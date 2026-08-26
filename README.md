@@ -11,13 +11,13 @@
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
-| Scadențe recurente | Facturi, rate și contribuții rezervate până la salariu; apăsarea „Plătită” creează cheltuiala reală din sursa aleasă. |
+| Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
 | Bonuri mobile | Maximum două fotografii comprimate local, OCR local pentru produse și prețuri individuale, categorii sugerate și repartizare editabilă; liniile trebuie să egaleze totalul înainte de salvare. |
 | Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit și întrebări rapide. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
-| Aspect și control | Temă întunecată persistentă, simbol nou de cămin și traseu de progres, resetare controlată și export/import de rezervă. |
+| Aspect și control | Temă întunecată persistentă, monogramă locală B/F cu relief, favicon inclus în build, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
@@ -29,6 +29,12 @@ Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișa
 > **Prognoza nu schimbă bugetul.** Ea folosește cheltuielile deja înregistrate până azi, zilele rămase, limita planului și rezervele recurente pentru a arăta ritmul zilnic curent, ritmul sigur și suma proiectată până la următorul venit. Este o estimare explicabilă, nu o garanție și nu o recomandare de investiții.
 
 > Soldul inițial reprezintă punctul de pornire introdus de familie. În versiunea actuală nu este un extras bancar reconciliat pe o dată istorică; de aceea, utilizați-l ca bază de pornire la configurare și actualizați-l atent după importuri vechi.
+
+> **Automatizarea recurentă rulează când aplicația este deschisă.** Pentru fiecare cheltuială activată, aplicația creează local o singură mișcare cu ID stabil pentru luna și data scadentă. Nu rulează în fundal când browserul sau aplicația este închisă și nu poate efectua plăți bancare.
+
+## Performanță mobilă
+
+Componentele de statistici, scadențe și OCR sunt încărcate la cerere. Runtime-ul React și iconițele sunt separate în fișiere cacheabile, ceea ce reduce bundle-ul principal de la aproximativ **718 kB** la aproximativ **669 kB** înainte de compresie, conform buildului de producție local. Funcțiile de OCR și rapoarte nu sunt descărcate până când utilizatorul nu deschide instrumentul corespunzător.
 
 ## Familie conectată și sincronizare GitHub protejată
 
@@ -66,7 +72,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
+Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente automate și protecția la dublare, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 

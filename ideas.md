@@ -72,3 +72,6 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Marcajele de măsură apar numai când indică suma consumată, un prag, un interval sau progresul; nu rămân ca decorație independentă.
 - Bara principală exprimă consumul planului ca procent și prag coral la 75%, iar pasul următor rămâne legat direct de această măsură.
 - Semnul de aplicație combină traseul de progres cu o insignă geometrică B/F, păstrând atât lectura semantică, cât și recunoașterea de brand la dimensiuni mici.
+- Monograma B/F este prima lectură a semnului; acoperișul și registrul servesc această geometrie, nu devin o pictogramă generică de casă sau bancă.
+- Riglele sunt eliminate de pe cardurile secundare; rămân numai în suprafețele care afișează consumul planului, progresul sau un prag verificabil.
+- Mierea rămâne exclusiv pentru alocare și revizuire, iar coralul semnalează exclusiv atenție, datorii ori depășiri.

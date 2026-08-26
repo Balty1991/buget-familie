@@ -28,7 +28,7 @@ export type Transaction = {
 
 export type Debt = { id: string; name: string; remaining: number; monthly: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; updatedAt?: string };
 export type SavingsGoal = { id: string; name: string; current: number; target: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; updatedAt?: string };
-export type RecurringPayment = { id: string; name: string; amount: number; category: string; sourceId: string; memberId: string; dueDay: number; active: boolean; note?: string; updatedAt?: string };
+export type RecurringPayment = { id: string; name: string; amount: number; category: string; sourceId: string; memberId: string; dueDay: number; active: boolean; /** Creează local plata la prima deschidere din ziua scadenței sau după aceasta. */ autoPost?: boolean; note?: string; updatedAt?: string };
 export type ReceiptLine = { id: string; category: string; amount: number; label?: string };
 
 export type Receipt = {
@@ -129,7 +129,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     version: 8, transactions, receipts,
     debts: Array.isArray(old.debts) ? old.debts.map((item) => ({ ...item, remaining: Math.max(0, parseRomanianAmount(item.remaining)), monthly: Math.max(0, parseRomanianAmount(item.monthly)) })) : [],
     savings: Array.isArray(old.savings) ? old.savings.map((item) => ({ ...item, current: Math.max(0, parseRomanianAmount(item.current)), target: Math.max(0, parseRomanianAmount(item.target)) })) : [],
-    recurring: Array.isArray(old.recurring) ? old.recurring.map((item, index) => ({ id: item.id || `recurring-${index}`, name: item.name || `Plată recurentă ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), category: item.category || "Casă & facturi", sourceId: sources.some((source) => source.id === item.sourceId) ? String(item.sourceId) : sources[0]?.id || "", memberId: members.some((member) => member.id === item.memberId) ? String(item.memberId) : members[0]?.id || "", dueDay: Math.min(31, Math.max(1, Math.round(parseRomanianAmount(item.dueDay || 1)))), active: item.active !== false, note: item.note || undefined, updatedAt: item.updatedAt || undefined })) : [],
+    recurring: Array.isArray(old.recurring) ? old.recurring.map((item, index) => ({ id: item.id || `recurring-${index}`, name: item.name || `Plată recurentă ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), category: item.category || "Casă & facturi", sourceId: sources.some((source) => source.id === item.sourceId) ? String(item.sourceId) : sources[0]?.id || "", memberId: members.some((member) => member.id === item.memberId) ? String(item.memberId) : members[0]?.id || "", dueDay: Math.min(31, Math.max(1, Math.round(parseRomanianAmount(item.dueDay || 1)))), active: item.active !== false, autoPost: item.autoPost === true, note: item.note || undefined, updatedAt: item.updatedAt || undefined })) : [],
     deleted: Array.isArray(old.deleted) ? old.deleted.filter((item): item is DeletedRecord => Boolean(item && typeof item.id === "string" && typeof item.deletedAt === "string" && ["transactions", "debts", "savings", "receipts", "recurring"].includes(item.entity))).slice(-500) : [],
     settings: { familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], salaryPlan: { periodStart: safeDate(oldPlan.periodStart), nextPayday: /^\d{4}-\d{2}-\d{2}$/.test(oldPlan.nextPayday || "") ? oldPlan.nextPayday : "", sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: oldPlan.allocations || [] } },
   };
@@ -162,6 +162,34 @@ export const pendingRecurringInPlan = (data: AppData) => data.recurring.flatMap(
   const paid = data.transactions.some((transaction) => transaction.recurringId === item.id && inPlanPeriod(transaction.date, data.settings.salaryPlan));
   return dueDate && !paid ? [{ ...item, dueDate }] : [];
 });
+
+/** Ziua reală a scadenței într-o lună; ziua 31 devine ultima zi din februarie sau dintr-o lună scurtă. */
+export const recurringDueForMonth = (item: RecurringPayment, asOf = isoToday()) => {
+  const basis = new Date(`${asOf}T12:00:00`);
+  const lastDay = new Date(basis.getFullYear(), basis.getMonth() + 1, 0).getDate();
+  return new Date(basis.getFullYear(), basis.getMonth(), Math.min(item.dueDay, lastDay), 12).toISOString().slice(0, 10);
+};
+
+/**
+ * Generează numai plata scadentă din luna curentă, când aplicația este deschisă.
+ * ID-ul determinist și verificarea recurringId+dată împiedică dublarea după reload sau sincronizare.
+ */
+export const autoPostDueRecurring = (data: AppData, asOf = isoToday()): AppData => {
+  const additions: Transaction[] = [];
+  data.recurring.forEach((item) => {
+    if (!item.active || !item.autoPost || item.amount <= 0) return;
+    const dueDate = recurringDueForMonth(item, asOf);
+    if (dueDate > asOf) return;
+    const source = data.settings.paymentSources.find((entry) => entry.id === item.sourceId);
+    const member = data.settings.members.find((entry) => entry.id === item.memberId);
+    if (!source || !member) return;
+    const id = `recurring-auto-${item.id}-${dueDate}`;
+    const exists = data.transactions.some((transaction) => transaction.id === id || (transaction.recurringId === item.id && transaction.date === dueDate));
+    if (exists) return;
+    additions.push({ id, recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: dueDate, note: "Adăugată automat din scadență recurentă", createdAt: `${asOf}T12:00:00.000Z` });
+  });
+  return additions.length ? { ...data, transactions: [...additions, ...data.transactions] } : data;
+};
 
 /**
  * O proiecție transparentă pentru perioada activă. Nu presupune venituri viitoare

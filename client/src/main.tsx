@@ -18,5 +18,7 @@ import "./atelier-review-pass.css";
 import "./personal-dashboard.css";
 import "./smart-scenario.css";
 import "./atelier-semantic-pass.css";
+import "./bf-logo-3d.css";
+import "./atelier-review-final.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationSpent, createEmptyAppData, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
+import { allocationSpent, autoPostDueRecurring, createEmptyAppData, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -48,6 +48,14 @@ describe("registrul financiar Buget Familie", () => {
     expect(pendingRecurringInPlan(data)).toHaveLength(1);
     data.transactions = [{ id: "paid", recurringId: "internet", title: "Internet", amount: 60, kind: "expense", category: "Casă & facturi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-15" }];
     expect(pendingRecurringInPlan(data)).toHaveLength(0);
+  });
+
+  it("adaugă automat o scadență o singură dată și adaptează ziua 31 la februarie", () => {
+    const data = createEmptyAppData(); const source = data.settings.paymentSources[0];
+    data.recurring = [{ id: "rent", name: "Chirie", amount: 1800, category: "Casă & facturi", sourceId: source.id, memberId: "member-me", dueDay: 31, active: true, autoPost: true }];
+    const posted = autoPostDueRecurring(data, "2026-02-28");
+    expect(posted.transactions).toHaveLength(1); expect(posted.transactions[0]).toMatchObject({ id: "recurring-auto-rent-2026-02-28", recurringId: "rent", date: "2026-02-28", amount: 1800 });
+    expect(autoPostDueRecurring(posted, "2026-02-28").transactions).toHaveLength(1);
   });
 
   it("proiectează explicit ritmul actual până la următorul venit", () => {
