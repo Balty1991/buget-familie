@@ -1,0 +1,124 @@
+/* Atelierul Financiar — informația financiară are prioritate, iar obligațiile rămân o filă verde de registru, nu un card străin. */
+.bf-upcoming {
+  border-color: rgba(153, 204, 181, .32) !important;
+  color: #edf5ef;
+  background:
+    linear-gradient(135deg, rgba(33, 90, 73, .98), rgba(18, 58, 49, .99)) !important;
+  box-shadow: inset 0 1px 0 rgba(241, 255, 246, .12), 0 12px 26px rgba(4, 28, 22, .16);
+}
+
+.bf-upcoming .bf-kicker {
+  color: #bdd4c6 !important;
+}
+
+.bf-upcoming > div {
+  min-height: 42px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(207, 233, 219, .16);
+}
+
+.bf-upcoming > div:first-of-type {
+  border-top: 0;
+}
+
+.bf-upcoming span {
+  color: #f5fbf7;
+  font-weight: 800;
+}
+
+.bf-upcoming small {
+  color: #bed1c5 !important;
+}
+
+.bf-upcoming b {
+  color: #f4aa91 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-upcoming::after {
+  opacity: .35 !important;
+  background: repeating-linear-gradient(90deg, rgba(219, 239, 228, .58) 0 1px, transparent 1px 15px) !important;
+}
+
+.dark .bf-upcoming {
+  border-color: rgba(115, 175, 146, .34) !important;
+  background: linear-gradient(135deg, #174b3e, #102f28) !important;
+}
+
+.bf-balance-card {
+  margin-top: 30px;
+  padding: clamp(18px, 3vw, 25px);
+  border: 1px solid #cbdacd;
+  border-radius: 21px;
+  color: #173d33;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(238, 198, 77, .18), transparent 28%),
+    linear-gradient(135deg, #f4f7f1, #e9f0e9);
+  box-shadow: 0 12px 26px rgba(21, 60, 47, .08);
+}
+
+.bf-balance-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+.bf-balance-heading .bf-kicker { color: #57756a; }
+.bf-balance-heading h2 { margin: 0; color: #173d33; font: 800 clamp(23px, 4vw, 30px)/.98 "Fraunces", Georgia, serif; letter-spacing: -.05em; }
+.bf-balance-heading h2 em { color: #497e6b; font-style: italic; }
+.bf-balance-heading button { min-height: 34px; display: inline-flex; align-items: center; gap: 2px; padding: 0; border: 0; color: #9a6b14; background: transparent; font-size: 11px; font-weight: 900; }
+.bf-balance-total { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin: 20px 0 13px; padding: 15px 0; border-top: 1px solid rgba(48, 93, 75, .2); border-bottom: 1px solid rgba(48, 93, 75, .2); }
+.bf-balance-total div { display: grid; gap: 4px; }
+.bf-balance-total span, .bf-balance-metrics article > span { color: #527064; font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+.bf-balance-total strong { color: #174d3d; font: 800 clamp(28px, 6vw, 39px)/.92 "Fraunces", Georgia, serif; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
+.bf-balance-total strong.negative, .bf-balance-metrics .negative { color: #a84d3b; }
+.bf-balance-total p { max-width: 25ch; margin: 0; color: #5e786c; font-size: 10px; line-height: 1.45; text-align: right; }
+.bf-balance-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.bf-balance-metrics article { display: grid; gap: 5px; min-width: 0; padding: 10px; border: 1px solid rgba(48, 93, 75, .16); border-radius: 13px; background: rgba(255, 255, 250, .54); }
+.bf-balance-metrics b { color: #204e40; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bf-balance-metrics small { color: #63796f; font-size: 9px; line-height: 1.35; }
+.dark .bf-balance-card { border-color: rgba(125, 177, 150, .26); color: #ecf5ee; background: radial-gradient(circle at 93% 3%, rgba(226, 185, 63, .15), transparent 28%), linear-gradient(135deg, #153f35, #102f28); box-shadow: 0 12px 28px rgba(0, 0, 0, .2); }
+.dark .bf-balance-heading .bf-kicker, .dark .bf-balance-total span, .dark .bf-balance-metrics article > span { color: #adcebb; }
+.dark .bf-balance-heading h2, .dark .bf-balance-total strong, .dark .bf-balance-metrics b { color: #edf8f1; }
+.dark .bf-balance-heading h2 em { color: #90c9ae; }
+.dark .bf-balance-total { border-color: rgba(185, 222, 201, .17); }
+.dark .bf-balance-total p, .dark .bf-balance-metrics small { color: #b5cfbd; }
+.dark .bf-balance-metrics article { border-color: rgba(185, 222, 201, .15); background: rgba(255, 255, 255, .04); }
+
+@media (max-width: 640px) {
+  .bf-balance-card { margin-top: 25px; border-radius: 18px; }
+  .bf-balance-total { align-items: start; flex-direction: column; gap: 8px; }
+  .bf-balance-total p { max-width: none; text-align: left; }
+  .bf-balance-metrics { grid-template-columns: 1fr; gap: 7px; }
+  .bf-balance-metrics article { grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; }
+  .bf-balance-metrics article > span { grid-column: 1; }
+  .bf-balance-metrics article b { grid-column: 2; grid-row: 1 / span 2; }
+  .bf-balance-metrics article small { grid-column: 1; }
+}
+
+@media (max-width: 640px) {
+  .bf-upcoming { padding: 17px !important; }
+}
+
+@media (max-width: 640px) {
+  .bf-safe-card {
+    padding-top: 1.35rem !important;
+  }
+
+  .bf-safe-card::before,
+  .bf-safe-card::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .bf-safe-card .bf-kicker {
+    margin-bottom: .42rem;
+    font-size: .6rem;
+    line-height: 1.15;
+    letter-spacing: .105em;
+  }
+
+  .bf-safe-card > div:first-child > p:last-child {
+    max-width: 28ch;
+    line-height: 1.42;
+  }
+
+  .bf-safe-card .bf-plan-measure {
+    margin-top: .35rem;
+  }
+}

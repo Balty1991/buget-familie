@@ -1,0 +1,80 @@
+/* Atelierul Financiar — temele schimbă materialul, nu semantica: venit, cheltuială și atenție rămân lizibile. */
+.bf-theme-picker { width: min(620px, calc(100vw - 28px)); }
+.bf-theme-picker-intro { margin: -4px 0 18px; color: #65766d; font-size: 12px; line-height: 1.55; }
+.bf-theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.bf-theme-option { display: grid; grid-template-columns: 46px minmax(0, 1fr) 18px; align-items: center; gap: 10px; min-height: 78px; padding: 10px; border: 1px solid #d7ded8; border-radius: 15px; color: #1b4137; background: #fbfcf8; text-align: left; transition: transform .16s cubic-bezier(.23,1,.32,1), border-color .16s ease, box-shadow .16s ease; }
+.bf-theme-option:hover { transform: translateY(-1px); border-color: #7ea793; }
+.bf-theme-option.selected { border-color: #2f725e; box-shadow: 0 0 0 2px rgba(47, 114, 94, .16); }
+.bf-theme-option > span:nth-child(2) { display: grid; gap: 3px; min-width: 0; }
+.bf-theme-option b { font-size: 12px; }
+.bf-theme-option small { color: #6d7f75; font-size: 9px; line-height: 1.35; }
+.bf-theme-option i { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: #fff; background: #2f725e; }
+.bf-theme-option:not(.selected) i { opacity: 0; }
+.bf-theme-swatch { width: 46px; height: 52px; border: 1px solid rgba(0,0,0,.12); border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,.32); }
+
+.theme-midnight .bf-app { color: #dceaff; background: #050914; }
+.theme-midnight .bf-appbar, .theme-midnight .bf-mobile-nav { border-color: #1b3157; background: rgba(5, 9, 20, .94); }
+.theme-midnight .bf-appbar nav button { color: #adc7ed; }
+.theme-midnight .bf-appbar nav button.active, .theme-midnight .bf-mobile-nav button.active { color: #e7f2ff; background: #17386a; }
+.theme-midnight .bf-theme { border-color: #2a4d82; color: #a9d1ff; background: #0d1b35; }
+.theme-midnight .bf-topline h1, .theme-midnight .bf-section-heading h2, .theme-midnight .bf-balance-heading h2 { color: #eef6ff; }
+.theme-midnight .bf-topline h1 em, .theme-midnight .bf-balance-heading h2 em { color: #75b7ff; }
+.theme-midnight .bf-topline > div > p:not(.bf-kicker), .theme-midnight .bf-kicker, .theme-midnight .bf-balance-total p { color: #a9bfde; }
+.theme-midnight .bf-safe-card { background: linear-gradient(135deg, #0b1b38, #123a6f); box-shadow: 0 16px 38px rgba(0,0,0,.34); }
+.theme-midnight .bf-pulse-grid article, .theme-midnight .bf-ledger-mini, .theme-midnight .bf-period-card, .theme-midnight .bf-filter-sheet, .theme-midnight .bf-journal, .theme-midnight .bf-more-grid button, .theme-midnight .bf-balance-card { border-color: #203d68; color: #e7f2ff; background: #0b162b; }
+.theme-midnight .bf-balance-card { background: radial-gradient(circle at 93% 3%, rgba(93,168,255,.18), transparent 28%), linear-gradient(135deg, #0d1c36, #091326); }
+.theme-midnight .bf-balance-total, .theme-midnight .bf-balance-metrics article { border-color: rgba(161, 204, 255, .2); }
+.theme-midnight .bf-balance-metrics article { background: rgba(255,255,255,.035); }
+.theme-midnight .bf-balance-total strong, .theme-midnight .bf-balance-metrics b { color: #edf6ff; }
+.theme-midnight .bf-upcoming { border-color: #2b5687 !important; background: linear-gradient(135deg, #102d57, #0a1a34) !important; }
+.theme-midnight .bf-upcoming small, .theme-midnight .bf-balance-metrics small { color: #b2c8e4 !important; }
+.theme-midnight .bf-upcoming b, .theme-midnight .bf-balance-total strong.negative, .theme-midnight .negative { color: #ff9c8a !important; }
+.theme-midnight .bf-primary { color: #071425; background: #75b7ff; box-shadow: 0 9px 22px rgba(62, 142, 232, .22); }
+.theme-midnight .bf-secondary { color: #cfe5ff; border-color: #2b5687; background: #102744; }
+.theme-midnight .bf-decision-rail, .theme-midnight .bf-family-checkin, .theme-midnight .bf-quick-grid, .theme-midnight .bf-quick-grid button, .theme-midnight .bf-pulse-grid article, .theme-midnight .bf-ledger-mini > div { border-color: #203d68 !important; color: #e7f2ff !important; background: #0b162b !important; }
+.theme-midnight .bf-decision-rail > div, .theme-midnight .bf-family-checkin > div, .theme-midnight .bf-quick-grid button { box-shadow: inset 0 1px 0 rgba(168,209,255,.12); }
+.theme-midnight .bf-decision-rail button, .theme-midnight .bf-checkin-list article, .theme-midnight .bf-quick-grid button:hover { border-color: #3168a9 !important; background: #102d57 !important; }
+.theme-midnight .bf-decision-rail p, .theme-midnight .bf-decision-rail span, .theme-midnight .bf-pulse-grid p, .theme-midnight .bf-quick-grid small, .theme-midnight .bf-ledger-mini small { color: #a9bfde !important; }
+.theme-midnight .bf-decision-rail strong, .theme-midnight .bf-pulse-grid strong, .theme-midnight .bf-ledger-mini b, .theme-midnight .bf-quick-grid span { color: #edf6ff !important; }
+.theme-midnight .bf-quick-grid svg, .theme-midnight .bf-pulse-icon.income { color: #75b7ff !important; }
+.theme-midnight .bf-primary, .theme-midnight .bf-app .bf-primary { color: #071425 !important; background: #75b7ff !important; }
+
+.theme-copper .bf-app { color: #f1e8dd; background: #131210; }
+.theme-copper .bf-appbar, .theme-copper .bf-mobile-nav { border-color: #4c3e32; background: rgba(19,18,16,.94); }
+.theme-copper .bf-appbar nav button { color: #cbbbad; }
+.theme-copper .bf-appbar nav button.active, .theme-copper .bf-mobile-nav button.active { color: #fff8ef; background: #4b3529; }
+.theme-copper .bf-theme { border-color: #6a4b38; color: #f2b07b; background: #241b16; }
+.theme-copper .bf-topline h1, .theme-copper .bf-section-heading h2, .theme-copper .bf-balance-heading h2 { color: #fff7ee; }
+.theme-copper .bf-topline h1 em, .theme-copper .bf-balance-heading h2 em { color: #e6a36f; }
+.theme-copper .bf-topline > div > p:not(.bf-kicker), .theme-copper .bf-kicker { color: #c8b4a3; }
+.theme-copper .bf-safe-card { background: linear-gradient(135deg, #30221c, #57392b); }
+.theme-copper .bf-pulse-grid article, .theme-copper .bf-ledger-mini, .theme-copper .bf-period-card, .theme-copper .bf-filter-sheet, .theme-copper .bf-journal, .theme-copper .bf-more-grid button, .theme-copper .bf-balance-card { border-color: #58463a; color: #fff5ea; background: #211a16; }
+.theme-copper .bf-balance-card { background: radial-gradient(circle at 93% 3%, rgba(211,141,89,.2), transparent 28%), linear-gradient(135deg, #2b211b, #1a1512); }
+.theme-copper .bf-balance-total, .theme-copper .bf-balance-metrics article { border-color: rgba(245, 210, 182, .18); }
+.theme-copper .bf-balance-metrics article { background: rgba(255,255,255,.035); }
+.theme-copper .bf-balance-total strong, .theme-copper .bf-balance-metrics b { color: #fff5ea; }
+.theme-copper .bf-upcoming { border-color: #735541 !important; background: linear-gradient(135deg, #493126, #291d18) !important; }
+.theme-copper .bf-upcoming small, .theme-copper .bf-balance-metrics small, .theme-copper .bf-balance-total p { color: #d1bca9 !important; }
+.theme-copper .bf-primary { color: #21130b; background: #e6a36f; box-shadow: 0 9px 22px rgba(206, 121, 64, .2); }
+.theme-copper .bf-secondary { color: #ffe5ce; border-color: #6a4b38; background: #35261f; }
+
+.dark .bf-theme-picker { color: #eff8f1; background: #10271f; }
+.dark .bf-theme-picker-intro { color: #b8cfbf; }
+.dark .bf-theme-option { border-color: rgba(197,231,210,.2); color: #eff8f1; background: rgba(255,255,255,.045); }
+.dark .bf-theme-option small { color: #bed3c4; }
+.dark .bf-theme-option.selected { border-color: #8fc6a8; box-shadow: 0 0 0 2px rgba(143,198,168,.18); }
+.theme-midnight .bf-theme-picker { background: #09162a; }
+.theme-midnight .bf-theme-option { border-color: #244b7e; background: #0d1d37; }
+.theme-midnight .bf-theme-option small { color: #b5cae5; }
+.theme-midnight .bf-theme-option.selected { border-color: #75b7ff; box-shadow: 0 0 0 2px rgba(117,183,255,.2); }
+.theme-midnight .bf-theme-option i { color: #061425; background: #75b7ff; }
+.theme-copper .bf-theme-picker { background: #1c1512; }
+.theme-copper .bf-theme-option { border-color: #654936; background: #251b16; }
+.theme-copper .bf-theme-option small { color: #d0b7a2; }
+.theme-copper .bf-theme-option.selected { border-color: #e6a36f; box-shadow: 0 0 0 2px rgba(230,163,111,.2); }
+.theme-copper .bf-theme-option i { color: #25150c; background: #e6a36f; }
+
+@media (max-width: 640px) {
+  .bf-theme-picker { width: min(100%, calc(100vw - 20px)); padding: 18px; }
+  .bf-theme-grid { grid-template-columns: 1fr; }
+}

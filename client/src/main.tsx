@@ -23,5 +23,9 @@ import "./atelier-review-final.css";
 import "./dark-night-premium.css";
 import "./envelope-source.css";
 import "./envelope-transfer.css";
+import "./envelope-insights.css";
+import "./mobile-decision-fix.css";
+import "./themes.css";
+import "./report-balance.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

@@ -1,0 +1,12 @@
+/* Atelierul Financiar — bilanțul separă lichiditatea, ratele și economiile; nu repetă un total opac. */
+.bf-report-balance { background: radial-gradient(circle at 92% 4%, rgba(214, 166, 71, .12), transparent 28%), #f7f8f4; }
+.bf-report-balance .bf-report-metrics { margin-top: 14px; }
+.bf-report-metrics small { display: block; margin-top: 5px; color: #738177; font-size: 10px; line-height: 1.4; }
+.bf-report-note { margin: 16px 2px 0; color: #637269; font-size: 11px; line-height: 1.55; }
+.dark .bf-report-balance { background: radial-gradient(circle at 92% 4%, rgba(239, 208, 121, .12), transparent 28%), #10271f; }
+.dark .bf-report-metrics small, .dark .bf-report-note { color: #b4c9ba; }
+.theme-midnight .bf-report-balance { border-color: #203d68; background: radial-gradient(circle at 92% 4%, rgba(93, 168, 255, .16), transparent 28%), #0b162b; }
+.theme-midnight .bf-report-metrics small, .theme-midnight .bf-report-note { color: #b1c6e1; }
+.theme-copper .bf-report-balance { border-color: #58463a; background: radial-gradient(circle at 92% 4%, rgba(230, 163, 111, .16), transparent 28%), #211a16; }
+.theme-copper .bf-report-metrics small, .theme-copper .bf-report-note { color: #d1bca9; }
+@media (max-width: 760px) { .bf-report-note { margin-top: 12px; font-size: 10px; } }

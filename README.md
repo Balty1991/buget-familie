@@ -6,12 +6,12 @@
 
 | Domeniu | Funcție disponibilă |
 |---|---|
-| Panou financiar | Indicatori calculați din registrul real; o stare depășită este semnalată explicit, fără a fi mascată ca disponibil. |
+| Panou financiar și bilanț | Indicatori calculați din registrul real; o stare depășită este semnalată explicit, fără a fi mascată ca disponibil. Bilanțul personal sau familial separă fluxul perioadei, soldurile utilizabile, ratele declarate, datoria rămasă și economiile urmărite. |
 | Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are dată ISO, membru, sursă de plată și categorie. |
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
-| Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
-| Plicuri de categorie | O categorie precum Transport/Taxi poate avea un buget, o sursă de finanțare și un detaliu opțional; cheltuielile cu aceeași categorie și sursă consumă automat plicul și arată suma rămasă înainte de salvare. |
-| Realocări între plicuri | Când o categorie depășește limita, poți muta o sumă din alt plic finanțat din aceeași sursă, cu explicație opțională și istoric al deciziei. |
+| Plan până la venit | Data estimată a următorului venit, prima dată posibilă opțională, limită totală, limită săptămânală calculată, zile rămase și alocări. Când există un interval, toate calculele folosesc prudent prima dată posibilă. |
+| Plicuri de categorie | O categorie precum Transport/Taxi poate avea un buget, o sursă, un membru opțional și un detaliu. De exemplu, Transport poate fi împărțit în Soție 430 RON și Eu 70 RON; fiecare cheltuială compatibilă consumă plicul exact, apoi plicul comun rămâne fallback. |
+| Puls, alerte și realocări | Plicurile au bare interactive, selectare de detaliu, alertă la 80% sau depășire, istoric filtrabil al realocărilor și transfer doar între categorii finanțate din aceeași sursă. |
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
@@ -19,12 +19,12 @@
 | Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit și întrebări rapide. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
-| Aspect și control | Temă întunecată persistentă, suprafețe nocturne cu contrast verificat, control accesibil cu stare explicită, monogramă locală B/F cu relief, favicon inclus în build, resetare controlată și export/import de rezervă. |
+| Aspect și control | Selector persistent cu Ivory Ledger, Forest Night, Black–Blue și Ink–Copper; semnificația veniturilor, cheltuielilor și alertelor rămâne aceeași în toate temele. Include monogramă locală B/F, favicon, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
 
-## Modelul de calcul v10
+## Modelul de calcul v11
 
 Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișat pentru o sursă de plată este **soldul inițial plus venituri minus cheltuieli** atribuite acelei surse. Planul include numai cheltuielile cu dată din intervalul ales; alocările personale sau pe categorii sunt consumate din aceleași intrări, nu dintr-un total separat. O scadență recurentă activă se rezervă separat în plan până când este confirmată; confirmarea creează o singură cheltuială legată, pentru a evita dubla numărare.
 
@@ -34,17 +34,21 @@ Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișa
 
 > **Prognoza nu schimbă bugetul.** Ea folosește cheltuielile deja înregistrate până azi, zilele rămase, limita planului și rezervele recurente pentru a arăta ritmul zilnic curent, ritmul sigur și suma proiectată până la următorul venit. Este o estimare explicabilă, nu o garanție și nu o recomandare de investiții.
 
+> Când venitul intră de regulă într-o zi, dar poate veni mai devreme, se salvează atât data estimată, cât și **prima dată posibilă**. Planul, plicurile, scadențele rezervate și prognoza se opresc la prima dată posibilă pentru a nu considera bani care ar putea să nu fie încă disponibili.
+
+> **Bilanțul nu dublează valorile.** Fluxul perioadei este venit minus cheltuieli înregistrate; ratele sunt obligații declarate, datoria rămasă este o valoare de pasiv, iar economiile sunt expuse separat. Poziția lichidă netă este soldurile utilizabile minus datoria rămasă.
+
 > Soldul inițial reprezintă punctul de pornire introdus de familie. În versiunea actuală nu este un extras bancar reconciliat pe o dată istorică; de aceea, utilizați-l ca bază de pornire la configurare și actualizați-l atent după importuri vechi.
 
 > **Automatizarea recurentă rulează când aplicația este deschisă.** Pentru fiecare cheltuială activată, aplicația creează local o singură mișcare cu ID stabil pentru luna și data scadentă. Nu rulează în fundal când browserul sau aplicația este închisă și nu poate efectua plăți bancare.
 
 ## Performanță mobilă
 
-Componentele de statistici, scadențe și OCR sunt încărcate la cerere. Runtime-ul React și iconițele sunt separate în fișiere cacheabile, ceea ce reduce bundle-ul principal de la aproximativ **718 kB** la aproximativ **669 kB** înainte de compresie, conform buildului de producție local. Funcțiile de OCR și rapoarte nu sunt descărcate până când utilizatorul nu deschide instrumentul corespunzător.
+Componentele de statistici, scadențe și OCR sunt încărcate la cerere. Runtime-ul React și iconițele sunt separate în fișiere cacheabile; buildul de audit a produs un bundle principal de aproximativ **703 kB** înainte de compresie, în timp ce OCR-ul, scadențele și rapoartele rămân în module separate încărcate numai la nevoie.
 
-## Mod întunecat
+## Teme memorate
 
-Tema întunecată se activează din butonul cu lună/soare din antet și alegerea rămâne memorată local pe dispozitiv. Versiunea nocturnă folosește fundal verde foarte închis, navigație opacă, valori cu contrast ridicat și păstrează verdele pentru control, mierea pentru revizuire și coralul pentru atenție. Nu este necesară configurare familială sau sincronizare pentru această preferință.
+Butonul de paletă din antet deschide alegerea temei și păstrează opțiunea local pe dispozitiv. **Black–Blue** folosește fundal negru-albăstrui, suprafețe bleumarin și albastru deschis pentru acțiunea principală; **Forest Night** păstrează atmosfera verde nocturnă, iar **Ink–Copper** folosește grafit și cupru. Textul, controalele și graficele sunt proiectate pentru contrast, iar coralul rămâne rezervat situațiilor de atenție.
 
 ## Familie conectată și sincronizare GitHub protejată
 
@@ -58,7 +62,7 @@ Aplicația publică este `Balty1991/buget-familie`. Repo-ul separat `Balty1991/b
 | 4 | Alege o parolă de familie de cel puțin 12 caractere; ea criptează datele prin AES-GCM înainte de upload. |
 | 5 | Pe fiecare telefon, introdu un token limitat separat și aceeași parolă, apoi apasă **Conectează acest telefon**. |
 
-După conectare, aplicația verifică actualizări aproximativ la 30 de secunde cât rămâne deschisă, unește intrările prin ID și marcaj de actualizare și păstrează ștergerile pentru a evita reapariția datelor eliminate. GitHub Contents API oferă controlul de conflict prin SHA, dar această soluție rămâne o actualizare periodică, nu un canal instantaneu în fundal. Fotografiile bonurilor sunt excluse intenționat din pachetul remote și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
+După conectare, aplicația verifică actualizări aproximativ la 30 de secunde cât rămâne deschisă, unește intrările prin ID și marcaj de actualizare și păstrează ștergerile — inclusiv scadențele recurente — pentru a evita reapariția datelor eliminate. GitHub Contents API oferă controlul de conflict prin SHA, dar această soluție rămâne o actualizare periodică, nu un canal instantaneu în fundal. Fotografiile bonurilor sunt excluse intenționat din pachetul remote și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
 
 ## Limite importante
 
@@ -67,6 +71,7 @@ După conectare, aplicația verifică actualizări aproximativ la 30 de secunde 
 | CRUD financiar, planificare, temă și analize | Da, local în browser. |
 | Copie între telefoane | Da, prin export/import sau pachet criptat în repo privat. |
 | Sincronizare automată în timp real | Actualizare periodică aproximativ la 30 s cât aplicația este deschisă; nu există actualizare garantată în fundal. |
+| Modificări simultane ale aceluiași plan | Plicurile și realocările sunt salvate împreună cu planul; pentru a evita pierderea unei modificări, sincronizează înainte de a modifica același plan pe alt telefon. |
 | Fotografii ale bonurilor | Maximum două pe bon, comprimate local; fotografiile rămân locale și nu intră în pachetul GitHub. |
 | Asistent LLM extern | Nu; GitHub Models a fost retras. Asistentul actual este local și explicabil. |
 
@@ -82,7 +87,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, realocarea limitelor între plicuri fără modificarea soldului, scadențele recurente automate și protecția la dublare, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
+Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul bilanțului derivat, plicurile pe surse și membri, realocarea limitelor, pragurile de alertă, prima dată posibilă a venitului, scadențele recurente automate și ștergerea lor sincronizabilă, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 

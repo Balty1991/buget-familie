@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, autoPostDueRecurring, createEmptyAppData, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, autoPostDueRecurring, createEmptyAppData, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -19,6 +19,13 @@ describe("registrul financiar Buget Familie", () => {
       { id: "expense", title: "Taxă", amount: 200, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-03" },
     ];
     expect(sourceBalance(data, source.id)).toBe(1300);
+  });
+
+  it("separă fluxul perioadei de ratele declarate și datoria rămasă în bilanț", () => {
+    const data = createEmptyAppData(); const source = data.settings.paymentSources[0]; source.openingBalance = 1000;
+    data.transactions = [{ id: "income", title: "Salariu", amount: 3000, kind: "income", category: "Venit", source: source.name, sourceId: source.id, person: "Eu", memberId: "member-me", date: "2026-08-01" }, { id: "expense", title: "Alimente", amount: 900, kind: "expense", category: "Alimente", source: source.name, sourceId: source.id, person: "Eu", memberId: "member-me", date: "2026-08-02" }];
+    data.debts = [{ id: "loan", name: "Credit", remaining: 38000, monthly: 650, due: "29 august" }]; data.savings = [{ id: "fund", name: "Fond", current: 2000, target: 5000, due: "Decembrie", tone: "honey" }];
+    expect(financialBalance(data, "2026-08-01", "2026-08-31")).toMatchObject({ income: 3000, expense: 900, cashflow: 2100, monthlyRates: 650, debtRemaining: 38000, savingsCurrent: 2000, liquidFunds: 3100, netLiquidPosition: -34900 });
   });
 
   it("calculează cheltuiala pentru alocarea de categorie doar în perioada activă", () => {
@@ -42,6 +49,17 @@ describe("registrul financiar Buget Familie", () => {
     expect(allocationSpent(data, { id: "transport-card", label: "Transport", amount: 500, category: "Transport", sourceId: card.id, note: "Taxi până la venit" })).toBe(120);
   });
 
+  it("separă plicurile de transport pe membri", () => {
+    const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
+    const wife = { id: "member-wife", name: "Soție" }; data.settings.members.push(wife);
+    const mine = { id: "transport-me", label: "Transport · Eu", amount: 70, category: "Transport", memberId: "member-me", sourceId: card.id };
+    const hers = { id: "transport-wife", label: "Transport · Soție", amount: 430, category: "Transport", memberId: wife.id, sourceId: card.id };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 500, weeklyLimit: 0, allocations: [mine, hers], transfers: [] };
+    data.transactions = [{ id: "wife-taxi", title: "Taxi soție", amount: 60, kind: "expense", category: "Transport", sourceId: card.id, source: card.name, memberId: wife.id, person: wife.name, date: "2026-08-04" }, { id: "my-taxi", title: "Taxi eu", amount: 15, kind: "expense", category: "Transport", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-08-05" }];
+    expect(allocationSpent(data, hers)).toBe(60);
+    expect(allocationSpent(data, mine)).toBe(15);
+  });
+
   it("realocă limita între plicuri fără a schimba nicio tranzacție sau sursă", () => {
     const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
     const transport = { id: "transport", label: "Transport", amount: 500, category: "Transport", sourceId: card.id };
@@ -52,12 +70,26 @@ describe("registrul financiar Buget Familie", () => {
     expect(data.transactions).toHaveLength(0);
   });
 
+  it("semnalizează plicul la 80% și la depășirea limitei", () => {
+    const data = createEmptyAppData(); const [card] = data.settings.paymentSources; const transport = { id: "transport", label: "Transport", amount: 100, category: "Transport", sourceId: card.id };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [transport], transfers: [] };
+    data.transactions = [{ id: "near", title: "Taxi", amount: 80, kind: "expense", category: "Transport", source: card.name, sourceId: card.id, person: "Eu", memberId: "member-me", date: "2026-08-12" }];
+    expect(allocationStatus(data, transport).state).toBe("watch");
+    data.transactions.push({ id: "over", title: "Taxi", amount: 25, kind: "expense", category: "Transport", source: card.name, sourceId: card.id, person: "Eu", memberId: "member-me", date: "2026-08-13" });
+    expect(allocationStatus(data, transport).state).toBe("over");
+  });
+
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
     const migrated = normalizeAppData({ version: 5, transactions: [{ id: "legacy", title: "Bon", amount: 20, kind: "expense", category: "Alimente", source: "Bon", person: "Eu", date: "26 aug." }], settings: {} });
     expect(migrated.version).toBe(8);
     expect(migrated.transactions[0].date).toBe(isoToday());
     expect(migrated.transactions[0].sourceId).toBe(migrated.settings.paymentSources.find((source) => source.kind === "meal")?.id);
     expect(migrated.deleted).toEqual([]);
+  });
+
+  it("elimină defensiv prima dată de venit dacă ar începe înaintea planului", () => {
+    const migrated = normalizeAppData({ settings: { salaryPlan: { periodStart: "2026-08-05", nextPayday: "2026-08-10", earliestPayday: "2026-08-02", sourceIds: [], totalLimit: 0, weeklyLimit: 0, allocations: [] } } });
+    expect(migrated.settings.salaryPlan.earliestPayday).toBeUndefined();
   });
 
   it("rezervă o scadență activă și o scoate din plan după confirmarea plății", () => {
@@ -93,6 +125,15 @@ describe("registrul financiar Buget Familie", () => {
     expect(forecast.safeDaily).toBeCloseTo(88.8889, 3);
   });
 
+  it("folosește prima dată posibilă din fereastra de venit pentru un plan prudent", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", earliestPayday: "2026-08-07", sourceIds: [], totalLimit: 700, weeklyLimit: 0, allocations: [], transfers: [] };
+    data.transactions = [{ id: "pace", title: "Cheltuială", amount: 100, kind: "expense", category: "Altele", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-02" }];
+    expect(inPlanPeriod("2026-08-08", data.settings.salaryPlan)).toBe(false);
+    expect(planForecast(data, "2026-08-02").remainingDays).toBe(6);
+  });
+
   it("interpretează local o cheltuială descrisă în limbaj natural", () => {
     expect(parseNaturalSpendScenario("Dacă plătesc 120 lei pe taxi mâine")).toMatchObject({ amount: 120, category: "Transport", timing: "mâine", understood: true });
     expect(parseNaturalSpendScenario("o cafea mâine")).toMatchObject({ amount: 0, category: "Băuturi", understood: false });
@@ -117,6 +158,13 @@ describe("registrul financiar Buget Familie", () => {
     expect(merged.transactions.map((item) => item.id)).toEqual(["local"]);
     expect(merged.savings.map((item) => item.id)).toEqual(["goal"]);
     expect(merged.deleted).toHaveLength(1);
+  });
+
+  it("nu reintroduce o scadență recurentă ștearsă pe un alt telefon", () => {
+    const local = createEmptyAppData(); const remote = createEmptyAppData(); const source = local.settings.paymentSources[0];
+    remote.recurring = [{ id: "subscription", name: "Abonament", amount: 50, category: "Casă & facturi", sourceId: source.id, memberId: "member-me", dueDay: 8, active: true, updatedAt: "2026-08-08T08:00:00.000Z" }];
+    local.deleted = [{ entity: "recurring", id: "subscription", deletedAt: "2026-08-08T09:00:00.000Z" }];
+    expect(mergeFamilyData(local, remote).recurring).toEqual([]);
   });
 
   it("propune produse și prețuri individuale, fără totaluri sau plăți", () => {

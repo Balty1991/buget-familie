@@ -190,3 +190,65 @@
 - [x] Adaugă un formular mobil cu plic sursă, plic destinație, sumă și explicație opțională.
 - [x] Afișează istoria realocărilor și previne transferurile peste suma rămasă sau către același plic.
 - [x] Adaugă teste, validează mobil și publică versiunea finală.
+
+## Vizualizare, istoric și alerte pentru plicuri
+
+- [x] Construiește un grafic interactiv pentru limită, cheltuit și rămas, pe fiecare categorie de buget.
+- [x] Permite selectarea unei categorii din grafic pentru a vedea exact suma, sursa și starea plicului.
+- [x] Creează un istoric separat al realocărilor, cu filtre după plic, sursă și perioadă.
+- [x] Adaugă alerte vizuale locale la pragul de 80% și pentru depășirea unui plic de categorie.
+- [ ] Testează calculele, filtrele și fluxul mobil, apoi publică versiunea validată.
+
+## Lizibilitate card principal pe mobil
+
+- [ ] Elimină suprapunerea etichetelor din banda de decizie la lățimi de 360–375 px.
+- [ ] Păstrează clar titlul, suma disponibilă și starea planului în tema luminoasă și întunecată.
+- [ ] Verifică ecranul principal pe mobil înainte de următoarea publicare.
+
+## Fereastră flexibilă pentru venit
+
+- [x] Permite definirea datei estimate și a celei mai devreme posibile pentru următorul venit.
+- [x] Calculează prudent ritmul, planul și prognoza până la prima dată posibilă din interval.
+- [x] Afișează clar fereastra de încasare în Plan și pe tabloul principal.
+- [x] Migrează planurile existente și testează intervalul de 1–3 zile înainte de data estimată.
+
+## Plicuri de categorie pe membri
+
+- [x] Permite alegerea unui membru atunci când aloci un plic de categorie, de exemplu Transport pentru soție sau pentru mine.
+- [x] Identifică plicul cheltuielii după categorie, membru și sursă, fără a consuma bugetul altui membru.
+- [x] Afișează clar în formular persoana al cărei plic este consumat și suma rămasă individual.
+- [x] Afișează împărțirea pe membri în Plan și testează cazul Transport 430 RON + 70 RON.
+
+## Bilanț financiar total
+
+- [x] Calculează veniturile și cheltuielile reale din perioada selectată, separat de obligațiile viitoare.
+- [x] Afișează ratele lunare, datoria rămasă, economiile curente și poziția netă fără dublă numărare.
+- [x] Adaugă un bilanț vizibil pentru utilizator sau familie pe Acasă și un detaliu în Rapoarte.
+- [x] Testează calculele cu venituri, cheltuieli, rate, datorii și economii înainte de publicare.
+
+## Consistență vizuală a obligațiilor
+
+- [x] Înlocuiește fundalul luminos al obligațiilor cu suprafața verde de registru a aplicației.
+- [x] Păstrează coralul numai pentru valoarea de atenție și verifică lizibilitatea în ambele teme.
+- [x] Verifică mobil suprafața următoarelor obligații înainte de publicare.
+
+## Audit complet și modernizare de produs
+
+- [x] Auditează modelul financiar, persistența, sincronizarea, calculele, erorile și accesibilitatea din aplicația curentă.
+- [x] Evaluează pe mobil ecranele critice, tema luminoasă/întunecată, meniurile și stările cu date locale de test.
+- [x] Cercetează comparativ aplicații actuale de buget familial, cheltuieli comune și planificare financiară mobilă.
+- [x] Definește un roadmap prioritar cu funcții utile, confidențiale și realiste pentru versiunea GitHub-only.
+- [x] Implementează și validează îmbunătățirile cu impact ridicat, fără controale demonstrative sau date simulate.
+- [ ] Publică GitHub Pages și APK-ul numai după verificări complete și documentează limitările onest.
+
+## Paletă de teme memorate
+
+- [x] Creează un selector de teme accesibil, cu etichete clare și previzualizare pentru fiecare variantă.
+- [x] Adaugă tema Black–Blue cu fundal negru profund, albastru electric controlat și contrast ridicat.
+- [x] Adaugă variante complementare coerente, fără a modifica semnificația sumelor de venit, cheltuială și atenție.
+- [x] Păstrează tema aleasă local și verifică mobil toate suprafețele, formularele, graficele și navigația.
+
+## Trasabilitate înainte de livrare
+
+- [ ] Confirmă separat: bilanț, plicuri și alerte, transferuri, împărțirea pe membri, fereastra de venit, recurente, bonuri OCR, sincronizare, teme, asistent local, mobil, Pages și APK.
+- [ ] Marchează drept livrate numai funcțiile care au test automat sau test manual documentat; menține vizibile limitările GitHub-only.
