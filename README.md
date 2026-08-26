@@ -11,6 +11,7 @@
 | Membri și surse | Membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
+| Scadențe recurente | Facturi, rate și contribuții rezervate până la salariu; apăsarea „Plătită” creează cheltuiala reală din sursa aleasă. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
 | Bonuri | Bon manual cu magazin, valoare, categorie, produse și fotografie locală opțională; bonul creează automat cheltuiala asociată. |
 | Asistent | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări. |
@@ -62,5 +63,17 @@ pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
 Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat și consumul alocărilor din perioada de plan.
+
+## Android APK
+
+Aplicația păstrează GitHub Pages pentru acces web și este pregătită separat pentru Android cu **Capacitor**. În GitHub, deschide **Actions → Build Android APK → Run workflow**. După rularea verde, descarcă artefactul `buget-familie-debug-apk` și instalează fișierul `app-debug.apk` pe un telefon Android. Pachetul debug este pentru testare privată; nu necesită chei de semnare și nu este pentru Google Play.
+
+| Comandă | Utilizare |
+|---|---|
+| `pnpm run cap:sync` | Construiește React/Vite și copiază bundle-ul în proiectul Android. |
+| `pnpm run cap:android` | Sincronizează și deschide proiectul Android în Android Studio. |
+| `cd android && ./gradlew assembleDebug` | Generează local un APK debug după instalarea Android SDK. |
+
+Un pachet pentru Google Play va necesita ulterior un AAB semnat și un keystore păstrat doar în GitHub Secrets. Nu introduce parole de sincronizare, tokenuri GitHub sau date financiare în setările de build.
 
 [^pages]: [GitHub Docs — GitHub Pages limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)

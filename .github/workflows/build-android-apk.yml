@@ -1,0 +1,42 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug-apk:
+    name: APK de test instalabil
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Instalează dependențele exacte
+        run: pnpm install --frozen-lockfile
+      - name: Verifică tipurile
+        run: pnpm check
+      - name: Rulează testele financiare
+        run: pnpm exec vitest run client/src/lib/finance-data.test.ts
+      - name: Construiește bundle-ul Android
+        run: pnpm run cap:sync
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Construiește APK-ul debug
+        working-directory: android
+        run: ./gradlew assembleDebug
+      - name: Publică APK-ul ca artefact GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: buget-familie-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14

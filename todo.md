@@ -68,3 +68,11 @@
 - [x] Redefinește arhitectura informației și navigația mobilă pentru fluxuri zilnice rapide.
 - [x] Construiește un redesign mobil-first cu ierarhie mai clară, contrast, spațiere, feedback tactil și grafice utile.
 - [ ] Validează fiecare flux critic și publică versiunea stabilizată în GitHub Pages.
+
+## Extindere mobilă și APK
+
+- [x] Analizează repo-ul Lumin Culler și identifică modelul de împachetare Android compatibil cu această aplicație.
+- [x] Cercetează concurența mobilă și prioritizează funcții cu valoare practică pentru buget familial.
+- [x] Optimizează fluxurile zilnice pentru o singură mână, tastatura numerică și mod offline.
+- [x] Configurează proiectul pentru generare repetabilă a unui APK Android, fără a afecta publicarea GitHub Pages.
+- [ ] Validează aplicația pe viewport mobil, construiește APK-ul și publică versiunea actualizată.

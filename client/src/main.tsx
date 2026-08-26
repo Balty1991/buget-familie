@@ -5,5 +5,6 @@ import "./atelier-refinement.css";
 import "./upgrade.css";
 import "./risk-state.css";
 import "./reports.css";
+import "./recurring.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

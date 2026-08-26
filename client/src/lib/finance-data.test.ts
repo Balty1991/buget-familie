@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationSpent, createEmptyAppData, isoToday, normalizeAppData, parseRomanianAmount, sourceBalance } from "./finance-data";
+import { allocationSpent, createEmptyAppData, isoToday, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, sourceBalance } from "./finance-data";
 
 describe("registrul financiar Buget Familie", () => {
   it("interpretează sumele românești cu punct pentru mii și virgulă zecimală", () => {
@@ -32,8 +32,18 @@ describe("registrul financiar Buget Familie", () => {
 
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
     const migrated = normalizeAppData({ version: 5, transactions: [{ id: "legacy", title: "Bon", amount: 20, kind: "expense", category: "Alimente", source: "Bon", person: "Eu", date: "26 aug." }], settings: {} });
-    expect(migrated.version).toBe(6);
+    expect(migrated.version).toBe(7);
     expect(migrated.transactions[0].date).toBe(isoToday());
     expect(migrated.transactions[0].sourceId).toBe(migrated.settings.paymentSources.find((source) => source.kind === "meal")?.id);
+  });
+
+  it("rezervă o scadență activă și o scoate din plan după confirmarea plății", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-20", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.recurring = [{ id: "internet", name: "Internet", amount: 60, category: "Casă & facturi", sourceId: source.id, memberId: "member-me", dueDay: 15, active: true }];
+    expect(pendingRecurringInPlan(data)).toHaveLength(1);
+    data.transactions = [{ id: "paid", recurringId: "internet", title: "Internet", amount: 60, kind: "expense", category: "Casă & facturi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-15" }];
+    expect(pendingRecurringInPlan(data)).toHaveLength(0);
   });
 });
