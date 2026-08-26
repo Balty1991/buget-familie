@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationSpent, autoPostDueRecurring, createEmptyAppData, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
+import { allocationBudget, allocationSpent, autoPostDueRecurring, createEmptyAppData, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -40,6 +40,16 @@ describe("registrul financiar Buget Familie", () => {
       { id: "cash-taxi", title: "Taxi cash", amount: 80, kind: "expense", category: "Transport", sourceId: cash.id, source: cash.name, memberId: "member-me", person: "Eu", date: "2026-08-05" },
     ];
     expect(allocationSpent(data, { id: "transport-card", label: "Transport", amount: 500, category: "Transport", sourceId: card.id, note: "Taxi până la venit" })).toBe(120);
+  });
+
+  it("realocă limita între plicuri fără a schimba nicio tranzacție sau sursă", () => {
+    const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
+    const transport = { id: "transport", label: "Transport", amount: 500, category: "Transport", sourceId: card.id };
+    const food = { id: "food", label: "Alimente", amount: 300, category: "Alimente", sourceId: card.id };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [transport, food], transfers: [{ id: "move", fromAllocationId: "transport", toAllocationId: "food", amount: 120, note: "Taxi mai puțin", createdAt: "2026-08-02T12:00:00.000Z" }] };
+    expect(allocationBudget(data, transport)).toBe(380);
+    expect(allocationBudget(data, food)).toBe(420);
+    expect(data.transactions).toHaveLength(0);
   });
 
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {

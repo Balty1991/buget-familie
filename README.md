@@ -11,6 +11,7 @@
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
 | Plicuri de categorie | O categorie precum Transport/Taxi poate avea un buget, o sursă de finanțare și un detaliu opțional; cheltuielile cu aceeași categorie și sursă consumă automat plicul și arată suma rămasă înainte de salvare. |
+| Realocări între plicuri | Când o categorie depășește limita, poți muta o sumă din alt plic finanțat din aceeași sursă, cu explicație opțională și istoric al deciziei. |
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
@@ -28,6 +29,8 @@
 Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișat pentru o sursă de plată este **soldul inițial plus venituri minus cheltuieli** atribuite acelei surse. Planul include numai cheltuielile cu dată din intervalul ales; alocările personale sau pe categorii sunt consumate din aceleași intrări, nu dintr-un total separat. O scadență recurentă activă se rezervă separat în plan până când este confirmată; confirmarea creează o singură cheltuială legată, pentru a evita dubla numărare.
 
 > Un **plic de categorie** nu mută bani într-un sold separat. El definește o limită verificabilă pe o categorie și, opțional, pe o sursă, de exemplu „Transport, 500 RON, Card debit”. La salvarea unei cheltuieli compatibile, aceeași intrare din registru scade atât soldul Cardului debit, cât și suma rămasă în plic.
+
+> O **realocare** între plicuri modifică numai limitele interne ale celor două categorii. Ea nu creează o cheltuială, nu mișcă bani între card și cash și nu schimbă soldul unei surse. Pentru claritate, sunt permise doar între plicuri de categorii finanțate din aceeași sursă.
 
 > **Prognoza nu schimbă bugetul.** Ea folosește cheltuielile deja înregistrate până azi, zilele rămase, limita planului și rezervele recurente pentru a arăta ritmul zilnic curent, ritmul sigur și suma proiectată până la următorul venit. Este o estimare explicabilă, nu o garanție și nu o recomandare de investiții.
 
@@ -79,7 +82,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente automate și protecția la dublare, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
+Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, realocarea limitelor între plicuri fără modificarea soldului, scadențele recurente automate și protecția la dublare, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 

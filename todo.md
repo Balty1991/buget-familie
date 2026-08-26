@@ -182,3 +182,11 @@
 - [x] Afișează în formularul de cheltuială plicul potrivit după alegerea categoriei și sursei.
 - [x] Consumă automat plicul prin tranzacțiile reale compatibile și explică suma rămasă sau depășirea.
 - [x] Adaugă teste pentru plicul cu sursă și verifică fluxul mobil înainte de publicare.
+
+## Transferuri între plicuri
+
+- [x] Definește un transfer de buget între două plicuri de categorie, fără să creeze o mișcare bancară.
+- [x] Actualizează limitele plicurilor prin transferuri și păstrează sursa de fonduri a fiecărui plic.
+- [x] Adaugă un formular mobil cu plic sursă, plic destinație, sumă și explicație opțională.
+- [x] Afișează istoria realocărilor și previne transferurile peste suma rămasă sau către același plic.
+- [x] Adaugă teste, validează mobil și publică versiunea finală.
