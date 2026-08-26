@@ -20,5 +20,6 @@ import "./smart-scenario.css";
 import "./atelier-semantic-pass.css";
 import "./bf-logo-3d.css";
 import "./atelier-review-final.css";
+import "./dark-night-premium.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

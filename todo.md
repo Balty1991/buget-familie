@@ -167,3 +167,10 @@
 - [x] Optimizează încărcarea inițială prin separarea suplimentară a modulelor grele și prin eliminarea dependențelor vizuale fragile.
 - [x] Adaugă un rezumat de performanță în README cu ce s-a optimizat concret și ce rămâne de urmărit.
 - [x] Validează publicarea GitHub Pages, APK-ul și aspectul pe mobil înainte de livrare.
+
+## Mod întunecat premium
+
+- [x] Auditează contrastul titlurilor, valorilor, formularelor, navigației și cardurilor în tema întunecată.
+- [x] Rafinază suprafețele nocturne, stările de atenție și vizibilitatea monogramei B/F fără a pierde semantica culorilor.
+- [x] Confirmă persistența temei după reîncărcare și folosirea corectă a controlului de schimbare a temei.
+- [x] Verifică varianta mobilă în tema întunecată și publică versiunea validată.

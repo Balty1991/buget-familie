@@ -17,7 +17,7 @@
 | Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit și întrebări rapide. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
-| Aspect și control | Temă întunecată persistentă, monogramă locală B/F cu relief, favicon inclus în build, resetare controlată și export/import de rezervă. |
+| Aspect și control | Temă întunecată persistentă, suprafețe nocturne cu contrast verificat, control accesibil cu stare explicită, monogramă locală B/F cu relief, favicon inclus în build, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
@@ -35,6 +35,10 @@ Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișa
 ## Performanță mobilă
 
 Componentele de statistici, scadențe și OCR sunt încărcate la cerere. Runtime-ul React și iconițele sunt separate în fișiere cacheabile, ceea ce reduce bundle-ul principal de la aproximativ **718 kB** la aproximativ **669 kB** înainte de compresie, conform buildului de producție local. Funcțiile de OCR și rapoarte nu sunt descărcate până când utilizatorul nu deschide instrumentul corespunzător.
+
+## Mod întunecat
+
+Tema întunecată se activează din butonul cu lună/soare din antet și alegerea rămâne memorată local pe dispozitiv. Versiunea nocturnă folosește fundal verde foarte închis, navigație opacă, valori cu contrast ridicat și păstrează verdele pentru control, mierea pentru revizuire și coralul pentru atenție. Nu este necesară configurare familială sau sincronizare pentru această preferință.
 
 ## Familie conectată și sincronizare GitHub protejată
 
