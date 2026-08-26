@@ -1,58 +1,56 @@
 # Buget Familie
 
-**Buget Familie** este o aplicație PWA pentru administrarea banilor unei familii, publicată exclusiv prin GitHub Pages. Interfața include registru de venituri și cheltuieli, planificare săptămânală, datorii, obiective de economisire, setări de familie și transfer local controlat între dispozitive.
+**Buget Familie** este o aplicație PWA pentru administrarea banilor unei familii. Interfața este publicată prin GitHub Pages, iar sincronizarea protejată salvează doar un pachet financiar criptat într-un repo GitHub privat separat.
 
-## Ce este implementat acum
+## Funcții implementate
 
-| Domeniu | Disponibil în interfață |
+| Domeniu | Funcție disponibilă |
 |---|---|
-| Panou financiar | Imagine curentă calculată exclusiv din datele reale adăugate de utilizator. |
-| Mișcări | Registru cu venituri și cheltuieli; adăugare, modificare și ștergere locală. |
-| Planificare | Suma disponibilă pentru săptămână și repartizare pe categorii. |
-| Datorii | Credite, rate și împrumuturi; adăugare, modificare și ștergere. |
-| Economii | Obiective, progres și alocări; adăugare, modificare și ștergere. |
-| Setări | Numele familiei, numele membrului, codul de familie, temă întunecată și resetare controlată. |
-| Transfer între dispozitive | Export JSON și import verificat prin codul familiei; transferul este manual, la alegerea utilizatorului. |
-| Bonuri și asistent | Interfețe locale de orientare; fotografiile și recomandările AI reale necesită stocare și procesare privată. |
+| Panou financiar | Indicatori calculați din înregistrările reale ale familiei. |
+| Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are membru, sursă de plată și categorie. |
+| Membri și surse | Membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
+| Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
+| Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
+| Bonuri | Bon manual cu magazin, valoare, categorie, produse și fotografie locală opțională; bonul creează automat cheltuiala asociată. |
+| Asistent | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări. |
+| Aspect și control | Temă întunecată, resetare controlată și export/import de rezervă. |
+| Sincronizare privată | Pachet AES-GCM criptat local, încărcat manual într-un repo GitHub privat. |
 
-> **Notă privind datele:** aplicația începe fără date demo. Datele introduse se păstrează numai în browserul curent. Pentru al doilea dispozitiv, exportă pachetul din **Setări**, transmite fișierul printr-un canal de încredere și importă-l folosind codul familiei. Codul verifică pachetul; nu îl criptează.
+> Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
+
+## Sincronizare GitHub protejată
+
+Aplicația publică este `Balty1991/buget-familie`. Repo-ul separat `Balty1991/buget-familie-date` este privat și stochează numai un pachet deja criptat în browser. Tokenul GitHub și parola de criptare nu sunt păstrate în local storage sau în repo-ul public.
+
+| Pas | Acțiune |
+|---|---|
+| 1 | Creează un **fine-grained personal access token** limitat strict la repo-ul `buget-familie-date`. |
+| 2 | Acordă numai permisiunea **Contents: Read and write**. |
+| 3 | În aplicație, deschide pagina **Sincronizare** și introdu tokenul doar pentru sesiunea curentă. |
+| 4 | Alege o parolă de familie de cel puțin 12 caractere; ea criptează datele prin AES-GCM înainte de upload. |
+| 5 | Pe al doilea dispozitiv, introdu un token limitat și aceeași parolă, apoi apasă **Descarcă din repo**. |
+
+Sincronizarea este intenționat manuală și confirmată înainte de suprascriere. În acest mod, familia alege când trimite sau recuperează datele și poate evita conflicte silențioase.
+
+## Limite importante
+
+| Cerință | Această versiune GitHub-only |
+|---|---|
+| CRUD financiar, planificare, temă și analize | Da, local în browser. |
+| Copie între telefoane | Da, prin export/import sau pachet criptat în repo privat. |
+| Sincronizare automată în timp real | Nu; este manuală cu protecție la suprascriere. |
+| Fotografii ale bonurilor | Locale în browser; imaginile mari nu sunt recomandate. |
+| Asistent LLM extern | Nu; GitHub Models a fost retras. Asistentul actual este local și explicabil. |
+
+Datele financiare necriptate, bonurile și cheile nu trebuie comise în repo-ul public sau incluse în artefactele GitHub Pages. GitHub avertizează că Pages este public și nu trebuie utilizat pentru tranzacții sensibile.[^pages]
 
 ## Rulare locală
 
 ```bash
 pnpm install
 pnpm dev
-```
-
-Pentru verificare înainte de publicare:
-
-```bash
 pnpm check
 pnpm build
 ```
 
-## Publicare prin GitHub Pages
-
-Repo-ul include un workflow GitHub Actions pentru build și publicare. GitHub Pages publică front-end static și nu poate găzdui un backend, o bază de date sau o procesare AI privată. Din acest motiv, versiunea curentă folosește transfer manual export/import, nu sincronizare automată în timp real.
-
-Datele financiare, bonurile și cheile secrete nu trebuie comise vreodată în repo sau incluse în artefactele Pages. GitHub avertizează că Pages este public și nu trebuie utilizat pentru tranzacții sensibile.[^pages]
-
-## Limită importantă pentru sincronizare
-
-| Strat | Rol |
-|---|---|
-| Cerință | Posibil doar cu GitHub Pages | Necesită un serviciu privat |
-|---|---|---|
-| Date locale, CRUD, temă și export | Da | Nu |
-| Mutare controlată a pachetului între telefoane | Da, prin fișier și cod | Nu |
-| Sincronizare automată simultană | Nu | Da, cu autentificare și bază de date |
-| Fotografii private ale bonurilor | Nu | Da, cu stocare privată |
-| Asistent AI pe date reale | Nu | Da, cu procesare server-side |
-
-## Principii de protecție
-
-Aplicația trebuie să aplice minimizarea datelor, accesul doar pentru membrii autorizați, o perioadă de retenție configurabilă, export și ștergere la cerere. Politicile de autorizare trebuie testate separat pentru operațiile de citire, adăugare, modificare și ștergere.[^gdpr] [^rls]
-
 [^pages]: [GitHub Docs — GitHub Pages limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)
-[^gdpr]: [European Commission — GDPR principles](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/principles-gdpr_en)
-[^rls]: [Supabase — Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)

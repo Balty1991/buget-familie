@@ -34,17 +34,62 @@ export type SavingsGoal = {
   tone: "forest" | "honey" | "coral";
 };
 
+export type Receipt = {
+  id: string;
+  vendor: string;
+  amount: number;
+  category: string;
+  date: string;
+  note?: string;
+  imageData?: string;
+};
+
+export type FamilyMember = {
+  id: string;
+  name: string;
+};
+
+export type PaymentSource = {
+  id: string;
+  name: string;
+  kind: "card" | "cash" | "meal" | "transfer";
+  memberId?: string;
+  balance: number;
+};
+
+export type BudgetAllocation = {
+  id: string;
+  label: string;
+  amount: number;
+  memberId?: string;
+  category?: string;
+};
+
+export type SalaryPlan = {
+  periodStart: string;
+  nextPayday: string;
+  sourceIds: string[];
+  totalLimit: number;
+  weeklyLimit: number;
+  allocations: BudgetAllocation[];
+};
+
 export type FamilySettings = {
   familyName: string;
   memberName: string;
   familyCode: string;
+  members: FamilyMember[];
+  paymentSources: PaymentSource[];
+  customCategories: string[];
+  salaryPlan: SalaryPlan;
 };
 
 export type AppData = {
-  version: 3;
+  version: 5;
   transactions: Transaction[];
   debts: Debt[];
   savings: SavingsGoal[];
+  receipts: Receipt[];
   settings: FamilySettings;
 };
 
@@ -66,9 +111,10 @@ export const createFamilyCode = () => {
 };
 
 export const createEmptyAppData = (): AppData => ({
-  version: 3,
+  version: 5,
   transactions: [],
   debts: [],
   savings: [],
-  settings: { familyName: "Familia mea", memberName: "Eu", familyCode: createFamilyCode() },
+  receipts: [],
+  settings: { familyName: "Familia mea", memberName: "Eu", familyCode: createFamilyCode(), members: [{ id: "member-me", name: "Eu" }], paymentSources: [{ id: "source-debit", name: "Card debit", kind: "card", memberId: "member-me", balance: 0 }, { id: "source-cash", name: "Cash", kind: "cash", memberId: "member-me", balance: 0 }, { id: "source-meal", name: "Bonuri de masă", kind: "meal", memberId: "member-me", balance: 0 }, { id: "source-transfer", name: "Transfer", kind: "transfer", balance: 0 }], customCategories: [], salaryPlan: { periodStart: new Date().toISOString().slice(0, 10), nextPayday: "", sourceIds: [], totalLimit: 0, weeklyLimit: 0, allocations: [] } },
 });
