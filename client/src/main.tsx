@@ -11,5 +11,6 @@ import "./assistant-checkin.css";
 import "./receipt-mobile.css";
 import "./family-guide.css";
 import "./workbench-final.css";
+import "./dark-mobile-repair.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

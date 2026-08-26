@@ -13,7 +13,7 @@
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Scadențe recurente | Facturi, rate și contribuții rezervate până la salariu; apăsarea „Plătită” creează cheltuiala reală din sursa aleasă. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
-| Bonuri mobile | Maximum două fotografii comprimate local, OCR local la cerere și repartizarea unui bon pe mai multe categorii; liniile trebuie să egaleze totalul înainte de salvare. |
+| Bonuri mobile | Maximum două fotografii comprimate local, OCR local pentru produse și prețuri individuale, categorii sugerate și repartizare editabilă; liniile trebuie să egaleze totalul înainte de salvare. |
 | Asistent | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări. |
 | Aspect și control | Temă întunecată, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |

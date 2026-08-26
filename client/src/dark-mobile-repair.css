@@ -1,0 +1,20 @@
+/* Atelierul Financiar: dark mode trebuie să păstreze aceeași ierarhie de registru, fără carduri albe și texte estompate. */
+.dark .bf-more-grid button { color: #f2f8f3; border-color: #3d6253; background: linear-gradient(145deg, #1c4035, #16352c); box-shadow: inset 0 3px 0 #c99a2e; }
+.dark .bf-more-grid button:nth-child(3n + 2) { box-shadow: inset 0 3px 0 #6fa98d; }
+.dark .bf-more-grid button:nth-child(3n) { box-shadow: inset 0 3px 0 #d48771; }
+.dark .bf-more-grid button:hover { border-color: #82b19a; background: #21493d; }
+.dark .bf-more-grid b { color: #f4faf5; }
+.dark .bf-more-grid span { color: #bad0c2; }
+.dark .bf-more-grid svg { color: #f1c84e; }
+.dark .bf-more-tabs { scrollbar-color: #527363 transparent; }
+.dark .bf-more-tabs button { color: #c5d8cc; border-color: #3b6152; background: #17392f; }
+.dark .bf-more-tabs button.active { color: #fffdf6; border-color: #79ad92; background: #275546; }
+.dark .bf-page { color: #edf7ef; }
+.dark .bf-modal { color: #edf7ef; }
+.dark .bf-modal .bf-field label, .dark .bf-modal .bf-field { color: #c5d8cc; }
+.dark .bf-modal .bf-field input, .dark .bf-modal .bf-field textarea, .dark .bf-modal .bf-field select { color: #f3faf5; border-color: #486a5a; background: #102b23; }
+.bf-ocr-info { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; padding: 10px 11px; border: 1px solid #d7bd69; border-radius: 11px; color: #695012; background: #fff7d9; font-size: 11px; font-weight: 700; line-height: 1.45; }
+.bf-ocr-info svg { flex: 0 0 auto; margin-top: 1px; color: #a47714; }
+.dark .bf-ocr-info { border-color: #826a25; color: #f5df8c; background: #3b351d; }
+.dark .bf-ocr-info svg { color: #f2cd52; }
+@media (max-width: 760px) { .bf-page { padding-top: 28px; } .bf-topline { scroll-margin-top: 86px; } .dark .bf-more-grid { gap: 12px; } .dark .bf-more-grid button { min-height: 116px; } }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { allocationSpent, createEmptyAppData, isoToday, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
+import { parseReceiptItems } from "./receipt-utils";
 
 describe("registrul financiar Buget Familie", () => {
   it("interpretează sumele românești cu punct pentru mii și virgulă zecimală", () => {
@@ -59,5 +60,10 @@ describe("registrul financiar Buget Familie", () => {
     expect(merged.transactions.map((item) => item.id)).toEqual(["local"]);
     expect(merged.savings.map((item) => item.id)).toEqual(["goal"]);
     expect(merged.deleted).toHaveLength(1);
+  });
+
+  it("propune produse și prețuri individuale, fără totaluri sau plăți", () => {
+    const items = parseReceiptItems(["LAPTE 1.5% 7,49", "APA MINERALA 2 x 3,50 7,00", "DETergent 18,99", "TOTAL 33,48", "CARD 33,48"]);
+    expect(items).toEqual([{ label: "LAPTE 1.5%", amount: 7.49, category: "Alimente", raw: "LAPTE 1.5% 7,49" }, { label: "APA MINERALA", amount: 7, category: "Băuturi", raw: "APA MINERALA 2 x 3,50 7,00" }, { label: "DETergent", amount: 18.99, category: "Casă & facturi", raw: "DETergent 18,99" }]);
   });
 });

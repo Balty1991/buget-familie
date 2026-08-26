@@ -111,3 +111,10 @@
 - [x] Adaugă o sesiune familială conectată, cu actualizare automată prudentă și merge defensiv al modificărilor locale/remote.
 - [x] Păstrează tokenul GitHub doar în memorie și parola de criptare doar pe dispozitiv; explică aceste limite în interfață.
 - [x] Adaugă manual integrat pentru crearea repo-ului privat, conectarea telefoanelor, sincronizare, bonuri și utilizare zilnică.
+
+## OCR pe produse și temă întunecată
+
+- [x] Extrage local liniile de produse și prețurile din textul OCR, fără a accepta automat rezultate neverificate.
+- [x] Propune linii editabile pentru bon, cu produse, prețuri și categorii sugerate; păstrează validarea totalului înainte de salvare.
+- [x] Corectează contrastul textelor, suprafețelor și filelor în tema întunecată, inclusiv titlul de pe ecrane mobile.
+- [x] Validează manual fluxul de bon și ecranele întunecate pe mobil înainte de reconstruirea APK-ului.
