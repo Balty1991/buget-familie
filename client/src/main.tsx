@@ -6,5 +6,6 @@ import "./upgrade.css";
 import "./risk-state.css";
 import "./reports.css";
 import "./recurring.css";
+import "./atelier-stationery.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

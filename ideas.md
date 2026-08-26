@@ -64,3 +64,5 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Marca folosește explicit lectura **B/F** peste simbolul geometric de registru-acoperiș pentru a crește recunoașterea la dimensiuni mici.
 - Ecranele fără date păstrează limbajul atelierului: fișe de lucru, rigle vizibile și o bandă contextuală de decizie rămân prezente de la prima deschidere.
 - Banda contextuală din dreapta devine un ghid de pornire pentru un spațiu nou și folosește mierea pentru alocări/revizuire, iar coralul pentru atenție sau obligații.
+- Marca principală folosește monograma B/F din benzi de registru, nu simbolul generic de portofel sau bancă.
+- Etichetele de sumă diferențiază semantic planificarea, ieșirile de bani și atenția prin verde, miere și coral; culorile nu sunt folosite decorativ.
