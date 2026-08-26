@@ -1,49 +1,49 @@
 /**
- * Atelierul Financiar — pagină principală cu suprafețe de hârtie caldă, măsurători clare și colaborare discretă.
+ * Atelierul Financiar — banc de lucru financiar local, configurabil și portabil între dispozitive.
  */
-import { useEffect, useMemo, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Bell,
   Bot,
   Camera,
+  Check,
   ChevronRight,
   CircleDollarSign,
-  CreditCard,
-  FileText,
+  Download,
+  FileUp,
   Goal,
   Home as HomeIcon,
   LayoutDashboard,
-  MoreHorizontal,
+  Moon,
+  Pencil,
   PiggyBank,
   Plus,
   ReceiptText,
-  Search,
+  RotateCcw,
   Send,
   Settings,
   Sparkles,
-  TrendingDown,
+  Sun,
+  Trash2,
   UsersRound,
   WalletCards,
-  X,
 } from "lucide-react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useTheme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
-import { categoryBudgets, debts, expenseCategories, initialTransactions, weeklyTrend, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { categoryColors, createEmptyAppData, createFamilyCode, expenseCategories, type AppData, type Debt, type SavingsGoal, type Transaction, type TransactionKind } from "@/lib/finance-data";
 
-const logoUrl = "/manus-storage/buget-familie-logo_f5f9de00.png";
-const deskUrl = "/manus-storage/buget-familie-family-desk_416ad39d.jpg";
-const receiptUrl = "/manus-storage/buget-familie-receipt-capture_2fbc0af7.jpg";
-const savingsUrl = "/manus-storage/buget-familie-savings-goal_2dad940c.jpg";
+type View = "Panou" | "Mișcări" | "Plan săptămânal" | "Datorii" | "Economii" | "Bonuri" | "Asistent" | "Setări";
 
-type View = "Panou" | "Mișcări" | "Plan săptămânal" | "Datorii" | "Economii" | "Bonuri" | "Asistent";
-
-const navigation: { label: View; icon: typeof LayoutDashboard }[] = [
+const STORE_KEY = "buget-familie:app-data-v3";
+const money = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 });
+const exactMoney = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const navigation: { label: Exclude<View, "Setări">; icon: typeof LayoutDashboard }[] = [
   { label: "Panou", icon: LayoutDashboard },
   { label: "Mișcări", icon: WalletCards },
   { label: "Plan săptămânal", icon: Goal },
@@ -53,178 +53,112 @@ const navigation: { label: View; icon: typeof LayoutDashboard }[] = [
   { label: "Asistent", icon: Bot },
 ];
 
-const money = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 });
-const exactMoney = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const newId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+const todayLabel = () => new Intl.DateTimeFormat("ro-RO", { day: "2-digit", month: "short" }).format(new Date());
+const readNumber = (value: string) => Number(value.replace(",", "."));
 
-function Metric({ label, value, delta, tone = "forest", icon: Icon }: { label: string; value: string; delta: string; tone?: "forest" | "coral" | "honey"; icon: typeof WalletCards }) {
-  const toneStyles = {
-    forest: "bg-[#E4EEE9] text-[#143C36]",
-    coral: "bg-[#F9E4DE] text-[#A74B37]",
-    honey: "bg-[#FBF0D2] text-[#8B6214]",
-  };
-  return (
-    <section className="paper-card metric-card">
-      <div className={cn("metric-icon", toneStyles[tone])}><Icon size={18} strokeWidth={2.2} /></div>
-      <p className="eyebrow">{label}</p>
-      <p className="metric-value">{value}</p>
-      <p className={cn("metric-delta", tone === "coral" ? "text-[#A74B37]" : "text-[#527269]")}>{delta}</p>
-    </section>
-  );
+function BudgetRibbon({ spent, budget, color = "#143C36" }: { spent: number; budget: number; color?: string }) {
+  const percentage = budget > 0 ? Math.min(100, (spent / budget) * 100) : 0;
+  return <div className="ribbon-track" aria-label={`${Math.round(percentage)}% utilizat`}><div className="ribbon-fill" style={{ width: `${percentage}%`, backgroundColor: color }} /><span className="ribbon-notch" style={{ left: "25%" }} /><span className="ribbon-notch" style={{ left: "50%" }} /><span className="ribbon-notch" style={{ left: "75%" }} /></div>;
 }
 
-function BudgetRibbon({ spent, budget, color }: { spent: number; budget: number; color: string }) {
-  const percentage = Math.min(100, (spent / budget) * 100);
-  return (
-    <div className="ribbon-track" aria-label={`${Math.round(percentage)}% utilizat`}>
-      <div className="ribbon-fill" style={{ width: `${percentage}%`, backgroundColor: color }} />
-      <span className="ribbon-notch" style={{ left: "50%" }} />
-      <span className="ribbon-notch" style={{ left: "75%" }} />
-    </div>
-  );
+function Metric({ label, value, detail, tone = "forest", icon: Icon }: { label: string; value: string; detail: string; tone?: "forest" | "coral" | "honey"; icon: typeof WalletCards }) {
+  const tones = { forest: "bg-[#E4EEE9] text-[#143C36]", coral: "bg-[#F9E4DE] text-[#A74B37]", honey: "bg-[#FBF0D2] text-[#8B6214]" };
+  return <section className="paper-card metric-card"><div className={cn("metric-icon", tones[tone])}><Icon size={18} strokeWidth={2.2} /></div><p className="eyebrow">{label}</p><p className="metric-value">{value}</p><p className="metric-delta">{detail}</p></section>;
 }
 
-function QuickAdd({ onAdd }: { onAdd: (transaction: Transaction) => void }) {
-  const [kind, setKind] = useState<TransactionKind>("expense");
-  const [title, setTitle] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Alimente");
-  const [note, setNote] = useState("");
+function EmptyState({ icon: Icon, title, copy, action }: { icon: typeof PiggyBank; title: string; copy: string; action?: ReactElement }) {
+  return <section className="paper-card empty-state"><div className="empty-icon"><Icon size={23} /></div><h2>{title}</h2><p>{copy}</p>{action && <div className="empty-action">{action}</div>}</section>;
+}
+
+function TransactionDialog({ trigger, transaction, memberName, onSave }: { trigger: ReactElement; transaction?: Transaction; memberName: string; onSave: (item: Transaction) => void }) {
   const [open, setOpen] = useState(false);
-
-  const save = () => {
-    const numeric = Number(amount.replace(",", "."));
-    if (!title.trim() || Number.isNaN(numeric) || numeric <= 0) return;
-    onAdd({ id: `t-${Date.now()}`, title: title.trim(), amount: numeric, kind, category: kind === "income" ? "Venit" : category, source: "Card", person: "Tu", date: "Acum", note: note.trim() || undefined });
-    setTitle(""); setAmount(""); setNote(""); setOpen(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="quick-add"><Plus size={17} /> Adaugă mișcare</Button>
-      </DialogTrigger>
-      <DialogContent className="add-dialog">
-        <DialogHeader><DialogTitle>Înregistrează o mișcare</DialogTitle></DialogHeader>
-        <div className="kind-switch" role="group" aria-label="Tip mișcare">
-          <button onClick={() => setKind("expense")} className={cn(kind === "expense" && "is-active")}>Cheltuială</button>
-          <button onClick={() => setKind("income")} className={cn(kind === "income" && "is-active income")}>Venit</button>
-        </div>
-        <label className="field-label">Ce ai înregistrat?<Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="ex. Cumpărături la magazin" autoFocus /></label>
-        <label className="field-label">Sumă (lei)<Input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" /></label>
-        {kind === "expense" && <label className="field-label">Categorie<select value={category} onChange={(event) => setCategory(event.target.value)}>{expenseCategories.map((item) => <option key={item}>{item}</option>)}</select></label>}
-        <label className="field-label">Notiță opțională<Textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Cum ai plătit sau alte detalii" /></label>
-        <Button onClick={save} className="save-transaction"><Plus size={16} /> Salvează mișcarea</Button>
-      </DialogContent>
-    </Dialog>
-  );
+  const [kind, setKind] = useState<TransactionKind>(transaction?.kind ?? "expense");
+  const [title, setTitle] = useState(transaction?.title ?? "");
+  const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
+  const [category, setCategory] = useState(transaction?.category ?? "Alimente");
+  const [source, setSource] = useState(transaction?.source ?? "Card");
+  const [note, setNote] = useState(transaction?.note ?? "");
+  useEffect(() => { if (open) { setKind(transaction?.kind ?? "expense"); setTitle(transaction?.title ?? ""); setAmount(transaction ? String(transaction.amount) : ""); setCategory(transaction?.category ?? "Alimente"); setSource(transaction?.source ?? "Card"); setNote(transaction?.note ?? ""); } }, [open, transaction]);
+  const submit = () => { const numeric = readNumber(amount); if (!title.trim() || !Number.isFinite(numeric) || numeric <= 0) return; onSave({ id: transaction?.id ?? newId("tx"), title: title.trim(), amount: numeric, kind, category: kind === "income" ? "Venit" : category, source, person: transaction?.person || memberName || "Eu", date: transaction?.date || todayLabel(), note: note.trim() || undefined }); setOpen(false); };
+  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild>{trigger}</DialogTrigger><DialogContent className="add-dialog"><DialogHeader><DialogTitle>{transaction ? "Modifică mișcarea" : "Înregistrează o mișcare"}</DialogTitle></DialogHeader><div className="kind-switch"><button onClick={() => setKind("expense")} className={cn(kind === "expense" && "is-active")}>Cheltuială</button><button onClick={() => setKind("income")} className={cn(kind === "income" && "is-active income")}>Venit</button></div><label className="field-label">Denumire<Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="ex. Cumpărături la magazin" autoFocus /></label><div className="dialog-grid"><label className="field-label">Sumă (lei)<Input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" /></label><label className="field-label">Plată<select value={source} onChange={(event) => setSource(event.target.value)}><option>Card</option><option>Cash</option><option>Bonuri de masă</option><option>Transfer</option></select></label></div>{kind === "expense" && <label className="field-label">Categorie<select value={category} onChange={(event) => setCategory(event.target.value)}>{expenseCategories.map((item) => <option key={item}>{item}</option>)}</select></label>}<label className="field-label">Notiță opțională<Textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Detalii utile pentru familie" /></label><Button onClick={submit} className="save-transaction"><Check size={16} /> {transaction ? "Salvează modificarea" : "Salvează mișcarea"}</Button></DialogContent></Dialog>;
 }
 
-function AssistantCard() {
+function DebtDialog({ trigger, debt, onSave }: { trigger: ReactElement; debt?: Debt; onSave: (item: Debt) => void }) {
+  const [open, setOpen] = useState(false); const [name, setName] = useState(debt?.name ?? ""); const [remaining, setRemaining] = useState(debt ? String(debt.remaining) : ""); const [monthly, setMonthly] = useState(debt ? String(debt.monthly) : ""); const [due, setDue] = useState(debt?.due ?? "");
+  useEffect(() => { if (open) { setName(debt?.name ?? ""); setRemaining(debt ? String(debt.remaining) : ""); setMonthly(debt ? String(debt.monthly) : ""); setDue(debt?.due ?? ""); } }, [open, debt]);
+  const submit = () => { const remainingValue = readNumber(remaining); const monthlyValue = readNumber(monthly); if (!name.trim() || !Number.isFinite(remainingValue) || remainingValue < 0 || !Number.isFinite(monthlyValue) || monthlyValue < 0) return; onSave({ id: debt?.id ?? newId("debt"), name: name.trim(), remaining: remainingValue, monthly: monthlyValue, due: due.trim() || "Nespecificat", tone: debt?.tone ?? "forest" }); setOpen(false); };
+  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild>{trigger}</DialogTrigger><DialogContent className="add-dialog"><DialogHeader><DialogTitle>{debt ? "Modifică datoria" : "Adaugă datorie"}</DialogTitle></DialogHeader><label className="field-label">Denumire<Input value={name} onChange={(event) => setName(event.target.value)} placeholder="ex. Credit bancar" autoFocus /></label><div className="dialog-grid"><label className="field-label">Sold rămas (lei)<Input value={remaining} onChange={(event) => setRemaining(event.target.value)} inputMode="decimal" /></label><label className="field-label">Rată lunară (lei)<Input value={monthly} onChange={(event) => setMonthly(event.target.value)} inputMode="decimal" /></label></div><label className="field-label">Scadență / zi de plată<Input value={due} onChange={(event) => setDue(event.target.value)} placeholder="ex. 5 septembrie" /></label><Button onClick={submit} className="save-transaction"><Check size={16} /> Salvează datoria</Button></DialogContent></Dialog>;
+}
+
+function SavingsDialog({ trigger, goal, onSave }: { trigger: ReactElement; goal?: SavingsGoal; onSave: (item: SavingsGoal) => void }) {
+  const [open, setOpen] = useState(false); const [name, setName] = useState(goal?.name ?? ""); const [current, setCurrent] = useState(goal ? String(goal.current) : ""); const [target, setTarget] = useState(goal ? String(goal.target) : ""); const [due, setDue] = useState(goal?.due ?? "");
+  useEffect(() => { if (open) { setName(goal?.name ?? ""); setCurrent(goal ? String(goal.current) : ""); setTarget(goal ? String(goal.target) : ""); setDue(goal?.due ?? ""); } }, [open, goal]);
+  const submit = () => { const currentValue = readNumber(current); const targetValue = readNumber(target); if (!name.trim() || !Number.isFinite(currentValue) || currentValue < 0 || !Number.isFinite(targetValue) || targetValue <= 0) return; onSave({ id: goal?.id ?? newId("goal"), name: name.trim(), current: currentValue, target: targetValue, due: due.trim() || "Fără termen", tone: goal?.tone ?? "honey" }); setOpen(false); };
+  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild>{trigger}</DialogTrigger><DialogContent className="add-dialog"><DialogHeader><DialogTitle>{goal ? "Modifică obiectivul" : "Obiectiv de economisire"}</DialogTitle></DialogHeader><label className="field-label">Pentru ce economisiți?<Input value={name} onChange={(event) => setName(event.target.value)} placeholder="ex. Fond de siguranță" autoFocus /></label><div className="dialog-grid"><label className="field-label">Strâns până acum (lei)<Input value={current} onChange={(event) => setCurrent(event.target.value)} inputMode="decimal" /></label><label className="field-label">Țintă (lei)<Input value={target} onChange={(event) => setTarget(event.target.value)} inputMode="decimal" /></label></div><label className="field-label">Termen<Input value={due} onChange={(event) => setDue(event.target.value)} placeholder="ex. decembrie 2026" /></label><Button onClick={submit} className="save-transaction"><Check size={16} /> Salvează obiectivul</Button></DialogContent></Dialog>;
+}
+
+function AssistantCard({ data }: { data: AppData }) {
   const [question, setQuestion] = useState("");
-  const [response, setResponse] = useState("Săptămâna aceasta, cheltuielile pentru alimente sunt în grafic: ai folosit 70% din suma alocată și mai ai 358 lei pentru 5 zile.");
-  const answer = () => {
-    if (!question.trim()) return;
-    setResponse("Am notat întrebarea. Pentru a răspunde corect, asistentul folosește doar tranzacțiile familiei, intervalul selectat și bugetele alocate. În versiunea conectată, răspunsul va indica mereu datele pe care se bazează.");
-    setQuestion("");
-  };
-  return (
-    <section className="assistant-card">
-      <div className="assistant-orbit"><Sparkles size={17} /></div>
-      <div><p className="eyebrow text-[#DDEAE4]">ASISTENT DE FAMILIE</p><h2>O privire calmă înainte de următoarea decizie.</h2></div>
-      <p className="assistant-response">{response}</p>
-      <div className="assistant-input"><input value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => event.key === "Enter" && answer()} placeholder="Întreabă despre bani..." /><button aria-label="Trimite întrebare" onClick={answer}><Send size={16} /></button></div>
-      <p className="assistant-disclaimer">Orientare financiară, nu consultanță de investiții sau credit.</p>
-    </section>
-  );
+  const expenses = data.transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+  const income = data.transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
+  const [response, setResponse] = useState(data.transactions.length ? `Ai înregistrat ${money.format(income)} venituri și ${money.format(expenses)} cheltuieli. Completează bugetele săptămânale înainte de a lua o decizie importantă.` : "Începe printr-o mișcare, datorie sau economie. Apoi panoul îți va putea arăta tendințele familiei.");
+  const answer = () => { if (!question.trim()) return; setResponse("În versiunea GitHub Pages, asistentul explică doar situația pe baza datelor locale de pe acest dispozitiv. Pentru recomandări AI și răspunsuri între dispozitive este necesar un serviciu securizat separat."); setQuestion(""); };
+  return <section className="assistant-card"><div className="assistant-orbit"><Sparkles size={17} /></div><div><p className="eyebrow text-[#DDEAE4]">GHID LOCAL</p><h2>O privire calmă înainte de următoarea decizie.</h2></div><p className="assistant-response">{response}</p><div className="assistant-input"><input value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => event.key === "Enter" && answer()} placeholder="Întreabă despre datele locale..." /><button aria-label="Trimite întrebare" onClick={answer}><Send size={16} /></button></div><p className="assistant-disclaimer">Analiză locală, nu consultanță financiară sau de investiții.</p></section>;
 }
 
-function Dashboard({ transactions, onAdd }: { transactions: Transaction[]; onAdd: (transaction: Transaction) => void }) {
-  const income = useMemo(() => transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0), [transactions]);
-  const expenses = useMemo(() => transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0), [transactions]);
-  const balance = 18432 + income - expenses;
-  return (
-    <>
-      <header className="view-header">
-        <div><p className="eyebrow">26 AUGUST · MARȚI</p><h1>Bună dimineața, <em>familie.</em></h1><p className="header-subtitle">Aveți o imagine clară asupra banilor din această lună.</p></div>
-        <div className="header-actions"><button className="icon-button" aria-label="Caută"><Search size={18} /></button><button className="icon-button has-dot" aria-label="Notificări"><Bell size={18} /></button><QuickAdd onAdd={onAdd} /></div>
-      </header>
-      <div className="metrics-grid">
-        <Metric label="Disponibil acum" value={money.format(balance)} delta="După plățile programate" icon={WalletCards} />
-        <Metric label="Venituri august" value={money.format(income || 7360)} delta="2 surse de venit" tone="honey" icon={ArrowDownRight} />
-        <Metric label="Cheltuit august" value={money.format(expenses || 2984)} delta="40% din veniturile lunii" tone="coral" icon={ArrowUpRight} />
-        <Metric label="Economii alocate" value="1.200 lei" delta="75% din obiectivul lunii" icon={PiggyBank} />
-      </div>
-      <div className="dashboard-columns">
-        <div className="dashboard-main">
-          <section className="paper-card spending-card">
-            <div className="section-heading"><div><p className="eyebrow">RITMUL SĂPTĂMÂNII</p><h2>Cheltuieli zilnice</h2></div><span className="period-chip">18–24 aug.</span></div>
-            <div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={weeklyTrend} margin={{ top: 10, right: 4, left: -20, bottom: 0 }}><defs><linearGradient id="spendingArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#143C36" stopOpacity={0.22} /><stop offset="100%" stopColor="#143C36" stopOpacity={0.01} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#E8E3D8" strokeDasharray="2 5" /><XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#758078", fontSize: 12, fontWeight: 700 }} /><YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `${value}`} tick={{ fill: "#9A9E96", fontSize: 11 }} /><Tooltip formatter={(value: number) => [exactMoney.format(value), "Cheltuit"]} contentStyle={{ borderRadius: 14, border: "1px solid #E8E3D8", boxShadow: "0 10px 25px rgba(34, 46, 38, 0.08)" }} /><Area dataKey="amount" type="monotone" stroke="#143C36" strokeWidth={3} fill="url(#spendingArea)" /></AreaChart></ResponsiveContainer></div>
-            <div className="chart-insight"><TrendingDown size={16} /><span>Cu <strong>14% mai puțin</strong> decât în săptămâna precedentă.</span><button>Vezi explicația <ChevronRight size={15} /></button></div>
-          </section>
-          <section className="paper-card budget-card">
-            <div className="section-heading"><div><p className="eyebrow">PLICURILE LUNII</p><h2>Bugete pe categorii</h2></div><button className="text-button">Gestionează</button></div>
-            <div className="budget-list">{categoryBudgets.map((item) => <div className="budget-row" key={item.label}><div className="budget-label"><span className="category-dot" style={{ backgroundColor: item.color }} /><strong>{item.label}</strong></div><div className="budget-ribbon"><BudgetRibbon spent={item.spent} budget={item.budget} color={item.color} /><span>{money.format(item.spent)} <i>/ {money.format(item.budget)}</i></span></div></div>)}</div>
-          </section>
-        </div>
-        <aside className="dashboard-side">
-          <section className="cashflow-card"><div className="cashflow-grid" /><p className="eyebrow text-[#DDEAE4]">PÂNĂ LA URMĂTORUL SALARIU</p><p className="cashflow-value">1.876 <small>lei</small></p><p>Ai la dispoziție 18 zile. Rămâi în ritmul planului săptămânal.</p><div className="cashflow-footer"><span><span className="live-dot" /> În ritm</span><button>Planul lunii <ChevronRight size={14} /></button></div></section>
-          <AssistantCard />
-        </aside>
-      </div>
-      <section className="paper-card transactions-card">
-        <div className="section-heading"><div><p className="eyebrow">ULTIMELE MIȘCĂRI</p><h2>Ce s-a întâmplat recent</h2></div><button className="text-button">Toate mișcările <ChevronRight size={15} /></button></div>
-        <div className="transaction-list">{transactions.slice(0, 5).map((item) => <div className="transaction-row" key={item.id}><div className={cn("transaction-icon", item.kind === "income" ? "income" : "expense")}>{item.kind === "income" ? <ArrowDownRight size={17} /> : <ReceiptText size={17} />}</div><div className="transaction-name"><strong>{item.title}</strong><span>{item.category} · {item.person} · {item.date}</span>{item.note && <small>{item.note}</small>}</div><div className={cn("transaction-amount", item.kind === "income" && "income")}>{item.kind === "income" ? "+" : "−"}{exactMoney.format(item.amount)}</div><button className="row-more" aria-label={`Mai multe opțiuni pentru ${item.title}`}><MoreHorizontal size={18} /></button></div>)}</div>
-      </section>
-    </>
-  );
+function Dashboard({ data, onAdd, onGo }: { data: AppData; onAdd: (transaction: Transaction) => void; onGo: (view: View) => void }) {
+  const income = useMemo(() => data.transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0), [data.transactions]);
+  const expenses = useMemo(() => data.transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0), [data.transactions]);
+  const savings = useMemo(() => data.savings.reduce((sum, item) => sum + item.current, 0), [data.savings]);
+  const categories = useMemo(() => Object.entries(data.transactions.filter((item) => item.kind === "expense").reduce<Record<string, number>>((result, item) => ({ ...result, [item.category]: (result[item.category] || 0) + item.amount }), {})).map(([label, spent]) => ({ label, spent, color: categoryColors[label] || "#7C857F" })).slice(0, 4), [data.transactions]);
+  const chartData = useMemo(() => data.transactions.filter((item) => item.kind === "expense").slice(0, 7).reverse().map((item, index) => ({ day: index === 0 ? "Acum" : item.date.slice(0, 5), amount: item.amount })), [data.transactions]);
+  const empty = !data.transactions.length && !data.debts.length && !data.savings.length;
+  if (empty) return <section className="onboarding-page"><header className="view-header"><div><p className="eyebrow">SPAȚIU NOU · FIȘA 01</p><h1>Pune prima cifră <em>la locul ei.</em></h1><p className="header-subtitle">Datele tale încep goale. Adaugă doar ce este real pentru familia voastră.</p></div><TransactionDialog memberName={data.settings.memberName} onSave={onAdd} trigger={<Button className="quick-add"><Plus size={17} /> Prima mișcare</Button>} /></header><div className="onboarding-workbench"><div className="onboarding-center"><div className="onboarding-grid"><EmptyState icon={WalletCards} title="Înregistrează un venit sau o cheltuială" copy="Începe cu salariul, o factură sau o cheltuială de azi. Poți modifica sau șterge orice intrare ulterior." action={<TransactionDialog memberName={data.settings.memberName} onSave={onAdd} trigger={<Button className="outline-action"><Plus size={16} /> Adaugă mișcare</Button>} />} /><EmptyState icon={PiggyBank} title="Setează un obiectiv" copy="Economiile devin vizibile atunci când au un nume, o țintă și un termen." action={<Button className="outline-action" onClick={() => onGo("Economii")}>Creează obiectiv <ChevronRight size={16} /></Button>} /><EmptyState icon={Settings} title="Configurează familia" copy="Alege numele spațiului și codul necesar pentru a muta pachetul de date pe alt dispozitiv." action={<Button className="outline-action" onClick={() => onGo("Setări")}>Deschide setările <ChevronRight size={16} /></Button>} /></div><div className="onboarding-instrument"><span className="instrument-label">MĂSURĂ DE PORNIRE</span><BudgetRibbon spent={1} budget={3} color="#E6B84A" /><span><b>1 din 3</b> fișe recomandate pentru o primă imagine financiară.</span></div><p className="onboarding-note">Datele sunt păstrate numai în browserul actual până când le exporți manual din Setări.</p></div><aside className="onboarding-side"><section className="onboarding-context"><div className="assistant-orbit"><Sparkles size={17} /></div><p className="eyebrow text-[#DDEAE4]">ATELIERUL DE AZI</p><h2>Trei pași. O situație mai clară.</h2><p>Nu trebuie să introduci totul din prima zi. Începe cu ce contează acum.</p><div className="context-step"><span className="context-number honey">01</span><span>Înregistrează primul flux de bani</span></div><div className="context-step"><span className="context-number coral">02</span><span>Notează prima obligație sau economie</span></div><button onClick={() => onGo("Datorii")}>Deschide datoriile <ChevronRight size={15} /></button></section><section className="onboarding-code paper-card"><p className="eyebrow">ETICHETĂ DE FAMILIE</p><strong>{data.settings.familyCode}</strong><span>Folosește acest cod când imporți pachetul pe un alt dispozitiv.</span><button onClick={() => onGo("Setări")}>Pregătește transferul <ChevronRight size={15} /></button></section></aside></div></section>;
+  return <><header className="view-header"><div><p className="eyebrow">SITUAȚIA CURENTĂ</p><h1>Bună dimineața, <em>{data.settings.familyName}.</em></h1><p className="header-subtitle">Imaginea de ansamblu se actualizează pe măsură ce înregistrezi date reale.</p></div><div className="header-actions"><button className="icon-button settings-button" onClick={() => onGo("Setări")} aria-label="Setări"><Settings size={18} /></button><TransactionDialog memberName={data.settings.memberName} onSave={onAdd} trigger={<Button className="quick-add"><Plus size={17} /> Adaugă mișcare</Button>} /></div></header><div className="metrics-grid"><Metric label="Disponibil acum" value={money.format(income - expenses)} detail="Venituri minus cheltuieli" icon={WalletCards} /><Metric label="Venituri" value={money.format(income)} detail={`${data.transactions.filter((item) => item.kind === "income").length} intrări` } tone="honey" icon={ArrowDownRight} /><Metric label="Cheltuit" value={money.format(expenses)} detail={`${data.transactions.filter((item) => item.kind === "expense").length} intrări`} tone="coral" icon={ArrowUpRight} /><Metric label="Economii alocate" value={money.format(savings)} detail={`${data.savings.length} obiective active`} icon={PiggyBank} /></div><div className="dashboard-columns"><div className="dashboard-main"><section className="paper-card spending-card"><div className="section-heading"><div><p className="eyebrow">RITMUL RECENT</p><h2>Cheltuieli înregistrate</h2></div><span className="period-chip">datele tale</span></div>{chartData.length ? <div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={chartData} margin={{ top: 10, right: 4, left: -20, bottom: 0 }}><defs><linearGradient id="spendingArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#143C36" stopOpacity={0.22} /><stop offset="100%" stopColor="#143C36" stopOpacity={0.01} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#E8E3D8" strokeDasharray="2 5" /><XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#758078", fontSize: 12, fontWeight: 700 }} /><YAxis axisLine={false} tickLine={false} tick={{ fill: "#9A9E96", fontSize: 11 }} /><Tooltip formatter={(value: number) => [exactMoney.format(value), "Cheltuit"]} /><Area dataKey="amount" type="monotone" stroke="#143C36" strokeWidth={3} fill="url(#spendingArea)" /></AreaChart></ResponsiveContainer></div> : <div className="chart-empty">Nu există încă cheltuieli pentru grafic.</div>}<div className="chart-insight"><Sparkles size={16} /><span>Graficul folosește numai cheltuielile introduse de voi.</span><button onClick={() => onGo("Mișcări")}>Registru <ChevronRight size={15} /></button></div></section><section className="paper-card budget-card"><div className="section-heading"><div><p className="eyebrow">CATEGORII FOLOSITE</p><h2>Unde au mers banii</h2></div><button className="text-button" onClick={() => onGo("Mișcări")}>Gestionează</button></div>{categories.length ? <div className="budget-list">{categories.map((item) => <div className="budget-row" key={item.label}><div className="budget-label"><span className="category-dot" style={{ backgroundColor: item.color }} /><strong>{item.label}</strong></div><div className="budget-ribbon"><BudgetRibbon spent={item.spent} budget={Math.max(item.spent, expenses)} color={item.color} /><span>{money.format(item.spent)}</span></div></div>)}</div> : <p className="empty-copy">Introdu prima cheltuială pentru a vedea categoriile.</p>}</section></div><aside className="dashboard-side"><section className="cashflow-card"><div className="cashflow-grid" /><p className="eyebrow text-[#DDEAE4]">RĂMAS DUPĂ CHELTUIELI</p><p className="cashflow-value">{money.format(income - expenses).replace("RON", "")} <small>lei</small></p><p>Aceasta este diferența dintre veniturile și cheltuielile înregistrate local.</p><div className="cashflow-footer"><span><span className="live-dot" /> Date locale</span><button onClick={() => onGo("Setări")}>Transfer date <ChevronRight size={14} /></button></div></section><AssistantCard data={data} /></aside></div><section className="paper-card transactions-card"><div className="section-heading"><div><p className="eyebrow">ULTIMELE MIȘCĂRI</p><h2>Ce s-a întâmplat recent</h2></div><button className="text-button" onClick={() => onGo("Mișcări")}>Toate mișcările <ChevronRight size={15} /></button></div><div className="transaction-list">{data.transactions.slice(0, 5).map((item) => <div className="transaction-row" key={item.id}><div className={cn("transaction-icon", item.kind === "income" ? "income" : "expense")}>{item.kind === "income" ? <ArrowDownRight size={17} /> : <ReceiptText size={17} />}</div><div className="transaction-name"><strong>{item.title}</strong><span>{item.category} · {item.person} · {item.date}</span>{item.note && <small>{item.note}</small>}</div><div className={cn("transaction-amount", item.kind === "income" && "income")}>{item.kind === "income" ? "+" : "−"}{exactMoney.format(item.amount)}</div></div>)}</div></section></>;
 }
 
-function DebtView() {
-  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">OBLIGAȚII PLANIFICATE</p><h1>Datorii sub <em>control.</em></h1><p className="header-subtitle">O singură privire asupra ratelor, împrumuturilor și a banilor rămași de plătit.</p></div><Button className="quick-add"><Plus size={17} /> Adaugă datorie</Button></div><div className="debt-summary"><section><p>Total rămas</p><strong>180.643 lei</strong><span>3 angajamente active</span></section><section><p>Plăți în septembrie</p><strong>2.099 lei</strong><span>Următoarea: 5 septembrie</span></section><section className="debt-summary-accent"><p>Direcție recomandată</p><strong>Închide rata frigiderului</strong><span>Eliberezi 189 lei/lună după 7 plăți</span></section></div><div className="debt-list">{debts.map((debt) => <article key={debt.name} className="paper-card debt-item"><div className={cn("debt-marker", debt.tone)} /><div className="debt-title"><strong>{debt.name}</strong><span>Scadență: {debt.due}</span></div><div><p>Rată lunară</p><strong>{money.format(debt.monthly)}</strong></div><div><p>Sold rămas</p><strong>{money.format(debt.remaining)}</strong></div><div className="debt-progress"><div><span>Progres de plată</span><strong>{debt.progress}%</strong></div><BudgetRibbon spent={debt.progress} budget={100} color={debt.tone === "forest" ? "#143C36" : debt.tone === "honey" ? "#E6B84A" : "#C9674D"} /></div><button className="row-more" aria-label={`Detalii ${debt.name}`}><ChevronRight size={18} /></button></article>)}</div></section>;
+function DebtView({ debts, onSave, onDelete }: { debts: Debt[]; onSave: (item: Debt) => void; onDelete: (id: string) => void }) {
+  const total = debts.reduce((sum, item) => sum + item.remaining, 0); const monthly = debts.reduce((sum, item) => sum + item.monthly, 0);
+  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">OBLIGAȚII PLANIFICATE</p><h1>Datorii sub <em>control.</em></h1><p className="header-subtitle">Adaugă credite, rate și împrumuturi, apoi modifică sau șterge orice intrare.</p></div><DebtDialog onSave={onSave} trigger={<Button className="quick-add"><Plus size={17} /> Adaugă datorie</Button>} /></div>{debts.length ? <><div className="debt-summary"><section><p>Total rămas</p><strong>{money.format(total)}</strong><span>{debts.length} angajamente active</span></section><section><p>Plăți recurente</p><strong>{money.format(monthly)}</strong><span>Totalul ratelor lunare</span></section><section className="debt-summary-accent"><p>Următorul pas</p><strong>Revizuiește scadențele</strong><span>Actualizează ratele după fiecare plată</span></section></div><div className="debt-list">{debts.map((debt) => <article key={debt.id} className="paper-card debt-item"><div className={cn("debt-marker", debt.tone)} /><div className="debt-title"><strong>{debt.name}</strong><span>Scadență: {debt.due}</span></div><div><p>Rată lunară</p><strong>{money.format(debt.monthly)}</strong></div><div><p>Sold rămas</p><strong>{money.format(debt.remaining)}</strong></div><div className="debt-progress"><div><span>Rată față de sold</span><strong>{debt.remaining ? `${Math.min(100, Math.round((debt.monthly / debt.remaining) * 100))}%` : "Achitat"}</strong></div><BudgetRibbon spent={debt.monthly} budget={Math.max(debt.remaining, debt.monthly)} color={debt.tone === "forest" ? "#143C36" : debt.tone === "honey" ? "#E6B84A" : "#C9674D"} /></div><div className="inline-actions"><DebtDialog debt={debt} onSave={onSave} trigger={<button aria-label={`Modifică ${debt.name}`}><Pencil size={16} /></button>} /><button className="delete-button" aria-label={`Șterge ${debt.name}`} onClick={() => window.confirm(`Ștergi datoria „${debt.name}”?`) && onDelete(debt.id)}><Trash2 size={16} /></button></div></article>)}</div></> : <EmptyState icon={CircleDollarSign} title="Nicio datorie înregistrată" copy="Dacă aveți credit, rate sau bani împrumutați, adaugă-i aici pentru a-i ține sub control." action={<DebtDialog onSave={onSave} trigger={<Button className="outline-action"><Plus size={16} /> Prima datorie</Button>} />} />}</section>;
 }
 
-function SavingsView() {
-  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">OBIECTIVE COMUNE</p><h1>Economiile au <em>un loc.</em></h1><p className="header-subtitle">Alocă bani cu un motiv concret și urmărește progresul împreună.</p></div><Button className="quick-add"><Plus size={17} /> Obiectiv nou</Button></div><div className="savings-layout"><article className="savings-feature"><img src={savingsUrl} alt="Obiect de ceramică în formă de casă, simbolizând economiile familiei" /><div className="savings-copy"><p className="eyebrow">FOND DE SIGURANȚĂ</p><h2>O lună fără grabă.</h2><p>Ai pus deoparte 7.500 lei. Mai lipsesc 2.500 lei pentru a acoperi o lună de cheltuieli esențiale.</p><BudgetRibbon spent={7500} budget={10000} color="#E6B84A" /><div><strong>7.500 lei</strong><span> din 10.000 lei</span></div><button>Vezi planul obiectivului <ChevronRight size={16} /></button></div></article><aside className="savings-side"><section className="paper-card small-goal"><div className="goal-icon"><HomeIcon size={19} /></div><p>Vacanță de iarnă</p><strong>2.100 lei</strong><BudgetRibbon spent={2100} budget={4000} color="#143C36" /><span>53% · țintă decembrie</span></section><section className="paper-card small-goal"><div className="goal-icon coral"><Settings size={19} /></div><p>Reparații casă</p><strong>950 lei</strong><BudgetRibbon spent={950} budget={1500} color="#C9674D" /><span>63% · țintă octombrie</span></section></aside></div></section>;
+function SavingsView({ savings, onSave, onDelete }: { savings: SavingsGoal[]; onSave: (item: SavingsGoal) => void; onDelete: (id: string) => void }) {
+  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">OBIECTIVE COMUNE</p><h1>Economiile au <em>un loc.</em></h1><p className="header-subtitle">Stabilește obiective reale, actualizează progresul și șterge ce nu mai este relevant.</p></div><SavingsDialog onSave={onSave} trigger={<Button className="quick-add"><Plus size={17} /> Obiectiv nou</Button>} /></div>{savings.length ? <div className="goals-grid">{savings.map((goal, index) => <article className={cn("goal-card", index === 0 && "goal-card-featured")} key={goal.id}><div className="goal-card-top"><div className={cn("goal-icon", goal.tone === "coral" && "coral")}><PiggyBank size={19} /></div><div className="inline-actions"><SavingsDialog goal={goal} onSave={onSave} trigger={<button aria-label={`Modifică ${goal.name}`}><Pencil size={16} /></button>} /><button className="delete-button" aria-label={`Șterge ${goal.name}`} onClick={() => window.confirm(`Ștergi obiectivul „${goal.name}”?`) && onDelete(goal.id)}><Trash2 size={16} /></button></div></div><p className="eyebrow">{goal.due}</p><h2>{goal.name}</h2><p className="goal-copy">Ai pus deoparte {money.format(goal.current)}. Mai lipsesc {money.format(Math.max(0, goal.target - goal.current))} până la țintă.</p><BudgetRibbon spent={goal.current} budget={goal.target} color={goal.tone === "forest" ? "#143C36" : goal.tone === "coral" ? "#C9674D" : "#E6B84A"} /><div className="goal-total"><strong>{money.format(goal.current)}</strong><span> din {money.format(goal.target)}</span></div></article>)}</div> : <EmptyState icon={PiggyBank} title="Niciun obiectiv de economisire" copy="Începe cu un fond de siguranță, o vacanță sau orice plan important pentru familie." action={<SavingsDialog onSave={onSave} trigger={<Button className="outline-action"><Plus size={16} /> Creează obiectiv</Button>} />} />}</section>;
 }
 
-function ReceiptsView() {
-  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">BONURI ȘI PRODUSE</p><h1>Vezi ce ai <em>cumpărat.</em></h1><p className="header-subtitle">Fotografia bonului păstrează contextul. Categoriile explică unde s-au dus banii.</p></div><Button className="quick-add"><Camera size={17} /> Scanează bon</Button></div><div className="receipt-layout"><article className="receipt-feature"><img src={receiptUrl} alt="Bon de cumpărături fotografiat pentru înregistrare" /><div><p className="eyebrow">FLUX SIMPLU</p><h2>Fotografie. Verificare. Claritate.</h2><p>În versiunea conectată, bonul intră într-o zonă privată, iar informațiile extrase sunt confirmate înainte să actualizeze bugetul.</p><div className="receipt-steps"><span>1. Fotografie</span><ChevronRight size={14} /><span>2. Verificare</span><ChevronRight size={14} /><span>3. Categorii</span></div></div></article><article className="paper-card product-breakdown"><div className="section-heading"><div><p className="eyebrow">LIDL · ASTĂZI</p><h2>186,42 lei</h2></div><span className="verified-tag">Verificat</span></div><div className="product-row"><span className="product-dot food" />Alimente <strong>128,12 lei</strong></div><div className="product-row"><span className="product-dot water" />Apă <strong>12,90 lei</strong></div><div className="product-row"><span className="product-dot treats" />Dulciuri <strong>21,40 lei</strong></div><div className="product-row"><span className="product-dot drinks" />Băuturi <strong>24,00 lei</strong></div><button className="text-button">Deschide bonul <ChevronRight size={15} /></button></article></div></section>;
+function MovementsView({ transactions, memberName, onSave, onDelete }: { transactions: Transaction[]; memberName: string; onSave: (item: Transaction) => void; onDelete: (id: string) => void }) {
+  const [filter, setFilter] = useState<"all" | TransactionKind>("all"); const listed = filter === "all" ? transactions : transactions.filter((item) => item.kind === filter);
+  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">REGISTRU DE FAMILIE</p><h1>Fiecare leu, <em>cu context.</em></h1><p className="header-subtitle">Corectează, modifică sau șterge orice mișcare introdusă greșit.</p></div><TransactionDialog memberName={memberName} onSave={onSave} trigger={<Button className="quick-add"><Plus size={17} /> Adaugă mișcare</Button>} /></div><div className="filter-pills"><button onClick={() => setFilter("all")} className={cn(filter === "all" && "is-selected")}>Toate</button><button onClick={() => setFilter("expense")} className={cn(filter === "expense" && "is-selected")}>Cheltuieli</button><button onClick={() => setFilter("income")} className={cn(filter === "income" && "is-selected")}>Venituri</button></div>{listed.length ? <section className="paper-card ledger-table"><div className="ledger-head"><span>MIȘCARE</span><span>CATEGORIE</span><span>INTRODUS DE</span><span>SUMĂ</span><span /></div>{listed.map((item) => <div className="ledger-row" key={item.id}><div><span className={cn("ledger-icon", item.kind)}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}</span><strong>{item.title}</strong><small>{item.date}</small></div><span className="ledger-category">{item.category}</span><span>{item.person}</span><strong className={item.kind === "income" ? "income-value" : "expense-value"}>{item.kind === "income" ? "+" : "−"}{exactMoney.format(item.amount)}</strong><div className="inline-actions"><TransactionDialog transaction={item} memberName={memberName} onSave={onSave} trigger={<button aria-label={`Modifică ${item.title}`}><Pencil size={16} /></button>} /><button className="delete-button" aria-label={`Șterge ${item.title}`} onClick={() => window.confirm(`Ștergi mișcarea „${item.title}”?`) && onDelete(item.id)}><Trash2 size={16} /></button></div></div>)}</section> : <EmptyState icon={WalletCards} title="Nicio mișcare în acest filtru" copy="Poți crea o intrare nouă sau poți alege alt filtru." action={<TransactionDialog memberName={memberName} onSave={onSave} trigger={<Button className="outline-action"><Plus size={16} /> Adaugă mișcare</Button>} />} />}</section>;
 }
 
-function MovementsView({ transactions }: { transactions: Transaction[] }) {
-  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">REGISTRU DE FAMILIE</p><h1>Fiecare leu, <em>cu context.</em></h1><p className="header-subtitle">Toate veniturile și cheltuielile, ordonate în locul în care le puteți discuta împreună.</p></div><div className="filter-pills"><button className="is-selected">Toate</button><button>Cheltuieli</button><button>Venituri</button></div></div><section className="paper-card ledger-table"><div className="ledger-head"><span>MIȘCARE</span><span>CATEGORIE</span><span>INTRODUS DE</span><span>SUMĂ</span></div>{transactions.map((item) => <div className="ledger-row" key={item.id}><div><span className={cn("ledger-icon", item.kind)}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}</span><strong>{item.title}</strong><small>{item.date}</small></div><span className="ledger-category">{item.category}</span><span>{item.person}</span><strong className={item.kind === "income" ? "income-value" : "expense-value"}>{item.kind === "income" ? "+" : "−"}{exactMoney.format(item.amount)}</strong></div>)}</section></section>;
+function WeeklyPlanView({ data, onGo }: { data: AppData; onGo: (view: View) => void }) {
+  const income = data.transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expenses = data.transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const available = income - expenses;
+  const groups = Object.entries(data.transactions.filter((item) => item.kind === "expense").reduce<Record<string, number>>((result, item) => ({ ...result, [item.category]: (result[item.category] || 0) + item.amount }), {}));
+  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">PLANUL SĂPTĂMÂNAL</p><h1>Săptămâna are <em>o limită.</em></h1><p className="header-subtitle">Planul folosește exclusiv veniturile și cheltuielile introduse de voi.</p></div></div><div className="weekly-plan"><section className="week-allowance"><p className="eyebrow text-[#DDEAE4]">SUMĂ RĂMASĂ DUPĂ CHELTUIELI</p><strong>{money.format(available)}</strong><p>Diferența dintre toate veniturile și cheltuielile din registrul local. Adaugă date pentru o repartizare mai utilă.</p><button onClick={() => onGo("Mișcări")}>Vezi registrul <ChevronRight size={15} /></button></section><section className="paper-card allocation-board"><div className="section-heading"><div><p className="eyebrow">REPARTIZARE ACTUALĂ</p><h2>Folosește suma cu intenție</h2></div><span className="hand-note">local</span></div>{groups.length ? groups.map(([name, value]) => <div className="allocation-row" key={name}><span>{name}</span><BudgetRibbon spent={value} budget={Math.max(expenses, value)} color={categoryColors[name] || "#143C36"} /><strong>{money.format(value)}</strong></div>) : <p className="empty-copy">Nu există încă cheltuieli de repartizat pe categorii.</p>}</section></div></section>;
 }
 
-function WeeklyPlanView() {
-  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">PLANUL SĂPTĂMÂNAL</p><h1>Săptămâna are <em>o limită.</em></h1><p className="header-subtitle">Împarte banii rămași până la salariu în pași ușor de urmărit.</p></div><span className="period-chip large">26 aug. – 1 sept.</span></div><div className="weekly-plan"><section className="week-allowance"><p className="eyebrow text-[#DDEAE4]">SUMĂ DISPONIBILĂ SĂPTĂMÂNA ACEASTA</p><strong>738 lei</strong><p>După facturi, rate și economii, aceasta este suma pe care o puteți distribui pentru cheltuieli flexibile.</p><button>Recalculează planul <ChevronRight size={15} /></button></section><section className="paper-card allocation-board"><div className="section-heading"><div><p className="eyebrow">REPARTIZARE</p><h2>Folosește suma cu intenție</h2></div><span className="hand-note">astăzi</span></div>{[{ name: "Alimente", value: 420, share: "57%" }, { name: "Transport", value: 110, share: "15%" }, { name: "Timp liber", value: 120, share: "16%" }, { name: "Rezervă", value: 88, share: "12%" }].map((item) => <div className="allocation-row" key={item.name}><span>{item.name}</span><BudgetRibbon spent={Number(item.share.replace("%", ""))} budget={100} color="#143C36" /><strong>{money.format(item.value)}</strong><small>{item.share}</small></div>)}</section></div></section>;
-}
+function ReceiptsView() { return <section className="content-page"><div className="view-header"><div><p className="eyebrow">BONURI ȘI PRODUSE</p><h1>Vezi ce ai <em>cumpărat.</em></h1><p className="header-subtitle">GitHub Pages păstrează aici doar interfața; fotografiile bonurilor necesită spațiu privat pentru fișiere.</p></div><Button className="quick-add" onClick={() => window.alert("Captura bonurilor va fi activată când aplicația are spațiu privat pentru fișiere. Până atunci, adaugă cheltuiala și nota ei din Mișcări.")}><Camera size={17} /> Despre bonuri</Button></div><section className="receipt-local-card"><div className="receipt-glyph"><ReceiptText size={34} /></div><div><p className="eyebrow">PĂSTRAT LOCAL</p><h2>Cheltuielile rămân clare și fără fotografie.</h2><p>Folosește câmpul de notițe dintr-o mișcare pentru produsele sau detaliile importante ale unui bon.</p><button onClick={() => window.alert("Introdu cheltuiala din Mișcări și adaugă detaliile bonului în câmpul de notițe.")}>Cum notezi un bon <ChevronRight size={16} /></button></div></section></section>; }
 
-function AssistantView() {
-  return <section className="content-page"><div className="view-header"><div><p className="eyebrow">GHID DE FAMILIE</p><h1>Întrebări bune. <em>Date clare.</em></h1><p className="header-subtitle">Asistentul rezumă ceea ce se întâmplă în buget și arată de unde vine fiecare concluzie.</p></div></div><div className="assistant-page"><AssistantCard /><section className="paper-card suggestion-board"><p className="eyebrow">ÎNTREBĂRI UTILE</p><h2>Pornește de aici</h2>{["Unde am depășit planul săptămâna aceasta?", "Ce plăți mari urmează în septembrie?", "Cât putem aloca vacanței după rate?", "Arată-mi diferența dintre alimente și timp liber."].map((item) => <button key={item}>{item}<ChevronRight size={16} /></button>)}</section></div></section>;
+function AssistantView({ data }: { data: AppData }) { return <section className="content-page"><div className="view-header"><div><p className="eyebrow">GHID DE FAMILIE</p><h1>Întrebări bune. <em>Date clare.</em></h1><p className="header-subtitle">Asistentul explică situația de pe acest dispozitiv, fără a trimite date financiare în altă parte.</p></div></div><div className="assistant-page"><AssistantCard data={data} /><section className="paper-card suggestion-board"><p className="eyebrow">ÎNTREBĂRI UTILE</p><h2>Pornește de aici</h2>{["Unde am cheltuit cel mai mult?", "Ce datorii trebuie revizuite?", "Cât este disponibil după cheltuieli?", "Ce obiective de economisire sunt active?"].map((item) => <button key={item}>{item}<ChevronRight size={16} /></button>)}</section></div></section>; }
+
+function SettingsView({ data, onChange, onReset }: { data: AppData; onChange: (data: AppData) => void; onReset: () => void }) {
+  const { theme, toggleTheme } = useTheme(); const inputRef = useRef<HTMLInputElement>(null); const [familyName, setFamilyName] = useState(data.settings.familyName); const [memberName, setMemberName] = useState(data.settings.memberName); const [familyCode, setFamilyCode] = useState(data.settings.familyCode); const [importCode, setImportCode] = useState(""); const [message, setMessage] = useState("");
+  useEffect(() => { setFamilyName(data.settings.familyName); setMemberName(data.settings.memberName); setFamilyCode(data.settings.familyCode); }, [data.settings]);
+  const saveSettings = () => { onChange({ ...data, settings: { familyName: familyName.trim() || "Familia mea", memberName: memberName.trim() || "Eu", familyCode: familyCode.trim().toUpperCase() || createFamilyCode() } }); setMessage("Setările familiei au fost salvate pe acest dispozitiv."); };
+  const exportData = () => { const packageData = { format: "Buget Familie", version: 1, exportedAt: new Date().toISOString(), familyCode: data.settings.familyCode, data }; const blob = new Blob([JSON.stringify(packageData, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `buget-familie-${data.settings.familyCode.toLowerCase()}.json`; link.click(); URL.revokeObjectURL(link.href); setMessage("Pachetul a fost descărcat. Trimite-l manual pe celălalt dispozitiv."); };
+  const importData = (file?: File) => { if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)); if (parsed?.format !== "Buget Familie" || !parsed?.data || !parsed?.familyCode) throw new Error("format"); if (importCode.trim().toUpperCase() !== String(parsed.familyCode).toUpperCase()) { setMessage("Codul de familie nu corespunde pachetului ales."); return; } onChange(parsed.data as AppData); setMessage("Datele au fost importate pe acest dispozitiv."); } catch { setMessage("Pachetul ales nu este valid."); } }; reader.readAsText(file); };
+  return <section className="content-page settings-page"><div className="view-header"><div><p className="eyebrow">CONTROLUL SPAȚIULUI</p><h1>Setări de <em>familie.</em></h1><p className="header-subtitle">Aici controlezi identitatea, tema, resetarea și transferul manual al datelor.</p></div></div><div className="settings-layout"><section className="paper-card settings-panel"><div className="section-heading"><div><p className="eyebrow">IDENTITATE</p><h2>Spațiul vostru local</h2></div><UsersRound size={19} /></div><label className="field-label">Numele familiei<Input value={familyName} onChange={(event) => setFamilyName(event.target.value)} placeholder="ex. Casa Popescu" /></label><label className="field-label">Numele tău<Input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label><label className="field-label">Cod de familie<Input value={familyCode} onChange={(event) => setFamilyCode(event.target.value.toUpperCase())} maxLength={12} /></label><div className="settings-actions"><Button className="save-transaction" onClick={saveSettings}><Check size={16} /> Salvează setările</Button><button className="text-button" onClick={() => setFamilyCode(createFamilyCode())}>Cod nou <RotateCcw size={15} /></button></div></section><section className="paper-card settings-panel"><div className="section-heading"><div><p className="eyebrow">ASPECT</p><h2>Lucrează confortabil</h2></div>{theme === "dark" ? <Moon size={19} /> : <Sun size={19} />}</div><div className="setting-row"><div><strong>Temă întunecată</strong><p>Reduce lumina puternică atunci când înregistrați seara.</p></div><button className={cn("theme-toggle", theme === "dark" && "is-dark")} onClick={toggleTheme} aria-label="Schimbă tema"><span>{theme === "dark" ? <Moon size={14} /> : <Sun size={14} />}</span></button></div><p className="settings-note">Preferința de temă se salvează separat pe fiecare dispozitiv.</p></section><section className="paper-card transfer-card"><div className="section-heading"><div><p className="eyebrow">MUTĂ DATELE</p><h2>Transfer manual între dispozitive</h2></div><Download size={19} /></div><p>GitHub Pages nu oferă sincronizare automată. Exportă pachetul, trimite-l personal și importă-l cu același cod de familie.</p><div className="transfer-steps"><span>1. Exportă</span><ChevronRight size={14} /><span>2. Trimite fișierul</span><ChevronRight size={14} /><span>3. Importă</span></div><div className="transfer-actions"><Button className="quick-add" onClick={exportData}><Download size={16} /> Exportă pachetul</Button><label className="file-button"><FileUp size={16} /> Importă pachetul<input ref={inputRef} type="file" accept="application/json" onChange={(event) => importData(event.target.files?.[0])} /></label></div><label className="field-label import-code">Codul pachetului pe care îl imporți<Input value={importCode} onChange={(event) => setImportCode(event.target.value.toUpperCase())} placeholder="ex. AB12CD" maxLength={12} /></label></section><section className="paper-card settings-panel danger-panel"><div className="section-heading"><div><p className="eyebrow">RESETARE</p><h2>Începe de la zero</h2></div><RotateCcw size={19} /></div><p>Șterge toate mișcările, datoriile și economiile doar de pe acest dispozitiv. Această acțiune nu poate fi anulată.</p><Button variant="outline" className="reset-button" onClick={() => window.confirm("Ștergi toate datele locale ale familiei de pe acest dispozitiv?") && onReset()}><Trash2 size={16} /> Resetează datele locale</Button></section></div>{message && <div className="settings-message"><Check size={16} /> {message}</div>}</section>;
 }
 
 export default function Home() {
   const [activeView, setActiveView] = useState<View>("Panou");
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    try {
-      const stored = window.localStorage.getItem("buget-familie:transactions");
-      return stored ? JSON.parse(stored) as Transaction[] : initialTransactions;
-    } catch {
-      return initialTransactions;
-    }
-  });
-  useEffect(() => {
-    window.localStorage.setItem("buget-familie:transactions", JSON.stringify(transactions));
-  }, [transactions]);
-  const addTransaction = (transaction: Transaction) => setTransactions((items) => [transaction, ...items]);
-  const current = () => {
-    if (activeView === "Mișcări") return <MovementsView transactions={transactions} />;
-    if (activeView === "Plan săptămânal") return <WeeklyPlanView />;
-    if (activeView === "Datorii") return <DebtView />;
-    if (activeView === "Economii") return <SavingsView />;
-    if (activeView === "Bonuri") return <ReceiptsView />;
-    if (activeView === "Asistent") return <AssistantView />;
-    return <Dashboard transactions={transactions} onAdd={addTransaction} />;
-  };
-  return <div className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark"><img src={logoUrl} alt="Monogram geometric B/F pentru Buget Familie" /><span aria-hidden="true">B/F</span></div><div><strong>Buget</strong><span>Familie</span></div></div><div className="family-switcher"><div className="family-avatars"><span>A</span><span>M</span></div><div><strong>Casa Popescu</strong><small>2 membri activi</small></div><ChevronRight size={15} /></div><nav className="sidebar-nav" aria-label="Navigație principală">{navigation.map(({ label, icon: Icon }) => <button key={label} onClick={() => setActiveView(label)} className={cn(activeView === label && "active")}><Icon size={18} /><span>{label}</span>{label === "Asistent" && <Sparkles className="nav-sparkle" size={14} />}</button>)}</nav><div className="sidebar-footer"><button><UsersRound size={17} /> Membrii familiei</button><button><Settings size={17} /> Setări</button><div className="privacy-note"><span className="privacy-lock">⌁</span><p><strong>Datele rămân private.</strong><br />Spațiul familiei se sincronizează doar după conectare.</p></div></div></aside><main className="main-workspace">{current()}</main><div className="mobile-nav">{navigation.slice(0, 5).map(({ label, icon: Icon }) => <button key={label} onClick={() => setActiveView(label)} className={cn(activeView === label && "active")}><Icon size={18} /><span>{label.split(" ")[0]}</span></button>)}</div></div>;
+  const [data, setData] = useState<AppData>(() => { try { const stored = window.localStorage.getItem(STORE_KEY); if (!stored) return createEmptyAppData(); const parsed = JSON.parse(stored) as AppData; return parsed?.version === 3 && Array.isArray(parsed.transactions) && Array.isArray(parsed.debts) && Array.isArray(parsed.savings) && parsed.settings ? parsed : createEmptyAppData(); } catch { return createEmptyAppData(); } });
+  useEffect(() => { window.localStorage.setItem(STORE_KEY, JSON.stringify(data)); }, [data]);
+  const update = (fn: (current: AppData) => AppData) => setData((current) => fn(current));
+  const saveTransaction = (item: Transaction) => update((current) => ({ ...current, transactions: current.transactions.some((entry) => entry.id === item.id) ? current.transactions.map((entry) => entry.id === item.id ? item : entry) : [item, ...current.transactions] }));
+  const saveDebt = (item: Debt) => update((current) => ({ ...current, debts: current.debts.some((entry) => entry.id === item.id) ? current.debts.map((entry) => entry.id === item.id ? item : entry) : [item, ...current.debts] }));
+  const saveSavings = (item: SavingsGoal) => update((current) => ({ ...current, savings: current.savings.some((entry) => entry.id === item.id) ? current.savings.map((entry) => entry.id === item.id ? item : entry) : [item, ...current.savings] }));
+  const current = () => { if (activeView === "Mișcări") return <MovementsView transactions={data.transactions} memberName={data.settings.memberName} onSave={saveTransaction} onDelete={(id) => update((current) => ({ ...current, transactions: current.transactions.filter((item) => item.id !== id) }))} />; if (activeView === "Plan săptămânal") return <WeeklyPlanView data={data} onGo={setActiveView} />; if (activeView === "Datorii") return <DebtView debts={data.debts} onSave={saveDebt} onDelete={(id) => update((current) => ({ ...current, debts: current.debts.filter((item) => item.id !== id) }))} />; if (activeView === "Economii") return <SavingsView savings={data.savings} onSave={saveSavings} onDelete={(id) => update((current) => ({ ...current, savings: current.savings.filter((item) => item.id !== id) }))} />; if (activeView === "Bonuri") return <ReceiptsView />; if (activeView === "Asistent") return <AssistantView data={data} />; if (activeView === "Setări") return <SettingsView data={data} onChange={setData} onReset={() => { setData(createEmptyAppData()); setActiveView("Panou"); }} />; return <Dashboard data={data} onAdd={saveTransaction} onGo={setActiveView} />; };
+  return <div className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark" aria-label="Monogram B F"><span aria-hidden="true">B/F</span></div><div><strong>Buget</strong><span>Familie</span></div></div><button className="family-switcher" onClick={() => setActiveView("Setări")}><div className="family-avatars"><span>{data.settings.familyName.slice(0, 1).toUpperCase()}</span><span>{data.settings.memberName.slice(0, 1).toUpperCase()}</span></div><div><strong>{data.settings.familyName}</strong><small>spațiu local</small></div><ChevronRight size={15} /></button><nav className="sidebar-nav" aria-label="Navigație principală">{navigation.map(({ label, icon: Icon }) => <button key={label} onClick={() => setActiveView(label)} className={cn(activeView === label && "active")}><Icon size={18} /><span>{label}</span>{label === "Asistent" && <Sparkles className="nav-sparkle" size={14} />}</button>)}</nav><div className="sidebar-footer"><button onClick={() => setActiveView("Setări")} className={cn(activeView === "Setări" && "active")}><Settings size={17} /> Setări</button><div className="privacy-note"><span className="privacy-lock">⌁</span><p><strong>Date locale, sub control.</strong><br />Folosește export/import pentru transfer manual.</p></div></div></aside><main className="main-workspace">{current()}</main><div className="mobile-nav">{navigation.slice(0, 5).map(({ label, icon: Icon }) => <button key={label} onClick={() => setActiveView(label)} className={cn(activeView === label && "active")}><Icon size={18} /><span>{label.split(" ")[0]}</span></button>)}</div></div>;
 }

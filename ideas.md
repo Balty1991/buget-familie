@@ -62,3 +62,5 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Benzile de măsură devin forma implicită pentru progres, buget și intervale: includ marcaje săptămânale și praguri vizibile.
 - Suprafețele principale se comportă ca fișe de lucru premium, cu muchii tratate, etichete perforate și note cu urmă de creion; cardurile neutre primesc un detaliu funcțional din acest sistem.
 - Marca folosește explicit lectura **B/F** peste simbolul geometric de registru-acoperiș pentru a crește recunoașterea la dimensiuni mici.
+- Ecranele fără date păstrează limbajul atelierului: fișe de lucru, rigle vizibile și o bandă contextuală de decizie rămân prezente de la prima deschidere.
+- Banda contextuală din dreapta devine un ghid de pornire pentru un spațiu nou și folosește mierea pentru alocări/revizuire, iar coralul pentru atenție sau obligații.

@@ -1,20 +1,21 @@
 # Buget Familie
 
-**Buget Familie** este o aplicație PWA pentru administrarea colaborativă a banilor unei familii. Interfața include registru de venituri și cheltuieli, planificare săptămânală, datorii, obiective de economisire, bonuri de cumpărături și un spațiu pentru explicații ghidate de date.
+**Buget Familie** este o aplicație PWA pentru administrarea banilor unei familii, publicată exclusiv prin GitHub Pages. Interfața include registru de venituri și cheltuieli, planificare săptămânală, datorii, obiective de economisire, setări de familie și transfer local controlat între dispozitive.
 
 ## Ce este implementat acum
 
 | Domeniu | Disponibil în interfață |
 |---|---|
-| Panou financiar | Imagine curentă, venituri, cheltuieli, economii, trend zilnic și bugete pe categorii. |
-| Mișcări | Registru cu venituri și cheltuieli; adăugare rapidă și păstrare locală în browser pentru varianta statică. |
+| Panou financiar | Imagine curentă calculată exclusiv din datele reale adăugate de utilizator. |
+| Mișcări | Registru cu venituri și cheltuieli; adăugare, modificare și ștergere locală. |
 | Planificare | Suma disponibilă pentru săptămână și repartizare pe categorii. |
-| Datorii | Credite, rate de produse și împrumuturi între persoane într-o singură vedere. |
-| Economii | Obiective, progres și alocări dedicate. |
-| Bonuri | Flux UI pentru captură, verificare și categorii de produs. |
-| Asistent | Interfață de întrebări și explicații; răspunsurile sunt etichetate ca orientare, nu consultanță financiară. |
+| Datorii | Credite, rate și împrumuturi; adăugare, modificare și ștergere. |
+| Economii | Obiective, progres și alocări; adăugare, modificare și ștergere. |
+| Setări | Numele familiei, numele membrului, codul de familie, temă întunecată și resetare controlată. |
+| Transfer între dispozitive | Export JSON și import verificat prin codul familiei; transferul este manual, la alegerea utilizatorului. |
+| Bonuri și asistent | Interfețe locale de orientare; fotografiile și recomandările AI reale necesită stocare și procesare privată. |
 
-> **Notă privind datele:** versiunea din repo este un front-end demonstrativ. Mișcările adăugate sunt păstrate doar în browserul curent; datele implicite sunt fictive. Nu introduce date financiare reale înainte de conectarea backendului securizat.
+> **Notă privind datele:** aplicația începe fără date demo. Datele introduse se păstrează numai în browserul curent. Pentru al doilea dispozitiv, exportă pachetul din **Setări**, transmite fișierul printr-un canal de încredere și importă-l folosind codul familiei. Codul verifică pachetul; nu îl criptează.
 
 ## Rulare locală
 
@@ -32,19 +33,21 @@ pnpm build
 
 ## Publicare prin GitHub Pages
 
-Repo-ul va include un workflow GitHub Actions pentru build și publicare. GitHub Pages publică front-end static și nu poate găzdui un backend, o bază de date sau o procesare AI privată. Pentru sincronizarea reală între membri, autentificare, bonuri și procesare AI, folosiți un backend securizat cu control de acces la nivel de rând (de exemplu, Supabase).
+Repo-ul include un workflow GitHub Actions pentru build și publicare. GitHub Pages publică front-end static și nu poate găzdui un backend, o bază de date sau o procesare AI privată. Din acest motiv, versiunea curentă folosește transfer manual export/import, nu sincronizare automată în timp real.
 
 Datele financiare, bonurile și cheile secrete nu trebuie comise vreodată în repo sau incluse în artefactele Pages. GitHub avertizează că Pages este public și nu trebuie utilizat pentru tranzacții sensibile.[^pages]
 
-## Arhitectură recomandată pentru versiunea sincronizată
+## Limită importantă pentru sincronizare
 
 | Strat | Rol |
 |---|---|
-| GitHub Pages | PWA React, build automat și cod public. |
-| Autentificare | Identități separate pentru fiecare membru; invitații și reautentificare pentru acțiuni sensibile. |
-| Bază de date | Tranzacții, categorii, bugete, datorii, economii și jurnal de activitate, protejate cu politici row-level security. |
-| Stocare privată | Bonuri în bucket privat, accesibile doar cu URL-uri semnate, validate ca format și dimensiune. |
-| Funcții de analiză | OCR și asistent AI în backend; fiecare recomandare include intervalul și tranzacțiile folosite. |
+| Cerință | Posibil doar cu GitHub Pages | Necesită un serviciu privat |
+|---|---|---|
+| Date locale, CRUD, temă și export | Da | Nu |
+| Mutare controlată a pachetului între telefoane | Da, prin fișier și cod | Nu |
+| Sincronizare automată simultană | Nu | Da, cu autentificare și bază de date |
+| Fotografii private ale bonurilor | Nu | Da, cu stocare privată |
+| Asistent AI pe date reale | Nu | Da, cu procesare server-side |
 
 ## Principii de protecție
 
