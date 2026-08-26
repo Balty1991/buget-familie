@@ -3,6 +3,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#000000" android:pathData="M35,29L58,29C70,29 77,35 77,45C77,50 75,54 69,57C76,59 80,64 80,71C80,80 73,85 59,85L35,85ZM46,39L46,52L57,52C62,52 65,50 65,45.5C65,41 62,39 57,39ZM46,62L46,75L59,75C64,75 68,73 68,68.5C68,64 64,62 59,62Z"/>
-    <path android:fillColor="#000000" android:pathData="M31,73L31,62L48,45L48,55L40,63L40,73ZM31,77L47,77L47,85L31,85Z"/>
+    <!-- Casă cu traseu de progres, într-o singură culoare pentru Android themed icons. -->
+    <path android:fillColor="#000000" android:fillType="evenOdd" android:pathData="M23,51L54,25L85,51L85,85L23,85ZM35,53L35,75L73,75L73,53L54,37Z"/>
+    <path android:fillColor="#000000" android:strokeColor="#000000" android:strokeWidth="5.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M39,68L49,58L57,63L70,48"/>
 </vector>

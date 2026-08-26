@@ -185,3 +185,47 @@ export const planForecast = (data: AppData, asOf = isoToday()) => {
   const safeDaily = Math.max(0, (budget - scheduled - spentToDate) / remainingDays);
   return { budget, scheduled, spentToDate, elapsedDays, remainingDays, paceDaily, safeDaily, projectedExpenses, projectedRemaining };
 };
+
+export type NaturalSpendScenario = { raw: string; amount: number; category?: string; timing: "azi" | "mâine" | "viitor" | "nespecificat"; title: string; understood: boolean };
+export type SavingSuggestion = { id: string; tone: "good" | "watch" | "risk"; title: string; detail: string; potential?: number };
+
+const foldRomanian = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/**
+ * Interpretează local expresii românești scurte, fără un model extern. Rezultatul
+ * este doar o previzualizare de simulator; nu creează nicio tranzacție.
+ */
+export const parseNaturalSpendScenario = (raw: string, categories: string[] = expenseCategories): NaturalSpendScenario => {
+  const folded = foldRomanian(raw.trim());
+  const amountMatch = raw.match(/(?:^|\s)(\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)(?=\s*(?:lei|ron|leu|$))/i);
+  const amount = amountMatch ? parseRomanianAmount(amountMatch[1]) : 0;
+  const categoryAliases: Array<[RegExp, string]> = [
+    [/\b(taxi|uber|bolt|transport|metrou|benzina|parcare|bilet)\b/, "Transport"],
+    [/\b(mancare|restaurant|lunch|pranz|cina|cumparaturi|supermarket|lidl|kaufland)\b/, "Alimente"],
+    [/\b(apa|suc|cafea|ceai|bere)\b/, "Băuturi"],
+    [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
+    [/\b(factura|internet|curent|gaz|chirie|detergent|casa)\b/, "Casă & facturi"],
+    [/\b(medic|farmacie|doctor|sanatate)\b/, "Sănătate"],
+    [/\b(film|joc|iesire|concert|timp liber)\b/, "Timp liber"],
+    [/\b(rata|credit|imprumut)\b/, "Rate produse"],
+  ];
+  const category = categories.find((item) => folded.includes(foldRomanian(item))) || categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
+  const timing: NaturalSpendScenario["timing"] = /\bmaine\b/.test(folded) ? "mâine" : /\b(azi|astazi)\b/.test(folded) ? "azi" : /\b(saptamana viitoare|luna viitoare|vineri|sambata|duminica|luni|marti|miercuri|joi)\b/.test(folded) ? "viitor" : "nespecificat";
+  const title = category ? `cheltuială pentru ${category.toLocaleLowerCase("ro-RO")}` : "cheltuială propusă";
+  return { raw, amount, category, timing, title, understood: amount > 0 };
+};
+
+/** Sugestii observabile și calculate din registru; nu recomandă investiții și nu modifică datele. */
+export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSuggestion[] => {
+  const forecast = planForecast(data, asOf); const plan = data.settings.salaryPlan;
+  const spendingByCategory = Object.entries(data.transactions.filter((item) => item.kind === "expense" && item.date >= plan.periodStart && item.date <= asOf && inPlanPeriod(item.date, plan)).reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {})).sort((a, b) => b[1] - a[1]);
+  const suggestions: SavingSuggestion[] = [];
+  if (plan.nextPayday && forecast.projectedRemaining < 0) suggestions.push({ id: "pace", tone: "risk", title: "Ritmul actual depășește planul", detail: `Estimarea indică un minus de ${Math.round(Math.abs(forecast.projectedRemaining))} RON până la următorul venit. Orice reducere a cheltuielilor flexibile micșorează direct această diferență.`, potential: Math.abs(forecast.projectedRemaining) });
+  const top = spendingByCategory[0];
+  if (top && top[1] > 0) { const potential = Math.max(1, Math.round(top[1] * 0.1)); suggestions.push({ id: "category", tone: "watch", title: `Revizuiește ${top[0]}`, detail: `Aceasta este categoria principală în perioada curentă (${Math.round(top[1])} RON). O reducere orientativă de 10% ar păstra aproximativ ${potential} RON, fără să modifice nimic automat.`, potential }); }
+  if (forecast.scheduled > 0) suggestions.push({ id: "reserve", tone: "watch", title: "Păstrează rezerva pentru scadențe", detail: `${Math.round(forecast.scheduled)} RON sunt deja rezervați pentru plăți recurente din acest plan. Tratează suma ca indisponibilă înainte de a face o cheltuială nouă.`, potential: forecast.scheduled });
+  const goal = data.savings.find((item) => item.target > item.current);
+  if (goal && forecast.projectedRemaining > 0) suggestions.push({ id: "goal", tone: "good", title: `Protejează obiectivul „${goal.name}”`, detail: `Planul proiectează o marjă de ${Math.round(forecast.projectedRemaining)} RON. Poți compara această marjă cu deficitul obiectivului, fără ca aplicația să mute bani automat.`, potential: Math.min(forecast.projectedRemaining, goal.target - goal.current) });
+  if (!suggestions.length) suggestions.push({ id: "history", tone: "good", title: "Construiește un ritm observabil", detail: "Înregistrează câteva cheltuieli și stabilește data următorului venit. Simulatorul va putea compara ritmul real cu limita planului." });
+  return suggestions.slice(0, 3);
+};

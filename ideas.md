@@ -69,3 +69,6 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Pe mobil, suma disponibilă și următoarea decizie familială domină înaintea pulsului și a registrului; butonul de înregistrare rămâne vizibil, dar nu concurează cu planul.
 - Fiecare suprafață majoră are un artefact funcțional de atelier: prag de decizie, bandă cu riglă, fișă liniată sau etichetă perforată; nu folosim carduri financiare generice fără rol de lucru.
 - Check-inul familiei este tratat ca o bandă de decizie, cu miere pentru revizuire/alocare și coral numai pentru atenție sau obligații.
+- Marcajele de măsură apar numai când indică suma consumată, un prag, un interval sau progresul; nu rămân ca decorație independentă.
+- Bara principală exprimă consumul planului ca procent și prag coral la 75%, iar pasul următor rămâne legat direct de această măsură.
+- Semnul de aplicație combină traseul de progres cu o insignă geometrică B/F, păstrând atât lectura semantică, cât și recunoașterea de brand la dimensiuni mici.

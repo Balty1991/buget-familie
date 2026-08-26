@@ -15,5 +15,8 @@ import "./dark-mobile-repair.css";
 import "./advisor-studio.css";
 import "./advisor-dark-fix.css";
 import "./atelier-review-pass.css";
+import "./personal-dashboard.css";
+import "./smart-scenario.css";
+import "./atelier-semantic-pass.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

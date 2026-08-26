@@ -126,3 +126,25 @@
 - [x] Extinde asistentul local cu răspunsuri structurate, recomandări proactive și acțiuni verificabile în registru.
 - [x] Rafinează suprafețele, ierarhia numerelor și stările de atenție pentru un aspect profesional consistent pe mobil.
 - [x] Documentează separat condițiile necesare pentru un model AI extern securizat, fără a promite transmiterea automată a datelor familiale.
+
+## Simulator conversațional și economisire explicabilă
+
+- [x] Definește expresiile românești acceptate pentru sumă, categorie și moment, fără a apela la un serviciu extern.
+- [x] Construiește parserul local pentru scenarii de tipul „Dacă plătesc 120 lei pe taxi mâine”.
+- [x] Generează sugestii de economisire din plan, ritm, categorii, rezerve și obiective reale.
+- [x] Integrează previzualizarea interpretării și recomandările în simulatorul mobil, fără scriere automată în registru.
+- [x] Adaugă teste pentru parser, simulare și mesajele explicabile, apoi publică versiunea validată.
+
+## Mod individual, redesign modern și performanță
+
+- [x] Înlocuiește mesajele de pornire strict familiale cu o voce neutră potrivită și pentru monitorizarea individuală.
+- [x] Clarifică în interfață faptul că membrii și sincronizarea sunt opționale, nu o condiție pentru folosire.
+- [x] Redesenază ecranul principal ca tablou de decizie modern, cu următoarea acțiune, ritm și detalii progresive.
+- [x] Reduce costul de încărcare inițială prin împărțirea componentelor grele și încărcarea la cerere.
+- [ ] Verifică pe mobil navigarea, tema întunecată și timpul de încărcare, apoi publică versiunea validată.
+
+## Identitate vizuală a aplicației
+
+- [x] Concepe o iconiță semnificativă care unește ideea de decizie financiară, progres și utilizare personală sau familială.
+- [x] Integrează simbolul actualizat în antetul web, favicon și resursele Android adaptive.
+- [ ] Verifică lizibilitatea iconiței la dimensiuni mici, în tema luminoasă și întunecată, apoi include-o în următorul APK.

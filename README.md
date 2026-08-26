@@ -1,6 +1,6 @@
 # Buget Familie
 
-**Buget Familie** este o aplicație PWA pentru administrarea banilor unei familii. Interfața este publicată prin GitHub Pages, iar sincronizarea protejată salvează doar un pachet financiar criptat într-un repo GitHub privat separat.
+**Buget Familie** este o aplicație PWA pentru administrarea banilor proprii sau ai unei gospodării. Interfața este publicată prin GitHub Pages, iar sincronizarea protejată, complet opțională, salvează doar un pachet financiar criptat într-un repo GitHub privat separat.
 
 ## Funcții implementate
 
@@ -8,15 +8,16 @@
 |---|---|
 | Panou financiar | Indicatori calculați din registrul real; o stare depășită este semnalată explicit, fără a fi mascată ca disponibil. |
 | Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are dată ISO, membru, sursă de plată și categorie. |
-| Membri și surse | Membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
+| Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Scadențe recurente | Facturi, rate și contribuții rezervate până la salariu; apăsarea „Plătită” creează cheltuiala reală din sursa aleasă. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
 | Bonuri mobile | Maximum două fotografii comprimate local, OCR local pentru produse și prețuri individuale, categorii sugerate și repartizare editabilă; liniile trebuie să egaleze totalul înainte de salvare. |
 | Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit și întrebări rapide. |
-| Simulare înainte de plată | Un scenariu editabil estimează marja până la venit pentru o cheltuială propusă, fără să creeze sau modifice vreo mișcare. |
-| Aspect și control | Temă întunecată persistentă, resetare controlată și export/import de rezervă. |
+| Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
+| Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
+| Aspect și control | Temă întunecată persistentă, simbol nou de cămin și traseu de progres, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
@@ -65,7 +66,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente, proiecția de ritm și merge-ul defensiv dintre două copii familiale.
+Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 
