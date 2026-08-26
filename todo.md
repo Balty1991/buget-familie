@@ -150,7 +150,7 @@
 - [x] Verifică lizibilitatea iconiței la dimensiuni mici, în tema luminoasă și întunecată, apoi include-o în următorul APK.
 - [x] Înlocuiește iconița anterioară cu un simbol 3D profesional fără text, disponibil direct în GitHub Pages.
 - [x] Elimină dependența care duce la iconiță lipsă în browser și aplică noul semn în antet, favicon și Android adaptive icon.
-- [ ] Validează încărcarea resursei în browserul mobil și în APK înainte de livrare.
+- [x] Validează încărcarea resursei în browserul mobil și în APK înainte de livrare.
 
 ## Cheltuieli recurente automate
 
@@ -158,7 +158,7 @@
 - [x] Creează tranzacția lunară la data scadentă, cu membru, sursă și categorie corecte.
 - [x] Blochează orice dublare, inclusiv după sincronizarea familială sau revenirea în aplicație.
 - [x] Adaugă un control clar pentru generarea automată și confirmarea rezultatului în jurnal.
-- [ ] Testează chiria și abonamentele la luni cu zile diferite, apoi publică versiunea validată.
+- [x] Testează chiria și abonamentele la luni cu zile diferite, apoi publică versiunea validată.
 
 ## Performanță și aspect premium extins
 
@@ -166,4 +166,4 @@
 - [x] Îmbunătățește primul ecran mobil cu o ierarhie mai clară, spațiere mai aerisită și semnale vizuale mai profesioniste.
 - [x] Optimizează încărcarea inițială prin separarea suplimentară a modulelor grele și prin eliminarea dependențelor vizuale fragile.
 - [x] Adaugă un rezumat de performanță în README cu ce s-a optimizat concret și ce rămâne de urmărit.
-- [ ] Validează publicarea GitHub Pages, APK-ul și aspectul pe mobil înainte de livrare.
+- [x] Validează publicarea GitHub Pages, APK-ul și aspectul pe mobil înainte de livrare.
