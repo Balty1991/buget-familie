@@ -1,0 +1,31 @@
+/* Atelierul Financiar — strat de rafinare: fișe, rigle, etichete perforate și note de creion. */
+@layer utilities {
+  .brand-mark { width: 42px; height: 42px; position: relative; display: grid; place-items: center; }
+  .brand-mark img { width: 42px; height: 42px; object-fit: contain; }
+  .brand-mark span { position: absolute; color: #143c36 !important; font-family: "Manrope", sans-serif !important; font-size: 8px !important; font-weight: 900; letter-spacing: -.13em; transform: translateY(1px); }
+  .brand > div:last-child > span { position: relative; width: max-content; }
+  .brand > div:last-child > span::after { content: ""; position: absolute; height: 2px; width: 22px; border-radius: 99px; background: #e6b84a; opacity: .7; left: 1px; bottom: -4px; transform: rotate(-2deg); }
+
+  .paper-card { border-radius: 8px 20px 12px 20px; position: relative; }
+  .paper-card::before { content: ""; position: absolute; z-index: 2; width: 18px; height: 18px; right: -1px; top: -1px; border-left: 1px solid #e9e3d7; border-bottom: 1px solid #e9e3d7; background: #f7f3ea; border-radius: 0 19px 0 10px; }
+  .metric-card::before { z-index: 3; }
+  .cashflow-card, .assistant-card { border-radius: 7px 19px 9px 19px; }
+
+  .budget-label { display: flex; gap: 8px; align-items: center; font-size: 10px; width: max-content; padding: 5px 8px 5px 6px; color: #39483f; background: #f3efe6; border: 1px solid #e2dbce; border-radius: 3px 8px 8px 3px; position: relative; }
+  .budget-label::before, .budget-label::after { content: ""; position: absolute; left: -3px; width: 5px; height: 5px; border-radius: 50%; background: #fffdfa; border: 1px solid #e2dbce; }
+  .budget-label::before { top: 3px; }.budget-label::after { bottom: 3px; }
+
+  .ribbon-track { height: 11px; border-radius: 3px; background-color: #edf0e9; background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(25% - 1px), rgba(20,60,54,.17) calc(25% - 1px), rgba(20,60,54,.17) 25%); overflow: hidden; position: relative; box-shadow: inset 0 1px 1px rgba(20,60,54,.05); }
+  .ribbon-track::after { content: ""; position: absolute; inset: 2px 0; background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(6.25% - 1px), rgba(255,255,255,.36) calc(6.25% - 1px), rgba(255,255,255,.36) 6.25%); pointer-events: none; }
+  .ribbon-fill { border-radius: 2px; }.ribbon-notch { top: 1px; bottom: 1px; z-index: 1; }
+
+  .cashflow-footer { padding-top: 20px; border-top: 0; position: relative; }
+  .cashflow-footer::before { content: ""; position: absolute; height: 10px; inset: 3px 0 auto; border-top: 1px solid rgba(255,255,255,.22); background-image: repeating-linear-gradient(90deg, transparent 0, transparent calc(25% - 1px), rgba(230,184,74,.75) calc(25% - 1px), rgba(230,184,74,.75) 25%); }
+
+  .assistant-response { position: relative; }
+  .assistant-response::after { content: ""; position: absolute; left: 2px; bottom: -5px; width: 148px; height: 5px; border-top: 2px solid rgba(230,184,74,.8); border-radius: 50%; transform: rotate(-1.5deg); }
+  .transaction-name small { margin-top: 4px; color: #a1754d; font-size: 8px; font-weight: 800; width: max-content; padding: 3px 6px; border: 1px solid #e7d8ba; background: #fff7e3; border-radius: 2px 7px 7px 2px; position: relative; }
+  .transaction-name small::before { content: ""; position: absolute; left: -3px; top: 50%; width: 5px; height: 5px; border-radius: 50%; background: #fffdfa; border: 1px solid #e7d8ba; transform: translateY(-50%); }
+
+  @media (max-width: 760px) { .paper-card { border-radius: 8px 16px 10px 16px; }.budget-label { font-size: 9px; }.transaction-name small { display: none; } }
+}
