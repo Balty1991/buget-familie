@@ -75,4 +75,4 @@
 - [x] Cercetează concurența mobilă și prioritizează funcții cu valoare practică pentru buget familial.
 - [x] Optimizează fluxurile zilnice pentru o singură mână, tastatura numerică și mod offline.
 - [x] Configurează proiectul pentru generare repetabilă a unui APK Android, fără a afecta publicarea GitHub Pages.
-- [ ] Validează aplicația pe viewport mobil, construiește APK-ul și publică versiunea actualizată.
+- [x] Validează aplicația pe viewport mobil, construiește APK-ul debug în GitHub Actions și publică versiunea actualizată pe GitHub Pages.
