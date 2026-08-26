@@ -55,7 +55,7 @@
 
 ## Validare înainte de publicare
 
-- [ ] Verifică planul calendaristic cu dată de salariu, limită totală, limită săptămânală și alocări pe membri/categorii.
-- [ ] Verifică în formularul de cheltuieli alegerea membrului și a sursei concrete de plată.
-- [ ] Verifică răspunsurile asistentului pentru întrebări scrise și întrebări rapide despre limită, cheltuieli și datorii.
-- [ ] Publică actualizările pe GitHub Pages și confirmă versiunea live de pe telefon.
+- [x] Verifică planul calendaristic cu dată de salariu, limită totală, limită săptămânală și alocări pe membri/categorii.
+- [x] Verifică în formularul de cheltuieli alegerea membrului și a sursei concrete de plată.
+- [x] Verifică răspunsurile asistentului pentru întrebări scrise și întrebări rapide despre limită, cheltuieli și datorii.
+- [x] Publică actualizările pe GitHub Pages și confirmă versiunea live de pe telefon.
