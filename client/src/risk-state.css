@@ -1,0 +1,4 @@
+/* Atelierul Financiar 2.0 — stare explicită pentru depășirea planului. */
+.bf-safe-card.risk { background: linear-gradient(135deg, #65392f, #9b4c3d); }
+.bf-safe-card.risk .bf-kicker { color: #ffe3b4; }
+.dark .bf-safe-card.risk { background: linear-gradient(135deg, #552f29, #823c33); }

@@ -17,7 +17,7 @@
 
 ## Transformare în produs funcțional
 
-- [ ] Leagă toate indicatorii panoului de datele utilizatorului, fără sume, date sau mesaje fixe.
+- [x] Leagă toți indicatorii panoului de datele utilizatorului, fără sume, date sau mesaje fixe.
 - [ ] Calculează planul săptămânal din venituri, cheltuieli, datorii și economii cu termene reale.
 - [x] Activează flux complet pentru bonuri locale, inclusiv atașare, previzualizare și categorisire manuală.
 - [x] Transformă asistentul în analiză deterministă, cu răspunsuri bazate pe datele locale și acțiuni utile.
@@ -36,7 +36,7 @@
 ## Extindere profesională
 
 - [x] Documentează funcțiile validate de planificare familială, alocare și analiză financiară explicabilă.
-- [ ] Adaugă indicatori anuali și lunari, plus alerte locale pentru depășiri de buget, scadențe și obiective.
+- [ ] Extinde alertele locale de la depășirea planului către scadențe și obiective; indicatorii anuali și lunari sunt implementați.
 - [x] Extinde asistentul cu întrebări bazate pe date, explicații ale calculelor și recomandări operaționale verificabile.
 - [ ] Proiectează un asistent AI securizat, fără expunerea datelor financiare sau a cheilor în GitHub Pages.
 
@@ -49,13 +49,22 @@
 
 ## Experiență modernă și accesibilă
 
-- [ ] Aplică un sistem coerent de contrast, focus vizibil, etichete accesibile și mesaje de eroare clare.
-- [ ] Optimizează controalele pentru ecrane mici, atingere cu o mână și introducere numerică rapidă.
-- [ ] Verifică toate fluxurile în tema luminoasă și întunecată, inclusiv dialoguri și tabele financiare.
+- [x] Aplică un sistem coerent de contrast, focus vizibil, etichete accesibile și mesaje de eroare clare.
+- [x] Optimizează controalele pentru ecrane mici, atingere cu o mână și introducere numerică rapidă.
+- [x] Verifică fluxurile principale în tema luminoasă și întunecată; testarea manuală a sincronizării necesită tokenul utilizatorului.
 
 ## Validare înainte de publicare
 
 - [x] Verifică planul calendaristic cu dată de salariu, limită totală, limită săptămânală și alocări pe membri/categorii.
 - [x] Verifică în formularul de cheltuieli alegerea membrului și a sursei concrete de plată.
 - [x] Verifică răspunsurile asistentului pentru întrebări scrise și întrebări rapide despre limită, cheltuieli și datorii.
-- [x] Publică actualizările pe GitHub Pages și confirmă versiunea live de pe telefon.
+- [ ] Publică actualizarea stabilizată pe GitHub Pages și confirmă versiunea live.
+
+## Audit și redesign major
+
+- [x] Auditează ecranele, formularele, calculele și stările goale pe desktop și mobil; păstrează concluziile în `docs/audit-2026-08-26.md`.
+- [x] Verifică persistența locală, calculul soldurilor, coerența planurilor și ștergerea bonurilor; sincronizarea remote rămâne de testat cu token real.
+- [x] Cercetează produse de buget familial, planificare pe intervale și practici mobile accesibile.
+- [x] Redefinește arhitectura informației și navigația mobilă pentru fluxuri zilnice rapide.
+- [x] Construiește un redesign mobil-first cu ierarhie mai clară, contrast, spațiere, feedback tactil și grafice utile.
+- [ ] Validează fiecare flux critic și publică versiunea stabilizată în GitHub Pages.

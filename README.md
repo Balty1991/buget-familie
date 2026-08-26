@@ -6,10 +6,11 @@
 
 | Domeniu | Funcție disponibilă |
 |---|---|
-| Panou financiar | Indicatori calculați din înregistrările reale ale familiei. |
-| Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are membru, sursă de plată și categorie. |
+| Panou financiar | Indicatori calculați din registrul real; o stare depășită este semnalată explicit, fără a fi mascată ca disponibil. |
+| Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are dată ISO, membru, sursă de plată și categorie. |
 | Membri și surse | Membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
+| Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
 | Bonuri | Bon manual cu magazin, valoare, categorie, produse și fotografie locală opțională; bonul creează automat cheltuiala asociată. |
 | Asistent | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări. |
@@ -17,6 +18,12 @@
 | Sincronizare privată | Pachet AES-GCM criptat local, încărcat manual într-un repo GitHub privat. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
+
+## Modelul de calcul v6
+
+Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișat pentru o sursă de plată este **soldul inițial plus venituri minus cheltuieli** atribuite acelei surse. Planul include numai cheltuielile cu dată din intervalul ales; alocările personale sau pe categorii sunt consumate din aceleași intrări, nu dintr-un total separat.
+
+> Soldul inițial reprezintă punctul de pornire introdus de familie. În versiunea actuală nu este un extras bancar reconciliat pe o dată istorică; de aceea, utilizați-l ca bază de pornire la configurare și actualizați-l atent după importuri vechi.
 
 ## Sincronizare GitHub protejată
 
@@ -51,6 +58,9 @@ pnpm install
 pnpm dev
 pnpm check
 pnpm build
+pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
+
+Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat și consumul alocărilor din perioada de plan.
 
 [^pages]: [GitHub Docs — GitHub Pages limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)
