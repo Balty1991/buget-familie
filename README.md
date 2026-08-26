@@ -10,6 +10,7 @@
 | Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are dată ISO, membru, sursă de plată și categorie. |
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la salariu | Data următorului venit, limită totală, limită săptămânală calculată, zile rămase și alocări pe membri sau categorii. |
+| Plicuri de categorie | O categorie precum Transport/Taxi poate avea un buget, o sursă de finanțare și un detaliu opțional; cheltuielile cu aceeași categorie și sursă consumă automat plicul și arată suma rămasă înainte de salvare. |
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
@@ -25,6 +26,8 @@
 ## Modelul de calcul v10
 
 Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișat pentru o sursă de plată este **soldul inițial plus venituri minus cheltuieli** atribuite acelei surse. Planul include numai cheltuielile cu dată din intervalul ales; alocările personale sau pe categorii sunt consumate din aceleași intrări, nu dintr-un total separat. O scadență recurentă activă se rezervă separat în plan până când este confirmată; confirmarea creează o singură cheltuială legată, pentru a evita dubla numărare.
+
+> Un **plic de categorie** nu mută bani într-un sold separat. El definește o limită verificabilă pe o categorie și, opțional, pe o sursă, de exemplu „Transport, 500 RON, Card debit”. La salvarea unei cheltuieli compatibile, aceeași intrare din registru scade atât soldul Cardului debit, cât și suma rămasă în plic.
 
 > **Prognoza nu schimbă bugetul.** Ea folosește cheltuielile deja înregistrate până azi, zilele rămase, limita planului și rezervele recurente pentru a arăta ritmul zilnic curent, ritmul sigur și suma proiectată până la următorul venit. Este o estimare explicabilă, nu o garanție și nu o recomandare de investiții.
 

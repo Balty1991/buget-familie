@@ -54,7 +54,7 @@ export type Receipt = {
 
 export type FamilyMember = { id: string; name: string; color?: string };
 export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei. */ openingBalance: number };
-export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string };
+export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string };
 export type SalaryPlan = { periodStart: string; nextPayday: string; sourceIds: string[]; totalLimit: number; weeklyLimit: number; allocations: BudgetAllocation[]; updatedAt?: string };
 export type FamilySettings = { familyName: string; memberName: string; familyCode: string; members: FamilyMember[]; paymentSources: PaymentSource[]; customCategories: string[]; salaryPlan: SalaryPlan };
 export type DeletedRecord = { entity: "transactions" | "debts" | "savings" | "receipts" | "recurring"; id: string; deletedAt: string };

@@ -174,3 +174,11 @@
 - [x] Rafinază suprafețele nocturne, stările de atenție și vizibilitatea monogramei B/F fără a pierde semantica culorilor.
 - [x] Confirmă persistența temei după reîncărcare și folosirea corectă a controlului de schimbare a temei.
 - [x] Verifică varianta mobilă în tema întunecată și publică versiunea validată.
+
+## Plicuri de categorie cu sursă
+
+- [x] Permite alegerea sursei de bani și a unui detaliu opțional la alocarea unei categorii, de exemplu Transport/Taxi.
+- [x] Migrează și păstrează sursa și nota plicului în datele financiare existente.
+- [x] Afișează în formularul de cheltuială plicul potrivit după alegerea categoriei și sursei.
+- [x] Consumă automat plicul prin tranzacțiile reale compatibile și explică suma rămasă sau depășirea.
+- [x] Adaugă teste pentru plicul cu sursă și verifică fluxul mobil înainte de publicare.

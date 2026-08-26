@@ -32,6 +32,16 @@ describe("registrul financiar Buget Familie", () => {
     expect(allocationSpent(data, { id: "a", label: "Taxi", amount: 200, category: "Taxi" })).toBe(100);
   });
 
+  it("consumă plicul de transport numai din sursa aleasă", () => {
+    const data = createEmptyAppData(); const [card, cash] = data.settings.paymentSources;
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.transactions = [
+      { id: "card-taxi", title: "Taxi card", amount: 120, kind: "expense", category: "Transport", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-08-04" },
+      { id: "cash-taxi", title: "Taxi cash", amount: 80, kind: "expense", category: "Transport", sourceId: cash.id, source: cash.name, memberId: "member-me", person: "Eu", date: "2026-08-05" },
+    ];
+    expect(allocationSpent(data, { id: "transport-card", label: "Transport", amount: 500, category: "Transport", sourceId: card.id, note: "Taxi până la venit" })).toBe(120);
+  });
+
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
     const migrated = normalizeAppData({ version: 5, transactions: [{ id: "legacy", title: "Bon", amount: 20, kind: "expense", category: "Alimente", source: "Bon", person: "Eu", date: "26 aug." }], settings: {} });
     expect(migrated.version).toBe(8);
