@@ -118,3 +118,11 @@
 - [x] Propune linii editabile pentru bon, cu produse, prețuri și categorii sugerate; păstrează validarea totalului înainte de salvare.
 - [x] Corectează contrastul textelor, suprafețelor și filelor în tema întunecată, inclusiv titlul de pe ecrane mobile.
 - [x] Validează manual fluxul de bon și ecranele întunecate pe mobil înainte de reconstruirea APK-ului.
+
+## Analitică profesională și asistent de decizie
+
+- [x] Cercetează funcțiile de diferențiere ale aplicațiilor de buget familial premium și asistenților financiari explicabili.
+- [x] Creează o hartă financiară de decizie: ritm de cheltuire, proiecție până la venit, presiunea scadențelor și progresul obiectivelor.
+- [x] Extinde asistentul local cu răspunsuri structurate, recomandări proactive și acțiuni verificabile în registru.
+- [x] Rafinează suprafețele, ierarhia numerelor și stările de atenție pentru un aspect profesional consistent pe mobil.
+- [x] Documentează separat condițiile necesare pentru un model AI extern securizat, fără a promite transmiterea automată a datelor familiale.

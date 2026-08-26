@@ -1,0 +1,3 @@
+/* Atelierul Financiar — corecție de contrast verificată manual pentru răspunsul asistentului în tema întunecată. */
+.dark .bf-advisor-answer{background:#102d27;color:#e3eee7}
+.dark .bf-advisor-answer>p:last-child{color:#e3eee7}

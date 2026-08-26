@@ -1,0 +1,23 @@
+/* Atelierul Financiar — ierarhie mobilă: decizia esențială, banda de familie, apoi registrul. */
+.bf-safe-card{border:1px solid rgba(20,60,54,.18);box-shadow:0 18px 32px rgba(20,60,54,.12)}
+.bf-safe-card::before{content:"DECIZIA ESENȚIALĂ";position:absolute;top:.85rem;right:1rem;color:rgba(255,255,255,.54);font:700 .58rem/1 Manrope,Arial,sans-serif;letter-spacing:.14em}
+.bf-safe-card.risk{border-color:rgba(206,97,75,.78);box-shadow:0 18px 32px rgba(164,72,53,.17)}
+.bf-safe-card.risk::before{color:#ffd2c7}
+.bf-family-checkin{position:relative;border:1px solid rgba(20,60,54,.18);background:linear-gradient(90deg,rgba(255,253,247,.97),rgba(248,244,234,.96));box-shadow:inset 5px 0 0 #efc94d,0 10px 22px rgba(20,60,54,.055)}
+.bf-family-checkin::after{content:"BANDĂ DE DECIZIE · FAMILIE";display:block;margin:.65rem 1rem 0;color:#80601d;font:700 .57rem/1 Manrope,Arial,sans-serif;letter-spacing:.13em}
+.bf-checkin-heading{padding-bottom:.75rem;border-bottom:1px dashed rgba(20,60,54,.22)}
+.bf-checkin-heading>button{border-color:#d3a93c;background:#fff9e9;color:#26483f}
+.bf-checkin-list article{border-radius:12px;background-image:repeating-linear-gradient(0deg,transparent 0 25px,rgba(20,60,54,.042) 25px 26px)}
+.bf-checkin-list article.watch{border-left:3px solid #efc94d}
+.bf-checkin-list article.risk{border-left:3px solid #ce614b}
+.bf-quick-grid{margin-top:1.05rem}
+.bf-quick-grid button{background:rgba(255,253,247,.58);border-color:rgba(20,60,54,.15);box-shadow:none}
+.bf-quick-grid button:nth-child(2){border-top-color:#5d9b86}.bf-quick-grid button:nth-child(3){border-top-color:#ce886f}
+.bf-pulse-grid article{border-color:rgba(20,60,54,.13);box-shadow:none}
+.bf-pulse-grid article strong{font-variant-numeric:tabular-nums}
+.bf-ledger-mini{border:1px solid rgba(20,60,54,.13);box-shadow:inset 0 3px 0 rgba(239,201,77,.48)}
+.bf-brand{position:relative}.bf-brand::after{content:"";position:absolute;left:2.85rem;right:.3rem;bottom:.15rem;height:2px;background:linear-gradient(90deg,#143c36 0 70%,#efc94d 70%);opacity:.76}
+.bf-brand-mark{width:2.55rem!important;height:2.55rem!important;flex-basis:2.55rem!important}
+.dark .bf-family-checkin{border-color:rgba(198,232,213,.2);background:linear-gradient(90deg,#102e28,#0d251f);box-shadow:inset 5px 0 0 #efc94d,0 10px 22px rgba(0,0,0,.1)}
+.dark .bf-family-checkin::after{color:#f0cf68}.dark .bf-checkin-heading{border-bottom-color:rgba(198,232,213,.22)}.dark .bf-checkin-heading>button{background:#193f35;border-color:rgba(239,201,77,.52);color:#f4e4a4}.dark .bf-checkin-list article{background-image:repeating-linear-gradient(0deg,transparent 0 25px,rgba(198,232,213,.055) 25px 26px)}.dark .bf-quick-grid button{background:#102d27;border-color:rgba(198,232,213,.16)}.dark .bf-pulse-grid article,.dark .bf-ledger-mini{border-color:rgba(198,232,213,.15)}
+@media(max-width:640px){.bf-topline .bf-primary{width:100%;margin-top:.4rem;background:#fff8e4;color:#143c36;border:1px solid #d9b24d;box-shadow:0 7px 0 rgba(20,60,54,.07)}.bf-topline .bf-primary::after{background:#ce614b}.bf-safe-card{margin-top:1.55rem;padding-top:2.5rem}.bf-safe-card>div:first-child>strong{font-size:clamp(3.15rem,16vw,4.5rem);letter-spacing:-.085em}.bf-safe-stats{border-top:1px solid rgba(255,255,255,.18);padding-top:.85rem}.bf-family-checkin{margin-top:1.15rem}.bf-checkin-list{margin-top:.85rem}.bf-checkin-list article{padding:.85rem}.bf-checkin-list article button{margin-top:.35rem;padding-top:.55rem;border-top:1px dashed rgba(20,60,54,.18)}.bf-quick-grid button{min-height:92px}.bf-section{margin-top:1.75rem}.bf-pulse-grid{opacity:.9}.bf-brand b{font-size:.95rem}.dark .bf-topline .bf-primary{background:#eec84d;color:#0e2d25;border-color:#eec84d}}

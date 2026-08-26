@@ -14,15 +14,18 @@
 | Scadențe recurente | Facturi, rate și contribuții rezervate până la salariu; apăsarea „Plătită” creează cheltuiala reală din sursa aleasă. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
 | Bonuri mobile | Maximum două fotografii comprimate local, OCR local pentru produse și prețuri individuale, categorii sugerate și repartizare editabilă; liniile trebuie să egaleze totalul înainte de salvare. |
-| Asistent | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări. |
-| Aspect și control | Temă întunecată, resetare controlată și export/import de rezervă. |
+| Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit și întrebări rapide. |
+| Simulare înainte de plată | Un scenariu editabil estimează marja până la venit pentru o cheltuială propusă, fără să creeze sau modifice vreo mișcare. |
+| Aspect și control | Temă întunecată persistentă, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
 
-## Modelul de calcul v8
+## Modelul de calcul v10
 
 Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișat pentru o sursă de plată este **soldul inițial plus venituri minus cheltuieli** atribuite acelei surse. Planul include numai cheltuielile cu dată din intervalul ales; alocările personale sau pe categorii sunt consumate din aceleași intrări, nu dintr-un total separat. O scadență recurentă activă se rezervă separat în plan până când este confirmată; confirmarea creează o singură cheltuială legată, pentru a evita dubla numărare.
+
+> **Prognoza nu schimbă bugetul.** Ea folosește cheltuielile deja înregistrate până azi, zilele rămase, limita planului și rezervele recurente pentru a arăta ritmul zilnic curent, ritmul sigur și suma proiectată până la următorul venit. Este o estimare explicabilă, nu o garanție și nu o recomandare de investiții.
 
 > Soldul inițial reprezintă punctul de pornire introdus de familie. În versiunea actuală nu este un extras bancar reconciliat pe o dată istorică; de aceea, utilizați-l ca bază de pornire la configurare și actualizați-l atent după importuri vechi.
 
@@ -62,7 +65,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente și merge-ul defensiv dintre două copii familiale.
+Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente, proiecția de ritm și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 

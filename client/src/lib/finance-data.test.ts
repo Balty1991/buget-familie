@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationSpent, createEmptyAppData, isoToday, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, sourceBalance } from "./finance-data";
+import { allocationSpent, createEmptyAppData, isoToday, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -48,6 +48,21 @@ describe("registrul financiar Buget Familie", () => {
     expect(pendingRecurringInPlan(data)).toHaveLength(1);
     data.transactions = [{ id: "paid", recurringId: "internet", title: "Internet", amount: 60, kind: "expense", category: "Casă & facturi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-15" }];
     expect(pendingRecurringInPlan(data)).toHaveLength(0);
+  });
+
+  it("proiectează explicit ritmul actual până la următorul venit", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.transactions = [
+      { id: "pace-1", title: "Alimente", amount: 100, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-01" },
+      { id: "pace-2", title: "Transport", amount: 100, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-02" },
+    ];
+    const forecast = planForecast(data, "2026-08-02");
+    expect(forecast.paceDaily).toBe(100);
+    expect(forecast.projectedExpenses).toBe(1000);
+    expect(forecast.projectedRemaining).toBe(0);
+    expect(forecast.safeDaily).toBeCloseTo(88.8889, 3);
   });
 
   it("unește modificările a două telefoane și păstrează ștergerile recente", () => {

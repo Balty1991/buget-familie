@@ -162,3 +162,26 @@ export const pendingRecurringInPlan = (data: AppData) => data.recurring.flatMap(
   const paid = data.transactions.some((transaction) => transaction.recurringId === item.id && inPlanPeriod(transaction.date, data.settings.salaryPlan));
   return dueDate && !paid ? [{ ...item, dueDate }] : [];
 });
+
+/**
+ * O proiecție transparentă pentru perioada activă. Nu presupune venituri viitoare
+ * și nu schimbă bugetul; estimează doar efectul păstrării ritmului deja observat.
+ */
+export const planForecast = (data: AppData, asOf = isoToday()) => {
+  const plan = data.settings.salaryPlan;
+  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
+  const availableSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
+  const budget = plan.totalLimit || Math.max(0, availableSources);
+  const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
+  const start = new Date(`${plan.periodStart}T12:00:00`).valueOf();
+  const end = plan.nextPayday ? new Date(`${plan.nextPayday}T12:00:00`).valueOf() : start + 6 * 86400000;
+  const current = Math.min(Math.max(new Date(`${asOf}T12:00:00`).valueOf(), start), end);
+  const elapsedDays = Math.max(1, Math.floor((current - start) / 86400000) + 1);
+  const remainingDays = Math.max(1, Math.floor((end - current) / 86400000) + 1);
+  const spentToDate = data.transactions.filter((item) => item.kind === "expense" && item.date >= plan.periodStart && item.date <= asOf && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
+  const paceDaily = spentToDate / elapsedDays;
+  const projectedExpenses = paceDaily * (elapsedDays + remainingDays - 1);
+  const projectedRemaining = budget - scheduled - projectedExpenses;
+  const safeDaily = Math.max(0, (budget - scheduled - spentToDate) / remainingDays);
+  return { budget, scheduled, spentToDate, elapsedDays, remainingDays, paceDaily, safeDaily, projectedExpenses, projectedRemaining };
+};

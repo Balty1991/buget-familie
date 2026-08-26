@@ -66,3 +66,6 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Banda contextuală din dreapta devine un ghid de pornire pentru un spațiu nou și folosește mierea pentru alocări/revizuire, iar coralul pentru atenție sau obligații.
 - Marca principală folosește monograma B/F din benzi de registru, nu simbolul generic de portofel sau bancă.
 - Etichetele de sumă diferențiază semantic planificarea, ieșirile de bani și atenția prin verde, miere și coral; culorile nu sunt folosite decorativ.
+- Pe mobil, suma disponibilă și următoarea decizie familială domină înaintea pulsului și a registrului; butonul de înregistrare rămâne vizibil, dar nu concurează cu planul.
+- Fiecare suprafață majoră are un artefact funcțional de atelier: prag de decizie, bandă cu riglă, fișă liniată sau etichetă perforată; nu folosim carduri financiare generice fără rol de lucru.
+- Check-inul familiei este tratat ca o bandă de decizie, cu miere pentru revizuire/alocare și coral numai pentru atenție sau obligații.
