@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allocationSpent, createEmptyAppData, isoToday, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, sourceBalance } from "./finance-data";
+import { mergeFamilyData } from "./github-sync";
 
 describe("registrul financiar Buget Familie", () => {
   it("interpretează sumele românești cu punct pentru mii și virgulă zecimală", () => {
@@ -32,9 +33,10 @@ describe("registrul financiar Buget Familie", () => {
 
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
     const migrated = normalizeAppData({ version: 5, transactions: [{ id: "legacy", title: "Bon", amount: 20, kind: "expense", category: "Alimente", source: "Bon", person: "Eu", date: "26 aug." }], settings: {} });
-    expect(migrated.version).toBe(7);
+    expect(migrated.version).toBe(8);
     expect(migrated.transactions[0].date).toBe(isoToday());
     expect(migrated.transactions[0].sourceId).toBe(migrated.settings.paymentSources.find((source) => source.kind === "meal")?.id);
+    expect(migrated.deleted).toEqual([]);
   });
 
   it("rezervă o scadență activă și o scoate din plan după confirmarea plății", () => {
@@ -45,5 +47,17 @@ describe("registrul financiar Buget Familie", () => {
     expect(pendingRecurringInPlan(data)).toHaveLength(1);
     data.transactions = [{ id: "paid", recurringId: "internet", title: "Internet", amount: 60, kind: "expense", category: "Casă & facturi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-15" }];
     expect(pendingRecurringInPlan(data)).toHaveLength(0);
+  });
+
+  it("unește modificările a două telefoane și păstrează ștergerile recente", () => {
+    const local = createEmptyAppData(); const remote = createEmptyAppData(); const source = local.settings.paymentSources[0];
+    local.transactions = [{ id: "local", title: "Taxi", amount: 25, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-10", updatedAt: "2026-08-10T09:00:00.000Z" }];
+    remote.savings = [{ id: "goal", name: "Vacanță", current: 100, target: 1000, due: "Decembrie", tone: "honey", updatedAt: "2026-08-10T10:00:00.000Z" }];
+    remote.transactions = [{ id: "deleted", title: "Dublură", amount: 10, kind: "expense", category: "Altele", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-10", updatedAt: "2026-08-10T09:00:00.000Z" }];
+    local.deleted = [{ entity: "transactions", id: "deleted", deletedAt: "2026-08-10T11:00:00.000Z" }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.transactions.map((item) => item.id)).toEqual(["local"]);
+    expect(merged.savings.map((item) => item.id)).toEqual(["goal"]);
+    expect(merged.deleted).toHaveLength(1);
   });
 });

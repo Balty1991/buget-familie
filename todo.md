@@ -76,3 +76,38 @@
 - [x] Optimizează fluxurile zilnice pentru o singură mână, tastatura numerică și mod offline.
 - [x] Configurează proiectul pentru generare repetabilă a unui APK Android, fără a afecta publicarea GitHub Pages.
 - [x] Validează aplicația pe viewport mobil, construiește APK-ul debug în GitHub Actions și publică versiunea actualizată pe GitHub Pages.
+
+## Iconiță nativă și evoluție mobilă
+
+- [x] Creează și integrează o iconiță Android adaptivă, cu monograma Buget Familie, pentru launcher și ecranul de lansare.
+- [ ] Cercetează aprofundat funcțiile de diferențiere pentru buget familial mobil, accesibilitate și confidențialitate.
+- [ ] Prioritizează și implementează următoarele funcții cu impact direct asupra planificării familiale zilnice.
+- [ ] Reconstruiește APK-ul și verifică pe telefon marca, iconița, fluxurile mobile și persistența datelor.
+
+## Asistent financiar de familie
+
+- [ ] Cercetează practici actuale pentru asistenți financiari de familie, recomandări explicabile și protecția datelor.
+- [x] Extinde asistentul local cu semnale proactive despre ritmul de cheltuire, scadențe, rezervă și obiective.
+- [x] Adaugă explicații verificabile și acțiuni directe, astfel încât fiecare recomandare să poată fi urmărită în registru.
+- [ ] Documentează opțiunea de AI externă securizată, separată de GitHub Pages, fără a trimite automat date financiare.
+
+## Cercetare extinsă pentru produs
+
+- [ ] Compară profund aplicațiile de buget familial, partajare de cheltuieli și planificare financiară pe mobil.
+- [ ] Verifică practici actuale pentru bugete pe intervale, facturi recurente, obiective, rapoarte și colaborare familială.
+- [ ] Verifică standardele actuale de confidențialitate, securitate, accesibilitate și Android pentru un produs financiar mobil.
+- [ ] Transformă cercetarea într-un roadmap prioritizat, cu funcții implementate și limitări documentate onest.
+
+## Bonuri mobile și repartizare pe categorii
+
+- [x] Acceptă maximum două fotografii pentru un bon lung și comprimă-le local înainte de salvare.
+- [x] Ridică limita practică de încărcare fără a permite ca imaginile să blocheze localStorage sau sincronizarea criptată.
+- [x] Permite împărțirea unui bon pe mai multe categorii, cu validarea totalului înainte de creare.
+- [x] Adaugă extragere asistată a totalului și textului din bon, cu verificare și corectare manuală obligatorie înainte de salvare.
+
+## Familie conectată și ghid de utilizare
+
+- [x] Cercetează sincronizarea criptată GitHub între două sau trei dispozitive, inclusiv limitele de timp real și conflicte.
+- [x] Adaugă o sesiune familială conectată, cu actualizare automată prudentă și merge defensiv al modificărilor locale/remote.
+- [x] Păstrează tokenul GitHub doar în memorie și parola de criptare doar pe dispozitiv; explică aceste limite în interfață.
+- [x] Adaugă manual integrat pentru crearea repo-ului privat, conectarea telefoanelor, sincronizare, bonuri și utilizare zilnică.

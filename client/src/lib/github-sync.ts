@@ -2,7 +2,7 @@
  * Atelierul Financiar — criptare locală și sincronizare explicită cu repo GitHub privat.
  * Tokenul nu se persistă; aplicația trimite doar un pachet AES-GCM deja criptat.
  */
-import type { AppData } from "@/lib/finance-data";
+import { normalizeAppData, type AppData, type DeletedRecord } from "@/lib/finance-data";
 
 export type EncryptedEnvelope = {
   version: 1;
@@ -49,6 +49,35 @@ export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: str
   } catch {
     throw new Error("Codul familiei este greșit sau pachetul nu poate fi decriptat.");
   }
+}
+
+const timestamp = (item: { updatedAt?: string; createdAt?: string }) => Date.parse(item.updatedAt || item.createdAt || "") || 0;
+const deletionKey = (item: DeletedRecord) => `${item.entity}:${item.id}`;
+
+function mergeCollection<T extends { id: string; updatedAt?: string; createdAt?: string }>(entity: DeletedRecord["entity"], local: T[], remote: T[], deleted: DeletedRecord[]) {
+  const tombstones = new Map(deleted.filter((item) => item.entity === entity).map((item) => [item.id, item]));
+  const all = new Map<string, T>();
+  [...remote, ...local].forEach((item) => {
+    const existing = all.get(item.id);
+    if (!existing || timestamp(item) >= timestamp(existing)) all.set(item.id, item);
+  });
+  return Array.from(all.values()).filter((item) => (Date.parse(tombstones.get(item.id)?.deletedAt || "") || 0) < timestamp(item));
+}
+
+/** Unește două copii de familie fără a expedia imagini de bon și fără a reintroduce elemente șterse. */
+export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData {
+  const local = normalizeAppData(localRaw); const remote = normalizeAppData(remoteRaw);
+  const deleted = [...remote.deleted, ...local.deleted].reduce<DeletedRecord[]>((all, item) => {
+    const index = all.findIndex((entry) => deletionKey(entry) === deletionKey(item));
+    if (index < 0) return [...all, item];
+    if (Date.parse(item.deletedAt) > Date.parse(all[index].deletedAt)) all[index] = item;
+    return all;
+  }, []).sort((a, b) => a.deletedAt.localeCompare(b.deletedAt)).slice(-500);
+  const memberMap = new Map([...remote.settings.members, ...local.settings.members].map((item) => [item.id, item]));
+  const sourceMap = new Map([...remote.settings.paymentSources, ...local.settings.paymentSources].map((item) => [item.id, item]));
+  const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);
+  const salaryPlan = timestamp(local.settings.salaryPlan) >= timestamp(remote.settings.salaryPlan) ? local.settings.salaryPlan : remote.settings.salaryPlan;
+  return normalizeAppData({ version: 8, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), salaryPlan } });
 }
 
 function headers(token: string) {

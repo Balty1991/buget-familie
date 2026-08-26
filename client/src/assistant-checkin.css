@@ -1,0 +1,41 @@
+/* Atelierul Financiar: check-in de familie ca fișă de decizie; hârtie caldă, cerneală verde, praguri explicite. */
+.bf-family-checkin {
+  position: relative;
+  margin: 1.1rem 0 1.25rem;
+  padding: 1rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bf-paper, #fffdf8) 90%, #e2f0e9);
+  border: 1px solid color-mix(in srgb, var(--bf-forest, #123e35) 16%, transparent);
+  border-radius: 1.35rem;
+  box-shadow: 0 12px 30px rgba(24, 61, 51, .06);
+}
+.bf-family-checkin::after {
+  position: absolute;
+  inset: auto -.2rem .45rem 1rem;
+  height: 8px;
+  content: "";
+  opacity: .35;
+  background: repeating-linear-gradient(90deg, var(--bf-forest, #123e35) 0 1px, transparent 1px 24px);
+}
+.bf-checkin-heading { display: flex; align-items: start; justify-content: space-between; gap: .75rem; margin: 0 0 .75rem; }
+.bf-checkin-heading h2 { margin: .12rem 0 0; font-size: 1.13rem; line-height: 1.15; color: var(--bf-ink, #123e35); }
+.bf-checkin-heading > button { display: inline-flex; align-items: center; gap: .35rem; min-height: 40px; padding: .45rem .65rem; color: var(--bf-forest, #123e35); background: transparent; border: 1px dashed color-mix(in srgb, var(--bf-forest, #123e35) 38%, transparent); border-radius: .75rem; font: inherit; font-size: .78rem; font-weight: 800; }
+.bf-checkin-list { display: grid; gap: .55rem; padding-bottom: .55rem; }
+.bf-checkin-list article { display: grid; grid-template-columns: 9px minmax(0, 1fr); gap: .65rem; align-items: start; padding: .75rem; background: rgba(255,255,255,.72); border: 1px solid rgba(18, 62, 53, .09); border-radius: .95rem; }
+.bf-checkin-list article.good { --checkin-tone: #2f8a68; }
+.bf-checkin-list article.watch { --checkin-tone: #c38a20; }
+.bf-checkin-list article.risk { --checkin-tone: #c96150; }
+.bf-checkin-dot { width: 8px; height: 8px; margin-top: .42rem; border-radius: 50%; background: var(--checkin-tone); box-shadow: 0 0 0 4px color-mix(in srgb, var(--checkin-tone) 14%, transparent); }
+.bf-checkin-list article > div { display: grid; gap: .2rem; }
+.bf-checkin-list article p { margin: 0; color: var(--checkin-tone); font-size: .63rem; font-weight: 900; letter-spacing: .1em; }
+.bf-checkin-list article b { color: var(--bf-ink, #123e35); font-size: .88rem; line-height: 1.2; }
+.bf-checkin-list article small { color: var(--bf-muted, #66726f); font-size: .76rem; line-height: 1.35; }
+.bf-checkin-list article > button { grid-column: 2; display: inline-flex; align-items: center; justify-content: space-between; min-height: 42px; padding: .35rem 0 .05rem; color: var(--bf-forest, #123e35); background: transparent; border: 0; border-top: 1px solid rgba(18, 62, 53, .08); font: inherit; font-size: .78rem; font-weight: 850; text-align: left; }
+.dark .bf-family-checkin { background: color-mix(in srgb, #183d35 82%, #0d1917); border-color: rgba(218, 237, 228, .15); box-shadow: none; }
+.dark .bf-family-checkin::after { background: repeating-linear-gradient(90deg, #c6dfcf 0 1px, transparent 1px 24px); }
+.dark .bf-checkin-heading h2, .dark .bf-checkin-list article b { color: #f8f4ea; }
+.dark .bf-checkin-heading > button, .dark .bf-checkin-list article > button { color: #e8c54f; }
+.dark .bf-checkin-list article { background: rgba(8, 24, 20, .36); border-color: rgba(218, 237, 228, .12); }
+.dark .bf-checkin-list article small { color: #b7c7bf; }
+@media (min-width: 760px) { .bf-checkin-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } .bf-checkin-list article { min-height: 174px; } .bf-checkin-list article > button { align-self: end; } }
+@media (prefers-reduced-motion: no-preference) { .bf-checkin-list article { transition: transform .18s cubic-bezier(.23,1,.32,1), border-color .18s ease; } .bf-checkin-list article:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--checkin-tone) 48%, transparent); } }

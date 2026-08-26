@@ -7,5 +7,9 @@ import "./risk-state.css";
 import "./reports.css";
 import "./recurring.css";
 import "./atelier-stationery.css";
+import "./assistant-checkin.css";
+import "./receipt-mobile.css";
+import "./family-guide.css";
+import "./workbench-final.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

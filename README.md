@@ -13,20 +13,20 @@
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Scadențe recurente | Facturi, rate și contribuții rezervate până la salariu; apăsarea „Plătită” creează cheltuiala reală din sursa aleasă. |
 | Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
-| Bonuri | Bon manual cu magazin, valoare, categorie, produse și fotografie locală opțională; bonul creează automat cheltuiala asociată. |
+| Bonuri mobile | Maximum două fotografii comprimate local, OCR local la cerere și repartizarea unui bon pe mai multe categorii; liniile trebuie să egaleze totalul înainte de salvare. |
 | Asistent | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări. |
 | Aspect și control | Temă întunecată, resetare controlată și export/import de rezervă. |
-| Sincronizare privată | Pachet AES-GCM criptat local, încărcat manual într-un repo GitHub privat. |
+| Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
 
-## Modelul de calcul v7
+## Modelul de calcul v8
 
 Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișat pentru o sursă de plată este **soldul inițial plus venituri minus cheltuieli** atribuite acelei surse. Planul include numai cheltuielile cu dată din intervalul ales; alocările personale sau pe categorii sunt consumate din aceleași intrări, nu dintr-un total separat. O scadență recurentă activă se rezervă separat în plan până când este confirmată; confirmarea creează o singură cheltuială legată, pentru a evita dubla numărare.
 
 > Soldul inițial reprezintă punctul de pornire introdus de familie. În versiunea actuală nu este un extras bancar reconciliat pe o dată istorică; de aceea, utilizați-l ca bază de pornire la configurare și actualizați-l atent după importuri vechi.
 
-## Sincronizare GitHub protejată
+## Familie conectată și sincronizare GitHub protejată
 
 Aplicația publică este `Balty1991/buget-familie`. Repo-ul separat `Balty1991/buget-familie-date` este privat și stochează numai un pachet deja criptat în browser. Tokenul GitHub și parola de criptare nu sunt păstrate în local storage sau în repo-ul public.
 
@@ -34,11 +34,11 @@ Aplicația publică este `Balty1991/buget-familie`. Repo-ul separat `Balty1991/b
 |---|---|
 | 1 | Creează un **fine-grained personal access token** limitat strict la repo-ul `buget-familie-date`. |
 | 2 | Acordă numai permisiunea **Contents: Read and write**. |
-| 3 | În aplicație, deschide pagina **Sincronizare** și introdu tokenul doar pentru sesiunea curentă. |
+| 3 | În aplicație, deschide **Mai mult → Sincronizare** și introdu tokenul doar pentru sesiunea curentă. |
 | 4 | Alege o parolă de familie de cel puțin 12 caractere; ea criptează datele prin AES-GCM înainte de upload. |
-| 5 | Pe al doilea dispozitiv, introdu un token limitat și aceeași parolă, apoi apasă **Descarcă din repo**. |
+| 5 | Pe fiecare telefon, introdu un token limitat separat și aceeași parolă, apoi apasă **Conectează acest telefon**. |
 
-Sincronizarea este intenționat manuală și confirmată înainte de suprascriere. În acest mod, familia alege când trimite sau recuperează datele și poate evita conflicte silențioase.
+După conectare, aplicația verifică actualizări aproximativ la 30 de secunde cât rămâne deschisă, unește intrările prin ID și marcaj de actualizare și păstrează ștergerile pentru a evita reapariția datelor eliminate. GitHub Contents API oferă controlul de conflict prin SHA, dar această soluție rămâne o actualizare periodică, nu un canal instantaneu în fundal. Fotografiile bonurilor sunt excluse intenționat din pachetul remote și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
 
 ## Limite importante
 
@@ -46,8 +46,8 @@ Sincronizarea este intenționat manuală și confirmată înainte de suprascrier
 |---|---|
 | CRUD financiar, planificare, temă și analize | Da, local în browser. |
 | Copie între telefoane | Da, prin export/import sau pachet criptat în repo privat. |
-| Sincronizare automată în timp real | Nu; este manuală cu protecție la suprascriere. |
-| Fotografii ale bonurilor | Locale în browser; imaginile mari nu sunt recomandate. |
+| Sincronizare automată în timp real | Actualizare periodică aproximativ la 30 s cât aplicația este deschisă; nu există actualizare garantată în fundal. |
+| Fotografii ale bonurilor | Maximum două pe bon, comprimate local; fotografiile rămân locale și nu intră în pachetul GitHub. |
 | Asistent LLM extern | Nu; GitHub Models a fost retras. Asistentul actual este local și explicabil. |
 
 Datele financiare necriptate, bonurile și cheile nu trebuie comise în repo-ul public sau incluse în artefactele GitHub Pages. GitHub avertizează că Pages este public și nu trebuie utilizat pentru tranzacții sensibile.[^pages]
@@ -62,7 +62,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat și consumul alocărilor din perioada de plan.
+Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul soldului derivat, consumul alocărilor, scadențele recurente și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 

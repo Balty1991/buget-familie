@@ -1,0 +1,19 @@
+/* Atelierul Financiar: ghidul este o fișă de lucru familială, nu o pagină de ajutor generică. */
+.bf-guide { display: grid; gap: .75rem; }
+.bf-guide-hero, .bf-guide > section:not(.bf-guide-hero), .bf-sync-session { padding: 1rem; border: 1px solid color-mix(in srgb, var(--bf-forest, #123e35) 14%, transparent); border-radius: 1rem; background: color-mix(in srgb, var(--bf-paper, #fffdf8) 93%, #e6f0e9); }
+.bf-guide-hero { color: #f9f4e8; background: linear-gradient(135deg, #123e35, #246551); border: 0; }
+.bf-guide-hero > svg { color: #efc94d; }
+.bf-guide-hero .bf-kicker { color: #d4e3d9; }
+.bf-guide-hero h2 { margin: .3rem 0; color: #fffdf8; font: 800 1.55rem/1.05 Fraunces, Georgia, serif; }
+.bf-guide-hero p:last-child { margin: 0; color: #dceae1; font-size: .84rem; line-height: 1.45; }
+.bf-guide > section:not(.bf-guide-hero) { position: relative; padding-left: 1.15rem; overflow: hidden; }
+.bf-guide > section:not(.bf-guide-hero)::before { position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--bf-honey, #efc94d); content: ""; }
+.bf-guide h3 { margin: .2rem 0 .35rem; color: var(--bf-forest, #123e35); font-size: .95rem; }
+.bf-guide > section p:last-child, .bf-sync-session > p { margin: 0; color: var(--bf-muted, #63716b); font-size: .84rem; line-height: 1.52; }
+.bf-sync-session { display: grid; gap: .75rem; margin-top: 1rem; }
+.bf-sync-session .bf-field { margin: 0; }
+.bf-sync-session .bf-primary.full { margin-top: .15rem; }
+.bf-sync-session .bf-link-button { justify-self: start; min-height: 38px; padding: 0; color: #a64e42; }
+.dark .bf-guide > section:not(.bf-guide-hero), .dark .bf-sync-session { background: rgba(18, 56, 46, .45); border-color: rgba(232, 245, 236, .13); }
+.dark .bf-guide h3 { color: #f6f8f1; }
+.dark .bf-guide > section p:last-child, .dark .bf-sync-session > p { color: #c6d6cc; }
