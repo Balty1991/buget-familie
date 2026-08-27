@@ -4,7 +4,8 @@
  */
 import { useState } from "react";
 import { CalendarDays, Check, ChevronRight, Plus, Trash2, WalletCards } from "lucide-react";
-import { applySalaryAllocationRules, allocationStatus, eligibleSalaryAllocationRules, expenseCategories, newId, parseRomanianAmount, planEndDate, revertSalaryAllocationApplication, sourceBalance, type AppData } from "@/lib/finance-data";
+import { calendarBudget } from "@/lib/calendar-budget";
+import { applySalaryAllocationRules, allocationStatus, eligibleSalaryAllocationRules, expenseCategories, formatDate, newId, parseRomanianAmount, planEndDate, revertSalaryAllocationApplication, sourceBalance, type AppData } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -28,6 +29,11 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const [ruleLabel, setRuleLabel] = useState("");
   const [selectedIncomeId, setSelectedIncomeId] = useState("");
   const [ruleError, setRuleError] = useState("");
+  const [cycleIncomeId, setCycleIncomeId] = useState("");
+  const [cycleAmount, setCycleAmount] = useState("");
+  const [cycleStart, setCycleStart] = useState(plan.periodStart);
+  const [cycleEnd, setCycleEnd] = useState(plan.earliestPayday || plan.nextPayday || "");
+  const [cycleError, setCycleError] = useState("");
 
   const planEnd = planEndDate(plan);
   const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
@@ -46,6 +52,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const salaryApplications = plan.salaryAllocationApplications || [];
   const incomes = data.transactions.filter((item) => item.kind === "income").sort((left, right) => right.date.localeCompare(left.date) || String(right.createdAt || "").localeCompare(String(left.createdAt || ""))).slice(0, 12);
   const selectedIncome = incomes.find((item) => item.id === selectedIncomeId) || incomes[0];
+  const cycleIncome = incomes.find((item) => item.id === cycleIncomeId);
+  const cycle = calendarBudget(parseRomanianAmount(cycleAmount), cycleStart, cycleEnd);
   const eligibleRules = selectedIncome ? eligibleSalaryAllocationRules(data, selectedIncome) : [];
   const plannedFromIncome = selectedIncome ? eligibleRules.reduce((sum, rule) => sum + (rule.mode === "percent" ? selectedIncome.amount * rule.value / 100 : rule.value), 0) : 0;
 
@@ -85,6 +93,15 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const revokeApplication = (applicationId: string) => {
     if (window.confirm("Anulezi această repartizare? Se vor reduce numai limitele plicurilor majorate prin această aplicare; registrul și soldurile surselor rămân neschimbate.")) onChange(revertSalaryAllocationApplication(data, applicationId));
   };
+  const chooseCycleIncome = (id: string) => {
+    setCycleIncomeId(id); const income = incomes.find((item) => item.id === id);
+    if (!income) return;
+    setCycleAmount(String(income.amount)); setCycleStart(income.date || plan.periodStart); setCycleError("");
+  };
+  const applyCycle = () => {
+    if (!cycle) return setCycleError("Introdu o sumă, data de început și data următorului venit. Sfârșitul trebuie să fie după început.");
+    updatePlan({ periodStart: cycle.start, nextPayday: cycle.end, weeklyLimit: cycle.weeklyAmount, totalLimit: cycle.total }); setCycleError("");
+  };
 
   return <div className="bf-page bf-plan-workspace">
     <header className="bf-plan-studio-header">
@@ -94,6 +111,20 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     <section className={`bf-plan-resource-band ${remaining < 0 ? "risk" : ""}`}>
       <div><p>{remaining < 0 ? "Limita trebuie revizuită" : "Disponibil de planificat"}</p><strong>{money(Math.max(0, remaining))}</strong><span>{plan.nextPayday ? `${days} zile · ${weeks} săptămâni · ${money(weekly)}/săptămână` : "setează data următorului venit"}</span></div>
       <div className="bf-plan-resource-stats"><span><b>{money(budget)}</b> limită activă</span><span><b>{money(plannedExpenses)}</b> cheltuit în perioadă</span><span><b>{money(availableSources)}</b> în sursele alese</span></div>
+    </section>
+    <section className="bf-calendar-budget">
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">RITM DIN VENIT</p><h2>Împarte perioada pe săptămâni reale</h2></div><CalendarDays size={19} /></div>
+      <p>De exemplu, 2.400 RON împărțiți între ziua salariului și următorul venit. Calculatorul include și o jumătate de săptămână, nu presupune automat patru săptămâni.</p>
+      <div className="bf-calendar-budget-fields">
+        <PlanField label="Venit înregistrat (opțional)"><select value={cycleIncomeId} onChange={(event) => chooseCycleIncome(event.target.value)}><option value="">Introduc suma manual</option>{incomes.map((income) => <option key={income.id} value={income.id}>{income.date} · {income.title} · {money(income.amount)}</option>)}</select></PlanField>
+        <PlanField label="Sumă de repartizat"><input value={cycleAmount} onChange={(event) => { setCycleAmount(event.target.value); setCycleError(""); }} inputMode="decimal" placeholder="ex. 2400" /></PlanField>
+        <PlanField label="Începe la"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} /></PlanField>
+        <PlanField label="Următorul venit la"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} /></PlanField>
+      </div>
+      {cycle ? <><div className="bf-calendar-budget-summary"><article><small>PERIOADĂ EXACTĂ</small><b>{cycle.days} zile · {new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 1 }).format(cycle.exactWeeks)} săptămâni</b></article><article><small>RITM RECOMANDAT</small><b>{money(cycle.weeklyAmount)}/săptămână</b></article><article><small>LIMITĂ DE PERIOADĂ</small><b>{money(cycle.total)}</b></article></div><div className="bf-calendar-budget-weeks" aria-label="Tranșele calendaristice propuse">{cycle.weeks.map((week) => <article key={week.index}><span>S{week.index}</span><div><b>{formatDate(week.start, { day: "2-digit", month: "short" })} – {formatDate(week.end, { day: "2-digit", month: "short" })}</b><small>{week.days} {week.days === 1 ? "zi" : "zile"}{week.days < 7 ? " · tranșă parțială" : ""}</small></div><strong>{money(week.amount)}</strong></article>)}</div></> : <div className="bf-calendar-budget-empty"><b>Completează intervalul pentru a vedea săptămânile calendaristice.</b><span>Poți seta orice durată: 28 zile, 31 zile sau 4 săptămâni și jumătate.</span></div>}
+      {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
+      <button className="bf-calendar-budget-apply" disabled={!cycle} onClick={applyCycle}><Check size={17} /> Aplică {cycle ? `${money(cycle.weeklyAmount)}/săptămână` : "ritmul săptămânal"}</button>
+      <small className="bf-calendar-budget-note">Aplicarea actualizează limita totală, limita săptămânală și perioada planului. Nu creează mișcări și nu mută bani între surse; plicurile rămân limite separate pe care le configurezi mai jos.</small>
     </section>
     <section className="bf-plan-sheet">
       <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">1. CADRUL PLANULUI</p><h2>Perioadă și limite</h2></div><span>se salvează automat</span></div>

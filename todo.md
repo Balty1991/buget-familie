@@ -408,3 +408,23 @@
 - [x] Reproiectează cele patru teme ca materiale și sisteme vizuale distincte, nu doar ca variații de verde în aceeași structură.
 - [x] Diferențiază selectorul prin mostre recognoscibile, nume de stil explicite și indicii vizuale ale suprafețelor, accentelor și navigației.
 - [x] Verifică pe 360–430 px contrastul, stările active și persistența fiecărei teme înainte de publicarea Pages și APK.
+
+## Preferințe de temă și accesibilitate
+
+- [x] Simplifică recapitularea săptămânală într-o fișă mobilă fără celule înguste, text tăiat sau concurență între context și cifre.
+- [x] Adaugă o previzualizare mare, statică și fidelă pentru tema aleasă înainte de confirmare.
+- [x] Permite program automat de temă după ora locală, cu intervale explicite și revenire la control manual.
+- [x] Adaugă mod local de contrast extra-ridicat, independent de tema selectată, fără a altera semantica financiară.
+- [x] Verifică pe 360–430 px previzualizarea, programul, persistența și contrastele înainte de publicarea Pages/APK.
+
+## Repartizare calendaristică a venitului
+
+- [x] Permite alegerea unei sume disponibile de repartizat, a datei de început și a următorului venit pentru un plan săptămânal calculat din intervalul calendaristic real.
+- [x] Arată săptămânile complete și porțiunea rămasă de săptămână, suma recomandată pe săptămână și lista de perioade calendaristice înainte de confirmare.
+- [x] Permite aplicarea confirmată a limitelor săptămânale în plicurile selectate, fără a crea tranzacții sau a muta bani între surse.
+- [x] Verifică scenariile de 4, 4½ și mai multe săptămâni, inclusiv reflow-ul pe 360–430 px, înainte de publicare.
+
+## Icon aplicație
+
+- [x] Refă monograma B/F ca simbol premium cu volum, literă lizibilă și contur adaptat fiecărei teme.
+- [x] Verifică iconul în antet, favicon și instalare PWA fără a înlocui identitatea existentă printr-un simbol generic.

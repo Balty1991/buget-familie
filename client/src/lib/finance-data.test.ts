@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { journalCsvSnapshot } from "./journal-csv";
+import { calendarBudget } from "./calendar-budget";
 import { parseReceiptItems } from "./receipt-utils";
 
 describe("registrul financiar Buget Familie", () => {
@@ -284,5 +285,19 @@ describe("registrul financiar Buget Familie", () => {
   it("propune produse și prețuri individuale, fără totaluri sau plăți", () => {
     const items = parseReceiptItems(["LAPTE 1.5% 7,49", "APA MINERALA 2 x 3,50 7,00", "DETergent 18,99", "TOTAL 33,48", "CARD 33,48"]);
     expect(items).toEqual([{ label: "LAPTE 1.5%", amount: 7.49, category: "Alimente", raw: "LAPTE 1.5% 7,49" }, { label: "APA MINERALA", amount: 7, category: "Băuturi", raw: "APA MINERALA 2 x 3,50 7,00" }, { label: "DETergent", amount: 18.99, category: "Casă & facturi", raw: "DETergent 18,99" }]);
+  });
+  it("împarte un venit în patru săptămâni calendaristice egale", () => {
+    const plan = calendarBudget(2400, "2026-09-01", "2026-09-28");
+    expect(plan).toMatchObject({ total: 2400, days: 28, exactWeeks: 4, weeklyAmount: 600 });
+    expect(plan?.weeks).toHaveLength(4);
+    expect(plan?.weeks.map((week) => week.amount)).toEqual([600, 600, 600, 600]);
+  });
+  it("împarte transparent patru săptămâni și jumătate, păstrând totalul exact", () => {
+    const plan = calendarBudget(2400, "2026-09-01", "2026-10-02");
+    expect(plan).toMatchObject({ days: 32, exactWeeks: 32 / 7, weeklyAmount: 525 });
+    expect(plan?.weeks).toHaveLength(5);
+    expect(plan?.weeks.at(-1)).toMatchObject({ days: 4, amount: 300 });
+    expect(plan?.weeks.reduce((sum, week) => sum + week.amount, 0)).toBe(2400);
+    expect(calendarBudget(2400, "2026-10-02", "2026-09-01")).toBeUndefined();
   });
 });
