@@ -128,3 +128,9 @@ Fiecare ecran începe cu o **bandă de situație** care răspunde într-un rând
 ### Interaction Philosophy 2.0
 
 Înregistrarea unei mișcări rămâne la o atingere, dar contextul (membru, sursă și plic) se completează direct în flux. Comutările Familie/Membru se păstrează numai acolo unde schimbă rezultatul. Un utilizator nu trebuie să deschidă „Mai mult” pentru a vedea analiza, rata sau un plic; acestea sunt destinații de lucru de prim rang.
+
+### Sistemul de redesign — Ledger Flow
+
+Redesignul folosește straturi de lucru cu contururi precise, nu module egale. Fiecare ecran are: o bară de aplicație translucidă cu marcaj de progres, o primă suprafață dominantă cu umbră controlată, rânduri de registru pentru detalii și o navigație inferioară plutitoare. Pe ecrane înguste, informația secundară este întotdeauna sub titlu, niciodată împinsă într-o coloană îngustă la dreapta.
+
+Temele păstrează aceleași roluri semantice, dar au materiale distincte: **Ivory Ledger** mineral-salvie, **Forest Night** emerald mat, **Black–Blue** obsidian și cyan, **Ink–Copper** grafit cu cupru cald. Fiecare temă oferă o suprafață opacă pentru controale active, text cu contrast stabil și umbre temperate; verdele înseamnă disponibil sau progres, mierea înseamnă alocare ori revizuire, iar coralul înseamnă obligație, atenție sau depășire.

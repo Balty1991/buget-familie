@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
+import { journalCsvSnapshot } from "./journal-csv";
 import { parseReceiptItems } from "./receipt-utils";
 
 describe("registrul financiar Buget Familie", () => {
@@ -139,6 +140,31 @@ describe("registrul financiar Buget Familie", () => {
     const migrated = normalizeAppData({ settings: { quickTemplates: [{ id: "taxi", label: "Taxi serviciu", kind: "expense", category: "Transport", amount: "45,50", memberId: "member-me", sourceId: "source-cash" }] } });
     expect(migrated.settings.quickTemplates).toEqual([expect.objectContaining({ id: "taxi", label: "Taxi serviciu", amount: 45.5, category: "Transport" })]);
     expect(migrated.transactions).toEqual([]);
+  });
+
+  it("aplică o singură dată reguli compatibile unui venit și poate anula exact limitele adăugate", () => {
+    const data = createEmptyAppData(); const [card, cash] = data.settings.paymentSources;
+    const transport = { id: "transport", label: "Transport", amount: 100, category: "Transport", sourceId: card.id, memberId: "member-me" };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [transport], transfers: [], salaryAllocationRules: [{ id: "fixed", label: "200 transport", allocationId: "transport", mode: "fixed", value: 200, active: true }, { id: "percent", label: "10% transport", allocationId: "transport", mode: "percent", value: 10, active: true }, { id: "cash-only", label: "cash", allocationId: "transport", mode: "fixed", value: 100, active: false }] };
+    data.transactions = [{ id: "salary", title: "Salariu august", amount: 1000, kind: "income", category: "Venit", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-08-01" }];
+    const result = applySalaryAllocationRules(data, "salary");
+    expect(result).toMatchObject({ total: 300, remaining: 700, applied: [{ allocationId: "transport", amount: 200 }, { allocationId: "transport", amount: 100 }] });
+    expect(result.data.settings.salaryPlan.allocations[0].amount).toBe(400);
+    expect(result.data.transactions).toEqual(data.transactions);
+    expect(applySalaryAllocationRules(result.data, "salary").error).toContain("deja repartizat");
+    const reverted = revertSalaryAllocationApplication(result.data, result.data.settings.salaryPlan.salaryAllocationApplications![0].id);
+    expect(reverted.settings.salaryPlan.allocations[0].amount).toBe(100);
+    expect(reverted.transactions).toEqual(data.transactions);
+    expect(cash.id).toBeTruthy();
+  });
+
+  it("exportă CSV local cu delimitare sigură, sumă românească și numai rândurile primite", () => {
+    const csv = journalCsvSnapshot([{ id: "taxi", title: "Taxi; seară", amount: 45.5, kind: "expense", category: "Transport", sourceId: "cash", source: "Cash", memberId: "member-me", person: "Eu", date: "2026-08-12", allocationId: "outside", note: "Plată \"confirmată\"" }]);
+    expect(csv).toContain('"Data";"Tip";"Denumire"');
+    expect(csv).toContain('"Taxi; seară"');
+    expect(csv).toContain('"45,50"');
+    expect(csv).toContain('"Plată ""confirmată"""');
+    expect(csv.split("\r\n")).toHaveLength(2);
   });
 
   it("normalizează arhiva locală de șabloane și filtrele salvate valide", () => {

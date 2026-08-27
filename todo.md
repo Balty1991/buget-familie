@@ -384,3 +384,18 @@
 - [x] Permite stabilirea unui prag de atenție procentual pentru fiecare plic, păstrând avertizarea de depășire la 100%.
 - [x] Înlocuiește temele actuale cu direcții vizuale distincte, moderne și cu contrast verificabil, menținând culorile semantice ale banilor.
 - [x] Verifică mobil filtrele salvate, arhiva, pragurile și toate temele înainte de publicarea web și APK.
+
+## Export Jurnal, reguli de salariu și grafic lunar
+
+- [x] Corectează pe 360–430 px reflow-ul valorilor secundare și densitatea benzii de categorii din Instrumente, fără text tăiat sau suprapus.
+- [x] Exportă local în CSV numai mișcările vizibile după filtrele active din Jurnal, fără trimiterea datelor către un serviciu extern.
+- [x] Permite definirea, editarea și eliminarea unor reguli de repartizare a unui venit în plicuri, cu previzualizare și confirmare explicită înainte de schimbarea limitelor.
+- [x] Creează o distribuție interactivă a cheltuielilor lunare din registrul real, cu valori exacte, categorii și perspectivă Familie/Membru.
+- [ ] Verifică pe 360–430 px, rulează testele și publică Pages/APK numai după confirmarea fluxurilor locale.
+
+## Redesign masiv și teme moderne
+
+- [x] Reorganizează vizibil toate ecranele mobile într-un sistem unitar de decizie financiară, cu informația importantă și acțiunea frecventă în primul plan.
+- [x] Reproiectează navigația, anteturile, suprafețele, listele, formularele și stările active pentru scanare rapidă, fără carduri supradimensionate ori rânduri încărcate.
+- [x] Înlocuiește temele prin variații moderne cu identitate proprie, contrast stabil și semantica financiară conservată pentru verde, miere și coral.
+- [ ] Auditează la 360–430 px toate traseele în lumină și întuneric și publică numai dacă nu există overflow, suprapuneri sau text ilizibil.
