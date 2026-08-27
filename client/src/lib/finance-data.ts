@@ -48,6 +48,8 @@ export type Receipt = {
   imageData?: string;
   /** A doua pagină a unui bon lung, păstrată doar local. */
   imageData2?: string;
+  /** Chei locale IndexedDB pentru fotografiile bonului; nu se sincronizează între dispozitive. */
+  imageKeys?: string[];
   /** Repartizarea validată a totalului pe categorii. */
   lines?: ReceiptLine[];
   /** Text OCR propus local; este editabil și nu este sursă contabilă. */
@@ -141,7 +143,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     const member = members.find((value) => value.id === item.memberId) || memberByName.get((item.person || "").toLowerCase());
     return { ...item, id: item.id || `legacy-tx-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || new Date().toISOString() };
   }) : [];
-  const receipts = Array.isArray(old.receipts) ? old.receipts.map((entry, index) => { const item = entry as Receipt; const linked = transactions.find((transaction) => transaction.id === item.linkedTransactionId || transaction.receiptId === item.id || transaction.id === `receipt-tx-${item.id}`); const lines = Array.isArray(item.lines) ? item.lines.map((line, lineIndex) => ({ id: line.id || `receipt-line-${index}-${lineIndex}`, category: line.category || "Altele", amount: Math.max(0, parseRomanianAmount(line.amount)), label: line.label || undefined })).filter((line) => line.amount > 0) : undefined; return { ...item, id: item.id || `legacy-receipt-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), lines, linkedTransactionId: linked?.id || item.linkedTransactionId, linkedTransactionIds: item.linkedTransactionIds?.length ? item.linkedTransactionIds : linked?.id ? [linked.id] : undefined }; }) : [];
+  const receipts = Array.isArray(old.receipts) ? old.receipts.map((entry, index) => { const item = entry as Receipt; const linked = transactions.find((transaction) => transaction.id === item.linkedTransactionId || transaction.receiptId === item.id || transaction.id === `receipt-tx-${item.id}`); const lines = Array.isArray(item.lines) ? item.lines.map((line, lineIndex) => ({ id: line.id || `receipt-line-${index}-${lineIndex}`, category: line.category || "Altele", amount: Math.max(0, parseRomanianAmount(line.amount)), label: line.label || undefined })).filter((line) => line.amount > 0) : undefined; const imageKeys = Array.isArray(item.imageKeys) ? item.imageKeys.filter((key): key is string => typeof key === "string" && key.length > 0).slice(0, 2) : undefined; return { ...item, id: item.id || `legacy-receipt-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), lines, imageKeys, linkedTransactionId: linked?.id || item.linkedTransactionId, linkedTransactionIds: item.linkedTransactionIds?.length ? item.linkedTransactionIds : linked?.id ? [linked.id] : undefined }; }) : [];
   const oldPlan = oldSettings.salaryPlan || fallback.settings.salaryPlan;
   const periodStart = safeDate(oldPlan.periodStart);
   const nextPayday = /^\d{4}-\d{2}-\d{2}$/.test(oldPlan.nextPayday || "") ? oldPlan.nextPayday : "";

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
-import { mergeFamilyData } from "./github-sync";
+import { GitHubSyncError, mergeFamilyData, retryGitHubOperation } from "./github-sync";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
 import { calendarPlanPdfSnapshot } from "./calendar-plan-pdf";
@@ -320,6 +320,18 @@ describe("registrul financiar Buget Familie", () => {
     const data = normalizeAppData({ version: 8, settings: { memberName: "Eu", salaryCycleTemplates: [{ id: "valid", label: " Salariu lunar ", amount: "2400", durationDays: 30 }, { id: "invalid", label: "", amount: 0, durationDays: 2 }], seenWeeklyPlanTranches: ["2026-09-01:2026-09-07:1", "nevalid"] } });
     expect(data.settings.salaryCycleTemplates).toEqual([expect.objectContaining({ id: "valid", label: "Salariu lunar", amount: 2400, durationDays: 30 })]);
     expect(data.settings.seenWeeklyPlanTranches).toEqual(["2026-09-01:2026-09-07:1"]);
+  });
+  it("păstrează doar cheile valide IndexedDB pentru bonuri la normalizare", () => {
+    const data = normalizeAppData({ receipts: [{ id: "bon", vendor: "Magazin", amount: 18, category: "Alimente", date: "2026-08-27", imageKeys: ["bon:image:0", "bon:image:1", 42] }] });
+    expect(data.receipts[0]).toMatchObject({ id: "bon", imageKeys: ["bon:image:0", "bon:image:1"] });
+  });
+  it("reîncearcă operațiile GitHub temporare, dar nu reîncearcă un conflict", async () => {
+    let attempts = 0;
+    await expect(retryGitHubOperation(async () => { attempts += 1; if (attempts === 1) throw new GitHubSyncError("temporary", "temporar", 1); return "gata"; }, 1)).resolves.toBe("gata");
+    expect(attempts).toBe(2);
+    let conflicts = 0;
+    await expect(retryGitHubOperation(async () => { conflicts += 1; throw new GitHubSyncError("conflict", "conflict"); }, 2)).rejects.toThrow("conflict");
+    expect(conflicts).toBe(1);
   });
   it("identifică o singură tranșă curentă și construiește snapshotul PDF fără mișcări", () => {
     const active = currentCalendarBudgetWeek(2400, "2026-09-01", "2026-09-28", "2026-09-12");

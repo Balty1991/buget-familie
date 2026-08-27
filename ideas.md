@@ -97,6 +97,12 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Bilanțul mobil este o listă de registru semantică: surse utilizabile cu verde, obligații confirmate cu coral și limite de plic cu miere, fiecare stare fiind numită explicit.
 - Titlurile de decizie numesc gospodăria, intervalul, venitul, plicul ori obligația concretă; evităm formulări abstracte care nu explică motivul pasului următor.
 
+### Amendamente Mișcări și Instrumente
+
+- Mișcări nu deschide niciodată cu spațiu decorativ: eticheta de registru, situația zilei, măsurătoarea intrărilor/ieșirilor și acțiunea de înregistrare apar în aceeași zonă de lucru.
+- Fără mișcări, registrul rămâne pregătit prin linii, gruparea zilei și o invitație concretă de a consemna prima intrare sau ieșire; nu apare o stare goală generică.
+- Instrumentele sunt prezentate ca un sertar secundar pentru acțiuni rare, cu o foaie de lucru compactă; ele nu concurează vizual cu cele cinci întrebări principale ale aplicației.
+
 ### Rafinare mobilă — decizie ca instrument unic
 
 - Prima vedere mobilă leagă situația, suma dominantă, măsurătoarea calibrată și următoarea acțiune într-o singură fișă de decizie; titlurile editoriale susțin, nu concurează cu suma.
