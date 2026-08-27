@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, savingSuggestions, sourceBalance } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -123,6 +123,19 @@ describe("registrul financiar Buget Familie", () => {
     expect(migrated.transactions[0].date).toBe(isoToday());
     expect(migrated.transactions[0].sourceId).toBe(migrated.settings.paymentSources.find((source) => source.kind === "meal")?.id);
     expect(migrated.deleted).toEqual([]);
+  });
+
+  it("păstrează defensiv șabloanele locale fără a le confunda cu tranzacțiile", () => {
+    const migrated = normalizeAppData({ settings: { quickTemplates: [{ id: "taxi", label: "Taxi serviciu", kind: "expense", category: "Transport", amount: "45,50", memberId: "member-me", sourceId: "source-cash" }] } });
+    expect(migrated.settings.quickTemplates).toEqual([expect.objectContaining({ id: "taxi", label: "Taxi serviciu", amount: 45.5, category: "Transport" })]);
+    expect(migrated.transactions).toEqual([]);
+  });
+
+  it("calculează săptămâna luni–duminică și poate filtra numai mișcările unui membru", () => {
+    const data = createEmptyAppData(); const source = data.settings.paymentSources[0]; data.settings.members.push({ id: "member-partner", name: "Soție" });
+    data.transactions = [{ id: "income", title: "Salariu", amount: 1000, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-24" }, { id: "taxi", title: "Taxi", amount: 75, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-25" }, { id: "food", title: "Alimente", amount: 120, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-partner", person: "Soție", date: "2026-08-30" }, { id: "old", title: "Vechi", amount: 999, kind: "expense", category: "Altele", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-23" }];
+    expect(weeklySummary(data, "2026-08-27")).toMatchObject({ start: "2026-08-24", end: "2026-08-30", income: 1000, expense: 195, cashflow: 805, transactionCount: 3, categories: [["Alimente", 120], ["Transport", 75]] });
+    expect(weeklySummary(data, "2026-08-27", "member-me")).toMatchObject({ income: 1000, expense: 75, cashflow: 925, transactionCount: 2, categories: [["Transport", 75]] });
   });
 
   it("elimină defensiv prima dată de venit dacă ar începe înaintea planului", () => {

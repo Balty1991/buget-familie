@@ -90,6 +90,9 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Prima suprafață a fiecărui ecran mobil este un singur instrument de decizie: situație, sumă dominantă, măsurătoare verificabilă și acțiunea următoare.
 - Geometria B/F de registru reapare discret în indicatoarele de secțiune și acțiunile de decizie, fără a deveni un ornament repetitiv.
 - Orice culoare semantică este însoțită de o etichetă: verde pentru disponibil/progres, miere pentru alocare/revizuire și coral pentru datorii, atenție ori depășire.
+- Banda principală de plan este o măsurătoare calibrată: marcajele indică intervale și praguri verificabile, nu o bară de progres generică.
+- Fișa de situație, banda de decizie și dovada din registru au niveluri vizuale distincte; ecranul nu este o stivă de module egale.
+- Identitatea B/F reapare numai ca marcaj de secțiune, interval sau decizie, păstrând suprafețele aerisite și orientate spre date.
 
 ## Redesign major mobil — structură aleasă
 

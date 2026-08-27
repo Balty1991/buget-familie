@@ -35,7 +35,9 @@ export async function encryptFamilyData(data: AppData, secret: string): Promise<
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(secret, salt);
-  const plain = encoder.encode(JSON.stringify(data));
+  // Șabloanele sunt preferințe de viteză ale acestui telefon; registrul financiar rămâne partea sincronizată.
+  const shareable = { ...data, settings: { ...data.settings, quickTemplates: [] } };
+  const plain = encoder.encode(JSON.stringify(shareable));
   const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain);
   return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(ciphertext)) };
 }

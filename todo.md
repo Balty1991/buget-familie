@@ -360,3 +360,11 @@
 - [x] Adaugă modul „Introducere rapidă” pentru o cheltuială sau încasare: sumă, categorie, sursă și salvare în același flux scurt.
 - [x] Adaugă tranziții de maximum 220 ms numai pentru schimbarea între ecrane și deschiderea foilor, cu respectarea reducerii mișcării.
 - [x] Reauditează pe telefon ecranele Astăzi, Plan, Instrumente și Analiză cu date reale, în temele luminoasă și întunecată.
+
+## Captură rapidă și control săptămânal
+
+- [x] Păstrează șabloane locale reutilizabile pentru cheltuieli frecvente, fără să creeze tranzacții până la confirmarea utilizatorului.
+- [x] Adaugă căutare locală în Jurnal după titlu, categorie, sursă, membru și sumă, împreună cu numărul de rezultate.
+- [x] Calculează recapitularea săptămânii curente din tranzacțiile înregistrate, pentru Familie sau membrul ales.
+- [x] Afișează în recapitulare veniturile, cheltuielile, diferența și categoriile principale cu valori exacte, fără estimări ascunse.
+- [x] Verifică pe 360–430 px că șabloanele, căutarea și recapitularea se păstrează lizibile și nu afectează înregistrările existente.
