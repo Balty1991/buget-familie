@@ -399,3 +399,12 @@
 - [x] Reproiectează navigația, anteturile, suprafețele, listele, formularele și stările active pentru scanare rapidă, fără carduri supradimensionate ori rânduri încărcate.
 - [x] Înlocuiește temele prin variații moderne cu identitate proprie, contrast stabil și semantica financiară conservată pentru verde, miere și coral.
 - [x] Auditează la 360–430 px toate traseele în lumină și întuneric și publică numai dacă nu există overflow, suprapuneri sau text ilizibil.
+
+## Teme cu identitate distinctă
+
+- [x] Compactează anteturile mobile, reduce spațiul decorativ și protejează ultimul conținut de bara de navigație fixă.
+- [x] Aliniază textele și valorile secundare din Plan și Jurnal pentru citire rapidă pe 360–430 px.
+- [x] Reduce titlul din Instrumente și transformă banda de categorii într-un control compact, complet încadrat pe 360–430 px.
+- [x] Reproiectează cele patru teme ca materiale și sisteme vizuale distincte, nu doar ca variații de verde în aceeași structură.
+- [x] Diferențiază selectorul prin mostre recognoscibile, nume de stil explicite și indicii vizuale ale suprafețelor, accentelor și navigației.
+- [x] Verifică pe 360–430 px contrastul, stările active și persistența fiecărei teme înainte de publicarea Pages și APK.

@@ -12,11 +12,11 @@ import { WeeklySummaryPanel } from "@/components/WeeklySummaryPanel";
 type MainView = "today" | "journal" | "plan" | "obligations" | "insights" | "utilities";
 type MoreView = "overview" | "debts" | "savings" | "receipts" | "recurring" | "reports" | "assistant" | "settings" | "sync" | "guide";
 type ThemeId = "ivory" | "forest" | "midnight" | "copper";
-const themeOptions: Array<{ id: ThemeId; name: string; detail: string; swatches: [string, string, string] }> = [
-  { id: "ivory", name: "Ivory Ledger", detail: "Lumină caldă, verde de atelier și accente de miere.", swatches: ["#f7f5ef", "#1b5749", "#eec64d"] },
-  { id: "forest", name: "Forest Night", detail: "Verde nocturn pentru lectura liniștită de seară.", swatches: ["#081e19", "#1b5b4c", "#efd079"] },
-  { id: "midnight", name: "Black–Blue", detail: "Negru-albăstrui cu albastru electric controlat.", swatches: ["#050914", "#102448", "#5da8ff"] },
-  { id: "copper", name: "Ink–Copper", detail: "Grafit dens, cupru cald și date accentuate discret.", swatches: ["#131210", "#3a3028", "#d38d59"] },
+const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
+  { id: "ivory", name: "Porcelain Studio", detail: "Porțelan rece, teal dens și linii de cobalt pentru citire luminoasă.", mood: "ZI · EDITORIAL" },
+  { id: "forest", name: "Aurora Moss", detail: "Verde de mușchi, reflexe aurora și suprafețe mate pentru seară.", mood: "SEARĂ · ORGANIC" },
+  { id: "midnight", name: "Ultraviolet Grid", detail: "Indigo profund, violet controlat și semnale cyan pentru focus nocturn.", mood: "NOAPTE · DIGITAL" },
+  { id: "copper", name: "Ember Ledger", detail: "Cărbune cald, cupru ars și hârtie fumurie pentru un ton tactil.", mood: "CALD · TACTIL" },
 ];
 const STORE_KEY = "buget-familie:app-data-v6";
 const LEGACY_KEY = "buget-familie:app-data-v3";
@@ -39,7 +39,7 @@ function Modal({ title, children, onClose }: { title: string; children: ReactNod
 }
 
 function ThemePicker({ theme, onChange, onClose }: { theme: ThemeId; onChange: (theme: ThemeId) => void; onClose: () => void }) {
-  return <div className="bf-modal-backdrop bf-theme-backdrop" role="presentation" onMouseDown={onClose}><section className="bf-modal bf-theme-picker" role="dialog" aria-modal="true" aria-label="Alege aspectul" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="bf-kicker">ASPECTUL APLICAȚIEI</p><h2>Alege materialul care îți este mai ușor de citit.</h2></div><button className="bf-icon-button" aria-label="Închide alegerea temei" onClick={onClose}><X size={19} /></button></header><p className="bf-theme-picker-intro">Semnificația rămâne neschimbată: veniturile, cheltuielile, alertele și plicurile se citesc la fel în fiecare temă.</p><div className="bf-theme-grid">{themeOptions.map((option) => <button key={option.id} className={`bf-theme-option ${option.id} ${theme === option.id ? "selected" : ""}`} aria-pressed={theme === option.id} onClick={() => { onChange(option.id); onClose(); }}><span className="bf-theme-swatch" style={{ background: `linear-gradient(135deg, ${option.swatches[0]} 0 52%, ${option.swatches[1]} 52% 77%, ${option.swatches[2]} 77%)` }} /><span><b>{option.name}</b><small>{option.detail}</small></span><i>{theme === option.id && <Check size={14} />}</i></button>)}</div></section></div>;
+  return <div className="bf-modal-backdrop bf-theme-backdrop" role="presentation" onMouseDown={onClose}><section className="bf-modal bf-theme-picker" role="dialog" aria-modal="true" aria-label="Alege aspectul" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="bf-kicker">ASPECTUL APLICAȚIEI</p><h2>Alege o atmosferă, nu doar o culoare.</h2></div><button className="bf-icon-button" aria-label="Închide alegerea temei" onClick={onClose}><X size={19} /></button></header><p className="bf-theme-picker-intro">Fiecare temă schimbă materialul, accentele și stările active. Verdele rămâne progres, mierea înseamnă revizuire, iar coralul atrage atenția.</p><div className="bf-theme-grid">{themeOptions.map((option) => <button key={option.id} className={`bf-theme-option ${option.id} ${theme === option.id ? "selected" : ""}`} aria-pressed={theme === option.id} onClick={() => { onChange(option.id); onClose(); }}><span className="bf-theme-swatch" aria-hidden="true"><span /></span><span><em>{option.mood}</em><b>{option.name}</b><small>{option.detail}</small></span><i>{theme === option.id && <Check size={14} />}</i></button>)}</div></section></div>;
 }
 
 function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) { return <label className="bf-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>; }
@@ -297,7 +297,7 @@ function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteReceipt, 
     if (tab === "guide") return <FamilyGuide />;
     return <SyncPanel data={data} onChange={onChange} />;
   };
-  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">INSTRUMENTE</p><h1>Alege ce vrei <em>să gestionezi.</em></h1></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">Glisează pentru mai multe</p><div className="bf-more-tabs" role="tablist" aria-label="Categorii de instrumente">{tabs.map((item) => { const Icon = item.icon; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}</button>; })}</div></div>{content()}</div>;
+  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">INSTRUMENTE</p><h1>Alege un <em>instrument.</em></h1></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">Glisează pentru mai multe</p><div className="bf-more-tabs" role="tablist" aria-label="Categorii de instrumente">{tabs.map((item) => { const Icon = item.icon; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}</button>; })}</div></div>{content()}</div>;
 }
 
 function SettingsPanel({ data, onChange, onReset }: { data: AppData; onChange: (value: AppData) => void; onReset: () => void }) {
