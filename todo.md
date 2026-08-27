@@ -462,6 +462,6 @@
 
 ## Incident urgent — pagină albă pe GitHub Pages mobil
 
-- [ ] Izolează eroarea de încărcare din buildul public și identifică resursa sau API-ul incompatibil cu browserul mobil.
-- [ ] Aplică o corecție fără ștergerea ori migrarea datelor existente în localStorage.
-- [ ] Verifică Pages cu cache nou, browser mobil și APK pentru commitul remedierii înainte de livrare.
+- [x] Izolează eroarea de încărcare din buildul public și identifică resursa sau API-ul incompatibil cu browserul mobil.
+- [x] Aplică o corecție fără ștergerea ori migrarea datelor existente în localStorage.
+- [x] Verifică Pages cu cache nou, browser mobil și APK pentru commitul remedierii înainte de livrare.
