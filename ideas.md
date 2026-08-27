@@ -87,6 +87,9 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Elemente de atelier apar numai când explică un prag, o limită, o categorie sau o acțiune. Claritatea și spațiul liber au prioritate față de orice textură decorativă.
 - IBM Plex Serif este rezervată sumei dominante, totalurilor majore și deciziei curente; toate controalele, filtrele și metadatele rămân în IBM Plex Sans compact.
 - În tema întunecată, starea activă folosește o suprafață închisă cu text cu contrast ridicat și o subliniere semantică; nu folosim niciodată text alb peste fundal aproape alb.
+- Prima suprafață a fiecărui ecran mobil este un singur instrument de decizie: situație, sumă dominantă, măsurătoare verificabilă și acțiunea următoare.
+- Geometria B/F de registru reapare discret în indicatoarele de secțiune și acțiunile de decizie, fără a deveni un ornament repetitiv.
+- Orice culoare semantică este însoțită de o etichetă: verde pentru disponibil/progres, miere pentru alocare/revizuire și coral pentru datorii, atenție ori depășire.
 
 ## Redesign major mobil — structură aleasă
 

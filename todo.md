@@ -352,3 +352,11 @@
 - [x] Corectează stările active cu contrast insuficient, inclusiv filele și bara de navigație din tema întunecată.
 - [x] Simplifică antetul, titlurile, panourile și formularele astfel încât un singur ecran să nu concureze pentru atenție.
 - [x] Verifică acțiunile frecvente cu o singură mână, fără text ascuns, zone prea mici sau derulare orizontală.
+
+## Corecții mobile semnalate în utilizare
+
+- [x] Reconfigurează totalurile Planului pe telefon astfel încât fiecare valoare să fie lizibilă, fără depășire de lățime sau tăiere.
+- [x] Transformă meniul de instrumente într-o bandă de categorii navigabilă prin swipe lateral, cu indicator vizibil și fără rânduri de carduri albastre aglomerate.
+- [x] Adaugă modul „Introducere rapidă” pentru o cheltuială sau încasare: sumă, categorie, sursă și salvare în același flux scurt.
+- [x] Adaugă tranziții de maximum 220 ms numai pentru schimbarea între ecrane și deschiderea foilor, cu respectarea reducerii mișcării.
+- [x] Reauditează pe telefon ecranele Astăzi, Plan, Instrumente și Analiză cu date reale, în temele luminoasă și întunecată.
