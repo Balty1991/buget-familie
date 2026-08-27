@@ -30,7 +30,7 @@ jobs:
       - name: Type check
         run: pnpm check
       - name: Build GitHub Pages bundle
-        run: pnpm vite build --base=/buget-familie/
+        run: pnpm run build:pages
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:

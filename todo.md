@@ -459,3 +459,9 @@
 - [ ] Adaugă pull–merge–retry cu backoff și rezolvare clară pentru conflicte/rate limit în sincronizarea GitHub.
 - [ ] Înlocuiește modalele cu dialoguri care rețin focusul, se închid sigur și întorc focusul la controlul de origine.
 - [ ] Simplifică următoarele ecrane: cronologia devine dominantă în Mișcări, scadențele în Obligații și concluzia lunară în Analiză.
+
+## Incident urgent — pagină albă pe GitHub Pages mobil
+
+- [ ] Izolează eroarea de încărcare din buildul public și identifică resursa sau API-ul incompatibil cu browserul mobil.
+- [ ] Aplică o corecție fără ștergerea ori migrarea datelor existente în localStorage.
+- [ ] Verifică Pages cu cache nou, browser mobil și APK pentru commitul remedierii înainte de livrare.
