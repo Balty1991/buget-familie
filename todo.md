@@ -300,3 +300,25 @@
 - [x] Adaugă o perspectivă Familie/Membru în bilanț, filtrând tranzacțiile, sursele, datoriile și economiile relevante.
 - [x] Încarcă panoul asistentului numai când este deschis și păstrează funcțiile locale existente.
 - [x] Testează plata parțială, plata finală, filtrul de bilanț și mărimea bundle-ului înainte de publicare.
+
+## Plicuri filtrate, rate marcate și bilanț PDF
+
+- [x] Adaugă perspectivă Familie/Membru pentru lista, graficul, alertele și istoricul plicurilor.
+- [x] Leagă plata ratei de datorie și păstrează în Jurnal o etichetă vizibilă pentru plată parțială sau achitare integrală.
+- [x] Afișează istoricul plăților aferente fiecărei datorii, cu sumă, dată, sursă și sold rămas după plată.
+- [x] Generează local un PDF lunar descărcabil cu bilanț, venituri, cheltuieli, datorii, rate și economii pentru perspectiva aleasă.
+- [x] Verifică PDF-ul, filtrul familial și plata parțială/finală pe mobil înainte de publicarea web și APK.
+
+## Reorganizare majoră după funcțiile în curs
+
+- [ ] Cercetează aprofundat arhitectura de informație, modelele de navigație și experiența zilnică din aplicații financiare mobile moderne.
+- [ ] Auditează toate ecranele actuale și definește o ierarhie nouă, pornind de la decizia zilnică, nu de la module izolate.
+- [ ] Reorganizează meniul, ecranul principal, Jurnalul, Planul, Obiectivele și instrumentele într-un sistem mai clar și mai rapid de parcurs.
+- [ ] Redesenază tipografia, spațierea, suprafețele și stările fără a modifica sau ascunde datele financiare reale.
+- [ ] Verifică noile fluxuri individuale și familiale pe mobil, apoi publică numai versiunea validată web și APK.
+
+## Platformă mobilă prioritară
+
+- [x] Măsoară încărcarea inițială și confirmă că rapoartele, PDF-ul, bonurile și asistentul nu sunt încărcate înainte de deschiderea lor.
+- [x] Menține controalele frecvente la dimensiuni tactile, fără text trunchiat ori acțiuni ascunse pe 360–430 px.
+- [x] Verifică fluxurile de înregistrare, plată rată, plic, bilanț și PDF pe telefon înainte de orice publicare.

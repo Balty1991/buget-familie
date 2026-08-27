@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, savingSuggestions, sourceBalance } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, savingSuggestions, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -40,6 +40,10 @@ describe("registrul financiar Buget Familie", () => {
     expect(recordDebtPayment(paid!, { debtId: "credit", amount: 100, sourceId: source.id, memberId: "member-wife" })).toBeUndefined();
     const finalPayment = recordDebtPayment(paid!, { debtId: "credit", amount: 600, sourceId: source.id, memberId: "member-me" });
     expect(finalPayment?.debts[0].remaining).toBe(0);
+    expect(finalPayment?.transactions[0].title).toContain("achitată integral");
+    expect(debtPaymentHistory(finalPayment!, "credit")).toHaveLength(2);
+    expect(debtPaymentHistory(finalPayment!, "credit")[0].debtId).toBe("credit");
+    expect(debtPaymentHistory(finalPayment!, "credit")[0].debtRemainingAfter).toBe(0);
   });
 
   it("filtrează bilanțul pe membru, incluzând doar sursele și obligațiile personale sau comune", () => {

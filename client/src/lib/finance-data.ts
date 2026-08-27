@@ -24,6 +24,10 @@ export type Transaction = {
   receiptId?: string;
   /** Legătură cu plata recurentă care a generat mișcarea. */
   recurringId?: string;
+  /** Datoria redusă de această plată confirmată manual. */
+  debtId?: string;
+  /** Soldul datoriei imediat după această plată, pentru istoricul explicabil. */
+  debtRemainingAfter?: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -156,11 +160,13 @@ export const allocationStatus = (data: AppData, allocation: BudgetAllocation) =>
 export const financialBalance = (data: AppData, start?: string, end?: string, memberId?: string) => { const entries = data.transactions.filter((item) => (!start || item.date >= start) && (!end || item.date <= end) && (!memberId || item.memberId === memberId)); const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const scopedDebts = data.debts.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const scopedSavings = data.savings.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const monthlyRates = scopedDebts.reduce((sum, item) => sum + item.monthly, 0); const debtRemaining = scopedDebts.reduce((sum, item) => sum + item.remaining, 0); const savingsCurrent = scopedSavings.reduce((sum, item) => sum + item.current, 0); const sources = data.settings.paymentSources.filter((source) => !memberId || !source.memberId || source.memberId === memberId); const liquidFunds = sources.reduce((sum, source) => sum + sourceBalance(data, source.id), 0); return { income, expense, cashflow: income - expense, monthlyRates, debtRemaining, savingsCurrent, liquidFunds, netLiquidPosition: liquidFunds - debtRemaining, memberId }; };
 
 /** Confirmă o plată reală de rată: scade doar datoria aleasă și înregistrează ieșirea din sursa aleasă. */
+export const debtPaymentHistory = (data: AppData, debtId: string) => data.transactions.filter((item) => item.debtId === debtId).sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || ""));
+
 export const recordDebtPayment = (data: AppData, input: { debtId: string; amount: number; sourceId: string; memberId: string; date?: string; note?: string }) => {
   const debt = data.debts.find((item) => item.id === input.debtId); const source = data.settings.paymentSources.find((item) => item.id === input.sourceId); const member = data.settings.members.find((item) => item.id === input.memberId); const amount = Math.round(Math.max(0, input.amount) * 100) / 100;
   if (!debt || !source || !member || (source.memberId && source.memberId !== member.id) || amount <= 0 || amount > debt.remaining) return undefined;
-  const now = new Date().toISOString(); const transaction: Transaction = { id: newId("debt-payment"), title: `Plată rată — ${debt.name}`, amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || `Plată confirmată pentru ${debt.name}`, allocationId: "outside", createdAt: now, updatedAt: now };
-  return { ...data, transactions: [transaction, ...data.transactions], debts: data.debts.map((item) => item.id === debt.id ? { ...item, remaining: Math.max(0, Math.round((item.remaining - amount) * 100) / 100), updatedAt: now } : item) };
+  const now = new Date().toISOString(); const remainingAfter = Math.max(0, Math.round((debt.remaining - amount) * 100) / 100); const paymentState = remainingAfter === 0 ? "achitată integral" : "plată parțială"; const transaction: Transaction = { id: newId("debt-payment"), debtId: debt.id, debtRemainingAfter: remainingAfter, title: `Rată ${paymentState} — ${debt.name}`, amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || `Rată ${paymentState}; sold rămas ${remainingAfter.toFixed(2)} RON`, allocationId: "outside", createdAt: now, updatedAt: now };
+  return { ...data, transactions: [transaction, ...data.transactions], debts: data.debts.map((item) => item.id === debt.id ? { ...item, remaining: remainingAfter, updatedAt: now } : item) };
 };
 
 /** Prima scadență lunară care intră în perioada curentă de plan, dacă există. */
