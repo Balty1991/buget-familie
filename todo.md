@@ -331,3 +331,9 @@
 - [x] Măsoară încărcarea inițială și confirmă că rapoartele, PDF-ul, bonurile și asistentul nu sunt încărcate înainte de deschiderea lor.
 - [x] Menține controalele frecvente la dimensiuni tactile, fără text trunchiat ori acțiuni ascunse pe 360–430 px.
 - [x] Verifică fluxurile de înregistrare, plată rată, plic, bilanț și PDF pe telefon înainte de orice publicare.
+
+## Confirmare distribuție redesign major
+
+- [x] Verifică ramura `gh-pages`, starea GitHub Pages și conținutul live cache-busted pentru noua navigație Astăzi/Mișcări/Plan/Obligații/Analiză.
+- [x] Confirmă buildul APK pentru commitul redesignului și verifică faptul că nu include meniul vechi.
+- [x] Marchează distribuția drept livrată numai după ce pagina publică și versiunea mobilă afișează noua structură.
