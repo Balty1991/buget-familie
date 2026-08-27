@@ -84,6 +84,9 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Pe mobil, prima vedere formulează o singură propoziție de decizie, o valoare dominantă și următoarea acțiune; titlurile editoriale rămân secundare față de această claritate.
 - Și în lipsa datelor, ecranele păstrează fișe pregătite, linii de registru, etichete perforate și zone calibrate, nu carduri goale generice.
 - Monograma este citită mai întâi ca B/F geometric de registru, fără interpretare de scut, mascotă sau insignă nostalgică; accentele de casă servesc doar geometria B/F.
+- Elemente de atelier apar numai când explică un prag, o limită, o categorie sau o acțiune. Claritatea și spațiul liber au prioritate față de orice textură decorativă.
+- IBM Plex Serif este rezervată sumei dominante, totalurilor majore și deciziei curente; toate controalele, filtrele și metadatele rămân în IBM Plex Sans compact.
+- În tema întunecată, starea activă folosește o suprafață închisă cu text cu contrast ridicat și o subliniere semantică; nu folosim niciodată text alb peste fundal aproape alb.
 
 ## Redesign major mobil — structură aleasă
 

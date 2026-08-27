@@ -337,3 +337,18 @@
 - [x] Verifică ramura `gh-pages`, starea GitHub Pages și conținutul live cache-busted pentru noua navigație Astăzi/Mișcări/Plan/Obligații/Analiză.
 - [x] Confirmă buildul APK pentru commitul redesignului și verifică faptul că nu include meniul vechi.
 - [x] Marchează distribuția drept livrată numai după ce pagina publică și versiunea mobilă afișează noua structură.
+
+## Revizuire totală de claritate mobilă
+
+- [x] Înlocuiește stilul editorial întunecat cu suprafețe simple, contrast stabil și text lizibil fără titluri supradimensionate.
+- [x] Elimină toate stările cu fundal deschis și text deschis, precum selectorul activ sau banda de decizie din tema întunecată.
+- [x] Redu fiecare ecran la ierarhia: titlu scurt, informație decisivă, acțiune principală și detalii progresive.
+- [x] Uniformizează navigația inferioară și controalele pentru a nu concura cu datele financiare ori cu bara browserului.
+- [x] Verifică pe 360–430 px tema luminoasă și cea întunecată înainte de o nouă publicare.
+
+## Evaluare multi-utilizator a interfeței
+
+- [x] Evaluează telefonul din perspectiva persoanei singure, a cuplului/familiei, a utilizatorului grăbit, a utilizatorului care are nevoie de contrast ridicat și a utilizatorului care verifică cifre exacte.
+- [x] Corectează stările active cu contrast insuficient, inclusiv filele și bara de navigație din tema întunecată.
+- [x] Simplifică antetul, titlurile, panourile și formularele astfel încât un singur ecran să nu concureze pentru atenție.
+- [x] Verifică acțiunile frecvente cu o singură mână, fără text ascuns, zone prea mici sau derulare orizontală.
