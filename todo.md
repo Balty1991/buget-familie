@@ -58,7 +58,7 @@
 - [x] Verifică planul calendaristic cu dată de salariu, limită totală, limită săptămânală și alocări pe membri/categorii.
 - [x] Verifică în formularul de cheltuieli alegerea membrului și a sursei concrete de plată.
 - [x] Verifică răspunsurile asistentului pentru întrebări scrise și întrebări rapide despre limită, cheltuieli și datorii.
-- [ ] Publică actualizarea stabilizată pe GitHub Pages și confirmă versiunea live.
+- [x] Publică actualizarea stabilizată pe GitHub Pages și confirmă versiunea live.
 
 ## Audit și redesign major
 
@@ -67,7 +67,7 @@
 - [x] Cercetează produse de buget familial, planificare pe intervale și practici mobile accesibile.
 - [x] Redefinește arhitectura informației și navigația mobilă pentru fluxuri zilnice rapide.
 - [x] Construiește un redesign mobil-first cu ierarhie mai clară, contrast, spațiere, feedback tactil și grafice utile.
-- [ ] Validează fiecare flux critic și publică versiunea stabilizată în GitHub Pages.
+- [x] Validează fiecare flux critic și publică versiunea stabilizată în GitHub Pages.
 
 ## Extindere mobilă și APK
 
@@ -239,7 +239,7 @@
 - [x] Cercetează comparativ aplicații actuale de buget familial, cheltuieli comune și planificare financiară mobilă.
 - [x] Definește un roadmap prioritar cu funcții utile, confidențiale și realiste pentru versiunea GitHub-only.
 - [x] Implementează și validează îmbunătățirile cu impact ridicat, fără controale demonstrative sau date simulate.
-- [ ] Publică GitHub Pages și APK-ul numai după verificări complete și documentează limitările onest.
+- [x] Publică GitHub Pages și APK-ul numai după verificări complete și documentează limitările onest.
 
 ## Paletă de teme memorate
 
@@ -250,8 +250,8 @@
 
 ## Trasabilitate înainte de livrare
 
-- [ ] Confirmă separat: bilanț, plicuri și alerte, transferuri, împărțirea pe membri, fereastra de venit, recurente, bonuri OCR, sincronizare, teme, asistent local, mobil, Pages și APK.
-- [ ] Marchează drept livrate numai funcțiile care au test automat sau test manual documentat; menține vizibile limitările GitHub-only.
+- [x] Confirmă separat: bilanț, plicuri și alerte, transferuri, împărțirea pe membri, fereastra de venit, recurente, bonuri OCR, sincronizare, teme, asistent local, mobil, Pages și APK.
+- [x] Marchează drept livrate numai funcțiile care au test automat sau test manual documentat; menține vizibile limitările GitHub-only.
 
 ## Asistent financiar personalizat
 
@@ -259,7 +259,7 @@
 - [x] Arată pentru fiecare recomandare suma, perioada și regula locală care au produs-o.
 - [x] Propune pași de planificare neautomată, fără plăți, transferuri sau recomandări de investiții.
 - [x] Adaugă teste pentru lipsa datelor, presiunea ratelor, schimbarea ritmului și recomandările de plic.
-- [ ] Verifică asistentul pe mobil, documentează limitele și publică numai după validare.
+- [x] Verifică asistentul pe mobil, documentează limitele și publică numai după validare.
 
 ## Întrebări de calcul pentru asistent
 
