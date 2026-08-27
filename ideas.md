@@ -78,3 +78,6 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Pe mobil, fișele urmează ordinea funcțională: decizia curentă, planul măsurat, banda de decizie, pulsul și registrul; nicio suprafață majoră nu devine un card financiar generic.
 - Semnele de măsură apar numai pentru un prag, interval, consum sau pas următor și folosesc aceeași gramatică de bandă calibrată.
 - Fiecare modul răspunde concret la una dintre întrebările: ce s-a întâmplat, ce înseamnă sau ce decidem acum; etichetele generice sunt înlocuite cu formulări de gospodărie clare.
+- Suprafețele secundare folosesc linii de registru, benzi etichetate sau muchii perforate în locul cardurilor neutre; riglele apar numai pentru progres, limite, praguri și intervale.
+- Mierea este rezervată pentru alocare și revizuire, coralul pentru datorii, depășiri și atenție, iar verdele pentru disponibil și progres; culoarea nu este decorativă.
+- Fișa „punct de decizie” și planul măsurat domină ecranul; pulsul, bilanțul și jurnalul sunt dovezi de lucru care explică ce s-a întâmplat și ce urmează.

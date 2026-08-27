@@ -6,7 +6,7 @@
 
 | Domeniu | Funcție disponibilă |
 |---|---|
-| Panou financiar și bilanț | Indicatori calculați din registrul real; o stare depășită este semnalată explicit, fără a fi mascată ca disponibil. Bilanțul personal sau familial separă fluxul perioadei, soldurile utilizabile, ratele declarate, datoria rămasă și economiile urmărite. |
+| Panou financiar și bilanț | Indicatori calculați din registrul real; o stare depășită este semnalată explicit, fără a fi mascată ca disponibil. Bilanțul are perspectivă **Familie** sau **Membru**, filtrează mișcările și sursele nominale, dar păstrează vizibile obligațiile/economiile comune. |
 | Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are dată ISO, membru, sursă de plată și categorie. |
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la venit | Data estimată a următorului venit, prima dată posibilă opțională, limită totală, limită săptămânală calculată, zile rămase și alocări. Când există un interval, toate calculele folosesc prudent prima dată posibilă. |
@@ -14,9 +14,9 @@
 | Puls, alerte și realocări | Plicurile au bare interactive, selectare de detaliu, alertă la 80% sau depășire, istoric filtrabil al realocărilor și transfer doar între categorii finanțate din aceeași sursă. |
 | Statistici | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
-| Datorii și economii | Adăugare, editare, ștergere și calcule de progres. |
+| Datorii și economii | Adăugare, editare, ștergere protejată, proprietar opțional (familie sau membru) și calcule de progres. O rată poate fi confirmată dintr-o sursă reală: creează cheltuiala în Jurnal și reduce automat soldul aceleiași datorii. |
 | Bonuri mobile | Maximum două fotografii comprimate local, OCR local pentru produse și prețuri individuale, categorii sugerate și repartizare editabilă; liniile trebuie să egaleze totalul înainte de salvare. |
-| Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit și întrebări rapide. |
+| Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit, întrebări rapide și calcule directe, de exemplu buget săptămânal împărțit pe zi. Se încarcă numai când este deschis. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
 | Aspect și control | Selector persistent cu Ivory Ledger, Forest Night, Black–Blue și Ink–Copper; semnificația veniturilor, cheltuielilor și alertelor rămâne aceeași în toate temele. Include monogramă locală B/F, favicon, resetare controlată și export/import de rezervă. |
@@ -38,13 +38,15 @@ Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișa
 
 > **Bilanțul nu dublează valorile.** Fluxul perioadei este venit minus cheltuieli înregistrate; ratele sunt obligații declarate, datoria rămasă este o valoare de pasiv, iar economiile sunt expuse separat. Poziția lichidă netă este soldurile utilizabile minus datoria rămasă.
 
+> O **plată de rată** se confirmă manual cu suma, data, membrul și sursa de plată. Aplicația creează o cheltuială reală în categoria „Rate produse” și reduce soldul acelei datorii cu exact aceeași sumă; nu poate depăși soldul rămas și nu inițiază plăți bancare.
+
 > Soldul inițial reprezintă punctul de pornire introdus de familie. În versiunea actuală nu este un extras bancar reconciliat pe o dată istorică; de aceea, utilizați-l ca bază de pornire la configurare și actualizați-l atent după importuri vechi.
 
 > **Automatizarea recurentă rulează când aplicația este deschisă.** Pentru fiecare cheltuială activată, aplicația creează local o singură mișcare cu ID stabil pentru luna și data scadentă. Nu rulează în fundal când browserul sau aplicația este închisă și nu poate efectua plăți bancare.
 
 ## Performanță mobilă
 
-Componentele de statistici, scadențe și OCR sunt încărcate la cerere. Runtime-ul React și iconițele sunt separate în fișiere cacheabile; buildul de audit a produs un bundle principal de aproximativ **703 kB** înainte de compresie, în timp ce OCR-ul, scadențele și rapoartele rămân în module separate încărcate numai la nevoie.
+Componentele de statistici, scadențe, OCR și asistent sunt încărcate la cerere. Runtime-ul React și iconițele sunt separate în fișiere cacheabile; buildul curent separă asistentul într-un modul de aproximativ **19 kB** înainte de compresie, astfel încât acesta nu blochează prima încărcare a tabloului. Bundle-ul principal rămâne monitorizat pentru următoarele separări funcționale.
 
 ## Teme memorate
 
@@ -74,6 +76,7 @@ După conectare, aplicația verifică actualizări aproximativ la 30 de secunde 
 | Modificări simultane ale aceluiași plan | Plicurile și realocările sunt salvate împreună cu planul; pentru a evita pierderea unei modificări, sincronizează înainte de a modifica același plan pe alt telefon. |
 | Fotografii ale bonurilor | Maximum două pe bon, comprimate local; fotografiile rămân locale și nu intră în pachetul GitHub. |
 | Asistent LLM extern | Nu; GitHub Models a fost retras. Asistentul actual este local și explicabil. |
+| Plata unei rate | Confirmare manuală în aplicație; actualizează registrul și soldul datoriei, dar nu trimite bani și nu poate accesa banca. |
 
 Datele financiare necriptate, bonurile și cheile nu trebuie comise în repo-ul public sau incluse în artefactele GitHub Pages. GitHub avertizează că Pages este public și nu trebuie utilizat pentru tranzacții sensibile.[^pages]
 
@@ -87,7 +90,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, migrarea defensivă a datelor vechi, calculul bilanțului derivat, plicurile pe surse și membri, realocarea limitelor, pragurile de alertă, prima dată posibilă a venitului, scadențele recurente automate și ștergerea lor sincronizabilă, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
+Testele de regresie verifică parserul românesc pentru sume, plata parțială și finală a unei rate, filtrul de bilanț pe membru, migrarea defensivă a datelor vechi, plicurile pe surse și membri, realocarea limitelor, pragurile de alertă, prima dată posibilă a venitului, scadențele recurente automate și ștergerea lor sincronizabilă, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 

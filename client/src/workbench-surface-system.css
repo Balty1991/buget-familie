@@ -1,29 +1,41 @@
 /* Buget Familie — suprafețe de lucru: structura de registru explică suma, contextul și următorul pas, fără ornamente gratuite. */
 .bf-pulse-grid article, .bf-ledger-mini, .bf-balance-card, .bf-upcoming, .bf-journal, .bf-filter-sheet { position: relative; overflow: hidden; }
 .bf-pulse-grid article { background-image: linear-gradient(to bottom, transparent 0, transparent 64px, rgba(31,72,60,.075) 65px, transparent 66px), linear-gradient(145deg, #fffefa, #f8f6ef); }
-.bf-pulse-grid article::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: #d9b64d; opacity: .76; }
+.bf-pulse-grid article::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: #4f8a74; opacity: .76; }
 .bf-pulse-grid article:nth-child(2)::after { background: #c96855; }
-.bf-pulse-grid article:nth-child(3)::after { background: #d3a832; }
+.bf-pulse-grid article:nth-child(3)::after { background: #4f8a74; }
 .bf-balance-card::before { content: "BILANȚ · LICHIDITATE · OBLIGAȚII"; display: block; margin: -2px 0 15px; padding-bottom: 9px; border-bottom: 1px dashed rgba(91,118,104,.35); color: #7a8d82; font: 700 .6rem/1 "IBM Plex Sans", sans-serif; letter-spacing: .13em; }
 .bf-upcoming::before { content: "URMĂTORUL ANGAJAMENT"; margin-bottom: 4px; color: #7f8061; font: 700 .6rem/1 "IBM Plex Sans", sans-serif; letter-spacing: .13em; }
 .bf-ledger-mini > div, .bf-journal .bf-ledger-row { position: relative; }
 .bf-ledger-mini > div::after, .bf-journal .bf-ledger-row::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: rgba(42,74,63,.08); }
 .bf-more-grid button { position: relative; overflow: hidden; background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(25,62,52,.06) 72.8%, transparent 73.6%), linear-gradient(145deg, #fffefa, #f8f6ef); }
-.bf-more-grid button::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: #d5b548; opacity: .8; }
+.bf-more-grid button::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: #4f8a74; opacity: .8; }
 .bf-more-grid button:nth-child(2n)::after { background: #5a9079; }
-.bf-more-grid button:nth-child(3n)::after { background: #6b94c4; }
+.bf-more-grid button:nth-child(3n)::after { background: #73847b; }
 .bf-filter-sheet::before { content: "FILTRE DE LECTURĂ"; display: block; padding: 0 0 8px; color: #778980; font: 700 .6rem/1 "IBM Plex Sans", sans-serif; letter-spacing: .13em; }
+.bf-decision-rail { position: relative; overflow: hidden; background-image: linear-gradient(to right, rgba(25,76,64,.14) 0 1px, transparent 1px 25%); background-size: 25% 100%; }
+.bf-decision-rail > div, .bf-decision-rail > button { position: relative; }
+.bf-decision-rail > div::before { content: ""; position: absolute; top: 10px; left: 10px; right: 10px; border-top: 1px dotted rgba(25,76,64,.36); }
+.bf-family-checkin { position: relative; overflow: hidden; border-left: 3px solid #d8b44a; background-image: linear-gradient(to bottom, rgba(216,180,74,.08) 0, rgba(216,180,74,.08) 1px, transparent 1px, transparent 38px); background-size: 100% 38px; }
+.bf-family-checkin::after { content: "FIȘĂ DE DECIZIE · VERIFICĂ ÎNAINTE DE URMĂTOAREA PLATĂ"; display: block; margin: 11px 16px 0; padding-top: 9px; border-top: 1px dashed rgba(128,104,34,.35); color: #857342; font: 700 .56rem/1.2 "IBM Plex Sans", sans-serif; letter-spacing: .11em; }
+.bf-balance-card { background-image: linear-gradient(to bottom, transparent 0, transparent 52px, rgba(31,72,60,.08) 53px, transparent 54px), linear-gradient(145deg, #fffefa, #f2f5ee); }
+.bf-balance-metrics article { position: relative; overflow: hidden; background-image: linear-gradient(to bottom, transparent 0, transparent 64%, rgba(31,72,60,.09) 64.7%, transparent 65.5%); }
+.bf-balance-metrics article::after { content: ""; position: absolute; top: 9px; bottom: 9px; left: 0; width: 2px; background: #4f8a74; }.bf-balance-metrics article:nth-child(2)::after { background: #c96855; }.bf-balance-metrics article:nth-child(3)::after { background: #4f8a74; }
+.bf-upcoming { border-left: 3px solid #c96855; background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 40px, rgba(201,104,85,.09) 41px, transparent 42px); }
 .dark .bf-pulse-grid article { background-image: linear-gradient(to bottom, transparent 0, transparent 64px, rgba(221,240,227,.1) 65px, transparent 66px), linear-gradient(145deg, #14382e, #102c24); }
 .dark .bf-balance-card::before { border-color: rgba(203,230,212,.23); color: #b4ccbd; }
 .dark .bf-ledger-mini > div::after, .dark .bf-journal .bf-ledger-row::after { background: rgba(211,233,218,.12); }
 .dark .bf-more-grid button { background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(220,239,227,.09) 72.8%, transparent 73.6%), linear-gradient(145deg, #15372e, #102b23); }
 .dark .bf-filter-sheet::before { color: #b4ccbd; }
+.dark .bf-family-checkin { background-image: linear-gradient(to bottom, rgba(216,180,74,.1) 0, rgba(216,180,74,.1) 1px, transparent 1px, transparent 38px); }.dark .bf-family-checkin::after { border-color: rgba(238,207,121,.35); color: #e2cf9a; }.dark .bf-balance-card { background-image: linear-gradient(to bottom, transparent 0, transparent 52px, rgba(214,235,220,.08) 53px, transparent 54px), linear-gradient(145deg, #13372d, #102b24); }.dark .bf-balance-metrics article { background-image: linear-gradient(to bottom, transparent 0, transparent 64%, rgba(214,235,220,.09) 64.7%, transparent 65.5%); }
 .theme-midnight .bf-pulse-grid article { background-image: linear-gradient(to bottom, transparent 0, transparent 64px, rgba(193,217,249,.1) 65px, transparent 66px), linear-gradient(145deg, #0e203b, #0a172c); }
 .theme-midnight .bf-balance-card::before { border-color: rgba(172,205,246,.25); color: #b8cde9; }
 .theme-midnight .bf-more-grid button { background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(187,214,249,.1) 72.8%, transparent 73.6%), linear-gradient(145deg, #0e203b, #0a172c); }
 .theme-midnight .bf-filter-sheet::before { color: #b8cde9; }
+.theme-midnight .bf-family-checkin { background-image: linear-gradient(to bottom, rgba(93,168,255,.11) 0, rgba(93,168,255,.11) 1px, transparent 1px, transparent 38px); border-left-color: #5da8ff; }.theme-midnight .bf-family-checkin::after { border-color: rgba(138,190,250,.35); color: #b8d5fa; }.theme-midnight .bf-balance-card { background-image: linear-gradient(to bottom, transparent 0, transparent 52px, rgba(193,217,249,.09) 53px, transparent 54px), linear-gradient(145deg, #0e203b, #09172b); }.theme-midnight .bf-balance-metrics article { background-image: linear-gradient(to bottom, transparent 0, transparent 64%, rgba(193,217,249,.1) 64.7%, transparent 65.5%); }
 .theme-copper .bf-pulse-grid article { background-image: linear-gradient(to bottom, transparent 0, transparent 64px, rgba(239,210,179,.1) 65px, transparent 66px), linear-gradient(145deg, #2a201a, #211914); }
 .theme-copper .bf-balance-card::before { border-color: rgba(237,200,166,.24); color: #d7bca4; }
 .theme-copper .bf-more-grid button { background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(237,210,179,.1) 72.8%, transparent 73.6%), linear-gradient(145deg, #2a201a, #211914); }
 .theme-copper .bf-filter-sheet::before { color: #d7bca4; }
-@media (max-width: 640px) { .bf-pulse-grid article::after, .bf-more-grid button::after { width: 2px; }.bf-balance-card::before { margin-bottom: 12px; }.bf-filter-sheet::before { padding-bottom: 7px; } }
+.theme-copper .bf-family-checkin { background-image: linear-gradient(to bottom, rgba(211,141,89,.1) 0, rgba(211,141,89,.1) 1px, transparent 1px, transparent 38px); border-left-color: #d38d59; }.theme-copper .bf-family-checkin::after { border-color: rgba(225,176,132,.34); color: #e5c4a5; }.theme-copper .bf-balance-card { background-image: linear-gradient(to bottom, transparent 0, transparent 52px, rgba(239,210,179,.09) 53px, transparent 54px), linear-gradient(145deg, #2a201a, #201812); }.theme-copper .bf-balance-metrics article { background-image: linear-gradient(to bottom, transparent 0, transparent 64%, rgba(239,210,179,.1) 64.7%, transparent 65.5%); }
+@media (max-width: 640px) { .bf-pulse-grid article::after, .bf-more-grid button::after { width: 2px; }.bf-balance-card::before { margin-bottom: 12px; }.bf-filter-sheet::before { padding-bottom: 7px; }.bf-family-checkin::after { margin: 9px 13px 0; font-size: .52rem; } }

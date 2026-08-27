@@ -4,4 +4,8 @@
 .bf-objective-card .bf-objective-actions .bf-objective-edit { color: #f8e7a2; border-color: rgba(239,208,121,.44); }
 .bf-objective-card .bf-objective-actions button:last-child { width: 38px; padding: 0; color: #ffd0c5; border-color: rgba(214,104,82,.48); background: rgba(176,73,53,.32); }
 .bf-objective-card .bf-objective-actions button:active { transform: scale(.97); }
+.bf-objective-card .bf-objective-actions .bf-objective-pay { background: #d8b44a; color: #16382f; border-color: #d8b44a; font-weight: 800; }
+.bf-debt-payment-intro { margin: 0 0 18px; padding: 14px; border-radius: 12px; background: rgba(210, 164, 55, .12); border-left: 3px solid #d8b44a; }
+.bf-debt-payment-intro p:last-of-type { margin: 5px 0 8px; font-size: .86rem; line-height: 1.45; }
+.bf-debt-payment-intro strong { display: block; color: #b96a55; font-size: 1.1rem; }
 @media (max-width: 640px) { .bf-objective-actions { width: 100%; margin: 3px 0 0; }.bf-objective-card .bf-objective-actions .bf-objective-edit { flex: 1; } }

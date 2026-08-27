@@ -291,3 +291,12 @@
 - [x] Rafinază bara de navigație, meniurile și filtrele pentru scanare rapidă, ținte tactile clare și stări active discrete.
 - [x] Confirmă încărcarea la cerere a rapoartelor, bonurilor și scadențelor; bundle-ul principal rămâne monitorizat pentru următoarea separare funcțională.
 - [x] Verifică mobil ecranele Acasă, Obiective și Asistent; restul fluxurilor rămân în verificarea de publicare.
+
+## Rate plătite, bilanț filtrat și asistent rapid
+
+- [x] Adaugă acțiunea „Plătește rată” pe o datorie, cu suma, sursa, membrul și data confirmate de utilizator.
+- [x] Creează o cheltuială reală la plată și scade aceeași sumă din soldul rămas al datoriei, fără a permite valori negative.
+- [x] Păstrează editarea manuală a datoriei și explică faptul că plata ratei nu rulează automat în fundal.
+- [x] Adaugă o perspectivă Familie/Membru în bilanț, filtrând tranzacțiile, sursele, datoriile și economiile relevante.
+- [x] Încarcă panoul asistentului numai când este deschis și păstrează funcțiile locale existente.
+- [x] Testează plata parțială, plata finală, filtrul de bilanț și mărimea bundle-ului înainte de publicare.

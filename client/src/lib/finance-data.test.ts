@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, savingSuggestions, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -26,6 +26,29 @@ describe("registrul financiar Buget Familie", () => {
     data.transactions = [{ id: "income", title: "Salariu", amount: 3000, kind: "income", category: "Venit", source: source.name, sourceId: source.id, person: "Eu", memberId: "member-me", date: "2026-08-01" }, { id: "expense", title: "Alimente", amount: 900, kind: "expense", category: "Alimente", source: source.name, sourceId: source.id, person: "Eu", memberId: "member-me", date: "2026-08-02" }];
     data.debts = [{ id: "loan", name: "Credit", remaining: 38000, monthly: 650, due: "29 august" }]; data.savings = [{ id: "fund", name: "Fond", current: 2000, target: 5000, due: "Decembrie", tone: "honey" }];
     expect(financialBalance(data, "2026-08-01", "2026-08-31")).toMatchObject({ income: 3000, expense: 900, cashflow: 2100, monthlyRates: 650, debtRemaining: 38000, savingsCurrent: 2000, liquidFunds: 3100, netLiquidPosition: -34900 });
+  });
+
+  it("înregistrează plata unei rate și reduce exact datoria aleasă, fără a depăși soldul rămas", () => {
+    const data = createEmptyAppData(); const source = data.settings.paymentSources[0]; source.openingBalance = 1200;
+    data.debts = [{ id: "credit", name: "Credit auto", remaining: 1000, monthly: 400, due: "28 august", tone: "coral" }];
+    const paid = recordDebtPayment(data, { debtId: "credit", amount: 400, sourceId: source.id, memberId: "member-me", date: "2026-08-27" });
+    expect(paid?.debts[0].remaining).toBe(600);
+    expect(paid?.transactions[0]).toMatchObject({ kind: "expense", category: "Rate produse", amount: 400, sourceId: source.id, memberId: "member-me" });
+    expect(sourceBalance(paid!, source.id)).toBe(800);
+    expect(recordDebtPayment(paid!, { debtId: "credit", amount: 601, sourceId: source.id, memberId: "member-me" })).toBeUndefined();
+    paid!.settings.members.push({ id: "member-wife", name: "Soție" });
+    expect(recordDebtPayment(paid!, { debtId: "credit", amount: 100, sourceId: source.id, memberId: "member-wife" })).toBeUndefined();
+    const finalPayment = recordDebtPayment(paid!, { debtId: "credit", amount: 600, sourceId: source.id, memberId: "member-me" });
+    expect(finalPayment?.debts[0].remaining).toBe(0);
+  });
+
+  it("filtrează bilanțul pe membru, incluzând doar sursele și obligațiile personale sau comune", () => {
+    const data = createEmptyAppData(); data.settings.members.push({ id: "member-partner", name: "Soție" });
+    data.settings.paymentSources.push({ id: "source-partner", name: "Card soție", kind: "card", memberId: "member-partner", openingBalance: 500 });
+    data.transactions = [{ id: "me-expense", title: "Taxi", amount: 100, kind: "expense", category: "Transport", sourceId: "source-debit", source: "Card debit", memberId: "member-me", person: "Eu", date: "2026-08-10" }, { id: "partner-income", title: "Venit", amount: 700, kind: "income", category: "Venit", sourceId: "source-partner", source: "Card soție", memberId: "member-partner", person: "Soție", date: "2026-08-10" }];
+    data.debts = [{ id: "me-debt", name: "Rată eu", remaining: 200, monthly: 50, due: "28 august", memberId: "member-me", tone: "coral" }, { id: "shared", name: "Chirie", remaining: 400, monthly: 100, due: "1 septembrie", tone: "coral" }];
+    const mine = financialBalance(data, undefined, undefined, "member-me");
+    expect(mine).toMatchObject({ income: 0, expense: 100, debtRemaining: 600, monthlyRates: 150, liquidFunds: -100 });
   });
 
   it("calculează cheltuiala pentru alocarea de categorie doar în perioada activă", () => {

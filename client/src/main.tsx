@@ -28,6 +28,7 @@ import "./mobile-decision-fix.css";
 import "./themes.css";
 import "./report-balance.css";
 import "./objective-edit.css";
+import "./balance-scope.css";
 import "./transaction-envelope-picker.css";
 import "./advisor-personalized.css";
 import "./professional-type-navigation.css";

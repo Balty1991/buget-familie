@@ -1,0 +1,9 @@
+/* Bilanț filtrat — perspectiva selectată trebuie să fie clară, compactă și să nu schimbe datele. */
+.bf-balance-scope { display: flex; gap: 6px; overflow-x: auto; margin: 0 0 7px; padding: 1px 0 5px; scrollbar-width: none; }
+.bf-balance-scope::-webkit-scrollbar { display: none; }
+.bf-balance-scope button { flex: 0 0 auto; min-height: 30px; padding: 0 11px; border: 1px solid rgba(33,77,64,.24); border-radius: 999px; background: rgba(255,255,255,.52); color: #38574c; font: 700 .7rem/1 "IBM Plex Sans", sans-serif; }
+.bf-balance-scope button.active { background: #194e42; border-color: #194e42; color: #fffdf6; }
+.bf-balance-scope-note { margin: 0 0 12px !important; color: #66776f; font-size: .73rem !important; line-height: 1.4 !important; }
+.dark .bf-balance-scope button { border-color: rgba(203,230,212,.28); background: rgba(8,30,25,.28); color: #cde1d3; }.dark .bf-balance-scope button.active { background: #d7b94e; border-color: #d7b94e; color: #12362d; }.dark .bf-balance-scope-note { color: #b5cbbc; }
+.theme-midnight .bf-balance-scope button { border-color: rgba(178,208,245,.3); background: rgba(11,28,53,.35); color: #c8ddfb; }.theme-midnight .bf-balance-scope button.active { background: #5da8ff; border-color: #5da8ff; color: #07172d; }.theme-midnight .bf-balance-scope-note { color: #b7cbe7; }
+.theme-copper .bf-balance-scope button { border-color: rgba(233,194,159,.3); background: rgba(37,28,23,.34); color: #ead1b8; }.theme-copper .bf-balance-scope button.active { background: #d38d59; border-color: #d38d59; color: #251811; }.theme-copper .bf-balance-scope-note { color: #d8bea5; }
