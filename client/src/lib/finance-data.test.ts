@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -128,6 +128,21 @@ describe("registrul financiar Buget Familie", () => {
     expect(allocationSpent(data, cashTaxi)).toBe(50);
     expect(allocationSpent(data, cardTaxi)).toBe(0);
     expect(sourceBalance(data, cash.id)).toBe(-80);
+  });
+
+  it("împarte alimentele pe surse familiale și consumă numai tranșa activă potrivită", () => {
+    const data = createEmptyAppData(); const [, cash] = data.settings.paymentSources;
+    const wife = { id: "member-wife", name: "Soție" }; const wifeCard = { id: "source-wife-card", name: "Card soție", kind: "card" as const, memberId: wife.id, openingBalance: 0 };
+    data.settings.members.push(wife); data.settings.paymentSources.push(wifeCard);
+    const foodCash = { id: "food-cash", label: "Alimente · cash Eu", amount: 1200, category: "Alimente", memberId: "member-me", sourceId: cash.id };
+    const foodWife = { id: "food-wife", label: "Alimente · card Soție", amount: 1200, category: "Alimente", memberId: wife.id, sourceId: wifeCard.id };
+    data.settings.salaryPlan = { periodStart: "2026-09-01", nextPayday: "2026-09-28", sourceIds: [], totalLimit: 2400, weeklyLimit: 600, allocations: [foodCash, foodWife], transfers: [] };
+    data.transactions = [{ id: "wife-food", title: "Alimente", amount: 100, kind: "expense", category: "Alimente", sourceId: wifeCard.id, source: wifeCard.name, memberId: wife.id, person: wife.name, date: "2026-09-10", allocationId: foodWife.id }];
+    expect(matchingAllocationsForExpense(data, { category: "Alimente", memberId: wife.id, sourceId: wifeCard.id }).map((item) => item.id)).toEqual([foodWife.id]);
+    expect(matchingAllocationsForExpense(data, { category: "Alimente", memberId: "member-me", sourceId: cash.id }).map((item) => item.id)).toEqual([foodCash.id]);
+    expect(matchingAllocationsForExpense(data, { category: "Alimente", memberId: "member-me", sourceId: wifeCard.id }).map((item) => item.id)).toEqual([foodWife.id]);
+    expect(allocationWeekStatus(data, foodWife, "2026-09-10")).toMatchObject({ index: 2, budget: 300, spent: 100, remaining: 200 });
+    expect(allocationWeekStatus(data, foodCash, "2026-09-10")).toMatchObject({ index: 2, budget: 300, spent: 0, remaining: 300 });
   });
 
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {

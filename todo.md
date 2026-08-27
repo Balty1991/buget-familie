@@ -435,3 +435,19 @@
 - [x] Generează un PDF local pentru calculatorul calendaristic, cu sumă, interval, ritm săptămânal și tranșe, fără încărcarea datelor într-un serviciu extern.
 - [x] Afișează alerte locale în aplicație la începutul unei tranșe săptămânale, o singură dată per tranșă și numai cât aplicația este deschisă.
 - [x] Verifică pe 360–430 px șabloanele, PDF-ul și alertele, apoi rulează testele și publică Pages/APK numai după rezultate verzi.
+
+## Reconstrucție Plan pe ciclu salarial familial
+
+- [x] Înlocuiește ecranul Plan aglomerat cu un flux ghidat: venit disponibil, interval calendaristic, tranșe săptămânale, plicuri și bani nealocați.
+- [x] Permite stabilirea unui buget de categorie pentru întregul ciclu, de exemplu 2.400 RON Alimente, și împărțirea lui pe tranșele săptămânale ale perioadei reale.
+- [x] Permite împărțirea unui plic pe membri și surse, de exemplu Alimente 300 RON cash Eu + 300 RON card Soție în fiecare săptămână, precum și Taxi Eu 100 RON + Soție 400 RON pe lună.
+- [x] Permite plicuri de obligații pentru abonamente, rate produse și consumabile copil, plus un separeu calculat de bani nealocați.
+- [x] La înregistrarea cheltuielii, identifică și consumă automat alocarea săptămânii active compatibilă cu categoria, membrul și sursa, oferind alternativă explicită pentru plată în afara plicurilor.
+- [ ] Migrează plicurile existente fără pierderea sursei, membrului, notei, pragului sau istoricului și verifică scenariul familial complet pe 360–430 px înainte de publicare.
+
+## Audit multi-perspectivă după Plan
+
+- [ ] Evaluează fluxurile principale ca persoană singură, cuplu/familie, utilizator grăbit și utilizator cu nevoie de contrast ridicat, pe ecrane de 360–430 px.
+- [ ] Evaluează separat înregistrarea cheltuielii cu cardul altui membru, alegerea automată a plicului și consumul tranșei săptămânale active.
+- [ ] Auditează ca dezvoltator experimentat modelul de date local-first, migrarea, persistența, code-splitting-ul, accesibilitatea și limitele sincronizării GitHub-only.
+- [ ] Documentează problemele confirmate, impactul, recomandarea și prioritatea într-un roadmap de dezvoltare fără promisiuni de funcții inexistente.

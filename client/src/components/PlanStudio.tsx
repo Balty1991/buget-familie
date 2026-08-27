@@ -1,12 +1,12 @@
 /**
- * Atelierul Financiar — Plan Studio: perioadă prudentă, plicuri și reguli locale explicabile.
- * Regulile cresc limitele după confirmarea utilizatorului; nu mută bani între surse și nu scriu în registru.
+ * Atelier Financiar — Plan pe ciclu salarial: suma, perioada, plicurile și tranșa activă.
+ * Filosofie: o familie împarte bani reali pe o perioadă aleasă manual; plicurile nu mută solduri.
  */
 import { useState } from "react";
-import { BookmarkPlus, CalendarDays, Check, ChevronRight, FileDown, Plus, Trash2, WalletCards } from "lucide-react";
+import { BookmarkPlus, CalendarDays, Check, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
-import { applySalaryAllocationRules, allocationStatus, eligibleSalaryAllocationRules, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, planEndDate, revertSalaryAllocationApplication, sourceBalance, type AppData } from "@/lib/finance-data";
+import { allocationBudget, allocationStatus, allocationWeekStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, planEndDate, sourceBalance, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -15,190 +15,159 @@ function PlanField({ label, hint, children }: { label: string; hint?: string; ch
   return <label className="bf-plan-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>;
 }
 
+function personName(data: AppData, memberId?: string) {
+  return data.settings.members.find((member) => member.id === memberId)?.name || "Familie / comun";
+}
+
+function sourceName(data: AppData, sourceId?: string) {
+  return data.settings.paymentSources.find((source) => source.id === sourceId)?.name || "Orice sursă";
+}
+
 export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data: AppData) => void }) {
   const plan = data.settings.salaryPlan;
-  const [mode, setMode] = useState<"member" | "category">("category");
-  const [target, setTarget] = useState(expenseCategories[0]);
-  const [allocationMemberId, setAllocationMemberId] = useState("");
-  const [sourceId, setSourceId] = useState(data.settings.paymentSources[0]?.id || "");
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
-  const [alertThreshold, setAlertThreshold] = useState(80);
-  const [ruleAllocationId, setRuleAllocationId] = useState("");
-  const [ruleMode, setRuleMode] = useState<"fixed" | "percent">("fixed");
-  const [ruleValue, setRuleValue] = useState("");
-  const [ruleLabel, setRuleLabel] = useState("");
-  const [selectedIncomeId, setSelectedIncomeId] = useState("");
-  const [ruleError, setRuleError] = useState("");
-  const [cycleIncomeId, setCycleIncomeId] = useState("");
-  const [cycleAmount, setCycleAmount] = useState("");
+  const planEnd = planEndDate(plan);
+  const categories = [...expenseCategories, ...data.settings.customCategories.filter((category) => !expenseCategories.includes(category))];
+  const [cycleAmount, setCycleAmount] = useState(plan.totalLimit ? String(plan.totalLimit) : "");
   const [cycleStart, setCycleStart] = useState(plan.periodStart);
-  const [cycleEnd, setCycleEnd] = useState(plan.earliestPayday || plan.nextPayday || "");
+  const [cycleEnd, setCycleEnd] = useState(planEnd || "");
+  const [cycleIncomeId, setCycleIncomeId] = useState("");
   const [cycleError, setCycleError] = useState("");
   const [cycleTemplateLabel, setCycleTemplateLabel] = useState("");
+  const [templateRenameId, setTemplateRenameId] = useState("");
+  const [templateRename, setTemplateRename] = useState("");
+  const [allocationLabel, setAllocationLabel] = useState("");
+  const [allocationCategory, setAllocationCategory] = useState(categories[0] || "Alimente");
+  const [allocationAmount, setAllocationAmount] = useState("");
+  const [allocationMemberId, setAllocationMemberId] = useState("");
+  const [allocationSourceId, setAllocationSourceId] = useState(data.settings.paymentSources[0]?.id || "");
+  const [allocationNote, setAllocationNote] = useState("");
+  const [allocationThreshold, setAllocationThreshold] = useState(80);
+  const [editingAllocationId, setEditingAllocationId] = useState("");
+  const [allocationError, setAllocationError] = useState("");
 
-  const planEnd = planEndDate(plan);
-  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
-  const activeSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id));
-  const availableSources = activeSources.reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
-  const plannedExpenses = data.transactions.filter((item) => item.kind === "expense" && item.date >= plan.periodStart && (!planEnd || item.date <= planEnd)).reduce((sum, item) => sum + item.amount, 0);
-  const budget = plan.totalLimit || Math.max(0, availableSources);
-  const days = planEnd ? Math.max(1, Math.floor((new Date(`${planEnd}T12:00:00`).valueOf() - new Date(`${plan.periodStart}T12:00:00`).valueOf()) / 86_400_000) + 1) : 7;
-  const weeks = Math.max(1, Math.ceil(days / 7));
-  const weekly = plan.weeklyLimit || budget / weeks;
-  const remaining = budget - plannedExpenses;
-  const categories = [...expenseCategories, ...data.settings.customCategories];
-  const targets = mode === "category" ? categories : data.settings.members.map((item) => item.id);
-  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item) }));
-  const salaryRules = plan.salaryAllocationRules || [];
-  const salaryApplications = plan.salaryAllocationApplications || [];
+  const enteredCycle = calendarBudget(parseRomanianAmount(cycleAmount), cycleStart, cycleEnd);
   const incomes = data.transactions.filter((item) => item.kind === "income").sort((left, right) => right.date.localeCompare(left.date) || String(right.createdAt || "").localeCompare(String(left.createdAt || ""))).slice(0, 12);
-  const selectedIncome = incomes.find((item) => item.id === selectedIncomeId) || incomes[0];
-  const cycle = calendarBudget(parseRomanianAmount(cycleAmount), cycleStart, cycleEnd);
-  const cycleTemplates = data.settings.salaryCycleTemplates;
-  const eligibleRules = selectedIncome ? eligibleSalaryAllocationRules(data, selectedIncome) : [];
-  const plannedFromIncome = selectedIncome ? eligibleRules.reduce((sum, rule) => sum + (rule.mode === "percent" ? selectedIncome.amount * rule.value / 100 : rule.value), 0) : 0;
+  const activeCycle = planEnd ? calendarBudget(plan.totalLimit, plan.periodStart, planEnd) : undefined;
+  const activeWeek = activeCycle?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end);
+  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: allocationWeekStatus(data, item) }));
+  const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
+  const unallocated = Math.round((plan.totalLimit - allocated) * 100) / 100;
+  const allocationPreview = planEnd ? calendarBudget(parseRomanianAmount(allocationAmount), plan.periodStart, planEnd) : undefined;
+  const allocationRatio = plan.totalLimit > 0 ? Math.min(1, Math.max(0, allocated / plan.totalLimit)) : 0;
+  const nextDecision = !planEnd ? "Completează perioada și suma salariului." : unallocated < 0 ? `Redu plicurile cu ${money(Math.abs(unallocated))}.` : unallocated > 0 ? `Repartizează sau păstrează ${money(unallocated)}.` : activeWeek ? `Înregistrează cheltuielile din tranșa S${activeWeek.index}.` : "Verifică plicurile înainte de cheltuială.";
+  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
+  const availableSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
+  const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
-  const updateEstimatedPayday = (nextPayday: string) => updatePlan({ nextPayday, earliestPayday: plan.earliestPayday && plan.earliestPayday <= nextPayday ? plan.earliestPayday : undefined });
-  const toggleSource = (id: string) => {
-    const all = data.settings.paymentSources.map((source) => source.id);
-    const selected = plan.sourceIds.length ? plan.sourceIds : all;
-    const next = selected.includes(id) ? selected.filter((entry) => entry !== id) : [...selected, id];
-    updatePlan({ sourceIds: next.length === all.length ? [] : next });
-  };
-  const addEnvelope = () => {
-    const numeric = parseRomanianAmount(amount);
-    const source = data.settings.paymentSources.find((item) => item.id === sourceId);
-    if (numeric <= 0 || !source) return;
-    const member = mode === "category" ? data.settings.members.find((item) => item.id === allocationMemberId) : data.settings.members.find((item) => item.id === target);
-    const category = mode === "category" ? target : undefined;
-    updatePlan({ allocations: [...plan.allocations, { id: newId("allocation"), label: category ? `${category}${member ? ` · ${member.name}` : ""}` : member?.name || "Membru", amount: numeric, category, memberId: member?.id, sourceId: source.id, note: note.trim() || undefined, alertThreshold }] });
-    setAmount(""); setNote(""); setAlertThreshold(80);
-  };
-  const updateEnvelopeThreshold = (id: string, value: number) => updatePlan({ allocations: plan.allocations.map((item) => item.id === id ? { ...item, alertThreshold: Math.min(95, Math.max(50, value)) } : item) });
-  const addSalaryRule = () => {
-    const value = parseRomanianAmount(ruleValue);
-    const allocation = plan.allocations.find((item) => item.id === ruleAllocationId);
-    if (!allocation || value <= 0 || (ruleMode === "percent" && value > 100)) return setRuleError(ruleMode === "percent" ? "Alege un plic și un procent între 1 și 100." : "Alege un plic și o sumă mai mare decât zero.");
-    const label = ruleLabel.trim() || `${allocation.label} · ${ruleMode === "percent" ? `${value}% din venit` : `${money(value)} din venit`}`;
-    updatePlan({ salaryAllocationRules: [{ id: newId("salary-rule"), label, allocationId: allocation.id, mode: ruleMode, value, active: true, updatedAt: new Date().toISOString() }, ...salaryRules].slice(0, 24) });
-    setRuleValue(""); setRuleLabel(""); setRuleError("");
-  };
-  const updateSalaryRule = (id: string, patch: Partial<(typeof salaryRules)[number]>) => updatePlan({ salaryAllocationRules: salaryRules.map((rule) => rule.id === id ? { ...rule, ...patch, updatedAt: new Date().toISOString() } : rule) });
-  const applyRulesToIncome = () => {
-    if (!selectedIncome) return setRuleError("Înregistrează mai întâi un venit real în Jurnal.");
-    const result = applySalaryAllocationRules(data, selectedIncome.id);
-    if (result.error) return setRuleError(result.error);
-    onChange(result.data); setRuleError("");
-  };
-  const revokeApplication = (applicationId: string) => {
-    if (window.confirm("Anulezi această repartizare? Se vor reduce numai limitele plicurilor majorate prin această aplicare; registrul și soldurile surselor rămân neschimbate.")) onChange(revertSalaryAllocationApplication(data, applicationId));
-  };
-  const chooseCycleIncome = (id: string) => {
-    setCycleIncomeId(id); const income = incomes.find((item) => item.id === id);
-    if (!income) return;
-    setCycleAmount(String(income.amount)); setCycleStart(income.date || plan.periodStart); setCycleError("");
-  };
-  const applyCycle = () => {
-    if (!cycle) return setCycleError("Introdu o sumă, data de început și data următorului venit. Sfârșitul trebuie să fie după început.");
-    updatePlan({ periodStart: cycle.start, nextPayday: cycle.end, weeklyLimit: cycle.weeklyAmount, totalLimit: cycle.total }); setCycleError("");
-  };
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return date.toISOString().slice(0, 10); };
-  const saveCycleTemplate = () => {
-    if (!cycle) return setCycleError("Completează suma și perioada înainte să salvezi un șablon.");
-    const label = cycleTemplateLabel.trim() || `Ciclu de ${cycle.days} zile`;
-    const now = new Date().toISOString(); const template = { id: newId("salary-cycle"), label, amount: cycle.total, durationDays: cycle.days, updatedAt: now };
-    const duplicate = cycleTemplates.find((item) => item.label.toLocaleLowerCase("ro-RO") === label.toLocaleLowerCase("ro-RO"));
-    onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: [template, ...cycleTemplates.filter((item) => item.id !== duplicate?.id)].slice(0, 12) } }); setCycleTemplateLabel(""); setCycleError("");
-  };
-  const applyCycleTemplate = (template: AppData["settings"]["salaryCycleTemplates"][number]) => { const start = cycleStart || isoToday(); setCycleAmount(String(template.amount)); setCycleStart(start); setCycleEnd(addDays(start, template.durationDays - 1)); setCycleError(""); };
-  const deleteCycleTemplate = (template: AppData["settings"]["salaryCycleTemplates"][number]) => { if (window.confirm(`Ștergi șablonul local „${template.label}”?`)) onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: cycleTemplates.filter((item) => item.id !== template.id) } }); };
-  const exportCyclePdf = async () => { if (!cycle) return; try { await downloadCalendarPlanPdf(cycle, data.settings.familyName); } catch { setCycleError("PDF-ul nu a putut fi generat local. Încearcă din nou."); } };
+  const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setEditingAllocationId(""); setAllocationError(""); };
 
-  return <div className="bf-page bf-plan-workspace">
+  const applyCycle = () => {
+    if (!enteredCycle) return setCycleError("Introdu suma salariului și intervalul ales de tine. Data finală trebuie să fie după data de început.");
+    updatePlan({ periodStart: enteredCycle.start, nextPayday: enteredCycle.end, earliestPayday: undefined, totalLimit: enteredCycle.total, weeklyLimit: enteredCycle.weeklyAmount });
+    setCycleError("");
+  };
+  const chooseIncome = (id: string) => {
+    setCycleIncomeId(id);
+    const income = incomes.find((item) => item.id === id);
+    if (!income) return;
+    setCycleAmount(String(income.amount));
+    setCycleStart(income.date || cycleStart);
+    setCycleError("");
+  };
+  const saveCycleTemplate = () => {
+    if (!enteredCycle) return setCycleError("Completează întâi suma și perioada pentru acest ciclu.");
+    const label = cycleTemplateLabel.trim() || `Ciclu de ${enteredCycle.days} zile`;
+    const now = new Date().toISOString();
+    const duplicate = data.settings.salaryCycleTemplates.find((item) => item.label.toLocaleLowerCase("ro-RO") === label.toLocaleLowerCase("ro-RO"));
+    const template = { id: duplicate?.id || newId("salary-cycle"), label, amount: enteredCycle.total, durationDays: enteredCycle.days, updatedAt: now };
+    onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: [template, ...data.settings.salaryCycleTemplates.filter((item) => item.id !== duplicate?.id)].slice(0, 12) } });
+    setCycleTemplateLabel("");
+  };
+  const applyCycleTemplate = (template: AppData["settings"]["salaryCycleTemplates"][number]) => {
+    const start = cycleStart || isoToday(); setCycleAmount(String(template.amount)); setCycleStart(start); setCycleEnd(addDays(start, template.durationDays - 1)); setCycleError("");
+  };
+  const renameCycleTemplate = (id: string) => {
+    const label = templateRename.trim(); if (!label) return;
+    onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: data.settings.salaryCycleTemplates.map((item) => item.id === id ? { ...item, label: label.slice(0, 42), updatedAt: new Date().toISOString() } : item) } });
+    setTemplateRenameId(""); setTemplateRename("");
+  };
+  const deleteCycleTemplate = (id: string, label: string) => { if (window.confirm(`Ștergi șablonul local „${label}”?`)) onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: data.settings.salaryCycleTemplates.filter((item) => item.id !== id) } }); };
+
+  const saveAllocation = () => {
+    const amount = parseRomanianAmount(allocationAmount);
+    const source = data.settings.paymentSources.find((item) => item.id === allocationSourceId);
+    const member = data.settings.members.find((item) => item.id === allocationMemberId);
+    if (amount <= 0) return setAllocationError("Introdu suma rezervată pentru întregul ciclu salarial.");
+    if (!source) return setAllocationError("Alege sursa din care vei plăti această categorie.");
+    const label = allocationLabel.trim() || `${allocationCategory}${member ? ` · ${member.name}` : ""}`;
+    const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold };
+    updatePlan({ allocations: editingAllocationId ? plan.allocations.map((item) => item.id === editingAllocationId ? next : item) : [...plan.allocations, next] });
+    resetAllocationBuilder();
+  };
+  const editAllocation = (item: BudgetAllocation) => { setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
+  const deleteAllocation = (id: string, label: string) => { if (window.confirm(`Ștergi plicul „${label}”? Cheltuielile deja înregistrate rămân în jurnal.`)) updatePlan({ allocations: plan.allocations.filter((item) => item.id !== id), transfers: plan.transfers.filter((transfer) => transfer.fromAllocationId !== id && transfer.toAllocationId !== id), salaryAllocationRules: (plan.salaryAllocationRules || []).filter((rule) => rule.allocationId !== id) }); };
+  const exportCyclePdf = async () => { if (!enteredCycle) return; try { await downloadCalendarPlanPdf(enteredCycle, data.settings.familyName); } catch { setCycleError("PDF-ul nu a putut fi generat local. Încearcă din nou."); } };
+
+  return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
     <header className="bf-plan-studio-header">
-      <div><p className="bf-kicker">PLAN PÂNĂ LA URMĂTORUL VENIT</p><h1>Alocă înainte <em>de cheltuială.</em></h1><p>Perioada și limitele pornesc din banii pe care alegi să îi folosești, nu din estimări ascunse.</p></div>
-      <span><CalendarDays size={25} /></span>
+      <div><p className="bf-kicker">PLANUL FAMILIEI, PE SALARIU</p><h1>Împarte banii <em>ca acasă.</em></h1><p>Începi cu salariul și perioada aleasă de tine. Apoi fiecare categorie spune clar cine plătește și din ce sursă.</p></div>
+      <span><WalletCards size={25} /></span>
     </header>
-    <section className={`bf-plan-resource-band ${remaining < 0 ? "risk" : ""}`}>
-      <div><p>{remaining < 0 ? "Limita trebuie revizuită" : "Disponibil de planificat"}</p><strong>{money(Math.max(0, remaining))}</strong><span>{plan.nextPayday ? `${days} zile · ${weeks} săptămâni · ${money(weekly)}/săptămână` : "setează data următorului venit"}</span></div>
-      <div className="bf-plan-resource-stats"><span><b>{money(budget)}</b> limită activă</span><span><b>{money(plannedExpenses)}</b> cheltuit în perioadă</span><span><b>{money(availableSources)}</b> în sursele alese</span></div>
+
+    <section className="bf-cycle-overview" aria-labelledby="cycle-overview-title">
+      <div className="bf-cycle-overview-main"><p className="bf-kicker">CICLUL ACTIV</p><h2 id="cycle-overview-title">{planEnd ? `${formatDate(plan.periodStart)} – ${formatDate(planEnd)}` : "Setează perioada salariului"}</h2><strong>{money(plan.totalLimit)}</strong><span>{activeCycle ? `${activeCycle.days} zile · ${activeCycle.weeks.length} tranșe · ritm ${money(activeCycle.weeklyAmount)}/săptămână` : "Alege începutul, următorul salariu și suma disponibilă."}</span></div>
+      <div className="bf-cycle-ruler" role="progressbar" aria-label="Salariu repartizat în plicuri" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(allocationRatio * 100)}><i style={{ width: `${allocationRatio * 100}%` }} />{activeCycle?.weeks.map((week) => <span key={week.index} style={{ left: `${week.index / activeCycle.weeks.length * 100}%` }} />)}</div>
+      <div className="bf-cycle-overview-ledger"><span><small>ALOCAT ÎN PLICURI</small><b>{money(allocated)}</b></span><span className={unallocated < 0 ? "over" : ""}><small>{unallocated < 0 ? "PESTE SALARIU" : "BANI NEALOCAȚI"}</small><b>{money(Math.abs(unallocated))}</b></span><span><small>SOLDURI ÎNREGISTRATE</small><b>{money(availableSources)}</b></span></div>
+      <div className={`bf-cycle-next ${unallocated < 0 ? "over" : unallocated > 0 ? "review" : "ready"}`}><span>ACUM DECIDEȚI</span><b>{nextDecision}</b></div>
+      <p className="bf-cycle-overview-note">Plicurile sunt limite de planificare. Ele nu mută bani între carduri sau cash și nu creează cheltuieli.</p>
     </section>
-    <section className="bf-calendar-budget">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">RITM DIN VENIT</p><h2>Împarte perioada pe săptămâni reale</h2></div><CalendarDays size={19} /></div>
-      <p>De exemplu, 2.400 RON împărțiți între ziua salariului și următorul venit. Calculatorul include și o jumătate de săptămână, nu presupune automat patru săptămâni.</p>
-      <div className="bf-calendar-budget-fields">
-        <PlanField label="Începe la"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} /></PlanField>
-        <PlanField label="Următorul venit la"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} /></PlanField>
-        <PlanField label="Sumă de repartizat"><input value={cycleAmount} onChange={(event) => { setCycleAmount(event.target.value); setCycleError(""); }} inputMode="decimal" placeholder="ex. 2400" /></PlanField>
-        <PlanField label="Venit înregistrat (opțional)"><select value={cycleIncomeId} onChange={(event) => chooseCycleIncome(event.target.value)}><option value="">Introduc suma manual</option>{incomes.map((income) => <option key={income.id} value={income.id}>{income.date} · {income.title} · {money(income.amount)}</option>)}</select></PlanField>
+
+    <section className="bf-cycle-setup" aria-labelledby="cycle-setup-title">
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">PASUL 1</p><h2 id="cycle-setup-title">Salariul până la următorul salariu</h2></div><CalendarDays size={20} /></div>
+      <p>Alege manual perioada. Pentru 2.400 RON pe 28 de zile, aplicația îți arată 600 RON pe fiecare săptămână; o ultimă tranșă parțială păstrează totalul exact.</p>
+      <div className="bf-cycle-setup-fields">
+        <PlanField label="Salariu disponibil pentru acest ciclu"><input value={cycleAmount} onChange={(event) => { setCycleAmount(event.target.value); setCycleError(""); }} inputMode="decimal" placeholder="ex. 2400" /></PlanField>
+        <PlanField label="Venit înregistrat (opțional)" hint="Doar precompletează suma și începutul; tu alegi perioada."><select value={cycleIncomeId} onChange={(event) => chooseIncome(event.target.value)}><option value="">Introduc salariul manual</option>{incomes.map((income) => <option key={income.id} value={income.id}>{income.date} · {income.title} · {money(income.amount)}</option>)}</select></PlanField>
+        <PlanField label="Prima zi a ciclului"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} /></PlanField>
+        <PlanField label="Ziua următorului salariu"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} /></PlanField>
       </div>
-      {cycle ? <><div className="bf-calendar-budget-summary"><article><small>PERIOADĂ EXACTĂ</small><b>{cycle.days} zile · {new Intl.NumberFormat("ro-RO", { maximumFractionDigits: 1 }).format(cycle.exactWeeks)} săptămâni</b></article><article><small>RITM RECOMANDAT</small><b>{money(cycle.weeklyAmount)}/săptămână</b></article><article><small>LIMITĂ DE PERIOADĂ</small><b>{money(cycle.total)}</b></article></div><div className="bf-calendar-budget-weeks" aria-label="Tranșele calendaristice propuse">{cycle.weeks.map((week) => <article key={week.index}><span>S{week.index}</span><div><b>{formatDate(week.start, { day: "2-digit", month: "short" })} – {formatDate(week.end, { day: "2-digit", month: "short" })}</b><small>{week.days} {week.days === 1 ? "zi" : "zile"}{week.days < 7 ? " · tranșă parțială" : ""}</small></div><strong>{money(week.amount)}</strong></article>)}</div></> : <div className="bf-calendar-budget-empty"><b>Completează intervalul pentru a vedea săptămânile calendaristice.</b><span>Poți seta orice durată: 28 zile, 31 zile sau 4 săptămâni și jumătate.</span></div>}
+      {enteredCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV</span><b>{money(enteredCycle.weeklyAmount)} / săptămână</b></div><ol>{enteredCycle.weeks.map((week) => <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{week.days} zile</small><strong>{money(week.amount)}</strong></li>)}</ol></div>}
       {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
-      <div className="bf-calendar-budget-actions"><button className="bf-calendar-budget-apply" disabled={!cycle} onClick={applyCycle}><Check size={17} /> Aplică {cycle ? `${money(cycle.weeklyAmount)}/săptămână` : "ritmul săptămânal"}</button><button className="bf-calendar-budget-pdf" disabled={!cycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> Exportă PDF</button></div>
-      <small className="bf-calendar-budget-note">Aplicarea actualizează limita totală, limita săptămânală și perioada planului. Nu creează mișcări și nu mută bani între surse; plicurile rămân limite separate pe care le configurezi mai jos.</small>
-      <details className="bf-cycle-template-bank"><summary><BookmarkPlus size={16} /> Cicluri salariale salvate local <span>{cycleTemplates.length}</span></summary><p>Un șablon păstrează suma și numărul de zile. La aplicare alegi din nou data de început, deci perioada rămâne sub controlul tău.</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={cycle ? `ex. Salariu ${cycle.days} zile` : "Completează mai întâi perioada"} disabled={!cycle} /><button disabled={!cycle} onClick={saveCycleTemplate}>Salvează ciclul</button></div><div className="bf-cycle-template-list">{cycleTemplates.map((template) => <article key={template.id}><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{money(template.amount)} · {template.durationDays} zile</small></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template)}><Trash2 size={15} /></button></article>)}{!cycleTemplates.length && <span>Nu ai șabloane salvate. Construiește un ciclu o dată, apoi îl poți reaplica cu perioada aleasă de tine.</span>}</div></details>
+      <div className="bf-cycle-setup-actions"><button className="bf-primary" disabled={!enteredCycle} onClick={applyCycle}><Check size={17} /> Salvează ciclul</button><button disabled={!enteredCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> PDF plan</button></div>
     </section>
-    <section className="bf-plan-sheet">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">1. CADRUL PLANULUI</p><h2>Perioadă și limite</h2></div><span>se salvează automat</span></div>
-      <div className="bf-plan-fields">
-        <PlanField label="Începe la"><input type="date" value={plan.periodStart} onChange={(event) => updatePlan({ periodStart: event.target.value })} /></PlanField>
-        <PlanField label="De regulă intră la"><input type="date" min={plan.periodStart} value={plan.nextPayday} onChange={(event) => updateEstimatedPayday(event.target.value)} /></PlanField>
-        <PlanField label="Poate intra cel mai devreme" hint="Calcul prudent până la această dată."><input type="date" min={plan.periodStart} max={plan.nextPayday || undefined} value={plan.earliestPayday || ""} onChange={(event) => updatePlan({ earliestPayday: event.target.value || undefined })} /></PlanField>
-        <PlanField label="Limită totală"><input value={plan.totalLimit ? String(plan.totalLimit) : ""} onChange={(event) => updatePlan({ totalLimit: Math.max(0, parseRomanianAmount(event.target.value)) })} inputMode="decimal" placeholder={money(availableSources)} /></PlanField>
-        <PlanField label="Limită săptămânală"><input value={plan.weeklyLimit ? String(plan.weeklyLimit) : ""} onChange={(event) => updatePlan({ weeklyLimit: Math.max(0, parseRomanianAmount(event.target.value)) })} inputMode="decimal" placeholder={money(weekly)} /></PlanField>
+
+    {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">ACUM · TRANȘA S{activeWeek.index}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.</span></div><strong>{money(activeWeek.amount)}<small>ritm total</small></strong></section>}
+
+    <section className="bf-allocation-studio" aria-labelledby="allocation-title">
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">PASUL 2</p><h2 id="allocation-title">Unde merge fiecare leu</h2></div><span>{envelopes.length} plicuri</span></div>
+      <p className="bf-allocation-intro">Creezi un plic pentru fiecare parte a banilor: alimente, taxi, abonamente, rate sau consumabile copil. Pentru 2.400 RON de Alimente pe patru săptămâni, adaugă 1.200 RON cash Eu și 1.200 RON card Soție: aplicația arată câte 300 RON pe săptămână pentru fiecare sursă.</p>
+      <div id="bf-allocation-builder" className="bf-allocation-builder">
+        <PlanField label="Ce plătește plicul"><select value={allocationCategory} onChange={(event) => setAllocationCategory(event.target.value)}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></PlanField>
+        <PlanField label="Nume plic" hint="Poți scrie «Taxi soție» sau lăsa automat."><input value={allocationLabel} onChange={(event) => setAllocationLabel(event.target.value)} placeholder="ex. Alimente · card soție" /></PlanField>
+        <PlanField label="Membru"><select value={allocationMemberId} onChange={(event) => { const memberId = event.target.value; setAllocationMemberId(memberId); const firstCompatible = data.settings.paymentSources.find((source) => !source.memberId || source.memberId === memberId); if (firstCompatible) setAllocationSourceId(firstCompatible.id); }}><option value="">Familie / comun</option>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></PlanField>
+        <PlanField label="Plătit din"><select value={allocationSourceId} onChange={(event) => setAllocationSourceId(event.target.value)}>{currentSourceOptions.map((source) => <option key={source.id} value={source.id}>{source.name} · {personName(data, source.memberId)} · {money(sourceBalance(data, source.id))}</option>)}</select></PlanField>
+        <PlanField label="Suma pentru întregul ciclu" hint={allocationPreview ? `În fiecare săptămână: aproximativ ${money(allocationPreview.weeklyAmount)} din acest plic.` : "Exemplu: 1.200 RON înseamnă 300 RON/săptămână într-un ciclu de 28 zile."}><input value={allocationAmount} onChange={(event) => { setAllocationAmount(event.target.value); setAllocationError(""); }} inputMode="decimal" placeholder="ex. 1200" /></PlanField>
+        <PlanField label="Avertizează la"><select value={allocationThreshold} onChange={(event) => setAllocationThreshold(Number(event.target.value))}>{thresholdOptions.map((value) => <option key={value} value={value}>{value}%</option>)}</select></PlanField>
+        <PlanField label="Detaliu liber"><input value={allocationNote} onChange={(event) => setAllocationNote(event.target.value)} placeholder="ex. telefon, cablu și aplicații" /></PlanField>
+        <div className="bf-allocation-builder-actions"><button className="bf-primary" onClick={saveAllocation}><Plus size={17} /> {editingAllocationId ? "Salvează plicul" : "Adaugă plicul"}</button>{editingAllocationId && <button onClick={resetAllocationBuilder}>Renunță</button>}</div>
+      </div>
+      {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}
+      <div className="bf-allocation-list" aria-live="polite">
+        {envelopes.map(({ item, budget, remaining, usage, state, week }) => <article key={item.id} className={state}>
+          <div className="bf-allocation-list-heading"><span className={`bf-allocation-state ${state}`}>{state === "over" ? "depășit" : state === "watch" ? "aproape de limită" : "în plan"}</span><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
+          <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>rămași din {money(budget)}</small></div>
+          {week && <div className={`bf-allocation-week ${week.state === "over" ? "over" : ""}`}><span>S{week.index} · {formatDate(week.start)} – {formatDate(week.end)}</span><b>{money(Math.max(0, week.remaining))}</b><small>{money(week.spent)} cheltuiți din {money(week.budget)} în această tranșă</small></div>}
+          <div className="bf-allocation-track" aria-label={`${Math.round(usage * 100)}% consumat`}><i style={{ width: `${Math.min(100, Math.max(0, usage * 100))}%` }} /></div>
+          <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> Editează</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> Șterge</button></div>
+        </article>)}
+        {!envelopes.length && <div className="bf-allocation-empty"><b>Încă nu ai repartizat salariul.</b><span>Începe cu Alimente, apoi adaugă Taxi, Abonamente, Rate produse și Consumabile copil.</span></div>}
       </div>
     </section>
-    <section className="bf-plan-sources">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">2. RESURSE FOLOSITE</p><h2>Alege banii incluși</h2></div><WalletCards size={19} /></div>
-      <div>{data.settings.paymentSources.map((source) => { const active = !plan.sourceIds.length || plan.sourceIds.includes(source.id); const owner = data.settings.members.find((member) => member.id === source.memberId)?.name || "Comun"; return <label key={source.id} className={active ? "active" : ""}><input type="checkbox" checked={active} onChange={() => toggleSource(source.id)} /><span><b>{source.name}</b><small>{owner}</small></span><strong>{money(sourceBalance(data, source.id))}</strong><i>{active && <Check size={14} />}</i></label>; })}</div>
-    </section>
-    <section className="bf-plan-envelope-workbench">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">3. PLICURI LUNARE ȘI DE PERIOADĂ</p><h2>Limite care pot fi folosite</h2></div><span>{envelopes.length} active</span></div>
-      <p className="bf-plan-envelope-intro">Un plic reprezintă o limită de buget. Cheltuiala din jurnal îl consumă numai când îl selectezi explicit; mutarea între plicuri nu mișcă bani între carduri sau cash.</p>
-      <div className="bf-plan-envelope-builder">
-        <PlanField label="Tip"><select value={mode} onChange={(event) => { const next = event.target.value as typeof mode; setMode(next); setTarget(next === "category" ? categories[0] : data.settings.members[0]?.id || ""); setAllocationMemberId(""); }}><option value="category">Categorie</option><option value="member">Membru</option></select></PlanField>
-        <PlanField label={mode === "category" ? "Categorie" : "Membru"}><select value={target} onChange={(event) => setTarget(event.target.value)}>{targets.map((item) => <option key={item} value={item}>{mode === "member" ? data.settings.members.find((member) => member.id === item)?.name : item}</option>)}</select></PlanField>
-        {mode === "category" && <PlanField label="Pentru"><select value={allocationMemberId} onChange={(event) => setAllocationMemberId(event.target.value)}><option value="">Familie / comun</option>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></PlanField>}
-        <PlanField label="Sursă"><select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name} · {money(sourceBalance(data, source.id))}</option>)}</select></PlanField>
-        <PlanField label="Limită"><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="lei" /></PlanField>
-        <PlanField label="Alertă la" hint="100% înseamnă depășit."><select value={alertThreshold} onChange={(event) => setAlertThreshold(Number(event.target.value))}>{thresholdOptions.map((value) => <option key={value} value={value}>{value}%</option>)}</select></PlanField>
-        <PlanField label="Detaliu"><input value={note} onChange={(event) => setNote(event.target.value)} placeholder="opțional" /></PlanField>
-        <button onClick={addEnvelope}><Plus size={17} /> Creează plic</button>
-      </div>
-      <div className="bf-plan-envelope-list">
-        {envelopes.map(({ item, budget: limit, remaining: remainingEnvelope, usage, state, alertThreshold: envelopeThreshold }) => { const memberName = data.settings.members.find((member) => member.id === item.memberId)?.name || "Familie"; const sourceName = data.settings.paymentSources.find((source) => source.id === item.sourceId)?.name || "Orice sursă"; const usagePercent = Math.round(Math.max(0, usage) * 100); return <article className={state} key={item.id}><div><span className="bf-plan-envelope-state">{state === "over" ? "Depășit" : state === "watch" ? "Aproape de limită" : "În limite"}</span><b>{item.label}</b><small>{memberName} · {sourceName}{item.note ? ` · ${item.note}` : ""}</small></div><div><strong>{money(Math.max(0, remainingEnvelope))}</strong><small>rămași din {money(limit)}</small></div><span className="bf-plan-envelope-track"><i style={{ width: `${Math.min(100, usagePercent)}%` }} /></span><label className="bf-envelope-threshold">Alertă la <select aria-label={`Prag de alertă pentru ${item.label}`} value={envelopeThreshold} onChange={(event) => updateEnvelopeThreshold(item.id, Number(event.target.value))}>{thresholdOptions.map((value) => <option key={value} value={value}>{value}%</option>)}</select></label><button aria-label={`Șterge ${item.label}`} onClick={() => updatePlan({ allocations: plan.allocations.filter((entry) => entry.id !== item.id), transfers: plan.transfers.filter((transfer) => transfer.fromAllocationId !== item.id && transfer.toAllocationId !== item.id), salaryAllocationRules: salaryRules.filter((rule) => rule.allocationId !== item.id) })}><Trash2 size={16} /></button></article>; })}
-        {!envelopes.length && <div className="bf-plan-envelope-empty"><p>Începe cu o limită clară, de exemplu Transport, Alimente sau Taxi.</p><ChevronRight size={18} /></div>}
-      </div>
-    </section>
-    <section className="bf-salary-rules">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">4. REGULI PENTRU VENIT</p><h2>Repartizează salariul cu control</h2></div><span>{salaryRules.length} reguli</span></div>
-      <p>Regulile propun o majorare a limitelor din plicuri pentru un venit real deja înregistrat. Nu transferă bani între surse și nu schimbă registrul.</p>
-      {envelopes.length ? <>
-        <div className="bf-salary-rule-builder">
-          <PlanField label="Plic"><select value={ruleAllocationId} onChange={(event) => setRuleAllocationId(event.target.value)}><option value="">Alege plicul</option>{envelopes.map(({ item }) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></PlanField>
-          <PlanField label="Regulă"><select value={ruleMode} onChange={(event) => setRuleMode(event.target.value as typeof ruleMode)}><option value="fixed">Sumă fixă</option><option value="percent">Procent</option></select></PlanField>
-          <PlanField label={ruleMode === "percent" ? "Procent" : "Sumă"}><input value={ruleValue} onChange={(event) => setRuleValue(event.target.value)} inputMode="decimal" placeholder={ruleMode === "percent" ? "ex. 20" : "ex. 500"} /></PlanField>
-          <PlanField label="Nume opțional"><input value={ruleLabel} onChange={(event) => setRuleLabel(event.target.value)} placeholder="ex. Transport după salariu" /></PlanField>
-          <button onClick={addSalaryRule}><Plus size={17} /> Adaugă regulă</button>
-        </div>
-        {ruleError && <p className="bf-form-error" role="alert">{ruleError}</p>}
-        <div className="bf-salary-rule-list">
-          {salaryRules.map((rule) => { const allocation = plan.allocations.find((item) => item.id === rule.allocationId); return <article key={rule.id}><label><input type="checkbox" checked={rule.active} onChange={(event) => updateSalaryRule(rule.id, { active: event.target.checked })} /><span><b>{rule.label}</b><small>{allocation?.label || "Plic șters"}</small></span></label><select aria-label={`Plic pentru ${rule.label}`} value={rule.allocationId} onChange={(event) => updateSalaryRule(rule.id, { allocationId: event.target.value })}>{envelopes.map(({ item }) => <option key={item.id} value={item.id}>{item.label}</option>)}</select><select aria-label={`Tip regulă pentru ${rule.label}`} value={rule.mode} onChange={(event) => updateSalaryRule(rule.id, { mode: event.target.value as "fixed" | "percent" })}><option value="fixed">RON</option><option value="percent">%</option></select><input aria-label={`Valoare pentru ${rule.label}`} value={rule.value} inputMode="decimal" onChange={(event) => { const next = parseRomanianAmount(event.target.value); updateSalaryRule(rule.id, { value: rule.mode === "percent" ? Math.min(100, Math.max(0, next)) : Math.max(0, next) }); }} /><button aria-label={`Șterge regula ${rule.label}`} onClick={() => updatePlan({ salaryAllocationRules: salaryRules.filter((item) => item.id !== rule.id) })}><Trash2 size={16} /></button></article>; })}
-          {!salaryRules.length && <p className="bf-empty-inline">Adaugă reguli pentru plicurile existente, de exemplu 500 RON către Alimente sau 15% către Transport.</p>}
-        </div>
-        <div className="bf-salary-apply">
-          <div><p className="bf-kicker">APLICĂ DUPĂ ÎNREGISTRAREA VENITULUI</p><h3>Previzualizează înainte să confirmi</h3><p>Aplicarea crește numai limitele plicurilor compatibile cu membrul și sursa venitului selectat.</p></div>
-          <PlanField label="Venit real"><select value={selectedIncome?.id || ""} onChange={(event) => setSelectedIncomeId(event.target.value)} disabled={!incomes.length}><option value="">{incomes.length ? "Alege venitul" : "Nu ai venituri înregistrate"}</option>{incomes.map((item) => <option key={item.id} value={item.id}>{item.date} · {item.title} · {money(item.amount)}</option>)}</select></PlanField>
-          <div className="bf-salary-preview"><span>Reguli compatibile <b>{eligibleRules.length}</b></span><span>De repartizat <b>{money(plannedFromIncome)}</b></span><span>Rămâne nealocat <b>{money(Math.max(0, (selectedIncome?.amount || 0) - plannedFromIncome))}</b></span></div>
-          <button className="bf-primary" disabled={!selectedIncome || !eligibleRules.length || plannedFromIncome > (selectedIncome?.amount || 0)} onClick={applyRulesToIncome}><Check size={17} /> Aplică repartizarea</button>
-        </div>
-        <div className="bf-salary-application-list">
-          {salaryApplications.slice(0, 4).map((application) => <article key={application.id}><div><b>{application.incomeTitle}</b><small>{application.appliedAt.slice(0, 10)} · {money(application.allocations.reduce((sum, item) => sum + item.amount, 0))} repartizați în {application.allocations.length} plicuri</small></div><button onClick={() => revokeApplication(application.id)}>Anulează</button></article>)}
-          {!salaryApplications.length && <p>Nu ai aplicat încă reguli la un venit.</p>}
-        </div>
-      </> : <div className="bf-plan-envelope-empty"><p>Creează întâi un plic; regulile repartizează numai către limite existente.</p><ChevronRight size={18} /></div>}
-    </section>
+
+    <section className="bf-plan-unallocated" aria-label="Banii nealocați"><div><p className="bf-kicker">SEPAREU DE SIGURANȚĂ</p><h2>Bani încă nealocați</h2><p>Rămân intenționat în afara plicurilor până decizi ce faci cu ei. Nu sunt cheltuiți și nu se mută din nicio sursă.</p></div><strong className={unallocated < 0 ? "over" : ""}>{unallocated < 0 ? "−" : ""}{money(Math.abs(unallocated))}</strong></section>
+
+    <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> Instrumente pentru cicluri repetate</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>Un șablon reține doar suma și durata; începi mereu următorul ciclu cu data aleasă de tine. PDF-ul se generează local pe dispozitiv.</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={enteredCycle ? `ex. Salariu ${enteredCycle.days} zile` : "Completează mai întâi ciclul"} disabled={!enteredCycle} /><button disabled={!enteredCycle} onClick={saveCycleTemplate}>Salvează șablonul</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>Salvează</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>Anulează</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{money(template.amount)} · {template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>Nu ai șabloane salvate încă.</span>}</div></div></details>
   </div>;
 }

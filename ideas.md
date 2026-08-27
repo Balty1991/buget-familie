@@ -104,6 +104,12 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Stările miere și coral apar numai împreună cu eticheta lor explicită: miere pentru alocare/revizuire, coral pentru datorie, atenție sau depășire.
 - În stările fără date, mesajul numește următoarea acțiune a gospodăriei și motivul ei; nu folosim formulări generice de onboarding.
 
+### Amendamente Plan — măsurătoarea salariului
+
+- Prima fișă din Plan este masa de lucru a salariului: suma, pragurile tranșelor, valoarea alocată, banii nealocați și pasul imediat apar într-o singură măsurătoare calibrată.
+- Verdele registru este singura culoare funcțională de acțiune și progres în Plan; mierea marchează strict alocarea/revizuirea, iar coralul numai depășirea. Albastrul nu concurează cu aceste stări.
+- Câmpurile din Plan se comportă ca zone de completare din fișe de registru, cu linii calibrate și ierarhie de lucru, nu ca o succesiune de inputuri web independente.
+
 ## Redesign major mobil — structură aleasă
 
 ### Diferența obligatorie

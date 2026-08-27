@@ -2,6 +2,7 @@
  * Atelierul Financiar 2.0 — registru financiar local, normalizat și portabil.
  * Toate sumele sunt în RON, toate datele sunt ISO (YYYY-MM-DD), iar identitățile sunt stabile.
  */
+import { calendarBudget } from "./calendar-budget";
 
 export type TransactionKind = "income" | "expense";
 export type PaymentKind = "card" | "cash" | "meal" | "transfer";
@@ -77,8 +78,8 @@ export type FamilySettings = { familyName: string; memberName: string; familyCod
 export type DeletedRecord = { entity: "transactions" | "debts" | "savings" | "receipts" | "recurring"; id: string; deletedAt: string };
 export type AppData = { version: 8; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; settings: FamilySettings };
 
-export const expenseCategories = ["Alimente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Timp liber", "Rate produse", "Altele"];
-export const categoryColors: Record<string, string> = { Alimente: "#256B5B", "Casă & facturi": "#5D7283", Transport: "#D49A2A", "Timp liber": "#D56852", Sănătate: "#4987AA", "Rate produse": "#966E4A", Altele: "#7D8581" };
+export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Timp liber", "Rate produse", "Altele"];
+export const categoryColors: Record<string, string> = { Alimente: "#256B5B", "Consumabile copil": "#55877D", Abonamente: "#5D7283", "Casă & facturi": "#5D7283", Transport: "#D49A2A", "Timp liber": "#D56852", Sănătate: "#4987AA", "Rate produse": "#966E4A", Altele: "#7D8581" };
 
 export const isoToday = () => new Date().toISOString().slice(0, 10);
 export const createFamilyCode = () => { const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(""); };
@@ -207,6 +208,37 @@ export const inPlanPeriod = (iso: string, plan: SalaryPlan) => { const end = pla
 export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, data.settings.salaryPlan)).filter((item) => item.allocationId ? item.allocationId === allocation.id : (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || item.sourceId === allocation.sourceId)).reduce((sum, item) => sum + item.amount, 0);
 export const allocationBudget = (data: AppData, allocation: BudgetAllocation) => allocation.amount + data.settings.salaryPlan.transfers.reduce((sum, transfer) => sum + (transfer.toAllocationId === allocation.id ? transfer.amount : 0) - (transfer.fromAllocationId === allocation.id ? transfer.amount : 0), 0);
 export const allocationStatus = (data: AppData, allocation: BudgetAllocation) => { const budget = allocationBudget(data, allocation); const spent = allocationSpent(data, allocation); const remaining = budget - spent; const usage = budget > 0 ? spent / budget : 0; const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80)); return { budget, spent, remaining, usage, alertThreshold, state: remaining < 0 ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const }; };
+
+/** Situația unui plic în tranșa calendaristică ce conține data verificată. */
+export const allocationWeekStatus = (data: AppData, allocation: BudgetAllocation, date = isoToday()) => {
+  const plan = data.settings.salaryPlan;
+  const end = planEndDate(plan);
+  const budget = allocationBudget(data, allocation);
+  const calendar = end ? calendarBudget(budget, plan.periodStart, end) : undefined;
+  const week = calendar?.weeks.find((item) => date >= item.start && date <= item.end);
+  if (!week) return undefined;
+  const spent = data.transactions.filter((item) => {
+    if (item.kind !== "expense" || item.date < week.start || item.date > week.end) return false;
+    if (item.allocationId) return item.allocationId === allocation.id;
+    return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || item.sourceId === allocation.sourceId);
+  }).reduce((sum, item) => sum + item.amount, 0);
+  const remaining = roundedMoney(week.amount - spent);
+  return { ...week, budget: week.amount, spent: roundedMoney(spent), remaining, usage: week.amount > 0 ? spent / week.amount : 0, state: remaining < 0 ? "over" as const : "healthy" as const };
+};
+
+/** Plicuri compatibile pentru o cheltuială reală, cu prioritate pentru potrivirea exactă membru + sursă. */
+export const matchingAllocationsForExpense = (data: AppData, input: { category: string; memberId?: string; sourceId?: string }) => data.settings.salaryPlan.allocations
+  .filter((allocation) => allocation.category === input.category && (!allocation.sourceId || allocation.sourceId === input.sourceId))
+  .filter((allocation, _index, all) => {
+    if (!allocation.memberId || allocation.memberId === input.memberId) return true;
+    const exactMemberMatchExists = all.some((item) => item.memberId === input.memberId);
+    const sourceOwnerId = data.settings.paymentSources.find((source) => source.id === input.sourceId)?.memberId;
+    return !exactMemberMatchExists && allocation.memberId === sourceOwnerId;
+  })
+  .sort((left, right) => {
+    const score = (item: BudgetAllocation) => (item.memberId ? 2 : 0) + (item.sourceId ? 2 : 0) + (allocationBudget(data, item) - allocationSpent(data, item) > 0 ? 1 : 0);
+    return score(right) - score(left);
+  });
 export const financialBalance = (data: AppData, start?: string, end?: string, memberId?: string) => { const entries = data.transactions.filter((item) => (!start || item.date >= start) && (!end || item.date <= end) && (!memberId || item.memberId === memberId)); const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const scopedDebts = data.debts.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const scopedSavings = data.savings.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const monthlyRates = scopedDebts.reduce((sum, item) => sum + item.monthly, 0); const debtRemaining = scopedDebts.reduce((sum, item) => sum + item.remaining, 0); const savingsCurrent = scopedSavings.reduce((sum, item) => sum + item.current, 0); const sources = data.settings.paymentSources.filter((source) => !memberId || !source.memberId || source.memberId === memberId); const liquidFunds = sources.reduce((sum, source) => sum + sourceBalance(data, source.id), 0); return { income, expense, cashflow: income - expense, monthlyRates, debtRemaining, savingsCurrent, liquidFunds, netLiquidPosition: liquidFunds - debtRemaining, memberId }; };
 
 /** Recapitulare locală luni–duminică. Perspectiva unui membru include numai mișcările lui. */
