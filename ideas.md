@@ -43,7 +43,7 @@ Interacțiunile de rutină sunt directe și rapide: adăugarea unei cheltuieli �
 Panourile, etichetele și cardurile folosesc tranziții de maximum 240 ms cu curbă `cubic-bezier(0.23, 1, 0.32, 1)`. Barele bugetelor cresc o singură dată la intrare, iar actualizările de sumă apar printr-un mic „slide” vertical, nu prin animații ostentative. Se respectă `prefers-reduced-motion`.
 
 ### Typography System
-**Fraunces** este folosită în titlurile de analiză și sumele de focalizare, pentru o voce umană și memorabilă. **Manrope** susține navigația, formularele și tabelele, cu cifre tabulare pentru sume. Ierarhia urmează o scară compactă: 12 px etichete, 14–16 px conținut, 24–32 px titluri de secțiune, 42–52 px pentru cifra esențială.
+**IBM Plex Serif** este rezervată titlurilor de orientare și sumelor de focalizare, pentru o voce matură și controlată. **IBM Plex Sans** susține navigația, formularele, filtrele și cifrele tabulare, cu o ierarhie compactă: 10–11 px etichete, 13–16 px conținut, 24–32 px titluri de secțiune și 42–52 px pentru cifra esențială.
 
 ### Brand Essence
 **Buget Familie este atelierul comun în care o familie vede, alocă și decide mai bine fiecare leu.** Personalitate: calmă, atentă, competentă.
@@ -75,3 +75,6 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Monograma B/F este prima lectură a semnului; acoperișul și registrul servesc această geometrie, nu devin o pictogramă generică de casă sau bancă.
 - Riglele sunt eliminate de pe cardurile secundare; rămân numai în suprafețele care afișează consumul planului, progresul sau un prag verificabil.
 - Mierea rămâne exclusiv pentru alocare și revizuire, iar coralul semnalează exclusiv atenție, datorii ori depășiri.
+- Pe mobil, fișele urmează ordinea funcțională: decizia curentă, planul măsurat, banda de decizie, pulsul și registrul; nicio suprafață majoră nu devine un card financiar generic.
+- Semnele de măsură apar numai pentru un prag, interval, consum sau pas următor și folosesc aceeași gramatică de bandă calibrată.
+- Fiecare modul răspunde concret la una dintre întrebările: ce s-a întâmplat, ce înseamnă sau ce decidem acum; etichetele generice sunt înlocuite cu formulări de gospodărie clare.

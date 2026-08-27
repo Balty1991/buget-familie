@@ -34,3 +34,16 @@ Nicio concluzie de piață nu justifică afișarea de recenzii, evaluări sau te
 ## Principii obligatorii pentru teme
 
 Conform [W3C WCAG 2.2 — Contrast minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum), textul obișnuit trebuie să atingă cel puțin 4,5:1 față de fundal, iar textul mare cel puțin 3:1. În temele noi, culorile nu vor fi singurul semnal: veniturile, cheltuielile și alertele păstrează icon, semn aritmetic, etichetă și text explicativ. Fundalul Black–Blue va folosi negru-albăstrui ca material principal și albastru doar ca accent controlat, nu ca fundal variabil sub text subțire.
+
+## Actualizare: tipografie, navigație și dashboard mobil
+
+Cercetarea pentru rafinarea interfeței confirmă că un dashboard mobil financiar trebuie să ofere întâi o vedere scanabilă asupra poziției curente și a deciziei următoare, apoi să dezvăluie detalii în context. Navigația globală, navigația contextuală și detalierea unei valori trebuie să se susțină reciproc, iar etichetele concise și filtrele mențin utilizatorul orientat.[^gooddata]
+
+Pentru mobil, prioritățile sunt acțiuni repetate rămase vizibile, ținte tactile de minimum aproximativ 48 px, ierarhie bazată pe sold, mișcări recente și obligații apropiate, plus carduri verticale pentru date care nu necesită comparație de tabel. Interfața financiară trebuie să favorizeze certitudinea, feedbackul și lizibilitatea cifrelor în fața elementelor decorative.[^toptal] [^banking]
+
+În implementare, aceasta înseamnă: font pentru cifre și controale orientat spre lizibilitate, titluri editoriale rezervate exclusiv punctelor de orientare, bara de navigație inferioară pentru cele cinci zone principale, filtre compacte pentru Jurnal și acțiuni distincte pentru editare versus ștergere. Culorile de stare rămân dublate de text, iconografie și etichete pentru a nu deveni singura sursă de semnificație.[^boia]
+
+[^gooddata]: https://www.gooddata.ai/blog/six-principles-of-dashboard-information-architecture/
+[^toptal]: https://www.toptal.com/designers/dashboard-design/mobile-dashboard-ui
+[^banking]: https://lollypop.design/blog/2026/june/banking-app-ui-design/
+[^boia]: https://www.boia.org/blog/4-common-accessibility-barriers-in-mobile-banking-apps

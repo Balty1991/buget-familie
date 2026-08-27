@@ -1,0 +1,30 @@
+/* Buget Familie — registru financiar sobru: Plex pentru cifre și controale, serif rezervat orientării; navigație tactilă compactă. */
+.bf-app, .bf-app button, .bf-app input, .bf-app select, .bf-app textarea { font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif !important; }
+.bf-app { font-variant-numeric: tabular-nums; letter-spacing: -.008em; }
+.bf-topline h1, .bf-section-heading h2, .bf-balance-heading h2, .bf-objective-card b, .bf-brand b, .bf-period-card h2, .bf-advisor-hero h2, .bf-page h1 { font-family: "IBM Plex Serif", Georgia, serif !important; font-weight: 600 !important; letter-spacing: -.042em !important; }
+.bf-topline h1 { max-width: 18ch; line-height: 1.02 !important; }
+.bf-topline h1 em { font-style: italic; }
+.bf-kicker { font-size: .64rem !important; letter-spacing: .13em !important; }
+.bf-appbar { min-height: 68px; padding-inline: clamp(16px, 4.5vw, 52px); }
+.bf-brand b { display: block; font-size: 1.12rem !important; line-height: .88 !important; }
+.bf-brand i { display: block; margin-top: 2px; font-family: "IBM Plex Sans", sans-serif; font-size: .85em; font-weight: 600; letter-spacing: -.02em; }
+.bf-appbar nav { gap: 5px; }
+.bf-appbar nav button { min-height: 42px; padding-inline: 12px; border-radius: 9px; font-size: .72rem; font-weight: 700; letter-spacing: -.01em; }
+.bf-appbar nav button.active { box-shadow: inset 0 -2px 0 currentColor; }
+.bf-theme { border-radius: 11px; }
+.bf-more-tabs { gap: 7px; padding: 0 0 10px; border-bottom: 1px solid rgba(113,132,121,.22); }
+.bf-more-tabs button { min-height: 40px; border-radius: 9px; font-size: .73rem; font-weight: 700; }
+.bf-more-grid button { min-height: 108px; border-radius: 14px; }
+.bf-more-grid b, .bf-quick-grid span { font-size: .85rem; letter-spacing: -.015em; }
+.bf-journal .bf-filter-sheet, .bf-filter-sheet { border-radius: 15px; }
+.bf-segment button, .bf-filter-pills button, .bf-journal-filter button { font-weight: 700; }
+.bf-mobile-nav { height: 74px !important; padding: 8px 9px calc(7px + env(safe-area-inset-bottom)) !important; border-top-width: 1px !important; box-shadow: 0 -10px 24px rgba(3,10,24,.18); }
+.bf-mobile-nav button { min-height: 58px; align-content: center; gap: 5px !important; border-radius: 12px; font-size: .64rem !important; font-weight: 700 !important; letter-spacing: -.015em; transition: background .16s var(--ease-out), color .16s var(--ease-out), transform .16s var(--ease-out); }
+.bf-mobile-nav button svg { width: 20px; height: 20px; }
+.bf-mobile-nav button.active { background: rgba(27,77,144,.16); }
+.bf-mobile-nav button.active svg { width: 21px !important; height: 21px !important; padding: 0 !important; border-radius: 0 !important; background: transparent !important; }
+.bf-mobile-nav button:active { transform: scale(.96); }
+.theme-midnight .bf-mobile-nav button.active { background: rgba(74,143,225,.24); }
+.theme-copper .bf-mobile-nav button.active { background: rgba(200,136,85,.19); }
+@media (max-width: 640px) { .bf-page { padding-inline: 18px; }.bf-topline { margin-bottom: 23px; }.bf-topline h1 { max-width: 14ch; font-size: clamp(2.12rem, 10.2vw, 2.72rem) !important; letter-spacing: -.048em !important; }.bf-topline.compact h1 { max-width: 18ch; font-size: clamp(1.9rem, 9.2vw, 2.45rem) !important; }.bf-topline > div > p:not(.bf-kicker) { font-size: .82rem; line-height: 1.55; }.bf-more-tabs { margin-inline: -2px; overflow-x: auto; scrollbar-width: none; }.bf-more-tabs::-webkit-scrollbar { display: none; }.bf-more-tabs button { flex: 0 0 auto; }.bf-more-grid button { min-height: 100px; padding: 15px; }.bf-mobile-nav { padding-inline: 6px !important; }.bf-mobile-nav button { font-size: .6rem !important; } }
+@media (max-width: 370px) { .bf-mobile-nav button { font-size: .56rem !important; }.bf-page { padding-inline: 15px; } }

@@ -27,5 +27,10 @@ import "./envelope-insights.css";
 import "./mobile-decision-fix.css";
 import "./themes.css";
 import "./report-balance.css";
+import "./objective-edit.css";
+import "./transaction-envelope-picker.css";
+import "./advisor-personalized.css";
+import "./professional-type-navigation.css";
+import "./workbench-surface-system.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, autoPostDueRecurring, createEmptyAppData, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, autoPostDueRecurring, createEmptyAppData, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, savingSuggestions, sourceBalance } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { parseReceiptItems } from "./receipt-utils";
 
@@ -79,6 +79,17 @@ describe("registrul financiar Buget Familie", () => {
     expect(allocationStatus(data, transport).state).toBe("over");
   });
 
+  it("consumă numai plicul selectat expres și lasă plata din afara plicurilor în soldul sursei", () => {
+    const data = createEmptyAppData(); const [card, cash] = data.settings.paymentSources;
+    const cashTaxi = { id: "taxi-cash", label: "Taxi cash", amount: 400, category: "Transport", sourceId: cash.id, memberId: "member-me" };
+    const cardTaxi = { id: "taxi-card", label: "Taxi card", amount: 300, category: "Transport", sourceId: card.id, memberId: "member-me" };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [cashTaxi, cardTaxi], transfers: [] };
+    data.transactions = [{ id: "cash-budget", title: "Taxi cash", amount: 50, kind: "expense", category: "Transport", sourceId: cash.id, source: cash.name, memberId: "member-me", person: "Eu", date: "2026-08-10", allocationId: "taxi-cash" }, { id: "cash-outside", title: "Taxi nebugetat", amount: 30, kind: "expense", category: "Transport", sourceId: cash.id, source: cash.name, memberId: "member-me", person: "Eu", date: "2026-08-11", allocationId: "outside" }];
+    expect(allocationSpent(data, cashTaxi)).toBe(50);
+    expect(allocationSpent(data, cardTaxi)).toBe(0);
+    expect(sourceBalance(data, cash.id)).toBe(-80);
+  });
+
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
     const migrated = normalizeAppData({ version: 5, transactions: [{ id: "legacy", title: "Bon", amount: 20, kind: "expense", category: "Alimente", source: "Bon", person: "Eu", date: "26 aug." }], settings: {} });
     expect(migrated.version).toBe(8);
@@ -139,6 +150,11 @@ describe("registrul financiar Buget Familie", () => {
     expect(parseNaturalSpendScenario("o cafea mâine")).toMatchObject({ amount: 0, category: "Băuturi", understood: false });
   });
 
+  it("calculează media zilnică pentru un buget săptămânal fără a interpreta întrebarea ca o cheltuială", () => {
+    const answer = answerBudgetQuestion("La un buget alimente cu de 600 pe săptămână, cât e media de cheltuit pe zi?", createEmptyAppData());
+    expect(answer).toMatchObject({ kind: "daily-average", amount: 600, days: 7, result: 600 / 7, category: "Alimente", source: "declared" });
+  });
+
   it("propune economisire doar din plan și mișcările reale", () => {
     const data = createEmptyAppData(); const source = data.settings.paymentSources[0];
     data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
@@ -146,6 +162,22 @@ describe("registrul financiar Buget Familie", () => {
     const suggestions = savingSuggestions(data, "2026-08-02");
     expect(suggestions.some((item) => item.id === "category" && item.potential === 40)).toBe(true);
     expect(suggestions.some((item) => item.id === "pace")).toBe(true);
+  });
+
+  it("explică presiunea bilanțului și a ratelor din istoricul personal", () => {
+    const data = createEmptyAppData(); const source = data.settings.paymentSources[0]; source.openingBalance = 300;
+    data.debts = [{ id: "credit", name: "Credit", remaining: 2600, monthly: 500, due: "28 august" }];
+    data.transactions = [{ id: "salary", title: "Salariu", amount: 1200, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-10" }];
+    const suggestions = savingSuggestions(data, "2026-08-20");
+    expect(suggestions.find((item) => item.id === "net-position")).toMatchObject({ tone: "risk", potential: 1100, nextStep: "Revizuiește ratele și planul" });
+    expect(suggestions.find((item) => item.id === "rate-pressure")).toMatchObject({ tone: "watch", potential: 500 });
+  });
+
+  it("semnalează o categorie care a crescut între două săptămâni din istoric", () => {
+    const data = createEmptyAppData(); const source = data.settings.paymentSources[0];
+    data.transactions = [{ id: "old-transport", title: "Taxi", amount: 60, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-02" }, { id: "new-transport", title: "Taxi", amount: 170, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-12" }];
+    const trend = savingSuggestions(data, "2026-08-14").find((item) => item.id === "history-trend");
+    expect(trend).toMatchObject({ tone: "watch", potential: 110, nextStep: "Vezi mișcările categoriei" });
   });
 
   it("unește modificările a două telefoane și păstrează ștergerile recente", () => {

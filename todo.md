@@ -252,3 +252,42 @@
 
 - [ ] Confirmă separat: bilanț, plicuri și alerte, transferuri, împărțirea pe membri, fereastra de venit, recurente, bonuri OCR, sincronizare, teme, asistent local, mobil, Pages și APK.
 - [ ] Marchează drept livrate numai funcțiile care au test automat sau test manual documentat; menține vizibile limitările GitHub-only.
+
+## Asistent financiar personalizat
+
+- [x] Leagă recomandările de istoricul recent, bilanț, scadențe, plicuri și ritmul până la venit.
+- [x] Arată pentru fiecare recomandare suma, perioada și regula locală care au produs-o.
+- [x] Propune pași de planificare neautomată, fără plăți, transferuri sau recomandări de investiții.
+- [x] Adaugă teste pentru lipsa datelor, presiunea ratelor, schimbarea ritmului și recomandările de plic.
+- [ ] Verifică asistentul pe mobil, documentează limitele și publică numai după validare.
+
+## Întrebări de calcul pentru asistent
+
+- [x] Recunoaște întrebări precum „la un buget de 600 pe săptămână, cât este media pe zi?” fără a le confunda cu o cheltuială nouă.
+- [x] Răspunde cu rezultatul, formula, unitatea și perioada, inclusiv pentru zi, săptămână și zile rămase până la venit.
+- [x] Recunoaște o categorie menționată și compară suma cu plicul corespunzător când acesta există.
+- [x] Păstrează mesajul de clarificare doar când lipsesc efectiv suma ori perioada necesare calculului.
+- [x] Adaugă teste de regresie pentru întrebările formulate de utilizator și verifică răspunsul în interfața mobilă.
+
+## Cheltuială din plic selectată explicit
+
+- [x] Afișează sursele de plată cu tipul și titularul lor, de exemplu „Cash · Soție” sau „Card debit · Eu”.
+- [x] După alegerea membrului, sursei și categoriei, oferă un selector explicit al plicurilor compatibile.
+- [x] Permite alegerea „În afara plicurilor” pentru o cheltuială reală care nu consumă o limită alocată.
+- [x] Arată clar ce plic va fi consumat, ce sumă rămâne și previne alegerea unui plic incompatibil.
+- [x] Adaugă teste de selecție și verifică formularul înainte de publicare.
+
+## Editare datorii și obiective
+
+- [x] Adaugă o acțiune distinctă de editare pentru fiecare datorie și obiectiv de economisire.
+- [x] Deschide formularul existent precompletat și păstrează identificatorul înregistrării pentru sincronizare.
+- [x] Păstrează ștergerea ca acțiune separată, cu confirmare explicită.
+- [x] Verifică actualizarea soldului rămas, ratei, datei și denumirii după editare.
+
+## Tipografie, meniuri și performanță
+
+- [x] Cercetează practici actuale pentru aplicații financiare mobile: ierarhie tipografică, navigație și densitatea informației.
+- [x] Înlocuiește accentele editoriale prea dominante cu un sistem tipografic mai funcțional și lizibil pentru cifre.
+- [x] Rafinază bara de navigație, meniurile și filtrele pentru scanare rapidă, ținte tactile clare și stări active discrete.
+- [x] Confirmă încărcarea la cerere a rapoartelor, bonurilor și scadențelor; bundle-ul principal rămâne monitorizat pentru următoarea separare funcțională.
+- [x] Verifică mobil ecranele Acasă, Obiective și Asistent; restul fluxurilor rămân în verificarea de publicare.

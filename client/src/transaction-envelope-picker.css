@@ -1,0 +1,28 @@
+/* Atelierul Financiar — sursa reală și plicul de consum sunt pași separați, cu statut vizibil pe ecrane mici. */
+.bf-envelope-choice { display: grid; gap: 10px; margin: 3px 0 15px; padding: 14px; border: 1px solid #bfd2c6; border-radius: 15px; background: linear-gradient(135deg, #f5faf6, #edf4ef); }
+.bf-envelope-choice h3 { margin: 2px 0 4px; color: #1e4d40; font: 800 18px/1.1 "Fraunces", Georgia, serif; }
+.bf-envelope-choice p:last-child, .bf-envelope-empty { margin: 0; color: #60776b; font-size: 11px; line-height: 1.45; }
+.bf-envelope-choice .bf-field { gap: 5px; }
+.bf-envelope-choice select { background: #fffefa; }
+.bf-envelope-match.outside { border-color: #9aa9a1; border-left-color: #71837a; background: #f0f4f1; }
+.bf-envelope-match.outside p { color: #526960; }
+.bf-envelope-match.outside b { color: #294b40; }
+.dark .bf-envelope-choice { border-color: #386051; background: linear-gradient(135deg, #153a2f, #112b24); }
+.dark .bf-envelope-choice h3 { color: #edf7ee; }
+.dark .bf-envelope-choice p:last-child, .dark .bf-envelope-empty { color: #b9d0c0; }
+.dark .bf-envelope-choice select { background: #0c211b; }
+.dark .bf-envelope-match.outside { border-color: #547066; border-left-color: #8ca69a; background: #1b3029; }
+.dark .bf-envelope-match.outside p { color: #b8cec0; }
+.dark .bf-envelope-match.outside b { color: #f0f8f2; }
+.theme-midnight .bf-envelope-choice { border-color: #284d80; background: linear-gradient(135deg, #0e203b, #0a172c); }
+.theme-midnight .bf-envelope-choice h3 { color: #e8f1ff; }
+.theme-midnight .bf-envelope-choice p:last-child, .theme-midnight .bf-envelope-empty { color: #b7c9e5; }
+.theme-midnight .bf-envelope-choice select { background: #09162a; }
+.theme-midnight .bf-envelope-match.outside { border-color: #3b5f88; border-left-color: #7aa8db; background: #12243d; }
+.theme-midnight .bf-envelope-match.outside p { color: #b7c9e5; }
+.theme-midnight .bf-envelope-match.outside b { color: #eff5ff; }
+.theme-copper .bf-envelope-choice { border-color: #715542; background: linear-gradient(135deg, #261c17, #1d1612); }
+.theme-copper .bf-envelope-choice h3 { color: #f5dfc9; }
+.theme-copper .bf-envelope-choice p:last-child, .theme-copper .bf-envelope-empty { color: #d5bda8; }
+.theme-copper .bf-envelope-choice select { background: #1c1511; }
+@media (max-width: 640px) { .bf-envelope-choice { padding: 12px; border-radius: 13px; }.bf-envelope-choice h3 { font-size: 17px; } }

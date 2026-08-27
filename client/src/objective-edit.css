@@ -1,0 +1,7 @@
+/* Atelierul Financiar — editarea este deliberată și distinctă de ștergere pe carduri de obligații și obiective. */
+.bf-objective-actions { display: inline-flex; align-items: center; gap: 7px; margin-left: auto; }
+.bf-objective-card .bf-objective-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 38px; padding: 0 11px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; color: inherit; background: rgba(255,255,255,.08); font-size: 11px; font-weight: 800; }
+.bf-objective-card .bf-objective-actions .bf-objective-edit { color: #f8e7a2; border-color: rgba(239,208,121,.44); }
+.bf-objective-card .bf-objective-actions button:last-child { width: 38px; padding: 0; color: #ffd0c5; border-color: rgba(214,104,82,.48); background: rgba(176,73,53,.32); }
+.bf-objective-card .bf-objective-actions button:active { transform: scale(.97); }
+@media (max-width: 640px) { .bf-objective-actions { width: 100%; margin: 3px 0 0; }.bf-objective-card .bf-objective-actions .bf-objective-edit { flex: 1; } }
