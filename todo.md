@@ -443,11 +443,19 @@
 - [x] Permite împărțirea unui plic pe membri și surse, de exemplu Alimente 300 RON cash Eu + 300 RON card Soție în fiecare săptămână, precum și Taxi Eu 100 RON + Soție 400 RON pe lună.
 - [x] Permite plicuri de obligații pentru abonamente, rate produse și consumabile copil, plus un separeu calculat de bani nealocați.
 - [x] La înregistrarea cheltuielii, identifică și consumă automat alocarea săptămânii active compatibilă cu categoria, membrul și sursa, oferind alternativă explicită pentru plată în afara plicurilor.
-- [ ] Migrează plicurile existente fără pierderea sursei, membrului, notei, pragului sau istoricului și verifică scenariul familial complet pe 360–430 px înainte de publicare.
+- [x] Migrează plicurile existente fără pierderea sursei, membrului, notei, pragului sau istoricului și verifică scenariul familial complet pe 360–430 px înainte de publicare.
 
 ## Audit multi-perspectivă după Plan
 
-- [ ] Evaluează fluxurile principale ca persoană singură, cuplu/familie, utilizator grăbit și utilizator cu nevoie de contrast ridicat, pe ecrane de 360–430 px.
-- [ ] Evaluează separat înregistrarea cheltuielii cu cardul altui membru, alegerea automată a plicului și consumul tranșei săptămânale active.
-- [ ] Auditează ca dezvoltator experimentat modelul de date local-first, migrarea, persistența, code-splitting-ul, accesibilitatea și limitele sincronizării GitHub-only.
-- [ ] Documentează problemele confirmate, impactul, recomandarea și prioritatea într-un roadmap de dezvoltare fără promisiuni de funcții inexistente.
+- [x] Evaluează fluxurile principale ca persoană singură, cuplu/familie, utilizator grăbit și utilizator cu nevoie de contrast ridicat, pe ecrane de 360–430 px.
+- [x] Evaluează separat înregistrarea cheltuielii cu cardul altui membru, alegerea automată a plicului și consumul tranșei săptămânale active.
+- [x] Auditează ca dezvoltator experimentat modelul de date local-first, migrarea, persistența, code-splitting-ul, accesibilitatea și limitele sincronizării GitHub-only.
+- [x] Documentează problemele confirmate, impactul, recomandarea și prioritatea într-un roadmap de dezvoltare fără promisiuni de funcții inexistente.
+
+## Roadmap după audit — integritate și experiență
+
+- [ ] Înlocuiește crearea noilor ID-uri cu UUID criptografice și acoperă cu teste sincronizarea simultană de pe două dispozitive.
+- [ ] Mută imaginile bonurilor în IndexedDB, păstrează referințe ușoare în registru și tratează explicit spațiul local insuficient.
+- [ ] Adaugă pull–merge–retry cu backoff și rezolvare clară pentru conflicte/rate limit în sincronizarea GitHub.
+- [ ] Înlocuiește modalele cu dialoguri care rețin focusul, se închid sigur și întorc focusul la controlul de origine.
+- [ ] Simplifică următoarele ecrane: cronologia devine dominantă în Mișcări, scadențele în Obligații și concluzia lunară în Analiză.
