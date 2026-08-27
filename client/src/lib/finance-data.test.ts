@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { allocationBudget, allocationSpent, allocationStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
 import { mergeFamilyData } from "./github-sync";
 import { journalCsvSnapshot } from "./journal-csv";
-import { calendarBudget } from "./calendar-budget";
+import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
+import { calendarPlanPdfSnapshot } from "./calendar-plan-pdf";
 import { parseReceiptItems } from "./receipt-utils";
 
 describe("registrul financiar Buget Familie", () => {
@@ -299,5 +300,18 @@ describe("registrul financiar Buget Familie", () => {
     expect(plan?.weeks.at(-1)).toMatchObject({ days: 4, amount: 300 });
     expect(plan?.weeks.reduce((sum, week) => sum + week.amount, 0)).toBe(2400);
     expect(calendarBudget(2400, "2026-10-02", "2026-09-01")).toBeUndefined();
+  });
+  it("normalizează șabloanele locale de ciclu și marcajele alertei fără a le confunda cu date financiare", () => {
+    const data = normalizeAppData({ version: 8, settings: { memberName: "Eu", salaryCycleTemplates: [{ id: "valid", label: " Salariu lunar ", amount: "2400", durationDays: 30 }, { id: "invalid", label: "", amount: 0, durationDays: 2 }], seenWeeklyPlanTranches: ["2026-09-01:2026-09-07:1", "nevalid"] } });
+    expect(data.settings.salaryCycleTemplates).toEqual([expect.objectContaining({ id: "valid", label: "Salariu lunar", amount: 2400, durationDays: 30 })]);
+    expect(data.settings.seenWeeklyPlanTranches).toEqual(["2026-09-01:2026-09-07:1"]);
+  });
+  it("identifică o singură tranșă curentă și construiește snapshotul PDF fără mișcări", () => {
+    const active = currentCalendarBudgetWeek(2400, "2026-09-01", "2026-09-28", "2026-09-12");
+    expect(active).toMatchObject({ index: 2, start: "2026-09-08", end: "2026-09-14", amount: 600 });
+    expect(calendarBudgetWeekKey(active!)).toBe("2026-09-08:2026-09-14:2");
+    const report = calendarPlanPdfSnapshot(calendarBudget(2400, "2026-09-01", "2026-09-28")!, "Familia mea");
+    expect(report).toMatchObject({ familyName: "Familia mea", total: 2400, days: 28 });
+    expect(report.weeks).toHaveLength(4);
   });
 });

@@ -27,3 +27,9 @@ export function calendarBudget(total: number, start: string, end: string): Calen
   }
   return { total: roundMoney(safeTotal), start, end, days, exactWeeks: days / 7, weeklyAmount, weeks };
 }
+
+/** Găsește tranșa care conține ziua verificată; folosită pentru un reminder in-app, nu pentru notificare în fundal. */
+export const currentCalendarBudgetWeek = (total: number, start: string, end: string, today: string) => calendarBudget(total, start, end)?.weeks.find((week) => today >= week.start && today <= week.end);
+
+/** Cheie stabilă: aceeași tranșă poate declanșa cel mult o alertă locală pe dispozitiv. */
+export const calendarBudgetWeekKey = (week: CalendarBudgetWeek) => `${week.start}:${week.end}:${week.index}`;

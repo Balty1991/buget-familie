@@ -93,6 +93,9 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Banda principală de plan este o măsurătoare calibrată: marcajele indică intervale și praguri verificabile, nu o bară de progres generică.
 - Fișa de situație, banda de decizie și dovada din registru au niveluri vizuale distincte; ecranul nu este o stivă de module egale.
 - Identitatea B/F reapare numai ca marcaj de secțiune, interval sau decizie, păstrând suprafețele aerisite și orientate spre date.
+- Prima situație și următoarea decizie se unesc într-o singură fișă când nu există alertă între ele; modulele de mai jos rămân dovezi de registru calme.
+- Bilanțul mobil este o listă de registru semantică: surse utilizabile cu verde, obligații confirmate cu coral și limite de plic cu miere, fiecare stare fiind numită explicit.
+- Titlurile de decizie numesc gospodăria, intervalul, venitul, plicul ori obligația concretă; evităm formulări abstracte care nu explică motivul pasului următor.
 
 ### Rafinare mobilă — decizie ca instrument unic
 

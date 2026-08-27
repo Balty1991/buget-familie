@@ -428,3 +428,10 @@
 
 - [x] Refă monograma B/F ca simbol premium cu volum, literă lizibilă și contur adaptat fiecărei teme.
 - [x] Verifică iconul în antet, favicon și instalare PWA fără a înlocui identitatea existentă printr-un simbol generic.
+
+## Cicluri salariale și plan exportabil
+
+- [x] Permite salvarea, aplicarea, redenumirea și ștergerea locală a unor șabloane de ciclu salarial, fără a forța datele calendaristice curente.
+- [x] Generează un PDF local pentru calculatorul calendaristic, cu sumă, interval, ritm săptămânal și tranșe, fără încărcarea datelor într-un serviciu extern.
+- [x] Afișează alerte locale în aplicație la începutul unei tranșe săptămânale, o singură dată per tranșă și numai cât aplicația este deschisă.
+- [x] Verifică pe 360–430 px șabloanele, PDF-ul și alertele, apoi rulează testele și publică Pages/APK numai după rezultate verzi.
