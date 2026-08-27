@@ -33,5 +33,8 @@ import "./transaction-envelope-picker.css";
 import "./advisor-personalized.css";
 import "./professional-type-navigation.css";
 import "./workbench-surface-system.css";
+import "./redesign-major-mobile.css";
+import "./plan-studio.css";
+import "./analysis-studio.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

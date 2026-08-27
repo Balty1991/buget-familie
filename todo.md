@@ -311,11 +311,20 @@
 
 ## Reorganizare majoră după funcțiile în curs
 
-- [ ] Cercetează aprofundat arhitectura de informație, modelele de navigație și experiența zilnică din aplicații financiare mobile moderne.
-- [ ] Auditează toate ecranele actuale și definește o ierarhie nouă, pornind de la decizia zilnică, nu de la module izolate.
-- [ ] Reorganizează meniul, ecranul principal, Jurnalul, Planul, Obiectivele și instrumentele într-un sistem mai clar și mai rapid de parcurs.
-- [ ] Redesenază tipografia, spațierea, suprafețele și stările fără a modifica sau ascunde datele financiare reale.
+- [x] Cercetează aprofundat arhitectura de informație, modelele de navigație și experiența zilnică din aplicații financiare mobile moderne.
+- [x] Auditează toate ecranele actuale și definește o ierarhie nouă, pornind de la decizia zilnică, nu de la module izolate.
+- [x] Reorganizează meniul, ecranul principal, Jurnalul, Planul, Obiectivele și instrumentele într-un sistem mai clar și mai rapid de parcurs.
+- [x] Redesenază tipografia, spațierea, suprafețele și stările fără a modifica sau ascunde datele financiare reale.
 - [ ] Verifică noile fluxuri individuale și familiale pe mobil, apoi publică numai versiunea validată web și APK.
+
+## Navigare mobilă, istoric comparativ și plicuri lunare
+
+- [x] Livrează ecrane și trasee vizibil diferite, nu doar retușuri de culoare, tipografie sau aceleași carduri în altă ordine.
+- [x] Regrupează navigarea mobilă în zonele Astăzi, Mișcări, Plan, Obligații și Analiză, cu acces fără blocaje la instrumentele existente.
+- [x] Construiește o cronologie financiară lunară cu comparație față de luna precedentă, implicit pentru anul curent și pentru perspectiva Familie/Membru.
+- [x] Afișează grafice locale pentru venituri, cheltuieli și balanță lunară, cu valori exacte și stări utile când lipsesc datele.
+- [x] Clarifică plicurile ca limite de interval lunar, cu alerte locale la pragul de atenție și la depășire, fără a crea mișcări bancare.
+- [x] Elimină componentele moarte din ecranul principal și verifică reducerea bundle-ului inițial înainte de publicare.
 
 ## Platformă mobilă prioritară
 

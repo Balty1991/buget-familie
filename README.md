@@ -6,13 +6,14 @@
 
 | Domeniu | Funcție disponibilă |
 |---|---|
-| Panou financiar și bilanț | Indicatori calculați din registrul real; o stare depășită este semnalată explicit, fără a fi mascată ca disponibil. Bilanțul are perspectivă **Familie** sau **Membru**, filtrează mișcările și sursele nominale, dar păstrează vizibile obligațiile/economiile comune. |
-| Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli. Fiecare intrare are dată ISO, membru, sursă de plată și categorie. |
+| Spațiu de lucru mobil | Navigație primară pe cinci trasee: **Astăzi**, **Mișcări**, **Plan**, **Obligații** și **Analiză**. Utilitarele rare rămân în zona separată de instrumente, astfel încât bara telefonului servește activitatea zilnică. |
+| Astăzi și bilanț | Bandă de marjă până la venit, următoarea decizie, măsurători de surse/obligații/plicuri și activitate recentă, toate calculate din registrul real. |
+| Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli într-o cronologie grupată pe zile, cu totaluri zilnice. Fiecare intrare are dată ISO, membru, sursă de plată și categorie. |
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la venit | Data estimată a următorului venit, prima dată posibilă opțională, limită totală, limită săptămânală calculată, zile rămase și alocări. Când există un interval, toate calculele folosesc prudent prima dată posibilă. |
 | Plicuri de categorie | O categorie precum Transport/Taxi poate avea un buget, o sursă, un membru opțional și un detaliu. De exemplu, Transport poate fi împărțit în Soție 430 RON și Eu 70 RON; fiecare cheltuială compatibilă consumă plicul exact, iar tabloul plicurilor se poate filtra după Familie sau fiecare membru. |
 | Puls, alerte și realocări | Plicurile au bare interactive, selectare de detaliu, alertă la 80% sau depășire, istoric filtrabil al realocărilor și transfer doar între categorii finanțate din aceeași sursă. |
-| Statistici și PDF | Venituri, cheltuieli și diferență pentru anul curent; evoluție lunară și categorii extrase din registru. Bilanțul poate fi descărcat ca PDF pentru o lună și perspectiva Familie/Membru, generat local în browser. |
+| Analiză, alerte și PDF | Comparație cu luna precedentă, evoluție lunară în anul curent, categorii, poziție financiară și plicuri la prag de atenție ori depășite. Bilanțul poate fi descărcat ca PDF pentru o lună și perspectiva Familie/Membru, generat local în browser. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere protejată, proprietar opțional (familie sau membru) și calcule de progres. O rată poate fi confirmată dintr-o sursă reală: creează cheltuiala în Jurnal, reduce automat soldul aceleiași datorii și păstrează istoricul „plată parțială” sau „achitată integral”. |
 | Bonuri mobile | Maximum două fotografii comprimate local, OCR local pentru produse și prețuri individuale, categorii sugerate și repartizare editabilă; liniile trebuie să egaleze totalul înainte de salvare. |
@@ -46,7 +47,7 @@ Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișa
 
 ## Performanță mobilă
 
-Componentele de statistici, scadențe, OCR și asistent sunt încărcate la cerere. Generatorul PDF este încărcat numai după apăsarea exportului, nu la prima deschidere a aplicației. Runtime-ul React și iconițele sunt separate în fișiere cacheabile; asistentul rămâne într-un modul de aproximativ **19 kB** înainte de compresie, astfel încât nu blochează încărcarea tabloului. Bundle-ul principal rămâne monitorizat pentru următoarele separări funcționale.
+Componentele de Plan, Analiză, scadențe, OCR și asistent sunt încărcate la cerere. Generatorul PDF este încărcat numai după apăsarea exportului, nu la prima deschidere a aplicației. Runtime-ul React și iconițele sunt separate în fișiere cacheabile; Planul, rapoartele și asistentul rămân în module separate, iar bundle-ul principal al acestei versiuni este de aproximativ **668 kB minificat / 179 kB gzip**. Bundle-ul principal rămâne monitorizat pentru următoarele separări funcționale.
 
 ## Teme memorate
 

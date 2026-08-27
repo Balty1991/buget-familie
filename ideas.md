@@ -81,3 +81,34 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Suprafețele secundare folosesc linii de registru, benzi etichetate sau muchii perforate în locul cardurilor neutre; riglele apar numai pentru progres, limite, praguri și intervale.
 - Mierea este rezervată pentru alocare și revizuire, coralul pentru datorii, depășiri și atenție, iar verdele pentru disponibil și progres; culoarea nu este decorativă.
 - Fișa „punct de decizie” și planul măsurat domină ecranul; pulsul, bilanțul și jurnalul sunt dovezi de lucru care explică ce s-a întâmplat și ce urmează.
+- Pe mobil, prima vedere formulează o singură propoziție de decizie, o valoare dominantă și următoarea acțiune; titlurile editoriale rămân secundare față de această claritate.
+- Și în lipsa datelor, ecranele păstrează fișe pregătite, linii de registru, etichete perforate și zone calibrate, nu carduri goale generice.
+- Monograma este citită mai întâi ca B/F geometric de registru, fără interpretare de scut, mascotă sau insignă nostalgică; accentele de casă servesc doar geometria B/F.
+
+## Redesign major mobil — structură aleasă
+
+### Diferența obligatorie
+
+Versiunea nouă nu păstrează traseul „Acasă · Jurnal · Plan · Obiective · Mai mult” și nu mută aceleași module între carduri. Ea este un **tablou de lucru pe cinci întrebări**: **Astăzi**, **Mișcări**, **Plan**, **Obligații** și **Analiză**. Utilitarele rare (temă, familie, sincronizare, ghid) devin o foaie de instrumente deschisă din antet, fără poziție în bara de jos.
+
+### Layout Paradigm
+
+Fiecare ecran începe cu o **bandă de situație** care răspunde într-un rând la întrebarea principală, urmată de o acțiune dominantă și de fișe de lucru desfășurate. Ecranul nu mai este o colecție de blocuri egalizate: prima decizie primește spațiu, iar următoarele detalii se comprimă într-o cronologie, un registru ori o măsurătoare.
+
+| Ecran | Rol nou | Piesă dominantă |
+|---|---|---|
+| Astăzi | decizie zilnică și atenții | panou de marjă până la venit + listă de acțiuni |
+| Mișcări | înregistrare și verificare | cronologie grupată pe zile, cu total zilnic |
+| Plan | alocare și control înainte de consum | atelier de plicuri + rezervări până la venit |
+| Obligații | datorii, rate, economii și scadențe | axă de obligații și istoric de plăți |
+| Analiză | explicația schimbărilor | comparație lunară + grafice + PDF și asistent |
+
+### Signature Elements 2.0
+
+1. **Benzi de situație:** o singură propoziție și o valoare dominantă, nu un antet decorativ repetat.
+2. **Cronologii de lucru:** mișcări, rate și modificări ale plicurilor apar ca trasee ordonate în timp, nu grile de instrumente.
+3. **Măsurători cu prag:** barele explică o limită sau evoluție și afișează întotdeauna valoarea exactă, starea și acțiunea disponibilă.
+
+### Interaction Philosophy 2.0
+
+Înregistrarea unei mișcări rămâne la o atingere, dar contextul (membru, sursă și plic) se completează direct în flux. Comutările Familie/Membru se păstrează numai acolo unde schimbă rezultatul. Un utilizator nu trebuie să deschidă „Mai mult” pentru a vedea analiza, rata sau un plic; acestea sunt destinații de lucru de prim rang.
