@@ -8,12 +8,12 @@
 |---|---|
 | Spațiu de lucru mobil | Navigație primară pe cinci trasee: **Astăzi**, **Mișcări**, **Plan**, **Obligații** și **Analiză**. Utilitarele rare rămân în zona separată de instrumente, astfel încât bara telefonului servește activitatea zilnică. |
 | Astăzi și bilanț | Bandă de marjă până la venit, următoarea decizie, măsurători de surse/obligații/plicuri și activitate recentă, toate calculate din registrul real. |
-| Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli într-o cronologie grupată pe zile, cu totaluri zilnice. Căutarea locală găsește titlul, categoria, sursa, membrul, notița ori suma, iar intervalul „De la / Până la” se combină cu toate filtrele și arată numărul de rezultate. |
-| Captură rapidă și săptămână | Foaia „Înregistrare rapidă” salvează o mișcare reală cu suma, categoria, membrul și sursa. Combinațiile frecvente pot fi memorate, actualizate sau șterse ca șabloane numai pe telefonul curent; nu afectează tranzacțiile deja confirmate. Jurnalul arată recapitularea curentă luni–duminică, cu perspectivă Familie/Membru, venituri, cheltuieli, diferență și categorii principale. |
+| Mișcări | Adăugare, editare și ștergere de venituri și cheltuieli într-o cronologie grupată pe zile, cu totaluri zilnice. Căutarea locală găsește titlul, categoria, sursa, membrul, notița ori suma, iar intervalul „De la / Până la” se combină cu toate filtrele și arată numărul de rezultate. Poți salva maximum opt filtre locale, le poți aplica, redenumi sau șterge; ele nu se sincronizează. |
+| Captură rapidă și săptămână | Foaia „Înregistrare rapidă” salvează o mișcare reală cu suma, categoria, membrul și sursa. Combinațiile frecvente pot fi memorate, actualizate, arhivate pe lună, restaurate sau șterse definitiv ca șabloane numai pe telefonul curent; nu afectează tranzacțiile deja confirmate. Jurnalul arată recapitularea curentă luni–duminică, cu perspectivă Familie/Membru, venituri, cheltuieli, diferență și categorii principale. |
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la venit | Data estimată a următorului venit, prima dată posibilă opțională, limită totală, limită săptămânală calculată, zile rămase și alocări. Când există un interval, toate calculele folosesc prudent prima dată posibilă. |
 | Plicuri de categorie | O categorie precum Transport/Taxi poate avea un buget, o sursă, un membru opțional și un detaliu. De exemplu, Transport poate fi împărțit în Soție 430 RON și Eu 70 RON; fiecare cheltuială compatibilă consumă plicul exact, iar tabloul plicurilor se poate filtra după Familie sau fiecare membru. |
-| Puls, alerte și realocări | Plicurile au bare interactive, selectare de detaliu, alertă la 80% sau depășire, bandă vizuală locală în ecranul Astăzi, istoric filtrabil al realocărilor și transfer doar între categorii finanțate din aceeași sursă. Alertele nu trimit bani, nu cer acces bancar și nu rulează când aplicația este închisă. |
+| Puls, alerte și realocări | Fiecare plic are un prag de atenție configurabil de la 50% la 95%; depășirea rămâne la 100%. Plicurile au bare interactive, selectare de detaliu, bandă vizuală locală în ecranul Astăzi, istoric filtrabil al realocărilor și transfer doar între categorii finanțate din aceeași sursă. Alertele nu trimit bani, nu cer acces bancar și nu rulează când aplicația este închisă. |
 | Analiză, alerte și PDF | Comparație cu luna precedentă, evoluție lunară în anul curent, categorii, poziție financiară și plicuri la prag de atenție ori depășite. Bilanțul poate fi descărcat ca PDF pentru o lună și perspectiva Familie/Membru, generat local în browser. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere protejată, proprietar opțional (familie sau membru) și calcule de progres. O rată poate fi confirmată dintr-o sursă reală: creează cheltuiala în Jurnal, reduce automat soldul aceleiași datorii și păstrează istoricul „plată parțială” sau „achitată integral”. |
@@ -21,7 +21,7 @@
 | Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit, întrebări rapide și calcule directe, de exemplu buget săptămânal împărțit pe zi. Se încarcă numai când este deschis. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
-| Aspect și control | Selector persistent cu Ivory Ledger, Forest Night, Black–Blue și Ink–Copper; semnificația veniturilor, cheltuielilor și alertelor rămâne aceeași în toate temele. Include monogramă locală B/F, favicon, resetare controlată și export/import de rezervă. |
+| Aspect și control | Selector persistent cu Ivory Ledger mineral, Forest Night emerald, Black–Blue obsidian/cyan și Ink–Copper grafit/cupru; semnificația veniturilor, cheltuielilor și alertelor rămâne aceeași în toate temele. Include monogramă locală B/F, favicon, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
@@ -52,7 +52,7 @@ Componentele de Plan, Analiză, scadențe, OCR, asistent și captura rapidă sun
 
 ## Teme memorate
 
-Butonul de paletă din antet deschide alegerea temei și păstrează opțiunea local pe dispozitiv. **Black–Blue** folosește fundal negru-albăstrui, suprafețe bleumarin și albastru deschis pentru acțiunea principală; **Forest Night** păstrează atmosfera verde nocturnă, iar **Ink–Copper** folosește grafit și cupru. Textul, controalele și graficele sunt proiectate pentru contrast, iar coralul rămâne rezervat situațiilor de atenție.
+Butonul de paletă din antet deschide alegerea temei și păstrează opțiunea local pe dispozitiv. **Ivory Ledger** combină hârtia minerală cu verde petrol; **Forest Night** folosește panouri emerald mate; **Black–Blue** combină obsidianul cu cyan moderat, iar **Ink–Copper** folosește grafit și cupru. Textul, controalele și graficele sunt proiectate pentru contrast, iar coralul rămâne rezervat situațiilor de atenție.
 
 ## Familie conectată și sincronizare GitHub protejată
 
@@ -66,7 +66,7 @@ Aplicația publică este `Balty1991/buget-familie`. Repo-ul separat `Balty1991/b
 | 4 | Alege o parolă de familie de cel puțin 12 caractere; ea criptează datele prin AES-GCM înainte de upload. |
 | 5 | Pe fiecare telefon, introdu un token limitat separat și aceeași parolă, apoi apasă **Conectează acest telefon**. |
 
-După conectare, aplicația verifică actualizări aproximativ la 30 de secunde cât rămâne deschisă, unește intrările prin ID și marcaj de actualizare și păstrează ștergerile — inclusiv scadențele recurente — pentru a evita reapariția datelor eliminate. GitHub Contents API oferă controlul de conflict prin SHA, dar această soluție rămâne o actualizare periodică, nu un canal instantaneu în fundal. Fotografiile bonurilor sunt excluse intenționat din pachetul remote și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
+După conectare, aplicația verifică actualizări aproximativ la 30 de secunde cât rămâne deschisă, unește intrările prin ID și marcaj de actualizare și păstrează ștergerile — inclusiv scadențele recurente — pentru a evita reapariția datelor eliminate. GitHub Contents API oferă controlul de conflict prin SHA, dar această soluție rămâne o actualizare periodică, nu un canal instantaneu în fundal. Fotografiile bonurilor, filtrele salvate și șabloanele active/arhivate sunt excluse intenționat din pachetul remote și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
 
 ## Limite importante
 
@@ -93,7 +93,7 @@ pnpm build
 pnpm exec vitest run client/src/lib/finance-data.test.ts
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, plata parțială și finală a unei rate, legătura ratei cu datoria și soldul rămas, filtrul de bilanț pe membru, migrarea defensivă a datelor vechi, șabloanele locale, recapitularea săptămânală Familie/Membru, plicurile pe surse și membri, realocarea limitelor, pragurile de alertă, prima dată posibilă a venitului, scadențele recurente automate și ștergerea lor sincronizabilă, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
+Testele de regresie verifică parserul românesc pentru sume, plata parțială și finală a unei rate, legătura ratei cu datoria și soldul rămas, filtrul de bilanț pe membru, migrarea defensivă a datelor vechi, șabloanele active și arhivate, filtrele locale salvate, recapitularea săptămânală Familie/Membru, plicurile pe surse și membri, realocarea limitelor, pragurile configurabile de alertă, prima dată posibilă a venitului, scadențele recurente automate și ștergerea lor sincronizabilă, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile și merge-ul defensiv dintre două copii familiale.
 
 ## Android APK
 

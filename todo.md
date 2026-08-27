@@ -376,3 +376,11 @@
 - [x] Adaugă în Jurnal filtru local de început/sfârșit pentru date, combinabil cu căutarea, membrul, sursa și tipul mișcării.
 - [x] Afișează o alertă locală în aplicație pentru plicurile la pragul de atenție sau depășite, fără plată, notificare bancară ori proces în fundal.
 - [x] Verifică pe mobil editarea/ștergerea șabloanelor, intervalul Jurnalului și declanșarea alertelor pentru plicuri înainte de publicare.
+
+## Filtre salvate, arhivă șabloane, praguri și teme noi
+
+- [x] Permite salvarea locală, aplicarea, redenumirea și ștergerea unui filtru Jurnal, fără a include date sensibile în sincronizarea familiei.
+- [x] Permite arhivarea și restaurarea locală a șabloanelor, grupată după luna în care au fost arhivate, fără a modifica Jurnalul.
+- [x] Permite stabilirea unui prag de atenție procentual pentru fiecare plic, păstrând avertizarea de depășire la 100%.
+- [x] Înlocuiește temele actuale cu direcții vizuale distincte, moderne și cu contrast verificabil, menținând culorile semantice ale banilor.
+- [x] Verifică mobil filtrele salvate, arhiva, pragurile și toate temele înainte de publicarea web și APK.

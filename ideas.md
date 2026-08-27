@@ -94,6 +94,13 @@ Marca este un **monogram geometric B/F** alcătuit din două forme de registru c
 - Fișa de situație, banda de decizie și dovada din registru au niveluri vizuale distincte; ecranul nu este o stivă de module egale.
 - Identitatea B/F reapare numai ca marcaj de secțiune, interval sau decizie, păstrând suprafețele aerisite și orientate spre date.
 
+### Rafinare mobilă — decizie ca instrument unic
+
+- Prima vedere mobilă leagă situația, suma dominantă, măsurătoarea calibrată și următoarea acțiune într-o singură fișă de decizie; titlurile editoriale susțin, nu concurează cu suma.
+- Fiecare suprafață secundară primește un artefact funcțional numai dacă explică o limită, o categorie, o stare sau o acțiune de gospodărie: linie de registru, muchie de fișă, etichetă sau prag.
+- Stările miere și coral apar numai împreună cu eticheta lor explicită: miere pentru alocare/revizuire, coral pentru datorie, atenție sau depășire.
+- În stările fără date, mesajul numește următoarea acțiune a gospodăriei și motivul ei; nu folosim formulări generice de onboarding.
+
 ## Redesign major mobil — structură aleasă
 
 ### Diferența obligatorie

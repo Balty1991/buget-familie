@@ -106,6 +106,16 @@ describe("registrul financiar Buget Familie", () => {
     expect(allocationStatus(data, transport).state).toBe("over");
   });
 
+  it("respectă pragul configurabil al plicului și îl limitează defensiv", () => {
+    const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
+    const transport = { id: "transport", label: "Transport", amount: 100, category: "Transport", sourceId: card.id, alertThreshold: 70 };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [transport], transfers: [] };
+    data.transactions = [{ id: "near", title: "Taxi", amount: 70, kind: "expense", category: "Transport", source: card.name, sourceId: card.id, person: "Eu", memberId: "member-me", date: "2026-08-12" }];
+    expect(allocationStatus(data, transport)).toMatchObject({ state: "watch", alertThreshold: 70 });
+    const migrated = normalizeAppData({ settings: { salaryPlan: { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 0, weeklyLimit: 0, allocations: [{ id: "low", label: "Mic", amount: 20, alertThreshold: 20 }, { id: "high", label: "Mare", amount: 20, alertThreshold: 99 }, { id: "default", label: "Implicit", amount: 20 }] } } });
+    expect(migrated.settings.salaryPlan.allocations.map((item) => item.alertThreshold)).toEqual([50, 95, 80]);
+  });
+
   it("consumă numai plicul selectat expres și lasă plata din afara plicurilor în soldul sursei", () => {
     const data = createEmptyAppData(); const [card, cash] = data.settings.paymentSources;
     const cashTaxi = { id: "taxi-cash", label: "Taxi cash", amount: 400, category: "Transport", sourceId: cash.id, memberId: "member-me" };
@@ -129,6 +139,12 @@ describe("registrul financiar Buget Familie", () => {
     const migrated = normalizeAppData({ settings: { quickTemplates: [{ id: "taxi", label: "Taxi serviciu", kind: "expense", category: "Transport", amount: "45,50", memberId: "member-me", sourceId: "source-cash" }] } });
     expect(migrated.settings.quickTemplates).toEqual([expect.objectContaining({ id: "taxi", label: "Taxi serviciu", amount: 45.5, category: "Transport" })]);
     expect(migrated.transactions).toEqual([]);
+  });
+
+  it("normalizează arhiva locală de șabloane și filtrele salvate valide", () => {
+    const migrated = normalizeAppData({ settings: { archivedQuickTemplates: [{ id: "taxi-aug", label: "Taxi august", kind: "expense", category: "Transport", amount: "45,50", archivedAt: "2026-08-27T10:00:00.000Z" }], savedJournalFilters: [{ id: "august", label: "Ieșiri august", kind: "expense", query: "taxi", fromDate: "2026-08-01", toDate: "2026-08-31", updatedAt: "2026-08-27T10:00:00.000Z" }, { id: "bad-range", label: "Interval greșit", kind: "all", fromDate: "2026-08-31", toDate: "2026-08-01" }, { id: "august-duplicate", label: "ieșiri august", kind: "all" }] } });
+    expect(migrated.settings.archivedQuickTemplates).toEqual([expect.objectContaining({ id: "taxi-aug", amount: 45.5, archivedAt: "2026-08-27T10:00:00.000Z" })]);
+    expect(migrated.settings.savedJournalFilters).toEqual([expect.objectContaining({ id: "august", label: "Ieșiri august", kind: "expense", query: "taxi" })]);
   });
 
   it("calculează săptămâna luni–duminică și poate filtra numai mișcările unui membru", () => {

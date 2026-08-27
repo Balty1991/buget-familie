@@ -35,8 +35,8 @@ export async function encryptFamilyData(data: AppData, secret: string): Promise<
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(secret, salt);
-  // Șabloanele sunt preferințe de viteză ale acestui telefon; registrul financiar rămâne partea sincronizată.
-  const shareable = { ...data, settings: { ...data.settings, quickTemplates: [] } };
+  // Preferințele de viteză și de lectură rămân pe telefon; registrul financiar rămâne partea sincronizată.
+  const shareable = { ...data, settings: { ...data.settings, quickTemplates: [], archivedQuickTemplates: [], savedJournalFilters: [] } };
   const plain = encoder.encode(JSON.stringify(shareable));
   const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain);
   return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(ciphertext)) };
@@ -79,7 +79,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
   const sourceMap = new Map([...remote.settings.paymentSources, ...local.settings.paymentSources].map((item) => [item.id, item]));
   const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);
   const salaryPlan = timestamp(local.settings.salaryPlan) >= timestamp(remote.settings.salaryPlan) ? local.settings.salaryPlan : remote.settings.salaryPlan;
-  return normalizeAppData({ version: 8, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), salaryPlan } });
+  return normalizeAppData({ version: 8, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), quickTemplates: local.settings.quickTemplates, archivedQuickTemplates: local.settings.archivedQuickTemplates, savedJournalFilters: local.settings.savedJournalFilters, salaryPlan } });
 }
 
 function headers(token: string) {
