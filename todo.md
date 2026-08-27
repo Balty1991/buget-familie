@@ -368,3 +368,11 @@
 - [x] Calculează recapitularea săptămânii curente din tranzacțiile înregistrate, pentru Familie sau membrul ales.
 - [x] Afișează în recapitulare veniturile, cheltuielile, diferența și categoriile principale cu valori exacte, fără estimări ascunse.
 - [x] Verifică pe 360–430 px că șabloanele, căutarea și recapitularea se păstrează lizibile și nu afectează înregistrările existente.
+
+## Control șabloane, interval Jurnal și alerte plicuri
+
+- [x] Permite editarea numelui, sumei, categoriei, membrului și sursei unui șablon local, fără a modifica tranzacții deja salvate.
+- [x] Permite ștergerea confirmată a unui șablon local, fără efect asupra Jurnalului sau asupra sincronizării familiei.
+- [x] Adaugă în Jurnal filtru local de început/sfârșit pentru date, combinabil cu căutarea, membrul, sursa și tipul mișcării.
+- [x] Afișează o alertă locală în aplicație pentru plicurile la pragul de atenție sau depășite, fără plată, notificare bancară ori proces în fundal.
+- [x] Verifică pe mobil editarea/ștergerea șabloanelor, intervalul Jurnalului și declanșarea alertelor pentru plicuri înainte de publicare.
