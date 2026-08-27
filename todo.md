@@ -391,11 +391,11 @@
 - [x] Exportă local în CSV numai mișcările vizibile după filtrele active din Jurnal, fără trimiterea datelor către un serviciu extern.
 - [x] Permite definirea, editarea și eliminarea unor reguli de repartizare a unui venit în plicuri, cu previzualizare și confirmare explicită înainte de schimbarea limitelor.
 - [x] Creează o distribuție interactivă a cheltuielilor lunare din registrul real, cu valori exacte, categorii și perspectivă Familie/Membru.
-- [ ] Verifică pe 360–430 px, rulează testele și publică Pages/APK numai după confirmarea fluxurilor locale.
+- [x] Verifică pe 360–430 px, rulează testele și publică Pages/APK numai după confirmarea fluxurilor locale.
 
 ## Redesign masiv și teme moderne
 
 - [x] Reorganizează vizibil toate ecranele mobile într-un sistem unitar de decizie financiară, cu informația importantă și acțiunea frecventă în primul plan.
 - [x] Reproiectează navigația, anteturile, suprafețele, listele, formularele și stările active pentru scanare rapidă, fără carduri supradimensionate ori rânduri încărcate.
 - [x] Înlocuiește temele prin variații moderne cu identitate proprie, contrast stabil și semantica financiară conservată pentru verde, miere și coral.
-- [ ] Auditează la 360–430 px toate traseele în lumină și întuneric și publică numai dacă nu există overflow, suprapuneri sau text ilizibil.
+- [x] Auditează la 360–430 px toate traseele în lumină și întuneric și publică numai dacă nu există overflow, suprapuneri sau text ilizibil.
