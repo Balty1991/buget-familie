@@ -42,5 +42,6 @@ import "./ledger-movements-pass.css";
 import "./priority-focus-pass.css";
 import "./envelope-weekly-toggle.css";
 import "./secondary-button-contrast.css";
+import "./week-transfer.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

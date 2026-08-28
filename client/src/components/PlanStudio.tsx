@@ -7,7 +7,7 @@ import { useState } from "react";
 import { BookmarkPlus, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
-import { allocationStatus, allocationWeekStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, planEndDate, sourceBalance, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -45,12 +45,16 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const [allocationWeeklyPace, setAllocationWeeklyPace] = useState(true);
   const [editingAllocationId, setEditingAllocationId] = useState("");
   const [allocationError, setAllocationError] = useState("");
+  const [weekTransferAllocationId, setWeekTransferAllocationId] = useState("");
+  const [weekTransferFromIndex, setWeekTransferFromIndex] = useState("");
+  const [weekTransferAmount, setWeekTransferAmount] = useState("");
+  const [weekTransferError, setWeekTransferError] = useState("");
 
   const periodValid = Boolean(cycleStart && cycleEnd && cycleEnd >= cycleStart);
   const weeklyPacedTotal = plan.allocations.filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
   const activeCycle = planEnd ? calendarBudget(weeklyPacedTotal, plan.periodStart, planEnd) : undefined;
   const activeWeek = activeCycle?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end);
-  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: item.weeklyPace === false ? undefined : allocationWeekStatus(data, item) }));
+  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: item.weeklyPace === false ? undefined : allocationWeekStatus(data, item), weeks: item.weeklyPace === false ? [] : allocationWeeksStatus(data, item) }));
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const allocationPreview = planEnd ? calendarBudget(parseRomanianAmount(allocationAmount), plan.periodStart, planEnd) : undefined;
   const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
@@ -108,6 +112,19 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   };
   const exportCyclePdf = async () => { if (!activeCycle) return; try { await downloadCalendarPlanPdf(activeCycle, data.settings.familyName); } catch { setCycleError("PDF-ul nu a putut fi generat local. Încearcă din nou."); } };
 
+  const openWeekTransfer = (allocationId: string) => { setWeekTransferAllocationId(allocationId); setWeekTransferFromIndex(""); setWeekTransferAmount(""); setWeekTransferError(""); };
+  const closeWeekTransfer = () => { setWeekTransferAllocationId(""); setWeekTransferFromIndex(""); setWeekTransferAmount(""); setWeekTransferError(""); };
+  const applyWeekTransfer = (allocationId: string, toWeekIndex: number) => {
+    const fromWeekIndex = Number(weekTransferFromIndex);
+    const amount = parseRomanianAmount(weekTransferAmount);
+    if (!fromWeekIndex) return setWeekTransferError("Alege săptămâna din care muți bani.");
+    if (amount <= 0) return setWeekTransferError("Introdu o sumă mai mare decât zero.");
+    const next = transferBetweenWeeks(data, { allocationId, fromWeekIndex, toWeekIndex, amount });
+    if (!next) return setWeekTransferError("Suma depășește ce a mai rămas în săptămâna aleasă.");
+    onChange(next);
+    closeWeekTransfer();
+  };
+
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
     <header className="bf-plan-studio-header">
       <div><p className="bf-kicker">PLANUL FAMILIEI, PE CATEGORII</p><h1>Împarte banii <em>ca acasă.</em></h1><p>Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.</p></div>
@@ -141,10 +158,21 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       </div>
       {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}
       <div className="bf-allocation-list" aria-live="polite">
-        {envelopes.map(({ item, budget, remaining, usage, state, week }) => <article key={item.id} className={state}>
+        {envelopes.map(({ item, budget, remaining, usage, state, week, weeks }) => <article key={item.id} className={state}>
           <div className="bf-allocation-list-heading"><span className={`bf-allocation-state ${state}`}>{state === "over" ? "depășit" : state === "watch" ? "aproape de limită" : "în plan"}</span><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>rămași din {money(budget)}</small></div>
           {week && <div className={`bf-allocation-week ${week.state === "over" ? "over" : ""}`}><span>S{week.index} · {formatDate(week.start)} – {formatDate(week.end)}</span><b>{money(Math.max(0, week.remaining))}</b><small>{money(week.spent)} cheltuiți din {money(week.budget)} în această tranșă</small></div>}
+          {week && weeks.length > 1 && <div className="bf-week-transfer">
+            {weekTransferAllocationId === item.id ? <div className="bf-week-transfer-form">
+              <select value={weekTransferFromIndex} onChange={(event) => { setWeekTransferFromIndex(event.target.value); setWeekTransferError(""); }}>
+                <option value="">Din ce săptămână?</option>
+                {weeks.filter((other) => other.index !== week.index).map((other) => <option key={other.index} value={other.index}>S{other.index} · {formatDate(other.start)}–{formatDate(other.end)} · {money(other.remaining)} rămași</option>)}
+              </select>
+              <input value={weekTransferAmount} onChange={(event) => { setWeekTransferAmount(event.target.value); setWeekTransferError(""); }} inputMode="decimal" placeholder="ex. 100" />
+              <div><button className="bf-primary" onClick={() => applyWeekTransfer(item.id, week.index)}>Transferă în S{week.index}</button><button onClick={closeWeekTransfer}>Renunță</button></div>
+              {weekTransferError && <p className="bf-form-error" role="alert">{weekTransferError}</p>}
+            </div> : <button type="button" className="bf-week-transfer-toggle" onClick={() => openWeekTransfer(item.id)}>Mută bani dintr-o altă săptămână</button>}
+          </div>}
           <div className="bf-allocation-track" aria-label={`${Math.round(usage * 100)}% consumat`}><i style={{ width: `${Math.min(100, Math.max(0, usage * 100))}%` }} /></div>
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> Editează</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> Șterge</button></div>
         </article>)}

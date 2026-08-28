@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenWeeks, weeklySummary } from "./finance-data";
 import { GitHubSyncError, mergeFamilyData, retryGitHubOperation } from "./github-sync";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -151,6 +151,25 @@ describe("registrul financiar Buget Familie", () => {
     expect(allocationWeekStatus(data, foodCash, "2026-09-10")).toMatchObject({ index: 2, budget: 300, spent: 0, remaining: 300 });
   });
 
+  it("mută bani dintr-o tranșă săptămânală în alta a aceluiași plic, fără să depășească ce a mai rămas", () => {
+    const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
+    const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente", sourceId: card.id };
+    data.settings.salaryPlan = { periodStart: "2026-09-01", nextPayday: "2026-09-28", sourceIds: [], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
+    data.transactions = [{ id: "week1-spend", title: "Alimente", amount: 350, kind: "expense", category: "Alimente", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-09-02", allocationId: food.id }];
+    const weeksBefore = allocationWeeksStatus(data, food);
+    expect(weeksBefore).toHaveLength(4);
+    expect(weeksBefore[0]).toMatchObject({ index: 1, budget: 300, spent: 350, remaining: -50, state: "over" });
+    expect(weeksBefore[1]).toMatchObject({ index: 2, budget: 300, spent: 0, remaining: 300, state: "healthy" });
+
+    expect(transferBetweenWeeks(data, { allocationId: food.id, fromWeekIndex: 2, toWeekIndex: 1, amount: 1000 })).toBeUndefined();
+
+    const moved = transferBetweenWeeks(data, { allocationId: food.id, fromWeekIndex: 2, toWeekIndex: 1, amount: 100 });
+    expect(moved).toBeDefined();
+    const weeksAfter = allocationWeeksStatus(moved!, food);
+    expect(weeksAfter[0]).toMatchObject({ index: 1, budget: 400, spent: 350, remaining: 50, state: "healthy" });
+    expect(weeksAfter[1]).toMatchObject({ index: 2, budget: 200, spent: 0, remaining: 200, state: "healthy" });
+  });
+
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
     const migrated = normalizeAppData({ version: 5, transactions: [{ id: "legacy", title: "Bon", amount: 20, kind: "expense", category: "Alimente", source: "Bon", person: "Eu", date: "26 aug." }], settings: {} });
     expect(migrated.version).toBe(8);
@@ -231,6 +250,7 @@ describe("registrul financiar Buget Familie", () => {
     const source = data.settings.paymentSources[0];
     data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
     data.transactions = [
+      { id: "pace-income", title: "Salariu", amount: 1000, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-01" },
       { id: "pace-1", title: "Alimente", amount: 100, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-01" },
       { id: "pace-2", title: "Transport", amount: 100, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-02" },
     ];
