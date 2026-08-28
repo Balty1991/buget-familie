@@ -113,7 +113,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
 
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
     <header className="bf-plan-studio-header">
-      <div><p className="bf-kicker">PLANUL FAMILIEI, PE SALARIU</p><h1>Împarte banii <em>ca acasă.</em></h1><p>Începi cu salariul și perioada aleasă de tine. Apoi fiecare categorie spune clar cine plătește și din ce sursă.</p></div>
+      <div><p className="bf-kicker">PLANUL FAMILIEI, PE SALARIU</p><h1>Împarte banii <em>ca acasă.</em></h1><p>Introdu banii disponibili, apoi împarte-i pe categorii — unele cu ritm săptămânal, altele doar cu un total.</p></div>
       <span><WalletCards size={25} /></span>
     </header>
 
@@ -126,15 +126,15 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     </section>
 
     <section className="bf-cycle-setup" aria-labelledby="cycle-setup-title">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">PASUL 1</p><h2 id="cycle-setup-title">Salariul până la următorul salariu</h2></div><CalendarDays size={20} /></div>
-      <p>Alege manual perioada. Pentru 2.400 RON pe 28 de zile, aplicația îți arată 600 RON pe fiecare săptămână; o ultimă tranșă parțială păstrează totalul exact.</p>
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">BANI DISPONIBILI</p><h2 id="cycle-setup-title">Câți bani ai de împărțit</h2></div><CalendarDays size={20} /></div>
+      <p>Suma și perioada sunt orientative — servesc doar la calculul ritmului săptămânal al categoriilor care îl folosesc.</p>
       <div className="bf-cycle-setup-fields">
-        <PlanField label="Salariu disponibil pentru acest ciclu"><input value={cycleAmount} onChange={(event) => { setCycleAmount(event.target.value); setCycleError(""); }} inputMode="decimal" placeholder="ex. 2400" /></PlanField>
+        <PlanField label="Bani disponibili de repartizat"><input value={cycleAmount} onChange={(event) => { setCycleAmount(event.target.value); setCycleError(""); }} inputMode="decimal" placeholder="ex. 2400" /></PlanField>
         <PlanField label="Venit înregistrat (opțional)" hint="Doar precompletează suma și începutul; tu alegi perioada."><select value={cycleIncomeId} onChange={(event) => chooseIncome(event.target.value)}><option value="">Introduc salariul manual</option>{incomes.map((income) => <option key={income.id} value={income.id}>{income.date} · {income.title} · {money(income.amount)}</option>)}</select></PlanField>
         <PlanField label="Prima zi a ciclului"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} /></PlanField>
         <PlanField label="Ziua următorului salariu"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} /></PlanField>
       </div>
-      {enteredCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV</span><b>{money(enteredCycle.weeklyAmount)} / săptămână</b></div><ol>{enteredCycle.weeks.map((week) => <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{week.days} zile</small><strong>{money(week.amount)}</strong></li>)}</ol></div>}
+      {enteredCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV</span><b>{money(enteredCycle.weeklyAmount)} / săptămână</b></div><details className="bf-cycle-tools"><summary><span>Vezi cele {enteredCycle.weeks.length} tranșe</span><ChevronDown size={17} /></summary><ol>{enteredCycle.weeks.map((week) => <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{week.days} zile</small><strong>{money(week.amount)}</strong></li>)}</ol></details></div>}
       {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
       <div className="bf-cycle-setup-actions"><button className="bf-primary" disabled={!enteredCycle} onClick={applyCycle}><Check size={17} /> Salvează ciclul</button><button disabled={!enteredCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> PDF plan</button></div>
     </section>
@@ -142,8 +142,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">ACUM · TRANȘA S{activeWeek.index}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.</span></div><strong>{money(activeWeek.amount)}<small>ritm total</small></strong></section>}
 
     <section className="bf-allocation-studio" aria-labelledby="allocation-title">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">PASUL 2</p><h2 id="allocation-title">Unde merge fiecare leu</h2></div><span>{envelopes.length} plicuri</span></div>
-      <p className="bf-allocation-intro">Creezi un plic pentru fiecare parte a banilor: alimente, taxi, abonamente, rate sau consumabile copil. Pentru 2.400 RON de Alimente pe patru săptămâni, adaugă 1.200 RON cash Eu și 1.200 RON card Soție: aplicația arată câte 300 RON pe săptămână pentru fiecare sursă.</p>
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">CATEGORII</p><h2 id="allocation-title">Unde merge fiecare leu</h2></div><span>{envelopes.length} plicuri</span></div>
+      <p className="bf-allocation-intro">Creează o categorie pentru fiecare parte a banilor: alimente, taxi, abonamente, consumabile copil. La o cheltuială reală, alegi categoria și aplicația scade automat din plicul potrivit.</p>
       <div id="bf-allocation-builder" className="bf-allocation-builder">
         <PlanField label="Ce plătește plicul"><select value={allocationCategory} onChange={(event) => setAllocationCategory(event.target.value)}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></PlanField>
         <PlanField label="Nume plic" hint="Poți scrie «Taxi soție» sau lăsa automat."><input value={allocationLabel} onChange={(event) => setAllocationLabel(event.target.value)} placeholder="ex. Alimente · card soție" /></PlanField>
