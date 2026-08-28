@@ -3,10 +3,10 @@
  * Filosofie: o familie împarte bani reali pe o perioadă aleasă manual; plicurile nu mută solduri.
  */
 import { useState } from "react";
-import { BookmarkPlus, CalendarDays, Check, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
+import { BookmarkPlus, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
-import { allocationBudget, allocationStatus, allocationWeekStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, planEndDate, sourceBalance, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, planEndDate, sourceBalance, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -54,18 +54,16 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const unallocated = Math.round((plan.totalLimit - allocated) * 100) / 100;
   const allocationPreview = planEnd ? calendarBudget(parseRomanianAmount(allocationAmount), plan.periodStart, planEnd) : undefined;
-  const allocationRatio = plan.totalLimit > 0 ? Math.min(1, Math.max(0, allocated / plan.totalLimit)) : 0;
-  const nextDecision = !planEnd ? "Completează perioada și suma salariului." : unallocated < 0 ? `Redu plicurile cu ${money(Math.abs(unallocated))}.` : unallocated > 0 ? `Repartizează sau păstrează ${money(unallocated)}.` : activeWeek ? `Înregistrează cheltuielile din tranșa S${activeWeek.index}.` : "Verifică plicurile înainte de cheltuială.";
-  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
-  const availableSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
   const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return date.toISOString().slice(0, 10); };
   const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
 
-  const applyCycle = () => {
-    if (!enteredCycle) return setCycleError("Introdu suma salariului și intervalul ales de tine. Data finală trebuie să fie după data de început.");
+  /** Se aplică automat de îndată ce suma și perioada sunt complete — nu există un buton separat de confirmare. */
+  const autoApplyCycle = () => {
+    if (!enteredCycle) return;
+    if (plan.periodStart === enteredCycle.start && plan.nextPayday === enteredCycle.end && plan.totalLimit === enteredCycle.total) return;
     updatePlan({ periodStart: enteredCycle.start, nextPayday: enteredCycle.end, earliestPayday: undefined, totalLimit: enteredCycle.total, weeklyLimit: enteredCycle.weeklyAmount });
     setCycleError("");
   };
@@ -113,37 +111,26 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
 
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
     <header className="bf-plan-studio-header">
-      <div><p className="bf-kicker">PLANUL FAMILIEI, PE SALARIU</p><h1>Împarte banii <em>ca acasă.</em></h1><p>Introdu banii disponibili, apoi împarte-i pe categorii — unele cu ritm săptămânal, altele doar cu un total.</p></div>
+      <div><p className="bf-kicker">PLANUL FAMILIEI, PE SALARIU</p><h1>Împarte banii <em>ca acasă.</em></h1><p>Bani, perioadă și categorii — totul într-un singur loc, fără pași separați.</p></div>
       <span><WalletCards size={25} /></span>
     </header>
 
-    <section className="bf-cycle-overview" aria-labelledby="cycle-overview-title">
-      <div className="bf-cycle-overview-main"><p className="bf-kicker">CICLUL ACTIV</p><h2 id="cycle-overview-title">{planEnd ? `${formatDate(plan.periodStart)} – ${formatDate(planEnd)}` : "Setează perioada salariului"}</h2><strong>{money(plan.totalLimit)}</strong><span>{activeCycle ? `${activeCycle.days} zile · ${activeCycle.weeks.length} tranșe · ritm ${money(activeCycle.weeklyAmount)}/săptămână` : "Alege începutul, următorul salariu și suma disponibilă."}</span></div>
-      <div className="bf-cycle-ruler" role="progressbar" aria-label="Salariu repartizat în plicuri" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(allocationRatio * 100)}><i style={{ width: `${allocationRatio * 100}%` }} />{activeCycle?.weeks.map((week) => <span key={week.index} style={{ left: `${week.index / activeCycle.weeks.length * 100}%` }} />)}</div>
-      <div className="bf-cycle-overview-ledger"><span><small>ALOCAT ÎN PLICURI</small><b>{money(allocated)}</b></span><span className={unallocated < 0 ? "over" : ""}><small>{unallocated < 0 ? "PESTE SALARIU" : "BANI NEALOCAȚI"}</small><b>{money(Math.abs(unallocated))}</b></span><span><small>SOLDURI ÎNREGISTRATE</small><b>{money(availableSources)}</b></span></div>
-      <div className={`bf-cycle-next ${unallocated < 0 ? "over" : unallocated > 0 ? "review" : "ready"}`}><span>ACUM DECIDEȚI</span><b>{nextDecision}</b></div>
-      <p className="bf-cycle-overview-note">Plicurile sunt limite de planificare. Ele nu mută bani între carduri sau cash și nu creează cheltuieli.</p>
-    </section>
+    {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">ACUM · TRANȘA S{activeWeek.index}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.</span></div><strong>{money(activeWeek.amount)}<small>ritm total</small></strong></section>}
 
     <section className="bf-cycle-setup" aria-labelledby="cycle-setup-title">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">BANI DISPONIBILI</p><h2 id="cycle-setup-title">Câți bani ai de împărțit</h2></div><CalendarDays size={20} /></div>
-      <p>Suma și perioada sunt orientative — servesc doar la calculul ritmului săptămânal al categoriilor care îl folosesc.</p>
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">BANI ȘI CATEGORII</p><h2 id="cycle-setup-title">Împarte banii disponibili</h2></div><span>{envelopes.length} plicuri</span></div>
+      <p>Introdu suma și perioada — se salvează automat — apoi adaugă direct categoriile de mai jos.</p>
       <div className="bf-cycle-setup-fields">
-        <PlanField label="Bani disponibili de repartizat"><input value={cycleAmount} onChange={(event) => { setCycleAmount(event.target.value); setCycleError(""); }} inputMode="decimal" placeholder="ex. 2400" /></PlanField>
+        <PlanField label="Bani disponibili de repartizat"><input value={cycleAmount} onChange={(event) => { setCycleAmount(event.target.value); setCycleError(""); }} onBlur={autoApplyCycle} inputMode="decimal" placeholder="ex. 2400" /></PlanField>
         <PlanField label="Venit înregistrat (opțional)" hint="Doar precompletează suma și începutul; tu alegi perioada."><select value={cycleIncomeId} onChange={(event) => chooseIncome(event.target.value)}><option value="">Introduc salariul manual</option>{incomes.map((income) => <option key={income.id} value={income.id}>{income.date} · {income.title} · {money(income.amount)}</option>)}</select></PlanField>
-        <PlanField label="Prima zi a ciclului"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} /></PlanField>
-        <PlanField label="Ziua următorului salariu"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} /></PlanField>
+        <PlanField label="Prima zi a ciclului"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} onBlur={autoApplyCycle} /></PlanField>
+        <PlanField label="Ziua următorului salariu"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} onBlur={autoApplyCycle} /></PlanField>
       </div>
       {enteredCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV</span><b>{money(enteredCycle.weeklyAmount)} / săptămână</b></div><details className="bf-cycle-tools"><summary><span>Vezi cele {enteredCycle.weeks.length} tranșe</span><ChevronDown size={17} /></summary><ol>{enteredCycle.weeks.map((week) => <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{week.days} zile</small><strong>{money(week.amount)}</strong></li>)}</ol></details></div>}
       {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
-      <div className="bf-cycle-setup-actions"><button className="bf-primary" disabled={!enteredCycle} onClick={applyCycle}><Check size={17} /> Salvează ciclul</button><button disabled={!enteredCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> PDF plan</button></div>
-    </section>
+      <div className="bf-cycle-setup-actions"><button disabled={!enteredCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> PDF plan</button></div>
 
-    {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">ACUM · TRANȘA S{activeWeek.index}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.</span></div><strong>{money(activeWeek.amount)}<small>ritm total</small></strong></section>}
-
-    <section className="bf-allocation-studio" aria-labelledby="allocation-title">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">CATEGORII</p><h2 id="allocation-title">Unde merge fiecare leu</h2></div><span>{envelopes.length} plicuri</span></div>
-      <p className="bf-allocation-intro">Creează o categorie pentru fiecare parte a banilor: alimente, taxi, abonamente, consumabile copil. La o cheltuială reală, alegi categoria și aplicația scade automat din plicul potrivit.</p>
+      <p className="bf-allocation-intro">Adaugă o categorie pentru fiecare parte a banilor: alimente, taxi, abonamente, consumabile copil. La o cheltuială reală, alegi categoria și aplicația scade automat din plicul potrivit.</p>
       <div id="bf-allocation-builder" className="bf-allocation-builder">
         <PlanField label="Ce plătește plicul"><select value={allocationCategory} onChange={(event) => setAllocationCategory(event.target.value)}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></PlanField>
         <PlanField label="Nume plic" hint="Poți scrie «Taxi soție» sau lăsa automat."><input value={allocationLabel} onChange={(event) => setAllocationLabel(event.target.value)} placeholder="ex. Alimente · card soție" /></PlanField>
