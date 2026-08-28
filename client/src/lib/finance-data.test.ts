@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, weeklySummary } from "./finance-data";
 import { GitHubSyncError, mergeFamilyData, retryGitHubOperation } from "./github-sync";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -11,6 +11,12 @@ describe("registrul financiar Buget Familie", () => {
     expect(parseRomanianAmount("1.234,50")).toBe(1234.5);
     expect(parseRomanianAmount("7 400,00")).toBe(7400);
     expect(parseRomanianAmount("abc")).toBe(0);
+  });
+
+  it("generează ID-uri criptografice unice, fără coliziuni pe volume mari", () => {
+    const ids = Array.from({ length: 5000 }, () => newId("tx"));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.every((id) => /^tx-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id))).toBe(true);
   });
 
   it("derivă soldul sursei din soldul inițial și mișcări", () => {
@@ -289,6 +295,17 @@ describe("registrul financiar Buget Familie", () => {
     expect(merged.transactions.map((item) => item.id)).toEqual(["local"]);
     expect(merged.savings.map((item) => item.id)).toEqual(["goal"]);
     expect(merged.deleted).toHaveLength(1);
+  });
+
+  it("păstrează toate mișcările create simultan pe două telefoane, fără coliziuni de ID", () => {
+    const local = createEmptyAppData(); const remote = createEmptyAppData(); const source = local.settings.paymentSources[0];
+    const now = "2026-08-27T09:00:00.000Z";
+    const onDevice = (person: string) => Array.from({ length: 200 }, (_, index) => ({ id: newId("tx"), title: `Cheltuială ${index}`, amount: 10, kind: "expense" as const, category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person, date: "2026-08-27", createdAt: now, updatedAt: now }));
+    local.transactions = onDevice("Telefon local");
+    remote.transactions = onDevice("Telefon la distanță");
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.transactions).toHaveLength(local.transactions.length + remote.transactions.length);
+    expect(new Set(merged.transactions.map((item) => item.id)).size).toBe(merged.transactions.length);
   });
 
   it("nu reintroduce o scadență recurentă ștearsă pe un alt telefon", () => {

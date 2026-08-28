@@ -85,7 +85,22 @@ export const categoryColors: Record<string, string> = { Alimente: "#256B5B", "Co
 
 export const isoToday = () => new Date().toISOString().slice(0, 10);
 export const createFamilyCode = () => { const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(""); };
-export const newId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+/** UUID v4 criptografic; evită coliziunile de ID când două telefoane creează înregistrări simultan, înainte de sincronizare. */
+const randomUUID = () => {
+  const cryptoRef = typeof crypto !== "undefined" ? crypto : undefined;
+  if (cryptoRef?.randomUUID) return cryptoRef.randomUUID();
+  if (cryptoRef?.getRandomValues) {
+    const bytes = cryptoRef.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
+export const newId = (prefix: string) => `${prefix}-${randomUUID()}`;
 
 export const parseRomanianAmount = (raw: string | number) => {
   if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
