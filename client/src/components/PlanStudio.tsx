@@ -56,6 +56,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const activeWeek = activeCycle?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end);
   const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: item.weeklyPace === false ? undefined : allocationWeekStatus(data, item), weeks: item.weeklyPace === false ? [] : allocationWeeksStatus(data, item) }));
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
+  const weekSpentByIndex = envelopes.reduce((all, envelope) => { envelope.weeks.forEach((week) => all.set(week.index, (all.get(week.index) || 0) + week.spent)); return all; }, new Map<number, number>());
   const allocationPreview = planEnd ? calendarBudget(parseRomanianAmount(allocationAmount), plan.periodStart, planEnd) : undefined;
   const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
 
@@ -140,7 +141,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
         <PlanField label="Prima zi a perioadei (opțional)"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
         <PlanField label="Ultima zi a perioadei (opțional)"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
       </div>
-      {activeCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV, DOAR CATEGORIILE CU RITM SĂPTĂMÂNAL</span><b>{money(activeCycle.weeklyAmount)} / săptămână</b></div><details className="bf-cycle-tools"><summary><span>Vezi cele {activeCycle.weeks.length} tranșe</span><ChevronDown size={17} /></summary><ol>{activeCycle.weeks.map((week) => <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{week.days} zile</small><strong>{money(week.amount)}</strong></li>)}</ol></details></div>}
+      {activeCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV, DOAR CATEGORIILE CU RITM SĂPTĂMÂNAL</span><b>{money(activeCycle.weeklyAmount)} / săptămână</b></div><details className="bf-cycle-tools"><summary><span>Vezi cele {activeCycle.weeks.length} tranșe</span><ChevronDown size={17} /></summary><ol>{activeCycle.weeks.map((week) => { const spent = weekSpentByIndex.get(week.index) || 0; return <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{money(spent)} cheltuiți din {money(week.amount)}</small><strong>{money(Math.max(0, week.amount - spent))}</strong></li>; })}</ol></details></div>}
       {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
       <div className="bf-cycle-setup-actions"><button disabled={!activeCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> PDF plan</button></div>
 
