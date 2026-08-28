@@ -45,5 +45,6 @@ import "./secondary-button-contrast.css";
 import "./week-transfer.css";
 import "./expanded-themes.css";
 import "./plan-header-stat.css";
+import "./theme-picker-scroll.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

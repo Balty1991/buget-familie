@@ -1,0 +1,2 @@
+/** .bf-theme-picker seta overflow:hidden pentru colțurile rotunjite, dar bloca și scrollul vertical al listei de teme. */
+.bf-theme-picker{overflow-x:hidden!important;overflow-y:auto!important}
