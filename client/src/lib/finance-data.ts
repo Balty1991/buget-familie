@@ -63,7 +63,7 @@ export type Receipt = {
 
 export type FamilyMember = { id: string; name: string; color?: string };
 export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei. */ openingBalance: number };
-export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string };
+export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string; /** Implicit adevărat: arată tranșa săptămânii active. Fals pentru plicuri fără ritm fix, unde contează doar totalul ciclului. */ weeklyPace?: boolean };
 export type BudgetTransfer = { id: string; fromAllocationId: string; toAllocationId: string; amount: number; note?: string; createdAt: string };
 /** Regulă de planificare: repartizează o valoare sau un procent dintr-un venit confirmat către un plic compatibil. */
 export type SalaryAllocationRule = { id: string; label: string; allocationId: string; mode: "fixed" | "percent"; value: number; active: boolean; updatedAt?: string };

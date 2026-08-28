@@ -42,6 +42,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const [allocationSourceId, setAllocationSourceId] = useState(data.settings.paymentSources[0]?.id || "");
   const [allocationNote, setAllocationNote] = useState("");
   const [allocationThreshold, setAllocationThreshold] = useState(80);
+  const [allocationWeeklyPace, setAllocationWeeklyPace] = useState(true);
   const [editingAllocationId, setEditingAllocationId] = useState("");
   const [allocationError, setAllocationError] = useState("");
 
@@ -49,7 +50,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const incomes = data.transactions.filter((item) => item.kind === "income").sort((left, right) => right.date.localeCompare(left.date) || String(right.createdAt || "").localeCompare(String(left.createdAt || ""))).slice(0, 12);
   const activeCycle = planEnd ? calendarBudget(plan.totalLimit, plan.periodStart, planEnd) : undefined;
   const activeWeek = activeCycle?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end);
-  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: allocationWeekStatus(data, item) }));
+  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: item.weeklyPace === false ? undefined : allocationWeekStatus(data, item) }));
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const unallocated = Math.round((plan.totalLimit - allocated) * 100) / 100;
   const allocationPreview = planEnd ? calendarBudget(parseRomanianAmount(allocationAmount), plan.periodStart, planEnd) : undefined;
@@ -61,7 +62,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return date.toISOString().slice(0, 10); };
-  const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setEditingAllocationId(""); setAllocationError(""); };
+  const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
 
   const applyCycle = () => {
     if (!enteredCycle) return setCycleError("Introdu suma salariului și intervalul ales de tine. Data finală trebuie să fie după data de început.");
@@ -102,11 +103,11 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     if (amount <= 0) return setAllocationError("Introdu suma rezervată pentru întregul ciclu salarial.");
     if (!source) return setAllocationError("Alege sursa din care vei plăti această categorie.");
     const label = allocationLabel.trim() || `${allocationCategory}${member ? ` · ${member.name}` : ""}`;
-    const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold };
+    const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold, weeklyPace: allocationWeeklyPace ? undefined : false };
     updatePlan({ allocations: editingAllocationId ? plan.allocations.map((item) => item.id === editingAllocationId ? next : item) : [...plan.allocations, next] });
     resetAllocationBuilder();
   };
-  const editAllocation = (item: BudgetAllocation) => { setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
+  const editAllocation = (item: BudgetAllocation) => { setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationWeeklyPace(item.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
   const deleteAllocation = (id: string, label: string) => { if (window.confirm(`Ștergi plicul „${label}”? Cheltuielile deja înregistrate rămân în jurnal.`)) updatePlan({ allocations: plan.allocations.filter((item) => item.id !== id), transfers: plan.transfers.filter((transfer) => transfer.fromAllocationId !== id && transfer.toAllocationId !== id), salaryAllocationRules: (plan.salaryAllocationRules || []).filter((rule) => rule.allocationId !== id) }); };
   const exportCyclePdf = async () => { if (!enteredCycle) return; try { await downloadCalendarPlanPdf(enteredCycle, data.settings.familyName); } catch { setCycleError("PDF-ul nu a putut fi generat local. Încearcă din nou."); } };
 
@@ -151,6 +152,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
         <PlanField label="Suma pentru întregul ciclu" hint={allocationPreview ? `În fiecare săptămână: aproximativ ${money(allocationPreview.weeklyAmount)} din acest plic.` : "Exemplu: 1.200 RON înseamnă 300 RON/săptămână într-un ciclu de 28 zile."}><input value={allocationAmount} onChange={(event) => { setAllocationAmount(event.target.value); setAllocationError(""); }} inputMode="decimal" placeholder="ex. 1200" /></PlanField>
         <PlanField label="Avertizează la"><select value={allocationThreshold} onChange={(event) => setAllocationThreshold(Number(event.target.value))}>{thresholdOptions.map((value) => <option key={value} value={value}>{value}%</option>)}</select></PlanField>
         <PlanField label="Detaliu liber"><input value={allocationNote} onChange={(event) => setAllocationNote(event.target.value)} placeholder="ex. telefon, cablu și aplicații" /></PlanField>
+        <label className="bf-plan-toggle"><input type="checkbox" checked={allocationWeeklyPace} onChange={(event) => setAllocationWeeklyPace(event.target.checked)} /><span><b>Împarte pe săptămâni</b><small>Dezactivează pentru plicuri fără ritm fix — taxi, cheltuieli ocazionale: rămâne doar totalul din ciclu, fără presiune pe săptămână.</small></span></label>
         <div className="bf-allocation-builder-actions"><button className="bf-primary" onClick={saveAllocation}><Plus size={17} /> {editingAllocationId ? "Salvează plicul" : "Adaugă plicul"}</button>{editingAllocationId && <button onClick={resetAllocationBuilder}>Renunță</button>}</div>
       </div>
       {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}

@@ -1,0 +1,6 @@
+/** Comutator per plic: unele plicuri au ritm săptămânal fix (Alimente), altele doar un total din ciclu (Taxi, ocazionale). */
+.bf-plan-toggle{display:flex!important;align-items:flex-start!important;gap:10px!important;grid-column:1/-1!important;padding:12px!important;border:1px dashed var(--cf-line)!important;border-radius:8px!important;background:var(--cf-surface-alt)!important;color:var(--cf-ink)!important;cursor:pointer}
+.bf-plan-toggle input{width:19px!important;height:19px!important;margin-top:2px!important;accent-color:var(--cf-primary-strong)!important}
+.bf-plan-toggle span{display:grid!important;gap:3px!important}
+.bf-plan-toggle b{font:750 13px/1.2 "IBM Plex Sans",sans-serif!important}
+.bf-plan-toggle small{color:var(--cf-muted)!important;font:600 11px/1.35 "IBM Plex Sans",sans-serif!important}
