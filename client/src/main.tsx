@@ -44,5 +44,6 @@ import "./envelope-weekly-toggle.css";
 import "./secondary-button-contrast.css";
 import "./week-transfer.css";
 import "./expanded-themes.css";
+import "./plan-header-stat.css";
 
 createRoot(document.getElementById("root")!).render(<App />);

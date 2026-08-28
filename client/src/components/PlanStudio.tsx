@@ -7,7 +7,7 @@ import { useState } from "react";
 import { BookmarkPlus, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -57,6 +57,11 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: item.weeklyPace === false ? undefined : allocationWeekStatus(data, item), weeks: item.weeklyPace === false ? [] : allocationWeeksStatus(data, item) }));
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const weekSpentByIndex = envelopes.reduce((all, envelope) => { envelope.weeks.forEach((week) => all.set(week.index, (all.get(week.index) || 0) + week.spent)); return all; }, new Map<number, number>());
+  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
+  const availableSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
+  const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
+  const reservedInEnvelopes = envelopes.reduce((sum, envelope) => sum + envelope.remaining, 0);
+  const unrepartized = availableSources - reservedInEnvelopes - scheduled;
   const allocationPreview = planEnd ? calendarBudget(parseRomanianAmount(allocationAmount), plan.periodStart, planEnd) : undefined;
   const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
 
@@ -128,8 +133,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
 
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
     <header className="bf-plan-studio-header">
-      <div><p className="bf-kicker">PLANUL FAMILIEI, PE CATEGORII</p><h1>Împarte banii <em>ca acasă.</em></h1><p>Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.</p></div>
-      <span><WalletCards size={25} /></span>
+      <div><p className="bf-kicker">PLANUL FAMILIEI, PE CATEGORII</p><h1>Fiecare leu <em>are un loc.</em></h1><p>Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.</p></div>
+      <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>NEREPARTIZAȚI</small><b>{money(unrepartized)}</b></div>
     </header>
 
     {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">ACUM · TRANȘA S{activeWeek.index}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.</span></div><strong>{money(activeWeek.amount)}<small>ritm total</small></strong></section>}
