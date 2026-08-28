@@ -458,7 +458,7 @@
 - [x] Mută imaginile bonurilor în IndexedDB, păstrează referințe ușoare în registru și tratează explicit spațiul local insuficient.
 - [x] Adaugă pull–merge–retry cu backoff și rezolvare clară pentru conflicte/rate limit în sincronizarea GitHub.
 - [x] Înlocuiește modalele cu dialoguri care rețin focusul, se închid sigur și întorc focusul la controlul de origine.
-- [ ] Simplifică următoarele ecrane: scadențele în Obligații și concluzia lunară în Analiză.
+- [x] Simplifică următoarele ecrane: scadențele în Obligații și concluzia lunară în Analiză.
 
 ## Pachet următor — bonuri, sincronizare și Mișcări
 

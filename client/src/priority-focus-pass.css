@@ -1,0 +1,26 @@
+/**
+ * Trece Obligații și Analiză printr-o singură axă dominantă, urmată de secțiunile de detaliu ca dovezi de registru
+ * compacte, în loc de o stivă de panouri cu aceeași greutate vizuală.
+ */
+.bf-obligation-timeline{display:grid;gap:14px;padding:20px;border:1px solid var(--cf-line,var(--bf-major-line));border-left:5px solid var(--cf-coral,var(--bf-major-coral));border-radius:16px;background:color-mix(in srgb,var(--cf-coral,var(--bf-major-coral)) 7%,var(--cf-surface,var(--bf-major-sheet)));box-shadow:var(--cf-shadow,none)}
+.bf-obligation-timeline .bf-section-heading{margin:0}
+.bf-obligation-timeline .bf-section-heading h2{margin:3px 0 0;font-size:26px}
+.bf-obligation-timeline-list{display:grid}
+.bf-obligation-timeline-list .bf-obligation-entry:last-child{border-bottom:0;padding-bottom:0}
+.bf-obligation-timeline-list .bf-obligation-entry:first-child{padding-top:0}
+
+.bf-analysis-month{padding:26px!important;border-radius:18px!important;box-shadow:0 16px 34px color-mix(in srgb,var(--bf-major-green,#1f5648),transparent 82%)!important}
+.bf-analysis-month-heading h2{font-size:29px!important}
+.bf-analysis-month-heading>span{font-size:32px!important}
+.bf-analysis-year,.bf-spend-compass,.bf-analysis-watch,.bf-analysis-balance{padding:15px!important;border-radius:10px!important;box-shadow:none!important}
+.bf-analysis-section-heading h2{font-size:19px!important}
+.bf-spend-compass .bf-analysis-section-heading h2{font-size:19px!important}
+
+@media(max-width:640px){
+  .bf-obligation-timeline{padding:16px;gap:11px}
+  .bf-obligation-timeline .bf-section-heading h2{font-size:22px}
+  .bf-analysis-month{padding:18px!important}
+  .bf-analysis-month-heading h2{font-size:24px!important}
+  .bf-analysis-month-heading>span{font-size:25px!important}
+  .bf-analysis-year,.bf-spend-compass,.bf-analysis-watch,.bf-analysis-balance{padding:13px!important}
+}

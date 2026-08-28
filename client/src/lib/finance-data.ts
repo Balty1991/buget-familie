@@ -294,6 +294,18 @@ export const pendingRecurringInPlan = (data: AppData) => data.recurring.flatMap(
   return dueDate && !paid ? [{ ...item, dueDate }] : [];
 });
 
+/** Confirmă o scadență rezervată în perioada activă: adaugă mișcarea reală o singură dată, fără s-o poată dubla. */
+export const confirmRecurringPayment = (data: AppData, recurringId: string): AppData | undefined => {
+  const pending = pendingRecurringInPlan(data).find((item) => item.id === recurringId);
+  const item = data.recurring.find((entry) => entry.id === recurringId);
+  const source = item && data.settings.paymentSources.find((entry) => entry.id === item.sourceId);
+  const member = item && data.settings.members.find((entry) => entry.id === item.memberId);
+  if (!item || !source || !member) return undefined;
+  const now = new Date().toISOString();
+  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending?.dueDate || isoToday(), note: "Plată recurentă confirmată", createdAt: now, updatedAt: now };
+  return { ...data, transactions: [transaction, ...data.transactions] };
+};
+
 /** Ziua reală a scadenței într-o lună; ziua 31 devine ultima zi din februarie sau dintr-o lună scurtă. */
 export const recurringDueForMonth = (item: RecurringPayment, asOf = isoToday()) => {
   const basis = new Date(`${asOf}T12:00:00`);

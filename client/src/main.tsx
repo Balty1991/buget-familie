@@ -39,5 +39,6 @@ import "./analysis-studio.css";
 import "./clarity-rebuild.css";
 import "./ledger-decision-pass.css";
 import "./ledger-movements-pass.css";
+import "./priority-focus-pass.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
