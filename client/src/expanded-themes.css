@@ -1,0 +1,25 @@
+/**
+ * Două teme noi, profesionale: Nordic Slate (zi, birou) și Velvet Plum (seară, rafinat).
+ * Urmează exact mecanismul temelor existente: aceleași variabile --cf-*, aceleași puncte de personalizare.
+ */
+.theme-slate{--cf-bg:#eef1f4;--cf-surface:#ffffff;--cf-surface-alt:#e4e9ee;--cf-ink:#1c2530;--cf-muted:#5b6b7c;--cf-line:#d3dbe3;--cf-primary:#35506e;--cf-primary-strong:#223447;--cf-info:#8a6624;--cf-danger:#c1483f;--cf-warning:#96601a;--cf-shadow:0 14px 34px rgba(28,37,48,.12);--cf-glow:rgba(53,80,110,.10);--cf-nav:rgba(255,255,255,.94)}
+.theme-plum{--cf-bg:#1c1019;--cf-surface:#2b1a24;--cf-surface-alt:#35212d;--cf-ink:#f8ecf3;--cf-muted:#cbabbd;--cf-line:#4c3040;--cf-primary:#dd8fc0;--cf-primary-strong:#9c4a7d;--cf-info:#eab866;--cf-danger:#ff9c95;--cf-warning:#f3c96a;--cf-shadow:0 16px 40px rgba(10,4,8,.42);--cf-glow:rgba(221,143,192,.16);--cf-nav:rgba(28,16,25,.92)}
+
+.theme-slate .bf-app{background:radial-gradient(850px 480px at 105% -8%,rgba(53,80,110,.10),transparent 55%),radial-gradient(600px 440px at -12% 35%,rgba(138,102,36,.07),transparent 58%),var(--cf-bg)!important}
+.theme-slate .bf-app::before{opacity:.16;background-image:linear-gradient(rgba(28,37,48,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(28,37,48,.05) 1px,transparent 1px);background-size:24px 24px}
+.theme-slate .bf-appbar::after{width:70px;background:linear-gradient(90deg,var(--cf-info),var(--cf-primary))}
+.theme-slate .bf-mobile-nav button.active{background:linear-gradient(135deg,var(--cf-primary),var(--cf-primary-strong))!important}
+
+.theme-plum .bf-app{background:radial-gradient(780px 480px at 104% -8%,rgba(221,143,192,.17),transparent 55%),radial-gradient(560px 420px at -18% 72%,rgba(234,184,102,.11),transparent 55%),var(--cf-bg)!important}
+.theme-plum .bf-app::before{opacity:.14;background-image:radial-gradient(rgba(234,184,102,.4) 1px,transparent 1.4px);background-size:22px 22px}
+.theme-plum .bf-appbar::after{width:68px;background:linear-gradient(90deg,var(--cf-primary),var(--cf-info))}
+.theme-plum .bf-mobile-nav button.active{background:linear-gradient(135deg,#9c4a7d,#c98a3f)!important}
+.theme-plum .bf-brand-mark.bf-logo-3d{border-color:#e6a9cc!important;background:linear-gradient(145deg,#c778a8,#7d3a63 62%,#4a1f3a)!important;box-shadow:inset 1px 1px 0 rgba(255,255,255,.36),inset -2px -3px 0 rgba(0,0,0,.26),0 6px 0 #3a1730,0 10px 20px rgba(220,143,192,.28)!important}
+
+.bf-theme-preview.slate{--preview-bg:#eef1f4;--preview-surface:#ffffff;--preview-ink:#1c2530;--preview-muted:#5b6b7c;--preview-line:#d3dbe3;--preview-primary:#223447;--preview-info:#8a6624;--preview-glow:rgba(53,80,110,.14)}
+.bf-theme-preview.plum{--preview-bg:#1c1019;--preview-surface:#2b1a24;--preview-ink:#f8ecf3;--preview-muted:#cbabbd;--preview-line:#4c3040;--preview-primary:#9c4a7d;--preview-info:#eab866;--preview-glow:rgba(221,143,192,.26)}
+
+.bf-theme-option.slate .bf-theme-swatch{background:linear-gradient(135deg,#eef1f4 0 55%,#35506e 55% 58%,#8a6624 58%)}
+.bf-theme-option.slate .bf-theme-swatch span{background:linear-gradient(rgba(28,37,48,.14) 1px,transparent 1px),linear-gradient(90deg,rgba(28,37,48,.14) 1px,transparent 1px);background-size:9px 9px}
+.bf-theme-option.plum .bf-theme-swatch{background:linear-gradient(135deg,#1c1019 0 52%,#9c4a7d 53% 71%,#2b1a24 72%)}
+.bf-theme-option.plum .bf-theme-swatch span{background:radial-gradient(rgba(234,184,102,.5) 1px,transparent 1.4px);background-size:8px 8px}

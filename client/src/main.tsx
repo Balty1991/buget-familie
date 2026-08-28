@@ -43,5 +43,6 @@ import "./priority-focus-pass.css";
 import "./envelope-weekly-toggle.css";
 import "./secondary-button-contrast.css";
 import "./week-transfer.css";
+import "./expanded-themes.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
