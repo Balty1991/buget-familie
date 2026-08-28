@@ -1,3 +1,5 @@
 /** Butoanele secundare din Plan (Editează/Șterge/Renunță/PDF) foloseau text pal, sub pragul de contrast lizibil. */
 .bf-allocation-actions button,.bf-allocation-builder-actions button:not(.bf-primary),.bf-cycle-setup-actions button:not(.bf-primary){color:var(--cf-ink)!important;border-color:color-mix(in srgb,var(--cf-ink),transparent 55%)!important;font-weight:800!important}
+/* Butoanele Editează/Șterge se comprimau sub lățimea textului lor (flex-shrink implicit), tăind cuvintele. */
+.bf-allocation-actions button{flex-shrink:0!important;white-space:nowrap!important;min-width:-webkit-max-content!important;min-width:max-content!important}
 .bf-allocation-actions button:last-child{color:color-mix(in srgb,var(--cf-coral),black 12%)!important;border-color:color-mix(in srgb,var(--cf-coral),transparent 40%)!important}
