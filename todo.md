@@ -457,7 +457,7 @@
 - [x] Înlocuiește crearea noilor ID-uri cu UUID criptografice și acoperă cu teste sincronizarea simultană de pe două dispozitive.
 - [x] Mută imaginile bonurilor în IndexedDB, păstrează referințe ușoare în registru și tratează explicit spațiul local insuficient.
 - [x] Adaugă pull–merge–retry cu backoff și rezolvare clară pentru conflicte/rate limit în sincronizarea GitHub.
-- [ ] Înlocuiește modalele cu dialoguri care rețin focusul, se închid sigur și întorc focusul la controlul de origine.
+- [x] Înlocuiește modalele cu dialoguri care rețin focusul, se închid sigur și întorc focusul la controlul de origine.
 - [ ] Simplifică următoarele ecrane: scadențele în Obligații și concluzia lunară în Analiză.
 
 ## Pachet următor — bonuri, sincronizare și Mișcări

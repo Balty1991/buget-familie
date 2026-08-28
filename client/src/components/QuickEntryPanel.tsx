@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Archive, ArchiveRestore, BookmarkPlus, Check, Plus, Trash2, X } from "lucide-react";
 import { allocationWeekStatus, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, sourceBalance, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 const money = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 });
 
@@ -64,9 +65,10 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const remove = () => { if (!templateId) return; if (!window.confirm(`Ștergi definitiv șablonul local „${activeTemplate?.label || "acesta"}”? Tranzacțiile rămân neschimbate.`)) return; onDeleteTemplate(templateId); chooseManual(); };
   const removeArchived = (id: string, label: string) => { if (window.confirm(`Ștergi definitiv șablonul arhivat „${label}”? Tranzacțiile rămân neschimbate.`)) onDeleteArchivedTemplate(id); };
   const sourceOwner = (id: string) => data.settings.members.find((member) => member.id === data.settings.paymentSources.find((source) => source.id === id)?.memberId)?.name || "Familie / comun";
+  const dialogRef = useFocusTrap<HTMLElement>(onClose);
 
   return <div className="bf-modal-backdrop" role="presentation" onMouseDown={onClose}>
-    <section className="bf-modal bf-quick-entry-panel" role="dialog" aria-modal="true" aria-label="Înregistrare rapidă" onMouseDown={(event) => event.stopPropagation()}>
+    <section ref={dialogRef} tabIndex={-1} className="bf-modal bf-quick-entry-panel" role="dialog" aria-modal="true" aria-label="Înregistrare rapidă" onMouseDown={(event) => event.stopPropagation()}>
       <header><div><p className="bf-kicker">CAPTURĂ ÎN CÂTEVA SECUNDE</p><h2>Înregistrare rapidă</h2></div><button className="bf-icon-button" aria-label="Închide" onClick={onClose}><X size={19} /></button></header>
       <p className="bf-quick-entry-intro">Salvezi o mișcare reală cu data de azi. Dacă există un plic pentru categoria și sursa aleasă, el este selectat automat.</p>
       <div className="bf-template-header-actions"><span>{data.settings.quickTemplates.length} șabloane active</span><button type="button" onClick={() => setShowArchive((value) => !value)}><Archive size={15} /> Arhivă{data.settings.archivedQuickTemplates.length ? ` (${data.settings.archivedQuickTemplates.length})` : ""}</button></div>
