@@ -324,3 +324,158 @@
     border-left: 1px dashed var(--cf-line);
   }
 }
+
+/* Analiză — snapshot de decizie înaintea detaliilor istorice. */
+.bf-analysis-snapshot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: stretch;
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px solid var(--cf-line);
+  border-left: 4px solid var(--cf-info);
+  border-radius: 12px;
+  background: var(--cf-surface);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--cf-ink), transparent 94%);
+}
+
+.bf-analysis-snapshot.good { border-left-color: var(--cf-primary); }
+.bf-analysis-snapshot.watch { border-left-color: var(--cf-warning); }
+.bf-analysis-snapshot.risk { border-left-color: var(--cf-danger); }
+
+.bf-analysis-snapshot-copy {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 11px;
+  align-items: start;
+  min-width: 0;
+}
+
+.bf-analysis-snapshot-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--cf-info);
+  background: color-mix(in srgb, var(--cf-info) 12%, var(--cf-surface));
+}
+
+.bf-analysis-snapshot.good .bf-analysis-snapshot-icon {
+  color: var(--cf-primary-strong);
+  background: color-mix(in srgb, var(--cf-primary) 13%, var(--cf-surface));
+}
+
+.bf-analysis-snapshot.watch .bf-analysis-snapshot-icon {
+  color: var(--cf-warning);
+  background: color-mix(in srgb, var(--cf-warning) 14%, var(--cf-surface));
+}
+
+.bf-analysis-snapshot.risk .bf-analysis-snapshot-icon {
+  color: var(--cf-danger);
+  background: color-mix(in srgb, var(--cf-danger) 13%, var(--cf-surface));
+}
+
+.bf-analysis-snapshot-copy .bf-kicker {
+  margin: 0 0 3px;
+}
+
+.bf-analysis-snapshot-copy h2 {
+  margin: 0;
+  color: var(--cf-ink);
+  font: 700 clamp(19px, 4.4vw, 26px)/1.08 "IBM Plex Serif", Georgia, serif;
+  letter-spacing: -.035em;
+}
+
+.bf-analysis-snapshot-copy p:last-child {
+  max-width: 54ch;
+  margin: 6px 0 0;
+  color: var(--cf-muted);
+  font-size: 12px;
+  line-height: 1.42;
+}
+
+.bf-analysis-snapshot-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(62px, 1fr));
+  align-items: stretch;
+  min-width: 230px;
+  border-left: 1px solid var(--cf-line);
+}
+
+.bf-analysis-snapshot-stats span {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 0 12px;
+  border-right: 1px solid var(--cf-line);
+}
+
+.bf-analysis-snapshot-stats span:last-child {
+  border-right: 0;
+}
+
+.bf-analysis-snapshot-stats small {
+  color: var(--cf-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  line-height: 1.1;
+}
+
+.bf-analysis-snapshot-stats b {
+  color: var(--cf-ink);
+  font: 700 18px/1 "IBM Plex Serif", Georgia, serif;
+  white-space: nowrap;
+}
+
+.bf-analysis-snapshot.risk .bf-analysis-snapshot-stats span:last-child b,
+.bf-analysis-snapshot.watch .bf-analysis-snapshot-stats span:last-child b {
+  color: var(--cf-danger);
+}
+
+@media (max-width: 640px) {
+  .bf-analysis-snapshot {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .bf-analysis-snapshot-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
+    border-top: 1px solid var(--cf-line);
+    border-left: 0;
+  }
+
+  .bf-analysis-snapshot-stats span {
+    min-height: 54px;
+    padding: 10px 8px 0;
+  }
+
+  .bf-analysis-snapshot-stats b {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 370px) {
+  .bf-analysis-snapshot-copy {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .bf-analysis-snapshot-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bf-analysis-snapshot-copy h2 {
+    font-size: 19px;
+  }
+
+  .bf-analysis-snapshot-stats small {
+    font-size: 8px;
+    letter-spacing: .04em;
+  }
+}
