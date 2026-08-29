@@ -159,3 +159,168 @@
     transform: none;
   }
 }
+
+/* Plan Studio — progres contextual, păstrat scurt pe ecrane mici. */
+.bf-plan-flow {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 2px;
+  padding: 16px;
+  border: 1px solid var(--cf-line);
+  border-top: 3px solid var(--cf-info);
+  border-radius: 12px;
+  background: var(--cf-surface);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--cf-ink), transparent 94%);
+}
+
+.bf-plan-flow-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+}
+
+.bf-plan-flow-summary h2 {
+  margin: 4px 0 4px;
+  color: var(--cf-ink);
+  font: 700 clamp(19px, 4.8vw, 24px)/1.08 "IBM Plex Serif", Georgia, serif;
+  letter-spacing: -.035em;
+}
+
+.bf-plan-flow-summary span,
+.bf-plan-flow-summary small {
+  color: var(--cf-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.bf-plan-flow-summary > strong {
+  display: grid;
+  justify-items: end;
+  color: var(--cf-primary-strong);
+  font: 700 26px/1 "IBM Plex Serif", Georgia, serif;
+  white-space: nowrap;
+}
+
+.bf-plan-flow-summary > strong small {
+  margin-top: 4px;
+  font: 800 9px/1 "IBM Plex Sans", sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.bf-plan-flow ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-plan-flow li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 9px;
+  border: 1px solid var(--cf-line);
+  border-radius: 9px;
+  color: var(--cf-muted);
+  background: var(--cf-surface-alt);
+}
+
+.bf-plan-flow li::after {
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  width: 8px;
+  border-top: 1px dashed var(--cf-line);
+  content: "";
+}
+
+.bf-plan-flow li:last-child::after {
+  display: none;
+}
+
+.bf-plan-flow li > span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: var(--cf-muted);
+  background: var(--cf-surface);
+  font: 800 10px/1 "IBM Plex Sans", sans-serif;
+}
+
+.bf-plan-flow li > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.bf-plan-flow li b {
+  overflow: hidden;
+  color: var(--cf-ink);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bf-plan-flow li small {
+  overflow: hidden;
+  font-size: 10px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bf-plan-flow li.complete {
+  border-color: color-mix(in srgb, var(--cf-primary) 48%, var(--cf-line));
+  background: color-mix(in srgb, var(--cf-primary) 8%, var(--cf-surface));
+}
+
+.bf-plan-flow li.complete > span {
+  color: var(--cf-on-forest);
+  background: var(--cf-primary-strong);
+}
+
+.bf-plan-flow li.active {
+  border-color: color-mix(in srgb, var(--cf-info) 62%, var(--cf-line));
+  box-shadow: inset 0 2px 0 var(--cf-info);
+}
+
+.bf-plan-flow li.active > span {
+  color: #fff;
+  background: var(--cf-info);
+}
+
+@media (max-width: 560px) {
+  .bf-plan-flow {
+    padding: 14px;
+  }
+
+  .bf-plan-flow ol {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .bf-plan-flow li {
+    min-height: 48px;
+  }
+
+  .bf-plan-flow li::after {
+    top: auto;
+    right: auto;
+    bottom: -7px;
+    left: 20px;
+    width: 0;
+    height: 6px;
+    border-top: 0;
+    border-left: 1px dashed var(--cf-line);
+  }
+}

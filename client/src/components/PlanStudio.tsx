@@ -131,11 +131,24 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     closeWeekTransfer();
   };
 
+  const hasPacedAllocations = plan.allocations.some((item) => item.weeklyPace !== false);
+  const completedPlanSteps = Number(periodValid) + Number(envelopes.length > 0) + Number(Boolean(activeCycle));
+  const nextPlanStep = !envelopes.length ? "Adaugă primul plic" : hasPacedAllocations && !periodValid ? "Setează perioada pentru ritm" : "Verifică ritmul și consumul";
+
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
     <header className="bf-plan-studio-header">
       <div><p className="bf-kicker">PLANUL FAMILIEI, PE CATEGORII</p><h1>Fiecare leu <em>are un loc.</em></h1><p>Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.</p></div>
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>NEREPARTIZAȚI</small><b>{money(unrepartized)}</b></div>
     </header>
+
+    <section className="bf-plan-flow" aria-label="Progresul planului în trei pași">
+      <div className="bf-plan-flow-summary"><div><p className="bf-kicker">PLAN ÎN TREI PAȘI</p><h2>{nextPlanStep}</h2><span>Configurația rămâne locală și poate fi ajustată oricând.</span></div><strong>{completedPlanSteps}<small>/ 3 pregătit</small></strong></div>
+      <ol>
+        <li className={periodValid ? "complete" : "active"}><span>01</span><div><b>Cadrul</b><small>Perioadă opțională</small></div></li>
+        <li className={envelopes.length ? "complete" : "active"}><span>02</span><div><b>Plicurile</b><small>{envelopes.length ? `${envelopes.length} configurate` : "Adaugă categorii"}</small></div></li>
+        <li className={activeCycle ? "complete" : "upcoming"}><span>03</span><div><b>Ritmul</b><small>{activeCycle ? "Gata de urmărit" : "Se activează cu perioada"}</small></div></li>
+      </ol>
+    </section>
 
     {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">ACUM · TRANȘA S{activeWeek.index}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.</span></div><strong>{money(activeWeek.amount)}<small>ritm total</small></strong></section>}
 
