@@ -1,0 +1,161 @@
+/* Buget Familie — modernization pass 2026-08-29
+ * Mobile-first: lizibilitate la 360–390 px, acțiuni clare și feedback tactil discret.
+ * Se aplică după straturile existente pentru a evita regresii în temele memorate.
+ */
+
+.bf-app button,
+.bf-app a,
+.bf-app input,
+.bf-app select,
+.bf-app textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bf-app button {
+  transition: transform 160ms cubic-bezier(.23, 1, .32, 1),
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.bf-app button:active {
+  transform: scale(.985);
+}
+
+.bf-app button:focus-visible,
+.bf-app input:focus-visible,
+.bf-app select:focus-visible,
+.bf-app textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--cf-info) 72%, white);
+  outline-offset: 2px;
+}
+
+.bf-today-situation,
+.bf-today-decision,
+.bf-today-measurements,
+.bf-today-activity {
+  min-width: 0;
+}
+
+.bf-today-decision-heading h1,
+.bf-decision-row b,
+.bf-decision-row em,
+.bf-today-situation-number span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .bf-today-decision-heading {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start !important;
+    gap: 9px !important;
+  }
+
+  .bf-today-decision-heading h1 {
+    max-width: none !important;
+    font-size: clamp(27px, 8.4vw, 34px) !important;
+    line-height: 1.06 !important;
+  }
+
+  .bf-today-decision-heading > button {
+    justify-self: start;
+    min-height: 40px !important;
+    margin-top: -2px;
+    padding: 0 10px !important;
+    border: 1px solid var(--cf-line) !important;
+    border-radius: 999px;
+    background: var(--cf-surface) !important;
+  }
+
+  .bf-decision-row,
+  .bf-decision-row.primary {
+    grid-template-columns: 24px minmax(0, 1fr) 18px !important;
+    gap: 9px !important;
+  }
+
+  .bf-decision-row {
+    min-height: 84px !important;
+    padding: 14px 0 !important;
+  }
+
+  .bf-decision-row.primary {
+    min-height: 112px !important;
+    padding: 16px 10px !important;
+  }
+
+  .bf-decision-row em,
+  .bf-decision-row.primary em {
+    display: -webkit-box;
+    overflow: hidden;
+    white-space: normal !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .bf-today-situation-top {
+    align-items: flex-start !important;
+  }
+
+  .bf-today-situation-top time {
+    max-width: 11ch;
+    text-align: right;
+    white-space: normal !important;
+  }
+
+  .bf-today-situation-actions {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch !important;
+  }
+
+  .bf-today-add,
+  .bf-today-plan-link {
+    width: 100%;
+  }
+
+  .bf-today-plan-link {
+    justify-content: space-between;
+    padding-inline: 2px !important;
+  }
+
+  .bf-today-measurements article {
+    min-height: 68px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .bf-today-workspace {
+    padding-inline: 12px !important;
+  }
+
+  .bf-today-situation {
+    padding-inline: 14px !important;
+  }
+
+  .bf-today-situation-number strong {
+    font-size: 47px !important;
+  }
+
+  .bf-decision-row.primary {
+    padding-inline: 9px !important;
+  }
+
+  .bf-today-measurements article {
+    padding-inline: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-app button,
+  .bf-app a,
+  .bf-app input,
+  .bf-app select,
+  .bf-app textarea {
+    transition-duration: 0.01ms !important;
+  }
+
+  .bf-app button:active {
+    transform: none;
+  }
+}

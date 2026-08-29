@@ -46,5 +46,6 @@ import "./week-transfer.css";
 import "./expanded-themes.css";
 import "./plan-header-stat.css";
 import "./theme-picker-scroll.css";
+import "./modernization-pass.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
