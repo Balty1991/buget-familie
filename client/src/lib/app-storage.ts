@@ -5,6 +5,7 @@ const DB_VERSION = 1;
 const STORE_NAME = "app";
 const DATA_KEY = "data";
 const BACKUP_VERSION = 1;
+export const SYNC_JOURNAL_KEY = "buget-familie:sync-journal-v1";
 
 export type AppBackup = {
   kind: "buget-familie-backup";
@@ -12,6 +13,34 @@ export type AppBackup = {
   exportedAt: string;
   data: AppData;
 };
+
+export type SyncJournalEntry = {
+  id: string;
+  conflictId?: string;
+  createdAt: string;
+  status: "detected" | "resolved" | "failed";
+  message: string;
+  action: string;
+};
+
+export function readSyncJournal(): SyncJournalEntry[] {
+  try {
+    const raw = window.localStorage.getItem(SYNC_JOURNAL_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((item): item is SyncJournalEntry => Boolean(item && typeof item === "object" && "id" in item && "createdAt" in item && "status" in item && "message" in item && "action" in item)).slice(0, 40) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function writeSyncJournal(entries: SyncJournalEntry[]): void {
+  try {
+    window.localStorage.setItem(SYNC_JOURNAL_KEY, JSON.stringify(entries.slice(0, 40)));
+  } catch {
+    // The journal is diagnostic metadata; a full browser quota must not block finance data.
+  }
+}
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
