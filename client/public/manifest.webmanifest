@@ -1,0 +1,16 @@
+{
+  "name": "Buget Familie",
+  "short_name": "Buget Familie",
+  "description": "Registru financiar personal sau familial.",
+  "lang": "ro",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f2ea",
+  "theme_color": "#143c36",
+  "icons": [{
+    "src": "/bf-favicon.svg",
+    "sizes": "any",
+    "type": "image/svg+xml",
+    "purpose": "any maskable"
+  }]
+}
