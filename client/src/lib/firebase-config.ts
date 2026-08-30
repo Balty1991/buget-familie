@@ -10,12 +10,12 @@
  * 3. Copiază obiectul `firebaseConfig` afișat de Firebase exact în locul valorilor de mai jos.
  */
 export const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyCblae37WNgd9kpkSMPQxfFN9kRRU_5Djs",
+  authDomain: "buget-familie-a6a0d.firebaseapp.com",
+  projectId: "buget-familie-a6a0d",
+  storageBucket: "buget-familie-a6a0d.firebasestorage.app",
+  messagingSenderId: "119097201129",
+  appId: "1:119097201129:web:d46d0e3889dd6e50b53b78",
 };
 
 export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
