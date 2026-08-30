@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Reguli Firestore pentru Buget Familie — de lipit în Firebase Console →
+// Firestore Database → Rules, exact așa cum sunt aici.
+//
+// Fiecare familie are propriul document, ale cărui ID este un hash SHA-256
+// al parolei ei de familie (client-ul îl calculează, nu-l trimite niciodată
+// pe cel în clar). Oricine nu cunoaște parola nu poate ghici sau enumera
+// ID-ul; conținutul propriu-zis este oricum criptat AES-GCM înainte să
+// ajungă aici, așa că Firestore nu vede niciodată date financiare în clar.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /familySync/{roomId} {
+      allow read: if roomId.size() == 64;
+      allow write: if roomId.size() == 64
+        && request.resource.data.keys().hasOnly(['envelope', 'updatedAt'])
+        && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
+        && request.resource.data.envelope.version == 1
+        && request.resource.data.envelope.ciphertext is string
+        && request.resource.data.envelope.ciphertext.size() < 2000000;
+    }
+  }
+}

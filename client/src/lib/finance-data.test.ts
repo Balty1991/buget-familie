@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenWeeks, weeklySummary } from "./finance-data";
-import { GitHubSyncError, mergeFamilyData, retryGitHubOperation } from "./github-sync";
+import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
 import { calendarPlanPdfSnapshot } from "./calendar-plan-pdf";
@@ -362,13 +362,11 @@ describe("registrul financiar Buget Familie", () => {
     const data = normalizeAppData({ receipts: [{ id: "bon", vendor: "Magazin", amount: 18, category: "Alimente", date: "2026-08-27", imageKeys: ["bon:image:0", "bon:image:1", 42] }] });
     expect(data.receipts[0]).toMatchObject({ id: "bon", imageKeys: ["bon:image:0", "bon:image:1"] });
   });
-  it("reîncearcă operațiile GitHub temporare, dar nu reîncearcă un conflict", async () => {
-    let attempts = 0;
-    await expect(retryGitHubOperation(async () => { attempts += 1; if (attempts === 1) throw new GitHubSyncError("temporary", "temporar", 1); return "gata"; }, 1)).resolves.toBe("gata");
-    expect(attempts).toBe(2);
-    let conflicts = 0;
-    await expect(retryGitHubOperation(async () => { conflicts += 1; throw new GitHubSyncError("conflict", "conflict"); }, 2)).rejects.toThrow("conflict");
-    expect(conflicts).toBe(1);
+  it("deduce aceeași cameră de sincronizare din aceeași parolă, dar niciodată parola însăși", async () => {
+    const roomId = await deriveFamilyRoomId("parola-familiei-12");
+    expect(roomId).toBe(await deriveFamilyRoomId("parola-familiei-12"));
+    expect(roomId).not.toBe(await deriveFamilyRoomId("altă-parolă-1234"));
+    expect(roomId).toMatch(/^[0-9a-f]{64}$/);
   });
   it("identifică o singură tranșă curentă și construiește snapshotul PDF fără mișcări", () => {
     const active = currentCalendarBudgetWeek(2400, "2026-09-01", "2026-09-28", "2026-09-12");

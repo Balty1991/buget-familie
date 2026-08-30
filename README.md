@@ -1,6 +1,6 @@
 # Buget Familie
 
-**Buget Familie** este o aplicație PWA pentru administrarea banilor proprii sau ai unei gospodării. Interfața este publicată prin GitHub Pages, iar sincronizarea protejată, complet opțională, salvează doar un pachet financiar criptat într-un repo GitHub privat separat.
+**Buget Familie** este o aplicație PWA pentru administrarea banilor proprii sau ai unei gospodării. Interfața este publicată prin GitHub Pages, iar sincronizarea protejată, complet opțională și în timp real, salvează doar un pachet financiar criptat într-un Firestore Firebase separat, izolat per familie printr-o parolă comună.
 
 ## Funcții implementate
 
@@ -17,12 +17,12 @@
 | Analiză, alerte și PDF | Comparație cu luna precedentă, evoluție lunară în anul curent, grafic interactiv de distribuție pe categorii, poziție financiară și plicuri la prag de atenție ori depășite. Bilanțul și planul calendaristic pot fi descărcate ca PDF local în browser; planul include suma, intervalul, ritmul și tranșele. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere protejată, proprietar opțional (familie sau membru) și calcule de progres. O rată poate fi confirmată dintr-o sursă reală: creează cheltuiala în Jurnal, reduce automat soldul aceleiași datorii și păstrează istoricul „plată parțială” sau „achitată integral”. |
-| Bonuri mobile | Maximum două fotografii comprimate local, păstrate în **IndexedDB** pe telefon, nu în `localStorage` și nu în pachetul GitHub. Bonurile salvate în versiunile vechi sunt mutate defensiv la prima deschidere; dacă spațiul local nu este disponibil, fotografiile existente nu sunt șterse. OCR-ul local poate propune produse, prețuri și categorii editabile; liniile trebuie să egaleze totalul înainte de salvare. |
+| Bonuri mobile | Maximum două fotografii comprimate local, păstrate în **IndexedDB** pe telefon, nu în `localStorage` și nu în pachetul sincronizat. Bonurile salvate în versiunile vechi sunt mutate defensiv la prima deschidere; dacă spațiul local nu este disponibil, fotografiile existente nu sunt șterse. OCR-ul local poate propune produse, prețuri și categorii editabile; liniile trebuie să egaleze totalul înainte de salvare. |
 | Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit, întrebări rapide și calcule directe, de exemplu buget săptămânal împărțit pe zi. Se încarcă numai când este deschis. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
 | Aspect și control | Selector persistent cu Porcelain Studio (zi editorială), Aurora Moss (seară organică), Ultraviolet Grid (noapte digitală) și Ember Ledger (cald tactil). Include previzualizare mare, program local evaluat cât aplicația rămâne deschisă și contrast extra-ridicat. Fiecare temă schimbă fundalul, geometria suprafețelor, accentele și navigația, iar semnificația veniturilor, cheltuielilor și alertelor rămâne aceeași. Include monogramă B/F cu relief și favicon aferent, resetare controlată și export/import de rezervă. |
-| Familie conectată | Pachet AES-GCM criptat local într-un repo privat, actualizat prudent între telefoane cât aplicația rămâne deschisă. Erorile temporare sunt reîncercate cu pauză scurtă, iar o actualizare concurentă este citită, reunită și reîncercată o dată cu SHA-ul nou. |
+| Familie conectată | Pachet AES-GCM criptat local, sincronizat în timp real printr-un Firestore Firebase comun, fără cont sau token per utilizator — doar o parolă de familie identică pe fiecare telefon. Fiecare actualizare primită este reunită automat prin ID și marcaj de actualizare. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
 
@@ -54,29 +54,38 @@ Componentele de Plan, Analiză, scadențe, OCR, asistent și captura rapidă sun
 
 Butonul de paletă din antet deschide alegerea temei și păstrează opțiunea local pe dispozitiv. **Porcelain Studio** combină porțelanul rece cu grilă de cobalt; **Aurora Moss** folosește reflexe organice în verde; **Ultraviolet Grid** combină indigo, violet și cyan, iar **Ember Ledger** folosește cărbune fumuriu și cupru ars. Textul, controalele și graficele sunt proiectate pentru contrast, iar coralul rămâne rezervat situațiilor de atenție.
 
-## Familie conectată și sincronizare GitHub protejată
+## Familie conectată și sincronizare Firebase în timp real
 
-Aplicația publică este `Balty1991/buget-familie`. Repo-ul separat `Balty1991/buget-familie-date` este privat și stochează numai un pachet deja criptat în browser. Tokenul GitHub și parola de criptare nu sunt păstrate în local storage sau în repo-ul public.
+Sincronizarea între telefoane nu mai cere niciun cont sau token per utilizator. Aplicația împarte un singur proiect Firebase (configurat o singură dată, de administrator, în `client/src/lib/firebase-config.ts`); fiecare familie primește propria „cameră" izolată în Firestore, dedusă printr-un hash SHA-256 al parolei ei — parola în sine nu este niciodată trimisă sau salvată. Registrul rămâne criptat AES-GCM în browser înainte de a ajunge în Firestore, la fel ca înainte.
+
+**Configurare unică, de administratorul aplicației** (nu se repetă per utilizator sau per telefon):
 
 | Pas | Acțiune |
 |---|---|
-| 1 | Creează un **fine-grained personal access token** limitat strict la repo-ul `buget-familie-date`. |
-| 2 | Acordă numai permisiunea **Contents: Read and write**. |
-| 3 | În aplicație, deschide **Mai mult → Sincronizare** și introdu tokenul doar pentru sesiunea curentă. |
-| 4 | Alege o parolă de familie de cel puțin 12 caractere; ea criptează datele prin AES-GCM înainte de upload. |
-| 5 | Pe fiecare telefon, introdu un token limitat separat și aceeași parolă, apoi apasă **Conectează acest telefon**. |
+| 1 | `console.firebase.google.com` → **Add project** (gratuit) → activează **Firestore Database**. |
+| 2 | **Project settings** → **Your apps** → **Web (`</>`)** → **Register app**; copiază obiectul de configurare afișat. |
+| 3 | Lipește valorile în `client/src/lib/firebase-config.ts` (`apiKey`, `authDomain`, `projectId` etc. — acestea nu sunt secrete, sunt publice prin design în orice aplicație Firebase). |
+| 4 | În Firebase Console → **Firestore Database → Rules**, lipește conținutul din `firestore.rules` din acest repo. |
 
-După conectare, aplicația verifică actualizări aproximativ la 30 de secunde cât rămâne deschisă, unește intrările prin ID și marcaj de actualizare și păstrează ștergerile — inclusiv scadențele recurente — pentru a evita reapariția datelor eliminate. Pentru răspunsuri temporare GitHub, aplicația reîncearcă prudent cât sesiunea rămâne deschisă; la conflictul SHA, citește copia nouă, reunește datele și încearcă o singură salvare cu versiunea actualizată. Dacă se întâmplă din nou, afișează mesajul pentru ca familia să verifice Planul înainte de următoarea încercare. Aceasta rămâne o actualizare periodică, nu un canal instantaneu ori un serviciu de fundal. Fotografiile și cheile IndexedDB ale bonurilor, filtrele salvate, șabloanele active/arhivate, șabloanele de ciclu și marcajele alertelor de tranșă sunt excluse intenționat din pachetul remote și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
+**Pentru orice familie care instalează aplicația**, odată ce administratorul a făcut configurarea de mai sus:
+
+| Pas | Acțiune |
+|---|---|
+| 1 | Deschide **Mai mult → Sincronizare**. |
+| 2 | Alegeți împreună o parolă de familie de cel puțin 12 caractere. |
+| 3 | Introduceți exact aceeași parolă pe fiecare telefon și apăsați **Conectează acest telefon**. |
+
+După conectare, modificările apar automat pe toate telefoanele conectate în câteva secunde, prin actualizări live Firestore — nu este nevoie de reîmprospătare manuală sau de interval de verificare. Unirea intrărilor se face prin ID și marcaj de actualizare, iar ștergerile — inclusiv scadențele recurente — sunt păstrate pentru a evita reapariția datelor eliminate. Fotografiile și cheile IndexedDB ale bonurilor, filtrele salvate, șabloanele active/arhivate, șabloanele de ciclu și marcajele alertelor de tranșă sunt excluse intenționat din pachetul sincronizat și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
 
 ## Limite importante
 
-| Cerință | Această versiune GitHub-only |
+| Cerință | Această versiune |
 |---|---|
 | CRUD financiar, planificare, temă și analize | Da, local în browser. |
-| Copie între telefoane | Da, prin export/import sau pachet criptat în repo privat. |
-| Sincronizare automată în timp real | Actualizare periodică aproximativ la 30 s cât aplicația este deschisă; nu există actualizare garantată în fundal. |
-| Modificări simultane ale aceluiași plan | La primul conflict, aplicația reia copia, face merge și reîncearcă o dată. Pentru două editări simultane ale acelorași plicuri sau realocări, verifică Planul pe ambele telefoane înainte de următoarea sincronizare. |
-| Fotografii ale bonurilor | Maximum două pe bon, comprimate local și păstrate în IndexedDB pe telefon; migrarea din versiunile vechi păstrează poza veche până la confirmarea salvării locale. Fotografiile și cheile lor nu intră în pachetul GitHub. |
+| Copie între telefoane | Da, prin export/import sau prin sesiunea de sincronizare Firebase în timp real. |
+| Sincronizare automată în timp real | Da, prin actualizări live Firestore cât aplicația rămâne deschisă pe cel puțin un telefon din sesiune; nu există serviciu de fundal cu aplicația închisă. |
+| Modificări simultane ale aceluiași plan | Fiecare telefon reunește automat, prin ID și marcaj de actualizare, orice pachet primit de la celelalte. Pentru două editări simultane ale acelorași plicuri sau realocări, verifică Planul pe ambele telefoane. |
+| Fotografii ale bonurilor | Maximum două pe bon, comprimate local și păstrate în IndexedDB pe telefon; migrarea din versiunile vechi păstrează poza veche până la confirmarea salvării locale. Fotografiile și cheile lor nu intră în pachetul sincronizat. |
 | Asistent LLM extern | Nu; GitHub Models a fost retras. Asistentul actual este local și explicabil. |
 | Plata unei rate | Confirmare manuală în aplicație; actualizează registrul și soldul datoriei, păstrând suma, sursa, data și statutul parțial/integral în istoric; nu trimite bani și nu poate accesa banca. |
 | Export PDF | Generat și descărcat local la cerere pentru bilanț sau planul calendaristic; datele nu sunt trimise unui serviciu extern. |

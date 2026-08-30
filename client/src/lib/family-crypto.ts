@@ -1,6 +1,6 @@
 /**
- * Atelierul Financiar — criptare locală și sincronizare explicită cu repo GitHub privat.
- * Tokenul nu se persistă; aplicația trimite doar un pachet AES-GCM deja criptat.
+ * Atelierul Financiar — criptare locală a registrului de familie și unirea a două copii.
+ * Parola nu se persistă; doar un pachet AES-GCM deja criptat părăsește telefonul.
  */
 import { normalizeAppData, type AllocationHistoryEntry, type AppData, type DeletedRecord } from "@/lib/finance-data";
 
@@ -11,13 +11,6 @@ export type EncryptedEnvelope = {
   iv: string;
   ciphertext: string;
 };
-
-export type RemotePackage = { envelope: EncryptedEnvelope; sha: string; createdAt?: string };
-export type GitHubSyncIssueKind = "conflict" | "rate-limit" | "temporary" | "access";
-
-export class GitHubSyncError extends Error {
-  constructor(public readonly kind: GitHubSyncIssueKind, message: string, public readonly retryAfterMs?: number) { super(message); }
-}
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -54,7 +47,7 @@ export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: str
     const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromBase64(envelope.iv) }, key, fromBase64(envelope.ciphertext));
     return JSON.parse(decoder.decode(plain)) as AppData;
   } catch {
-    throw new Error("Codul familiei este greșit sau pachetul nu poate fi decriptat.");
+    throw new Error("Parola familiei este greșită sau pachetul nu poate fi decriptat.");
   }
 }
 
@@ -89,62 +82,8 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
   return normalizeAppData({ version: 8, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), quickTemplates: local.settings.quickTemplates, archivedQuickTemplates: local.settings.archivedQuickTemplates, savedJournalFilters: local.settings.savedJournalFilters, salaryCycleTemplates: local.settings.salaryCycleTemplates, seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches, salaryPlan } });
 }
 
-function headers(token: string) {
-  return { Accept: "application/vnd.github+json", Authorization: `Bearer ${token}`, "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json" };
-}
-
-function endpoint(owner: string, repo: string, path: string) {
-  return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path.split("/").map(encodeURIComponent).join("/")}`;
-}
-
-const retryAfter = (response: Response) => {
-  const seconds = Number(response.headers.get("retry-after"));
-  return Number.isFinite(seconds) && seconds > 0 ? Math.min(4_000, seconds * 1_000) : undefined;
-};
-
-const pause = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
-
-/** Reîncearcă numai erorile trecătoare cât aplicația rămâne deschisă; conflictele cer reunire explicită. */
-export async function retryGitHubOperation<T>(operation: () => Promise<T>, retries = 2): Promise<T> {
-  let attempt = 0;
-  while (true) {
-    try { return await operation(); }
-    catch (error) {
-      const retryable = error instanceof GitHubSyncError ? error.kind === "temporary" || error.kind === "rate-limit" : error instanceof TypeError;
-      if (!retryable || attempt >= retries) throw error;
-      const delay = error instanceof GitHubSyncError && error.retryAfterMs ? error.retryAfterMs : 700 * 2 ** attempt;
-      attempt += 1;
-      await pause(delay);
-    }
-  }
-}
-
-function responseProblem(response: Response) {
-  if (response.status === 409 || response.status === 422) return new GitHubSyncError("conflict", "O altă actualizare a ajuns pe GitHub. Reunim copiile înainte de a încerca din nou.");
-  if (response.status === 429 || (response.status === 403 && response.headers.get("x-ratelimit-remaining") === "0")) return new GitHubSyncError("rate-limit", "GitHub a cerut o pauză scurtă înainte de următoarea actualizare.", retryAfter(response));
-  if (response.status >= 500) return new GitHubSyncError("temporary", "GitHub este temporar indisponibil; mai încercăm cât aplicația rămâne deschisă.");
-  return new GitHubSyncError("access", "GitHub nu a acceptat accesul. Verifică tokenul și repo-ul privat.");
-}
-
-export async function getRemotePackage({ token, owner, repo, path }: { token: string; owner: string; repo: string; path: string }): Promise<RemotePackage | null> {
-  const response = await retryGitHubOperation(async () => {
-    const result = await fetch(endpoint(owner, repo, path), { headers: headers(token) });
-    if (result.status === 404 || result.ok) return result;
-    throw responseProblem(result);
-  });
-  if (response.status === 404) return null;
-  const payload = await response.json() as { content: string; sha: string };
-  const json = decoder.decode(fromBase64(payload.content.replace(/\n/g, "")));
-  return { envelope: JSON.parse(json) as EncryptedEnvelope, sha: payload.sha };
-}
-
-export async function saveRemotePackage({ token, owner, repo, path, envelope, sha }: { token: string; owner: string; repo: string; path: string; envelope: EncryptedEnvelope; sha?: string }) {
-  const content = toBase64(encoder.encode(JSON.stringify(envelope)));
-  const response = await retryGitHubOperation(async () => {
-    const result = await fetch(endpoint(owner, repo, path), { method: "PUT", headers: headers(token), body: JSON.stringify({ message: `sync: actualizare criptată ${envelope.createdAt}`, content, ...(sha ? { sha } : {}) }) });
-    if (result.ok) return result;
-    throw responseProblem(result);
-  });
-  const payload = await response.json() as { content: { sha: string } };
-  return payload.content.sha;
+/** Transformă parola de familie într-un identificator de cameră, fără a expune parola. */
+export async function deriveFamilyRoomId(secret: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(`buget-familie-room:${secret}`));
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
