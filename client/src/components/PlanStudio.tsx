@@ -7,7 +7,8 @@ import { useState } from "react";
 import { BookmarkPlus, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -106,15 +107,18 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     if (!source) return setAllocationError("Alege sursa din care vei plăti această categorie.");
     const label = allocationLabel.trim() || `${allocationCategory}${member ? ` · ${member.name}` : ""}`;
     const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold, weeklyPace: allocationWeeklyPace ? undefined : false };
+    const previous = editingAllocationId ? plan.allocations.find((item) => item.id === editingAllocationId) : undefined;
     const nextAllocations = editingAllocationId ? plan.allocations.map((item) => item.id === editingAllocationId ? next : item) : [...plan.allocations, next];
-    updatePlan({ allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0) });
+    const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), updatedAt: new Date().toISOString() } } };
+    onChange(appendAllocationHistory(nextData, { kind: editingAllocationId ? "updated" : "created", allocationId: next.id, allocationLabel: label, amount, previousAmount: previous?.amount, newAmount: amount }));
     resetAllocationBuilder();
   };
   const editAllocation = (item: BudgetAllocation) => { setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationWeeklyPace(item.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
   const deleteAllocation = (id: string, label: string) => {
     if (!window.confirm(`Ștergi plicul „${label}”? Cheltuielile deja înregistrate rămân în jurnal.`)) return;
     const nextAllocations = plan.allocations.filter((item) => item.id !== id);
-    updatePlan({ allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), transfers: plan.transfers.filter((transfer) => transfer.fromAllocationId !== id && transfer.toAllocationId !== id), salaryAllocationRules: (plan.salaryAllocationRules || []).filter((rule) => rule.allocationId !== id) });
+    const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), transfers: plan.transfers.filter((transfer) => transfer.fromAllocationId !== id && transfer.toAllocationId !== id), salaryAllocationRules: (plan.salaryAllocationRules || []).filter((rule) => rule.allocationId !== id) } } };
+    onChange(appendAllocationHistory(nextData, { kind: "deleted", allocationId: id, allocationLabel: label, previousAmount: plan.allocations.find((item) => item.id === id)?.amount }));
   };
   const exportCyclePdf = async () => { if (!activeCycle) return; try { await downloadCalendarPlanPdf(activeCycle, data.settings.familyName); } catch { setCycleError("PDF-ul nu a putut fi generat local. Încearcă din nou."); } };
 
@@ -123,11 +127,15 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const applyWeekTransfer = (allocationId: string, toWeekIndex: number) => {
     const fromWeekIndex = Number(weekTransferFromIndex);
     const amount = parseRomanianAmount(weekTransferAmount);
+    const allocation = plan.allocations.find((item) => item.id === allocationId);
+    if (!allocation) return setWeekTransferError("Plicul nu mai există în plan.");
     if (!fromWeekIndex) return setWeekTransferError("Alege săptămâna din care muți bani.");
     if (amount <= 0) return setWeekTransferError("Introdu o sumă mai mare decât zero.");
     const next = transferBetweenWeeks(data, { allocationId, fromWeekIndex, toWeekIndex, amount });
     if (!next) return setWeekTransferError("Suma depășește ce a mai rămas în săptămâna aleasă.");
-    onChange(next);
+    const transfer = next.settings.salaryPlan.weekTransfers?.[0];
+    const updated = appendAllocationHistory(next, { kind: "week-transfer", referenceId: transfer?.id, allocationId, allocationLabel: allocation.label, amount, fromWeekIndex, toWeekIndex });
+    onChange(updated);
     closeWeekTransfer();
   };
 
@@ -198,9 +206,9 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> Editează</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> Șterge</button></div>
         </article>)}
         {!envelopes.length && <div className="bf-allocation-empty"><b>Încă nu ai nicio categorie.</b><span>Începe cu Alimente, apoi adaugă Taxi, Abonamente, Rate produse și Consumabile copil.</span></div>}
-      </div>
+            </div>
+      <AllocationHistoryPanel data={data} />
     </section>
-
     <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> Instrumente pentru perioade repetate</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>Un șablon reține doar durata perioadei; începi mereu următorul ciclu cu data aleasă de tine.</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={periodValid ? `ex. Salariu ${daysBetween(cycleStart, cycleEnd)} zile` : "Completează mai întâi perioada"} disabled={!periodValid} /><button disabled={!periodValid} onClick={saveCycleTemplate}>Salvează șablonul</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>Salvează</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>Anulează</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>Nu ai șabloane salvate încă.</span>}</div></div></details>
   </div>;
 }

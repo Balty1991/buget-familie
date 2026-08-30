@@ -2,7 +2,7 @@
  * Atelierul Financiar — criptare locală și sincronizare explicită cu repo GitHub privat.
  * Tokenul nu se persistă; aplicația trimite doar un pachet AES-GCM deja criptat.
  */
-import { normalizeAppData, type AppData, type DeletedRecord } from "@/lib/finance-data";
+import { normalizeAppData, type AllocationHistoryEntry, type AppData, type DeletedRecord } from "@/lib/finance-data";
 
 export type EncryptedEnvelope = {
   version: 1;
@@ -83,7 +83,9 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
   const memberMap = new Map([...remote.settings.members, ...local.settings.members].map((item) => [item.id, item]));
   const sourceMap = new Map([...remote.settings.paymentSources, ...local.settings.paymentSources].map((item) => [item.id, item]));
   const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);
-  const salaryPlan = timestamp(local.settings.salaryPlan) >= timestamp(remote.settings.salaryPlan) ? local.settings.salaryPlan : remote.settings.salaryPlan;
+  const salaryPlanBase = timestamp(local.settings.salaryPlan) >= timestamp(remote.settings.salaryPlan) ? local.settings.salaryPlan : remote.settings.salaryPlan;
+  const allocationHistory: AllocationHistoryEntry[] = [...(remote.settings.salaryPlan.allocationHistory || []), ...(local.settings.salaryPlan.allocationHistory || [])].reduce<AllocationHistoryEntry[]>((all, item) => all.some((entry) => entry.id === item.id) ? all : [...all, item], []).sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt)).slice(0, 400);
+  const salaryPlan = { ...salaryPlanBase, allocationHistory };
   return normalizeAppData({ version: 8, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), quickTemplates: local.settings.quickTemplates, archivedQuickTemplates: local.settings.archivedQuickTemplates, savedJournalFilters: local.settings.savedJournalFilters, salaryCycleTemplates: local.settings.salaryCycleTemplates, seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches, salaryPlan } });
 }
 
