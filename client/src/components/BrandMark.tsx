@@ -1,14 +1,7 @@
 /**
- * Semnul casei-plic: familia și bugetul pe plicuri, fără litere.
- * Același desen ca favicon-ul și iconița de pe ecranul telefonului.
+ * Semnul 3D casă-plic din antet — același fișier ca iconița de pe telefon.
  */
 export function BrandMark({ size = 36 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <rect width="64" height="64" rx="15" fill="#EEC64D" />
-      <path fill="#173F36" d="M12 26.5 32 7.2 52 26.5v22.6c0 3-2.4 5.4-5.4 5.4H17.4c-3 0-5.4-2.4-5.4-5.4Z" />
-      <path fill="#F6E9B4" d="M13.8 26.2 32 41.4 50.2 26.2Z" />
-      <circle cx="32" cy="28" r="5" fill="#EEC64D" />
-    </svg>
-  );
+  const src = `${import.meta.env.BASE_URL}icons/icon-192.png`;
+  return <img className="bf-brand-mark-img" src={src} width={size} height={size} alt="" decoding="async" />;
 }
