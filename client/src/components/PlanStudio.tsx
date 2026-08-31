@@ -4,7 +4,7 @@
  * Perioada e opțională și comună — servește doar categoriilor cu ritm săptămânal; nu există o sumă „generală” separată.
  */
 import { useState } from "react";
-import { BookmarkPlus, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
+import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
 import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
@@ -50,6 +50,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const [weekTransferFromIndex, setWeekTransferFromIndex] = useState("");
   const [weekTransferAmount, setWeekTransferAmount] = useState("");
   const [weekTransferError, setWeekTransferError] = useState("");
+  const [allocationPeriod, setAllocationPeriod] = useState<"next-income" | "month" | "week" | "custom">("next-income");
+  const [allocationPreviewOpen, setAllocationPreviewOpen] = useState(false);
 
   const periodValid = Boolean(cycleStart && cycleEnd && cycleEnd >= cycleStart);
   const weeklyPacedTotal = plan.allocations.filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
@@ -68,6 +70,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return date.toISOString().slice(0, 10); };
+  const allocationPeriodOptions = [{ id: "next-income" as const, label: "Până la următorul venit" }, { id: "month" as const, label: "Luna aceasta" }, { id: "week" as const, label: "Săptămâna aceasta" }, { id: "custom" as const, label: "Personalizat" }];
+  const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(planEnd || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)); setCycleEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)); } else if (periodId === "week") { const start = new Date(); setCycleStart(start.toISOString().slice(0, 10)); setCycleEnd(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)); } };
   const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
 
   /** Perioada e comună tuturor categoriilor cu ritm săptămânal; se aplică automat, fără buton separat. */
@@ -151,6 +155,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>NEREPARTIZAȚI</small><b>{money(unrepartized)}</b></div>
     </header>
 
+    <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">REPARTIZARE PE PERIOADĂ</p><h2 id="allocation-period-title">Alege ritmul casei.</h2><p>Vezi banii disponibili pentru intervalul în care iei decizia.</p></div><span>{money(Math.max(0, unrepartized))}<small>rămași de repartizat</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label="Perioada repartizării">{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>disponibil în surse</small></span><span><b>{money(reservedInEnvelopes)}</b><small>în plicuri</small></span><span><b>{money(scheduled)}</b><small>scadențe rezervate</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>de repartizat</small></span></div></section>
     <section className="bf-plan-flow" aria-label="Progresul planului în trei pași">
       <div className="bf-plan-flow-summary"><div><p className="bf-kicker">PLAN ÎN TREI PAȘI</p><h2>{nextPlanStep}</h2><span>Configurația rămâne locală și poate fi ajustată oricând.</span></div><strong>{completedPlanSteps}<small>/ 3 pregătit</small></strong></div>
       <ol>
@@ -183,8 +188,9 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
         <PlanField label="Avertizează la"><select value={allocationThreshold} onChange={(event) => setAllocationThreshold(Number(event.target.value))}>{thresholdOptions.map((value) => <option key={value} value={value}>{value}%</option>)}</select></PlanField>
         <PlanField label="Detaliu liber"><input value={allocationNote} onChange={(event) => setAllocationNote(event.target.value)} placeholder="ex. telefon, cablu și aplicații" /></PlanField>
         <label className="bf-plan-toggle"><input type="checkbox" checked={allocationWeeklyPace} onChange={(event) => setAllocationWeeklyPace(event.target.checked)} /><span><b>Împarte pe săptămâni</b><small>Dezactivează pentru plicuri fără ritm fix — taxi, cheltuieli ocazionale: rămâne doar totalul, fără presiune pe săptămână.</small></span></label>
-        <div className="bf-allocation-builder-actions"><button className="bf-primary" onClick={saveAllocation}><Plus size={17} /> {editingAllocationId ? "Salvează plicul" : "Adaugă plicul"}</button>{editingAllocationId && <button onClick={resetAllocationBuilder}>Renunță</button>}</div>
+        <div className="bf-allocation-builder-actions"><button className="bf-primary" onClick={() => setAllocationPreviewOpen(true)}><Plus size={17} /> {editingAllocationId ? "Salvează plicul" : "Adaugă plicul"}</button>{editingAllocationId && <button onClick={resetAllocationBuilder}>Renunță</button>}</div>
       </div>
+      {allocationPreviewOpen && <div className="bf-allocation-preview" role="dialog" aria-modal="true" aria-labelledby="allocation-preview-title"><div><p className="bf-kicker">PREVIZUALIZARE</p><h3 id="allocation-preview-title">Verifică înainte de aplicare</h3><p>Vei {editingAllocationId ? "actualiza" : "adăuga"} plicul <b>{allocationLabel.trim() || allocationCategory}</b> cu <strong>{money(parseRomanianAmount(allocationAmount))}</strong> pentru perioada aleasă.</p><div><span>Rămas acum<strong>{money(unrepartized)}</strong></span><span>Rămas după<strong>{money(unrepartized - parseRomanianAmount(allocationAmount))}</strong></span></div><small>Previzualizarea nu schimbă nimic până când nu confirmi.</small><footer><button onClick={() => setAllocationPreviewOpen(false)}>Înapoi la editare</button><button className="bf-primary" onClick={() => { setAllocationPreviewOpen(false); saveAllocation(); }}><Check size={16} /> Confirmă repartizarea</button></footer></div></div>}
       {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}
       <div className="bf-allocation-list" aria-live="polite">
         {envelopes.map(({ item, budget, remaining, usage, state, week, weeks }) => <article key={item.id} className={state}>
