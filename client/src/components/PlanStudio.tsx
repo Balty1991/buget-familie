@@ -4,7 +4,7 @@
  * Perioada e opțională și comună — servește doar categoriilor cu ritm săptămânal; nu există o sumă „generală” separată.
  */
 import { useState } from "react";
-import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
+import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
 import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
@@ -15,6 +15,15 @@ import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, appendAl
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
 const daysBetween = (start: string, end: string) => Math.floor((new Date(`${end}T12:00:00`).valueOf() - new Date(`${start}T12:00:00`).valueOf()) / 86_400_000) + 1;
+
+const QUICK_ENVELOPE_PRESETS = [
+  { category: "Alimente", amount: "1500", weekly: true },
+  { category: "Transport", amount: "400", weekly: true },
+  { category: "Casă & facturi", amount: "800", weekly: false },
+  { category: "Abonamente", amount: "150", weekly: false },
+  { category: "Consumabile copil", amount: "500", weekly: true },
+  { category: "Timp liber", amount: "300", weekly: true },
+] as const;
 
 function PlanField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return <label className="bf-plan-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>;
@@ -77,7 +86,6 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(planEnd || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)); setCycleEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)); } else if (periodId === "week") { const start = new Date(); setCycleStart(start.toISOString().slice(0, 10)); setCycleEnd(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)); } };
   const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
 
-  /** Perioada e comună tuturor categoriilor cu ritm săptămânal; se aplică automat, fără buton separat. */
   const autoApplyPeriod = () => {
     if (!periodValid) return;
     if (plan.periodStart === cycleStart && plan.nextPayday === cycleEnd) return;
@@ -153,6 +161,17 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const nextPlanStep = !envelopes.length ? "Adaugă primul plic" : hasPacedAllocations && !periodValid ? "Setează perioada pentru ritm" : "Verifică ritmul și consumul";
   const allocationHealth = unrepartized < 0 ? "attention" : unrepartized > 0 ? "ready" : "balanced";
   const allocationHealthLabel = allocationHealth === "attention" ? "Ai alocat peste soldul disponibil" : allocationHealth === "ready" ? "Mai există bani de repartizat" : "Banii disponibili sunt repartizați";
+  const allocatedRatio = availableSources > 0 ? Math.min(1, Math.max(0, (availableSources - Math.max(0, unrepartized)) / availableSources)) : 0;
+  const missingCategories = QUICK_ENVELOPE_PRESETS.filter((preset) => !plan.allocations.some((item) => item.category === preset.category));
+  const quickStartPreset = (preset: (typeof QUICK_ENVELOPE_PRESETS)[number]) => {
+    setAllocationCategory(preset.category);
+    setAllocationLabel(preset.category);
+    setAllocationAmount(preset.amount);
+    setAllocationWeeklyPace(preset.weekly);
+    setAllocationError("");
+    setEditingAllocationId("");
+    window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  };
 
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
     <header className="bf-plan-studio-header">
@@ -161,6 +180,36 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     </header>
 
     <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">REPARTIZARE PE PERIOADĂ</p><h2 id="allocation-period-title">Alege ritmul casei.</h2><p>Vezi banii disponibili pentru intervalul în care iei decizia.</p></div><span>{money(Math.max(0, unrepartized))}<small>rămași de repartizat</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label="Perioada repartizării">{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>disponibil în surse</small></span><span><b>{money(reservedInEnvelopes)}</b><small>în plicuri</small></span><span><b>{money(scheduled)}</b><small>scadențe rezervate</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>de repartizat</small></span></div></section>
+
+    <section className="bf-allocation-progress-card" aria-label="Progres repartizare">
+      <div className="bf-allocation-progress-top">
+        <div>
+          <p className="bf-kicker">PROGRES REPARTIZARE</p>
+          <h2>{allocationHealth === "balanced" ? "Totul are un loc." : allocationHealth === "ready" ? "Mai ai de așezat." : "Ajustează limitele."}</h2>
+        </div>
+        <strong>{Math.round(allocatedRatio * 100)}%</strong>
+      </div>
+      <div className="bf-allocation-progress-track" aria-hidden="true">
+        <i style={{ width: `${Math.round(allocatedRatio * 100)}%` }} className={allocationHealth} />
+      </div>
+      <div className="bf-allocation-progress-meta">
+        <span><b>{money(Math.max(0, availableSources - Math.max(0, unrepartized)))}</b> repartizați</span>
+        <span><b>{money(Math.max(0, unrepartized))}</b> rămași</span>
+      </div>
+      {missingCategories.length > 0 && (
+        <div className="bf-quick-envelope-chips" aria-label="Pornire rapidă plicuri">
+          <p><Sparkles size={14} /> Pornește rapid</p>
+          <div>
+            {missingCategories.slice(0, 5).map((preset) => (
+              <button key={preset.category} type="button" onClick={() => quickStartPreset(preset)}>
+                {preset.category}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+
     <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || "Luna aceasta"} onApply={applyMonthlyAllocation} />
     <AllocationRecommendationsPanel data={data} allocations={plan.allocations} periodDays={periodValid ? daysBetween(cycleStart, cycleEnd) : 30} onApply={applyRecommendation} />
     <section className={`bf-plan-flow ${planFlowOpen ? "expanded" : "compact"}`} aria-label="Progresul planului în trei pași"><button type="button" className="bf-plan-flow-toggle" aria-expanded={planFlowOpen} onClick={() => setPlanFlowOpen((value) => !value)}><span>{planFlowOpen ? "Ascunde ghidul" : "Arată ghidul complet"}</span><ChevronDown size={16} /></button>
@@ -218,7 +267,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
           <div className="bf-allocation-track" aria-label={`${Math.round(usage * 100)}% consumat`}><i style={{ width: `${Math.min(100, Math.max(0, usage * 100))}%` }} /></div>
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> Editează</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> Șterge</button></div>
         </article>)}
-        {!envelopes.length && <div className="bf-allocation-empty"><b>Încă nu ai nicio categorie.</b><span>Începe cu Alimente, apoi adaugă Taxi, Abonamente, Rate produse și Consumabile copil.</span></div>}
+        {!envelopes.length && <div className="bf-allocation-empty"><Sparkles size={22} /><b>Așază primii lei într-un plic.</b><span>Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.</span></div>}
             </div>
       <AllocationHistoryPanel data={data} />
     </section>
