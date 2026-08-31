@@ -3,7 +3,7 @@ import { Sparkles } from "lucide-react";
 const included = [
   "Plicuri până la următorul venit, pe membru și pe sursă (card, cash, bonuri)",
   "Sincronizare de familie criptată AES-GCM, fără cont",
-  "Cât poți cheltui azi, scadențe din 7 zile și abonamente detectate din registru",
+  "Bilanțul săptămânii: planificat vs realizat pe plic, de trimis familiei",
   "Recapitulare lunară, vârstă a banilor, vânător de abonamente",
   "PDF de bilanț, CSV, OCR local pe bonuri, asistent explicabil",
 ];

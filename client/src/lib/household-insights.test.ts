@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, detectSubscriptions, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief } from "./household-insights";
+import { ageOfMoney, detectSubscriptions, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief, weeklyCheckIn } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -116,5 +116,44 @@ describe("analize de gospodărie", () => {
     data.recurring = [{ id: "rec-chirie", name: "Chirie", amount: 1200, category: "Casă & facturi", sourceId: source.id, memberId: "member-me", dueDay: 20, active: true }];
     const brief = todayBrief(data, "2026-08-16");
     expect(brief.dues).toEqual([expect.objectContaining({ name: "Chirie", amount: 1200, dueDate: "2026-08-20", confirmable: true })]);
+  });
+
+  it("construiește bilanțul săptămânii luni–duminică, cu plicuri planificat vs realizat", () => {
+    const { data, source } = base();
+    data.settings.familyName = "Casa Vanzo";
+    data.settings.salaryPlan.periodStart = "2026-08-03";
+    data.settings.salaryPlan.nextPayday = "2026-08-30";
+    data.settings.salaryPlan.allocations = [
+      { id: "al-food", label: "Alimente", amount: 400, category: "Alimente", weeklyPace: false, alertThreshold: 80 },
+      { id: "al-taxi", label: "Taxi", amount: 200, category: "Transport", weeklyPace: false, alertThreshold: 80 },
+    ];
+    data.transactions = [
+      { id: "in", title: "Avans", amount: 500, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-24" },
+      { id: "food", title: "Lidl", amount: 180, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-25", allocationId: "al-food" },
+      { id: "taxi", title: "Bolt", amount: 30, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-partner", person: "Soția", date: "2026-08-26", allocationId: "al-taxi" },
+      { id: "old", title: "În afara săptămânii", amount: 900, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-10", allocationId: "al-food" },
+    ];
+    const check = weeklyCheckIn(data, "2026-08-28");
+    expect(check.start).toBe("2026-08-24");
+    expect(check.end).toBe("2026-08-30");
+    expect(check.income).toBe(500);
+    expect(check.expense).toBe(210);
+    expect(check.shouldPrompt).toBe(true);
+    const food = check.envelopes.find((item) => item.id === "al-food");
+    const taxi = check.envelopes.find((item) => item.id === "al-taxi");
+    expect(food).toMatchObject({ spent: 180, planned: 100, state: "over" });
+    expect(taxi).toMatchObject({ spent: 30, planned: 50, state: "healthy" });
+    expect(check.members.find((item) => item.memberId === "member-me")?.expense).toBe(180);
+    expect(check.members.find((item) => item.memberId === "member-partner")?.expense).toBe(30);
+    expect(check.nextStep).toMatch(/Alimente/);
+    const share = formatWeeklyCheckInShare(check);
+    expect(share).toContain("Casa Vanzo");
+    expect(share).toContain("Alimente");
+    expect(share).toContain("Următorul pas");
+  });
+
+  it("nu cere bilanțul în mijlocul săptămânii și rămâne gol fără mișcări", () => {
+    const { data } = base();
+    expect(weeklyCheckIn(data, "2026-08-31")).toMatchObject({ shouldPrompt: false, tone: "empty", transactionCount: 0 });
   });
 });

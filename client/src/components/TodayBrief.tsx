@@ -1,5 +1,5 @@
 import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
-import { recurringFromDetection, todayBrief } from "@/lib/household-insights";
+import { recurringFromDetection, todayBrief, weeklyCheckIn } from "@/lib/household-insights";
 
 type Go = (view: "plan" | "obligations" | "insights") => void;
 
@@ -16,8 +16,9 @@ const dueLabel = (daysLeft: number) => {
  * Briefing de dimineață: cât poți cheltui azi, scadențe din 7 zile, abonamente detectate, ritual de salariu.
  * Scrie în registru doar la confirmare explicită — aceeași formă sincronizată.
  */
-export function TodayBrief({ data, onGo, onChange }: { data: AppData; onGo: Go; onChange: (next: AppData) => void }) {
+export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData; onGo: Go; onChange: (next: AppData) => void; onOpenWeek?: () => void }) {
   const brief = todayBrief(data);
+  const week = weeklyCheckIn(data);
   const rules = data.settings.salaryPlan.salaryAllocationRules || [];
   const pendingIncome = unappliedSalaryIncomes(data).find((item) => eligibleSalaryAllocationRules(data, item).length > 0);
   const needsRitual = !rules.length && unappliedSalaryIncomes(data).length > 0 && data.settings.salaryPlan.allocations.length > 0;
@@ -86,6 +87,13 @@ export function TodayBrief({ data, onGo, onChange }: { data: AppData; onGo: Go; 
           <small>{money(hunt.amount)} · {hunt.reason} Adaugă la scadențe.</small>
         </button>
       ))}
+
+      {week.shouldPrompt && (
+        <button type="button" className="bf-brief-week" onClick={() => onOpenWeek?.()}>
+          <b>Bilanțul săptămânii</b>
+          <small>{week.nextStep}</small>
+        </button>
+      )}
 
       {brief.closeSoon && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("insights")}>

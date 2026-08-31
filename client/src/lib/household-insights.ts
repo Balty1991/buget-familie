@@ -3,13 +3,19 @@
  * Nu persistă nimic în AppData și nu ating pachetul Firebase.
  */
 import {
+  allocationBudget,
   allocationStatus,
+  allocationWeekStatus,
   financialBalance,
+  formatDate,
   isoToday,
   newId,
   pendingRecurringInPlan,
+  planEndDate,
   planForecast,
+  weeklySummary,
   type AppData,
+  type BudgetAllocation,
   type RecurringPayment,
   type Transaction,
 } from "./finance-data";
@@ -379,4 +385,136 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
     closeSoon: hasPayday && remainingDays <= 2,
   };
 };
+
+const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const matchesAllocation = (item: Transaction, allocation: BudgetAllocation) => {
+  if (item.kind !== "expense") return false;
+  if (item.allocationId) return item.allocationId === allocation.id;
+  return (!allocation.memberId || item.memberId === allocation.memberId)
+    && (!allocation.category || item.category === allocation.category)
+    && (!allocation.sourceId || item.sourceId === allocation.sourceId);
+};
+
+export type WeeklyCheckInEnvelope = {
+  id: string;
+  label: string;
+  planned: number;
+  spent: number;
+  remaining: number;
+  usage: number;
+  state: "healthy" | "watch" | "over";
+};
+
+export type WeeklyCheckInMember = {
+  memberId: string;
+  name: string;
+  expense: number;
+  income: number;
+  share: number;
+};
+
+export type WeeklyCheckIn = {
+  start: string;
+  end: string;
+  income: number;
+  expense: number;
+  cashflow: number;
+  transactionCount: number;
+  categories: Array<[string, number]>;
+  envelopes: WeeklyCheckInEnvelope[];
+  members: WeeklyCheckInMember[];
+  nextStep: string;
+  tone: "good" | "watch" | "risk" | "empty";
+  shouldPrompt: boolean;
+  familyName: string;
+};
+
+const lei = (value: number) => `${Math.round(value).toLocaleString("ro-RO")} lei`;
+
+/**
+ * Bilanțul săptămânii de familie: luni–duminică, planificat vs realizat pe plic, fără scriere în AppData.
+ */
+export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: string): WeeklyCheckIn => {
+  const summary = weeklySummary(data, asOf, memberId);
+  const plan = data.settings.salaryPlan;
+  const end = planEndDate(plan);
+  const planDays = end ? Math.max(1, daysBetween(plan.periodStart, end) + 1) : 7;
+  const weekTx = data.transactions.filter((item) => item.date >= summary.start && item.date <= summary.end && (!memberId || item.memberId === memberId));
+  const envelopes = plan.allocations.map((allocation) => {
+    const spent = roundMoney(weekTx.filter((item) => matchesAllocation(item, allocation)).reduce((sum, item) => sum + item.amount, 0));
+    const cycleBudget = allocationBudget(data, allocation);
+    const weekStatus = allocation.weeklyPace === false ? undefined : allocationWeekStatus(data, allocation, asOf);
+    const planned = roundMoney(weekStatus ? weekStatus.budget : cycleBudget * Math.min(7, planDays) / planDays);
+    const remaining = roundMoney(planned - spent);
+    const usage = planned > 0 ? spent / planned : spent > 0 ? 1 : 0;
+    const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80));
+    const state = remaining < 0 || (planned <= 0 && spent > 0) ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const;
+    return { id: allocation.id, label: allocation.label, planned, spent, remaining, usage, state };
+  }).sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.spent - left.spent);
+
+  const familyExpense = weekTx.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+  const members = data.settings.members.map((member) => {
+    const entries = weekTx.filter((item) => item.memberId === member.id);
+    const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+    const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
+    return { memberId: member.id, name: member.name, expense, income, share: familyExpense > 0 ? expense / familyExpense : 0 };
+  }).sort((left, right) => right.expense - left.expense);
+
+  const over = envelopes.filter((item) => item.state === "over");
+  const watch = envelopes.filter((item) => item.state === "watch");
+  const weekday = new Date(`${asOf}T12:00:00`).getDay();
+  const weekend = weekday === 0 || weekday >= 5;
+  const empty = summary.transactionCount === 0;
+  const tone = empty ? "empty" as const : over.length || summary.cashflow < 0 ? "risk" as const : watch.length ? "watch" as const : "good" as const;
+  const nextStep = empty
+    ? "Înregistrează mișcări ca să ai un bilanț de trimis familiei."
+    : over[0]
+      ? `Mută lei în ${over[0].label} sau încetinește cheltuielile din acest plic (${lei(Math.abs(over[0].remaining))} peste plan).`
+      : summary.cashflow < 0 && summary.income > 0
+        ? "Cheltuielile au trecut peste veniturile săptămânii. Amână o plată neesențială."
+        : watch[0]
+          ? `Urmărește ${watch[0].label} — s-a consumat ${Math.round(watch[0].usage * 100)}% din tranșa săptămânii.`
+          : "Săptămâna e în ritm. Poți trimite bilanțul familiei.";
+
+  return {
+    start: summary.start,
+    end: summary.end,
+    income: summary.income,
+    expense: summary.expense,
+    cashflow: summary.cashflow,
+    transactionCount: summary.transactionCount,
+    categories: summary.categories,
+    envelopes,
+    members,
+    nextStep,
+    tone,
+    shouldPrompt: weekend && !empty,
+    familyName: data.settings.familyName || "Familie",
+  };
+};
+
+/** Text de trimis pe WhatsApp sau copiat — fără poze, fără date de sync. */
+export const formatWeeklyCheckInShare = (check: WeeklyCheckIn) => {
+  const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;
+  const lines = [
+    `${check.familyName} · bilanț ${range}`,
+    `Venituri ${lei(check.income)}`,
+    `Cheltuieli ${lei(check.expense)}`,
+    `Diferență ${check.cashflow >= 0 ? "+" : "−"}${lei(Math.abs(check.cashflow))}`,
+  ];
+  if (check.members.length > 1 && check.expense > 0) {
+    lines.push(check.members.filter((item) => item.expense > 0).map((item) => `${item.name} ${lei(item.expense)}`).join(" · "));
+  }
+  if (check.envelopes.some((item) => item.spent > 0 || item.planned > 0)) {
+    lines.push("", "Plicuri (planificat → cheltuit)");
+    check.envelopes.slice(0, 8).forEach((item) => {
+      const mark = item.state === "over" ? "peste" : item.state === "watch" ? "atenție" : "ok";
+      lines.push(`${item.label}  ${lei(item.planned)} → ${lei(item.spent)}  (${mark})`);
+    });
+  }
+  lines.push("", `Următorul pas: ${check.nextStep}`);
+  return lines.join("\n");
+};
+
 
