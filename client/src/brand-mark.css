@@ -1,0 +1,42 @@
+/* Semnul casei-plic din antet — învinge straturile vechi cu litere BF. */
+.bf-brand-mark,
+.bf-brand > .bf-brand-mark,
+.bf-brand > span.bf-brand-mark {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--cf-ink, #173f36) 16%, transparent) !important;
+}
+.bf-brand-mark::before,
+.bf-brand-mark::after,
+.bf-logo-3d::before,
+.bf-logo-3d::after {
+  display: none !important;
+  content: none !important;
+}
+.bf-brand-mark svg {
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+
+@media (max-width: 760px) {
+  .bf-brand-mark,
+  .bf-brand > .bf-brand-mark,
+  .bf-brand > span.bf-brand-mark,
+  .bf-brand-mark svg {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .bf-brand > .bf-brand-mark,
+  .bf-brand > span.bf-brand-mark {
+    flex-basis: 32px !important;
+  }
+}

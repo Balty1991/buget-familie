@@ -56,6 +56,7 @@ import "./ledger-live.css";
 import "./ledger-atelier.css";
 import "./atelier-atmosphere.css";
 import "./mobile-speed.css";
+import "./brand-mark.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 

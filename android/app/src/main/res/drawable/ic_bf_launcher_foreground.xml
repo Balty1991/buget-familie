@@ -1,13 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Monogramă B/F premium: forme groase de registru, lizibile în zona sigură a iconiței adaptive. -->
-    <path android:fillColor="#0B2F29" android:pathData="M27,27L80,27C84,27 87,30 87,34L87,76C87,81 83,85 78,85L30,85C25,85 21,81 21,76L21,36C21,31 23,28 27,27Z"/>
-    <path android:fillColor="#1D6A56" android:pathData="M30,24L77,24C83,24 87,28 87,34L87,72C87,76 85,79 81,80L27,80C23,80 20,76 20,72L20,35C20,29 24,25 30,24Z"/>
-    <path android:fillColor="#F6E9B4" android:pathData="M29,39L43,39C53,39 58,43 58,50C58,54 56,57 52,59C57,61 60,65 60,70C60,77 55,80 45,80L29,80ZM38,46L38,56L44,56C48,56 50,54 50,51C50,48 48,46 44,46ZM38,63L38,73L45,73C49,73 52,71 52,68C52,65 49,63 45,63Z"/>
-    <path android:fillColor="#F6E9B4" android:pathData="M63,39L81,39L81,47L72,47L72,55L80,55L80,63L72,63L72,80L63,80Z"/>
-    <path android:fillColor="#E6BD45" android:pathData="M27,29L54,13L82,29L76,29L54,18L33,29Z"/>
-    <path android:fillColor="#E6BD45" android:pathData="M24,82L75,82L75,88L24,88Z"/>
+    <!-- Casă-plic: acoperiș de familie + plic de buget, în zona sigură a iconiței adaptive. -->
+    <path
+        android:fillColor="#173F36"
+        android:pathData="M27.3,47.6L54,23.3L80.7,47.6L80.7,78.6C80.7,82.9 77.2,86.4 72.9,86.4L35.1,86.4C30.8,86.4 27.3,82.9 27.3,78.6Z"/>
+    <path
+        android:fillColor="#F6E9B4"
+        android:pathData="M30.4,47.3L54,70.2L77.6,47.3Z"/>
+    <path
+        android:fillColor="#EEC64D"
+        android:pathData="M54,50.6m-7.3,0a7.3,7.3 0,1 1,14.6 0a7.3,7.3 0,1 1,-14.6 0"/>
 </vector>

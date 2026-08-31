@@ -14,9 +14,12 @@
     <path d="M0 90h1024M0 170h1024M0 250h1024M0 330h1024M0 410h1024"/>
     <path d="M80 0v500M200 0v500M320 0v500M440 0v500M560 0v500M680 0v500M800 0v500M920 0v500"/>
   </g>
-  <path d="M78 86h248v248H78z" fill="url(#card)" rx="0"/>
-  <path d="M78 86h248l-124 78z" fill="#f4ead0" opacity=".9"/>
-  <text x="202" y="248" text-anchor="middle" fill="#f7f4ea" font-family="Georgia, serif" font-size="54" font-weight="700">BF</text>
+  <rect x="78" y="86" width="248" height="248" rx="36" fill="#EEC64D"/>
+  <g transform="translate(90 98) scale(3.5)">
+    <path fill="#173F36" d="M12 26.5 32 7.2 52 26.5v22.6c0 3-2.4 5.4-5.4 5.4H17.4c-3 0-5.4-2.4-5.4-5.4Z"/>
+    <path fill="#F6E9B4" d="M13.8 26.2 32 41.4 50.2 26.2Z"/>
+    <circle cx="32" cy="28" r="5" fill="#EEC64D"/>
+  </g>
   <text x="372" y="168" fill="#f4ead0" font-family="Georgia, serif" font-size="22" letter-spacing="4">BUGET FAMILIE</text>
   <text x="372" y="236" fill="#f7f4ea" font-family="Georgia, serif" font-size="54">Fiecare leu</text>
   <text x="372" y="300" fill="#c8e8d8" font-family="Georgia, serif" font-size="54" font-style="italic">are un loc.</text>
