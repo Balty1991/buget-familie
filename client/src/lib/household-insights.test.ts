@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, detectSubscriptions, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection } from "./household-insights";
+import { ageOfMoney, detectSubscriptions, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -95,5 +95,26 @@ describe("analize de gospodărie", () => {
     data.settings.salaryPlan.periodStart = "2026-08-01";
     data.settings.salaryPlan.nextPayday = "2026-08-31";
     expect(paydayTrack(data, "2026-08-16")).toMatchObject({ total: 31, elapsed: 16, remaining: 15 });
+  });
+
+  it("calculează cât poți cheltui azi ca minimul dintre ritmul sigur și lichidul pe zilele rămase", () => {
+    const { data, source } = base();
+    source.openingBalance = 3100;
+    data.settings.salaryPlan.periodStart = "2026-08-01";
+    data.settings.salaryPlan.nextPayday = "2026-08-31";
+    const brief = todayBrief(data, "2026-08-16");
+    expect(brief.hasPayday).toBe(true);
+    expect(brief.spendable).toBeGreaterThan(100);
+    expect(brief.spendable).toBeLessThanOrEqual(3100 / 16);
+    expect(brief.dues).toEqual([]);
+  });
+
+  it("pune scadențele din următoarele 7 zile în briefingul de azi", () => {
+    const { data, source } = base();
+    data.settings.salaryPlan.periodStart = "2026-08-01";
+    data.settings.salaryPlan.nextPayday = "2026-08-31";
+    data.recurring = [{ id: "rec-chirie", name: "Chirie", amount: 1200, category: "Casă & facturi", sourceId: source.id, memberId: "member-me", dueDay: 20, active: true }];
+    const brief = todayBrief(data, "2026-08-16");
+    expect(brief.dues).toEqual([expect.objectContaining({ name: "Chirie", amount: 1200, dueDate: "2026-08-20", confirmable: true })]);
   });
 });

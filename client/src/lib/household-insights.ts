@@ -7,6 +7,8 @@ import {
   financialBalance,
   isoToday,
   newId,
+  pendingRecurringInPlan,
+  planForecast,
   type AppData,
   type RecurringPayment,
   type Transaction,
@@ -299,3 +301,82 @@ export const envelopeLane = (data: AppData) => data.settings.salaryPlan.allocati
   .map((item) => ({ item, ...allocationStatus(data, item) }))
   .sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.usage - left.usage)
   .slice(0, 8);
+
+export type TodayDue = {
+  id: string;
+  kind: "recurring" | "debt";
+  name: string;
+  amount: number;
+  dueDate: string;
+  daysLeft: number;
+  confirmable: boolean;
+};
+
+export type TodayBrief = {
+  spendable: number;
+  remainingDays: number;
+  hasPayday: boolean;
+  reason: string;
+  dues: TodayDue[];
+  hunts: SubscriptionDetection[];
+  closeSoon: boolean;
+};
+
+/**
+ * Cât poți cheltui azi fără să rupi ritmul până la venit.
+ * Minim dintre ritmul sigur al planului și lichidul împărțit pe zilele rămase.
+ * Nu scrie în AppData.
+ */
+export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
+  const hasPayday = Boolean(data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday);
+  const forecast = planForecast(data, asOf);
+  const safe = liquidSafeToSpend(data, asOf);
+  const remainingDays = Math.max(1, forecast.remainingDays);
+  const fromPace = Math.max(0, forecast.safeDaily);
+  const fromLiquid = Math.max(0, safe.available / remainingDays);
+  const spendable = hasPayday ? Math.max(0, Math.min(fromPace, fromLiquid)) : 0;
+  const reason = !hasPayday
+    ? "Setează următorul venit ca să calculăm cât poți cheltui azi."
+    : spendable <= 0
+      ? "Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate."
+      : `Ritm ${Math.round(fromPace)} lei/zi, din ${Math.round(safe.available)} disponibili pe ${remainingDays} zile.`;
+
+  const horizonDate = new Date(`${asOf}T12:00:00`);
+  horizonDate.setDate(horizonDate.getDate() + 7);
+  const horizon = horizonDate.toISOString().slice(0, 10);
+  const dues: TodayDue[] = [
+    ...pendingRecurringInPlan(data)
+      .filter((item) => item.dueDate <= horizon)
+      .map((item) => ({
+        id: item.id,
+        kind: "recurring" as const,
+        name: item.name,
+        amount: item.amount,
+        dueDate: item.dueDate,
+        daysLeft: daysBetween(asOf, item.dueDate),
+        confirmable: true,
+      })),
+    ...data.debts
+      .filter((item) => item.dueDate && item.dueDate <= horizon)
+      .map((item) => ({
+        id: item.id,
+        kind: "debt" as const,
+        name: item.name,
+        amount: item.monthly || item.remaining,
+        dueDate: item.dueDate as string,
+        daysLeft: daysBetween(asOf, item.dueDate as string),
+        confirmable: false,
+      })),
+  ].sort((left, right) => left.dueDate.localeCompare(right.dueDate) || right.amount - left.amount).slice(0, 4);
+
+  return {
+    spendable,
+    remainingDays,
+    hasPayday,
+    reason,
+    dues,
+    hunts: detectSubscriptions(data, asOf).slice(0, 2),
+    closeSoon: hasPayday && remainingDays <= 2,
+  };
+};
+

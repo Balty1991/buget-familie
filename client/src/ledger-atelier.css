@@ -526,6 +526,90 @@
 .bf-obligation-empty b { color: var(--cf-ink); font-size: 15px; }
 .bf-obligation-empty small { color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
 
+/* —— Briefing de dimineață —— */
+.bf-today-brief {
+  display: grid;
+  gap: 10px;
+  color: var(--cf-ink);
+}
+.bf-spend-stamp {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 16px 18px 14px;
+  border: 1px dashed var(--cf-line);
+  border-radius: 6px 20px 6px 20px;
+  color: var(--cf-ink);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 13px,
+      color-mix(in srgb, var(--cf-ink) 6%, transparent) 13px 14px
+    ),
+    var(--cf-surface);
+  text-align: left;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--cf-ink) 7%, transparent);
+}
+.bf-spend-stamp strong {
+  color: var(--cf-ink);
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: clamp(28px, 8vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -.04em;
+}
+.bf-spend-stamp p { margin: 0; color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
+.bf-spend-stamp.tight strong { color: var(--cf-danger); }
+.bf-brief-dues {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0 4px;
+  list-style: none;
+  border: 1px solid var(--cf-line);
+  border-radius: 16px;
+  background: var(--cf-surface);
+  overflow: hidden;
+}
+.bf-brief-dues li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--cf-line);
+  color: var(--cf-ink);
+}
+.bf-brief-dues li:first-child { border-top: 0; }
+.bf-brief-dues b { display: block; font-size: 14px; line-height: 1.25; }
+.bf-brief-dues small { color: var(--cf-muted); font-size: 11px; }
+.bf-brief-dues button,
+.bf-brief-hunt,
+.bf-brief-close {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--cf-line);
+  border-radius: 10px;
+  color: var(--cf-ink);
+  background: var(--cf-surface-alt);
+  font-size: 12px;
+  font-weight: 800;
+}
+.bf-brief-hunt,
+.bf-brief-close {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+}
+.bf-brief-hunt small,
+.bf-brief-close {
+  color: var(--cf-muted);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 @media (max-width: 760px) {
   .bf-app {
     height: 100dvh !important;
