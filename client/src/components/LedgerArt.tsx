@@ -55,19 +55,27 @@ export function HealthGauge({ score, tone, size = 120 }: { score: number; tone: 
   );
 }
 
+/** Bancnotă: textul stă în fereastra centrală, rozetele rămân în colțuri. */
 export function CashNote({ amount, caption }: { amount: string; caption: string }) {
+  const compact = amount.length > 14;
   return (
-    <div className="bf-cash-note">
-      <svg viewBox="0 0 200 112" preserveAspectRatio="none" aria-hidden="true">
-        <rect x="4" y="6" width="192" height="100" rx="10" className="bf-cash-note-body" />
-        <rect x="12" y="14" width="176" height="84" rx="6" className="bf-cash-note-frame" />
-        <circle cx="40" cy="56" r="16" className="bf-cash-note-rosette" />
-        <circle cx="160" cy="56" r="16" className="bf-cash-note-rosette" />
-        <text x="100" y="38" textAnchor="middle" className="bf-cash-note-mark">RON</text>
+    <figure className="bf-cash-note">
+      <svg viewBox="0 0 320 168" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${caption} ${amount}`}>
+        <rect className="bf-cash-note-body" x="8" y="10" width="304" height="148" rx="18" />
+        <rect className="bf-cash-note-frame" x="22" y="24" width="276" height="120" rx="12" />
+        <circle className="bf-cash-note-rosette" cx="44" cy="46" r="11" />
+        <circle className="bf-cash-note-rosette" cx="276" cy="46" r="11" />
+        <circle className="bf-cash-note-rosette" cx="44" cy="122" r="11" />
+        <circle className="bf-cash-note-rosette" cx="276" cy="122" r="11" />
+        <circle className="bf-cash-note-rosette inner" cx="44" cy="46" r="5" />
+        <circle className="bf-cash-note-rosette inner" cx="276" cy="46" r="5" />
+        <circle className="bf-cash-note-rosette inner" cx="44" cy="122" r="5" />
+        <circle className="bf-cash-note-rosette inner" cx="276" cy="122" r="5" />
+        <text className="bf-cash-note-mark" x="160" y="54" textAnchor="middle">RON</text>
+        <text className="bf-cash-note-caption" x="160" y="86" textAnchor="middle">{caption}</text>
+        <text className={`bf-cash-note-amount${compact ? " compact" : ""}`} x="160" y="128" textAnchor="middle">{amount}</text>
       </svg>
-      <small>{caption}</small>
-      <b>{amount}</b>
-    </div>
+    </figure>
   );
 }
 

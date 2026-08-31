@@ -36,8 +36,8 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
           <div className="bf-today-pulse-chart" role="img" aria-label={`Cheltuieli pe 7 zile, total ${money(weekSpend)}`}>
             {pulse.map((day) => (
               <span key={day.date} className={day.isToday ? "today" : ""}>
-                <i style={{ height: `${Math.max(8, (day.expense / maxExpense) * 100)}%` }} />
-                <b>{day.weekday}</b>
+                <i style={{ height: `${Math.max(12, (day.expense / maxExpense) * 100)}%` }} />
+                <b>{day.weekday.slice(0, 2)}</b>
               </span>
             ))}
           </div>
@@ -58,10 +58,10 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
             {envelopes.map((entry) => (
               <li key={entry.item.id} className={entry.state}>
                 <button type="button" onClick={() => onGo("plan")}>
-                  <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={68} />
+                  <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={56} />
                   <b>{entry.item.label}</b>
                   <strong>{money(Math.max(0, entry.remaining))}</strong>
-                  <small>{Math.round(entry.usage * 100)}% folosit din {money(entry.budget)}</small>
+                  <small>{Math.round(entry.usage * 100)}% · {money(entry.budget)}</small>
                 </button>
               </li>
             ))}

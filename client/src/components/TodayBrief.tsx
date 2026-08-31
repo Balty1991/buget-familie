@@ -41,8 +41,10 @@ export function TodayBrief({ data, onGo, onChange }: { data: AppData; onGo: Go; 
   return (
     <section className="bf-today-brief" aria-label="Cât poți cheltui azi">
       <button type="button" className={`bf-spend-stamp ${brief.hasPayday ? "" : "empty"} ${brief.spendable <= 0 && brief.hasPayday ? "tight" : ""}`} onClick={() => onGo("plan")}>
-        <p className="bf-kicker">ASTĂZI POȚI</p>
-        <strong>{brief.hasPayday ? money(brief.spendable) : "Setează venitul"}</strong>
+        <span className="bf-spend-stamp-top">
+          <p className="bf-kicker">ASTĂZI POȚI</p>
+          <strong>{brief.hasPayday ? money(brief.spendable) : "Setează venitul"}</strong>
+        </span>
         <p>{brief.reason}</p>
       </button>
 

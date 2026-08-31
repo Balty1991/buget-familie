@@ -53,6 +53,7 @@ import "./play-studio.css";
 import "./atelier-graphic-pass.css";
 import "./ledger-live.css";
 import "./ledger-atelier.css";
+import "./atelier-atmosphere.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 

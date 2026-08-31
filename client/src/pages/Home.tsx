@@ -32,11 +32,11 @@ type ThemeSchedule = "manual" | "auto";
 type ThemeScheduleTimes = { dayStart: string; eveningStart: string; nightStart: string };
 type BackgroundId = "plain" | "paper" | "grid" | "aurora" | "dots";
 const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: string }> = [
-  { id: "plain", name: "Suprafață curată", detail: "Minimală, fără textură" },
-  { id: "paper", name: "Hârtie fină", detail: "Textură caldă, discretă" },
-  { id: "grid", name: "Grilă editorială", detail: "Linii pentru orientare" },
-  { id: "aurora", name: "Aurora soft", detail: "Pete de lumină difuză" },
-  { id: "dots", name: "Puncte calme", detail: "Ritm vizual delicat" },
+  { id: "plain", name: "Lumină curată", detail: "Glow discret, fără textură" },
+  { id: "paper", name: "Hârtie linată", detail: "Fibre fine, calde" },
+  { id: "grid", name: "Grilă largă", detail: "Linii rare, atmosferice" },
+  { id: "aurora", name: "Aurora", detail: "Trei pete de lumină" },
+  { id: "dots", name: "Puncte moi", detail: "Ritm vizual delicat" },
 ];
 const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
   { id: "ivory", name: "Porcelain Studio", detail: "Porțelan rece, teal dens și linii de cobalt pentru citire luminoasă.", mood: "ZI · EDITORIAL" },

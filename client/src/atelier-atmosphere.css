@@ -1,0 +1,273 @@
+/**
+ * Atmosferă — ultimul CSS: fundaluri moderne, text încadrat în grafice, nav liberă.
+ * Tokeni --cf-*. Nu atinge sync.
+ */
+
+/* —— Fundaluri: glow + textură fină, nu hârtie milimetrică —— */
+.bf-app::before {
+  opacity: .55 !important;
+  background-image:
+    radial-gradient(980px 560px at 112% -12%, color-mix(in srgb, var(--cf-primary) 26%, transparent), transparent 58%),
+    radial-gradient(720px 520px at -18% 118%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 62%) !important;
+  background-size: auto !important;
+  pointer-events: none;
+}
+.background-plain .bf-app {
+  background:
+    radial-gradient(920px 520px at 108% -10%, color-mix(in srgb, var(--cf-primary) 22%, transparent), transparent 56%),
+    radial-gradient(640px 460px at -16% 110%, color-mix(in srgb, var(--cf-info) 12%, transparent), transparent 58%),
+    var(--cf-bg) !important;
+}
+.background-paper .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--cf-ink) 3.5%, transparent) 0 1px, transparent 1px 4px),
+    radial-gradient(880px 500px at 100% 0, color-mix(in srgb, var(--cf-primary) 16%, transparent), transparent 58%),
+    var(--cf-bg) !important;
+  background-size: auto, auto, auto !important;
+}
+.background-grid .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 5.5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 5.5%, transparent) 1px, transparent 1px),
+    radial-gradient(900px 520px at 108% -8%, color-mix(in srgb, var(--cf-primary) 20%, transparent), transparent 58%),
+    var(--cf-bg) !important;
+  background-size: 56px 56px, 56px 56px, auto, auto !important;
+}
+.background-aurora .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(720px 480px at 92% 4%, color-mix(in srgb, var(--cf-primary) 32%, transparent), transparent 58%),
+    radial-gradient(620px 460px at 8% 96%, color-mix(in srgb, var(--cf-info) 24%, transparent), transparent 60%),
+    radial-gradient(480px 380px at 70% 78%, color-mix(in srgb, var(--cf-warning) 10%, transparent), transparent 55%),
+    var(--cf-bg) !important;
+  background-size: auto !important;
+}
+.background-dots .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(color-mix(in srgb, var(--cf-primary) 22%, transparent) 1.1px, transparent 1.8px),
+    radial-gradient(780px 480px at 100% 0, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 60%),
+    var(--cf-bg) !important;
+  background-size: 22px 22px, auto, auto !important;
+}
+
+.bf-background-swatch.plain {
+  background:
+    radial-gradient(18px 14px at 80% 20%, color-mix(in srgb, var(--cf-primary) 55%, transparent), transparent 70%),
+    var(--cf-bg) !important;
+}
+.bf-background-swatch.paper {
+  background-color: var(--cf-bg) !important;
+  background-image: repeating-linear-gradient(0deg, color-mix(in srgb, var(--cf-ink) 18%, transparent) 0 1px, transparent 1px 3px) !important;
+}
+.bf-background-swatch.grid {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 28%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 28%, transparent) 1px, transparent 1px) !important;
+  background-size: 8px 8px !important;
+}
+.bf-background-swatch.aurora {
+  background:
+    radial-gradient(circle at 78% 22%, var(--cf-primary), transparent 48%),
+    radial-gradient(circle at 18% 82%, var(--cf-info), var(--cf-bg) 62%) !important;
+}
+.bf-background-swatch.dots {
+  background-color: var(--cf-bg) !important;
+  background-image: radial-gradient(var(--cf-primary) 1px, transparent 1.5px) !important;
+  background-size: 7px 7px !important;
+}
+
+/* Carduri: sticlă discretă pe teme întunecate */
+.dark .bf-today-pulse,
+.dark .bf-payday-strip,
+.dark .bf-today-envelopes,
+.dark .bf-spend-stamp,
+.dark .bf-brief-salary,
+.dark .bf-envelope-fan button,
+.dark .bf-obligation-entry,
+.dark .bf-snowball {
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, .28),
+    inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent) !important;
+}
+
+/* —— Bancnota: SVG în flux, text centrat între rozete —— */
+.bf-cash-note {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  display: block !important;
+  align-content: unset !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.bf-cash-note svg {
+  position: relative !important;
+  inset: auto !important;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.bf-cash-note-body {
+  fill: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface));
+  stroke: var(--cf-line);
+  stroke-width: 1.4;
+}
+.bf-cash-note-frame {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cf-primary-strong) 40%, var(--cf-line));
+  stroke-dasharray: 4 5;
+  stroke-width: 1.2;
+}
+.bf-cash-note-rosette {
+  fill: none;
+  stroke: color-mix(in srgb, var(--cf-primary-strong) 50%, transparent);
+  stroke-width: 1.3;
+}
+.bf-cash-note-rosette.inner { stroke-width: 1; opacity: .7; }
+.bf-cash-note-mark {
+  fill: color-mix(in srgb, var(--cf-primary-strong) 28%, transparent);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .38em;
+}
+.bf-cash-note-caption {
+  fill: var(--cf-muted);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.bf-cash-note-amount {
+  fill: var(--cf-ink);
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -.04em;
+}
+.bf-cash-note-amount.compact { font-size: 22px; }
+.bf-cash-note small,
+.bf-cash-note > b { display: none !important; }
+
+.dark .bf-cash-note-body {
+  fill: color-mix(in srgb, var(--cf-primary) 22%, var(--cf-surface));
+}
+
+/* —— Briefing compact: suma și kicker pe același rând —— */
+.bf-spend-stamp {
+  display: grid !important;
+  gap: 8px !important;
+  padding: 14px 16px 12px !important;
+  border: 1px solid var(--cf-line) !important;
+  border-radius: 18px !important;
+  background: var(--cf-surface) !important;
+  text-align: left;
+}
+.bf-spend-stamp-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bf-spend-stamp-top .bf-kicker {
+  margin: 0;
+  flex: 0 0 auto;
+}
+.bf-spend-stamp strong {
+  margin: 0 !important;
+  font-size: clamp(26px, 7vw, 36px) !important;
+  line-height: 1 !important;
+  letter-spacing: -.04em;
+  text-align: right;
+}
+.bf-spend-stamp > p {
+  margin: 0;
+  color: var(--cf-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.bf-brief-salary,
+.bf-brief-salary.setup {
+  display: grid !important;
+  gap: 2px !important;
+  padding: 11px 14px !important;
+  border-radius: 14px !important;
+  min-height: 0 !important;
+}
+.bf-brief-salary b { font-size: 13px; line-height: 1.25; }
+.bf-brief-salary small { font-size: 11px; line-height: 1.4; }
+
+/* —— Puls: zilele goale rămân vizibile —— */
+.bf-today-pulse-chart {
+  min-height: 108px !important;
+  padding: 6px 4px 0 !important;
+}
+.bf-today-pulse-chart span {
+  grid-template-rows: 76px auto !important;
+  gap: 4px !important;
+}
+.bf-today-pulse-chart i {
+  width: 58% !important;
+  min-height: 10px !important;
+  border-radius: 6px 6px 2px 2px !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cf-primary) 28%, transparent);
+}
+.bf-today-pulse-chart b {
+  color: var(--cf-ink) !important;
+  opacity: .72;
+  font-size: 10px !important;
+  letter-spacing: .02em;
+}
+
+/* —— Plicuri: fără spațiu gol deasupra, text pe un rând —— */
+.bf-envelope-fan button {
+  gap: 5px !important;
+  padding: 10px 8px 12px !important;
+}
+.bf-envelope-fan button svg,
+.bf-envelope-fan .bf-envelope-mark {
+  width: 58px !important;
+  height: 45px !important;
+}
+.bf-envelope-fan small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* —— Titluri de masă: nu se înghesuie cu butonul —— */
+@media (max-width: 760px) {
+  .bf-desk-heading {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    align-items: start !important;
+  }
+  .bf-desk-heading h2 {
+    max-width: none !important;
+    font-size: 22px !important;
+    line-height: 1.18 !important;
+  }
+  .bf-desk-heading button {
+    width: 100%;
+    justify-content: center;
+  }
+  .bf-today-hub-links {
+    display: none !important;
+  }
+  .bf-spend-stamp-top {
+    flex-wrap: wrap;
+  }
+  .bf-spend-stamp strong {
+    width: 100%;
+    text-align: left;
+  }
+}
