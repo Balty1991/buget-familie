@@ -1,109 +1,18 @@
 /**
- * Atmosferă — ultimul CSS: fundaluri moderne, text încadrat în grafice, nav liberă.
- * Tokeni --cf-*. Nu atinge sync.
+ * Atmosferă — ultimul CSS: încadrează grafica, fundaluri mai profunde, fără a atinge sync.
  */
 
-/* —— Fundaluri: glow + textură fină, nu hârtie milimetrică —— */
-.bf-app::before {
-  opacity: .55 !important;
-  background-image:
-    radial-gradient(980px 560px at 112% -12%, color-mix(in srgb, var(--cf-primary) 26%, transparent), transparent 58%),
-    radial-gradient(720px 520px at -18% 118%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 62%) !important;
-  background-size: auto !important;
-  pointer-events: none;
-}
-.background-plain .bf-app {
-  background:
-    radial-gradient(920px 520px at 108% -10%, color-mix(in srgb, var(--cf-primary) 22%, transparent), transparent 56%),
-    radial-gradient(640px 460px at -16% 110%, color-mix(in srgb, var(--cf-info) 12%, transparent), transparent 58%),
-    var(--cf-bg) !important;
-}
-.background-paper .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--cf-ink) 3.5%, transparent) 0 1px, transparent 1px 4px),
-    radial-gradient(880px 500px at 100% 0, color-mix(in srgb, var(--cf-primary) 16%, transparent), transparent 58%),
-    var(--cf-bg) !important;
-  background-size: auto, auto, auto !important;
-}
-.background-grid .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--cf-ink) 5.5%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 5.5%, transparent) 1px, transparent 1px),
-    radial-gradient(900px 520px at 108% -8%, color-mix(in srgb, var(--cf-primary) 20%, transparent), transparent 58%),
-    var(--cf-bg) !important;
-  background-size: 56px 56px, 56px 56px, auto, auto !important;
-}
-.background-aurora .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(720px 480px at 92% 4%, color-mix(in srgb, var(--cf-primary) 32%, transparent), transparent 58%),
-    radial-gradient(620px 460px at 8% 96%, color-mix(in srgb, var(--cf-info) 24%, transparent), transparent 60%),
-    radial-gradient(480px 380px at 70% 78%, color-mix(in srgb, var(--cf-warning) 10%, transparent), transparent 55%),
-    var(--cf-bg) !important;
-  background-size: auto !important;
-}
-.background-dots .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(color-mix(in srgb, var(--cf-primary) 22%, transparent) 1.1px, transparent 1.8px),
-    radial-gradient(780px 480px at 100% 0, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 60%),
-    var(--cf-bg) !important;
-  background-size: 22px 22px, auto, auto !important;
-}
-
-.bf-background-swatch.plain {
-  background:
-    radial-gradient(18px 14px at 80% 20%, color-mix(in srgb, var(--cf-primary) 55%, transparent), transparent 70%),
-    var(--cf-bg) !important;
-}
-.bf-background-swatch.paper {
-  background-color: var(--cf-bg) !important;
-  background-image: repeating-linear-gradient(0deg, color-mix(in srgb, var(--cf-ink) 18%, transparent) 0 1px, transparent 1px 3px) !important;
-}
-.bf-background-swatch.grid {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--cf-ink) 28%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 28%, transparent) 1px, transparent 1px) !important;
-  background-size: 8px 8px !important;
-}
-.bf-background-swatch.aurora {
-  background:
-    radial-gradient(circle at 78% 22%, var(--cf-primary), transparent 48%),
-    radial-gradient(circle at 18% 82%, var(--cf-info), var(--cf-bg) 62%) !important;
-}
-.bf-background-swatch.dots {
-  background-color: var(--cf-bg) !important;
-  background-image: radial-gradient(var(--cf-primary) 1px, transparent 1.5px) !important;
-  background-size: 7px 7px !important;
-}
-
-/* Carduri: sticlă discretă pe teme întunecate */
-.dark .bf-today-pulse,
-.dark .bf-payday-strip,
-.dark .bf-today-envelopes,
-.dark .bf-spend-stamp,
-.dark .bf-brief-salary,
-.dark .bf-envelope-fan button,
-.dark .bf-obligation-entry,
-.dark .bf-snowball {
-  box-shadow:
-    0 16px 36px rgba(0, 0, 0, .28),
-    inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent) !important;
-}
-
-/* —— Bancnota: SVG în flux, text centrat între rozete —— */
+/* —— Bancnota: textul trăiește în SVG, rozetele în colțuri —— */
 .bf-cash-note {
+  position: relative !important;
+  overflow: visible !important;
+  display: block !important;
   margin: 0 !important;
   padding: 0 !important;
   min-height: 0 !important;
-  overflow: visible !important;
-  display: block !important;
-  align-content: unset !important;
-  background: transparent !important;
   border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
   box-shadow: none !important;
 }
 .bf-cash-note svg {
@@ -112,144 +21,216 @@
   display: block;
   width: 100%;
   height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 14px 28px color-mix(in srgb, var(--cf-ink) 14%, transparent));
 }
 .bf-cash-note-body {
-  fill: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface));
+  fill: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface));
   stroke: var(--cf-line);
   stroke-width: 1.4;
 }
 .bf-cash-note-frame {
   fill: none;
   stroke: color-mix(in srgb, var(--cf-primary-strong) 40%, var(--cf-line));
-  stroke-dasharray: 4 5;
+  stroke-dasharray: 6 5;
   stroke-width: 1.2;
 }
 .bf-cash-note-rosette {
   fill: none;
-  stroke: color-mix(in srgb, var(--cf-primary-strong) 50%, transparent);
-  stroke-width: 1.3;
+  stroke: color-mix(in srgb, var(--cf-primary-strong) 55%, transparent);
+  stroke-width: 1.5;
 }
-.bf-cash-note-rosette.inner { stroke-width: 1; opacity: .7; }
+.bf-cash-note-rosette-core {
+  fill: color-mix(in srgb, var(--cf-primary-strong) 22%, transparent);
+  stroke: color-mix(in srgb, var(--cf-primary-strong) 45%, transparent);
+  stroke-width: 1;
+}
 .bf-cash-note-mark {
-  fill: color-mix(in srgb, var(--cf-primary-strong) 28%, transparent);
+  fill: color-mix(in srgb, var(--cf-primary-strong) 32%, transparent);
   font-family: "IBM Plex Sans", system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: .38em;
+  letter-spacing: .28em;
 }
 .bf-cash-note-caption {
   fill: var(--cf-muted);
   font-family: "IBM Plex Sans", system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .08em;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
 }
 .bf-cash-note-amount {
   fill: var(--cf-ink);
   font-family: "IBM Plex Serif", Georgia, serif;
   font-size: 28px;
   font-weight: 700;
-  letter-spacing: -.04em;
-}
-.bf-cash-note-amount.compact { font-size: 22px; }
-.bf-cash-note small,
-.bf-cash-note > b { display: none !important; }
-
-.dark .bf-cash-note-body {
-  fill: color-mix(in srgb, var(--cf-primary) 22%, var(--cf-surface));
+  letter-spacing: -.03em;
 }
 
-/* —— Briefing compact: suma și kicker pe același rând —— */
+/* —— Briefing: o carte compactă, nu o coală tăiată —— */
 .bf-spend-stamp {
-  display: grid !important;
-  gap: 8px !important;
+  gap: 4px !important;
   padding: 14px 16px 12px !important;
   border: 1px solid var(--cf-line) !important;
   border-radius: 18px !important;
   background: var(--cf-surface) !important;
-  text-align: left;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--cf-ink) 8%, transparent) !important;
 }
+.bf-spend-stamp .bf-kicker { margin: 0 !important; }
 .bf-spend-stamp-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-.bf-spend-stamp-top .bf-kicker {
-  margin: 0;
-  flex: 0 0 auto;
+  display: grid;
+  gap: 2px;
 }
 .bf-spend-stamp strong {
-  margin: 0 !important;
-  font-size: clamp(26px, 7vw, 36px) !important;
-  line-height: 1 !important;
-  letter-spacing: -.04em;
-  text-align: right;
+  font-size: clamp(26px, 7vw, 34px) !important;
+  line-height: 1.08 !important;
 }
-.bf-spend-stamp > p {
-  margin: 0;
-  color: var(--cf-muted);
-  font-size: 12px;
-  line-height: 1.4;
+.bf-spend-stamp p {
+  max-width: 42ch;
+  color: var(--cf-muted) !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
 }
-
-.bf-brief-salary,
-.bf-brief-salary.setup {
-  display: grid !important;
-  gap: 2px !important;
+.bf-brief-salary {
   padding: 11px 14px !important;
   border-radius: 14px !important;
-  min-height: 0 !important;
 }
-.bf-brief-salary b { font-size: 13px; line-height: 1.25; }
-.bf-brief-salary small { font-size: 11px; line-height: 1.4; }
 
-/* —— Puls: zilele goale rămân vizibile —— */
+/* —— Puls: zilele goale rămân vizibile, etichetele se citesc —— */
 .bf-today-pulse-chart {
   min-height: 108px !important;
+  align-items: end !important;
   padding: 6px 4px 0 !important;
 }
 .bf-today-pulse-chart span {
   grid-template-rows: 76px auto !important;
-  gap: 4px !important;
+  gap: 8px !important;
 }
 .bf-today-pulse-chart i {
+  min-height: 12px !important;
   width: 58% !important;
-  min-height: 10px !important;
-  border-radius: 6px 6px 2px 2px !important;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cf-primary) 28%, transparent);
+}
+.bf-today-pulse-chart i.empty {
+  opacity: .28;
+  background: color-mix(in srgb, var(--cf-ink) 35%, var(--cf-surface)) !important;
 }
 .bf-today-pulse-chart b {
   color: var(--cf-ink) !important;
-  opacity: .72;
   font-size: 10px !important;
-  letter-spacing: .02em;
+  letter-spacing: .06em;
+  opacity: .72;
 }
 
-/* —— Plicuri: fără spațiu gol deasupra, text pe un rând —— */
-.bf-envelope-fan button {
-  gap: 5px !important;
-  padding: 10px 8px 12px !important;
-}
-.bf-envelope-fan button svg,
-.bf-envelope-fan .bf-envelope-mark {
-  width: 58px !important;
-  height: 45px !important;
-}
+/* —— Plicuri: procentul nu mai rupe rânduri inutil —— */
 .bf-envelope-fan small {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  max-width: 16ch;
+  line-height: 1.3 !important;
 }
 
-/* —— Titluri de masă: nu se înghesuie cu butonul —— */
+/* —— Fundaluri: atmosferă, nu hârtie milimetrică —— */
+.bf-app::before {
+  opacity: .22 !important;
+  background-image:
+    radial-gradient(ellipse 80% 46% at 100% -4%, color-mix(in srgb, var(--cf-primary) 30%, transparent), transparent 62%),
+    radial-gradient(ellipse 58% 40% at -6% 104%, color-mix(in srgb, var(--cf-info) 20%, transparent), transparent 58%) !important;
+  background-size: auto !important;
+}
+
+html.background-plain .bf-app,
+.background-plain .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(980px 560px at 108% -10%, color-mix(in srgb, var(--cf-primary) 26%, transparent), transparent 58%),
+    radial-gradient(720px 480px at -16% 108%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 54%) !important;
+}
+
+html.background-paper .bf-app,
+.background-paper .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(900px 520px at 100% 0, color-mix(in srgb, var(--cf-primary) 14%, transparent), transparent 56%),
+    repeating-linear-gradient(0deg, transparent, transparent 3px, color-mix(in srgb, var(--cf-ink) 4%, transparent) 4px),
+    radial-gradient(color-mix(in srgb, var(--cf-ink) 9%, transparent) .7px, transparent .85px) !important;
+  background-size: auto, 100% 5px, 16px 16px !important;
+}
+
+html.background-grid .bf-app,
+.background-grid .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(860px 480px at 100% -8%, color-mix(in srgb, var(--cf-primary) 22%, transparent), transparent 56%),
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 6%, transparent) 1px, transparent 1px) !important;
+  background-size: auto, 52px 52px, 52px 52px !important;
+}
+
+html.background-aurora .bf-app,
+.background-aurora .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(640px 420px at 88% 6%, color-mix(in srgb, var(--cf-primary) 38%, transparent), transparent 62%),
+    radial-gradient(520px 360px at 8% 92%, color-mix(in srgb, var(--cf-info) 30%, transparent), transparent 58%),
+    radial-gradient(380px 260px at 72% 72%, color-mix(in srgb, var(--cf-warning) 16%, transparent), transparent 55%) !important;
+}
+
+html.background-dots .bf-app,
+.background-dots .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(720px 420px at 12% 0, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 50%),
+    radial-gradient(color-mix(in srgb, var(--cf-primary) 20%, transparent) 1.15px, transparent 1.7px) !important;
+  background-size: auto, 22px 22px !important;
+}
+
+.bf-background-swatch.plain {
+  background:
+    radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--cf-primary) 45%, transparent), var(--cf-bg) 62%) !important;
+}
+.bf-background-swatch.paper {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, color-mix(in srgb, var(--cf-ink) 14%, transparent) 3px),
+    radial-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) .6px, transparent .8px) !important;
+  background-size: 100% 4px, 7px 7px !important;
+}
+.bf-background-swatch.grid {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px) !important;
+  background-size: 10px 10px !important;
+}
+.bf-background-swatch.aurora {
+  background:
+    radial-gradient(circle at 80% 18%, var(--cf-primary), transparent 46%),
+    radial-gradient(circle at 18% 84%, var(--cf-info), var(--cf-bg) 62%) !important;
+}
+.bf-background-swatch.dots {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--cf-primary) 40%, transparent), transparent 50%),
+    radial-gradient(var(--cf-primary) 1px, transparent 1.5px) !important;
+  background-size: auto, 8px 8px !important;
+}
+
+html.dark .bf-today-pulse,
+html.dark .bf-payday-strip,
+html.dark .bf-spend-stamp,
+html.dark .bf-envelope-fan button,
+html.dark .bf-brief-salary,
+html.dark .bf-today-envelopes {
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, .28),
+    inset 0 1px 0 color-mix(in srgb, #fff 9%, transparent) !important;
+}
+
 @media (max-width: 760px) {
+  .bf-today-hub-links { display: none !important; }
   .bf-desk-heading {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
     gap: 10px !important;
-    align-items: start !important;
   }
   .bf-desk-heading h2 {
     max-width: none !important;
@@ -258,16 +239,8 @@
   }
   .bf-desk-heading button {
     width: 100%;
-    justify-content: center;
+    min-height: 44px !important;
   }
-  .bf-today-hub-links {
-    display: none !important;
-  }
-  .bf-spend-stamp-top {
-    flex-wrap: wrap;
-  }
-  .bf-spend-stamp strong {
-    width: 100%;
-    text-align: left;
-  }
+  .bf-cash-note-amount { font-size: 26px; }
+  .bf-today-pulse-copy h2 { font-size: 22px !important; }
 }

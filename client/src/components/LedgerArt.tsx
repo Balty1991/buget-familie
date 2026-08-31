@@ -55,25 +55,24 @@ export function HealthGauge({ score, tone, size = 120 }: { score: number; tone: 
   );
 }
 
-/** Bancnotă: textul stă în fereastra centrală, rozetele rămân în colțuri. */
+/** Bancnotă: rozetele stau în colțuri, textul în fereastra centrală. */
 export function CashNote({ amount, caption }: { amount: string; caption: string }) {
-  const compact = amount.length > 14;
   return (
     <figure className="bf-cash-note">
       <svg viewBox="0 0 320 168" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${caption} ${amount}`}>
-        <rect className="bf-cash-note-body" x="8" y="10" width="304" height="148" rx="18" />
-        <rect className="bf-cash-note-frame" x="22" y="24" width="276" height="120" rx="12" />
-        <circle className="bf-cash-note-rosette" cx="44" cy="46" r="11" />
-        <circle className="bf-cash-note-rosette" cx="276" cy="46" r="11" />
-        <circle className="bf-cash-note-rosette" cx="44" cy="122" r="11" />
-        <circle className="bf-cash-note-rosette" cx="276" cy="122" r="11" />
-        <circle className="bf-cash-note-rosette inner" cx="44" cy="46" r="5" />
-        <circle className="bf-cash-note-rosette inner" cx="276" cy="46" r="5" />
-        <circle className="bf-cash-note-rosette inner" cx="44" cy="122" r="5" />
-        <circle className="bf-cash-note-rosette inner" cx="276" cy="122" r="5" />
-        <text className="bf-cash-note-mark" x="160" y="54" textAnchor="middle">RON</text>
-        <text className="bf-cash-note-caption" x="160" y="86" textAnchor="middle">{caption}</text>
-        <text className={`bf-cash-note-amount${compact ? " compact" : ""}`} x="160" y="128" textAnchor="middle">{amount}</text>
+        <rect x="8" y="8" width="304" height="152" rx="16" className="bf-cash-note-body" />
+        <rect x="20" y="20" width="280" height="128" rx="10" className="bf-cash-note-frame" />
+        <circle cx="46" cy="46" r="13" className="bf-cash-note-rosette" />
+        <circle cx="274" cy="46" r="13" className="bf-cash-note-rosette" />
+        <circle cx="46" cy="122" r="13" className="bf-cash-note-rosette" />
+        <circle cx="274" cy="122" r="13" className="bf-cash-note-rosette" />
+        <circle cx="46" cy="46" r="5" className="bf-cash-note-rosette-core" />
+        <circle cx="274" cy="46" r="5" className="bf-cash-note-rosette-core" />
+        <circle cx="46" cy="122" r="5" className="bf-cash-note-rosette-core" />
+        <circle cx="274" cy="122" r="5" className="bf-cash-note-rosette-core" />
+        <text x="160" y="54" textAnchor="middle" className="bf-cash-note-mark">RON</text>
+        <text x="160" y="86" textAnchor="middle" className="bf-cash-note-caption">{caption}</text>
+        <text x="160" y="126" textAnchor="middle" className="bf-cash-note-amount">{amount}</text>
       </svg>
     </figure>
   );
