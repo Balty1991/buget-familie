@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import "./fonts-local.css";
 import "./index.css";
 import "./atelier-refinement.css";
 import "./upgrade.css";

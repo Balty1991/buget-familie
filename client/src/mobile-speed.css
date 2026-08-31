@@ -16,13 +16,20 @@ html {
 .bf-app a,
 .bf-app [role="button"],
 .bf-appbar,
-.bf-mobile-nav {
-  -webkit-tap-highlight-color: color-mix(in srgb, var(--cf-primary) 22%, transparent);
+.bf-mobile-nav,
+.bf-app > main {
+  -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
 .bf-below-fold-slot {
-  min-height: 72px;
+  min-height: 48px;
+}
+
+@media (max-width: 760px) {
+  .bf-below-fold-slot {
+    min-height: 160px;
+  }
 }
 
 .bf-receipt-thumb {
@@ -63,7 +70,12 @@ html {
 
 @media (max-width: 760px) {
   .bf-appbar,
-  .bf-mobile-nav {
+  .bf-mobile-nav,
+  .bf-modal-backdrop,
+  .bf-onboarding-backdrop,
+  .bf-theme-backdrop,
+  .bf-command-backdrop,
+  .bf-health-backdrop {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
@@ -79,9 +91,10 @@ html {
   .bf-today-measurements,
   .bf-today-activity,
   .bf-today-envelope-evolution,
-  .bf-weekly-summary {
+  .bf-weekly-summary,
+  .bf-today-hub-links {
     content-visibility: auto;
-    contain-intrinsic-size: auto 240px;
+    contain-intrinsic-size: auto 220px;
   }
 
   .bf-mobile-nav button {
@@ -89,10 +102,15 @@ html {
   }
 
   .bf-lazy-panel {
-    min-height: 88px;
+    min-height: 36vh;
     display: grid;
     place-items: center;
+    margin: 12px 0 0;
+    padding: 24px 16px;
+    border: 1px solid var(--cf-line);
+    border-radius: 18px;
     color: var(--cf-muted);
+    background: var(--cf-surface);
     font-size: 13px;
   }
 
@@ -102,13 +120,67 @@ html {
     width: 48px !important;
     height: 48px !important;
   }
+
+  .bf-cash-note svg,
+  .bf-envelope-mark,
+  .bf-desk-scene {
+    filter: none !important;
+  }
+
+  .bf-today-situation,
+  .bf-decision-row,
+  .bf-today-hub-links button,
+  .bf-today-add,
+  .bf-today-plan-link,
+  .bf-plic-card {
+    will-change: auto !important;
+  }
+
+  .bf-screen-transition,
+  .bf-today-situation,
+  .bf-today-decision,
+  .bf-today-activity,
+  .bf-major-enter,
+  .bf-atelier-enter {
+    animation: none !important;
+  }
+
+  .bf-today-situation,
+  .bf-ledger-desk,
+  .bf-today-envelopes,
+  .bf-spend-stamp,
+  .bf-today-pulse,
+  .bf-payday-strip,
+  .bf-today-brief {
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--cf-ink) 8%, transparent) !important;
+  }
+
+  .bf-page,
+  .bf-today-workspace,
+  .bf-movements-workspace,
+  .bf-obligations-workspace,
+  .bf-plan-workspace,
+  .bf-insights-workspace,
+  .bf-utilities-workspace,
+  .bf-goals-workspace,
+  .bf-habits-workspace,
+  .bf-calendar-workspace {
+    padding-bottom: var(--bf-nav-clearance, calc(124px + env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  .bf-app > main {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bf-app button,
   .bf-app .bf-primary,
   .bf-app .bf-secondary,
-  .bf-screen-transition {
+  .bf-screen-transition,
+  .bf-today-situation,
+  .bf-today-decision {
     transition: none !important;
+    animation: none !important;
   }
 }
