@@ -2,10 +2,11 @@
  * Ecrane și formulare încărcate după Astăzi — nu intra în first paint.
  */
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, ChevronRight, Cloud, Command, Download, Goal, LayoutDashboard, Search, Upload, MoreHorizontal, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, Cloud, Command, Download, Goal, LayoutDashboard, Search, Upload, MoreHorizontal, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
 import { allocationBudget, allocationSpent, allocationWeekStatus, createEmptyAppData, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type ReceiptLine, type SavingsGoal, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
-import { clearReceiptImageStorage, receiptImageUrl, storeReceiptImages } from "@/lib/receipt-storage";
+import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageStorage, releaseReceiptObjectUrl, storeReceiptImages } from "@/lib/receipt-storage";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { DebtSnowballCard } from "@/components/DebtSnowballCard";
@@ -83,34 +84,106 @@ export function CalmOnboarding({ onClose, onAdd, onGo }: { onClose: () => void; 
 export function ReceiptThumbnail({ receipt }: { receipt: Receipt }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [visible, setVisible] = useState(false);
+  const [open, setOpen] = useState(false);
   const [url, setUrl] = useState<string | undefined>();
+  const photoCount = receipt.imageKeys?.length || (receipt.imageData2 ? 2 : receipt.imageData ? 1 : 0);
+  const hasPhoto = photoCount > 0;
   useEffect(() => {
     const node = ref.current;
-    if (!node || visible) return;
+    if (!node) return;
     if (typeof IntersectionObserver !== "function") { setVisible(true); return; }
-    const rect = node.getBoundingClientRect();
-    if (rect.top < (window.innerHeight || 800) + 160 && rect.bottom > -160) { setVisible(true); return; }
+    let leaveTimer: number | undefined;
     const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) { setVisible(true); observer.disconnect(); }
-    }, { rootMargin: "160px 0px" });
+      const onScreen = entries.some((entry) => entry.isIntersecting);
+      if (onScreen) {
+        if (leaveTimer) window.clearTimeout(leaveTimer);
+        setVisible(true);
+        return;
+      }
+      leaveTimer = window.setTimeout(() => setVisible(false), 480);
+    }, { rootMargin: "180px 0px" });
     observer.observe(node);
-    return () => observer.disconnect();
-  }, [visible]);
+    return () => { observer.disconnect(); if (leaveTimer) window.clearTimeout(leaveTimer); };
+  }, []);
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) { setUrl(undefined); return; }
     if (receipt.imageData) { setUrl(receipt.imageData); return; }
     const key = receipt.imageKeys?.[0];
     if (!key) { setUrl(undefined); return; }
     let active = true;
-    let objectUrl: string | undefined;
-    void receiptImageUrl(key).then((next) => {
-      if (!active) { if (next) URL.revokeObjectURL(next); return; }
-      objectUrl = next;
+    let cacheKey: string | undefined;
+    void acquireReceiptPreviewUrl(key).then((next) => {
+      if (!active) { if (next) releaseReceiptObjectUrl(next.cacheKey); return; }
+      cacheKey = next?.cacheKey;
+      setUrl(next?.url);
+    }).catch(() => { if (active) setUrl(undefined); });
+    return () => { active = false; releaseReceiptObjectUrl(cacheKey); setUrl(undefined); };
+  }, [visible, receipt.imageData, receipt.imageKeys?.[0]]);
+  return (
+    <>
+      <span ref={ref} className="bf-receipt-thumb">
+        <button type="button" disabled={!hasPhoto} aria-label={hasPhoto ? `Deschide fotografia bonului ${receipt.vendor}` : undefined} onClick={() => { if (hasPhoto) setOpen(true); }}>
+          {url ? <img src={url} alt="" width={54} height={54} sizes="54px" loading="lazy" decoding="async" fetchPriority="low" /> : <span className="bf-receipt-icon"><ReceiptText size={21} /></span>}
+          {photoCount > 1 ? <i className="bf-receipt-count">{photoCount}</i> : null}
+        </button>
+      </span>
+      {open ? <ReceiptPhotoViewer receipt={receipt} onClose={() => setOpen(false)} /> : null}
+    </>
+  );
+}
+
+function receiptPhotoSources(receipt: Receipt): Array<{ id: string; key?: string; dataUrl?: string }> {
+  if (receipt.imageKeys?.length) return receipt.imageKeys.map((key) => ({ id: key, key }));
+  return [receipt.imageData, receipt.imageData2].filter((image): image is string => Boolean(image)).map((dataUrl, index) => ({ id: `inline-${index}`, dataUrl }));
+}
+
+function ReceiptPhotoViewer({ receipt, onClose }: { receipt: Receipt; onClose: () => void }) {
+  const sources = receiptPhotoSources(receipt);
+  const [index, setIndex] = useState(0);
+  const [url, setUrl] = useState<string | undefined>();
+  const current = sources[index];
+  const dialogRef = useFocusTrap<HTMLElement>(onClose);
+  useEffect(() => {
+    if (!current) { setUrl(undefined); return; }
+    if (current.dataUrl) { setUrl(current.dataUrl); return; }
+    if (!current.key) { setUrl(undefined); return; }
+    let active = true;
+    let cacheKey: string | undefined;
+    void acquireReceiptObjectUrl(current.key).then((next) => {
+      if (!active) { if (next) releaseReceiptObjectUrl(current.key); return; }
+      if (next) cacheKey = current.key;
       setUrl(next);
     }).catch(() => { if (active) setUrl(undefined); });
-    return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [visible, receipt.imageData, receipt.imageKeys?.[0]]);
-  return <span ref={ref} className="bf-receipt-thumb">{url ? <img src={url} alt={`Bon ${receipt.vendor}`} width={54} height={54} loading="lazy" decoding="async" /> : <span className="bf-receipt-icon"><ReceiptText size={21} /></span>}</span>;
+    return () => { active = false; releaseReceiptObjectUrl(cacheKey); setUrl(undefined); };
+  }, [current?.id, current?.key, current?.dataUrl]);
+  if (!current) return null;
+  return createPortal(
+    <div className="bf-modal-backdrop bf-receipt-photo-sheet" role="presentation" onMouseDown={onClose}>
+      <section ref={dialogRef} tabIndex={-1} className="bf-receipt-photo-card" role="dialog" aria-modal="true" aria-label={`Fotografie bon ${receipt.vendor}`} onMouseDown={(event) => event.stopPropagation()}>
+        <header>
+          <div>
+            <p className="bf-kicker">BON LOCAL</p>
+            <h2>{receipt.vendor}</h2>
+          </div>
+          <button className="bf-icon-button" aria-label="Închide fotografia" onClick={onClose}><X size={19} /></button>
+        </header>
+        <div className="bf-receipt-photo-frame">
+          {url ? <img src={url} alt={`Bon ${receipt.vendor}, partea ${index + 1}`} decoding="async" /> : <span>Pregătim fotografia…</span>}
+        </div>
+        {sources.length > 1 ? (
+          <div className="bf-receipt-photo-switch" role="tablist" aria-label="Părțile bonului">
+            <button type="button" disabled={index === 0} aria-label="Partea anterioară" onClick={() => setIndex((value) => Math.max(0, value - 1))}><ChevronLeft size={17} /></button>
+            {sources.map((source, photoIndex) => (
+              <button key={source.id} type="button" role="tab" aria-selected={photoIndex === index} className={photoIndex === index ? "active" : ""} onClick={() => setIndex(photoIndex)}>Partea {photoIndex + 1}</button>
+            ))}
+            <button type="button" disabled={index === sources.length - 1} aria-label="Partea următoare" onClick={() => setIndex((value) => Math.min(sources.length - 1, value + 1))}><ChevronRight size={17} /></button>
+          </div>
+        ) : null}
+        <p>Fotografia rămâne pe telefon. Nu este trimisă în sincronizarea familiei.</p>
+      </section>
+    </div>,
+    document.body,
+  );
 }
 
 export function TransactionForm({ data, initial, onSave, onClose }: { data: AppData; initial?: Transaction; onSave: (item: Transaction) => void; onClose: () => void }) {
@@ -200,7 +273,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
     if (!normalizedLines.length || Math.abs(numeric - splitTotal) > 0.01) return setError(`Repartizarea este ${fmtExact.format(splitTotal)}, dar totalul bonului este ${fmtExact.format(numeric)}. Corectează liniile înainte de salvare.`);
     try { setBusy(true); setError(""); const id = newId("receipt"); const imageKeys = images.length ? await storeReceiptImages(id, images) : []; await onSave({ id, vendor: vendor.trim(), amount: numeric, date, category: normalizedLines[0].category, lines: normalizedLines, sourceId, memberId, note: note.trim() || undefined, imageKeys: imageKeys.length ? imageKeys : undefined, ocrText: ocrText || undefined }); onClose(); } catch (reason) { setError(reason instanceof Error ? reason.message : "Bonul nu a putut fi salvat pe telefon."); } finally { setBusy(false); }
   };
-  return <Modal title="Adaugă bon" onClose={onClose}><div className="bf-receipt-intro"><p className="bf-kicker">BON CU REPARTIZARE</p><p>Poți fotografia un bon lung în două părți; imaginile se comprimă și rămân doar în stocarea locală securizată a telefonului.</p></div><div className="bf-form-grid"><Field label="Magazin"><input autoFocus value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder="ex. Lidl" /></Field><Field label="Total (lei)"><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" /></Field><Field label="Data"><input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></Field><Field label="Membru"><select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field><Field label="Plătit din"><select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></Field></div><section className="bf-receipt-images"><div><p className="bf-kicker">FOTOGRAFIILE BONULUI</p><strong>{images.length}/2 imagini</strong></div><label className="bf-upload-control"><Camera size={18} /> {busy && !progress ? "Comprimăm…" : "Adaugă poze"}<input type="file" accept="image/*" capture="environment" multiple disabled={busy || images.length >= 2} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} /></label>{images.length > 0 && <button className="bf-ocr-button" disabled={busy} onClick={() => void scan()}><Bot size={17} /> {busy && progress ? `Citim ${progress}%` : "Citește produsele și prețurile local"}</button>}<div className="bf-receipt-preview-grid">{images.map((image, index) => <figure key={image}><img src={image} alt={`Previzualizare bon partea ${index + 1}`} width={280} height={140} decoding="async" /><button aria-label={`Elimină fotografia ${index + 1}`} onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={15} /></button></figure>)}</div>{ocrSummary && <p className="bf-ocr-info" role="status"><Bot size={16} /> {ocrSummary}</p>}</section><section className="bf-receipt-split"><div className="bf-split-heading"><div><p className="bf-kicker">PRODUSE ȘI CATEGORII</p><h3>{fmtExact.format(lineTotal)} din {amount ? fmtExact.format(parseRomanianAmount(amount)) : "0,00 RON"}</h3></div><button className="bf-secondary" onClick={() => setLines((current) => [...current, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }])}><Plus size={16} /> Produs</button></div>{lines.map((line) => <div className="bf-split-line" key={line.id}><select aria-label="Categorie bon" value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item}>{item}</option>)}</select><input aria-label="Preț produs" value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="lei" /><input aria-label="Produs" value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder="ex. fructe" />{lines.length > 1 && <button aria-label="Elimină produsul" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button>}</div>)}<small>OCR-ul propune linii editabile. Fiecare linie devine o cheltuială reală, iar totalul liniilor trebuie să fie egal cu totalul bonului.</small></section>{ocrText && <Field label="Text citit local (verifică înainte de salvare)"><textarea value={note} onChange={(event) => setNote(event.target.value)} /></Field>}{!ocrText && <Field label="Produse / notiță"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="ex. apă, fructe, detergent" /></Field>}{error && <p className="bf-form-error" role="alert">{error}</p>}<button className="bf-primary full" disabled={busy} onClick={() => void save()}><Check size={17} /> Salvează bonul și cheltuielile</button></Modal>;
+  return <Modal title="Adaugă bon" onClose={onClose}><div className="bf-receipt-intro"><p className="bf-kicker">BON CU REPARTIZARE</p><p>Poți fotografia un bon lung în două părți; imaginile se comprimă și rămân doar în stocarea locală securizată a telefonului.</p></div><div className="bf-form-grid"><Field label="Magazin"><input autoFocus value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder="ex. Lidl" /></Field><Field label="Total (lei)"><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" /></Field><Field label="Data"><input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></Field><Field label="Membru"><select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field><Field label="Plătit din"><select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></Field></div><section className="bf-receipt-images"><div><p className="bf-kicker">FOTOGRAFIILE BONULUI</p><strong>{images.length}/2 imagini</strong></div><label className="bf-upload-control"><Camera size={18} /> {busy && !progress ? "Comprimăm…" : "Adaugă poze"}<input type="file" accept="image/*" capture="environment" multiple disabled={busy || images.length >= 2} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} /></label>{images.length > 0 && <button className="bf-ocr-button" disabled={busy} onClick={() => void scan()}><Bot size={17} /> {busy && progress ? `Citim ${progress}%` : "Citește produsele și prețurile local"}</button>}<div className="bf-receipt-preview-grid">{images.map((image, index) => <figure key={image}><img src={image} alt={`Previzualizare bon partea ${index + 1}`} width={280} height={140} loading="lazy" decoding="async" /><button aria-label={`Elimină fotografia ${index + 1}`} onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={15} /></button></figure>)}</div>{ocrSummary && <p className="bf-ocr-info" role="status"><Bot size={16} /> {ocrSummary}</p>}</section><section className="bf-receipt-split"><div className="bf-split-heading"><div><p className="bf-kicker">PRODUSE ȘI CATEGORII</p><h3>{fmtExact.format(lineTotal)} din {amount ? fmtExact.format(parseRomanianAmount(amount)) : "0,00 RON"}</h3></div><button className="bf-secondary" onClick={() => setLines((current) => [...current, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }])}><Plus size={16} /> Produs</button></div>{lines.map((line) => <div className="bf-split-line" key={line.id}><select aria-label="Categorie bon" value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item}>{item}</option>)}</select><input aria-label="Preț produs" value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="lei" /><input aria-label="Produs" value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder="ex. fructe" />{lines.length > 1 && <button aria-label="Elimină produsul" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button>}</div>)}<small>OCR-ul propune linii editabile. Fiecare linie devine o cheltuială reală, iar totalul liniilor trebuie să fie egal cu totalul bonului.</small></section>{ocrText && <Field label="Text citit local (verifică înainte de salvare)"><textarea value={note} onChange={(event) => setNote(event.target.value)} /></Field>}{!ocrText && <Field label="Produse / notiță"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="ex. apă, fructe, detergent" /></Field>}{error && <p className="bf-form-error" role="alert">{error}</p>}<button className="bf-primary full" disabled={busy} onClick={() => void save()}><Check size={17} /> Salvează bonul și cheltuielile</button></Modal>;
 }
 
 export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteReceipt, onOpenDebt, onOpenSaving, onOpenCalendar, receiptStorageNotice, sync }: { tab: MoreView; setTab: (value: MoreView) => void; data: AppData; onChange: (value: AppData) => void; onAddReceipt: () => void; onDeleteReceipt: (id: string) => void; onOpenDebt: () => void; onOpenSaving: () => void; onOpenCalendar: () => void; receiptStorageNotice?: string; sync: SyncPanelProps }) {
