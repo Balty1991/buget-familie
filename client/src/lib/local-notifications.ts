@@ -145,8 +145,9 @@ async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
     // @ts-expect-error Capacitor may be injected at runtime on native
     const Cap = typeof window !== "undefined" ? (window as any).Capacitor : null;
     if (!Cap?.isNativePlatform?.()) return false;
-    // Plugin opțional — nu e în bundle până la `pnpm add @capacitor/local-notifications && cap sync`
-    const mod = await import(/* @vite-ignore */ "@capacitor/local-notifications").catch(() => null);
+    // Plugin opțional pe nativ — rezolvat la runtime, nu la typecheck/bundle web.
+    const pluginName = "@capacitor/local-notifications";
+    const mod = await import(/* @vite-ignore */ pluginName).catch(() => null);
     if (!mod?.LocalNotifications) return false;
     const { LocalNotifications } = mod;
     const perm = await LocalNotifications.requestPermissions();
