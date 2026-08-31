@@ -1,9 +1,16 @@
 /**
  * Ultimul strat pentru textura suprafeței.
  * theme-contrast-pass punea border-color !important pe TOATE dalele,
- * deci starea .selected era invizibilă. Aici inelul, bifa și
- * previzualizarea câștigă în sfârșit.
+ * deci starea .selected era invizibilă. Aici inelul, bifa,
+ * previzualizarea și fundalul real câștigă în sfârșit.
  */
+
+.bf-theme-backdrop,
+.bf-theme-picker,
+.bf-theme-picker button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
 
 .bf-theme-option.selected {
   border-color: var(--cf-primary) !important;
@@ -41,14 +48,18 @@
   min-height: 92px !important;
   padding: 9px !important;
   overflow: hidden !important;
-  border: 1.5px solid var(--cf-line) !important;
+  border: 2px solid var(--cf-line) !important;
   border-radius: 14px !important;
   background: var(--cf-surface-alt) !important;
   color: var(--cf-ink) !important;
   text-align: left !important;
   cursor: pointer !important;
   box-shadow: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  touch-action: manipulation !important;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .bf-background-grid button:focus-visible {
   outline: 2px solid var(--cf-info) !important;
@@ -56,8 +67,15 @@
 }
 .bf-background-grid button.selected {
   border-color: var(--cf-primary) !important;
-  background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface-alt)) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-primary), transparent 64%) !important;
+  background: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface-alt)) !important;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--cf-primary), transparent 55%),
+    inset 0 0 0 1px color-mix(in srgb, var(--cf-primary), transparent 35%) !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+.bf-background-grid button:not(.selected) {
+  opacity: .88 !important;
 }
 .bf-background-grid button:last-child {
   grid-column: span 2 !important;
@@ -86,12 +104,12 @@
 }
 .bf-background-grid button i {
   position: absolute !important;
-  top: 12px !important;
-  right: 12px !important;
+  top: 10px !important;
+  right: 10px !important;
   display: grid !important;
   place-items: center !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 22px !important;
+  height: 22px !important;
   border-radius: 50% !important;
   background: var(--cf-primary) !important;
   color: var(--cf-bg) !important;
@@ -110,16 +128,16 @@
 .bf-theme-preview.background-preview-paper {
   background-color: var(--preview-bg) !important;
   background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 3px, color-mix(in srgb, var(--preview-ink) 10%, transparent) 4px),
-    radial-gradient(color-mix(in srgb, var(--preview-ink) 16%, transparent) .7px, transparent .85px),
+    repeating-linear-gradient(0deg, transparent, transparent 3px, color-mix(in srgb, var(--preview-ink) 14%, transparent) 4px),
+    radial-gradient(color-mix(in srgb, var(--preview-ink) 22%, transparent) .7px, transparent .85px),
     radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
   background-size: 100% 5px, 10px 10px, auto !important;
 }
 .bf-theme-preview.background-preview-grid {
   background-color: var(--preview-bg) !important;
   background-image:
-    linear-gradient(color-mix(in srgb, var(--preview-ink) 16%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--preview-ink) 16%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--preview-ink) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--preview-ink) 22%, transparent) 1px, transparent 1px),
     radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
   background-size: 18px 18px, 18px 18px, auto !important;
 }
@@ -134,9 +152,69 @@
 .bf-theme-preview.background-preview-dots {
   background-color: var(--preview-bg) !important;
   background-image:
-    radial-gradient(color-mix(in srgb, var(--preview-primary) 42%, transparent) 1.15px, transparent 1.7px),
+    radial-gradient(color-mix(in srgb, var(--preview-primary) 55%, transparent) 1.15px, transparent 1.7px),
     radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
   background-size: 12px 12px, auto !important;
+}
+
+/*
+ * Fundalul real al aplicației. Shorthand-ul `.theme-rosewood .bf-app { background: ... }`
+ * ștergea background-image. Specificitatea html.theme-*.background-* bate
+ * atât tema cât și straturile anterioare.
+ */
+html.background-plain .bf-app,
+html[class*="theme-"].background-plain .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(980px 560px at 108% -10%, color-mix(in srgb, var(--cf-primary) 26%, transparent), transparent 58%),
+    radial-gradient(720px 480px at -16% 108%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 54%) !important;
+  background-size: auto !important;
+  background-blend-mode: normal !important;
+}
+html.background-paper .bf-app,
+html[class*="theme-"].background-paper .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(900px 520px at 100% 0, color-mix(in srgb, var(--cf-primary) 14%, transparent), transparent 56%),
+    repeating-linear-gradient(0deg, transparent, transparent 3px, color-mix(in srgb, var(--cf-ink) 7%, transparent) 4px),
+    radial-gradient(color-mix(in srgb, var(--cf-ink) 14%, transparent) .7px, transparent .85px) !important;
+  background-size: auto, 100% 5px, 16px 16px !important;
+  background-blend-mode: normal !important;
+}
+html.background-grid .bf-app,
+html[class*="theme-"].background-grid .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(860px 480px at 100% -8%, color-mix(in srgb, var(--cf-primary) 22%, transparent), transparent 56%),
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 10%, transparent) 1px, transparent 1px) !important;
+  background-size: auto, 44px 44px, 44px 44px !important;
+  background-blend-mode: normal !important;
+}
+html.background-aurora .bf-app,
+html[class*="theme-"].background-aurora .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(640px 420px at 88% 6%, color-mix(in srgb, var(--cf-primary) 38%, transparent), transparent 62%),
+    radial-gradient(520px 360px at 8% 92%, color-mix(in srgb, var(--cf-info) 30%, transparent), transparent 58%),
+    radial-gradient(380px 260px at 72% 72%, color-mix(in srgb, var(--cf-warning) 16%, transparent), transparent 55%) !important;
+  background-size: auto !important;
+  background-blend-mode: normal !important;
+}
+html.background-dots .bf-app,
+html[class*="theme-"].background-dots .bf-app {
+  background-color: var(--cf-bg) !important;
+  background-image:
+    radial-gradient(720px 420px at 12% 0, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 50%),
+    radial-gradient(color-mix(in srgb, var(--cf-primary) 28%, transparent) 1.15px, transparent 1.7px) !important;
+  background-size: auto, 18px 18px !important;
+  background-blend-mode: normal !important;
+}
+
+html.background-paper .bf-app::before,
+html.background-grid .bf-app::before,
+html.background-dots .bf-app::before {
+  opacity: .1 !important;
 }
 
 @media (min-width: 641px) {
