@@ -25,6 +25,34 @@ html {
   min-height: 72px;
 }
 
+.bf-receipt-thumb {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--cf-honey, #efc94d) 28%, var(--cf-surface, #fffefa));
+  contain: strict;
+}
+
+.bf-receipt-thumb img,
+.bf-receipt-thumb .bf-receipt-icon {
+  width: 54px !important;
+  height: 54px !important;
+  display: block;
+  object-fit: cover;
+}
+
+.bf-receipt-list article {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 76px;
+}
+
+.bf-receipt-preview-grid img {
+  content-visibility: auto;
+}
+
 @media (hover: none) {
   .bf-app button:hover,
   .bf-app .bf-primary:hover,
@@ -66,6 +94,13 @@ html {
     place-items: center;
     color: var(--cf-muted);
     font-size: 13px;
+  }
+
+  .bf-receipt-thumb,
+  .bf-receipt-thumb img,
+  .bf-receipt-thumb .bf-receipt-icon {
+    width: 48px !important;
+    height: 48px !important;
   }
 }
 
