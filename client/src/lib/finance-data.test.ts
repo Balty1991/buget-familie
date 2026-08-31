@@ -4,7 +4,7 @@ import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
 import { calendarPlanPdfSnapshot } from "./calendar-plan-pdf";
-import { parseReceiptItems } from "./receipt-utils";
+import { parseReceiptItems, isReceiptImageFile, interpretReceiptText } from "./receipt-utils";
 
 describe("registrul financiar Buget Familie", () => {
   it("interpretează sumele românești cu punct pentru mii și virgulă zecimală", () => {
@@ -382,6 +382,49 @@ describe("registrul financiar Buget Familie", () => {
   it("propune produse și prețuri individuale, fără totaluri sau plăți", () => {
     const items = parseReceiptItems(["LAPTE 1.5% 7,49", "APA MINERALA 2 x 3,50 7,00", "DETergent 18,99", "TOTAL 33,48", "CARD 33,48"]);
     expect(items).toEqual([{ label: "LAPTE 1.5%", amount: 7.49, category: "Alimente", raw: "LAPTE 1.5% 7,49" }, { label: "APA MINERALA", amount: 7, category: "Băuturi", raw: "APA MINERALA 2 x 3,50 7,00" }, { label: "DETergent", amount: 18.99, category: "Casă & facturi", raw: "DETergent 18,99" }]);
+  });
+  it("citește un bon fiscal românesc: magazin, TOTAL LEI, reduceri și fără TVA", () => {
+    const result = interpretReceiptText([
+      "sinsay",
+      "LPP ROMANIA FASHION S.R.L.",
+      "STR.CARPATI NR.132",
+      "CIF: RO22418650",
+      "08108-90X-39H CIORAPI 1 BUC X 11.99= 11.99 E",
+      "REDUCERE -3.42 E",
+      "841JJ-99X-25 TENISI FE 1 BUC X 45.99= 45.99 E",
+      "REDUCERE -13.15 E",
+      "809EZ-MLC-ONE JUCARIE 1 BUC X 11.99= 11.99 E",
+      "REDUCERE -3.43 E",
+      "HB111-XXX-ONE PUNGA DE 1 BUC X 1.00= 1.00 E",
+      "TOTAL LEI 50.97",
+      "NUMERAR LEI 51.00",
+      "REST LEI 0.03",
+      "TOTAL TVA E - 21% 8.85",
+      "TOTAL TVA BON 8.85",
+    ]);
+    expect(result.vendor).toBe("Sinsay");
+    expect(result.amount).toBe(50.97);
+    expect(result.items.map((item) => ({ label: item.label, amount: item.amount }))).toEqual([
+      { label: "CIORAPI", amount: 8.57 },
+      { label: "TENISI FE", amount: 32.84 },
+      { label: "JUCARIE", amount: 8.56 },
+      { label: "PUNGA DE", amount: 1 },
+    ]);
+    expect(result.items.reduce((sum, item) => sum + item.amount, 0)).toBeCloseTo(50.97, 2);
+  });
+  it("nu propune produse false când citirea e zgomot, și ignoră TOTAL TVA", () => {
+    const noise = interpretReceiptText([", wal,", "LJ", "s:nsay", "LPP ROMANIA FASHION pA", "11.99", "45.99", "134,00"]);
+    expect(noise.items).toEqual([]);
+    expect(noise.amount).toBeUndefined();
+    const tvaLast = interpretReceiptText(["CIORAPI 8,57", "TOTAL LEI 8,57", "TOTAL TVA BON 1,47"]);
+    expect(tvaLast.amount).toBe(8.57);
+    expect(tvaLast.items).toHaveLength(1);
+  });
+  it("acceptă pozele de pe camera Android fără MIME, dar respinge PDF-urile", () => {
+    expect(isReceiptImageFile(new File(["x"], "image.jpg", { type: "" }))).toBe(true);
+    expect(isReceiptImageFile(new File(["x"], "IMG_001", { type: "application/octet-stream" }))).toBe(true);
+    expect(isReceiptImageFile(new File(["x"], "bon.png", { type: "image/png" }))).toBe(true);
+    expect(isReceiptImageFile(new File(["x"], "nota.pdf", { type: "application/pdf" }))).toBe(false);
   });
   it("salvează un bon din magazin și total, fără poze și fără linii de produs complete", () => {
     expect(resolveReceiptLines([{ id: "a", category: "Alimente", amount: "", label: "" }], 42.5)).toEqual([

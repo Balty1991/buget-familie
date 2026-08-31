@@ -435,10 +435,16 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
       setBusy(true);
       setError("");
       const { compressReceiptImage } = await import("@/lib/receipt-utils");
-      const compressed = await Promise.all(selected.map(compressReceiptImage));
+      const compressed: string[] = [];
+      for (const file of selected) {
+        compressed.push(await Promise.race([
+          compressReceiptImage(file),
+          new Promise<string>((_, reject) => window.setTimeout(() => reject(new Error("Poza a durat prea mult. Încearcă din galerie sau salvează bonul fără fotografie.")), 20000)),
+        ]));
+      }
       setImages((current) => [...current, ...compressed].slice(0, 2));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Poza bonului nu a putut fi procesată.");
+      setError(reason instanceof Error ? reason.message : "Poza bonului nu a putut fi procesată. Poți salva cumpărăturile fără fotografie.");
     } finally {
       setBusy(false);
     }
@@ -449,19 +455,23 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
       setError("");
       setOcrSummary("");
       setProgress(0);
-      const { readReceiptLocally } = await import("@/lib/receipt-utils");
+      const { readReceiptLocally, ocrTextLooksUseful } = await import("@/lib/receipt-utils");
       const result = await readReceiptLocally(images, setProgress);
       setOcrText(result.text);
-      if (result.amount) setAmount(String(result.amount));
+      if (result.vendor && !vendor.trim()) setVendor(result.vendor);
+      if (result.amount) setAmount(String(result.amount).replace(".", ","));
       if (result.date) setDate(result.date);
-      if (result.text && !note.trim()) setNote(result.text.slice(0, 1400));
+      if (result.text && !note.trim() && ocrTextLooksUseful(result.text)) setNote(result.text.slice(0, 1400));
       if (result.items.length) {
-        const suggestedLines = result.items.map((item) => ({ id: newId("receipt-line"), category: categories.includes(item.category) ? item.category : "Alimente", amount: String(item.amount), label: item.label }));
+        const suggestedLines = result.items.map((item) => ({ id: newId("receipt-line"), category: categories.includes(item.category) ? item.category : "Alimente", amount: String(item.amount).replace(".", ","), label: item.label }));
         setLines(suggestedLines);
         const detectedTotal = result.items.reduce((sum, item) => sum + item.amount, 0);
-        setOcrSummary(`Am propus ${result.items.length} produs${result.items.length === 1 ? "" : "e"} cu prețuri individuale (${fmtExact.format(detectedTotal)}). Verifică produsele, categoriile și totalul înainte de salvare.`);
+        const who = result.vendor ? `${result.vendor}, ` : "";
+        setOcrSummary(`Am citit ${who}${result.items.length} produs${result.items.length === 1 ? "" : "e"} după reduceri (${fmtExact.format(detectedTotal)}). Verifică categoriile înainte de salvare.`);
+      } else if (result.amount) {
+        setOcrSummary(`Am citit totalul ${fmtExact.format(result.amount)}${result.vendor ? ` la ${result.vendor}` : ""}, dar produsele nu sunt sigure. Completează magazinul dacă lipsește — fotografia rămâne atașată.`);
       } else {
-        setOcrSummary("Am citit textul și totalul, dar nu am identificat sigur linii de produse. Completează repartizarea manual.");
+        setOcrSummary("Nu am citit clar textul de pe bon. Scrie magazinul și totalul; fotografia rămâne atașată și poți salva fără produse separate.");
       }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Textul de pe bon nu a putut fi citit.");
@@ -496,7 +506,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
       <div className="bf-receipt-body">
         <div className="bf-receipt-intro">
           <p className="bf-kicker">CUMPĂRĂTURI</p>
-          <p>Scrie magazinul și totalul, apoi salvează. Fotografiile sunt opționale — alege din galerie sau fotografiază bonul.</p>
+          <p>Scrie magazinul și totalul, apoi apasă Salvează. Pozele sunt opționale: din galerie sau cu aparatul foto.</p>
         </div>
         <div className="bf-form-grid">
           <Field label="Magazin"><input autoFocus value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder="ex. Lidl" /></Field>
@@ -528,11 +538,11 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
             <p className="bf-kicker">FOTOGRAFII OPȚIONALE</p>
             <strong>{images.length}/2 imagini</strong>
           </div>
-          <p className="bf-receipt-photo-hint">Pozele rămân pe telefon și nu sunt necesare ca să salvezi cumpărăturile.</p>
+          <p className="bf-receipt-photo-hint">Pozele rămân pe telefon. Nu sunt obligatorii — poți salva magazinul și totalul fără ele.</p>
           <div className="bf-receipt-photo-actions">
             <label className="bf-upload-control gallery">
               <Images size={18} /> {busy && !progress ? "Comprimăm…" : "Din galerie"}
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,.jpg,.jpeg,.png,.webp" multiple disabled={busy || photosFull} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} />
+              <input type="file" accept="image/*" multiple disabled={busy || photosFull} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} />
             </label>
             <label className="bf-upload-control camera">
               <Camera size={18} /> Fotografiază

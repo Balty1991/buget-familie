@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v23";
+const CACHE = "buget-familie-shell-v24";
 
 const SHELL = ["./", "./manifest.webmanifest", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/icon-512.png"];
 

@@ -45,7 +45,10 @@ export type SyncPanelProps = { connected: boolean; busy: boolean; password: stri
 
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
-  return <div className="bf-modal-backdrop" role="presentation" onMouseDown={onClose}><section ref={dialogRef} tabIndex={-1} className="bf-modal" role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}><header><div><p className="bf-kicker">ÎNREGISTRARE RAPIDĂ</p><h2>{title}</h2></div><button className="bf-icon-button" aria-label="Închide" onClick={onClose}><X size={19} /></button></header>{children}</section></div>;
+  const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget }) => {
+    if (event.target === event.currentTarget) onClose();
+  };
+  return <div className="bf-modal-backdrop" role="presentation" onPointerDown={closeIfBackdrop}><section ref={dialogRef} tabIndex={-1} className="bf-modal" role="dialog" aria-modal="true" aria-label={title} onPointerDown={(event) => event.stopPropagation()}><header><div><p className="bf-kicker">ÎNREGISTRARE RAPIDĂ</p><h2>{title}</h2></div><button type="button" className="bf-icon-button" aria-label="Închide" onClick={onClose}><X size={19} /></button></header>{children}</section></div>;
 }
 
 export function DeferBelowFold({ children }: { children: ReactNode }) {
