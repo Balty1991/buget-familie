@@ -1,1 +1,1 @@
-PLACEHOLDER_WILL_REPLACE
+SEE_FILE_/tmp/home_update_payload.json
