@@ -476,3 +476,96 @@ export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSugge
   if (!suggestions.length) suggestions.push({ id: "history", tone: "good", title: "Construiește un profil financiar observabil", detail: "Înregistrează câteva venituri și cheltuieli, apoi stabilește data următorului venit. Asistentul va compara istoricul, bilanțul și ritmul real fără să trimită datele către un serviciu extern.", basis: "Încă nu există suficiente mișcări pentru o comparație personală", nextStep: "Adaugă prima mișcare" });
   return suggestions.slice(0, 4);
 };
+
+export type HealthScoreBreakdown = {
+  score: number;
+  tone: "good" | "watch" | "risk";
+  factors: Array<{
+    id: string;
+    label: string;
+    value: number;
+    weight: number;
+    detail: string;
+  }>;
+};
+
+/**
+ * Scor local 0–100 pentru ecranul Astăzi.
+ * Combină marja, starea plicurilor, scadențele apropiate și ritmul de cheltuire.
+ * Nu estimează venituri viitoare și nu modifică datele.
+ */
+export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthScoreBreakdown => {
+  const plan = data.settings.salaryPlan;
+  const forecast = planForecast(data, asOf);
+  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((s) => s.id);
+  const availableSources = data.settings.paymentSources
+    .filter((s) => sourceIds.includes(s.id))
+    .reduce((sum, s) => sum + sourceBalance(data, s.id), 0);
+
+  const reserved = plan.allocations.reduce((sum, a) => sum + Math.max(0, allocationStatus(data, a).remaining), 0);
+  const scheduled = pendingRecurringInPlan(data).reduce((sum, i) => sum + i.amount, 0);
+  const remaining = availableSources - reserved - scheduled;
+  const marginRatio = availableSources > 0 ? Math.max(0, Math.min(1, remaining / availableSources)) : (remaining >= 0 ? 0.6 : 0);
+  const marginDetail = remaining >= 0
+    ? `${Math.round(remaining)} RON nerepartizați din ${Math.round(availableSources)} RON`
+    : `Planul este peste limită cu ${Math.round(Math.abs(remaining))} RON`;
+
+  const envelopes = plan.allocations.map((a) => allocationStatus(data, a));
+  let envelopeScore = 1;
+  if (envelopes.length) {
+    const avgHealth = envelopes.reduce((sum, e) => sum + Math.max(0, 1 - e.usage), 0) / envelopes.length;
+    const overPenalty = envelopes.some((e) => e.state === "over") ? 0.35 : envelopes.some((e) => e.state === "watch") ? 0.15 : 0;
+    envelopeScore = Math.max(0, avgHealth - overPenalty);
+  }
+  const overCount = envelopes.filter((e) => e.state === "over").length;
+  const watchCount = envelopes.filter((e) => e.state === "watch").length;
+  const envelopeDetail = envelopes.length
+    ? overCount
+      ? `${overCount} plic${overCount > 1 ? "uri" : ""} depășit${overCount > 1 ? "e" : ""}`
+      : watchCount
+        ? `${watchCount} plic${watchCount > 1 ? "uri" : ""} aproape de limită`
+        : "Toate plicurile sunt în limite"
+    : "Nu există încă plicuri";
+
+  const in7Days = new Date(`${asOf}T12:00:00`);
+  in7Days.setDate(in7Days.getDate() + 7);
+  const horizon = in7Days.toISOString().slice(0, 10);
+  const upcomingRecurring = pendingRecurringInPlan(data).filter((i) => i.dueDate <= horizon);
+  const upcomingDebts = data.debts.filter((d) => d.dueDate && d.dueDate >= asOf && d.dueDate <= horizon);
+  const upcomingAmount = upcomingRecurring.reduce((sum, i) => sum + i.amount, 0) +
+    upcomingDebts.reduce((sum, d) => sum + (d.monthly || 0), 0);
+  const dueScore = upcomingAmount === 0 ? 1 : Math.max(0, 1 - Math.min(1, upcomingAmount / Math.max(1, availableSources * 0.4)));
+  const upcomingCount = upcomingRecurring.length + upcomingDebts.length;
+  const dueDetail = upcomingCount
+    ? `${upcomingCount} scadenț${upcomingCount > 1 ? "e" : "ă"} în 7 zile (${Math.round(upcomingAmount)} RON)`
+    : "Nicio scadență în următoarele 7 zile";
+
+  let paceScore = 0.7;
+  let paceDetail = "Setează următorul venit pentru a calcula ritmul";
+  if (plan.nextPayday || plan.earliestPayday) {
+    if (forecast.spentToDate <= 0) {
+      paceScore = 0.85;
+      paceDetail = "Încă nu există cheltuieli în perioada curentă";
+    } else if (forecast.safeDaily <= 0) {
+      paceScore = 0.2;
+      paceDetail = "Ritmul sigur este zero sau negativ";
+    } else {
+      const ratio = forecast.paceDaily / forecast.safeDaily;
+      paceScore = ratio <= 0.85 ? 1 : ratio <= 1.05 ? 0.75 : ratio <= 1.3 ? 0.4 : 0.15;
+      paceDetail = `Ritm actual ${Math.round(forecast.paceDaily)} RON/zi vs sigur ${Math.round(forecast.safeDaily)} RON/zi`;
+    }
+  }
+
+  const factors = [
+    { id: "margin", label: "Marjă până la venit", value: marginRatio, weight: 0.35, detail: marginDetail },
+    { id: "envelopes", label: "Starea plicurilor", value: envelopeScore, weight: 0.25, detail: envelopeDetail },
+    { id: "dues", label: "Scadențe apropiate", value: dueScore, weight: 0.20, detail: dueDetail },
+    { id: "pace", label: "Ritm de cheltuire", value: paceScore, weight: 0.20, detail: paceDetail },
+  ];
+
+  const raw = factors.reduce((sum, f) => sum + f.value * f.weight, 0);
+  const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
+  const tone: HealthScoreBreakdown["tone"] = score >= 75 ? "good" : score >= 45 ? "watch" : "risk";
+
+  return { score, tone, factors };
+};
