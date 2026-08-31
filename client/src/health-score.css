@@ -192,3 +192,15 @@
 .theme-rosewood .bf-health-ring::before {
   background: color-mix(in srgb, var(--card, #1a2420) 92%, transparent);
 }
+
+/* FAB-ul de jos e redundant: Avem deja Înregistrează mișcare în cardul de situație. */
+.bf-mobile-fab {
+  display: none !important;
+}
+
+/* Fără FAB, cardul săptămânal nu mai trebuie să evite un buton flotant. */
+@media (max-width: 880px) {
+  .bf-today-workspace {
+    padding-bottom: 1.25rem;
+  }
+}
