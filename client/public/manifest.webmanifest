@@ -4,16 +4,11 @@
   "description": "Registru financiar personal sau familial.",
   "lang": "ro",
   "start_url": ".",
+  "id": "./",
   "display": "standalone",
-  "background_color": "#EEC64D",
+  "background_color": "#EBB754",
   "theme_color": "#143c36",
   "icons": [
-    {
-      "src": "bf-favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",
