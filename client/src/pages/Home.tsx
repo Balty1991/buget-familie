@@ -1,4 +1,1 @@
-/**
- * RESTORED_MARKER_CHECK
- */
-export default function Home() { return null; }
+PLACEHOLDER_WILL_REPLACE
