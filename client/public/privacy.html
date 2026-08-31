@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Politică de confidențialitate — Buget Familie</title>
+  <meta name="description" content="Cum prelucrează Buget Familie datele financiare: registru local, sincronizare criptată opțională, fără cont și fără login bancar." />
+  <style>
+    body { margin: 0; color: #143c36; background: #f5f2ea; font: 16px/1.55 "IBM Plex Sans", "Segoe UI", sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1, h2 { font-family: "IBM Plex Serif", Georgia, serif; line-height: 1.2; }
+    h1 { font-size: 32px; }
+    h2 { margin-top: 28px; font-size: 22px; }
+    a { color: #1f5c52; }
+    .meta { color: #4d645d; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="meta">Buget Familie · versiunea 1.1.0 · actualizat 31 august 2026</p>
+    <h1>Politică de confidențialitate</h1>
+    <p>Buget Familie este o aplicație de evidență financiară personală sau de familie, publicată de dezvoltatorul Balty1991. Contact: <a href="mailto:contact.vanzo@gmail.com">contact.vanzo@gmail.com</a>. Pachet Android: <code>ro.balty1991.bugetfamilie</code>.</p>
+    <p>Nu creăm conturi de utilizator, nu cerem date bancare și nu vindem informații. Tu ești operatorul datelor din registrul tău.</p>
+
+    <h2>1. Ce date sunt prelucrate</h2>
+    <p>Pe dispozitiv (IndexedDB și stocare locală a browserului / WebView):</p>
+    <ul>
+      <li>mișcări (sume, categorii, date, membru, sursă de plată);</li>
+      <li>plicuri de buget, datorii, economii, scadențe recurente;</li>
+      <li>fotografii de bonuri și text OCR, numai local;</li>
+      <li>preferințe de temă, alerte și configurare.</li>
+    </ul>
+    <p>Opțional, dacă activezi sincronizarea de familie: un pachet criptat AES-GCM (PBKDF2, 250.000 iterații) este salvat în Google Firebase Firestore, într-o cameră identificată prin hash SHA-256 al parolei de familie. Parola nu este trimisă și nu este stocată. Serverul nu poate citi lei, nume sau note în clar.</p>
+    <p>Fotografiile bonurilor, șabloanele rapide, filtrele jurnalului, tema și jurnalul de sincronizare al telefonului nu sunt incluse în pachetul criptat.</p>
+
+    <h2>2. Temei și scop</h2>
+    <p>Prelucrarea are loc la cererea ta, pentru a ține un registru financiar. Nu folosim datele pentru publicitate, profilare de marketing sau scoring de credit.</p>
+
+    <h2>3. Analytics</h2>
+    <p>Aplicația web poate încărca un script Umami numai dacă administratorul a configurat variabilele de mediu aferente. Nu este un SDK de publicitate. Dacă scriptul nu este configurat, nu se colectează vizite.</p>
+
+    <h2>4. Permisiuni Android</h2>
+    <ul>
+      <li><b>INTERNET</b> — sincronizare opțională și, pe web, încărcarea aplicației.</li>
+      <li><b>POST_NOTIFICATIONS</b> — reamintiri locale de scadențe și plicuri, numai dacă le activezi.</li>
+      <li><b>SCHEDULE_EXACT_ALARM</b> și <b>RECEIVE_BOOT_COMPLETED</b> — reprogramarea reamintirilor locale.</li>
+    </ul>
+    <p>Nu cerem locație, contacte, microfon sau acces la conturi Google. Bonurile se aleg prin selectorul de sistem, fără permisiune Camera nativă.</p>
+
+    <h2>5. Copii de rezervă</h2>
+    <p>Backup-ul Google al aplicației este dezactivat (<code>allowBackup=false</code>), ca datele financiare să nu părăsească telefonul prin backup-ul de sistem. Poți exporta un fișier JSON local din Setări.</p>
+
+    <h2>6. Păstrare și ștergere</h2>
+    <p>Datele locale rămân până le ștergi (Setări → Resetare) sau dezinstalezi aplicația. Nu există un cont de șters la noi. Pentru camera de familie: schimbați parola pe telefoanele rămase; camera veche, derivată din parola veche, nu mai poate decripta un pachet nou. Instrucțiuni: pagina <a href="./delete-data.html">Cum ștergi datele</a>.</p>
+
+    <h2>7. Destinatari</h2>
+    <p>Google Firebase (UE/US, infrastructură Google Cloud) primește doar ciphertext-ul, dacă sincronizezi. GitHub Pages servește interfața web publică, nu registrul tău. Nu folosim procesatori de plăți în această versiune.</p>
+
+    <h2>8. Drepturile tale</h2>
+    <p>Poți accesa, exporta și șterge datele din aplicație. Pentru întrebări GDPR: <a href="mailto:contact.vanzo@gmail.com">contact.vanzo@gmail.com</a>. Răspundem în maximum 30 de zile.</p>
+
+    <h2>9. Copii</h2>
+    <p>Aplicația nu este destinată copiilor sub 13 ani și nu colectează conștient date despre ei.</p>
+
+    <p class="meta"><a href="./terms.html">Termeni de utilizare</a> · <a href="./">Înapoi la aplicație</a></p>
+  </main>
+</body>
+</html>

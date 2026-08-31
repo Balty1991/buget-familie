@@ -49,6 +49,7 @@ import "./theme-picker-scroll.css";
 import "./modernization-pass.css";
 import "./health-score.css";
 import "./theme-contrast-pass.css";
+import "./play-studio.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 

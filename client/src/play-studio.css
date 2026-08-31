@@ -1,0 +1,76 @@
+/**
+ * Studio Play — gospodărie, încredere, configurare. Tokeni --cf-* ca restul aplicației.
+ */
+.bf-insights-switch { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.bf-insights-switch button { font-size: 12px !important; padding: 0 8px !important; }
+
+.bf-setup { max-width: 420px; }
+.bf-setup .bf-setup-copy { display: grid; gap: 12px; color: var(--cf-ink); }
+.bf-setup h2 { margin: 0; color: var(--cf-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 28px; line-height: 1.15; }
+.bf-setup h2 em { font-style: italic; }
+.bf-setup p { margin: 0; color: var(--cf-muted); font-size: 14px; line-height: 1.5; }
+.bf-setup-sources { display: grid; gap: 10px; }
+.bf-setup-presets { display: grid; gap: 8px; }
+.bf-setup-presets button { position: relative; display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--cf-line); border-radius: 12px; color: var(--cf-ink); background: var(--cf-surface); text-align: left; }
+.bf-setup-presets button small { color: var(--cf-muted); }
+.bf-setup-presets button.active { border-color: var(--cf-primary-strong); background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface)); }
+.bf-setup-presets button svg { position: absolute; top: 12px; right: 12px; color: var(--cf-primary-strong); }
+.bf-setup-privacy { margin: 0; padding-left: 18px; color: var(--cf-ink); font-size: 13px; line-height: 1.55; }
+.bf-setup-shield { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: var(--cf-primary-strong); background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)); }
+
+.bf-household { display: grid; gap: 16px; padding: 8px 22px 24px; color: var(--cf-ink); }
+.bf-household-recap, .bf-household-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--cf-line); border-radius: 16px; background: var(--cf-surface); color: var(--cf-ink); }
+.bf-household-recap { border-top: 4px solid var(--cf-primary-strong); }
+.bf-household-recap.risk { border-top-color: var(--cf-danger); }
+.bf-household-recap.watch { border-top-color: var(--cf-warning); }
+.bf-household-recap.good { border-top-color: var(--cf-primary-strong); }
+.bf-household-recap h2, .bf-household-card h2 { margin: 4px 0 0; color: var(--cf-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 24px; line-height: 1.15; }
+.bf-household-recap p, .bf-household-card p { margin: 0; color: var(--cf-muted); font-size: 13px; line-height: 1.5; }
+.bf-household-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.bf-household-flow article, .bf-household-safe span { display: grid; gap: 4px; }
+.bf-household-flow small, .bf-household-safe small, .bf-household-flow em { color: var(--cf-muted); font-size: 10px; font-style: normal; }
+.bf-household-flow b, .bf-household-safe b, .bf-household-age strong { color: var(--cf-ink); font-variant-numeric: tabular-nums; }
+.bf-household-flow b { font-size: 16px; }
+.bf-household-flow .negative { color: var(--cf-danger); }
+.bf-household-actions { display: grid; gap: 8px; }
+.bf-household-actions small { color: var(--cf-muted); }
+.bf-household-heading { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+.bf-household-heading svg { color: var(--cf-muted); }
+.bf-household-age strong { font-family: "IBM Plex Serif", Georgia, serif; font-size: 32px; line-height: 1; }
+.bf-household-safe { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding-top: 8px; border-top: 1px solid var(--cf-line); }
+.bf-household-members { display: grid; gap: 12px; }
+.bf-household-members article { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid var(--cf-line); }
+.bf-household-members header, .bf-household-members div { display: flex; justify-content: space-between; gap: 10px; }
+.bf-household-members i { display: block; height: 6px; background: color-mix(in srgb, var(--cf-line) 70%, transparent); }
+.bf-household-members em { display: block; height: 100%; background: var(--cf-primary-strong); }
+.bf-household-hunt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--cf-line); }
+.bf-household-hunt small { display: block; color: var(--cf-muted); font-size: 11px; }
+.bf-household-hunt button { grid-column: 1 / -1; min-height: 40px; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-ink); background: var(--cf-surface-alt); font-size: 12px; font-weight: 700; }
+.bf-household-feed { display: grid; }
+.bf-household-feed article { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--cf-line); }
+.bf-household-feed span { display: grid; place-items: center; width: 28px; height: 28px; }
+.bf-household-feed span.income { color: var(--cf-primary-strong); background: color-mix(in srgb, var(--cf-primary) 16%, transparent); }
+.bf-household-feed span.expense { color: var(--cf-danger); background: color-mix(in srgb, var(--cf-danger) 14%, transparent); }
+.bf-household-feed small { color: var(--cf-muted); font-size: 11px; }
+.bf-household-feed strong.income { color: var(--cf-primary-strong); }
+.bf-household-feed strong.expense { color: var(--cf-danger); }
+.bf-household-pdf { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-ink); background: var(--cf-surface); font-size: 12px; font-weight: 800; }
+
+.bf-trust, .bf-premium-catalog { display: grid; gap: 10px; padding: 4px 0 8px; color: var(--cf-ink); }
+.bf-trust h2, .bf-premium-catalog h2 { margin: 0; color: var(--cf-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 22px; line-height: 1.2; }
+.bf-trust p, .bf-premium-catalog p, .bf-trust li, .bf-premium-catalog li { color: var(--cf-ink); font-size: 13px; line-height: 1.5; }
+.bf-trust ul, .bf-premium-catalog ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.bf-premium-catalog li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; }
+.bf-premium-catalog li svg { margin-top: 2px; color: var(--cf-primary-strong); }
+.bf-trust-links { display: grid; gap: 8px; }
+.bf-trust-links a { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 12px; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-ink); background: var(--cf-surface); text-decoration: none; font-size: 13px; font-weight: 700; }
+.bf-settings .bf-trust, .bf-settings .bf-premium-catalog { padding: 16px; border: 1px solid var(--cf-line); border-radius: 16px; background: var(--cf-surface); }
+
+.bf-obligations-header .bf-goals-link + .bf-goals-link, .bf-calendar-link { margin-top: 8px; }
+
+@media (max-width: 760px) {
+  .bf-household { padding: 6px 16px 18px; }
+  .bf-household-flow, .bf-household-safe { grid-template-columns: 1fr; }
+  .bf-household-recap h2, .bf-household-card h2 { font-size: 22px; }
+  .bf-insights-switch button { font-size: 11px !important; gap: 4px !important; }
+}

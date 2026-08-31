@@ -15,6 +15,8 @@
 | Plicuri de categorie | O categorie precum Alimente, Transport/Taxi, Abonamente, Rate produse sau Consumabile copil are bugetul întregului ciclu, sursa reală, membrul opțional și un detaliu. De exemplu, Alimente 2.400 RON pe patru săptămâni pot fi create ca 1.200 RON cash Eu și 1.200 RON card Soție: fiecare plic are 300 RON în fiecare tranșă. O plată compatibilă selectează automat plicul și consumă exact tranșa activă; se poate alege expres un alt plic sau plata în afara plicurilor. |
 | Puls, alerte și realocări | Fiecare plic are un prag de atenție configurabil de la 50% la 95%; depășirea este semnalată, nu blocată. Planul și formularul de mișcare arată suma rămasă atât în plicul ciclului, cât și în tranșa activă. Începutul unei tranșe poate genera o singură alertă locală pentru fiecare interval. Alertele nu trimit bani, nu cer acces bancar și nu rulează când aplicația este închisă. |
 | Analiză, alerte și PDF | Comparație cu luna precedentă, evoluție lunară în anul curent, grafic interactiv de distribuție pe categorii, poziție financiară și plicuri la prag de atenție ori depășite. Bilanțul și planul calendaristic pot fi descărcate ca PDF local în browser; planul include suma, intervalul, ritmul și tranșele. |
+| Gospodărie | Recapitulare de lună cu ritual de închidere local, vârstă a banilor, împărțire pe membri, vânător de abonamente din istoric și calendar de scadențe (inclusiv rate). |
+| Încredere | Politică de confidențialitate, termeni și instrucțiuni de ștergere, publice pe GitHub Pages și în Setări. |
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere protejată, proprietar opțional (familie sau membru) și calcule de progres. O rată poate fi confirmată dintr-o sursă reală: creează cheltuiala în Jurnal, reduce automat soldul aceleiași datorii și păstrează istoricul „plată parțială” sau „achitată integral”. |
 | Bonuri mobile | Maximum două fotografii comprimate local, păstrate în **IndexedDB** pe telefon, nu în `localStorage` și nu în pachetul sincronizat. Bonurile salvate în versiunile vechi sunt mutate defensiv la prima deschidere; dacă spațiul local nu este disponibil, fotografiile existente nu sunt șterse. OCR-ul local poate propune produse, prețuri și categorii editabile; liniile trebuie să egaleze totalul înainte de salvare. |
@@ -115,5 +117,10 @@ Aplicația păstrează GitHub Pages pentru acces web și este pregătită separa
 | `cd android && ./gradlew assembleDebug` | Generează local un APK debug după instalarea Android SDK. |
 
 Un pachet pentru Google Play va necesita ulterior un AAB semnat și un keystore păstrat doar în GitHub Secrets. Nu introduce parole de sincronizare, tokenuri GitHub sau date financiare în setările de build.
+
+Politică de confidențialitate: https://balty1991.github.io/buget-familie/privacy.html  
+Termeni: https://balty1991.github.io/buget-familie/terms.html  
+Ștergere date: https://balty1991.github.io/buget-familie/delete-data.html  
+Listare Play (text gata de lipit): `docs/play-store-listing-ro.md`
 
 [^pages]: [GitHub Docs — GitHub Pages limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)
