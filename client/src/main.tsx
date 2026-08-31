@@ -47,6 +47,7 @@ import "./expanded-themes.css";
 import "./plan-header-stat.css";
 import "./theme-picker-scroll.css";
 import "./modernization-pass.css";
+import "./health-score.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
