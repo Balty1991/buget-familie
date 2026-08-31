@@ -266,3 +266,36 @@ export const liquidSafeToSpend = (data: AppData, asOf = isoToday()) => {
   const available = Math.max(0, balance.liquidFunds - pending);
   return { liquidFunds: balance.liquidFunds, reservedRecurring: pending, envelopeLeft, available, asOf };
 };
+
+export const lastDaysPulse = (data: AppData, days = 7, asOf = isoToday()) => {
+  const basis = new Date(`${asOf}T12:00:00`);
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(basis);
+    date.setDate(basis.getDate() - (days - 1 - index));
+    const iso = date.toISOString().slice(0, 10);
+    const entries = data.transactions.filter((item) => item.date === iso);
+    const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+    const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
+    return {
+      date: iso,
+      weekday: new Intl.DateTimeFormat("ro-RO", { weekday: "short" }).format(date).replace(".", ""),
+      expense,
+      income,
+      isToday: iso === asOf,
+    };
+  });
+};
+
+export const paydayTrack = (data: AppData, asOf = isoToday()) => {
+  const plan = data.settings.salaryPlan;
+  const end = plan.nextPayday || plan.earliestPayday;
+  if (!plan.periodStart || !end) return undefined;
+  const total = Math.max(1, daysBetween(plan.periodStart, end) + 1);
+  const elapsed = Math.max(0, Math.min(total, daysBetween(plan.periodStart, asOf) + 1));
+  return { start: plan.periodStart, end, total, elapsed, remaining: Math.max(0, total - elapsed), ratio: elapsed / total };
+};
+
+export const envelopeLane = (data: AppData) => data.settings.salaryPlan.allocations
+  .map((item) => ({ item, ...allocationStatus(data, item) }))
+  .sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.usage - left.usage)
+  .slice(0, 8);

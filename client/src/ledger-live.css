@@ -1,0 +1,214 @@
+/**
+ * Plicuri desenate, pulsul săptămânii, umplere vizuală.
+ * Tokeni --cf-*; ultimul cuvânt după atelier-graphic-pass.
+ */
+
+.bf-envelope-mark { display: block; overflow: visible; }
+.bf-envelope-body { fill: color-mix(in srgb, var(--cf-surface) 88%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.4; }
+.bf-envelope-fill { fill: var(--cf-primary-strong); opacity: .88; }
+.bf-envelope-flap { fill: none; stroke: var(--cf-ink); stroke-width: 1.6; stroke-linejoin: round; }
+.bf-envelope-lip { fill: color-mix(in srgb, var(--cf-surface) 70%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.2; }
+.bf-envelope-mark.watch .bf-envelope-fill { fill: var(--cf-warning); }
+.bf-envelope-mark.over .bf-envelope-fill { fill: var(--cf-danger); }
+.bf-envelope-mark.over .bf-envelope-body { stroke: var(--cf-danger); }
+
+.bf-envelope-empty-art .bf-envelope-body { fill: var(--cf-surface); stroke: var(--cf-line); stroke-width: 1.6; }
+.bf-envelope-empty-art .bf-envelope-flap { fill: none; stroke: var(--cf-muted); stroke-width: 1.5; }
+.bf-envelope-empty-art .bf-envelope-lip { fill: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface)); stroke: var(--cf-line); }
+.bf-envelope-empty-art .bf-envelope-seal { fill: var(--cf-warning); }
+
+.bf-today-ledger {
+  display: grid;
+  gap: 14px;
+  color: var(--cf-ink);
+}
+
+.bf-today-pulse,
+.bf-today-envelopes,
+.bf-payday-track {
+  padding: 16px 18px;
+  border: 1px solid var(--cf-line);
+  border-radius: 20px;
+  background: var(--cf-surface);
+  color: var(--cf-ink);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--cf-ink) 6%, transparent);
+}
+
+.bf-today-pulse {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(160px, 1.1fr);
+  gap: 16px;
+  align-items: end;
+}
+
+.bf-today-pulse-copy h2 {
+  margin: 4px 0 6px;
+  color: var(--cf-ink);
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: 28px;
+  line-height: 1.05;
+  letter-spacing: -.04em;
+}
+
+.bf-today-pulse-copy p { margin: 0; color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
+
+.bf-today-pulse-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+  min-height: 92px;
+}
+
+.bf-today-pulse-chart span {
+  display: grid;
+  grid-template-rows: 72px auto;
+  justify-items: center;
+  gap: 6px;
+}
+
+.bf-today-pulse-chart i {
+  align-self: end;
+  width: 70%;
+  min-height: 6px;
+  border-radius: 5px 5px 2px 2px;
+  background: linear-gradient(180deg, var(--cf-primary), var(--cf-primary-strong));
+}
+
+.bf-today-pulse-chart span.today i {
+  background: var(--cf-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cf-warning) 28%, transparent);
+}
+
+.bf-today-pulse-chart b {
+  color: var(--cf-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.bf-payday-track {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.bf-payday-track span { display: grid; gap: 2px; }
+.bf-payday-track small { color: var(--cf-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.bf-payday-track b { color: var(--cf-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 22px; line-height: 1; }
+.bf-payday-rail {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--cf-ink) 12%, var(--cf-surface));
+}
+.bf-payday-rail i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cf-primary), var(--cf-info));
+}
+
+.bf-today-envelopes-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bf-today-envelopes-heading h2 {
+  margin: 4px 0 0;
+  color: var(--cf-ink);
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.bf-today-envelopes-heading button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--cf-line);
+  border-radius: 10px;
+  color: var(--cf-ink);
+  background: var(--cf-surface-alt);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.bf-today-envelopes ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bf-today-envelopes li {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  border-top: 1px solid var(--cf-line);
+  color: var(--cf-ink);
+}
+
+.bf-today-envelopes li:first-child { border-top: 0; }
+.bf-today-envelopes li b { display: block; font-size: 14px; }
+.bf-today-envelopes li small { color: var(--cf-muted); font-size: 11px; }
+.bf-today-envelopes li strong { font-variant-numeric: tabular-nums; font-size: 13px; }
+
+.bf-today-envelopes-empty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed var(--cf-line);
+  border-radius: 16px;
+  color: var(--cf-ink);
+  background: color-mix(in srgb, var(--cf-primary) 7%, var(--cf-surface));
+  text-align: left;
+}
+
+.bf-today-envelopes-empty b { display: block; font-size: 15px; }
+.bf-today-envelopes-empty small { color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
+
+.bf-allocation-list article {
+  grid-template-columns: 64px minmax(0, 1fr) auto auto 33px !important;
+  align-items: center;
+}
+
+.bf-envelope-portrait {
+  display: grid;
+  place-items: center;
+  width: 64px;
+}
+
+.bf-allocation-empty {
+  display: grid !important;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px 16px !important;
+  text-align: center;
+}
+
+.bf-onboarding-visual .bf-envelope-mark {
+  position: absolute;
+  inset: auto;
+  opacity: .22;
+  transform: rotate(-8deg) translate(28px, -6px);
+}
+
+@media (max-width: 760px) {
+  .bf-today-pulse { grid-template-columns: 1fr; }
+  .bf-today-pulse-chart { min-height: 84px; }
+  .bf-payday-track { grid-template-columns: minmax(0, 1fr) auto; }
+  .bf-payday-rail { grid-column: 1 / -1; }
+  .bf-allocation-list article { grid-template-columns: 52px minmax(0, 1fr) auto !important; }
+  .bf-envelope-portrait { width: 52px; }
+}

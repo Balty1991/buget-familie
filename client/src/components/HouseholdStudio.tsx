@@ -5,6 +5,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, PiggyBank, Repeat, Shield, Users } from "lucide-react";
 import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-data";
+import { CashNote } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection } from "@/lib/household-insights";
 
@@ -39,12 +40,13 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   };
   return (
     <div className="bf-household">
-      <section className={`bf-household-recap ${recap.tone}`}>
+      <section className={`bf-household-recap bf-statement ${recap.tone}`}>
         <div>
           <p className="bf-kicker">RITUALUL LUNII</p>
           <h2>{recap.title}</h2>
           <p>{recap.nextStep}</p>
         </div>
+        {closedThis && <span className="bf-statement-stamp">Închis</span>}
         <div className="bf-household-flow">
           <article><small>Venituri</small><b>{money(recap.income)}</b><em>{recap.priorIncome ? `${recap.income - recap.priorIncome >= 0 ? "+" : ""}${money(recap.income - recap.priorIncome)} vs luna trecută` : "prima lună cu date"}</em></article>
           <article><small>Cheltuieli</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : "fără categorie dominantă"}</em></article>
@@ -65,7 +67,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
         </div>
         {age ? (
           <div className="bf-household-age">
-            <strong>{age.days < 1 ? "sub o zi" : `${age.days} zile`}</strong>
+            <CashNote amount={age.days < 1 ? "sub o zi" : `${age.days} zile`} caption="Vârsta medie a leului" />
             <p>Media ponderată pe {money(age.sampleAmount)} cheltuiți. {age.unfundedAmount > 0 ? `${money(age.unfundedAmount)} nu au avut încă un venit pereche — completează soldul inițial.` : "Fiecare leu cheltuit a avut o încasare în spate."}</p>
           </div>
         ) : <p className="bf-helper">După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.</p>}

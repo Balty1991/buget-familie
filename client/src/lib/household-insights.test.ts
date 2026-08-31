@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, detectSubscriptions, householdActivity, monthlyRecap, recurringFromDetection } from "./household-insights";
+import { ageOfMoney, detectSubscriptions, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -75,5 +75,25 @@ describe("analize de gospodărie", () => {
       { id: "n3", title: "Netflix", amount: 55, kind: "expense", category: "Abonamente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-08" },
     ];
     expect(detectSubscriptions(data, "2026-08-20")).toEqual([]);
+  });
+
+  it("desenează pulsul pe 7 zile și pune astăzi la capăt", () => {
+    const { data, source } = base();
+    data.transactions = [
+      { id: "e1", title: "Pâine", amount: 20, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-31" },
+      { id: "e0", title: "Taxi", amount: 40, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-25" },
+    ];
+    const pulse = lastDaysPulse(data, 7, "2026-08-31");
+    expect(pulse).toHaveLength(7);
+    expect(pulse[0].date).toBe("2026-08-25");
+    expect(pulse[0].expense).toBe(40);
+    expect(pulse[6]).toMatchObject({ date: "2026-08-31", expense: 20, isToday: true });
+  });
+
+  it("desenează pista până la venit între începutul ciclului și nextPayday", () => {
+    const { data } = base();
+    data.settings.salaryPlan.periodStart = "2026-08-01";
+    data.settings.salaryPlan.nextPayday = "2026-08-31";
+    expect(paydayTrack(data, "2026-08-16")).toMatchObject({ total: 31, elapsed: 16, remaining: 15 });
   });
 });

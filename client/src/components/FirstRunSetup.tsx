@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { Check, ChevronRight, ShieldCheck, WalletCards } from "lucide-react";
+import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 
@@ -83,6 +84,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
     <div className="bf-modal-backdrop bf-onboarding-backdrop" role="presentation">
       <section ref={dialogRef} tabIndex={-1} className="bf-onboarding bf-setup" role="dialog" aria-modal="true" aria-labelledby="bf-setup-title">
         <button className="bf-onboarding-skip" onClick={complete}>Sari peste</button>
+        <div className="bf-setup-visual" aria-hidden="true"><EnvelopeStack fill={(step + 1) / 4} size={96} /></div>
         <p className="bf-kicker">CONFIGURARE · 0{step + 1} / 04</p>
         {step === 0 && (
           <div className="bf-setup-copy">

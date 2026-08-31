@@ -1,0 +1,404 @@
+/**
+ * Atelier de plicuri — limbaj vizual de registru fizic.
+ * Ultimul CSS: tokeni --cf-*, contrast forțat, fără a atinge sync.
+ */
+
+/* —— Plic desenat —— */
+.bf-envelope-mark,
+.bf-envelope-empty-art,
+.bf-desk-scene { display: block; overflow: visible; color: var(--cf-ink); }
+.bf-envelope-shadow { fill: color-mix(in srgb, var(--cf-ink) 18%, transparent); }
+.bf-envelope-body { fill: color-mix(in srgb, var(--cf-surface) 82%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.4; }
+.bf-envelope-fill { fill: var(--cf-primary-strong); opacity: .82; }
+.bf-envelope-window { fill: color-mix(in srgb, var(--cf-surface) 70%, #fff); stroke: var(--cf-line); stroke-width: 1; }
+.bf-envelope-window-fill { fill: color-mix(in srgb, var(--cf-primary) 55%, var(--cf-surface)); }
+.bf-envelope-flap { fill: none; stroke: var(--cf-ink); stroke-width: 1.5; stroke-linejoin: round; }
+.bf-envelope-lip { fill: color-mix(in srgb, var(--cf-surface) 55%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.1; }
+.bf-envelope-grain { fill: var(--cf-ink); opacity: .28; pointer-events: none; }
+.bf-envelope-seal { fill: var(--cf-warning); stroke: color-mix(in srgb, var(--cf-ink) 35%, var(--cf-warning)); stroke-width: 1; }
+.bf-envelope-seal-text { fill: #3a2410; font-size: 7px; font-weight: 800; font-family: "IBM Plex Sans", system-ui, sans-serif; }
+.bf-envelope-mark.watch .bf-envelope-fill,
+.bf-envelope-mark.watch .bf-envelope-window-fill { fill: var(--cf-warning); }
+.bf-envelope-mark.watch .bf-envelope-seal { fill: var(--cf-warning); }
+.bf-envelope-mark.over .bf-envelope-fill,
+.bf-envelope-mark.over .bf-envelope-window-fill { fill: var(--cf-danger); }
+.bf-envelope-mark.over .bf-envelope-body { stroke: var(--cf-danger); }
+.bf-envelope-mark.over .bf-envelope-seal { fill: var(--cf-danger); }
+.bf-envelope-mark.over .bf-envelope-seal-text { fill: #fff; }
+
+.bf-envelope-stack { position: relative; margin: 0 auto; }
+.bf-envelope-stack span { position: absolute; inset: auto 0 0; display: grid; place-items: end center; }
+.bf-envelope-stack .layer-0 { transform: translate(-18px, 6px) rotate(-14deg); opacity: .7; }
+.bf-envelope-stack .layer-1 { transform: translate(16px, 4px) rotate(11deg); opacity: .86; }
+.bf-envelope-stack .layer-2 { transform: translate(0, 0); }
+
+.bf-desk-blotter-art { fill: color-mix(in srgb, var(--cf-primary) 10%, var(--cf-surface)); stroke: var(--cf-line); }
+.bf-desk-rule { stroke: color-mix(in srgb, var(--cf-ink) 18%, transparent); stroke-width: 1; }
+.bf-desk-pencil rect { fill: var(--cf-warning); }
+.bf-desk-pencil polygon { fill: color-mix(in srgb, var(--cf-ink) 55%, var(--cf-warning)); }
+
+/* —— Cadran sănătate —— */
+.bf-health-gauge { display: block; color: var(--cf-primary-strong); overflow: visible; }
+.bf-health-gauge.watch { color: var(--cf-warning); }
+.bf-health-gauge.risk { color: var(--cf-danger); }
+.bf-health-gauge-track { stroke: color-mix(in srgb, var(--cf-ink) 16%, var(--cf-surface)); stroke-width: 12; stroke-linecap: round; }
+.bf-health-gauge-arc { stroke-width: 12; stroke-linecap: round; }
+.bf-health-gauge-tick { stroke: color-mix(in srgb, var(--cf-ink) 35%, transparent); stroke-width: 1.4; }
+.bf-health-gauge-end { fill: var(--cf-muted); font-size: 9px; font-weight: 800; }
+.bf-health-gauge-score {
+  fill: var(--cf-ink);
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+.bf-health-needle { fill: var(--cf-ink); }
+.bf-health-needle-hub { fill: var(--cf-ink); stroke: var(--cf-surface); stroke-width: 2; }
+
+.bf-health-score {
+  display: inline-flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px !important;
+  padding: 4px 8px 6px !important;
+}
+.bf-health-score small { letter-spacing: .08em; }
+.bf-health-factor {
+  display: grid !important;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.bf-today-situation .bf-health-score {
+  background: rgba(255,255,255,.12) !important;
+  border-color: rgba(255,255,255,.28) !important;
+  color: var(--bf-on-hero, #f4faf6) !important;
+}
+.bf-today-situation .bf-health-gauge { color: #f4ead0; }
+.bf-today-situation .bf-health-gauge.watch { color: var(--cf-warning); }
+.bf-today-situation .bf-health-gauge.risk { color: #ffc1b6; }
+.bf-today-situation .bf-health-gauge-track { stroke: rgba(255,255,255,.22); }
+.bf-today-situation .bf-health-gauge-tick { stroke: rgba(255,255,255,.4); }
+.bf-today-situation .bf-health-gauge-end,
+.bf-today-situation .bf-health-gauge-score,
+.bf-today-situation .bf-health-needle,
+.bf-today-situation .bf-health-needle-hub { fill: #f7fff9; }
+.bf-today-situation .bf-health-needle-hub { stroke: color-mix(in srgb, var(--cf-primary-strong) 40%, #06140f); }
+.bf-today-situation .bf-health-score small { color: #f7fff9 !important; }
+
+/* —— Masa de lucru Astăzi —— */
+.bf-ledger-desk,
+.bf-today-ledger {
+  display: grid;
+  gap: 14px;
+  color: var(--cf-ink);
+}
+.bf-desk-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bf-desk-heading h2,
+.bf-today-pulse-copy h2,
+.bf-today-envelopes-heading h2 {
+  margin: 4px 0 0;
+  color: var(--cf-ink);
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: 24px;
+  line-height: 1.12;
+  letter-spacing: -.03em;
+}
+.bf-desk-heading button,
+.bf-today-envelopes-heading button {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--cf-line);
+  border-radius: 10px;
+  color: var(--cf-ink);
+  background: var(--cf-surface-alt);
+  font-size: 12px;
+  font-weight: 800;
+}
+.bf-desk-top {
+  display: grid;
+  grid-template-columns: minmax(140px, .72fr) minmax(0, 1.28fr);
+  gap: 12px;
+  align-items: stretch;
+}
+.bf-today-pulse,
+.bf-today-envelopes,
+.bf-payday-track,
+.bf-payday-strip,
+.bf-cash-note {
+  padding: 16px 18px;
+  border: 1px solid var(--cf-line);
+  border-radius: 20px;
+  background: var(--cf-surface);
+  color: var(--cf-ink);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--cf-ink) 6%, transparent);
+}
+.bf-today-pulse {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(150px, 1.1fr);
+  gap: 16px;
+  align-items: end;
+}
+.bf-today-pulse-copy p { margin: 0; color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
+.bf-today-pulse-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+  min-height: 92px;
+  padding: 8px 6px 0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 8%, transparent) 1px, transparent 1px);
+  background-size: 100% 14px;
+  border-radius: 10px;
+}
+.bf-today-pulse-chart span { display: grid; grid-template-rows: 72px auto; justify-items: center; gap: 6px; }
+.bf-today-pulse-chart i {
+  align-self: end;
+  width: 62%;
+  min-height: 8px;
+  border-radius: 5px 5px 1px 1px;
+  background: linear-gradient(180deg, var(--cf-primary), var(--cf-primary-strong));
+}
+.bf-today-pulse-chart span.today i {
+  background: var(--cf-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cf-warning) 28%, transparent);
+}
+.bf-today-pulse-chart b {
+  color: var(--cf-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.bf-cash-note {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  min-height: 132px;
+  background:
+    radial-gradient(circle at 18% 50%, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 42%),
+    var(--cf-surface);
+}
+.bf-cash-note svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bf-cash-note-body { fill: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)); stroke: var(--cf-line); }
+.bf-cash-note-frame { fill: none; stroke: color-mix(in srgb, var(--cf-primary-strong) 45%, var(--cf-line)); stroke-dasharray: 5 4; }
+.bf-cash-note-rosette { fill: none; stroke: color-mix(in srgb, var(--cf-primary-strong) 55%, transparent); stroke-width: 1.4; }
+.bf-cash-note-mark { fill: color-mix(in srgb, var(--cf-primary-strong) 35%, transparent); font-size: 18px; font-weight: 800; letter-spacing: .2em; }
+.bf-cash-note small, .bf-cash-note b { position: relative; z-index: 1; }
+.bf-cash-note small { color: var(--cf-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.bf-cash-note b {
+  color: var(--cf-ink);
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+
+.bf-payday-strip {
+  display: grid;
+  gap: 12px;
+}
+.bf-payday-strip small { color: var(--cf-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.bf-payday-strip b { color: var(--cf-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 22px; line-height: 1; }
+.bf-payday-strip ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18px, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bf-payday-strip li { display: grid; justify-items: center; gap: 4px; }
+.bf-payday-strip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--cf-ink) 14%, var(--cf-surface));
+  box-shadow: inset 0 0 0 1px var(--cf-line);
+}
+.bf-payday-strip li.past i { background: var(--cf-primary-strong); box-shadow: none; }
+.bf-payday-strip li.payday i {
+  width: 16px;
+  height: 16px;
+  background: var(--cf-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cf-warning) 28%, transparent);
+}
+.bf-payday-strip span { color: var(--cf-muted); font-size: 8px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
+.bf-payday-strip li.payday span { color: var(--cf-ink); }
+
+.bf-envelope-fan {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(132px, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 4px 2px 8px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.bf-envelope-fan li { scroll-snap-align: start; }
+.bf-envelope-fan button {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 168px;
+  padding: 12px 10px 14px;
+  border: 1px solid var(--cf-line);
+  border-radius: 8px 8px 18px 18px;
+  color: var(--cf-ink);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px);
+  text-align: center;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--cf-ink) 8%, transparent);
+}
+.bf-envelope-fan b { font-size: 13px; line-height: 1.25; }
+.bf-envelope-fan strong { font-variant-numeric: tabular-nums; font-size: 14px; }
+.bf-envelope-fan small { color: var(--cf-muted); font-size: 10px; line-height: 1.35; }
+.bf-envelope-fan li.watch button { background: linear-gradient(180deg, color-mix(in srgb, var(--cf-warning) 22%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px); }
+.bf-envelope-fan li.over button { background: linear-gradient(180deg, color-mix(in srgb, var(--cf-danger) 22%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px); }
+
+.bf-today-envelopes-empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border: 1px dashed var(--cf-line);
+  border-radius: 18px;
+  color: var(--cf-ink);
+  background: color-mix(in srgb, var(--cf-primary) 7%, var(--cf-surface));
+  text-align: center;
+}
+.bf-today-envelopes-empty b { display: block; font-size: 15px; }
+.bf-today-envelopes-empty small { color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
+
+/* —— Plan: birou de plicuri —— */
+.bf-plan-fan {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+  min-height: 52px;
+  padding: 4px 0 2px;
+}
+.bf-plan-fan .bf-envelope-mark { margin-left: -18px; filter: drop-shadow(0 6px 8px color-mix(in srgb, var(--cf-ink) 16%, transparent)); }
+.bf-plan-fan .bf-envelope-mark:first-child { margin-left: 0; }
+
+.bf-allocation-list.bf-envelope-desk {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+  gap: 14px !important;
+}
+.bf-allocation-list.bf-envelope-desk > article {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 8px !important;
+  padding: 14px 14px 12px !important;
+  border: 1px solid var(--cf-line) !important;
+  border-radius: 8px 8px 20px 20px !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
+  color: var(--cf-ink) !important;
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--cf-ink) 8%, transparent);
+}
+.bf-allocation-list.bf-envelope-desk > article.watch {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cf-warning) 22%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
+}
+.bf-allocation-list.bf-envelope-desk > article.over {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cf-danger) 20%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
+}
+.bf-allocation-list.bf-envelope-desk > article::after { display: none !important; }
+.bf-envelope-desk .bf-envelope-portrait {
+  width: 100% !important;
+  justify-items: start;
+}
+.bf-envelope-desk .bf-allocation-list-heading b,
+.bf-envelope-desk .bf-allocation-list-total strong { color: var(--cf-ink) !important; }
+.bf-envelope-desk .bf-allocation-empty {
+  grid-column: 1 / -1;
+  display: grid !important;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px 16px !important;
+  text-align: center;
+}
+
+/* —— Onboarding: plicurile nu mai sunt filigran —— */
+.bf-onboarding-visual .bf-envelope-mark,
+.bf-onboarding-visual .bf-envelope-stack {
+  position: relative !important;
+  inset: auto !important;
+  opacity: 1 !important;
+  transform: none !important;
+  z-index: 1;
+}
+.bf-onboarding-visual .bf-envelope-stack { width: 140px; height: 100px; }
+.bf-onboarding-visual .bf-onboarding-icon { z-index: 2; }
+.bf-setup-visual { display: grid; place-items: center; margin: 8px 0 12px; }
+
+/* —— Extrasul gospodăriei —— */
+.bf-statement {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 11px,
+      color-mix(in srgb, var(--cf-ink) 6%, transparent) 11px 12px
+    ),
+    var(--cf-surface) !important;
+}
+.bf-statement::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 10px;
+  background:
+    radial-gradient(circle at 10px 10px, transparent 6px, var(--cf-surface-alt) 7px);
+  background-size: 20px 10px;
+}
+.bf-statement-stamp {
+  position: absolute;
+  right: 16px;
+  top: 22px;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--cf-primary-strong);
+  border-radius: 50%;
+  color: var(--cf-primary-strong);
+  transform: rotate(12deg);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .78;
+}
+.bf-statement.risk .bf-statement-stamp { border-color: var(--cf-danger); color: var(--cf-danger); }
+
+@media (max-width: 760px) {
+  .bf-desk-top { grid-template-columns: 1fr; }
+  .bf-today-pulse { grid-template-columns: 1fr; }
+  .bf-today-situation .bf-health-gauge { width: 78px; height: auto; }
+  .bf-allocation-list.bf-envelope-desk { grid-template-columns: 1fr !important; }
+  .bf-plan-fan { justify-content: flex-start; overflow-x: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-health-gauge-arc,
+  .bf-envelope-fill,
+  .bf-today-pulse-chart i { transition: none !important; }
+}

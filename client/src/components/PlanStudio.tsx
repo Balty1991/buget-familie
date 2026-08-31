@@ -5,6 +5,7 @@
  */
 import { useState } from "react";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
+import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
 import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
@@ -178,6 +179,13 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       <div><p className="bf-kicker">PLANUL FAMILIEI, PE CATEGORII</p><h1>Fiecare leu <em>are un loc.</em></h1><p>Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.</p></div>
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>NEREPARTIZAȚI</small><b>{money(unrepartized)}</b></div>
     </header>
+    {envelopes.length > 0 && (
+      <div className="bf-plan-fan" aria-hidden="true">
+        {envelopes.slice(0, 8).map(({ item, usage, state }) => (
+          <EnvelopeMark key={item.id} remaining={Math.max(0, 1 - usage)} state={state} size={54} />
+        ))}
+      </div>
+    )}
 
     <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">REPARTIZARE PE PERIOADĂ</p><h2 id="allocation-period-title">Alege ritmul casei.</h2><p>Vezi banii disponibili pentru intervalul în care iei decizia.</p></div><span>{money(Math.max(0, unrepartized))}<small>rămași de repartizat</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label="Perioada repartizării">{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>disponibil în surse</small></span><span><b>{money(reservedInEnvelopes)}</b><small>în plicuri</small></span><span><b>{money(scheduled)}</b><small>scadențe rezervate</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>de repartizat</small></span></div></section>
 
@@ -248,8 +256,9 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       </div>
       {allocationPreviewOpen && <div className="bf-allocation-preview" role="dialog" aria-modal="true" aria-labelledby="allocation-preview-title"><div><p className="bf-kicker">PREVIZUALIZARE</p><h3 id="allocation-preview-title">Verifică înainte de aplicare</h3><p>Vei {editingAllocationId ? "actualiza" : "adăuga"} plicul <b>{allocationLabel.trim() || allocationCategory}</b> cu <strong>{money(parseRomanianAmount(allocationAmount))}</strong> pentru perioada aleasă.</p><div><span>Rămas acum<strong>{money(unrepartized)}</strong></span><span>Rămas după<strong>{money(unrepartized - parseRomanianAmount(allocationAmount))}</strong></span></div><small>Previzualizarea nu schimbă nimic până când nu confirmi.</small><footer><button onClick={() => setAllocationPreviewOpen(false)}>Înapoi la editare</button><button className="bf-primary" onClick={() => { setAllocationPreviewOpen(false); saveAllocation(); }}><Check size={16} /> Confirmă repartizarea</button></footer></div></div>}
       {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}
-      <div className="bf-allocation-list" aria-live="polite">
+      <div className="bf-allocation-list bf-envelope-desk" aria-live="polite">
         {envelopes.map(({ item, budget, remaining, usage, state, week, weeks }) => <article key={item.id} className={state}>
+          <div className="bf-envelope-portrait" aria-hidden="true"><EnvelopeMark remaining={Math.max(0, 1 - usage)} state={state} size={58} /></div>
           <div className="bf-allocation-list-heading"><span className={`bf-allocation-state ${state}`}>{state === "over" ? "depășit" : state === "watch" ? "aproape de limită" : "în plan"}</span><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>rămași din {money(budget)}</small></div>
           {week && <div className={`bf-allocation-week ${week.state === "over" ? "over" : ""}`}><span>S{week.index} · {formatDate(week.start)} – {formatDate(week.end)}</span><b>{money(Math.max(0, week.remaining))}</b><small>{money(week.spent)} cheltuiți din {money(week.budget)} în această tranșă</small></div>}
@@ -267,7 +276,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
           <div className="bf-allocation-track" aria-label={`${Math.round(usage * 100)}% consumat`}><i style={{ width: `${Math.min(100, Math.max(0, usage * 100))}%` }} /></div>
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> Editează</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> Șterge</button></div>
         </article>)}
-        {!envelopes.length && <div className="bf-allocation-empty"><Sparkles size={22} /><b>Așază primii lei într-un plic.</b><span>Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.</span></div>}
+        {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>Așază primii lei într-un plic.</b><span>Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.</span></div>}
             </div>
       <AllocationHistoryPanel data={data} />
     </section>

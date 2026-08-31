@@ -51,6 +51,8 @@ import "./health-score.css";
 import "./theme-contrast-pass.css";
 import "./play-studio.css";
 import "./atelier-graphic-pass.css";
+import "./ledger-live.css";
+import "./ledger-atelier.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
