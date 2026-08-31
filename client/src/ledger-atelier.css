@@ -430,8 +430,12 @@
   overflow: visible !important;
 }
 .bf-envelope-fan li {
+  display: block !important;
+  grid-template-columns: none !important;
   min-width: 0 !important;
-  width: auto !important;
+  width: 100% !important;
+  padding: 0 !important;
+  border: 0 !important;
   flex: none !important;
 }
 .bf-envelope-fan button {
@@ -457,13 +461,27 @@
 }
 .bf-envelope-fan button svg,
 .bf-envelope-fan .bf-envelope-mark {
-  width: 72px !important;
-  height: 56px !important;
+  width: min(108px, 78%) !important;
+  height: auto !important;
   max-height: none !important;
 }
-.bf-envelope-fan b { font-size: 13px; line-height: 1.25; }
-.bf-envelope-fan strong { font-variant-numeric: tabular-nums; font-size: 15px; line-height: 1.2; }
-.bf-envelope-fan small { color: var(--cf-muted); font-size: 10px; line-height: 1.35; }
+.bf-envelope-fan b {
+  max-width: 100%;
+  overflow: visible;
+  font-size: 13px;
+  line-height: 1.25;
+  white-space: normal;
+}
+.bf-envelope-fan strong { font-variant-numeric: tabular-nums; font-size: 17px; line-height: 1.15; }
+.bf-envelope-fan small {
+  max-width: none;
+  overflow: visible;
+  color: var(--cf-muted);
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: normal;
+  text-overflow: unset;
+}
 .bf-envelope-fan li.watch button { background: color-mix(in srgb, var(--cf-warning) 10%, var(--cf-surface)) !important; }
 .bf-envelope-fan li.over button { background: color-mix(in srgb, var(--cf-danger) 10%, var(--cf-surface)) !important; }
 

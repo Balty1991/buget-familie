@@ -57,11 +57,18 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
           <ul className="bf-envelope-fan">
             {envelopes.map((entry) => (
               <li key={entry.item.id} className={entry.state}>
-                <button type="button" onClick={() => onGo("plan")}>
-                  <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={68} />
+                <button type="button" className="bf-plic-card" onClick={() => onGo("plan")}>
+                  <span className="bf-plic-flap" aria-hidden="true" />
+                  <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={108} />
                   <b>{entry.item.label}</b>
                   <strong>{money(Math.max(0, entry.remaining))}</strong>
-                  <small>{Math.round(entry.usage * 100)}% din {money(entry.budget)}</small>
+                  <span className="bf-plic-bar" aria-hidden="true">
+                    <i style={{ width: `${Math.min(100, Math.max(4, entry.usage * 100))}%` }} />
+                  </span>
+                  <small>
+                    <span>{Math.round(entry.usage * 100)}%</span>
+                    <span>din {money(entry.budget)}</span>
+                  </small>
                 </button>
               </li>
             ))}

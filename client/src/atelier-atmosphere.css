@@ -122,10 +122,204 @@
   opacity: .72;
 }
 
-/* —— Plicuri: procentul nu mai rupe rânduri inutil —— */
+/* —— Plicuri: cardul umple celula, textul se citește integral —— */
+.bf-today-envelopes {
+  overflow: visible !important;
+}
+.bf-today-envelopes-heading {
+  display: block !important;
+  margin-bottom: 16px !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.bf-today-envelopes-heading::before,
+.bf-today-envelopes-heading::after,
+.bf-today-envelopes-heading h2::before,
+.bf-today-envelopes-heading h2::after {
+  content: none !important;
+  display: none !important;
+}
+.bf-today-envelopes-heading h2 {
+  max-width: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+.bf-today-envelopes ul.bf-envelope-fan,
+.bf-envelope-fan {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  margin: 0 !important;
+  padding: 10px 0 2px !important;
+  overflow: visible !important;
+}
+
+.bf-today-envelopes .bf-envelope-fan li,
+.bf-envelope-fan li {
+  display: block !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.bf-envelope-fan .bf-plic-card,
+.bf-envelope-fan button {
+  position: relative !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-content: start !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 22px 10px 12px !important;
+  overflow: visible !important;
+  border: 1px solid var(--cf-line) !important;
+  border-radius: 8px 8px 18px 18px !important;
+  color: var(--cf-ink) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) 0 14px,
+      var(--cf-surface) 14px
+    ) !important;
+  text-align: center !important;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--cf-ink) 8%, transparent) !important;
+}
+.bf-envelope-fan li.watch .bf-plic-card,
+.bf-envelope-fan li.watch button {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--cf-warning) 22%, var(--cf-surface)) 0 14px,
+      var(--cf-surface) 14px
+    ) !important;
+}
+.bf-envelope-fan li.over .bf-plic-card,
+.bf-envelope-fan li.over button {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--cf-danger) 22%, var(--cf-surface)) 0 14px,
+      var(--cf-surface) 14px
+    ) !important;
+}
+
+.bf-plic-flap {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  z-index: 1;
+  display: block;
+  width: 44%;
+  height: 11px;
+  transform: translateX(-50%);
+  border: 1px solid var(--cf-line);
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  background: color-mix(in srgb, var(--cf-primary) 22%, var(--cf-surface));
+  pointer-events: none;
+}
+.bf-envelope-fan li.watch .bf-plic-flap {
+  background: color-mix(in srgb, var(--cf-warning) 28%, var(--cf-surface));
+}
+.bf-envelope-fan li.over .bf-plic-flap {
+  background: color-mix(in srgb, var(--cf-danger) 28%, var(--cf-surface));
+}
+
+.bf-envelope-fan .bf-plic-card svg,
+.bf-envelope-fan .bf-plic-card .bf-envelope-mark,
+.bf-envelope-fan button svg,
+.bf-envelope-fan .bf-envelope-mark {
+  width: min(108px, 82%) !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  margin: 2px 0 2px !important;
+}
+
+.bf-envelope-fan b {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  color: var(--cf-ink) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+  text-overflow: unset !important;
+  word-break: break-word;
+}
+
+.bf-envelope-fan strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  color: var(--cf-ink) !important;
+  font-family: "IBM Plex Serif", Georgia, serif !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.03em;
+  white-space: normal !important;
+  text-overflow: unset !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-plic-bar {
+  display: block;
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--cf-ink) 12%, var(--cf-surface));
+}
+.bf-plic-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cf-primary-strong);
+}
+.bf-envelope-fan li.watch .bf-plic-bar i { background: var(--cf-warning); }
+.bf-envelope-fan li.over .bf-plic-bar i { background: var(--cf-danger); }
+
 .bf-envelope-fan small {
-  max-width: 16ch;
-  line-height: 1.3 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 0 .35em !important;
+  width: 100% !important;
+  max-width: none !important;
+  overflow: visible !important;
+  color: var(--cf-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+  text-overflow: unset !important;
+  text-align: center !important;
+}
+.bf-envelope-fan small span {
+  display: inline !important;
+  overflow: visible !important;
+  white-space: nowrap;
+}
+
+@media (min-width: 761px) {
+  .bf-envelope-fan {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  }
 }
 
 /* —— Fundaluri: atmosferă, nu hârtie milimetrică —— */
@@ -218,6 +412,7 @@ html.dark .bf-today-pulse,
 html.dark .bf-payday-strip,
 html.dark .bf-spend-stamp,
 html.dark .bf-envelope-fan button,
+html.dark .bf-plic-card,
 html.dark .bf-brief-salary,
 html.dark .bf-today-envelopes {
   box-shadow:

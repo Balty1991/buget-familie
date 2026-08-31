@@ -147,12 +147,9 @@
 }
 
 .bf-today-envelopes li {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 4px;
-  border-top: 1px solid var(--cf-line);
+  display: block;
+  padding: 0;
+  border: 0;
   color: var(--cf-ink);
 }
 
