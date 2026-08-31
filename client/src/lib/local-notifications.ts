@@ -101,7 +101,7 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     alerts.push({
       id: id++,
       title: days === 0 ? "Scadență azi" : "Scadență aproape",
-      body: `${item.title || item.label || "Obligație"} · ${money(item.amount)} · ${formatDate(item.dueDate)}`,
+      body: `${item.name || "Obligație"} · ${money(item.amount)} · ${formatDate(item.dueDate)}`,
       at: when,
       tag: `due-${item.id || item.dueDate}`,
     });
@@ -142,8 +142,7 @@ function buildAlerts(data: AppData): PlannedAlert[] {
 
 async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
   try {
-    // @ts-expect-error Capacitor may be injected at runtime on native
-    const Cap = typeof window !== "undefined" ? (window as any).Capacitor : null;
+    const Cap = typeof window !== "undefined" ? (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor : undefined;
     if (!Cap?.isNativePlatform?.()) return false;
     // Plugin opțional pe nativ — rezolvat la runtime, nu la typecheck/bundle web.
     const pluginName = "@capacitor/local-notifications";
@@ -180,7 +179,7 @@ async function scheduleWeb(alerts: PlannedAlert[]) {
       // Programare soft prin setTimeout cât timp tab-ul trăiește (PWA)
       window.setTimeout(() => {
         try {
-          new Notification(alert.title, { body: alert.body, tag: alert.tag, renotify: false });
+          new Notification(alert.title, { body: alert.body, tag: alert.tag });
         } catch {
           /* ignore */
         }
