@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { calculateHealthScore, type AppData, type HealthScoreBreakdown } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -36,8 +37,8 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const toneLabel = health.tone === "good" ? "Calm" : health.tone === "watch" ? "Atenție" : "Risc";
 
-  return (
-    <div className="bf-modal-backdrop" role="presentation" onMouseDown={onClose}>
+  return createPortal(
+    <div className="bf-modal-backdrop bf-health-backdrop" role="presentation" onMouseDown={onClose}>
       <section
         ref={dialogRef}
         tabIndex={-1}
@@ -86,6 +87,7 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
           Marja 35% · Plicuri 25% · Scadențe 20% · Ritm 20%
         </p>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

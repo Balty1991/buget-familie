@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v2";
+const CACHE = "buget-familie-shell-v3";
 const SHELL = ["./", "./manifest.webmanifest", "./bf-favicon.svg"];
 
 self.addEventListener("install", (event) => {

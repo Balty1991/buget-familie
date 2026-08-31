@@ -1,0 +1,301 @@
+/**
+ * Contrast pass — un singur sistem de culoare pentru TOATE temele și fundalurile.
+ *
+ * Problema: --card / --muted-foreground / --bf-major-* rămâneau pe paleta ivory
+ * (crem + gri) și pe temele închise produceau text deschis pe card deschis
+ * sau text gri pe verde închis. Aici toate token-urile urmează --cf-*.
+ */
+
+html.theme-ivory, html.theme-forest, html.theme-midnight, html.theme-copper,
+html.theme-slate, html.theme-plum, html.theme-lagoon, html.theme-rosewood,
+html.dark {
+  --background: var(--cf-bg);
+  --foreground: var(--cf-ink);
+  --card: var(--cf-surface);
+  --card-foreground: var(--cf-ink);
+  --popover: var(--cf-surface);
+  --popover-foreground: var(--cf-ink);
+  --muted: var(--cf-surface-alt);
+  --muted-foreground: var(--cf-muted);
+  --border: var(--cf-line);
+  --input: var(--cf-line);
+  --bf-surface: var(--cf-surface);
+  --bf-green: var(--cf-primary);
+  --bf-honey: var(--cf-warning);
+  --bf-coral: var(--cf-danger);
+}
+
+.bf-app,
+.theme-ivory .bf-app,
+.theme-forest .bf-app,
+.theme-midnight .bf-app,
+.theme-copper .bf-app,
+.theme-slate .bf-app,
+.theme-plum .bf-app,
+.theme-lagoon .bf-app,
+.theme-rosewood .bf-app,
+.dark .bf-app {
+  --bf-major-bg: var(--cf-bg);
+  --bf-major-sheet: var(--cf-surface);
+  --bf-major-ink: var(--cf-ink);
+  --bf-major-muted: var(--cf-muted);
+  --bf-major-line: var(--cf-line);
+  --bf-major-green: var(--cf-primary-strong);
+  --bf-major-green-deep: var(--cf-primary-strong);
+  --bf-major-honey: var(--cf-warning);
+  --bf-major-coral: var(--cf-danger);
+  --bf-major-blue: var(--cf-info);
+  color: var(--cf-ink);
+  background-color: var(--cf-bg);
+}
+
+html.bf-high-contrast {
+  --cf-muted: var(--cf-ink);
+  --muted-foreground: var(--cf-ink);
+}
+
+/* Dialoguri: niciodată crem hardcodat pe temă închisă. */
+.bf-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 120 !important;
+}
+.bf-modal,
+.dark .bf-modal,
+.theme-forest .bf-modal,
+.theme-midnight .bf-modal,
+.theme-copper .bf-modal,
+.theme-plum .bf-modal,
+.theme-rosewood .bf-modal,
+.theme-slate .bf-modal,
+.theme-lagoon .bf-modal,
+.theme-ivory .bf-modal {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border-color: var(--cf-line) !important;
+}
+.bf-modal h2,
+.bf-modal header h2 {
+  color: var(--cf-ink) !important;
+}
+.bf-icon-button {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface-alt) !important;
+  border: 1px solid var(--cf-line) !important;
+}
+
+/* Plan: cardul de progres nu mai e hârtie crem pe fundal violet. */
+.bf-allocation-progress-card {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border: 1px solid var(--cf-line) !important;
+}
+.bf-allocation-progress-card .bf-kicker,
+.bf-allocation-progress-meta,
+.bf-quick-envelope-chips > p,
+.bf-allocation-progress-card small {
+  color: var(--cf-muted) !important;
+}
+.bf-allocation-progress-card h2,
+.bf-allocation-progress-top strong,
+.bf-allocation-progress-meta b {
+  color: var(--cf-ink) !important;
+}
+.bf-allocation-progress-track {
+  background: color-mix(in srgb, var(--cf-ink) 14%, var(--cf-surface)) !important;
+}
+.bf-quick-envelope-chips button {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface-alt) !important;
+  border: 1px solid var(--cf-line) !important;
+}
+
+/* Titlul Plan nu se mai taie pe linia de sus (line-height < 1 + serif). */
+.bf-plan-studio-header,
+.bf-movements-header,
+.bf-obligations-header,
+.bf-insights-header,
+.bf-salary-cycle-plan .bf-plan-studio-header {
+  overflow: visible !important;
+  align-items: start !important;
+}
+.bf-plan-studio-header h1,
+.bf-salary-cycle-plan .bf-plan-studio-header h1,
+.bf-movements-header h1,
+.bf-obligations-header h1,
+.bf-insights-header h1 {
+  overflow: visible !important;
+  line-height: 1.18 !important;
+  padding-top: 0.12em !important;
+  max-width: 14ch !important;
+  color: var(--cf-ink) !important;
+}
+.bf-plan-studio-header p:not(.bf-kicker),
+.bf-plan-studio-header .bf-kicker {
+  color: var(--cf-muted) !important;
+}
+.bf-plan-header-stat {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface-alt) !important;
+  border-color: var(--cf-line) !important;
+}
+.bf-plan-header-stat b { color: var(--cf-ink) !important; }
+.bf-plan-header-stat small { color: var(--cf-muted) !important; }
+
+/* Carduri Plan / ciclu / plicuri — suprafața temei, nu crem. */
+.bf-plan-sheet,
+.bf-plan-sources,
+.bf-plan-envelope-workbench,
+.bf-cycle-overview,
+.bf-cycle-setup,
+.bf-allocation-studio,
+.bf-plan-unallocated,
+.bf-cycle-tools,
+.bf-plan-flow,
+.bf-allocation-period,
+.bf-allocation-guidance,
+.bf-allocation-list > article,
+.bf-allocation-builder,
+.bf-allocation-empty {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border-color: var(--cf-line) !important;
+}
+.bf-plan-flow h2,
+.bf-allocation-period h2,
+.bf-allocation-guidance h2,
+.bf-cycle-overview h2,
+.bf-allocation-studio h2,
+.bf-plan-sheet-heading h2 {
+  color: var(--cf-ink) !important;
+}
+.bf-plan-flow .bf-kicker,
+.bf-allocation-period .bf-kicker,
+.bf-allocation-guidance p,
+.bf-allocation-period p:not(.bf-kicker),
+.bf-plan-envelope-intro {
+  color: var(--cf-muted) !important;
+}
+
+/* Situația de azi: inelul de scor nu e tăiat, cardul rămâne pe temă. */
+.bf-today-situation,
+.bf-today-decision,
+.bf-today-activity,
+.bf-today-hub-links,
+.bf-weekly-summary {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  overflow: visible !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+/* Rapoarte, scadențe, asistent: carduri crem hardcodate → suprafața temei. */
+.bf-recurring-card,
+.bf-report-card,
+.bf-report-metrics article,
+.bf-advisor-studio,
+.bf-scenario-card,
+.bf-more-grid button,
+.bf-filter-sheet,
+.bf-journal,
+.bf-period-card,
+.bf-balance-card,
+.bf-ledger-mini,
+.bf-pulse-grid article {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border-color: var(--cf-line) !important;
+}
+.bf-recurring-form label,
+.bf-recurring-form small,
+.bf-report-metrics small,
+.bf-report-note {
+  color: var(--cf-muted) !important;
+}
+.bf-recurring-form input,
+.bf-recurring-form select,
+.bf-plan-field input,
+.bf-plan-field select {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border-color: var(--cf-line) !important;
+}
+
+/* Hero-urile cu text deschis pe gradient rămân lizibile (text forțat deschis). */
+.bf-recurring-hero,
+.bf-reports-hero,
+.bf-advisor-hero {
+  color: #f4faf6 !important;
+}
+.bf-recurring-hero h2,
+.bf-reports-hero h2,
+.bf-advisor-hero h2,
+.bf-recurring-hero p,
+.bf-reports-hero p {
+  color: inherit !important;
+}
+.bf-recurring-hero .bf-kicker,
+.bf-reports-hero .bf-kicker,
+.bf-advisor-hero .bf-kicker {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* Fundaluri: textura stă ÎN SPATELE cardurilor, nu prin ele. */
+.background-paper .bf-app,
+.background-grid .bf-app,
+.background-aurora .bf-app,
+.background-dots .bf-app {
+  background-color: var(--cf-bg) !important;
+}
+.bf-page,
+.bf-today-workspace,
+.bf-plan-workspace,
+.bf-movements-workspace,
+.bf-obligations-workspace,
+.bf-insights-workspace {
+  color: var(--cf-ink) !important;
+}
+
+/* Navigație + appbar pe suprafața temei, nu pe un overlay străin. */
+.bf-appbar,
+.bf-mobile-nav {
+  color: var(--cf-ink);
+  background: color-mix(in srgb, var(--cf-surface) 92%, transparent) !important;
+  border-color: var(--cf-line) !important;
+}
+
+/* Command palette / theme picker moștenesc tema, nu ivory. */
+.bf-command-palette,
+.bf-theme-picker,
+.bf-onboarding {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border-color: var(--cf-line) !important;
+}
+.bf-command-palette h2,
+.bf-theme-picker h2,
+.bf-onboarding h2 {
+  color: var(--cf-ink) !important;
+}
+.bf-command-palette small,
+.bf-theme-picker-intro,
+.bf-onboarding-copy > p,
+.bf-theme-option small {
+  color: var(--cf-muted) !important;
+}
+.bf-theme-option,
+.bf-background-grid button {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface-alt) !important;
+  border-color: var(--cf-line) !important;
+}
+
+@media (max-width: 760px) {
+  .bf-plan-studio-header h1,
+  .bf-salary-cycle-plan .bf-plan-studio-header h1 {
+    font-size: clamp(28px, 8.2vw, 34px) !important;
+    line-height: 1.16 !important;
+    max-width: 13ch !important;
+  }
+}
