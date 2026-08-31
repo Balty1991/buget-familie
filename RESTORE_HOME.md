@@ -1,43 +1,34 @@
-# Restaurare urgentă Home.tsx
+# Restaurare Home.tsx (obligatoriu)
 
-Pe `main`, fișierul `client/src/pages/Home.tsx` a fost înlocuit accidental cu un stub.
+Pe `main`, `client/src/pages/Home.tsx` este un stub (4 linii). Restul lucrării este deja pe main:
 
-## Recuperare (1 minut)
+- `HealthScoreBadge` + `calculateHealthScore` + `health-score.css`
+- PlanStudio modernizat (progress bar, quick chips)
+- `local-notifications.ts` (alerte scadențe / plicuri)
+- permisiuni Android + `@capacitor/local-notifications`
+
+## Pași (local, 30 secunde)
+
+1. Descarcă `Home_RESTORED.tsx` din artifacts (conversația cu agentul).
+2. În root-ul repo-ului:
 
 ```bash
-git fetch origin
-git checkout cb4390e123704ebed187b84777d1a9dfc2fa4b01 -- client/src/pages/Home.tsx
-git commit -m "fix: restore Home.tsx from last good commit"
+cp ~/Downloads/Home_RESTORED.tsx client/src/pages/Home.tsx
+git add client/src/pages/Home.tsx
+git commit -m "fix: restore full Home.tsx with health score and local alerts"
 git push origin main
 ```
 
-## Apoi, ca să apară scorul + alertele
+## Verificare
 
-1. Importuri (după WeeklySummaryPanel):
-
-```ts
-import { HealthScoreBadge } from "@/components/HealthScoreBadge";
-import { scheduleFinancialReminders, requestNotificationPermission, setNotificationsEnabled } from "@/lib/local-notifications";
+```bash
+wc -l client/src/pages/Home.tsx   # ~400 linii, nu 4
+grep -n HealthScoreBadge client/src/pages/Home.tsx
+pnpm dev
 ```
 
-2. În `TodayView`, după `</span>` din `bf-today-situation-number`:
+Pe ecranul **Astăzi** trebuie să apară inelul de scor lângă suma nerepartizată. În **Setări** → **ALERTE LOCALE** poți activa/opri reamintirile.
 
-```tsx
-<HealthScoreBadge data={data} />
-```
+## De ce s-a rupt
 
-3. După `autoPostDueRecurring`:
-
-```ts
-useEffect(() => { if (!storageReady) return; void scheduleFinancialReminders(data); }, [data, storageReady]);
-```
-
-4. În Setări → înainte de BACKUP: butoane Activează / Oprește alerte (folosesc `requestNotificationPermission` / `setNotificationsEnabled`).
-
-## Ce e deja pe main (OK)
-
-- Plan: progres repartizare + chip-uri rapide
-- `local-notifications.ts`
-- `@capacitor/local-notifications` în package.json
-- Permisiuni Android pentru notificări
-- HealthScoreBadge + CSS (componentă gata)
+Un push anterior a înlocuit accidental conținutul cu un placeholder. Componentele și logica de scor/notificări au rămas intacte; lipsește doar legătura din `Home.tsx`.
