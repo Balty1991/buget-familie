@@ -10,7 +10,9 @@ import { calendarBudget } from "@/lib/calendar-budget";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
 import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
 import { AllocationRecommendationsPanel } from "@/components/AllocationRecommendationsPanel";
+import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
+import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
@@ -271,6 +273,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
         </article>)}
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>Așază primii lei într-un plic.</b><span>Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.</span></div>}
             </div>
+      <EnvelopeTransferPanel data={data} onChange={onChange} />
+      <SalaryRitualPanel data={data} onChange={onChange} />
       <AllocationHistoryPanel data={data} />
     </section>
     <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> Instrumente pentru perioade repetate</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>Un șablon reține doar durata perioadei; începi mereu următorul ciclu cu data aleasă de tine.</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={periodValid ? `ex. Salariu ${daysBetween(cycleStart, cycleEnd)} zile` : "Completează mai întâi perioada"} disabled={!periodValid} /><button disabled={!periodValid} onClick={saveCycleTemplate}>Salvează șablonul</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>Salvează</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>Anulează</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>Nu ai șabloane salvate încă.</span>}</div></div></details>

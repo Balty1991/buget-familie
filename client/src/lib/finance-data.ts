@@ -280,6 +280,56 @@ export const transferBetweenWeeks = (data: AppData, input: { allocationId: strin
   return { ...data, settings: { ...data.settings, salaryPlan: { ...plan, weekTransfers: [transfer, ...(plan.weekTransfers || [])], updatedAt: new Date().toISOString() } } };
 };
 
+/** Mută o limită între două plicuri; nu poate lua mai mult decât a rămas în plicul sursă și nu mișcă bani din surse. */
+export const transferBetweenEnvelopes = (data: AppData, input: { fromAllocationId: string; toAllocationId: string; amount: number; note?: string }): AppData | undefined => {
+  const plan = data.settings.salaryPlan;
+  const from = plan.allocations.find((item) => item.id === input.fromAllocationId);
+  const to = plan.allocations.find((item) => item.id === input.toAllocationId);
+  const amount = roundedMoney(input.amount);
+  if (!from || !to || from.id === to.id || amount <= 0) return undefined;
+  if (amount > allocationStatus(data, from).remaining) return undefined;
+  const transfer: BudgetTransfer = { id: newId("transfer"), fromAllocationId: from.id, toAllocationId: to.id, amount, note: input.note?.trim() || undefined, createdAt: new Date().toISOString() };
+  return { ...data, settings: { ...data.settings, salaryPlan: { ...plan, transfers: [transfer, ...plan.transfers], updatedAt: transfer.createdAt } } };
+};
+
+/** Venituri încă nerepartizate prin ritualul de salariu. */
+export const unappliedSalaryIncomes = (data: AppData) => {
+  const applied = new Set((data.settings.salaryPlan.salaryAllocationApplications || []).map((item) => item.incomeId));
+  return data.transactions
+    .filter((item) => item.kind === "income" && !applied.has(item.id))
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || ""));
+};
+
+export type DebtSnowballStep = {
+  debt: Debt;
+  rank: number;
+  remaining: number;
+  monthly: number;
+  monthsAtMinimum: number | null;
+  recommended: number;
+  isNext: boolean;
+};
+
+/** Ordine tip minge de zăpadă: cea mai mică datorie rămasă întâi. Nu estimează dobândă. */
+export const debtSnowball = (data: AppData) => {
+  const open = [...data.debts.filter((item) => item.remaining > 0)].sort((a, b) => a.remaining - b.remaining || a.name.localeCompare(b.name, "ro-RO"));
+  const order: DebtSnowballStep[] = open.map((debt, index) => ({
+    debt,
+    rank: index + 1,
+    remaining: debt.remaining,
+    monthly: debt.monthly,
+    monthsAtMinimum: debt.monthly > 0 ? Math.ceil(debt.remaining / debt.monthly) : null,
+    recommended: Math.min(debt.remaining, debt.monthly > 0 ? debt.monthly : debt.remaining),
+    isNext: index === 0,
+  }));
+  return {
+    order,
+    next: order[0],
+    totalRemaining: roundedMoney(open.reduce((sum, item) => sum + item.remaining, 0)),
+    count: open.length,
+  };
+};
+
 /** Plicuri compatibile pentru o cheltuială reală, cu prioritate pentru potrivirea exactă membru + sursă. */
 export const matchingAllocationsForExpense = (data: AppData, input: { category: string; memberId?: string; sourceId?: string }) => data.settings.salaryPlan.allocations
   .filter((allocation) => allocation.category === input.category && (!allocation.sourceId || allocation.sourceId === input.sourceId))

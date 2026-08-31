@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenWeeks, weeklySummary } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -168,6 +168,50 @@ describe("registrul financiar Buget Familie", () => {
     const weeksAfter = allocationWeeksStatus(moved!, food);
     expect(weeksAfter[0]).toMatchObject({ index: 1, budget: 400, spent: 350, remaining: 50, state: "healthy" });
     expect(weeksAfter[1]).toMatchObject({ index: 2, budget: 200, spent: 0, remaining: 200, state: "healthy" });
+  });
+
+  it("mută o limită între două plicuri fără să schimbe tranzacțiile sau soldurile surselor", () => {
+    const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
+    const transport = { id: "transport", label: "Transport", amount: 500, category: "Transport", sourceId: card.id };
+    const food = { id: "food", label: "Alimente", amount: 300, category: "Alimente", sourceId: card.id };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 800, weeklyLimit: 0, allocations: [transport, food], transfers: [] };
+    data.transactions = [{ id: "taxi", title: "Taxi", amount: 80, kind: "expense", category: "Transport", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-08-04", allocationId: "transport" }];
+    card.openingBalance = 2000;
+    expect(transferBetweenEnvelopes(data, { fromAllocationId: "transport", toAllocationId: "food", amount: 500 })).toBeUndefined();
+    expect(transferBetweenEnvelopes(data, { fromAllocationId: "transport", toAllocationId: "transport", amount: 50 })).toBeUndefined();
+    const moved = transferBetweenEnvelopes(data, { fromAllocationId: "transport", toAllocationId: "food", amount: 120, note: "Taxi mai puțin" });
+    expect(moved).toBeDefined();
+    expect(allocationBudget(moved!, transport)).toBe(380);
+    expect(allocationBudget(moved!, food)).toBe(420);
+    expect(allocationStatus(moved!, transport).remaining).toBe(300);
+    expect(moved!.transactions).toEqual(data.transactions);
+    expect(sourceBalance(moved!, card.id)).toBe(sourceBalance(data, card.id));
+    expect(moved!.settings.salaryPlan.transfers[0]).toMatchObject({ fromAllocationId: "transport", toAllocationId: "food", amount: 120, note: "Taxi mai puțin" });
+  });
+
+  it("ordonează datoriile ca minge de zăpadă, de la cea mai mică rămasă", () => {
+    const data = createEmptyAppData();
+    data.debts = [
+      { id: "car", name: "Credit auto", remaining: 18000, monthly: 900, due: "lună", tone: "coral" },
+      { id: "phone", name: "Telefon", remaining: 1200, monthly: 200, due: "lună", tone: "honey" },
+      { id: "done", name: "Achitat", remaining: 0, monthly: 0, due: "—", tone: "forest" },
+      { id: "store", name: "Rate magazin", remaining: 450, monthly: 150, due: "lună", tone: "honey" },
+    ];
+    const ball = debtSnowball(data);
+    expect(ball.count).toBe(3);
+    expect(ball.order.map((item) => item.debt.id)).toEqual(["store", "phone", "car"]);
+    expect(ball.next).toMatchObject({ debt: expect.objectContaining({ id: "store" }), recommended: 150, monthsAtMinimum: 3, isNext: true });
+    expect(ball.totalRemaining).toBe(19650);
+  });
+
+  it("listează veniturile încă nerepartizate prin ritualul de salariu", () => {
+    const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
+    data.transactions = [
+      { id: "salary-old", title: "Salariu iulie", amount: 4000, kind: "income", category: "Venit", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-07-01" },
+      { id: "salary-new", title: "Salariu august", amount: 4200, kind: "income", category: "Venit", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-08-01" },
+    ];
+    data.settings.salaryPlan.salaryAllocationApplications = [{ id: "app-1", incomeId: "salary-old", incomeTitle: "Salariu iulie", incomeAmount: 4000, appliedAt: "2026-07-01T12:00:00.000Z", allocations: [{ ruleId: "r1", allocationId: "food", amount: 400 }] }];
+    expect(unappliedSalaryIncomes(data).map((item) => item.id)).toEqual(["salary-new"]);
   });
 
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
