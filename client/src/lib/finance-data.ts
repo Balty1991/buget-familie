@@ -113,6 +113,31 @@ export const parseRomanianAmount = (raw: string | number) => {
   return Number.isFinite(value) ? value : 0;
 };
 
+/** Un bon se salvează și fără poze: dacă nu există linii cu sumă, totalul devine un singur produs. */
+export function resolveReceiptLines(
+  lines: Array<{ id?: string; category?: string; amount?: string | number; label?: string }>,
+  total: number,
+): ReceiptLine[] {
+  const normalized = lines
+    .map((line, index) => ({
+      id: line.id || `receipt-line-${index}`,
+      category: line.category || "Alimente",
+      amount: parseRomanianAmount(line.amount ?? 0),
+      label: String(line.label || "").trim() || undefined,
+    }))
+    .filter((line) => line.amount > 0);
+  if (!normalized.length && total > 0) {
+    const first = lines[0];
+    normalized.push({
+      id: first?.id || "whole",
+      category: first?.category || "Alimente",
+      amount: total,
+      label: String(first?.label || "").trim() || undefined,
+    });
+  }
+  return normalized;
+}
+
 export const formatDate = (iso?: string, options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short" }) => {
   if (!iso) return "Nespecificat";
   const date = new Date(`${iso}T12:00:00`);

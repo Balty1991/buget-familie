@@ -1,0 +1,108 @@
+/**
+ * Ultimul strat pentru Adaugă bon: galerie + cameră, poze opționale, salvare lipită.
+ * receipt-mobile.css e importat devreme; theme-contrast-pass și upgrade.css
+ * trebuie bătute aici ca butoanele și footer-ul să rămână vizibile pe mobil.
+ */
+
+.bf-modal:has(.bf-receipt-save) {
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden !important;
+  max-height: min(92dvh, 860px) !important;
+  padding-bottom: 0 !important;
+}
+
+.bf-modal:has(.bf-receipt-save) > header {
+  flex: none;
+}
+
+.bf-receipt-body {
+  display: grid;
+  gap: .15rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: .35rem;
+}
+
+.bf-receipt-photo-hint {
+  margin: 0;
+  color: var(--cf-muted, #64716c);
+  font-size: .76rem;
+  line-height: 1.4;
+}
+
+.bf-receipt-photo-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .55rem;
+}
+
+.bf-upload-control {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 48px;
+  touch-action: manipulation;
+}
+
+.bf-upload-control.gallery {
+  border-style: solid;
+  color: var(--cf-primary-ink, var(--cf-ink, #1e513f)) !important;
+  background: color-mix(in srgb, var(--cf-primary, #1e513f) 10%, var(--cf-surface, #fffefa)) !important;
+  border-color: color-mix(in srgb, var(--cf-primary, #1e513f) 38%, var(--cf-line, #e1ded5)) !important;
+}
+
+.bf-upload-control.camera {
+  border-style: dashed;
+}
+
+.bf-upload-control input {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  font-size: 24px;
+  cursor: pointer;
+  pointer-events: auto !important;
+}
+
+.bf-upload-control:has(input:disabled) {
+  pointer-events: none;
+  opacity: .55;
+}
+
+.bf-receipt-save {
+  flex: none;
+  display: grid;
+  gap: .4rem;
+  margin: 0 -4px;
+  padding: 10px 4px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--cf-surface, #fffefa);
+  border-top: 1px solid var(--cf-line, rgba(18, 62, 53, .14));
+  z-index: 3;
+}
+
+.bf-receipt-save .bf-primary {
+  width: 100%;
+  min-height: 48px;
+}
+
+html[class*="theme-"] .bf-receipt-save {
+  background: var(--cf-surface) !important;
+  border-top-color: var(--cf-line) !important;
+}
+
+html[class*="theme-"] .bf-receipt-photo-hint,
+.dark .bf-receipt-photo-hint {
+  color: var(--cf-muted) !important;
+}
+
+@media (max-width: 420px) {
+  .bf-receipt-photo-actions {
+    grid-template-columns: 1fr;
+  }
+}

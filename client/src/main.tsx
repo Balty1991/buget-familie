@@ -59,6 +59,7 @@ import "./mobile-speed.css";
 import "./brand-mark.css";
 import "./weekly-checkin.css";
 import "./surface-texture.css";
+import "./receipt-form-fix.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 

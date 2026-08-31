@@ -3,8 +3,8 @@
  */
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, Cloud, Command, Download, Goal, LayoutDashboard, Search, Upload, MoreHorizontal, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
-import { allocationBudget, allocationSpent, allocationWeekStatus, createEmptyAppData, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type ReceiptLine, type SavingsGoal, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, ChevronLeft, ChevronRight, Cloud, Command, Download, Goal, LayoutDashboard, Search, Upload, MoreHorizontal, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
+import { allocationBudget, allocationSpent, allocationWeekStatus, createEmptyAppData, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
 import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageStorage, releaseReceiptObjectUrl, storeReceiptImages } from "@/lib/receipt-storage";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -347,40 +347,220 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
   return <div className="bf-page bf-obligations-workspace"><header className="bf-obligations-header"><div><p className="bf-kicker">OBLIGAȚII ȘI REZERVE</p><h1>Ce trebuie <em>protejat.</em></h1><p>Ratele devin mișcări doar după confirmare. Economiile rămân distincte de soldurile surselor.</p></div><div className="bf-obligations-links"><button className="bf-goals-link" onClick={onOpenGoals}><PiggyBank size={16} /> Obiective pe termen lung</button><button className="bf-goals-link" onClick={onOpenCalendar}><CalendarDays size={16} /> Calendar de scadențe</button></div></header><DebtSnowballCard data={data} onPay={onPayDebt} /><section className="bf-obligation-timeline"><div className="bf-section-heading"><div><p className="bf-kicker">URMEAZĂ</p><h2>Următoarele scadențe</h2></div></div>{upcoming.length ? <div className="bf-obligation-timeline-list">{upcoming.map((entry) => <article className="bf-obligation-entry" key={entry.id}><div className="bf-obligation-entry-main"><span><BellRing size={17} /></span><div><b>{entry.label}</b><small>{dateText(entry.date, true)} · {entry.detail}</small></div><strong>{money(entry.amount)}</strong></div><div className="bf-obligation-entry-actions"><button className="pay" onClick={entry.onConfirm}><Check size={16} /> Confirmă plata</button></div></article>)}</div> : <div className="bf-obligation-empty"><span><b>Nu ai scadențe apropiate.</b><small>Adaugă o dată la datorii sau o scadență recurentă pentru a le vedea aici.</small></span></div>}</section><section className="bf-obligation-ledger"><article className="debt"><span>Sold datorii</span><b>{money(totalDebt)}</b><small>{money(monthlyRates)} rate declarate / lună</small></article><article className="savings"><span>Economii urmărite</span><b>{money(totalSavings)}</b><small>{data.savings.length} obiective înregistrate</small></article><button onClick={onOpenRecurring}><CalendarClock size={18} /><span>Scadențe programate</span><b>{data.recurring.length}</b><ChevronRight size={16} /></button></section><section className="bf-obligation-actions"><button onClick={openDebt}><Plus size={17} /> Adaugă datorie</button><button onClick={openSaving}><Plus size={17} /> Creează economisire</button></section><div className="bf-obligation-lanes"><section className="bf-obligation-lane debt"><header><div><p className="bf-kicker">DE PLĂTIT</p><h2>Rate și împrumuturi</h2></div><span>{data.debts.length}</span></header>{rankedDebts.map((debt) => <article className={`bf-obligation-entry${snowball.next?.debt.id === debt.id ? " next" : ""}`} key={debt.id}><div className="bf-obligation-entry-main"><span><BellRing size={17} /></span><div><b>{debt.name}</b>{snowball.next?.debt.id === debt.id ? <em className="bf-snowball-tag">01 · următoarea</em> : null}<small>{debt.due} · rată {money(debt.monthly)}/lună</small></div><strong>{money(debt.remaining)}</strong></div><DebtPaymentHistory data={data} debt={debt} /><div className="bf-obligation-entry-actions"><button className="pay" onClick={() => onPayDebt(debt)}><Check size={16} /> Confirmă plata</button><button onClick={() => onEditDebt(debt)}><Pencil size={15} /> Editează</button><button className="delete" aria-label={`Șterge ${debt.name}`} onClick={() => onDeleteDebt(debt.id)}><Trash2 size={16} /></button></div></article>)}{!data.debts.length && <div className="bf-obligation-empty"><BellRing size={21} /><span><b>Nu ai datorii înregistrate.</b><small>Adaugă doar obligațiile pe care vrei să le rezervi în plan.</small></span><button onClick={openDebt}>Adaugă</button></div>}</section><section className="bf-obligation-lane savings"><header><div><p className="bf-kicker">DE CONSTRUIT</p><h2>Economii și obiective</h2></div><span>{data.savings.length}</span></header>{data.savings.map((saving) => <article className="bf-obligation-entry" key={saving.id}><div className="bf-obligation-entry-main"><span><PiggyBank size={17} /></span><div><b>{saving.name}</b><small>{saving.due}</small></div><strong>{money(saving.current)}</strong></div><div className="bf-obligation-progress"><BudgetBar used={saving.current} total={saving.target} tone="gold" /><small>{money(Math.max(0, saving.target - saving.current))} rămași până la {money(saving.target)}</small></div><div className="bf-obligation-entry-actions"><button onClick={() => onEditSaving(saving)}><Pencil size={15} /> Editează</button><button className="delete" aria-label={`Șterge ${saving.name}`} onClick={() => onDeleteSaving(saving.id)}><Trash2 size={16} /></button></div></article>)}{!data.savings.length && <div className="bf-obligation-empty"><PiggyBank size={21} /><span><b>Nu ai obiective de economisire.</b><small>Începe cu fondul de siguranță sau un obiectiv concret.</small></span><button onClick={openSaving}>Creează</button></div>}</section></div></div>;
 }
 
+
+const RECEIPT_DRAFT_KEY = "buget-familie:receipt-draft";
+type ReceiptFormDraft = {
+  vendor: string;
+  amount: string;
+  date: string;
+  sourceId: string;
+  memberId: string;
+  note: string;
+  images: string[];
+  lines: Array<{ id: string; category: string; amount: string; label: string }>;
+  ocrText: string;
+  ocrSummary: string;
+};
+function readReceiptDraft(): ReceiptFormDraft | undefined {
+  try {
+    const raw = sessionStorage.getItem(RECEIPT_DRAFT_KEY);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as ReceiptFormDraft;
+    if (!parsed || typeof parsed.vendor !== "string") return undefined;
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
+function writeReceiptDraft(draft: ReceiptFormDraft) {
+  try {
+    sessionStorage.setItem(RECEIPT_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    try { sessionStorage.setItem(RECEIPT_DRAFT_KEY, JSON.stringify({ ...draft, images: [] })); } catch { /* quota */ }
+  }
+}
+function clearReceiptDraft() {
+  try { sessionStorage.removeItem(RECEIPT_DRAFT_KEY); } catch { /* ignore */ }
+}
+
 export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: (item: Receipt) => void | Promise<void>; onClose: () => void }) {
-  const [vendor, setVendor] = useState(""); const [amount, setAmount] = useState(""); const [date, setDate] = useState(isoToday()); const [sourceId, setSourceId] = useState(data.settings.paymentSources[0]?.id || ""); const [memberId, setMemberId] = useState(data.settings.members[0]?.id || ""); const [note, setNote] = useState(""); const [images, setImages] = useState<string[]>([]); const [lines, setLines] = useState<Array<{ id: string; category: string; amount: string; label: string }>>([{ id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }]); const [ocrText, setOcrText] = useState(""); const [ocrSummary, setOcrSummary] = useState(""); const [busy, setBusy] = useState(false); const [progress, setProgress] = useState(0); const [error, setError] = useState("");
+  const [draft] = useState(() => readReceiptDraft());
+  const [vendor, setVendor] = useState(draft?.vendor ?? "");
+  const [amount, setAmount] = useState(draft?.amount ?? "");
+  const [date, setDate] = useState(draft?.date || isoToday());
+  const [sourceId, setSourceId] = useState(draft?.sourceId || data.settings.paymentSources[0]?.id || "");
+  const [memberId, setMemberId] = useState(draft?.memberId || data.settings.members[0]?.id || "");
+  const [note, setNote] = useState(draft?.note ?? "");
+  const [images, setImages] = useState<string[]>(draft?.images ?? []);
+  const [lines, setLines] = useState<Array<{ id: string; category: string; amount: string; label: string }>>(draft?.lines?.length ? draft.lines : [{ id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }]);
+  const [ocrText, setOcrText] = useState(draft?.ocrText ?? "");
+  const [ocrSummary, setOcrSummary] = useState(draft?.ocrSummary ?? "");
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState("");
+  const lastSyncedTotal = useRef(draft?.amount ?? "");
   const categories = [...expenseCategories, ...data.settings.customCategories];
-  const lineTotal = lines.reduce((sum, line) => sum + parseRomanianAmount(line.amount), 0);
+  const numericTotal = parseRomanianAmount(amount);
+  const resolvedPreview = resolveReceiptLines(lines, numericTotal);
+  const lineTotal = resolvedPreview.reduce((sum, line) => sum + line.amount, 0);
+  const photosFull = images.length >= 2;
+
+  useEffect(() => {
+    setLines((current) => {
+      if (current.length !== 1) return current;
+      const lineAmount = current[0].amount.trim();
+      if (lineAmount && lineAmount !== lastSyncedTotal.current) return current;
+      lastSyncedTotal.current = amount;
+      if (current[0].amount === amount) return current;
+      return [{ ...current[0], amount }];
+    });
+  }, [amount]);
+
+  useEffect(() => {
+    const persist = () => writeReceiptDraft({ vendor, amount, date, sourceId, memberId, note, images, lines, ocrText, ocrSummary });
+    persist();
+    window.addEventListener("pagehide", persist);
+    document.addEventListener("visibilitychange", persist);
+    return () => {
+      window.removeEventListener("pagehide", persist);
+      document.removeEventListener("visibilitychange", persist);
+    };
+  }, [vendor, amount, date, sourceId, memberId, note, images, lines, ocrText, ocrSummary]);
+
   const pick = async (files?: FileList | null) => {
     const selected = files ? Array.from(files) : [];
     if (!selected.length) return;
     if (images.length + selected.length > 2) return setError("Un bon poate avea maximum două fotografii. Elimină una înainte de a adăuga alta.");
-    try { setBusy(true); setError(""); const { compressReceiptImage } = await import("@/lib/receipt-utils"); const compressed = await Promise.all(selected.map(compressReceiptImage)); setImages((current) => [...current, ...compressed]); } catch (reason) { setError(reason instanceof Error ? reason.message : "Poza bonului nu a putut fi procesată."); } finally { setBusy(false); }
+    try {
+      setBusy(true);
+      setError("");
+      const { compressReceiptImage } = await import("@/lib/receipt-utils");
+      const compressed = await Promise.all(selected.map(compressReceiptImage));
+      setImages((current) => [...current, ...compressed].slice(0, 2));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Poza bonului nu a putut fi procesată.");
+    } finally {
+      setBusy(false);
+    }
   };
   const scan = async () => {
-    try { setBusy(true); setError(""); setOcrSummary(""); setProgress(0); const { readReceiptLocally } = await import("@/lib/receipt-utils"); const result = await readReceiptLocally(images, setProgress); setOcrText(result.text); if (result.amount) setAmount(String(result.amount)); if (result.date) setDate(result.date); if (result.text && !note.trim()) setNote(result.text.slice(0, 1400)); if (result.items.length) { const suggestedLines = result.items.map((item) => ({ id: newId("receipt-line"), category: categories.includes(item.category) ? item.category : "Alimente", amount: String(item.amount), label: item.label })); setLines(suggestedLines); const detectedTotal = result.items.reduce((sum, item) => sum + item.amount, 0); setOcrSummary(`Am propus ${result.items.length} produs${result.items.length === 1 ? "" : "e"} cu prețuri individuale (${fmtExact.format(detectedTotal)}). Verifică produsele, categoriile și totalul înainte de salvare.`); } else { setOcrSummary("Am citit textul și totalul, dar nu am identificat sigur linii de produse. Completează repartizarea manual."); } } catch (reason) { setError(reason instanceof Error ? reason.message : "Textul de pe bon nu a putut fi citit."); } finally { setBusy(false); setProgress(0); }
+    try {
+      setBusy(true);
+      setError("");
+      setOcrSummary("");
+      setProgress(0);
+      const { readReceiptLocally } = await import("@/lib/receipt-utils");
+      const result = await readReceiptLocally(images, setProgress);
+      setOcrText(result.text);
+      if (result.amount) setAmount(String(result.amount));
+      if (result.date) setDate(result.date);
+      if (result.text && !note.trim()) setNote(result.text.slice(0, 1400));
+      if (result.items.length) {
+        const suggestedLines = result.items.map((item) => ({ id: newId("receipt-line"), category: categories.includes(item.category) ? item.category : "Alimente", amount: String(item.amount), label: item.label }));
+        setLines(suggestedLines);
+        const detectedTotal = result.items.reduce((sum, item) => sum + item.amount, 0);
+        setOcrSummary(`Am propus ${result.items.length} produs${result.items.length === 1 ? "" : "e"} cu prețuri individuale (${fmtExact.format(detectedTotal)}). Verifică produsele, categoriile și totalul înainte de salvare.`);
+      } else {
+        setOcrSummary("Am citit textul și totalul, dar nu am identificat sigur linii de produse. Completează repartizarea manual.");
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Textul de pe bon nu a putut fi citit.");
+    } finally {
+      setBusy(false);
+      setProgress(0);
+    }
   };
   const updateLine = (id: string, patch: Partial<(typeof lines)[number]>) => setLines((current) => current.map((line) => line.id === id ? { ...line, ...patch } : line));
   const save = async () => {
     const numeric = parseRomanianAmount(amount);
-    const normalizedLines: ReceiptLine[] = lines.map((line) => ({ id: line.id, category: line.category, amount: parseRomanianAmount(line.amount), label: line.label.trim() || undefined })).filter((line) => line.amount > 0);
-    if (normalizedLines.length === 0 && numeric > 0 && lines.length === 1) normalizedLines.push({ id: lines[0].id, category: lines[0].category, amount: numeric, label: lines[0].label.trim() || undefined });
+    const normalizedLines = resolveReceiptLines(lines, numeric);
     const splitTotal = normalizedLines.reduce((sum, line) => sum + line.amount, 0);
-    if (!vendor.trim() || numeric <= 0 || !sourceId || !memberId) return setError("Completează magazinul, totalul, membrul și sursa.");
+    if (!vendor.trim() || numeric <= 0 || !sourceId || !memberId) return setError("Completează magazinul, totalul, membrul și sursa. Fotografiile nu sunt obligatorii.");
     if (!normalizedLines.length || Math.abs(numeric - splitTotal) > 0.01) return setError(`Repartizarea este ${fmtExact.format(splitTotal)}, dar totalul bonului este ${fmtExact.format(numeric)}. Corectează liniile înainte de salvare.`);
-    try { setBusy(true); setError(""); const id = newId("receipt"); const imageKeys = images.length ? await storeReceiptImages(id, images) : []; await onSave({ id, vendor: vendor.trim(), amount: numeric, date, category: normalizedLines[0].category, lines: normalizedLines, sourceId, memberId, note: note.trim() || undefined, imageKeys: imageKeys.length ? imageKeys : undefined, ocrText: ocrText || undefined }); onClose(); } catch (reason) { setError(reason instanceof Error ? reason.message : "Bonul nu a putut fi salvat pe telefon."); } finally { setBusy(false); }
+    try {
+      setBusy(true);
+      setError("");
+      const id = newId("receipt");
+      const imageKeys = images.length ? await storeReceiptImages(id, images) : [];
+      await onSave({ id, vendor: vendor.trim(), amount: numeric, date, category: normalizedLines[0].category, lines: normalizedLines, sourceId, memberId, note: note.trim() || undefined, imageKeys: imageKeys.length ? imageKeys : undefined, ocrText: ocrText || undefined });
+      clearReceiptDraft();
+      onClose();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Bonul nu a putut fi salvat pe telefon.");
+    } finally {
+      setBusy(false);
+    }
   };
-  return <Modal title="Adaugă bon" onClose={onClose}><div className="bf-receipt-intro"><p className="bf-kicker">BON CU REPARTIZARE</p><p>Poți fotografia un bon lung în două părți; imaginile se comprimă și rămân doar în stocarea locală securizată a telefonului.</p></div><div className="bf-form-grid"><Field label="Magazin"><input autoFocus value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder="ex. Lidl" /></Field><Field label="Total (lei)"><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" /></Field><Field label="Data"><input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></Field><Field label="Membru"><select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field><Field label="Plătit din"><select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></Field></div><section className="bf-receipt-images"><div><p className="bf-kicker">FOTOGRAFIILE BONULUI</p><strong>{images.length}/2 imagini</strong></div><label className="bf-upload-control"><Camera size={18} /> {busy && !progress ? "Comprimăm…" : "Adaugă poze"}<input type="file" accept="image/*" capture="environment" multiple disabled={busy || images.length >= 2} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} /></label>{images.length > 0 && <button className="bf-ocr-button" disabled={busy} onClick={() => void scan()}><Bot size={17} /> {busy && progress ? `Citim ${progress}%` : "Citește produsele și prețurile local"}</button>}<div className="bf-receipt-preview-grid">{images.map((image, index) => <figure key={image}><img src={image} alt={`Previzualizare bon partea ${index + 1}`} width={280} height={140} loading="lazy" decoding="async" /><button aria-label={`Elimină fotografia ${index + 1}`} onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={15} /></button></figure>)}</div>{ocrSummary && <p className="bf-ocr-info" role="status"><Bot size={16} /> {ocrSummary}</p>}</section><section className="bf-receipt-split"><div className="bf-split-heading"><div><p className="bf-kicker">PRODUSE ȘI CATEGORII</p><h3>{fmtExact.format(lineTotal)} din {amount ? fmtExact.format(parseRomanianAmount(amount)) : "0,00 RON"}</h3></div><button className="bf-secondary" onClick={() => setLines((current) => [...current, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }])}><Plus size={16} /> Produs</button></div>{lines.map((line) => <div className="bf-split-line" key={line.id}><select aria-label="Categorie bon" value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item}>{item}</option>)}</select><input aria-label="Preț produs" value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="lei" /><input aria-label="Produs" value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder="ex. fructe" />{lines.length > 1 && <button aria-label="Elimină produsul" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button>}</div>)}<small>OCR-ul propune linii editabile. Fiecare linie devine o cheltuială reală, iar totalul liniilor trebuie să fie egal cu totalul bonului.</small></section>{ocrText && <Field label="Text citit local (verifică înainte de salvare)"><textarea value={note} onChange={(event) => setNote(event.target.value)} /></Field>}{!ocrText && <Field label="Produse / notiță"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="ex. apă, fructe, detergent" /></Field>}{error && <p className="bf-form-error" role="alert">{error}</p>}<button className="bf-primary full" disabled={busy} onClick={() => void save()}><Check size={17} /> Salvează bonul și cheltuielile</button></Modal>;
+  return (
+    <Modal title="Adaugă bon" onClose={onClose}>
+      <div className="bf-receipt-body">
+        <div className="bf-receipt-intro">
+          <p className="bf-kicker">CUMPĂRĂTURI</p>
+          <p>Scrie magazinul și totalul, apoi salvează. Fotografiile sunt opționale — alege din galerie sau fotografiază bonul.</p>
+        </div>
+        <div className="bf-form-grid">
+          <Field label="Magazin"><input autoFocus value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder="ex. Lidl" /></Field>
+          <Field label="Total (lei)"><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" /></Field>
+          <Field label="Data"><input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></Field>
+          <Field label="Membru"><select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field>
+          <Field label="Plătit din"><select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></Field>
+        </div>
+        <section className="bf-receipt-split">
+          <div className="bf-split-heading">
+            <div>
+              <p className="bf-kicker">PRODUSE ȘI CATEGORII</p>
+              <h3>{fmtExact.format(lineTotal)} din {amount ? fmtExact.format(numericTotal) : "0,00 RON"}</h3>
+            </div>
+            <button type="button" className="bf-secondary" onClick={() => setLines((current) => [...current, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }])}><Plus size={16} /> Produs</button>
+          </div>
+          {lines.map((line) => (
+            <div className="bf-split-line" key={line.id}>
+              <select aria-label="Categorie bon" value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item}>{item}</option>)}</select>
+              <input aria-label="Preț produs" value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="lei" />
+              <input aria-label="Produs" value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder="ex. fructe" />
+              {lines.length > 1 && <button type="button" aria-label="Elimină produsul" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button>}
+            </div>
+          ))}
+          <small>Dacă lași un singur produs gol, totalul se pune automat pe el. Mai multe linii trebuie să însumeze exact totalul bonului.</small>
+        </section>
+        <section className="bf-receipt-images">
+          <div>
+            <p className="bf-kicker">FOTOGRAFII OPȚIONALE</p>
+            <strong>{images.length}/2 imagini</strong>
+          </div>
+          <p className="bf-receipt-photo-hint">Pozele rămân pe telefon și nu sunt necesare ca să salvezi cumpărăturile.</p>
+          <div className="bf-receipt-photo-actions">
+            <label className="bf-upload-control gallery">
+              <Images size={18} /> {busy && !progress ? "Comprimăm…" : "Din galerie"}
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,.jpg,.jpeg,.png,.webp" multiple disabled={busy || photosFull} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} />
+            </label>
+            <label className="bf-upload-control camera">
+              <Camera size={18} /> Fotografiază
+              <input type="file" accept="image/*" capture="environment" disabled={busy || photosFull} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} />
+            </label>
+          </div>
+          {images.length > 0 && <button type="button" className="bf-ocr-button" disabled={busy} onClick={() => void scan()}><Bot size={17} /> {busy && progress ? `Citim ${progress}%` : "Citește produsele și prețurile local"}</button>}
+          <div className="bf-receipt-preview-grid">{images.map((image, index) => <figure key={`${index}-${image.slice(-24)}`}><img src={image} alt={`Previzualizare bon partea ${index + 1}`} width={280} height={140} loading="lazy" decoding="async" /><button type="button" aria-label={`Elimină fotografia ${index + 1}`} onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={15} /></button></figure>)}</div>
+          {ocrSummary && <p className="bf-ocr-info" role="status"><Bot size={16} /> {ocrSummary}</p>}
+        </section>
+        {ocrText ? <Field label="Text citit local (verifică înainte de salvare)"><textarea value={note} onChange={(event) => setNote(event.target.value)} /></Field> : <Field label="Produse / notiță"><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="ex. apă, fructe, detergent" /></Field>}
+      </div>
+      <div className="bf-receipt-save">
+        {error && <p className="bf-form-error" role="alert">{error}</p>}
+        <button type="button" className="bf-primary full" disabled={busy} onClick={() => void save()}><Check size={17} /> Salvează bonul</button>
+      </div>
+    </Modal>
+  );
 }
 
 export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteReceipt, onOpenDebt, onOpenSaving, onOpenCalendar, receiptStorageNotice, sync }: { tab: MoreView; setTab: (value: MoreView) => void; data: AppData; onChange: (value: AppData) => void; onAddReceipt: () => void; onDeleteReceipt: (id: string) => void; onOpenDebt: () => void; onOpenSaving: () => void; onOpenCalendar: () => void; receiptStorageNotice?: string; sync: SyncPanelProps }) {
   const isCollaborative = data.settings.members.length > 1; const tabs: { id: MoreView; label: string; icon: typeof SlidersHorizontal }[] = [{ id: "overview", label: "Instrumente", icon: MoreHorizontal }, { id: "debts", label: "Datorii", icon: BellRing }, { id: "savings", label: "Economii", icon: PiggyBank }, { id: "receipts", label: "Bonuri", icon: ReceiptText }, { id: "recurring", label: "Scadențe", icon: CalendarDays }, { id: "reports", label: "Statistici", icon: LayoutDashboard }, { id: "assistant", label: "Asistent", icon: Bot }, { id: "settings", label: "Setări", icon: Settings }, { id: "sync", label: "Sync", icon: Cloud }, { id: "guide", label: "Ghid", icon: BookOpen }];
   const setSettings = (patch: Partial<AppData["settings"]>) => onChange({ ...data, settings: { ...data.settings, ...patch } });
   const content = () => {
-    if (tab === "overview") return <div className="bf-more-grid"><button onClick={() => setTab("debts")}><BellRing size={20} /><b>Datorii</b><span>{data.debts.length} active</span></button><button onClick={() => setTab("savings")}><PiggyBank size={20} /><b>Economii</b><span>{data.savings.length} obiective</span></button><button onClick={() => setTab("receipts")}><Camera size={20} /><b>Bonuri</b><span>{data.receipts.length} salvate</span></button><button onClick={() => setTab("recurring")}><CalendarClock size={20} /><b>Scadențe</b><span>{data.recurring.length} programate</span></button><button onClick={() => setTab("reports")}><LayoutDashboard size={20} /><b>Statistici</b><span>istoric și categorii</span></button><button onClick={() => setTab("assistant")}><Bot size={20} /><b>Asistent</b><span>explică datele</span></button><button onClick={() => setTab("settings")}><Settings size={20} /><b>{isCollaborative ? "Setări familie" : "Setări profil"}</b><span>{isCollaborative ? "membri și surse" : "surse și categorii"}</span></button><button onClick={() => setTab("sync")}><Cloud size={20} /><b>Sincronizare</b><span>{isCollaborative ? "spațiu conectat" : "opțională între telefoane"}</span></button><button onClick={() => setTab("guide")}><BookOpen size={20} /><b>Manual</b><span>configurare și utilizare</span></button><button onClick={onOpenCalendar}><CalendarDays size={20} /><b>Calendar</b><span>scadențe și obiective</span></button></div>;
+    if (tab === "overview") return <div className="bf-more-grid"><button onClick={() => setTab("debts")}><BellRing size={20} /><b>Datorii</b><span>{data.debts.length} active</span></button><button onClick={() => setTab("savings")}><PiggyBank size={20} /><b>Economii</b><span>{data.savings.length} obiective</span></button><button onClick={() => setTab("receipts")}><ReceiptText size={20} /><b>Bonuri</b><span>{data.receipts.length} salvate</span></button><button onClick={() => setTab("recurring")}><CalendarClock size={20} /><b>Scadențe</b><span>{data.recurring.length} programate</span></button><button onClick={() => setTab("reports")}><LayoutDashboard size={20} /><b>Statistici</b><span>istoric și categorii</span></button><button onClick={() => setTab("assistant")}><Bot size={20} /><b>Asistent</b><span>explică datele</span></button><button onClick={() => setTab("settings")}><Settings size={20} /><b>{isCollaborative ? "Setări familie" : "Setări profil"}</b><span>{isCollaborative ? "membri și surse" : "surse și categorii"}</span></button><button onClick={() => setTab("sync")}><Cloud size={20} /><b>Sincronizare</b><span>{isCollaborative ? "spațiu conectat" : "opțională între telefoane"}</span></button><button onClick={() => setTab("guide")}><BookOpen size={20} /><b>Manual</b><span>configurare și utilizare</span></button><button onClick={onOpenCalendar}><CalendarDays size={20} /><b>Calendar</b><span>scadențe și obiective</span></button></div>;
     if (tab === "debts") return <div className="bf-more-list"><button className="bf-primary bf-inline-add" onClick={onOpenDebt}><Plus size={16} /> Adaugă datorie</button>{data.debts.map((debt) => <article key={debt.id}><span><b>{debt.name}</b><small>{debt.due}</small></span><strong>{money(debt.remaining)}</strong><em>{money(debt.monthly)}/lună</em></article>)}{!data.debts.length && <div className="bf-empty-state slim"><BellRing size={23} /><h2>Nicio datorie</h2></div>}</div>;
     if (tab === "savings") return <div className="bf-more-list"><button className="bf-primary bf-inline-add" onClick={onOpenSaving}><Plus size={16} /> Creează obiectiv</button>{data.savings.map((saving) => <article key={saving.id}><span><b>{saving.name}</b><small>{saving.due}</small></span><strong>{money(saving.current)}</strong><BudgetBar used={saving.current} total={saving.target} tone="gold" /></article>)}{!data.savings.length && <div className="bf-empty-state slim"><PiggyBank size={23} /><h2>Niciun obiectiv</h2></div>}</div>;
-    if (tab === "receipts") return <div>{receiptStorageNotice && <p className="bf-notice" role="status"><ShieldCheck size={15} /> {receiptStorageNotice}</p>}<button className="bf-primary bf-inline-add" onClick={onAddReceipt}><Camera size={17} /> Adaugă bon</button><div className="bf-receipt-list">{data.receipts.map((receipt) => <article key={receipt.id}><ReceiptThumbnail receipt={receipt} /><div><b>{receipt.vendor}</b><small>{dateText(receipt.date)} · {receipt.lines?.length || 1} categorie{(receipt.lines?.length || 1) === 1 ? "" : "i"}</small><p>{receipt.lines?.map((line) => `${line.category}: ${money(line.amount)}`).join(" · ") || receipt.note || "Fără detalii"}</p>{(receipt.imageKeys?.length || (receipt.imageData2 ? 2 : receipt.imageData ? 1 : 0)) > 1 && <small>Bon în două fotografii</small>}</div><strong>{money(receipt.amount)}</strong><button aria-label={`Șterge bonul ${receipt.vendor}`} onClick={() => onDeleteReceipt(receipt.id)}><Trash2 size={16} /></button></article>)}{!data.receipts.length && <div className="bf-empty-state slim"><ReceiptText size={23} /><h2>Niciun bon</h2><p>Un bon poate avea două poze și mai multe categorii; fiecare categorie creează o cheltuială legată de același bon.</p></div>}</div></div>;
+    if (tab === "receipts") return <div>{receiptStorageNotice && <p className="bf-notice" role="status"><ShieldCheck size={15} /> {receiptStorageNotice}</p>}<button className="bf-primary bf-inline-add" onClick={onAddReceipt}><ReceiptText size={17} /> Adaugă bon</button><div className="bf-receipt-list">{data.receipts.map((receipt) => <article key={receipt.id}><ReceiptThumbnail receipt={receipt} /><div><b>{receipt.vendor}</b><small>{dateText(receipt.date)} · {receipt.lines?.length || 1} categorie{(receipt.lines?.length || 1) === 1 ? "" : "i"}</small><p>{receipt.lines?.map((line) => `${line.category}: ${money(line.amount)}`).join(" · ") || receipt.note || "Fără detalii"}</p>{(receipt.imageKeys?.length || (receipt.imageData2 ? 2 : receipt.imageData ? 1 : 0)) > 1 && <small>Bon în două fotografii</small>}</div><strong>{money(receipt.amount)}</strong><button aria-label={`Șterge bonul ${receipt.vendor}`} onClick={() => onDeleteReceipt(receipt.id)}><Trash2 size={16} /></button></article>)}{!data.receipts.length && <div className="bf-empty-state slim"><ReceiptText size={23} /><h2>Niciun bon</h2><p>Adaugă magazinul și totalul. Fotografiile sunt opționale; fiecare categorie creează o cheltuială legată de același bon.</p></div>}</div></div>;
     if (tab === "recurring") return <Suspense fallback={<div className="bf-lazy-panel">Pregătim scadențele…</div>}><RecurringPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "reports") return <Suspense fallback={<div className="bf-lazy-panel">Pregătim statisticile…</div>}><ReportsPanel data={data} /></Suspense>;
     if (tab === "assistant") return <Suspense fallback={<div className="bf-lazy-panel">Pregătim asistentul…</div>}><AdvisorPanel data={data} /></Suspense>;
@@ -405,7 +585,7 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
   return <div className="bf-sync"><div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">FAMILIE CONECTATĂ</p><h2>{connected ? "Sesiunea familiei este activă." : "Sincronizare criptată, în timp real, între telefoane."}</h2><p>Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.</p></div><section className="bf-sync-session"><p className="bf-kicker">{connected ? "CONECTAT" : "CONECTEAZĂ FAMILIA"}</p>{connected ? <><p><b>Actualizare live, fără reîmprospătare manuală</b><br />Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.</p><button className="bf-link-button" onClick={onDisconnect}>Închide sesiunea acestui telefon</button></> : <><Field label="Parola familiei" hint="Orice parolă inventată de voi, de cel puțin 12 caractere. Trebuie să fie identică, literă cu literă, pe toate telefoanele."><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="minimum 12 caractere" autoComplete="new-password" /></Field><p className="bf-helper">Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată.</p><button className="bf-primary full" disabled={busy} onClick={onConnect}><Users size={17} /> Conectează acest telefon</button></>}</section>{lastSync && <p className="bf-helper">Ultima actualizare: {new Intl.DateTimeFormat("ro-RO", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastSync))}</p>}{notice && <p className="bf-notice" role="status"><Check size={15} /> {notice}</p>}<section className="bf-sync-journal" aria-labelledby="sync-journal-title"><div className="bf-sync-journal-heading"><div><p className="bf-kicker">ISTORIC DE ACTUALIZĂRI</p><h3 id="sync-journal-title">Ce s-a întâmplat la sincronizare</h3></div>{journal.length > 0 && <button className="bf-link-button" onClick={onClearJournal}>Curăță istoricul</button>}</div>{journal.length ? <div className="bf-sync-journal-list">{journal.map((entry) => <article key={entry.id} className={`bf-sync-journal-entry ${entry.status}`}><div className="bf-sync-journal-icon" aria-hidden="true">{entry.status === "resolved" ? <Check size={15} /> : entry.status === "failed" ? <X size={15} /> : <RotateCcw size={15} />}</div><div><strong>{entry.status === "resolved" ? "Actualizare reunită" : entry.status === "failed" ? "Actualizare eșuată" : "Actualizare detectată"}</strong><p>{entry.message}</p><small>{new Intl.DateTimeFormat("ro-RO", { dateStyle: "short", timeStyle: "short" }).format(new Date(entry.createdAt))} · {entry.action}</small></div></article>)}</div> : <p className="bf-helper">Nu există actualizări înregistrate pe acest dispozitiv. Când un alt telefon trimite mișcări noi, aici vei vedea ce a fost reunit automat.</p>}</section></div>;
 }
 
-export function FamilyGuide() { return <div className="bf-guide"><section className="bf-guide-hero"><BookOpen size={25} /><p className="bf-kicker">MANUAL RAPID</p><h2>Doar tu sau împreună.</h2><p>Poți urmări banii proprii de la prima deschidere. Membrii și conectarea telefoanelor sunt opționale.</p><button className="bf-guide-replay" onClick={() => window.dispatchEvent(new Event("buget-familie:replay-onboarding"))}><BookOpen size={16} /> Reia turul „Calm financiar”</button><button className="bf-guide-replay" onClick={() => window.dispatchEvent(new Event("buget-familie:replay-setup"))}><WalletCards size={16} /> Reia configurarea casei</button></section><section><p className="bf-kicker">1. PORNEȘTE CU TINE</p><h3>Configurează profilul și banii reali</h3><p>În <b>Setări familie</b>, păstrează un singur membru pentru monitorizare personală sau adaugă mai mulți membri când aveți un buget comun. Configurează sursele și soldurile inițiale, apoi creează planul până la următorul venit.</p></section><section><p className="bf-kicker">2. CONECTEAZĂ OPȚIONAL</p><h3>O parolă de familie, în loc de conturi și tokenuri</h3><p>Dacă vrei același registru pe mai multe telefoane, mergi în <b>Mai mult → Sincronizare</b> și alegeți împreună o parolă de familie de minimum 12 caractere. Introduceți exact aceeași parolă pe fiecare telefon, apoi apăsați „Conectează acest telefon". De acolo, mișcările apar automat, în timp real, pe toate telefoanele conectate.</p></section><section><p className="bf-kicker">3. LUCREAZĂ ZILNIC</p><h3>Înregistrează, verifică, decide</h3><p>Adaugă mișcările la momentul plății. Pentru cumpărături mixte, un bon poate avea două poze și mai multe categorii. Verifică zilnic punctul de decizie și confirmă scadențele când sunt plătite.</p></section><section><p className="bf-kicker">4. PROTEJEAZĂ DATELE</p><h3>Parola de familie rămâne la voi</h3><p>Parola de sincronizare nu este salvată. Nu o pune în conversații, bonuri sau capturi de ecran. Dacă un telefon se pierde, schimbați parola pe telefoanele rămase — camera veche nu mai decriptează pachetul. Pozele bonurilor nu părăsesc telefonul. Politica, termenii și ștergerea datelor sunt în Setări → Încredere.</p></section></div>; }
+export function FamilyGuide() { return <div className="bf-guide"><section className="bf-guide-hero"><BookOpen size={25} /><p className="bf-kicker">MANUAL RAPID</p><h2>Doar tu sau împreună.</h2><p>Poți urmări banii proprii de la prima deschidere. Membrii și conectarea telefoanelor sunt opționale.</p><button className="bf-guide-replay" onClick={() => window.dispatchEvent(new Event("buget-familie:replay-onboarding"))}><BookOpen size={16} /> Reia turul „Calm financiar”</button><button className="bf-guide-replay" onClick={() => window.dispatchEvent(new Event("buget-familie:replay-setup"))}><WalletCards size={16} /> Reia configurarea casei</button></section><section><p className="bf-kicker">1. PORNEȘTE CU TINE</p><h3>Configurează profilul și banii reali</h3><p>În <b>Setări familie</b>, păstrează un singur membru pentru monitorizare personală sau adaugă mai mulți membri când aveți un buget comun. Configurează sursele și soldurile inițiale, apoi creează planul până la următorul venit.</p></section><section><p className="bf-kicker">2. CONECTEAZĂ OPȚIONAL</p><h3>O parolă de familie, în loc de conturi și tokenuri</h3><p>Dacă vrei același registru pe mai multe telefoane, mergi în <b>Mai mult → Sincronizare</b> și alegeți împreună o parolă de familie de minimum 12 caractere. Introduceți exact aceeași parolă pe fiecare telefon, apoi apăsați „Conectează acest telefon". De acolo, mișcările apar automat, în timp real, pe toate telefoanele conectate.</p></section><section><p className="bf-kicker">3. LUCREAZĂ ZILNIC</p><h3>Înregistrează, verifică, decide</h3><p>Adaugă mișcările la momentul plății. Pentru cumpărături, un bon se salvează cu magazin și total; pozele sunt opționale. Verifică zilnic punctul de decizie și confirmă scadențele când sunt plătite.</p></section><section><p className="bf-kicker">4. PROTEJEAZĂ DATELE</p><h3>Parola de familie rămâne la voi</h3><p>Parola de sincronizare nu este salvată. Nu o pune în conversații, bonuri sau capturi de ecran. Dacă un telefon se pierde, schimbați parola pe telefoanele rămase — camera veche nu mai decriptează pachetul. Pozele bonurilor nu părăsesc telefonul. Politica, termenii și ștergerea datelor sunt în Setări → Încredere.</p></section></div>; }
 
 /** Atelierul Financiar 3.0 — Analiza este o destinație de lucru, cu rapoarte și asistent separat încărcate la cerere. */
 export function InsightsView({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {

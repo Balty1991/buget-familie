@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -382,6 +382,21 @@ describe("registrul financiar Buget Familie", () => {
   it("propune produse și prețuri individuale, fără totaluri sau plăți", () => {
     const items = parseReceiptItems(["LAPTE 1.5% 7,49", "APA MINERALA 2 x 3,50 7,00", "DETergent 18,99", "TOTAL 33,48", "CARD 33,48"]);
     expect(items).toEqual([{ label: "LAPTE 1.5%", amount: 7.49, category: "Alimente", raw: "LAPTE 1.5% 7,49" }, { label: "APA MINERALA", amount: 7, category: "Băuturi", raw: "APA MINERALA 2 x 3,50 7,00" }, { label: "DETergent", amount: 18.99, category: "Casă & facturi", raw: "DETergent 18,99" }]);
+  });
+  it("salvează un bon din magazin și total, fără poze și fără linii de produs complete", () => {
+    expect(resolveReceiptLines([{ id: "a", category: "Alimente", amount: "", label: "" }], 42.5)).toEqual([
+      { id: "a", category: "Alimente", amount: 42.5, label: undefined },
+    ]);
+    expect(resolveReceiptLines([], 18)).toEqual([{ id: "whole", category: "Alimente", amount: 18, label: undefined }]);
+  });
+  it("păstrează liniile de produs când au sume, fără să le înlocuiască cu totalul", () => {
+    expect(resolveReceiptLines([
+      { id: "a", category: "Alimente", amount: "10", label: "lapte" },
+      { id: "b", category: "Băuturi", amount: "5,50", label: "apă" },
+    ], 15.5)).toEqual([
+      { id: "a", category: "Alimente", amount: 10, label: "lapte" },
+      { id: "b", category: "Băuturi", amount: 5.5, label: "apă" },
+    ]);
   });
   it("împarte un venit în patru săptămâni calendaristice egale", () => {
     const plan = calendarBudget(2400, "2026-09-01", "2026-09-28");
