@@ -54,6 +54,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const [weekTransferError, setWeekTransferError] = useState("");
   const [allocationPeriod, setAllocationPeriod] = useState<"next-income" | "month" | "week" | "custom">("next-income");
   const [allocationPreviewOpen, setAllocationPreviewOpen] = useState(false);
+  const [planFlowOpen, setPlanFlowOpen] = useState(false);
 
   const periodValid = Boolean(cycleStart && cycleEnd && cycleEnd >= cycleStart);
   const weeklyPacedTotal = plan.allocations.filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
@@ -162,7 +163,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">REPARTIZARE PE PERIOADĂ</p><h2 id="allocation-period-title">Alege ritmul casei.</h2><p>Vezi banii disponibili pentru intervalul în care iei decizia.</p></div><span>{money(Math.max(0, unrepartized))}<small>rămași de repartizat</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label="Perioada repartizării">{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>disponibil în surse</small></span><span><b>{money(reservedInEnvelopes)}</b><small>în plicuri</small></span><span><b>{money(scheduled)}</b><small>scadențe rezervate</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>de repartizat</small></span></div></section>
     <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || "Luna aceasta"} onApply={applyMonthlyAllocation} />
     <AllocationRecommendationsPanel data={data} allocations={plan.allocations} periodDays={periodValid ? daysBetween(cycleStart, cycleEnd) : 30} onApply={applyRecommendation} />
-    <section className="bf-plan-flow" aria-label="Progresul planului în trei pași">
+    <section className={`bf-plan-flow ${planFlowOpen ? "expanded" : "compact"}`} aria-label="Progresul planului în trei pași"><button type="button" className="bf-plan-flow-toggle" aria-expanded={planFlowOpen} onClick={() => setPlanFlowOpen((value) => !value)}><span>{planFlowOpen ? "Ascunde ghidul" : "Arată ghidul complet"}</span><ChevronDown size={16} /></button>
       <div className="bf-plan-flow-summary"><div><p className="bf-kicker">PLAN ÎN TREI PAȘI</p><h2>{nextPlanStep}</h2><span>Configurația rămâne locală și poate fi ajustată oricând.</span></div><strong>{completedPlanSteps}<small>/ 3 pregătit</small></strong></div>
       <ol>
         <li className={periodValid ? "complete" : "active"}><span>01</span><div><b>Cadrul</b><small>Perioadă opțională</small></div></li>
