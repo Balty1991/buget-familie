@@ -1,0 +1,152 @@
+/**
+ * Ultimul strat pentru textura suprafeței.
+ * theme-contrast-pass punea border-color !important pe TOATE dalele,
+ * deci starea .selected era invizibilă. Aici inelul, bifa și
+ * previzualizarea câștigă în sfârșit.
+ */
+
+.bf-theme-option.selected {
+  border-color: var(--cf-primary) !important;
+  background: color-mix(in srgb, var(--cf-primary) 12%, var(--cf-surface-alt)) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-primary), transparent 68%) !important;
+}
+
+.bf-theme-picker .bf-background-preferences {
+  margin: 4px 13px 12px !important;
+  padding: 16px 0 2px !important;
+  border-top: 1px solid var(--cf-line) !important;
+  box-shadow: none !important;
+}
+.bf-theme-picker .bf-background-preferences h3 {
+  margin: 2px 0 4px !important;
+  color: var(--cf-ink) !important;
+  font: 700 18px/1.12 "IBM Plex Serif", Georgia, serif !important;
+  letter-spacing: -.03em !important;
+}
+.bf-theme-picker .bf-background-preferences > div > p:last-child {
+  margin: 0 0 12px !important;
+  color: var(--cf-muted) !important;
+  font: 600 12px/1.4 "IBM Plex Sans", sans-serif !important;
+}
+
+.bf-background-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+.bf-background-grid button {
+  position: relative !important;
+  display: grid !important;
+  gap: 7px !important;
+  min-height: 92px !important;
+  padding: 9px !important;
+  overflow: hidden !important;
+  border: 1.5px solid var(--cf-line) !important;
+  border-radius: 14px !important;
+  background: var(--cf-surface-alt) !important;
+  color: var(--cf-ink) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.bf-background-grid button:focus-visible {
+  outline: 2px solid var(--cf-info) !important;
+  outline-offset: 2px !important;
+}
+.bf-background-grid button.selected {
+  border-color: var(--cf-primary) !important;
+  background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface-alt)) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-primary), transparent 64%) !important;
+}
+.bf-background-grid button:last-child {
+  grid-column: span 2 !important;
+}
+.bf-background-swatch {
+  display: block !important;
+  height: 36px !important;
+  border: 1px solid color-mix(in srgb, var(--cf-ink), transparent 82%) !important;
+  border-radius: 8px !important;
+}
+.bf-background-copy {
+  display: grid !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  padding-right: 22px !important;
+}
+.bf-background-grid b {
+  display: block !important;
+  color: var(--cf-ink) !important;
+  font: 750 13px/1.15 "IBM Plex Sans", sans-serif !important;
+}
+.bf-background-grid small {
+  display: block !important;
+  color: var(--cf-muted) !important;
+  font: 600 11px/1.3 "IBM Plex Sans", sans-serif !important;
+}
+.bf-background-grid button i {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  background: var(--cf-primary) !important;
+  color: var(--cf-bg) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .28) !important;
+  pointer-events: none !important;
+}
+
+/* Previzualizarea mare trebuie să arate textura aleasă — shorthand-ul
+   din clarity-rebuild o ștergea. */
+.bf-theme-preview.background-preview-plain {
+  background-color: var(--preview-bg) !important;
+  background-image:
+    radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
+  background-size: auto !important;
+}
+.bf-theme-preview.background-preview-paper {
+  background-color: var(--preview-bg) !important;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, color-mix(in srgb, var(--preview-ink) 10%, transparent) 4px),
+    radial-gradient(color-mix(in srgb, var(--preview-ink) 16%, transparent) .7px, transparent .85px),
+    radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
+  background-size: 100% 5px, 10px 10px, auto !important;
+}
+.bf-theme-preview.background-preview-grid {
+  background-color: var(--preview-bg) !important;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--preview-ink) 16%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--preview-ink) 16%, transparent) 1px, transparent 1px),
+    radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
+  background-size: 18px 18px, 18px 18px, auto !important;
+}
+.bf-theme-preview.background-preview-aurora {
+  background-color: var(--preview-bg) !important;
+  background-image:
+    radial-gradient(circle at 82% 14%, var(--preview-info), transparent 38%),
+    radial-gradient(circle at 14% 86%, var(--preview-glow), transparent 48%),
+    linear-gradient(135deg, color-mix(in srgb, var(--preview-primary) 55%, var(--preview-bg)), var(--preview-bg)) !important;
+  background-size: auto !important;
+}
+.bf-theme-preview.background-preview-dots {
+  background-color: var(--preview-bg) !important;
+  background-image:
+    radial-gradient(color-mix(in srgb, var(--preview-primary) 42%, transparent) 1.15px, transparent 1.7px),
+    radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
+  background-size: 12px 12px, auto !important;
+}
+
+@media (min-width: 641px) {
+  .bf-background-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+  .bf-background-grid button:last-child {
+    grid-column: auto !important;
+  }
+  .bf-background-grid button {
+    min-height: 108px !important;
+  }
+}
