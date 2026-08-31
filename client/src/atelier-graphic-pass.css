@@ -1,0 +1,476 @@
+/**
+ * Atelier graphic pass — redesenare de aspect, fără a rupe contrastul.
+ * Ultimul CSS încărcat. Culorile rămân pe --cf-*; hero-urile branded
+ * folosesc text deschis pe un amestec întunecat al accentului, pe orice temă.
+ */
+
+.bf-app {
+  --bf-on-hero: #f4faf6;
+  --bf-on-hero-muted: rgba(244, 250, 246, .78);
+  --bf-on-hero-soft: rgba(244, 250, 246, .16);
+  --bf-hero-ink: #10241e;
+  --bf-ease: cubic-bezier(.22, 1, .36, 1);
+  --bf-radius-card: 22px;
+  --bf-radius-control: 12px;
+}
+
+/* —— Hero-uri de registru (Astăzi + Plan) —— */
+.bf-today-situation,
+.bf-today-situation.risk,
+.bf-plan-resource-band,
+.bf-plan-resource-band.risk {
+  position: relative !important;
+  overflow: hidden !important;
+  color: var(--bf-on-hero) !important;
+  border: 1px solid color-mix(in srgb, var(--cf-primary-strong) 45%, transparent) !important;
+  background:
+    radial-gradient(120% 90% at 108% -8%, color-mix(in srgb, var(--cf-info) 28%, transparent), transparent 52%),
+    linear-gradient(148deg,
+      color-mix(in srgb, var(--cf-primary-strong) 88%, #04110e),
+      color-mix(in srgb, var(--cf-primary-strong) 52%, #030807)) !important;
+  box-shadow: 0 22px 44px color-mix(in srgb, var(--cf-primary-strong) 28%, transparent) !important;
+}
+
+.bf-today-situation { border-radius: 6px 28px 6px 28px !important; }
+.bf-plan-resource-band { border-radius: 22px 6px 22px 6px !important; }
+
+.bf-today-situation.risk,
+.bf-plan-resource-band.risk {
+  border-color: color-mix(in srgb, var(--cf-danger) 55%, transparent) !important;
+  background:
+    radial-gradient(90% 80% at 100% 0, color-mix(in srgb, var(--cf-warning) 22%, transparent), transparent 50%),
+    linear-gradient(148deg,
+      color-mix(in srgb, var(--cf-danger) 72%, #2a0c0a),
+      color-mix(in srgb, var(--cf-danger) 40%, #140606)) !important;
+}
+
+.bf-today-situation::before,
+.bf-plan-resource-band::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  opacity: .22 !important;
+  background-image:
+    linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) !important;
+  background-size: 42px 42px !important;
+  mask-image: linear-gradient(115deg, #000 0 42%, transparent 78%) !important;
+}
+
+.bf-today-situation::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  right: -12px;
+  top: 12px;
+  width: 176px;
+  height: 176px;
+  pointer-events: none !important;
+  opacity: .2 !important;
+  background:
+    linear-gradient(135deg, transparent 46%, rgba(255,255,255,.95) 46% 54%, transparent 54%),
+    linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.08));
+  clip-path: polygon(6% 20%, 50% 2%, 94% 20%, 94% 90%, 6% 90%);
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.2));
+}
+
+.bf-today-situation-top,
+.bf-today-situation-number,
+.bf-today-situation-actions,
+.bf-plan-resource-band > div {
+  position: relative;
+  z-index: 1;
+}
+
+.bf-today-situation-top,
+.bf-today-situation-top time,
+.bf-today-situation .bf-status-chip,
+.bf-today-situation-number p,
+.bf-today-situation-number strong,
+.bf-today-situation-number span,
+.bf-plan-resource-band p,
+.bf-plan-resource-band strong,
+.bf-plan-resource-band span,
+.bf-plan-resource-band b {
+  color: var(--bf-on-hero) !important;
+}
+
+.bf-today-situation-number p,
+.bf-today-situation-top time,
+.bf-plan-resource-band p,
+.bf-plan-resource-band > div:last-child > span {
+  color: var(--bf-on-hero-muted) !important;
+}
+
+.bf-today-situation-number {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 16px !important;
+  max-width: none !important;
+}
+
+.bf-today-situation-number p,
+.bf-today-situation-number strong,
+.bf-today-situation-number span {
+  grid-column: 1;
+}
+
+.bf-today-situation-number strong {
+  font-size: clamp(46px, 8vw, 72px) !important;
+  line-height: .94 !important;
+  letter-spacing: -.055em !important;
+  text-shadow: 0 10px 28px rgba(0,0,0,.22);
+}
+
+.bf-today-situation .bf-health-score {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  flex-direction: column;
+  gap: .35rem;
+  margin: 0 !important;
+  padding: .55rem .7rem .5rem !important;
+  border-radius: 22px !important;
+  border-color: rgba(255,255,255,.28) !important;
+  background: rgba(255,255,255,.12) !important;
+  color: var(--bf-on-hero) !important;
+  backdrop-filter: blur(10px);
+}
+
+.bf-today-situation .bf-health-ring {
+  width: 3.25rem;
+  height: 3.25rem;
+  background: conic-gradient(
+    #f4ead0 calc(var(--score) * 1%),
+    rgba(255,255,255,.18) 0
+  ) !important;
+}
+
+.bf-today-situation .bf-health-score.watch .bf-health-ring {
+  background: conic-gradient(var(--cf-warning) calc(var(--score) * 1%), rgba(255,255,255,.18) 0) !important;
+}
+
+.bf-today-situation .bf-health-score.risk .bf-health-ring {
+  background: conic-gradient(#ffc1b6 calc(var(--score) * 1%), rgba(255,255,255,.18) 0) !important;
+}
+
+.bf-today-situation .bf-health-ring::before {
+  background: color-mix(in srgb, var(--cf-primary-strong) 38%, #06140f) !important;
+}
+
+.bf-today-situation .bf-health-ring b,
+.bf-today-situation .bf-health-score small {
+  color: #f7fff9 !important;
+}
+
+.bf-today-situation .bf-health-ring b { font-size: .95rem; }
+
+.bf-today-situation .bf-status-chip i {
+  background: #f4ead0 !important;
+  box-shadow: 0 0 0 4px rgba(244, 234, 208, .18) !important;
+}
+
+.bf-today-situation .bf-today-add {
+  color: var(--bf-hero-ink) !important;
+  background: #f7f4ea !important;
+  border: 0 !important;
+  border-radius: var(--bf-radius-control) !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
+}
+
+.bf-today-situation .bf-today-plan-link {
+  color: #f4ead0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.bf-today-situation-actions {
+  border-top-color: rgba(255,255,255,.22) !important;
+}
+
+/* —— Măsurători ca dale grafice —— */
+.bf-today-measurements {
+  gap: 10px !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.bf-today-measurements article {
+  position: relative;
+  overflow: hidden;
+  min-height: 112px !important;
+  padding: 16px 16px 16px 18px !important;
+  border: 1px solid var(--cf-line) !important;
+  border-top-width: 1px !important;
+  border-right: 1px solid var(--cf-line) !important;
+  border-radius: 18px !important;
+  background: var(--cf-surface) !important;
+  color: var(--cf-ink) !important;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--cf-ink) 6%, transparent);
+}
+
+.bf-today-measurements article::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--cf-primary-strong);
+}
+
+.bf-today-measurements article:nth-child(2)::before { background: var(--cf-danger); }
+.bf-today-measurements article:nth-child(3)::before { background: var(--cf-warning); }
+
+.bf-today-measurements span { color: var(--cf-muted) !important; }
+.bf-today-measurements b { color: var(--cf-ink) !important; }
+.bf-today-measurements small { color: var(--cf-muted) !important; }
+
+/* —— Acces rapid + decizii —— */
+.bf-today-hub-links {
+  border-radius: 20px !important;
+  background: var(--cf-surface) !important;
+}
+
+.bf-today-hub-links button > span {
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) !important;
+  color: var(--cf-primary-strong) !important;
+}
+
+.bf-decision-index {
+  display: grid !important;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--cf-primary-strong) !important;
+  background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) !important;
+  font-size: 11px !important;
+}
+
+.bf-decision-row.primary .bf-decision-index {
+  color: #fff !important;
+  background: var(--cf-primary-strong) !important;
+}
+
+.bf-today-activity-list article,
+.bf-household-feed article {
+  border-radius: 12px;
+}
+
+.bf-tx-icon,
+.bf-household-feed span {
+  border-radius: 10px !important;
+}
+
+/* —— Plicuri ca hârtie îndoită —— */
+.bf-plan-envelope-list article,
+.bf-allocation-list > article {
+  position: relative;
+}
+
+.bf-plan-envelope-list article::after,
+.bf-allocation-list > article::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  background: linear-gradient(135deg, transparent 50%, color-mix(in srgb, var(--cf-primary) 22%, var(--cf-surface)) 50%);
+  box-shadow: -1px 1px 0 color-mix(in srgb, var(--cf-ink) 8%, transparent);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.bf-plan-envelope-track,
+.bf-allocation-progress-track {
+  height: 8px !important;
+  border-radius: 99px !important;
+  overflow: hidden;
+}
+
+.bf-plan-envelope-track i,
+.bf-allocation-progress-track i {
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong)) !important;
+}
+
+.bf-plan-envelope-list article.watch .bf-plan-envelope-track i,
+.bf-allocation-progress-track i.ready {
+  background: var(--cf-warning) !important;
+}
+
+.bf-plan-envelope-list article.over .bf-plan-envelope-track i,
+.bf-allocation-progress-track i.attention {
+  background: var(--cf-danger) !important;
+}
+
+/* —— Grafice analiză —— */
+.bf-analysis-chart i,
+.bf-analysis-chart i.income,
+.bf-analysis-chart i.expense {
+  border-radius: 4px 4px 1px 1px;
+}
+
+.bf-analysis-chart i.income {
+  background: linear-gradient(180deg, var(--cf-primary), var(--cf-primary-strong)) !important;
+}
+
+.bf-analysis-chart i.expense {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cf-danger) 70%, #fff), var(--cf-danger)) !important;
+}
+
+.bf-spend-donut {
+  box-shadow: inset 0 0 0 14px var(--cf-surface), 0 12px 28px color-mix(in srgb, var(--cf-ink) 10%, transparent);
+}
+
+.bf-allocation-chart svg text { fill: var(--cf-muted); font-size: 11px; }
+.bf-allocation-chart .bf-chart-zero { stroke: var(--cf-line); }
+.bf-allocation-chart .bf-chart-grid { stroke: color-mix(in srgb, var(--cf-line) 70%, transparent); }
+.bf-allocation-chart-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--cf-muted);
+  background:
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--cf-primary) 12%, transparent), transparent 46%),
+    var(--cf-surface);
+  border: 1px dashed var(--cf-line);
+  border-radius: 18px;
+}
+
+.bf-today-empty-activity {
+  border-radius: 16px !important;
+  background:
+    radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--cf-primary) 14%, transparent), transparent 42%),
+    var(--cf-surface) !important;
+}
+
+/* —— Navigație plutitoare —— */
+.bf-appbar {
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+
+.bf-brand b {
+  font-family: "IBM Plex Serif", Georgia, serif;
+  letter-spacing: -.04em;
+}
+
+.bf-brand i { color: var(--cf-primary-strong); font-style: italic; }
+
+.bf-brand-mark.bf-logo-3d {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px 11px 14px 11px !important;
+  background: linear-gradient(160deg, var(--cf-primary), var(--cf-primary-strong)) !important;
+  border: 1px solid color-mix(in srgb, #fff 28%, var(--cf-primary-strong)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 6px 14px color-mix(in srgb, var(--cf-primary-strong) 30%, transparent) !important;
+}
+
+.bf-logo-letter { color: #f7f4ea !important; text-shadow: 0 1px 0 rgba(0,0,0,.25) !important; }
+
+@media (max-width: 760px) {
+  .bf-mobile-nav {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    padding: 6px !important;
+    border-radius: 24px !important;
+    border: 1px solid var(--cf-line) !important;
+    background: color-mix(in srgb, var(--cf-surface) 88%, transparent) !important;
+    box-shadow: 0 16px 40px color-mix(in srgb, var(--cf-ink) 18%, transparent) !important;
+  }
+
+  .bf-mobile-nav button {
+    min-height: 56px !important;
+    border-radius: 18px !important;
+    color: var(--cf-muted) !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .bf-mobile-nav button.active {
+    color: #fff !important;
+    background: var(--cf-primary-strong) !important;
+    box-shadow: 0 8px 16px color-mix(in srgb, var(--cf-primary-strong) 38%, transparent) !important;
+  }
+
+  .bf-page,
+  .bf-today-workspace,
+  .bf-movements-workspace,
+  .bf-obligations-workspace,
+  .bf-plan-workspace,
+  .bf-insights-workspace,
+  .bf-utilities-workspace {
+    padding-bottom: calc(122px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .bf-today-situation { border-radius: 6px 22px 6px 22px !important; }
+
+  .bf-today-situation-number {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .bf-today-situation-number strong { font-size: clamp(40px, 11vw, 56px) !important; }
+
+  .bf-today-measurements { grid-template-columns: 1fr !important; }
+  .bf-today-measurements article { min-height: 78px !important; }
+}
+
+/* —— Onboarding / setup vizual —— */
+.bf-onboarding-icon,
+.bf-setup-shield {
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--cf-primary-strong) 24%, transparent);
+}
+
+.bf-onboarding-orbit {
+  border-color: color-mix(in srgb, var(--cf-primary) 35%, transparent) !important;
+}
+
+/* —— Mișcare scurtă, oprită dacă se cere —— */
+.bf-screen-transition {
+  animation: bf-atelier-enter .34s var(--bf-ease) both;
+}
+
+.bf-today-situation,
+.bf-plan-resource-band,
+.bf-today-measurements article,
+.bf-household-recap {
+  animation: bf-atelier-rise .42s var(--bf-ease) both;
+}
+
+@keyframes bf-atelier-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes bf-atelier-rise {
+  from { opacity: .72; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-screen-transition,
+  .bf-today-situation,
+  .bf-plan-resource-band,
+  .bf-today-measurements article,
+  .bf-household-recap {
+    animation: none !important;
+  }
+}
+
+/* Hero-urile rămân lizibile și în contrast extra. */
+html.bf-high-contrast .bf-today-situation,
+html.bf-high-contrast .bf-plan-resource-band {
+  box-shadow: 0 0 0 1px #fff inset !important;
+}

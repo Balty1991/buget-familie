@@ -50,6 +50,11 @@ Aplicația nu plătește facturi, nu investește și nu înlocuiește un consult
 
 App de finanțe personale, fără user-generated public, fără violență, fără locație. Public țintă: 18+.
 
+## Grafică de magazin
+
+- Grafic caracteristică: [play-feature.svg](https://balty1991.github.io/buget-familie/play-feature.svg) — exportă PNG 1024×500 (Play nu acceptă SVG).
+- Capturi: Astăzi (eroarea de registru + inelul de scor), Plan (plicuri), Analiză → Gospodărie, Setări → Încredere.
+
 ## Ce NU s-a atins
 
 `family-crypto.ts`, `realtime-sync.ts`, `firestore.rules` — protocolul de familie rămâne identic.
