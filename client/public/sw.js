@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v13";
+const CACHE = "buget-familie-shell-v14";
 
 const SHELL = ["./", "./manifest.webmanifest", "./bf-favicon.svg"];
 
@@ -14,9 +14,27 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.includes("/api/") || url.pathname.includes("github")) return;
+
+  const hashed = /\/assets\/.+\.[A-Za-z0-9_-]{8,}\.(js|css)$/.test(url.pathname) || /\.(woff2?|png|svg|webp|jpg)$/.test(url.pathname);
+  if (hashed) {
+    event.respondWith(caches.match(request).then((cached) => {
+      const networked = fetch(request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          void caches.open(CACHE).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      }).catch(() => cached);
+      return cached || networked;
+    }));
+    return;
+  }
+
   event.respondWith(fetch(request).then((response) => {
-    const copy = response.clone();
-    void caches.open(CACHE).then((cache) => cache.put(request, copy));
+    if (response.ok) {
+      const copy = response.clone();
+      void caches.open(CACHE).then((cache) => cache.put(request, copy));
+    }
     return response;
   }).catch(() => caches.match(request).then((cached) => cached || caches.match("./"))));
 });

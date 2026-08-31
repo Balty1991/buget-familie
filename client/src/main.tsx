@@ -54,6 +54,7 @@ import "./atelier-graphic-pass.css";
 import "./ledger-live.css";
 import "./ledger-atelier.css";
 import "./atelier-atmosphere.css";
+import "./mobile-speed.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 

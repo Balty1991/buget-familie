@@ -1,0 +1,79 @@
+/**
+ * Mobil: tap imediat, fără blur scump, inputuri lizibile, secțiuni de sub pliu amânate.
+ * Ultimul CSS — nu atinge sync, teme sau plicuri.
+ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.bf-app {
+  overscroll-behavior-y: contain;
+}
+
+.bf-app button,
+.bf-app a,
+.bf-app [role="button"],
+.bf-appbar,
+.bf-mobile-nav {
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--cf-primary) 22%, transparent);
+  touch-action: manipulation;
+}
+
+.bf-below-fold-slot {
+  min-height: 72px;
+}
+
+@media (hover: none) {
+  .bf-app button:hover,
+  .bf-app .bf-primary:hover,
+  .bf-app .bf-secondary:hover {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .bf-appbar,
+  .bf-mobile-nav {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .bf-app input,
+  .bf-app select,
+  .bf-app textarea {
+    font-size: 16px !important;
+    line-height: 1.25 !important;
+  }
+
+  .bf-today-decision,
+  .bf-today-measurements,
+  .bf-today-activity,
+  .bf-today-envelope-evolution,
+  .bf-weekly-summary {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 240px;
+  }
+
+  .bf-mobile-nav button {
+    min-height: 48px !important;
+  }
+
+  .bf-lazy-panel {
+    min-height: 88px;
+    display: grid;
+    place-items: center;
+    color: var(--cf-muted);
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-app button,
+  .bf-app .bf-primary,
+  .bf-app .bf-secondary,
+  .bf-screen-transition {
+    transition: none !important;
+  }
+}

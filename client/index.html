@@ -5,15 +5,57 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Buget Familie — atelierul deciziilor financiare</title>
     <meta name="description" content="Un spațiu personal sau comun pentru buget, datorii, economii și decizii financiare clare." />
     <meta name="theme-color" content="#143C36" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <link rel="icon" type="image/svg+xml" href="bf-favicon.svg" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap" rel="stylesheet" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Serif:ital,wght@0,600;0,700;1,600&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Serif:ital,wght@0,600;0,700;1,600&display=swap" media="print" onload="this.media='all'" />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Serif:ital,wght@0,600;0,700;1,600&display=swap" />
+    </noscript>
+    <script>
+      (function () {
+        try {
+          var root = document.documentElement;
+          var schedule = localStorage.getItem("buget-familie:theme-schedule");
+          var theme = localStorage.getItem("buget-familie:theme") || "ivory";
+          if (theme === "dark") theme = "forest";
+          if (schedule === "auto") {
+            var now = new Date();
+            var minutes = now.getHours() * 60 + now.getMinutes();
+            var times = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
+            try {
+              var saved = JSON.parse(localStorage.getItem("buget-familie:theme-schedule-times") || "null");
+              if (saved) Object.assign(times, saved);
+            } catch (e) {}
+            var toMin = function (value, fallback) {
+              var parts = String(value || "").split(":");
+              var hours = Number(parts[0]);
+              var mins = Number(parts[1]);
+              return Number.isFinite(hours) && Number.isFinite(mins) ? hours * 60 + mins : fallback;
+            };
+            var day = toMin(times.dayStart, 360);
+            var evening = toMin(times.eveningStart, 1020);
+            var night = toMin(times.nightStart, 1260);
+            theme = minutes >= day && minutes < evening ? "ivory" : minutes >= evening && minutes < night ? "forest" : "midnight";
+          }
+          var themes = { ivory: 1, forest: 1, midnight: 1, copper: 1, slate: 1, plum: 1, lagoon: 1, rosewood: 1 };
+          if (!themes[theme]) theme = "ivory";
+          var background = localStorage.getItem("buget-familie:background") || "plain";
+          if (!{ plain: 1, paper: 1, grid: 1, aurora: 1, dots: 1 }[background]) background = "plain";
+          root.classList.add("theme-" + theme, "background-" + background);
+          if (!{ ivory: 1, slate: 1, lagoon: 1 }[theme]) root.classList.add("dark");
+          if (localStorage.getItem("buget-familie:high-contrast") === "true") root.classList.add("bf-high-contrast");
+        } catch (e) {}
+      })();
+    </script>
   </head>
 
   <body>
