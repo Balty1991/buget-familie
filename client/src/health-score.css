@@ -1,0 +1,194 @@
+/* Scor de sănătate financiară — badge pe Astăzi + sheet explicabil */
+
+.bf-health-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.bf-health-score:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.bf-health-score:active {
+  transform: scale(0.97);
+}
+
+.bf-health-score.good {
+  color: var(--bf-green, #256b5b);
+}
+
+.bf-health-score.watch {
+  color: var(--bf-honey, #d49a2a);
+}
+
+.bf-health-score.risk {
+  color: var(--bf-coral, #d56852);
+}
+
+.bf-health-ring {
+  --score: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(
+    currentColor calc(var(--score) * 1%),
+    color-mix(in srgb, currentColor 15%, transparent) 0
+  );
+  position: relative;
+  flex-shrink: 0;
+}
+
+.bf-health-ring::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--bf-surface, #f7f5ef);
+}
+
+.bf-health-ring b {
+  position: relative;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.bf-health-ring.large {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.bf-health-ring.large b {
+  font-size: 1.25rem;
+}
+
+.bf-health-ring.large::before {
+  inset: 5px;
+}
+
+.bf-health-score small {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Sheet detalii */
+.bf-health-sheet {
+  max-width: 22rem;
+}
+
+.bf-health-sheet-intro {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--muted-foreground, #707c74);
+}
+
+.bf-health-sheet-ring-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.bf-health-sheet-ring-wrap .bf-health-ring.good {
+  color: var(--bf-green, #256b5b);
+}
+
+.bf-health-sheet-ring-wrap .bf-health-ring.watch {
+  color: var(--bf-honey, #d49a2a);
+}
+
+.bf-health-sheet-ring-wrap .bf-health-ring.risk {
+  color: var(--bf-coral, #d56852);
+}
+
+.bf-health-factors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.bf-health-factor-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.bf-health-factor-top b {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.bf-health-factor-top span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground, #707c74);
+  white-space: nowrap;
+}
+
+.bf-health-factor-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.bf-health-factor-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+.bf-health-factor small {
+  display: block;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted-foreground, #707c74);
+}
+
+.bf-health-sheet-note {
+  margin: 1.1rem 0 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground, #707c74);
+  text-align: center;
+}
+
+/* Plasare naturală în banda de situație Astăzi */
+.bf-today-situation-number .bf-health-score {
+  margin-top: 0.85rem;
+}
+
+/* Dark / theme-aware surface pentru inel */
+.dark .bf-health-ring::before,
+.theme-forest .bf-health-ring::before,
+.theme-midnight .bf-health-ring::before,
+.theme-copper .bf-health-ring::before,
+.theme-plum .bf-health-ring::before,
+.theme-rosewood .bf-health-ring::before {
+  background: color-mix(in srgb, var(--card, #1a2420) 92%, transparent);
+}
