@@ -179,13 +179,6 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       <div><p className="bf-kicker">PLANUL FAMILIEI, PE CATEGORII</p><h1>Fiecare leu <em>are un loc.</em></h1><p>Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.</p></div>
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>NEREPARTIZAȚI</small><b>{money(unrepartized)}</b></div>
     </header>
-    {envelopes.length > 0 && (
-      <div className="bf-plan-fan" aria-hidden="true">
-        {envelopes.slice(0, 8).map(({ item, usage, state }) => (
-          <EnvelopeMark key={item.id} remaining={Math.max(0, 1 - usage)} state={state} size={54} />
-        ))}
-      </div>
-    )}
 
     <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">REPARTIZARE PE PERIOADĂ</p><h2 id="allocation-period-title">Alege ritmul casei.</h2><p>Vezi banii disponibili pentru intervalul în care iei decizia.</p></div><span>{money(Math.max(0, unrepartized))}<small>rămași de repartizat</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label="Perioada repartizării">{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>disponibil în surse</small></span><span><b>{money(reservedInEnvelopes)}</b><small>în plicuri</small></span><span><b>{money(scheduled)}</b><small>scadențe rezervate</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>de repartizat</small></span></div></section>
 

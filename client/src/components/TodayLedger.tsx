@@ -58,7 +58,7 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
             {envelopes.map((entry) => (
               <li key={entry.item.id} className={entry.state}>
                 <button type="button" onClick={() => onGo("plan")}>
-                  <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={86} />
+                  <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={68} />
                   <b>{entry.item.label}</b>
                   <strong>{money(Math.max(0, entry.remaining))}</strong>
                   <small>{Math.round(entry.usage * 100)}% folosit din {money(entry.budget)}</small>

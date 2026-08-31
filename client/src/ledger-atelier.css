@@ -402,3 +402,160 @@
   .bf-envelope-fill,
   .bf-today-pulse-chart i { transition: none !important; }
 }
+
+
+/* —— Calibrare afișare: fără întindere, fără tăieri, fără acoperire —— */
+.bf-envelope-mark,
+.bf-envelope-empty-art,
+.bf-desk-scene,
+.bf-health-gauge {
+  display: block !important;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+  flex-shrink: 0;
+}
+
+.bf-envelope-fan {
+  display: flex !important;
+  grid-auto-flow: unset !important;
+  grid-auto-columns: unset !important;
+  gap: 10px !important;
+  margin: 0 -4px !important;
+  padding: 2px 4px 6px !important;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.bf-envelope-fan li {
+  flex: 0 0 min(44vw, 158px);
+  scroll-snap-align: start;
+  min-width: 132px;
+}
+.bf-envelope-fan button {
+  display: grid !important;
+  justify-items: center;
+  gap: 8px !important;
+  width: 100%;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 12px 10px 14px !important;
+  border: 1px solid var(--cf-line);
+  border-radius: 16px !important;
+  color: var(--cf-ink);
+  background: var(--cf-surface) !important;
+  text-align: center;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--cf-ink) 7%, transparent);
+}
+.bf-envelope-fan button svg,
+.bf-envelope-portrait svg,
+.bf-envelope-fan .bf-envelope-mark {
+  width: 68px !important;
+  height: auto !important;
+  max-height: 54px !important;
+}
+.bf-envelope-fan b { font-size: 13px; line-height: 1.25; }
+.bf-envelope-fan strong { font-variant-numeric: tabular-nums; font-size: 15px; line-height: 1.2; }
+.bf-envelope-fan small { color: var(--cf-muted); font-size: 10px; line-height: 1.35; }
+.bf-envelope-fan li.watch button { background: color-mix(in srgb, var(--cf-warning) 10%, var(--cf-surface)) !important; }
+.bf-envelope-fan li.over button { background: color-mix(in srgb, var(--cf-danger) 10%, var(--cf-surface)) !important; }
+
+.bf-payday-strip {
+  overflow: visible !important;
+  padding: 16px 16px 14px !important;
+}
+.bf-payday-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.bf-payday-copy small {
+  display: block;
+  line-height: 1.3 !important;
+  text-transform: uppercase;
+}
+.bf-payday-copy b {
+  display: block;
+  line-height: 1.2 !important;
+  overflow: visible;
+}
+.bf-payday-strip ol {
+  overflow-x: auto;
+  grid-template-columns: repeat(auto-fit, minmax(20px, 1fr)) !important;
+}
+
+.bf-plan-fan { display: none !important; }
+
+.bf-allocation-list.bf-envelope-desk .bf-envelope-portrait {
+  width: auto !important;
+  justify-items: start;
+}
+.bf-allocation-list.bf-envelope-desk .bf-envelope-portrait svg {
+  width: 56px !important;
+  height: auto !important;
+  max-height: 46px !important;
+}
+
+.bf-obligations-header > span {
+  align-self: start;
+}
+
+@media (max-width: 760px) {
+  .bf-app {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .bf-appbar {
+    position: relative !important;
+    flex: 0 0 auto;
+    z-index: 30;
+  }
+  .bf-app > main {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .bf-mobile-nav {
+    height: auto !important;
+  }
+  .bf-page,
+  .bf-today-workspace,
+  .bf-movements-workspace,
+  .bf-obligations-workspace,
+  .bf-plan-workspace,
+  .bf-insights-workspace,
+  .bf-utilities-workspace,
+  .bf-goals-workspace,
+  .bf-calendar-workspace {
+    padding-bottom: calc(136px + env(safe-area-inset-bottom)) !important;
+  }
+  .bf-obligations-header {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .bf-obligations-header > span { display: none !important; }
+  .bf-obligations-header .bf-goals-link {
+    width: 100%;
+    justify-content: center;
+  }
+  .bf-plan-studio-header h1 {
+    line-height: 1.12 !important;
+    overflow: visible !important;
+  }
+  .bf-desk-top { grid-template-columns: 1fr !important; }
+  .bf-today-pulse { grid-template-columns: 1fr !important; }
+  .bf-envelope-fan li { flex-basis: min(58vw, 180px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-health-gauge-arc,
+  .bf-envelope-fill,
+  .bf-today-pulse-chart i { transition: none !important; }
+}

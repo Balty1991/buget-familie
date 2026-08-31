@@ -17,6 +17,7 @@ export function HealthGauge({ score, tone, size = 120 }: { score: number; tone: 
       viewBox="0 0 200 128"
       width={size}
       height={size * 128 / 200}
+      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label={`Scor ${clamped} din 100`}
     >
@@ -57,7 +58,7 @@ export function HealthGauge({ score, tone, size = 120 }: { score: number; tone: 
 export function CashNote({ amount, caption }: { amount: string; caption: string }) {
   return (
     <div className="bf-cash-note">
-      <svg viewBox="0 0 200 112" aria-hidden="true">
+      <svg viewBox="0 0 200 112" preserveAspectRatio="none" aria-hidden="true">
         <rect x="4" y="6" width="192" height="100" rx="10" className="bf-cash-note-body" />
         <rect x="12" y="14" width="176" height="84" rx="6" className="bf-cash-note-frame" />
         <circle cx="40" cy="56" r="16" className="bf-cash-note-rosette" />
@@ -76,8 +77,8 @@ export function PaydayStrip({ elapsed, total, remaining }: { elapsed: number; to
 
   return (
     <div className="bf-payday-strip" aria-label={`${remaining} zile până la venit`}>
-      <div>
-        <small>PÂNĂ LA VENIT</small>
+      <div className="bf-payday-copy">
+        <small>Până la venit</small>
         <b>{remaining === 0 ? "Astăzi" : `${remaining} ${remaining === 1 ? "zi" : "zile"}`}</b>
       </div>
       <ol>
