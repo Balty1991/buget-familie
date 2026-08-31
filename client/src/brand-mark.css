@@ -11,7 +11,7 @@
   overflow: hidden !important;
   border: 0 !important;
   border-radius: 11px !important;
-  background: #d89d37 !important;
+  background: #e3ae3a !important;
   box-shadow: 0 4px 10px color-mix(in srgb, var(--cf-ink, #173f36) 18%, transparent), inset 0 1px 0 rgba(255,255,255,.28) !important;
 }
 .bf-brand-mark::before,
@@ -43,5 +43,40 @@
   .bf-brand > .bf-brand-mark,
   .bf-brand > span.bf-brand-mark {
     flex-basis: 32px !important;
+  }
+}
+
+/* Instrumente: fără liniatura de registru care taie rândurile. */
+.bf-utilities-workspace .bf-more-grid {
+  background: var(--cf-surface, #fffefa) !important;
+  background-image: none !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--cf-line, #e1ded5) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+.bf-utilities-workspace .bf-more-grid::before {
+  border-bottom: 1px solid color-mix(in srgb, var(--cf-line, #e1ded5) 75%, transparent) !important;
+}
+.bf-utilities-workspace .bf-more-grid button {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--cf-line, #e1ded5) 55%, transparent) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  min-height: 64px !important;
+}
+.bf-utilities-workspace .bf-more-grid button:last-of-type {
+  border-bottom: 0 !important;
+}
+.bf-utilities-workspace .bf-more-grid button::after {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .bf-utilities-workspace {
+    padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
