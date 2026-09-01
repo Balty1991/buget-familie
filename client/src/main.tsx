@@ -60,6 +60,7 @@ import "./brand-mark.css";
 import "./weekly-checkin.css";
 import "./surface-texture.css";
 import "./receipt-form-fix.css";
+import "./redesign-2026.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
