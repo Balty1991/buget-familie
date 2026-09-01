@@ -50,7 +50,8 @@ Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișa
 
 ## Performanță mobilă
 
-Componentele de Plan, Analiză, scadențe, OCR, asistent și captura rapidă sunt încărcate la cerere. Generatorul PDF este încărcat numai după apăsarea exportului, nu la prima deschidere a aplicației. Runtime-ul React și iconițele sunt separate în fișiere cacheabile; Planul, rapoartele și asistentul rămân în module separate. Bundle-ul principal rămâne monitorizat pentru următoarele separări funcționale.
+Componentele de Plan, Analiză, scadențe, OCR, asistent și captura rapidă sunt încărcate la cerere. Generatorul PDF este încărcat numai după apăsarea exportului, nu la prima deschidere a aplicației. Runtime-ul React rămâne într-un fișier cacheabil; iconițele fiecărui ecran rămân în modulul acelui ecran, ca Astăzi să nu descarce iconițele Planului. După ce ecranul principal e gata, Planul și Mișcările sunt pregătite discret în fundal; instrumentele și temele se încarcă abia la deschidere. Kit-ul de componente nefolosit nu mai intră în CSS-ul inițial.
+
 
 ## Teme memorate
 

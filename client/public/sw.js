@@ -1,6 +1,6 @@
-const CACHE = "buget-familie-shell-v24";
+const CACHE = "buget-familie-shell-v25";
 
-const SHELL = ["./", "./manifest.webmanifest", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/icon-512.png"];
+const SHELL = ["./", "./manifest.webmanifest", "./icons/favicon-32.png", "./icons/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

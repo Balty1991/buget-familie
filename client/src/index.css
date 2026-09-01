@@ -1,6 +1,8 @@
 /* Atelierul Financiar — hârtie caldă, verde registru și măsurători ca elemente de navigare. */
 @import "tailwindcss";
-@import "tw-animate-css";
+/* Kit-ul shadcn din components/ui nu este pe traseul Astăzi; îl excludem ca Tailwind
+   să nu genereze sute de utilitare animate-in/sidebar pe first paint. */
+@source not "./components/ui";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -224,13 +224,16 @@ export default defineConfig(({ command }) => {
     build: {
       outDir: path.resolve(import.meta.dirname, "dist/public"),
       emptyOutDir: true,
+      target: ["es2022", "chrome111", "safari16"],
+      cssMinify: "lightningcss",
+      modulePreload: { polyfill: false },
       rollupOptions: {
         output: {
           manualChunks(id) {
             if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/") || id.includes("node_modules/scheduler") || id.includes("node_modules/wouter")) return "react-runtime";
-            if (id.includes("node_modules/lucide-react")) return "interface-icons";
             if (id.includes("node_modules/firebase") || id.includes("node_modules/@firebase")) return "family-sync";
             if (id.includes("node_modules/tesseract.js")) return "receipt-ocr";
+            // Nu grupa lucide-react: un chunk comun forța toate iconițele Plan/Analiză pe first paint.
             // Nu grupa jspdf/html2canvas: helperul de preload ajunge în chunk-ul mare și se încarcă la prima deschidere.
           },
         },
