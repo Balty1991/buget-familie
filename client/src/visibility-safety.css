@@ -296,3 +296,22 @@
 .bf-allocation-list.bf-envelope-desk > article > * {
   grid-column: 1 / -1 !important;
 }
+
+/* Cardurile de sub Astăzi ("Surse utilizabile" etc.) folosesc un grid cu o coloană de
+ * etichetă care se îngustează la ~33px de îndată ce suma e pe 4-5 cifre (ex. "4.700 RON"),
+ * pentru că regula câștigătoare rezervă spațiul sumei înaintea etichetei. Rezultatul: eticheta
+ * și nota se despart cuvânt cu cuvânt și textul lor se scurge peste sumă. Trecem pe o coloană
+ * simplă, stivuită (etichetă / sumă / notă) — clară pe orice lățime de telefon și pentru orice
+ * sumă. Selectorul trebuie să repete exact lista :first-child/:nth-child a regulii vechi din
+ * clarity-rebuild.css ca să o depășească în specificitate, nu doar în ordine. */
+.bf-today-measurements article,
+.bf-today-measurements article:first-child,
+.bf-today-measurements article:nth-child(2),
+.bf-today-measurements article:nth-child(3) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
