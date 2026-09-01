@@ -210,3 +210,76 @@
   background: var(--cf-primary) !important;
   border-color: var(--cf-primary) !important;
 }
+
+/* Restul suprafețelor "ivory" forțate de redesign-2026.css (Plan, Sync, Ghid, Gospodărie,
+ * Obiective, Calendar, Obiceiuri, Analiză, Mișcări, Instrumente) nu primiseră încă tema
+ * activă — rămâneau cu fundal alb fix, dar text moștenit din tema închisă (alb pe alb). */
+:is(
+  .bf-movements-ledger,
+  .bf-plan-simulation,
+  .bf-plan-simulator,
+  .bf-cycle-setup,
+  .bf-cycle-tools,
+  .bf-more-tab-region,
+  .bf-more-grid,
+  .bf-insights-section,
+  .bf-analysis-section,
+  .bf-goals-overview,
+  .bf-goals-list,
+  .bf-calendar-card,
+  .bf-calendar-agenda,
+  .bf-habits-pulse,
+  .bf-habits-signals,
+  .bf-guide,
+  .bf-household-card,
+  .bf-sync
+) {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border-color: var(--cf-line) !important;
+}
+
+:is(
+  .bf-movements-ledger,
+  .bf-plan-simulation,
+  .bf-plan-simulator,
+  .bf-cycle-setup,
+  .bf-cycle-tools,
+  .bf-more-tab-region,
+  .bf-more-grid,
+  .bf-insights-section,
+  .bf-analysis-section,
+  .bf-goals-overview,
+  .bf-goals-list,
+  .bf-calendar-card,
+  .bf-calendar-agenda,
+  .bf-habits-pulse,
+  .bf-habits-signals,
+  .bf-guide,
+  .bf-household-card,
+  .bf-sync
+) :is(.bf-kicker, small, em) {
+  color: var(--cf-muted) !important;
+}
+
+/* În temele întunecate, --cf-primary devine deschis la culoare intenționat, ca accentul să
+ * iasă în evidență pe fundal închis — dar câteva controale "active"/CTA moștenesc în continuare
+ * text alb sau deschis peste acel accent deschis, din redesign. Închidem explicit textul lor
+ * doar în temele întunecate; în temele deschise (--cf-primary e deja închis), rămân neatinse. */
+.dark .bf-primary,
+.dark .bf-movement-kind button.active,
+.dark .bf-insights-switch button.active,
+.dark .bf-plan-toggle button.active,
+.dark .bf-analysis-scope button.active,
+.dark .bf-cycle-template-save button,
+.dark .bf-wizard-progress span.active,
+.dark .bf-analysis-next-step button {
+  color: #10231f !important;
+}
+
+/* Aceeași problemă, familia de accent "pericol" (--cf-danger): în temele întunecate devine
+ * un coral deschis, dar textul rămâne alb din regulile mai vechi. */
+.dark .bf-obligation-actions button:first-child,
+.dark .bf-obligation-entry-actions button.pay {
+  color: #2b0a06 !important;
+}
