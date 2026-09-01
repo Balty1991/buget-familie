@@ -83,13 +83,13 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
   return (
     <div className="bf-modal-backdrop bf-onboarding-backdrop" role="presentation">
       <section ref={dialogRef} tabIndex={-1} className="bf-onboarding bf-setup" role="dialog" aria-modal="true" aria-labelledby="bf-setup-title">
-        <button className="bf-onboarding-skip" onClick={complete}>Sari peste</button>
+        <button className="bf-onboarding-skip" onClick={complete}>Mai târziu</button>
         <div className="bf-setup-visual" aria-hidden="true"><EnvelopeStack fill={(step + 1) / 4} size={96} /></div>
-        <p className="bf-kicker">CONFIGURARE · 0{step + 1} / 04</p>
+        <p className="bf-kicker">PASUL {step + 1} DIN 4</p>
         {step === 0 && (
           <div className="bf-setup-copy">
-            <h2 id="bf-setup-title">Cine ține <em>registrul?</em></h2>
-            <p>Numele tău rămâne pe acest telefon. Partenerul e opțional — același registru, fără conturi separate.</p>
+            <h2 id="bf-setup-title">Cine folosește <em>aplicația?</em></h2>
+            <p>Poți ține evidența singur sau împreună cu partenerul. Numele ajută la identificarea persoanei care a adăugat o cheltuială.</p>
             <label className="bf-field"><span>Numele familiei</span><input value={familyName} onChange={(event) => setFamilyName(event.target.value)} placeholder="ex. Familia Popescu" /></label>
             <label className="bf-field"><span>Numele tău</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>Partener (opțional)</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
@@ -97,8 +97,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
         )}
         {step === 1 && (
           <div className="bf-setup-copy">
-            <h2 id="bf-setup-title">Câți lei <em>sunt acum?</em></h2>
-            <p>Soldul inițial e punctul de plecare, nu un extras bancar. Poți lăsa 0 și completa mai târziu din Setări.</p>
+            <h2 id="bf-setup-title">Ce bani ai <em>acum?</em></h2>
+            <p>Scrie aproximativ cât ai în cont, pe card sau cash. Este doar punctul de plecare și poate fi schimbat mai târziu.</p>
             <div className="bf-setup-sources">
               {data.settings.paymentSources.map((source) => (
                 <label className="bf-field" key={source.id}>
@@ -111,8 +111,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
         )}
         {step === 2 && (
           <div className="bf-setup-copy">
-            <h2 id="bf-setup-title">Până când ții <em>planul?</em></h2>
-            <p>Alege următoarea zi de venit. Plicurile și ritmul zilnic se opresc acolo.</p>
+            <h2 id="bf-setup-title">Până când vrei să ajungă <em>banii?</em></h2>
+            <p>Alege ziua în care primești următorul venit. Apoi aplicația îți arată cât ai pus deoparte pentru fiecare scop până atunci.</p>
             <label className="bf-field"><span>Următorul venit</span><input type="date" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-presets" role="group" aria-label="Plicuri de start">
               {PRESETS.map((preset) => {
@@ -120,7 +120,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{preset.category}</b>
-                    <small>{money(preset.amount)}{preset.weekly ? " · ritm săptămânal" : " · total ciclu"}</small>
+                    <small>{money(preset.amount)}{preset.weekly ? " · în fiecare săptămână" : " · pentru perioada aleasă"}</small>
                     {active && <Check size={14} />}
                   </button>
                 );
@@ -131,11 +131,11 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
         {step === 3 && (
           <div className="bf-setup-copy">
             <span className="bf-setup-shield"><ShieldCheck size={28} /></span>
-            <h2 id="bf-setup-title">Datele rămân <em>la voi.</em></h2>
-            <p>Registrul stă pe telefon. Sincronizarea e opțională, criptată AES-GCM, fără cont Google sau bancă. Pozele bonurilor nu părăsesc dispozitivul.</p>
+            <h2 id="bf-setup-title">Datele rămân <em>la tine.</em></h2>
+            <p>Registrul stă pe telefon. Sincronizarea este opțională și criptată. Nu este nevoie de cont Google sau de conectare la bancă. Pozele bonurilor rămân pe dispozitiv.</p>
             <ul className="bf-setup-privacy">
-              <li>Fără login bancar, fără reclame, fără vânzare de date.</li>
-              <li>Politica de confidențialitate e în Setări → Încredere.</li>
+              <li>Fără conectare la bancă, fără reclame în registru, fără vânzare de date.</li>
+              <li>Politica de confidențialitate o găsești în Instrumente → Încredere.</li>
               <li>Poți șterge totul local oricând din Resetare.</li>
             </ul>
           </div>

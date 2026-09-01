@@ -269,3 +269,85 @@ html {
     animation: none !important;
   }
 }
+
+
+/* Claritate pentru utilizatori noi: explicațiile apar la cerere, fără să încarce cardul. */
+.bf-skip-link {
+  position: fixed;
+  z-index: 200;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-140%);
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #fffefa;
+  background: var(--cf-ink, #10251f);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 160ms var(--bf-ease, cubic-bezier(.23, 1, .32, 1));
+}
+
+.bf-skip-link:focus {
+  transform: translateY(0);
+}
+
+.bf-today-explainer {
+  width: min(100%, 430px);
+  margin-top: 12px;
+  color: color-mix(in srgb, currentColor 88%, transparent);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.bf-today-explainer summary {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid color-mix(in srgb, currentColor 34%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+}
+
+.bf-today-explainer summary::-webkit-details-marker {
+  display: none;
+}
+
+.bf-today-explainer summary::after {
+  content: "＋";
+  font-size: 15px;
+  line-height: 1;
+}
+
+.bf-today-explainer[open] summary::after {
+  content: "−";
+}
+
+.bf-today-explainer p {
+  max-width: 480px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid color-mix(in srgb, currentColor 45%, transparent);
+  color: inherit;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .bf-today-explainer {
+    width: 100%;
+  }
+
+  .bf-today-explainer summary {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-skip-link {
+    transition: none;
+  }
+}
