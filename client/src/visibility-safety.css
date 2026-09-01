@@ -315,3 +315,21 @@
   height: auto !important;
   min-height: 0 !important;
 }
+
+/* Cardul mare de pe Astăzi rezervă o coloană fixă (~210px) pentru sumă și una separată
+ * (~116px) pentru insigna de sănătate financiară, pe același rând. Suma folosește un font
+ * foarte mare (clamp 48-72px); orice sold de 4-5 cifre depășește cei 210px alocați și se
+ * scurge peste insignă. O coloană simplă, cu insigna stivuită dedesubt, elimină concurența
+ * pentru lățime indiferent cât de mare e suma. */
+.bf-today-situation-number {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.bf-today-situation .bf-health-score {
+  position: relative !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin-top: 12px !important;
+}
