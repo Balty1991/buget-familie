@@ -1,0 +1,212 @@
+/* Household OS — final visibility safety layer.
+ * Every surface in the obligations workspace must inherit the active --cf-* palette.
+ * This file is intentionally loaded after the visual redesign so no ivory fallback can win.
+ */
+
+.bf-appbar,
+.bf-mobile-nav {
+  color: var(--cf-ink) !important;
+  background: color-mix(in srgb, var(--cf-surface) 96%, transparent) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-appbar nav button,
+.bf-appbar-tools > button,
+.bf-appbar .bf-brand,
+.bf-appbar .bf-brand > b {
+  color: var(--cf-ink) !important;
+}
+
+.bf-appbar nav button.active {
+  color: var(--cf-ink) !important;
+  background: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface)) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-obligations-workspace,
+.bf-obligations-header,
+.bf-obligation-timeline,
+.bf-obligation-ledger,
+.bf-obligation-lane,
+.bf-obligation-entry,
+.bf-obligation-empty,
+.bf-debt-history,
+.bf-obligation-links .bf-goals-link {
+  color: var(--cf-ink) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-obligation-ledger,
+.bf-obligation-lane,
+.bf-obligation-entry,
+.bf-obligation-empty,
+.bf-debt-history,
+.bf-obligation-timeline {
+  background: var(--cf-surface) !important;
+}
+
+.bf-obligation-lane > header,
+.bf-obligation-entry,
+.bf-obligation-empty,
+.bf-debt-history {
+  border-color: var(--cf-line) !important;
+}
+
+.bf-obligation-lane > header h2,
+.bf-obligation-entry-main b,
+.bf-obligation-empty b,
+.bf-obligation-timeline h2,
+.bf-obligation-timeline b,
+.bf-obligation-ledger article span,
+.bf-obligation-ledger article small {
+  color: var(--cf-ink) !important;
+}
+
+.bf-obligation-header p:not(.bf-kicker),
+.bf-obligation-entry-main small,
+.bf-obligation-progress small,
+.bf-obligation-empty small,
+.bf-debt-history,
+.bf-debt-history > p,
+.bf-obligation-ledger article small,
+.bf-obligation-lane > header > span {
+  color: var(--cf-muted) !important;
+}
+
+.bf-obligation-ledger article.debt b,
+.bf-obligation-entry-main strong,
+.bf-obligation-entry-actions button.delete {
+  color: var(--cf-danger) !important;
+}
+
+.bf-obligation-ledger article.savings b,
+.bf-obligation-lane.savings .bf-obligation-entry-main strong {
+  color: var(--cf-primary) !important;
+}
+
+.bf-obligation-lane,
+.bf-obligation-lane.debt {
+  border-top-color: var(--cf-danger) !important;
+}
+
+.bf-obligation-lane.savings {
+  border-top-color: var(--cf-primary) !important;
+}
+
+.bf-obligation-entry-main > span {
+  color: var(--cf-danger) !important;
+  background: color-mix(in srgb, var(--cf-danger) 16%, var(--cf-surface)) !important;
+}
+
+.bf-obligation-lane.savings .bf-obligation-entry-main > span {
+  color: var(--cf-primary) !important;
+  background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) !important;
+}
+
+.bf-obligation-actions button,
+.bf-obligation-entry-actions button,
+.bf-obligation-empty button {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface-alt) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-obligation-actions button:first-child,
+.bf-obligation-entry-actions button.pay {
+  color: #fff !important;
+  background: var(--cf-danger) !important;
+  border-color: var(--cf-danger) !important;
+}
+
+.bf-obligation-ledger > button {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface-alt) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-obligation-ledger > button svg:first-child {
+  color: var(--cf-warning) !important;
+}
+
+.bf-obligation-empty > svg,
+.bf-obligation-empty > span + button {
+  color: var(--cf-info) !important;
+}
+
+.bf-mobile-nav button {
+  color: var(--cf-muted) !important;
+  background: transparent !important;
+}
+
+.bf-mobile-nav button.active {
+  color: var(--cf-ink) !important;
+  background: color-mix(in srgb, var(--cf-primary) 20%, var(--cf-surface)) !important;
+  box-shadow: inset 0 -2px 0 var(--cf-primary) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-obligation-entry,
+  .bf-obligation-actions button,
+  .bf-obligation-entry-actions button {
+    transition: none !important;
+  }
+}
+
+/* Plan: progresul este o informație de decizie, nu un ornament; păstrăm un track vizibil în orice temă. */
+.bf-allocation-progress-card,
+.bf-allocation-guidance,
+.bf-allocation-builder,
+.bf-allocation-empty {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-allocation-progress-card h2,
+.bf-allocation-guidance h2,
+.bf-allocation-guidance-stats b,
+.bf-allocation-progress-meta b {
+  color: var(--cf-ink) !important;
+}
+
+.bf-allocation-progress-track {
+  background: color-mix(in srgb, var(--cf-line) 82%, var(--cf-surface)) !important;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 78%, var(--cf-surface)) !important;
+}
+
+.bf-allocation-progress-track i,
+.bf-allocation-progress-track i.balanced {
+  background: var(--cf-primary) !important;
+}
+
+.bf-allocation-progress-track i.ready {
+  background: var(--cf-warning) !important;
+}
+
+.bf-allocation-progress-track i.attention {
+  background: var(--cf-danger) !important;
+}
+
+.bf-quick-envelope-chips button,
+.bf-allocation-guidance-action {
+  color: var(--cf-ink) !important;
+  background: var(--cf-surface-alt) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-allocation-guidance-action:hover,
+.bf-quick-envelope-chips button:hover {
+  background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface-alt)) !important;
+}
+
+.bf-wizard-progress span {
+  color: var(--cf-muted) !important;
+  background: var(--cf-surface-alt) !important;
+  border-color: var(--cf-line) !important;
+}
+
+.bf-wizard-progress span.active {
+  color: var(--cf-ink) !important;
+  background: var(--cf-primary) !important;
+  border-color: var(--cf-primary) !important;
+}

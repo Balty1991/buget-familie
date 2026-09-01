@@ -198,8 +198,15 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
         </div>
         <strong>{Math.round(allocatedRatio * 100)}%</strong>
       </div>
-      <div className="bf-allocation-progress-track" aria-hidden="true">
-        <i style={{ width: `${Math.round(allocatedRatio * 100)}%` }} className={allocationHealth} />
+      <div
+        className="bf-allocation-progress-track"
+        role="progressbar"
+        aria-label="Procentul banilor repartizați în plicuri"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(allocatedRatio * 100)}
+      >
+        <i aria-hidden="true" style={{ width: `${Math.round(allocatedRatio * 100)}%` }} className={allocationHealth} />
       </div>
       <div className="bf-allocation-progress-meta">
         <span><b>{money(Math.max(0, availableSources - Math.max(0, unrepartized)))}</b> repartizați</span>
