@@ -174,13 +174,21 @@ html {
     will-change: auto !important;
   }
 
-  .bf-screen-transition,
   .bf-today-situation,
   .bf-today-decision,
   .bf-today-activity,
   .bf-major-enter,
   .bf-atelier-enter {
     animation: none !important;
+  }
+
+  .bf-screen-transition {
+    animation: bf-screen-mobile-enter 220ms var(--bf-ease, cubic-bezier(.23, 1, .32, 1)) both !important;
+  }
+
+  @keyframes bf-screen-mobile-enter {
+    from { opacity: .92; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
   }
 
   .bf-today-situation,
