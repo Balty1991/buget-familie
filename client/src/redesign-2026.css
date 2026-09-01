@@ -487,3 +487,115 @@
 .theme-midnight .bf-today-situation .bf-today-situation-number strong,
 .theme-plum .bf-today-situation .bf-today-situation-number strong,
 .theme-rosewood .bf-today-situation .bf-today-situation-number strong { color: #fffaf4 !important; }
+
+
+/* Header lock: regulile directe ale app-ului nu trebuie să împingă logo-ul în jos. */
+.bf-app > .bf-skip-link {
+  position: fixed !important;
+  z-index: 200 !important;
+  top: max(8px, env(safe-area-inset-top)) !important;
+  left: 8px !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  transform: translateY(-140%);
+}
+.bf-app > .bf-skip-link:focus { transform: translateY(0); }
+.bf-app > .bf-appbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+
+/* Page surfaces: paginile secundare nu mai pot combina suprafață Ivory cu textul unei teme dark. */
+.bf-page {
+  background: var(--cf-bg, #f4f7f1) !important;
+  color: var(--cf-ink, #10231f) !important;
+}
+.bf-page > header h1,
+.bf-page > header h1 em,
+.bf-page > header p:not(.bf-kicker),
+.bf-page .bf-section-heading h2,
+.bf-page .bf-topline h1,
+.bf-page .bf-topline h1 em,
+.bf-page .bf-topline p:not(.bf-kicker) {
+  color: var(--cf-ink, #10231f) !important;
+}
+.bf-page > header p:not(.bf-kicker),
+.bf-page .bf-topline p:not(.bf-kicker) { color: var(--cf-muted, #6c7f77) !important; }
+.bf-page > header h1 em,
+.bf-page .bf-topline h1 em { color: var(--cf-primary-strong, #0f3d35) !important; }
+
+.bf-movements-ledger .bf-movements-header h1,
+.bf-movements-ledger .bf-movements-header h1 em,
+.bf-movements-ledger .bf-movements-header p:not(.bf-kicker) {
+  color: var(--cf-ink, #10231f) !important;
+}
+.bf-movements-ledger .bf-movements-header h1 em { color: var(--cf-primary-strong, #0f3d35) !important; }
+.bf-movements-ledger .bf-movements-header > div::before { color: var(--cf-primary-strong, #0f3d35) !important; border-left-color: var(--cf-primary, #185849) !important; }
+.bf-journal-day-pulse,
+.bf-journal-quickbar,
+.bf-journal-filter-sheet,
+.bf-movement-day,
+.bf-empty-state,
+.bf-journal-search,
+.bf-journal-filter-toggle,
+.bf-journal-export,
+.bf-journal-clear,
+.bf-journal-save-filter,
+.bf-journal-saved-list {
+  border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important;
+  background: var(--cf-surface, #fffdf8) !important;
+  color: var(--cf-ink, #10231f) !important;
+}
+.bf-journal-day-pulse b,
+.bf-journal-day-pulse small,
+.bf-journal-quickbar input,
+.bf-journal-search input,
+.bf-movement-day header,
+.bf-movement-day article b,
+.bf-movement-day article em,
+.bf-empty-state h2,
+.bf-empty-state p { color: var(--cf-ink, #10231f) !important; }
+.bf-journal-day-pulse small,
+.bf-movement-day header,
+.bf-movement-day article em,
+.bf-empty-state p { color: var(--cf-muted, #6c7f77) !important; }
+.bf-movement-day article,
+.bf-movement-day header,
+.bf-journal-day-pulse > span,
+.bf-journal-day-pulse > div { border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important; }
+.bf-journal-quickbar button,
+.bf-journal-filter-toggle,
+.bf-journal-export,
+.bf-journal-clear,
+.bf-journal-save-filter button,
+.bf-journal-saved-list button { color: var(--cf-primary-strong, #0f3d35) !important; }
+.bf-movement-kind button.active,
+.bf-journal-filter-toggle.active,
+.bf-journal-save-filter button { color: var(--cf-on-forest, #fff) !important; background: var(--cf-primary, #185849) !important; }
+.bf-journal-search input,
+.bf-journal-filter-sheet input,
+.bf-journal-filter-sheet select,
+.bf-journal-save-filter input { border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important; background: var(--cf-surface-alt, #f4f7f1) !important; color: var(--cf-ink, #10231f) !important; }
+.bf-empty-state .bf-primary { color: var(--cf-on-forest, #fff) !important; background: var(--cf-primary, #185849) !important; }
+
+.dark .bf-page { background: var(--cf-bg, #10251f) !important; }
+.dark .bf-journal-day-pulse,
+.dark .bf-journal-quickbar,
+.dark .bf-journal-filter-sheet,
+.dark .bf-movement-day,
+.dark .bf-empty-state,
+.dark .bf-journal-search,
+.dark .bf-journal-filter-toggle,
+.dark .bf-journal-export,
+.dark .bf-journal-clear,
+.dark .bf-journal-save-filter,
+.dark .bf-journal-saved-list { background: var(--cf-surface, #17352b) !important; }
+.dark .bf-journal-search input,
+.dark .bf-journal-filter-sheet input,
+.dark .bf-journal-filter-sheet select,
+.dark .bf-journal-save-filter input { background: var(--cf-surface-alt, #123027) !important; }
