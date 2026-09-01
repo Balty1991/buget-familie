@@ -569,3 +569,184 @@
 .bf-plan-flow-toggle{display:none}.bf-plan-flow{position:relative}.bf-plan-studio-header{align-items:end}.bf-plan-studio-header h1{max-width:12ch}.bf-plan-workspace>.bf-allocation-period{order:-1}.bf-plan-workspace>.bf-monthly-wizard{order:-1}.bf-plan-workspace>.bf-allocation-recommendations{order:-1}@media(max-width:760px){.bf-plan-workspace{gap:12px}.bf-plan-studio-header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin-bottom:0;padding-bottom:4px}.bf-plan-studio-header .bf-kicker{font-size:8px}.bf-plan-studio-header h1{margin:5px 0;font-size:31px;line-height:.98}.bf-plan-studio-header>div:first-child>p:last-child{max-width:31ch;font-size:10px;line-height:1.3}.bf-plan-header-stat{min-width:102px;padding:11px 9px!important;border-radius:14px!important}.bf-plan-header-stat b{font-size:17px!important}.bf-plan-header-stat small{font-size:7px!important}.bf-plan-flow{gap:10px;margin:0;padding:12px 13px;border-top-width:2px;border-radius:15px}.bf-plan-flow-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:29px;padding:0;border:0;color:var(--cf-muted);background:transparent;font-size:9px;font-weight:900;text-align:left}.bf-plan-flow-toggle svg{transition:transform .24s ease}.bf-plan-flow.expanded .bf-plan-flow-toggle svg{transform:rotate(180deg)}.bf-plan-flow.compact ol{display:none}.bf-plan-flow.compact .bf-plan-flow-summary{gap:8px}.bf-plan-flow.compact .bf-plan-flow-summary h2{font-size:17px}.bf-plan-flow.compact .bf-plan-flow-summary span{display:none}.bf-plan-flow.compact .bf-plan-flow-summary>strong{font-size:21px}.bf-plan-flow.compact .bf-plan-flow-summary>strong small{font-size:7px}.bf-allocation-period{gap:11px!important;padding:14px!important;border-radius:16px!important}.bf-allocation-period-heading h2{font-size:20px!important}.bf-allocation-period-heading>span{font-size:19px!important}.bf-allocation-period-tabs{margin-inline:-2px}.bf-allocation-period-summary span{padding:9px 8px!important}.bf-allocation-period-summary b{font-size:10px!important}.bf-allocation-period-summary small{font-size:7px!important}.bf-monthly-wizard{padding:15px!important;border-radius:16px!important}.bf-monthly-wizard-head h2{font-size:22px!important}.bf-monthly-wizard-head>span{width:34px;height:34px}.bf-allocation-recommendations{padding:14px!important;border-radius:16px!important}}
 @media(min-width:761px){.bf-plan-workspace>.bf-allocation-period,.bf-plan-workspace>.bf-monthly-wizard,.bf-plan-workspace>.bf-allocation-recommendations{order:initial}}
 @media(prefers-reduced-motion:reduce){.bf-plan-flow-toggle svg{transition:none!important}}
+
+
+/* Visual refresh — suprafețe mai clare, ierarhie mai calmă și accente contemporane. */
+:root {
+  --bf-radius-lg: 22px;
+  --bf-radius-md: 15px;
+  --bf-shadow-soft: 0 18px 48px color-mix(in srgb, var(--cf-ink) 9%, transparent);
+}
+
+.bf-app {
+  background:
+    radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--cf-info) 8%, transparent), transparent 34rem),
+    radial-gradient(circle at 96% 14%, color-mix(in srgb, var(--cf-primary) 8%, transparent), transparent 30rem),
+    var(--cf-bg);
+}
+
+.bf-page {
+  max-width: 1180px;
+}
+
+.bf-topline,
+.bf-today-situation,
+.bf-today-decision,
+.bf-today-measurements,
+.bf-today-activity,
+.bf-today-envelope-evolution,
+.bf-analysis-control,
+.bf-analysis-month,
+.bf-analysis-year,
+.bf-spend-compass,
+.bf-analysis-watch,
+.bf-analysis-balance,
+.bf-plan-studio-header,
+.bf-cycle-setup,
+.bf-allocation-list,
+.bf-more-grid,
+.bf-settings > section,
+.bf-sync-hero,
+.bf-sync-session,
+.bf-sync-journal,
+.bf-guide > section {
+  border-radius: var(--bf-radius-lg);
+  box-shadow: var(--bf-shadow-soft);
+}
+
+.bf-topline {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 78%, transparent);
+}
+
+.bf-topline::after {
+  position: absolute;
+  z-index: -1;
+  top: -6rem;
+  right: -5rem;
+  width: 15rem;
+  height: 15rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cf-info) 10%, transparent);
+  content: "";
+  filter: blur(2px);
+}
+
+.bf-today-decision,
+.bf-analysis-snapshot,
+.bf-plan-simulator,
+.bf-plan-simulation {
+  border-color: color-mix(in srgb, var(--cf-line) 72%, transparent);
+}
+
+.bf-section-heading h2,
+.bf-today-decision-heading h1,
+.bf-analysis-section-heading h2,
+.bf-plan-sheet-heading h2 {
+  letter-spacing: -.035em;
+}
+
+.bf-decision-row,
+.bf-today-activity-list article,
+.bf-allocation-list > article,
+.bf-analysis-flow article,
+.bf-plan-simulation-list label {
+  border-color: color-mix(in srgb, var(--cf-line) 72%, transparent);
+  background: color-mix(in srgb, var(--cf-surface) 78%, transparent);
+}
+
+.bf-decision-row:hover,
+.bf-today-activity-list article:hover,
+.bf-allocation-list > article:hover,
+.bf-plan-simulation-list label:focus-within {
+  border-color: color-mix(in srgb, var(--cf-info) 42%, var(--cf-line));
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--cf-info) 9%, transparent);
+  transform: translateY(-1px);
+}
+
+.bf-primary,
+.bf-analysis-next-step button,
+.bf-plan-simulator button,
+.bf-plan-simulation footer .bf-primary {
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--cf-primary) 20%, transparent);
+}
+
+.bf-primary:hover,
+.bf-analysis-next-step button:hover,
+.bf-plan-simulator button:hover,
+.bf-plan-simulation footer .bf-primary:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.bf-mobile-nav {
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 75%, transparent);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--cf-surface) 88%, transparent);
+  box-shadow: 0 16px 38px color-mix(in srgb, var(--cf-ink) 14%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.bf-mobile-nav button {
+  min-height: 48px;
+  border-radius: 14px;
+}
+
+.bf-mobile-nav button.active {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cf-primary) 24%, transparent), 0 5px 14px color-mix(in srgb, var(--cf-primary) 14%, transparent);
+}
+
+.bf-app input,
+.bf-app select,
+.bf-app textarea {
+  border-radius: 11px;
+}
+
+@media (max-width: 640px) {
+  .bf-page {
+    padding-inline: 14px;
+  }
+
+  .bf-topline,
+  .bf-today-situation,
+  .bf-today-decision,
+  .bf-today-measurements,
+  .bf-today-activity,
+  .bf-today-envelope-evolution,
+  .bf-analysis-control,
+  .bf-analysis-month,
+  .bf-analysis-year,
+  .bf-spend-compass,
+  .bf-analysis-watch,
+  .bf-analysis-balance,
+  .bf-cycle-setup,
+  .bf-more-grid,
+  .bf-settings > section,
+  .bf-sync-hero,
+  .bf-sync-session,
+  .bf-sync-journal,
+  .bf-guide > section {
+    border-radius: 18px;
+  }
+
+  .bf-mobile-nav {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-decision-row:hover,
+  .bf-today-activity-list article:hover,
+  .bf-allocation-list > article:hover,
+  .bf-primary:hover,
+  .bf-analysis-next-step button:hover,
+  .bf-plan-simulator button:hover,
+  .bf-plan-simulation footer .bf-primary:hover {
+    transform: none;
+  }
+}
