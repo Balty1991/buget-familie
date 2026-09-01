@@ -219,6 +219,45 @@ html {
   }
 }
 
+@media (max-width: 640px) {
+  /* Toate perioadele rămân vizibile și accesibile pe ecranele înguste. */
+  .bf-allocation-period-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+
+  .bf-allocation-period-tabs button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 8px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  /* Butonul nu mai poate împinge simulatorul în afara viewportului. */
+  .bf-plan-simulator {
+    display: grid;
+    gap: 12px;
+  }
+
+  .bf-plan-simulator button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Bara lungă de Instrumente rămâne scrollabilă, dar indică vizibil gestul necesar. */
+  .bf-more-swipe-hint {
+    display: block !important;
+    margin: 0 16px 6px !important;
+    color: var(--cf-muted) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-align: right !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bf-app button,
   .bf-app .bf-primary,
