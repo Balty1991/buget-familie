@@ -283,3 +283,16 @@
 .dark .bf-obligation-entry-actions button.pay {
   color: #2b0a06 !important;
 }
+
+/* Cardul de plic (.bf-allocation-list.bf-envelope-desk > article) a acumulat definiții
+ * grid-template-columns contradictorii din mai multe treceri de redesign; rezultatul este o
+ * coloană care colapsează la 0 lățime, înghesuind textul explicativ și linkul de transfer
+ * unul peste altul. O singură coloană, cu fiecare copil forțat să o ocupe integral, elimină
+ * ambiguitatea indiferent ce a mai rămas din regulile vechi. */
+.bf-allocation-list.bf-envelope-desk > article {
+  grid-template-columns: 1fr !important;
+}
+
+.bf-allocation-list.bf-envelope-desk > article > * {
+  grid-column: 1 / -1 !important;
+}
