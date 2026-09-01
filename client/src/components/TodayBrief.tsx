@@ -40,13 +40,13 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData
   };
 
   return (
-    <section className="bf-today-brief" aria-label="Cât poți cheltui azi">
+    <section className="bf-today-brief" aria-label="Reperul zilnic din plan">
       <button type="button" className={`bf-spend-stamp ${brief.hasPayday ? "" : "empty"} ${brief.spendable <= 0 && brief.hasPayday ? "tight" : ""}`} onClick={() => onGo("plan")}>
         <span className="bf-spend-stamp-top">
-          <p className="bf-kicker">ASTĂZI POȚI</p>
+          <p className="bf-kicker">REPER PENTRU AZI</p>
           <strong>{brief.hasPayday ? money(brief.spendable) : "Setează venitul"}</strong>
         </span>
-        <p>{brief.reason}</p>
+        <p>{brief.hasPayday ? `${brief.reason} Este un reper din plan, nu un sold separat.` : brief.reason}</p>
       </button>
 
       {pendingIncome && (
