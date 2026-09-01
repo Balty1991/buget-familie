@@ -9,6 +9,7 @@ import {
   formatDate,
   isoToday,
   pendingRecurringInPlan,
+  planForecast,
   type AppData,
 } from "@/lib/finance-data";
 
@@ -133,9 +134,17 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     }
   }
 
-  // Ritmul zilnic dacă rămâne puțin până la payday
-  const remaining = typeof (data as any). foreshadowRemaining === "number" ? 0 : 0;
-  void remaining;
+  // Ritmul zilnic: dacă proiecția arată că plicurile rămase nu ajung până la salariu
+  const forecast = planForecast(data);
+  if (forecast.remainingDays > 0 && forecast.spentToDate > 0 && forecast.projectedRemaining < 0) {
+    alerts.push({
+      id: id++,
+      title: "Ritm peste plan",
+      body: `Cu ritmul actual, planul ar ieși în minus cu ${money(Math.abs(forecast.projectedRemaining))} până la salariu. Sigur pe zi: ${money(forecast.safeDaily)}.`,
+      at: atLocalHour(0, 10, 30),
+      tag: "pace-over-plan",
+    });
+  }
 
   return alerts.slice(0, 8);
 }
@@ -144,11 +153,8 @@ async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
   try {
     const Cap = typeof window !== "undefined" ? (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor : undefined;
     if (!Cap?.isNativePlatform?.()) return false;
-    // Plugin opțional pe nativ — rezolvat la runtime, nu la typecheck/bundle web.
-    const pluginName = "@capacitor/local-notifications";
-    const mod = await import(/* @vite-ignore */ pluginName).catch(() => null);
-    if (!mod?.LocalNotifications) return false;
-    const { LocalNotifications } = mod;
+    // Încărcat doar pe nativ, ca să nu intre în bundle-ul web/PWA.
+    const { LocalNotifications } = await import("@capacitor/local-notifications");
     const perm = await LocalNotifications.requestPermissions();
     if (perm.display !== "granted") return false;
     await LocalNotifications.cancel({ notifications: alerts.map((a) => ({ id: a.id })) }).catch(() => undefined);

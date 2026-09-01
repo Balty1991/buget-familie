@@ -69,6 +69,7 @@ Sincronizarea între telefoane nu mai cere niciun cont sau token per utilizator.
 | 2 | **Project settings** → **Your apps** → **Web (`</>`)** → **Register app**; copiază obiectul de configurare afișat. |
 | 3 | Lipește valorile în `client/src/lib/firebase-config.ts` (`apiKey`, `authDomain`, `projectId` etc. — acestea nu sunt secrete, sunt publice prin design în orice aplicație Firebase). |
 | 4 | În Firebase Console → **Firestore Database → Rules**, lipește conținutul din `firestore.rules` din acest repo. |
+| 5 (opțional) | **App Check** (protecție anti-abuz a cotei gratuite): Build → App Check → aplicația web înregistrată → provider **reCAPTCHA v3** → generează o cheie de site și lipește valoarea în `recaptchaSiteKey` din `firebase-config.ts`. Activează „Enforce" pentru Firestore abia după ce confirmi că versiunea publicată trimite tokenul (altfel blochezi accesul tuturor familiilor). |
 
 **Pentru orice familie care instalează aplicația**, odată ce administratorul a făcut configurarea de mai sus:
 
@@ -102,14 +103,14 @@ pnpm install
 pnpm dev
 pnpm check
 pnpm build
-pnpm exec vitest run client/src/lib/finance-data.test.ts
+pnpm test
 ```
 
-Testele de regresie verifică parserul românesc pentru sume, plata parțială și finală a unei rate, legătura ratei cu datoria și soldul rămas, filtrul de bilanț pe membru, migrarea defensivă a datelor vechi, șabloanele active, arhivate și de ciclu, filtrele locale salvate, exportul CSV sigur, snapshotul PDF de plan, recapitularea săptămânală Familie/Membru, plicurile pe surse și membri, inclusiv potrivirea plicului după cardul soției și calculul unei tranșe active, realocarea limitelor, regulile reversibile de repartizare a veniturilor, împărțirea calendaristică exactă pe 4 și 4½ săptămâni, identificarea tranșei active, pragurile configurabile de alertă, prima dată posibilă a venitului, scadențele recurente automate și ștergerea lor sincronizabilă, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile, merge-ul defensiv dintre două copii familiale, cheile IndexedDB valide ale bonurilor și retry-ul exclusiv pentru erori temporare.
+Testele de regresie (`client/src/lib/*.test.ts`) verifică parserul românesc pentru sume, plata parțială și finală a unei rate, legătura ratei cu datoria și soldul rămas, filtrul de bilanț pe membru, migrarea defensivă a datelor vechi, șabloanele active, arhivate și de ciclu, filtrele locale salvate, exportul CSV sigur, snapshotul PDF de plan, recapitularea săptămânală Familie/Membru, plicurile pe surse și membri, inclusiv potrivirea plicului după cardul soției și calculul unei tranșe active, realocarea limitelor, regulile reversibile de repartizare a veniturilor, împărțirea calendaristică exactă pe 4 și 4½ săptămâni, identificarea tranșei active, pragurile configurabile de alertă, prima dată posibilă a venitului, scadențele recurente automate și ștergerea lor sincronizabilă, proiecția de ritm, interpretarea locală a unui scenariu natural, sugestiile explicabile, merge-ul defensiv dintre două copii familiale, cheile IndexedDB valide ale bonurilor, derivarea camerei de sincronizare Firebase dintr-o parolă de familie, stocarea locală IndexedDB și rezumatele de gospodărie.
 
 ## Android APK
 
-Aplicația păstrează GitHub Pages pentru acces web și este pregătită separat pentru Android cu **Capacitor**. În GitHub, deschide **Actions → Build Android APK → Run workflow**. După rularea verde, descarcă artefactul `buget-familie-debug-apk` și instalează fișierul `app-debug.apk` pe un telefon Android. Pachetul debug este pentru testare privată; nu necesită chei de semnare și nu este pentru Google Play.
+Aplicația păstrează GitHub Pages pentru acces web și este pregătită separat pentru Android cu **Capacitor**. Pentru testare privată: în GitHub, deschide **Actions → Build Android APK → Run workflow**. După rularea verde, descarcă artefactul `buget-familie-debug-apk` și instalează fișierul `app-debug.apk` pe un telefon Android. Pachetul debug e semnat cu o cheie efemeră generată la fiecare rulare — un build nou poate cere dezinstalarea celui vechi înainte de reinstalare, ceea ce șterge datele locale; exportă un backup înainte, din precauție.
 
 | Comandă | Utilizare |
 |---|---|
@@ -117,7 +118,22 @@ Aplicația păstrează GitHub Pages pentru acces web și este pregătită separa
 | `pnpm run cap:android` | Sincronizează și deschide proiectul Android în Android Studio. |
 | `cd android && ./gradlew assembleDebug` | Generează local un APK debug după instalarea Android SDK. |
 
-Un pachet pentru Google Play va necesita ulterior un AAB semnat și un keystore păstrat doar în GitHub Secrets. Nu introduce parole de sincronizare, tokenuri GitHub sau date financiare în setările de build.
+Pachetul pentru Google Play (`ro.balty1991.bugetfamilie`, vezi `docs/play-store-listing-ro.md`) folosește un workflow separat, **Release Android AAB**, care semnează cu un keystore persistent păstrat în GitHub Secrets — vezi secțiunea „Release Play Store" mai jos. Nu introduce parole de sincronizare, tokenuri GitHub sau date financiare în setările de build.
+
+## Release Play Store
+
+Workflow-ul **Release Android AAB** (`.github/workflows/release-android-aab.yml`) construiește un `.aab` semnat, pregătit de încărcat în Play Console. Spre deosebire de build-ul debug, semnătura de release trebuie să rămână **identică** de la o versiune la alta — de-asta stă într-un keystore persistent, nu generat automat.
+
+Configurare unică (nu se repetă la fiecare release):
+
+| Pas | Acțiune |
+|---|---|
+| 1 | Local, generează un keystore propriu: `keytool -genkeypair -v -keystore release.keystore -alias buget-familie -keyalg RSA -keysize 2048 -validity 10000`. Alege parole puternice și **păstrează-le într-un manager de parole** — pierderea keystore-ului înseamnă că nu mai poți publica actualizări la aceeași aplicație pe Play Store. |
+| 2 | Codifică fișierul: `base64 -w0 release.keystore` (macOS: `base64 -i release.keystore`). |
+| 3 | În GitHub → repo → **Settings → Secrets and variables → Actions**, adaugă 4 secrete: `ANDROID_RELEASE_KEYSTORE_BASE64` (textul de la pasul 2), `ANDROID_RELEASE_KEYSTORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS` (`buget-familie`, dacă ai urmat pasul 1), `ANDROID_RELEASE_KEY_PASSWORD`. |
+| 4 | Șterge `release.keystore` de pe calculator după ce l-ai încărcat ca secret, sau păstrează-l offline, într-un loc sigur — nu-l comite niciodată în repo. |
+
+După configurare: **Actions → Release Android AAB → Run workflow**. Artefactul `buget-familie-release-aab` conține `app-release.aab`, gata de încărcat manual în Play Console (Producție sau testare internă). Înainte de fiecare release nou, crește `versionCode`/`versionName` din `android/app/build.gradle`.
 
 Politică de confidențialitate: https://balty1991.github.io/buget-familie/privacy.html  
 Termeni: https://balty1991.github.io/buget-familie/terms.html  

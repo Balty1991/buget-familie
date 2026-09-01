@@ -62,6 +62,7 @@ import "./surface-texture.css";
 import "./receipt-form-fix.css";
 import "./redesign-2026.css";
 import "./visibility-safety.css";
+import "./app-lock.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 

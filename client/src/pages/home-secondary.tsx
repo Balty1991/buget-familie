@@ -3,7 +3,7 @@
  */
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, ChevronLeft, ChevronRight, Cloud, Command, Download, Goal, LayoutDashboard, Search, Upload, MoreHorizontal, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
+import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, ChevronLeft, ChevronRight, Cloud, Command, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
 import { allocationBudget, allocationSpent, allocationWeekStatus, createEmptyAppData, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
 import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageStorage, releaseReceiptObjectUrl, storeReceiptImages } from "@/lib/receipt-storage";
@@ -11,6 +11,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { DebtSnowballCard } from "@/components/DebtSnowballCard";
 import { requestNotificationPermission, setNotificationsEnabled } from "@/lib/local-notifications";
+import { disableAppLock, hasAppLockPin, isAppLockEnabled, isValidPin, setAppLockPin } from "@/lib/app-lock";
 import {
   BudgetBar,
   Field,
@@ -581,6 +582,79 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
   return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">INSTRUMENTE</p><h1>Alege un <em>instrument.</em></h1></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">Glisează pentru mai multe</p><div className="bf-more-tabs" role="tablist" aria-label="Categorii de instrumente">{tabs.map((item) => { const Icon = item.icon; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}</button>; })}</div></div>{content()}</div>;
 }
 
+function AppLockSettings() {
+  const [enabled, setEnabled] = useState(() => isAppLockEnabled() && hasAppLockPin());
+  const [mode, setMode] = useState<"idle" | "create" | "confirm">("idle");
+  const [firstPin, setFirstPin] = useState("");
+  const [pin, setPin] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const startCreate = () => { setMode("create"); setPin(""); setFirstPin(""); setNotice(""); };
+  const cancel = () => { setMode("idle"); setPin(""); setFirstPin(""); };
+
+  const submitFirst = () => {
+    if (!isValidPin(pin)) return setNotice("PIN-ul trebuie să aibă exact 4 cifre.");
+    setFirstPin(pin);
+    setPin("");
+    setMode("confirm");
+    setNotice("");
+  };
+
+  const submitConfirm = () => {
+    if (pin !== firstPin) {
+      setNotice("PIN-urile nu coincid. Încearcă din nou.");
+      setPin("");
+      setFirstPin("");
+      setMode("create");
+      return;
+    }
+    void setAppLockPin(pin).then(() => {
+      setEnabled(true);
+      setMode("idle");
+      setPin("");
+      setFirstPin("");
+      setNotice("Blocarea cu PIN este activă pe acest telefon.");
+    });
+  };
+
+  const turnOff = () => {
+    if (!window.confirm("Dezactivezi blocarea cu PIN pe acest telefon?")) return;
+    disableAppLock();
+    setEnabled(false);
+    setNotice("Blocarea a fost dezactivată.");
+  };
+
+  return (
+    <section className="bf-settings-lock">
+      <p className="bf-kicker">SECURITATE</p>
+      <h2>Blocare cu PIN</h2>
+      <p>Un PIN de 4 cifre, doar pe acest telefon. Nu se salvează în clar, nu intră în backup și nu se sincronizează cu celelalte telefoane.</p>
+      {mode === "idle" && (
+        enabled ? (
+          <div className="bf-notification-actions">
+            <button type="button" onClick={startCreate}>Schimbă PIN-ul</button>
+            <button type="button" onClick={turnOff}>Dezactivează</button>
+          </div>
+        ) : (
+          <button type="button" className="bf-primary" onClick={startCreate}><LockKeyhole size={16} /> Activează blocarea</button>
+        )
+      )}
+      {(mode === "create" || mode === "confirm") && (
+        <div className="bf-app-lock-setup">
+          <Field label={mode === "create" ? "PIN nou (4 cifre)" : "Confirmă PIN-ul"}>
+            <input inputMode="numeric" maxLength={4} value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="••••" autoFocus />
+          </Field>
+          <div className="bf-notification-actions">
+            <button type="button" onClick={cancel}>Anulează</button>
+            <button type="button" className="bf-primary" disabled={pin.length !== 4} onClick={mode === "create" ? submitFirst : submitConfirm}>{mode === "create" ? "Continuă" : "Confirmă"}</button>
+          </div>
+        </div>
+      )}
+      {notice && <p className="bf-notice" role="status">{notice}</p>}
+    </section>
+  );
+}
+
 export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onChange: (value: AppData) => void; onReset: () => void }) {
   const [backupPreview, setBackupPreview] = useState<{ data: AppData; exportedAt: string; fileName: string } | null>(null);
   const importBackup = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; void file.text().then((raw) => { const backup = parseBackup(raw); setBackupPreview({ data: normalizeAppData(backup.data), exportedAt: backup.exportedAt, fileName: file.name }); }).catch((reason) => window.alert(reason instanceof Error ? reason.message : "Backup-ul nu a putut fi importat.")); event.target.value = ""; };
@@ -589,7 +663,7 @@ export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onCh
   const settings = data.settings; const change = (patch: Partial<typeof settings>) => onChange({ ...data, settings: { ...settings, ...patch } });
   const addMember = () => { if (!member.trim()) return; if (settings.members.some((item) => item.name.toLowerCase() === member.trim().toLowerCase())) return; change({ members: [...settings.members, { id: newId("member"), name: member.trim() }] }); setMember(""); };
   const addSource = () => { if (!source.trim()) return; change({ paymentSources: [...settings.paymentSources, { id: newId("source"), name: source.trim(), kind, memberId: kind === "transfer" ? undefined : owner, openingBalance: 0 }] }); setSource(""); };
-  return <div className="bf-settings"><section><p className="bf-kicker">FAMILIE</p><Field label="Numele familiei"><input value={settings.familyName} onChange={(event) => change({ familyName: event.target.value })} /></Field><Field label="Numele tău"><input value={settings.memberName} onChange={(event) => change({ memberName: event.target.value })} /></Field><Field label="Cod local de familie" hint="Codul ajută la verificarea exportului manual."><input value={settings.familyCode} onChange={(event) => change({ familyCode: event.target.value.toUpperCase() })} /><button className="bf-link-button" onClick={() => change({ familyCode: createFamilyCode() })}><RotateCcw size={14} /> Cod nou</button></Field></section><section><p className="bf-kicker">MEMBRI</p><div className="bf-chip-list">{settings.members.map((item) => <span key={item.id}>{item.name}{settings.members.length > 1 && <button onClick={() => change({ members: settings.members.filter((memberItem) => memberItem.id !== item.id) })}><X size={14} /></button>}</span>)}</div><div className="bf-mini-form"><input value={member} onChange={(event) => setMember(event.target.value)} placeholder="ex. Soția" /><button onClick={addMember}>Adaugă</button></div></section><section><p className="bf-kicker">SURSE ȘI SOLD INITIAL</p>{settings.paymentSources.map((item) => <div className="bf-source-edit" key={item.id}><span><b>{item.name}</b><small>{sourceKindName[item.kind]} · {settings.members.find((memberItem) => memberItem.id === item.memberId)?.name || "Comun"}</small></span><label><small>Sold inițial</small><input inputMode="decimal" value={String(item.openingBalance)} onChange={(event) => change({ paymentSources: settings.paymentSources.map((sourceItem) => sourceItem.id === item.id ? { ...sourceItem, openingBalance: Math.max(0, parseRomanianAmount(event.target.value)) } : sourceItem) })} /></label><strong>{money(sourceBalance(data, item.id))}</strong></div>)}<div className="bf-source-builder"><input value={source} onChange={(event) => setSource(event.target.value)} placeholder="ex. Card soție" /><select value={kind} onChange={(event) => setKind(event.target.value as PaymentKind)}>{Object.entries(sourceKindName).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><select value={owner} disabled={kind === "transfer"} onChange={(event) => setOwner(event.target.value)}>{settings.members.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button onClick={addSource}>Adaugă</button></div></section><section><p className="bf-kicker">CATEGORII PROPRII</p><div className="bf-chip-list">{settings.customCategories.map((item) => <span key={item}>{item}<button onClick={() => change({ customCategories: settings.customCategories.filter((categoryItem) => categoryItem !== item) })}><X size={14} /></button></span>)}</div><div className="bf-mini-form"><input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="ex. Taxi" /><button onClick={() => { if (category.trim() && !settings.customCategories.includes(category.trim())) { change({ customCategories: [...settings.customCategories, category.trim()] }); setCategory(""); } }}>Adaugă</button></div></section><section className="bf-settings-notifications"><p className="bf-kicker">ALERTE LOCALE</p><h2>Reamintiri pe telefon</h2><p>Scadențe, plicuri aproape de limită și un check-in calm. Rămân pe dispozitiv; nu se trimit pe server.</p><div className="bf-notification-actions"><button type="button" className="bf-primary" onClick={() => void (async () => { const status = await requestNotificationPermission(); setNotificationsEnabled(status === "granted"); if (status === "granted") window.alert("Alertele sunt active pe acest dispozitiv."); else if (status === "denied") window.alert("Permisiunea a fost refuzată. O poți reactiva din setările telefonului."); else window.alert("Notificările nu sunt disponibile în acest browser."); })()}>Activează alertele</button><button type="button" onClick={() => { setNotificationsEnabled(false); window.alert("Alertele au fost oprite pe acest dispozitiv."); }}>Oprește alertele</button></div><small className="bf-helper">Pe Android nativ: <code>pnpm install && npx cap sync</code>.</small></section><section><p className="bf-kicker">BACKUP ȘI RECUPERARE</p><h2>Protejează registrul local</h2><p>Backup-ul este un fișier local JSON. Nu este trimis automat în rețea și poate fi importat pe un alt dispozitiv.</p><div className="bf-backup-actions"><button onClick={() => downloadBackup(data)}><Download size={16} /> Exportă backup</button><label className="bf-file-button"><Upload size={16} /> Alege backup<input type="file" accept="application/json,.json" onChange={importBackup} /></label></div>{backupPreview && <div className="bf-backup-preview" role="alert" aria-live="polite"><div><p className="bf-kicker">PREVIZUALIZARE ÎNAINTE DE IMPORT</p><h3>{backupPreview.fileName}</h3><p>Exportat la {new Intl.DateTimeFormat("ro-RO", { dateStyle: "medium", timeStyle: "short" }).format(new Date(backupPreview.exportedAt))}.</p><div className="bf-backup-preview-stats"><span><b>{backupPreview.data.transactions.length}</b><small>mișcări</small></span><span><b>{backupPreview.data.receipts.length}</b><small>bonuri</small></span><span><b>{backupPreview.data.settings.members.length}</b><small>membri</small></span></div></div><p className="bf-backup-warning">Importul va înlocui datele locale actuale. Nimic nu se schimbă până nu confirmi.</p><div className="bf-backup-preview-actions"><button type="button" onClick={() => setBackupPreview(null)}>Anulează</button><button type="button" className="bf-primary" onClick={confirmBackupImport}><Check size={16} /> Confirmă importul</button></div></div>}</section><Suspense fallback={null}><TrustCenter /></Suspense><Suspense fallback={null}><PremiumStudio /></Suspense><section className="bf-danger"><p className="bf-kicker">RESETARE</p><h2>Începe curat pe acest dispozitiv</h2><p>Șterge numai datele locale. O copie sincronizată sau exportată nu este afectată.</p><button onClick={onReset}><Trash2 size={16} /> Resetează datele locale</button></section></div>;
+  return <div className="bf-settings"><section><p className="bf-kicker">FAMILIE</p><Field label="Numele familiei"><input value={settings.familyName} onChange={(event) => change({ familyName: event.target.value })} /></Field><Field label="Numele tău"><input value={settings.memberName} onChange={(event) => change({ memberName: event.target.value })} /></Field><Field label="Cod local de familie" hint="Codul ajută la verificarea exportului manual."><input value={settings.familyCode} onChange={(event) => change({ familyCode: event.target.value.toUpperCase() })} /><button className="bf-link-button" onClick={() => change({ familyCode: createFamilyCode() })}><RotateCcw size={14} /> Cod nou</button></Field></section><section><p className="bf-kicker">MEMBRI</p><div className="bf-chip-list">{settings.members.map((item) => <span key={item.id}>{item.name}{settings.members.length > 1 && <button onClick={() => change({ members: settings.members.filter((memberItem) => memberItem.id !== item.id) })}><X size={14} /></button>}</span>)}</div><div className="bf-mini-form"><input value={member} onChange={(event) => setMember(event.target.value)} placeholder="ex. Soția" /><button onClick={addMember}>Adaugă</button></div></section><section><p className="bf-kicker">SURSE ȘI SOLD INITIAL</p>{settings.paymentSources.map((item) => <div className="bf-source-edit" key={item.id}><span><b>{item.name}</b><small>{sourceKindName[item.kind]} · {settings.members.find((memberItem) => memberItem.id === item.memberId)?.name || "Comun"}</small></span><label><small>Sold inițial</small><input inputMode="decimal" value={String(item.openingBalance)} onChange={(event) => change({ paymentSources: settings.paymentSources.map((sourceItem) => sourceItem.id === item.id ? { ...sourceItem, openingBalance: Math.max(0, parseRomanianAmount(event.target.value)) } : sourceItem) })} /></label><strong>{money(sourceBalance(data, item.id))}</strong></div>)}<div className="bf-source-builder"><input value={source} onChange={(event) => setSource(event.target.value)} placeholder="ex. Card soție" /><select value={kind} onChange={(event) => setKind(event.target.value as PaymentKind)}>{Object.entries(sourceKindName).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><select value={owner} disabled={kind === "transfer"} onChange={(event) => setOwner(event.target.value)}>{settings.members.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button onClick={addSource}>Adaugă</button></div></section><section><p className="bf-kicker">CATEGORII PROPRII</p><div className="bf-chip-list">{settings.customCategories.map((item) => <span key={item}>{item}<button onClick={() => change({ customCategories: settings.customCategories.filter((categoryItem) => categoryItem !== item) })}><X size={14} /></button></span>)}</div><div className="bf-mini-form"><input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="ex. Taxi" /><button onClick={() => { if (category.trim() && !settings.customCategories.includes(category.trim())) { change({ customCategories: [...settings.customCategories, category.trim()] }); setCategory(""); } }}>Adaugă</button></div></section><section className="bf-settings-notifications"><p className="bf-kicker">ALERTE LOCALE</p><h2>Reamintiri pe telefon</h2><p>Scadențe, plicuri aproape de limită și un check-in calm. Rămân pe dispozitiv; nu se trimit pe server.</p><div className="bf-notification-actions"><button type="button" className="bf-primary" onClick={() => void (async () => { const status = await requestNotificationPermission(); setNotificationsEnabled(status === "granted"); if (status === "granted") window.alert("Alertele sunt active pe acest dispozitiv."); else if (status === "denied") window.alert("Permisiunea a fost refuzată. O poți reactiva din setările telefonului."); else window.alert("Notificările nu sunt disponibile în acest browser."); })()}>Activează alertele</button><button type="button" onClick={() => { setNotificationsEnabled(false); window.alert("Alertele au fost oprite pe acest dispozitiv."); }}>Oprește alertele</button></div><small className="bf-helper">Pe Android nativ: <code>pnpm install && npx cap sync</code>.</small></section><AppLockSettings /><section><p className="bf-kicker">BACKUP ȘI RECUPERARE</p><h2>Protejează registrul local</h2><p>Backup-ul este un fișier local JSON. Nu este trimis automat în rețea și poate fi importat pe un alt dispozitiv.</p><div className="bf-backup-actions"><button onClick={() => downloadBackup(data)}><Download size={16} /> Exportă backup</button><label className="bf-file-button"><Upload size={16} /> Alege backup<input type="file" accept="application/json,.json" onChange={importBackup} /></label></div>{backupPreview && <div className="bf-backup-preview" role="alert" aria-live="polite"><div><p className="bf-kicker">PREVIZUALIZARE ÎNAINTE DE IMPORT</p><h3>{backupPreview.fileName}</h3><p>Exportat la {new Intl.DateTimeFormat("ro-RO", { dateStyle: "medium", timeStyle: "short" }).format(new Date(backupPreview.exportedAt))}.</p><div className="bf-backup-preview-stats"><span><b>{backupPreview.data.transactions.length}</b><small>mișcări</small></span><span><b>{backupPreview.data.receipts.length}</b><small>bonuri</small></span><span><b>{backupPreview.data.settings.members.length}</b><small>membri</small></span></div></div><p className="bf-backup-warning">Importul va înlocui datele locale actuale. Nimic nu se schimbă până nu confirmi.</p><div className="bf-backup-preview-actions"><button type="button" onClick={() => setBackupPreview(null)}>Anulează</button><button type="button" className="bf-primary" onClick={confirmBackupImport}><Check size={16} /> Confirmă importul</button></div></div>}</section><Suspense fallback={null}><TrustCenter /></Suspense><Suspense fallback={null}><PremiumStudio /></Suspense><section className="bf-danger"><p className="bf-kicker">RESETARE</p><h2>Începe curat pe acest dispozitiv</h2><p>Șterge numai datele locale. O copie sincronizată sau exportată nu este afectată.</p><button onClick={onReset}><Trash2 size={16} /> Resetează datele locale</button></section></div>;
 }
 
 /** Prezentare pură: starea de conectare live trăiește în Home, ca să reziste la schimbarea de tab. */

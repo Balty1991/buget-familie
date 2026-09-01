@@ -2,6 +2,7 @@
 import { lazy, Suspense } from "react";
 import { Route, Router as WouterRouter, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { AppLockGate } from "./components/AppLockGate";
 import Home from "./pages/Home";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -30,7 +31,9 @@ function AppRouter() {
 function App() {
   return (
     <ErrorBoundary>
-      <AppRouter />
+      <AppLockGate>
+        <AppRouter />
+      </AppLockGate>
     </ErrorBoundary>
   );
 }

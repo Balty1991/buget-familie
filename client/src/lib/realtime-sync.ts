@@ -6,8 +6,9 @@
  * Firestore nu vede niciodată datele în clar — doar pachetul AES-GCM criptat local.
  */
 import { initializeApp, type FirebaseApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
-import { firebaseConfig, isFirebaseConfigured } from "@/lib/firebase-config";
+import { firebaseConfig, isAppCheckConfigured, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { deriveFamilyRoomId } from "@/lib/family-crypto";
 
@@ -22,7 +23,12 @@ let firestore: Firestore | undefined;
 
 function db(): Firestore {
   if (!isFirebaseConfigured) throw new RealtimeSyncError("not-configured", "Sincronizarea nu a fost încă configurată de administratorul aplicației.");
-  if (!firestore) { app = app || initializeApp(firebaseConfig); firestore = getFirestore(app); }
+  if (!firestore) {
+    app = app || initializeApp(firebaseConfig);
+    // No-op până când administratorul completează recaptchaSiteKey în firebase-config.ts.
+    if (isAppCheckConfigured) initializeAppCheck(app, { provider: new ReCaptchaV3Provider(recaptchaSiteKey), isTokenAutoRefreshEnabled: true });
+    firestore = getFirestore(app);
+  }
   return firestore;
 }
 

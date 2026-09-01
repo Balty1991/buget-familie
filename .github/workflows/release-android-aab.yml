@@ -1,0 +1,58 @@
+name: Release Android AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-aab:
+    name: AAB semnat pentru Google Play
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Instalează dependențele exacte
+        run: pnpm install --frozen-lockfile
+      - name: Verifică tipurile
+        run: pnpm check
+      - name: Rulează testele
+        run: pnpm test
+      - name: Construiește bundle-ul Android
+        run: pnpm run cap:sync
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Scrie keystore-ul de release din secrete
+        working-directory: android/app
+        run: |
+          if [ -z "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" ]; then
+            echo "::error::Lipsesc secretele ANDROID_RELEASE_*. Vezi README → Release Play Store."
+            exit 1
+          fi
+          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          cat > release-keystore.properties <<EOF
+          storeFile=release.keystore
+          storePassword=${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+          EOF
+      - name: Construiește AAB-ul semnat
+        working-directory: android
+        run: ./gradlew bundleRelease
+      - name: Șterge keystore-ul de pe runner
+        if: always()
+        working-directory: android/app
+        run: rm -f release.keystore release-keystore.properties
+      - name: Publică AAB-ul ca artefact GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: buget-familie-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 14
