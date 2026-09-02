@@ -333,3 +333,39 @@
   bottom: auto !important;
   margin-top: 12px !important;
 }
+
+/* "Plicurile pe masă" (.bf-envelope-fan) a acumulat reguli de grid contradictorii din mai
+ * multe treceri: un fișier fixează grid-auto-flow: column + grid-auto-columns: 132px (gând
+ * inițial de rând cu scroll orizontal), altul suprascrie doar grid-template-columns cu
+ * repeat(2, ...) (gând ulterior de grilă pe rânduri) fără să resetăm și auto-flow. Cum sunt
+ * proprietăți diferite, niciuna nu o anulează complet pe cealaltă: rezultă un grid cu doar 2
+ * coloane explicite dar auto-flow pe coloană, deci de la al 3-lea plic încolo se generează
+ * coloane noi în loc de rânduri noi — iar overflow-x, forțat la "visible" de o altă regulă,
+ * lasă plicurile în plus să iasă din ecran fără niciun scroll ca să ajungi la ele. Fixăm aici
+ * explicit toate proprietățile implicate, ca indiferent câte plicuri sunt, lista să se așeze
+ * pe rânduri de câte 2 (sau mai multe pe ecrane late), niciodată într-un singur rând nemărginit. */
+.bf-envelope-fan {
+  display: grid !important;
+  grid-auto-flow: row !important;
+  grid-auto-columns: auto !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+@media (min-width: 761px) {
+  .bf-envelope-fan {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+  }
+}
+
+/* redesign-2026.css a transformat .bf-obligation-lane ("De plătit" / "De construit") într-un
+ * card cu bordură și fundal pe toate laturile, dar containerul și copiii lui (antetul, rândurile
+ * de rată/economisire) au primit padding doar pe verticală dintr-o trecere anterioară, când lista
+ * era gândită edge-to-edge, fără bordură laterală. Rezultatul: numele datoriei, suma și butoanele
+ * ating direct marginea stângă/dreaptă a cardului. Adăugăm padding orizontal pe container, ca toți
+ * copiii să fie retrași uniform de la margine, indiferent de restul regulilor de padding vertical. */
+.bf-obligation-lane {
+  padding: 0 18px 18px !important;
+}
