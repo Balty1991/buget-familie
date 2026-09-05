@@ -64,6 +64,7 @@ import "./redesign-2026.css";
 import "./visibility-safety.css";
 import "./app-lock.css";
 import "./mobile-capture-pass.css";
+import "./mobile-movements-pass.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
