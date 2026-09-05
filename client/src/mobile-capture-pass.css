@@ -1,0 +1,184 @@
+/* Mobile capture pass — modernizare incrementală, fără a modifica token-urile globale. */
+.bf-quick-entry-panel {
+  --capture-accent: var(--cf-primary-strong, #174b3d);
+  --capture-soft: color-mix(in srgb, var(--cf-primary, #256b5b), transparent 90%);
+  overflow: hidden;
+}
+
+.bf-quick-entry-panel > header {
+  position: sticky;
+  top: -20px;
+  z-index: 2;
+  padding-bottom: 14px;
+  background: var(--cf-surface);
+}
+
+.bf-quick-entry-panel .bf-quick-entry-intro {
+  max-width: 46ch;
+  margin: 0 0 14px;
+  color: var(--cf-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.bf-quick-entry-panel .bf-quick-entry-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bf-quick-entry-panel .bf-amount-field {
+  grid-column: 1 / -1;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--cf-primary), transparent 62%);
+  border-radius: 16px;
+  background: linear-gradient(145deg, var(--capture-soft), var(--cf-surface-alt));
+}
+
+.bf-quick-entry-panel .bf-amount-field > input {
+  min-height: 58px;
+  border: 0;
+  padding: 0;
+  color: var(--capture-accent);
+  background: transparent;
+  font-size: clamp(34px, 11vw, 48px);
+  font-weight: 850;
+  letter-spacing: -.06em;
+  outline: none;
+}
+
+.bf-quick-entry-panel .bf-amount-field > input::placeholder {
+  color: color-mix(in srgb, var(--capture-accent), transparent 62%);
+}
+
+.bf-quick-entry-panel .bf-quick-category-picks {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  margin: 0 -2px 12px;
+  padding: 2px;
+  scrollbar-width: none;
+}
+
+.bf-quick-entry-panel .bf-quick-category-picks::-webkit-scrollbar { display: none; }
+
+.bf-quick-entry-panel .bf-quick-category-picks > span {
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--cf-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.bf-quick-entry-panel .bf-quick-category-picks button,
+.bf-quick-entry-panel .bf-quick-template-rail button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  border: 1px solid var(--cf-line);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--cf-ink);
+  background: var(--cf-surface-alt);
+  font-size: 11px;
+  font-weight: 780;
+}
+
+.bf-quick-entry-panel .bf-quick-category-picks button.active,
+.bf-quick-entry-panel .bf-quick-template-rail button.active {
+  border-color: var(--capture-accent);
+  color: var(--cf-on-primary, #fffdf7);
+  background: var(--capture-accent);
+}
+
+.bf-quick-entry-panel .bf-quick-entry-grid .bf-field > span {
+  margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.bf-quick-entry-panel .bf-quick-entry-grid select,
+.bf-quick-entry-panel .bf-quick-entry-grid input:not(.bf-amount-field input) {
+  min-height: 46px;
+}
+
+.bf-quick-entry-panel > .bf-primary.full {
+  position: sticky;
+  bottom: -30px;
+  z-index: 2;
+  min-height: 50px;
+  margin: 15px -2px -30px;
+  box-shadow: 0 -14px 24px color-mix(in srgb, var(--cf-surface), transparent 10%);
+}
+
+@media (max-width: 520px) {
+  .bf-quick-entry-panel {
+    max-height: 94dvh;
+    padding: 17px 15px 30px;
+  }
+
+  .bf-quick-entry-panel > header {
+    top: -17px;
+  }
+
+  .bf-quick-entry-panel .bf-quick-entry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bf-quick-entry-panel .bf-amount-field {
+    grid-column: auto;
+  }
+
+  .bf-quick-entry-panel .bf-quick-entry-grid .bf-field {
+    gap: 5px;
+  }
+
+  .bf-quick-entry-panel .bf-quick-envelope {
+    margin-top: 13px;
+    padding: 13px;
+    border-radius: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bf-quick-entry-panel .bf-amount-field {
+    transition: border-color 180ms ease-out, box-shadow 180ms ease-out;
+  }
+
+  .bf-quick-entry-panel .bf-amount-field:focus-within {
+    border-color: var(--capture-accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--capture-accent), transparent 84%);
+  }
+}
+
+.dark .bf-quick-entry-panel > .bf-primary.full {
+  box-shadow: 0 -14px 24px color-mix(in srgb, var(--cf-surface), transparent 5%);
+}
+
+/* Today hierarchy: one clear next action on narrow screens. */
+@media (max-width: 520px) {
+  .bf-today-workspace .bf-today-situation-actions {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    margin-top: 16px;
+  }
+
+  .bf-today-workspace .bf-today-add {
+    min-height: 50px;
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  .bf-today-workspace .bf-today-plan-link {
+    justify-content: center;
+    min-height: 32px;
+    font-size: 11px;
+  }
+
+  .bf-today-workspace .bf-today-situation-number strong {
+    font-size: clamp(38px, 12vw, 52px);
+    letter-spacing: -.065em;
+  }
+}
