@@ -1,78 +1,34 @@
-import { useMemo, useState } from "react";
-import { ArrowRight, Bot, ChevronDown, Lightbulb, MessageCircle, PieChart, Plus, Send, Sparkles, WalletCards, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Bot, ChevronDown, CircleCheck, Lightbulb, PieChart, Plus, Send, Sparkles, WalletCards, X } from "lucide-react";
 import { expenseCategories, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void };
-type Prompt = { label: string; answer: string; action?: "add" | "plan" | "journal" | "insights"; actionLabel?: string };
-
-const pageNames: Record<string, string> = { today: "tablou", journal: "jurnal", plan: "planul de bani", obligations: "obligații", insights: "analiză", utilities: "instrumente" };
+type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" } };
+const CHAT_KEY = "buget-familie:ai-chat-v1";
 const today = () => new Date().toISOString().slice(0, 10);
-const naturalTitle = (raw: string, category?: string) => {
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (/combustibil|benzina|motorina/.test(folded)) return "Combustibil";
-  return category || "Cheltuială";
-};
+const money = (value: number) => `${Math.round(value).toLocaleString("ro-RO")} RON`;
+const naturalTitle = (raw: string, category?: string) => /combustibil|benzina|motorina/i.test(raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ? "Combustibil" : category || "Cheltuială";
 
 export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry }: Props) {
   const [open, setOpen] = useState(false);
-  const [activePrompt, setActivePrompt] = useState<Prompt | null>(null);
   const [message, setMessage] = useState("");
-  const [parseNotice, setParseNotice] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => { try { return JSON.parse(window.localStorage.getItem(CHAT_KEY) || "[]") as ChatMessage[]; } catch { return []; } });
+  const monthSummary = useMemo(() => { const month = today().slice(0, 7); const current = data.transactions.filter((item) => item.date.startsWith(month)); return { income: current.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0), expense: current.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0) }; }, [data]);
+  const contextReply = useMemo(() => { if (!data.transactions.length) return "Sunt aici cu tine. Putem începe foarte simplu: îmi spui ce venituri ai, ce datorii există și pentru ce vrei să pui bani deoparte. Eu te ajut să le așezăm în aplicație."; if (!data.settings.salaryPlan.allocations.length) return "Văd că ai început să notezi mișcări, dar încă nu ai repartizări. Te pot ajuta să punem banii în plicuri pentru mâncare, facturi, transport și economii."; if (monthSummary.income > 0 && monthSummary.expense > monthSummary.income) return `M-am uitat la luna aceasta: ai ${money(monthSummary.expense)} cheltuieli și ${money(monthSummary.income)} venituri. Nu te judec — hai să vedem împreună ce ajustăm.`; return `Sunt cu tine în ${view === "today" ? "tabloul de azi" : "secțiunea deschisă"}. Dacă apare o cheltuială sau un venit, scrie-mi natural și îl pregătesc pentru tine.`; }, [data, monthSummary, view]);
 
-  const context = useMemo(() => {
-    const month = today().slice(0, 7);
-    const current = data.transactions.filter((item) => item.date.startsWith(month));
-    const income = current.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
-    const expense = current.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
-    const hasPlan = data.settings.salaryPlan.allocations.length > 0;
-    if (!data.transactions.length) return { title: "Începem cu prima mișcare?", detail: "Îți pot arăta pas cu pas cum înregistrezi o cheltuială sau un venit. Durează câteva secunde.", tone: "warm", action: "add" as const, actionLabel: "Adaugă prima mișcare" };
-    if (!hasPlan) return { title: "Banii au nevoie de o direcție", detail: "Ai deja activitate în jurnal. Hai să împărțim veniturile în plicuri simple, ca să știi ce îți permiți.", tone: "gold", action: "plan" as const, actionLabel: "Configurează repartizarea" };
-    if (income > 0 && expense > income) return { title: "Luna cere puțină atenție", detail: `Cheltuielile lunii sunt cu ${Math.round(expense - income).toLocaleString("ro-RO")} RON peste venituri. Verificăm împreună jurnalul?`, tone: "coral", action: "journal" as const, actionLabel: "Vezi jurnalul" };
-    return { title: `Sunt cu tine în ${pageNames[view] || "aplicație"}`, detail: income > 0 ? `Până acum: ${Math.round(income).toLocaleString("ro-RO")} RON venituri și ${Math.round(expense).toLocaleString("ro-RO")} RON cheltuieli în luna aceasta.` : "Adaugă mișcările pe măsură ce apar, iar eu îți păstrez imaginea de ansamblu clară.", tone: "good", action: "add" as const, actionLabel: "Adaugă rapid" };
-  }, [data, view]);
+  useEffect(() => { if (!open || messages.length) return; setMessages([{ id: "welcome", role: "assistant", text: contextReply }]); }, [open, messages.length, contextReply]);
+  useEffect(() => { try { window.localStorage.setItem(CHAT_KEY, JSON.stringify(messages.slice(-30))); } catch { /* spațiu local indisponibil */ } }, [messages]);
 
-  const prompts: Prompt[] = [
-    { label: "Adaug o cheltuială", answer: "Scrie-mi suma și pentru ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil».", action: "add", actionLabel: "Deschide înregistrarea" },
-    { label: "Cum împart banii?", answer: "Începe cu cheltuielile obligatorii, apoi economii și abia la final banii flexibili. Planul cu plicuri face această ordine vizibilă.", action: "plan", actionLabel: "Deschide planul" },
-    { label: "Vreau să înțeleg luna", answer: "Analiza îți arată unde se duc banii, ce obiceiuri se repetă și care este următoarea decizie utilă.", action: "insights", actionLabel: "Vezi analiza" },
-  ];
+  const addMessage = (entry: Omit<ChatMessage, "id">) => setMessages((current) => [...current, { ...entry, id: `${Date.now()}-${current.length}` }].slice(-30));
+  const runAction = (type: "add" | "plan" | "journal" | "insights", label: string) => { addMessage({ role: "user", text: label }); setTyping(true); window.setTimeout(() => { setTyping(false); addMessage({ role: "assistant", text: type === "add" ? "Deschid formularul. Completează ce mai lipsește și verifică înainte să salvezi." : type === "plan" ? "Deschid planul. Acolo așezăm veniturile pe destinații și ritmuri." : type === "journal" ? "Deschid jurnalul și ne uităm la mișcările care contează." : "Deschid analiza ca să vedem tiparele lunii.", action: { type, label: type === "add" ? "Deschide formularul" : type === "plan" ? "Vezi planul" : type === "journal" ? "Vezi jurnalul" : "Vezi analiza" } }); }, 260); };
+  const handleAction = (type: "add" | "plan" | "journal" | "insights") => { if (type === "add") onAdd(); else onGo(type); setOpen(false); };
+  const send = () => { const raw = message.trim(); if (!raw) return; setMessage(""); addMessage({ role: "user", text: raw }); const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); setTyping(true); window.setTimeout(() => { setTyping(false); if (!parsed.understood) { addMessage({ role: "assistant", text: "Vreau să te ajut, dar nu am găsit suma. Încearcă, de exemplu: «am cheltuit 50 de lei pe combustibil» sau «am plătit 120 lei la Lidl»." }); return; } addMessage({ role: "assistant", text: `Am înțeles: ${parsed.title}, ${money(parsed.amount)}, ${parsed.timing === "mâine" ? "mâine" : "astăzi"}. Îți deschid formularul cu aceste date precompletate; verificăm împreună înainte de salvare.`, action: { type: "add", label: "Deschide și verifică" } }); onNaturalEntry({ kind: "expense", amount: parsed.amount, category: parsed.category || "Alimente", title: naturalTitle(raw, parsed.category), date: parsed.timing === "mâine" ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : today(), note: raw }); }, 420); };
 
-  const submitNaturalMessage = () => {
-    const raw = message.trim();
-    if (!raw) return;
-    const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
-    if (!parsed.understood) {
-      setParseNotice("Nu am găsit suma. Încearcă: «am cheltuit 50 de lei pe combustibil».");
-      return;
-    }
-    onNaturalEntry({ kind: "expense", amount: parsed.amount, category: parsed.category || "Alimente", title: naturalTitle(raw, parsed.category), date: parsed.timing === "mâine" ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : today(), note: raw });
-    setMessage("");
-    setParseNotice("");
-    setOpen(false);
-  };
-
-  const runAction = (action?: Prompt["action"]) => {
-    if (action === "add") onAdd();
-    if (action === "plan" || action === "journal" || action === "insights") onGo(action);
-    setActivePrompt(null);
-    setOpen(false);
-  };
-
-  return <>
-    {open && <aside className="ai-companion-panel" aria-label="Ghidul tău AI">
-      <div className="ai-companion-head"><div className="ai-avatar"><Sparkles size={17} /></div><div><p className="ai-eyebrow">GHIDUL TĂU AI</p><h2>Hai să facem ordine</h2></div><button type="button" className="ai-close" aria-label="Închide ghidul" onClick={() => setOpen(false)}><X size={17} /></button></div>
-      <form className="ai-natural-form" onSubmit={(event) => { event.preventDefault(); submitNaturalMessage(); }}><label htmlFor="ai-natural-message">Spune-mi ce s-a întâmplat</label><div><input id="ai-natural-message" value={message} onChange={(event) => { setMessage(event.target.value); setParseNotice(""); }} placeholder="ex. am cheltuit 50 de lei pe combustibil" /><button type="submit" aria-label="Interpretează mesajul"><Send size={16} /></button></div>{parseNotice && <small role="alert">{parseNotice}</small>}<p>Îți precompletez formularul; tu verifici și confirmi.</p></form>
-      <div className={`ai-context ai-${context.tone}`}><div className="ai-context-icon"><Lightbulb size={16} /></div><div><strong>{context.title}</strong><p>{context.detail}</p></div></div>
-      <div className="ai-actions"><button type="button" onClick={() => runAction(context.action)}><Plus size={15} /> {context.actionLabel}</button><button type="button" onClick={() => runAction("plan")}><PieChart size={15} /> Repartizează bani</button></div>
-      <div className="ai-prompts"><p className="ai-eyebrow">CU CE TE AJUT?</p>{prompts.map((prompt) => <button key={prompt.label} type="button" className={activePrompt?.label === prompt.label ? "selected" : ""} onClick={() => setActivePrompt(prompt)}><MessageCircle size={15} />{prompt.label}<ArrowRight size={14} /></button>)}</div>
-      {activePrompt && <div className="ai-answer"><Bot size={16} /><div><p>{activePrompt.answer}</p><button type="button" onClick={() => runAction(activePrompt.action)}>{activePrompt.actionLabel} <ArrowRight size={13} /></button></div></div>}
-      <p className="ai-privacy"><WalletCards size={13} /> Sugestiile folosesc datele locale ale bugetului tău.</p>
-    </aside>}
-    <button type="button" className={`ai-companion-trigger ${open ? "is-open" : ""}`} aria-label={open ? "Închide ghidul AI" : "Deschide ghidul AI"} onClick={() => setOpen((value) => !value)}><span className="ai-trigger-pulse" /><Sparkles size={21} /><span>Ghid AI</span>{open ? <ChevronDown size={14} /> : <span className="ai-live">LIVE</span>}</button>
-  </>;
+  return <><button type="button" className={`ai-companion-trigger ${open ? "is-open" : ""}`} aria-label={open ? "Închide ghidul AI" : "Deschide ghidul AI"} onClick={() => setOpen((value) => !value)}><span className="ai-trigger-pulse" /><Sparkles size={21} /><span>Ghidul tău</span>{open ? <ChevronDown size={14} /> : <span className="ai-live">ONLINE</span>}</button>{open && <aside className="ai-companion-panel ai-chat-panel" aria-label="Conversație cu ghidul tău AI"><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div><p className="ai-eyebrow">GHIDUL TĂU · ONLINE</p><h2>Sunt aici cu tine</h2><span className="ai-status"><i /> Îți răspund din contextul bugetului tău</span></div><button type="button" className="ai-close" aria-label="Închide ghidul" onClick={() => setOpen(false)}><X size={17} /></button></header><div className="ai-chat-history" aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<span>{item.text}</span></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item.action!.type)}><CircleCheck size={14} /> {item.action.label}</button>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div><div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", "Vreau să adaug o mișcare")}>+ Adaugă o mișcare</button><button type="button" onClick={() => runAction("plan", "Ajută-mă cu repartizarea")}>Repartizare</button><button type="button" onClick={() => runAction("journal", "Vreau să văd luna")}>Situația mea</button></div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">Scrie-mi orice despre banii tăi</label><div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="ex. am cheltuit 50 de lei pe combustibil" /><button type="submit" aria-label="Trimite mesajul"><Send size={16} /></button></div><p><Lightbulb size={12} /> Îți explic, te ghidez și îți cer confirmarea înainte să salvez.</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația este păstrată local pe acest dispozitiv.</p></aside>}</>;
 }
 
 export default AICompanion;
