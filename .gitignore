@@ -112,7 +112,5 @@ temp/
 client/public/__manus__/version.json
 .project-config.json
 
-# Semnare Android release — nu se comite niciodată în repo
-android/app/release-keystore.properties
-android/app/release.keystore
-android/app/*.jks
+# Generated Lighthouse reports
+reports/

@@ -13,6 +13,7 @@
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "test": "vitest run",
+    "lighthouse": "pnpm build && node scripts/lighthouse.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {
@@ -71,6 +72,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^7.0.0",
     "vaul": "^1.1.2",
+    "web-vitals": "^4.2.4",
     "wouter": "^3.3.5",
     "zod": "^4.1.12"
   },
@@ -87,7 +89,9 @@
     "@vitejs/plugin-react": "^5.0.4",
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",
+    "chrome-launcher": "^1.1.0",
     "esbuild": "^0.25.0",
+    "lighthouse": "^12.8.2",
     "pnpm": "^10.15.1",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",

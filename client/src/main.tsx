@@ -68,8 +68,9 @@ import "./mobile-movements-pass.css";
 import "./mobile-obligations-pass.css";
 import "./mobile-analysis-pass.css";
 import "./mobile-settings-pass.css";
-
+import { startPerformanceMonitoring } from "./lib/performance-monitor";
 createRoot(document.getElementById("root")!).render(<App />);
+startPerformanceMonitoring();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
