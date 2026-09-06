@@ -482,10 +482,10 @@ const foldRomanian = (value: string) => value.toLocaleLowerCase("ro-RO").normali
  */
 export const parseNaturalSpendScenario = (raw: string, categories: string[] = expenseCategories): NaturalSpendScenario => {
   const folded = foldRomanian(raw.trim());
-  const amountMatch = raw.match(/(?:^|\s)(\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)(?=\s*(?:lei|ron|leu|$))/i);
+  const amountMatch = raw.match(/(?:^|\s)(\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)(?=\s*(?:de\s+)?(?:lei|ron|leu|$))/i);
   const amount = amountMatch ? parseRomanianAmount(amountMatch[1]) : 0;
   const categoryAliases: Array<[RegExp, string]> = [
-    [/\b(taxi|uber|bolt|transport|metrou|benzina|parcare|bilet)\b/, "Transport"],
+    [/\b(taxi|uber|bolt|transport|metrou|benzina|motorina|combustibil|parcare|bilet)\b/, "Transport"],
     [/\b(mancare|restaurant|lunch|pranz|cina|cumparaturi|supermarket|lidl|kaufland)\b/, "Alimente"],
     [/\b(apa|suc|cafea|ceai|bere)\b/, "Băuturi"],
     [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
