@@ -1,0 +1,228 @@
+/* Mobile obligations pass — următoarea scadență înaintea registrului administrativ. */
+.bf-obligations-workspace {
+  --obligation-accent: var(--cf-danger, #c96855);
+  --obligation-surface: var(--cf-surface, #fffdf7);
+}
+
+.bf-obligations-workspace .bf-obligations-header {
+  align-items: end;
+  gap: 18px;
+}
+
+.bf-obligations-workspace .bf-obligations-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.bf-obligations-workspace .bf-goals-link {
+  min-height: 40px;
+  border-radius: 11px;
+}
+
+.bf-obligations-workspace .bf-obligation-timeline {
+  border-top: 3px solid var(--obligation-accent);
+  border-radius: 16px;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--cf-ink), transparent 94%);
+}
+
+.bf-obligations-workspace .bf-obligation-timeline .bf-section-heading {
+  padding-bottom: 12px;
+}
+
+.bf-obligations-workspace .bf-obligation-timeline-list {
+  display: grid;
+  gap: 9px;
+}
+
+.bf-obligations-workspace .bf-obligation-timeline .bf-obligation-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 13px;
+  align-items: center;
+  border: 1px solid var(--cf-line);
+  border-left: 3px solid var(--obligation-accent);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--obligation-accent), transparent 96%);
+}
+
+.bf-obligations-workspace .bf-obligation-timeline .bf-obligation-entry-main {
+  min-width: 0;
+}
+
+.bf-obligations-workspace .bf-obligation-timeline .bf-obligation-entry-main strong {
+  font-size: 17px;
+}
+
+.bf-obligations-workspace .bf-obligation-timeline .bf-obligation-entry-actions button {
+  min-height: 40px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.bf-obligations-workspace .bf-obligation-ledger {
+  gap: 9px;
+  border-radius: 15px;
+}
+
+.bf-obligations-workspace .bf-obligation-ledger > article,
+.bf-obligations-workspace .bf-obligation-ledger > button {
+  min-height: 82px;
+  border-radius: 12px;
+}
+
+.bf-obligations-workspace .bf-obligation-actions button {
+  min-height: 46px;
+  border-radius: 12px;
+}
+
+.bf-obligations-workspace .bf-obligation-lane {
+  border-radius: 15px;
+}
+
+.bf-obligations-workspace .bf-obligation-lane > header {
+  padding: 15px;
+}
+
+.bf-obligations-workspace .bf-obligation-lane > article {
+  border-radius: 12px;
+}
+
+@media (max-width: 640px) {
+  .bf-obligations-workspace {
+    gap: 14px;
+    padding-inline: 13px;
+  }
+
+  .bf-obligations-workspace .bf-obligations-header {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .bf-obligations-workspace .bf-obligations-header h1 {
+    max-width: 10ch;
+    font-size: clamp(30px, 9vw, 42px);
+    line-height: .98;
+  }
+
+  .bf-obligations-workspace .bf-obligations-header > div:first-child > p:last-child {
+    max-width: 35ch;
+    font-size: 11px;
+  }
+
+  .bf-obligations-workspace .bf-obligations-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bf-obligations-workspace .bf-goals-link {
+    justify-content: center;
+    min-height: 42px;
+    padding-inline: 8px;
+    font-size: 10px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-timeline {
+    padding: 14px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-timeline .bf-section-heading {
+    align-items: start;
+    margin-bottom: 4px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-timeline .bf-section-heading h2 {
+    font-size: 25px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-timeline .bf-obligation-entry {
+    grid-template-columns: 1fr;
+    gap: 9px;
+    padding: 13px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-timeline .bf-obligation-entry-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .bf-obligations-workspace .bf-obligation-timeline .bf-obligation-entry-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .bf-obligations-workspace .bf-obligation-ledger {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bf-obligations-workspace .bf-obligation-ledger > button {
+    grid-column: 1 / -1;
+    min-height: 54px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-actions button {
+    justify-content: center;
+    min-height: 48px;
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-lane > header {
+    align-items: start;
+    padding: 13px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-lane > article {
+    padding: 13px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-entry-main {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 9px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-entry-main > div {
+    min-width: 0;
+  }
+
+  .bf-obligations-workspace .bf-obligation-entry-main b,
+  .bf-obligations-workspace .bf-obligation-entry-main small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bf-obligations-workspace .bf-obligation-entry-actions {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .bf-obligations-workspace .bf-obligation-entry-actions button {
+    min-height: 38px;
+    padding-inline: 10px;
+  }
+}
+
+@media (max-width: 370px) {
+  .bf-obligations-workspace .bf-obligations-links,
+  .bf-obligations-workspace .bf-obligation-actions,
+  .bf-obligations-workspace .bf-obligation-ledger {
+    grid-template-columns: 1fr;
+  }
+
+  .bf-obligations-workspace .bf-obligation-ledger > button {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-obligations-workspace * { scroll-behavior: auto !important; }
+}

@@ -65,6 +65,7 @@ import "./visibility-safety.css";
 import "./app-lock.css";
 import "./mobile-capture-pass.css";
 import "./mobile-movements-pass.css";
+import "./mobile-obligations-pass.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
