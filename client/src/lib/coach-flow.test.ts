@@ -13,6 +13,11 @@ describe("antrenorul financiar — siguranța financiară", () => {
     });
   });
 
+  it("oferă pașii pentru repartizare și cheltuială", () => {
+    expect(coachStepAfterGoalSelection("repartizare")).toMatchObject({ step: 2, prompt: "Cum împărțim banii disponibili?", mutatesData: false });
+    expect(coachStepAfterGoalSelection("cheltuiala")).toMatchObject({ step: 2, prompt: "Cum adaug o cheltuială?", mutatesData: false });
+  });
+
   it("păstrează mesajele explicabile pentru obiectiv", () => {
     expect(coachGoalLabel("siguranta")).toBe("siguranța financiară");
     expect(coachPromptForGoal("siguranta")).toBe("Cum arată bilanțul meu?");
