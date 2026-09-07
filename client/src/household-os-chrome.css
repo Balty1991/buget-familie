@@ -39,7 +39,10 @@ html, body {
 .os-appbar.bf-appbar {
   min-height: 64px !important;
   height: auto !important;
-  padding: 10px 16px !important;
+  padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+  padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
+  padding-bottom: 10px !important;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
   border-bottom: 1px solid var(--os-line) !important;
   background: color-mix(in srgb, var(--os-bg) 86%, transparent) !important;
   backdrop-filter: blur(16px) !important;
@@ -1093,6 +1096,43 @@ body .bf-command-palette .bf-icon-button,
     border-radius: 24px 24px 0 0 !important;
     padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
   }
+}
+
+/* Skip-link: WebView-ul Android îl focusează la start și îl pune peste bara de stare. */
+.os-shell > .bf-skip-link,
+.bf-app > .bf-skip-link {
+  position: absolute !important;
+  top: auto !important;
+  left: -10000px !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  transform: none !important;
+}
+
+.os-shell > .bf-skip-link:focus-visible,
+.bf-app > .bf-skip-link:focus-visible {
+  position: fixed !important;
+  z-index: 400 !important;
+  top: max(10px, env(safe-area-inset-top, 0px)) !important;
+  left: 10px !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 10px 14px !important;
+  overflow: visible !important;
+  clip: auto !important;
+  clip-path: none !important;
+  white-space: nowrap !important;
+  border-radius: 10px !important;
+  color: var(--os-mint-fg, #04140e) !important;
+  background: var(--os-mint, #7cffc4) !important;
+  transform: none !important;
 }
 
 
