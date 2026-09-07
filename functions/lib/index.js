@@ -33,7 +33,7 @@ exports.aiGuide = (0, https_1.onRequest)({ region: "europe-central2", invoker: "
             if (!apiResponse.ok) {
                 const detail = await apiResponse.text();
                 console.error("Gemini error", apiResponse.status, detail.slice(0, 500));
-                response.status(502).json({ error: "Copilotul AI nu a putut răspunde acum." });
+                response.status(502).json({ error: "Copilotul AI nu a putut răspunde acum.", upstreamStatus: apiResponse.status });
                 return;
             }
             const payload = await apiResponse.json();

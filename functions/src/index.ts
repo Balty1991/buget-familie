@@ -25,7 +25,7 @@ export const aiGuide = onRequest({ region: "europe-central2", invoker: "public",
     if (!messages.length) { response.status(400).json({ error: "Conversation is required" }); return; }
     try {
       const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiApiKey.value())}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ system_instruction: { parts: [{ text: systemInstruction }] }, contents: [{ role: "user", parts: [{ text: `Context financiar controlat (nu divulga datele ca listă decât dacă utilizatorul cere): ${JSON.stringify(context)}` }] }, ...messages.map((message) => ({ role: message.role === "assistant" ? "model" : "user", parts: [{ text: message.text }] }))], generationConfig: { temperature: 0.65, responseMimeType: "application/json", responseSchema: jsonSchema } }) });
-      if (!apiResponse.ok) { const detail = await apiResponse.text(); console.error("Gemini error", apiResponse.status, detail.slice(0, 500)); response.status(502).json({ error: "Copilotul AI nu a putut răspunde acum." }); return; }
+      if (!apiResponse.ok) { const detail = await apiResponse.text(); console.error("Gemini error", apiResponse.status, detail.slice(0, 500)); response.status(502).json({ error: "Copilotul AI nu a putut răspunde acum.", upstreamStatus: apiResponse.status }); return; }
       const payload = await apiResponse.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
       const raw = payload.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
       response.json(JSON.parse(raw));
