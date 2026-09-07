@@ -47,12 +47,12 @@
             var night = toMin(times.nightStart, 1260);
             theme = minutes >= day && minutes < evening ? "ivory" : minutes >= evening && minutes < night ? "forest" : "midnight";
           }
-          var themes = { ivory: 1, forest: 1, midnight: 1, copper: 1, slate: 1, plum: 1, lagoon: 1, rosewood: 1 };
+          var themes = { snow: 1, ivory: 1, sand: 1, sage: 1, slate: 1, lagoon: 1, forest: 1, midnight: 1, navy: 1, graphite: 1, copper: 1, plum: 1, rosewood: 1 };
           if (!themes[theme]) theme = "ivory";
           var background = localStorage.getItem("buget-familie:background") || "plain";
           if (!{ plain: 1, paper: 1, grid: 1, aurora: 1, dots: 1 }[background]) background = "plain";
           root.classList.add("theme-" + theme, "background-" + background);
-          if (!{ ivory: 1, slate: 1, lagoon: 1 }[theme]) root.classList.add("dark");
+          if (!{ snow: 1, ivory: 1, sand: 1, sage: 1, slate: 1, lagoon: 1 }[theme]) root.classList.add("dark");
           if (localStorage.getItem("buget-familie:high-contrast") === "true") root.classList.add("bf-high-contrast");
         } catch (e) {}
       })();

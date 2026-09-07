@@ -9,10 +9,11 @@ import { type SyncJournalEntry } from "@/lib/app-storage";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
 export type MoreView = "overview" | "debts" | "savings" | "receipts" | "recurring" | "reports" | "assistant" | "settings" | "sync" | "guide";
-export type ThemeId = "ivory" | "forest" | "midnight" | "copper" | "slate" | "plum" | "lagoon" | "rosewood";
+export type ThemeId = "snow" | "ivory" | "sand" | "sage" | "slate" | "lagoon" | "forest" | "midnight" | "navy" | "graphite" | "copper" | "plum" | "rosewood";
 export type ThemeSchedule = "manual" | "auto";
 export type ThemeScheduleTimes = { dayStart: string; eveningStart: string; nightStart: string };
 export type BackgroundId = "plain" | "paper" | "grid" | "aurora" | "dots";
+export const LIGHT_THEMES: ThemeId[] = ["snow", "ivory", "sand", "sage", "slate", "lagoon"];
 
 export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: string }> = [
   { id: "plain", name: "Lumină curată", detail: "Halo-uri moi, fără grilă" },
@@ -22,13 +23,18 @@ export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: 
   { id: "dots", name: "Ceață fină", detail: "Puncte moi, adâncime" },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
+  { id: "snow", name: "Studio Alb", detail: "Alb curat, cerneală cărbune și accent teal. Fundal alb, citire de zi.", mood: "ZI · ALB" },
   { id: "ivory", name: "Porcelain Studio", detail: "Porțelan rece, teal dens și linii de cobalt pentru citire luminoasă.", mood: "ZI · EDITORIAL" },
-  { id: "forest", name: "Aurora Moss", detail: "Verde de mușchi, reflexe aurora și suprafețe mate pentru seară.", mood: "SEARĂ · ORGANIC" },
-  { id: "midnight", name: "Ultraviolet Grid", detail: "Indigo profund, violet controlat și semnale cyan pentru focus nocturn.", mood: "NOAPTE · DIGITAL" },
-  { id: "copper", name: "Ember Ledger", detail: "Cărbune cald, cupru ars și hârtie fumurie pentru un ton tactil.", mood: "CALD · TACTIL" },
+  { id: "sand", name: "Hârtie Caldă", detail: "Cremă de studio, espresso și teracotă. Calm, ca un dosar de hârtie.", mood: "ZI · CALD" },
+  { id: "sage", name: "Salvie", detail: "Verde-salvie deschis, alb mineral, accent pădure. Lin, profesional.", mood: "ZI · LINIȘTE" },
   { id: "slate", name: "Nordic Slate", detail: "Gri-albăstrui de birou, accent auriu discret și alb cald pentru claritate profesională.", mood: "ZI · PROFESIONAL" },
-  { id: "plum", name: "Velvet Plum", detail: "Prună catifelată, accent auriu cald și contrast rafinat pentru seri elegante.", mood: "NOAPTE · RAFINAT" },
   { id: "lagoon", name: "Lagoon Glass", detail: "Turcoaz marin, alb mineral și accente de coral pentru un aer proaspăt.", mood: "ZI · LUMINOS" },
+  { id: "forest", name: "Mint OLED", detail: "Negru OLED, mint, cifre Fraunces. Household OS de noapte.", mood: "NOAPTE · MINT" },
+  { id: "midnight", name: "Ultraviolet Grid", detail: "Indigo profund, violet controlat și semnale cyan pentru focus nocturn.", mood: "NOAPTE · DIGITAL" },
+  { id: "navy", name: "Navy Cabinet", detail: "Bleumarin de birou, crem și auriu discret. Serios, de cabinet.", mood: "NOAPTE · BIROU" },
+  { id: "graphite", name: "Grafit", detail: "Negru grafit, accent albastru de ecran. Neutru, fără verde.", mood: "NOAPTE · NEUTRU" },
+  { id: "copper", name: "Ember Ledger", detail: "Cărbune cald, cupru ars și hârtie fumurie pentru un ton tactil.", mood: "CALD · TACTIL" },
+  { id: "plum", name: "Velvet Plum", detail: "Prună catifelată, accent auriu cald și contrast rafinat pentru seri elegante.", mood: "NOAPTE · RAFINAT" },
   { id: "rosewood", name: "Rosewood Night", detail: "Cărbune prună, roz prăfuit și cupru pentru o atmosferă calmă de seară.", mood: "NOAPTE · CALM" },
 ];
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };

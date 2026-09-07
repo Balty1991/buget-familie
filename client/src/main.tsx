@@ -70,13 +70,14 @@ import "./mobile-analysis-pass.css";
 import "./mobile-settings-pass.css";
 import "./household-os-today.css";
 import "./household-os-chrome.css";
+import "./household-os-themes.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 createRoot(document.getElementById("root")!).render(<App />);
 startPerformanceMonitoring();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=36`).then((registration) => {
+    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=37`).then((registration) => {
       void registration.update();
       if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
     }).catch(() => undefined);

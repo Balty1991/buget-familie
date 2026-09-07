@@ -475,25 +475,6 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-app {
-  --cf-bg: #07090c;
-  --cf-surface: #10141a;
-  --cf-surface-alt: #161d24;
-  --cf-ink: #f3f6f4;
-  --cf-muted: #9aa8a1;
-  --cf-line: color-mix(in srgb, #7cffc4 16%, transparent);
-  --cf-primary: #7cffc4;
-  --cf-primary-strong: #5ee0aa;
-  --cf-info: #7cffc4;
-  --bf-major-bg: #07090c;
-  --bf-major-sheet: #10141a;
-  --bf-major-ink: #f3f6f4;
-  --bf-major-muted: #9aa8a1;
-  --bf-major-line: color-mix(in srgb, #7cffc4 16%, transparent);
-  --bf-major-green: #7cffc4;
-  --bf-major-green-deep: #14352b;
-  --bf-major-honey: #e8c38a;
-  color: #f3f6f4 !important;
-  background: #07090c !important;
   font-family: Outfit, "IBM Plex Sans", system-ui, sans-serif !important;
 }
 

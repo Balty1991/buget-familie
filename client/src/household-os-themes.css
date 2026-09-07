@@ -1,0 +1,157 @@
+/**
+ * Palete Household OS. Importat după chrome, ca --cf-* să alimenteze --os-*.
+ */
+html.theme-snow {
+  --cf-bg: #ffffff;
+  --cf-surface: #f4f6f5;
+  --cf-surface-alt: #ebeef0;
+  --cf-ink: #121614;
+  --cf-muted: #5c6964;
+  --cf-line: #e2e7e4;
+  --cf-primary: #0e7a5c;
+  --cf-primary-strong: #0b5c46;
+  --cf-info: #2b6cb0;
+  --cf-danger: #c2473c;
+  --cf-warning: #b07d12;
+  --cf-on-forest: #ffffff;
+  --cf-nav: rgba(255, 255, 255, .94);
+  --cf-shadow: 0 14px 34px rgba(18, 22, 20, .08);
+  --cf-glow: rgba(14, 122, 92, .08);
+}
+html.theme-sand {
+  --cf-bg: #f7f1e6;
+  --cf-surface: #fffaf2;
+  --cf-surface-alt: #efe6d6;
+  --cf-ink: #2a2118;
+  --cf-muted: #7a6b58;
+  --cf-line: #e4d8c4;
+  --cf-primary: #9a5a32;
+  --cf-primary-strong: #7a4324;
+  --cf-info: #b5812a;
+  --cf-danger: #b44532;
+  --cf-warning: #c48a22;
+  --cf-on-forest: #fff8ef;
+  --cf-nav: rgba(255, 250, 242, .94);
+  --cf-shadow: 0 14px 34px rgba(42, 33, 24, .1);
+  --cf-glow: rgba(154, 90, 50, .1);
+}
+html.theme-sage {
+  --cf-bg: #eef3ee;
+  --cf-surface: #f8fbf8;
+  --cf-surface-alt: #e3ebe3;
+  --cf-ink: #1b2a22;
+  --cf-muted: #5d7166;
+  --cf-line: #d4ded6;
+  --cf-primary: #3f7a5c;
+  --cf-primary-strong: #2c5c44;
+  --cf-info: #4a7c8c;
+  --cf-danger: #b54b40;
+  --cf-warning: #a57a1e;
+  --cf-on-forest: #f4fff8;
+  --cf-nav: rgba(248, 251, 248, .94);
+  --cf-shadow: 0 14px 34px rgba(27, 42, 34, .09);
+  --cf-glow: rgba(63, 122, 92, .1);
+}
+html.theme-forest {
+  --cf-bg: #07090c;
+  --cf-surface: #10151a;
+  --cf-surface-alt: #161d23;
+  --cf-ink: #e8eeea;
+  --cf-muted: #8a968f;
+  --cf-line: #22302a;
+  --cf-primary: #7cffc4;
+  --cf-primary-strong: #5ee0aa;
+  --cf-info: #7cffc4;
+  --cf-danger: #ff8a7a;
+  --cf-warning: #e8c38a;
+  --cf-on-forest: #04140e;
+  --cf-nav: rgba(7, 9, 12, .9);
+  --cf-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+  --cf-glow: rgba(124, 255, 196, .12);
+}
+html.theme-navy {
+  --cf-bg: #0b1220;
+  --cf-surface: #141c2e;
+  --cf-surface-alt: #1c2740;
+  --cf-ink: #eef2f8;
+  --cf-muted: #9aa8be;
+  --cf-line: #2a3854;
+  --cf-primary: #d4b06a;
+  --cf-primary-strong: #c49a4a;
+  --cf-info: #8bb4e8;
+  --cf-danger: #ff8b7a;
+  --cf-warning: #e0c07a;
+  --cf-on-forest: #14100a;
+  --cf-nav: rgba(11, 18, 32, .92);
+  --cf-shadow: 0 18px 40px rgba(0, 0, 0, .5);
+  --cf-glow: rgba(212, 176, 106, .12);
+}
+html.theme-graphite {
+  --cf-bg: #111214;
+  --cf-surface: #1a1c1f;
+  --cf-surface-alt: #23262b;
+  --cf-ink: #eceff3;
+  --cf-muted: #9aa3ad;
+  --cf-line: #2c3138;
+  --cf-primary: #8ab4ff;
+  --cf-primary-strong: #5b8fe0;
+  --cf-info: #8ab4ff;
+  --cf-danger: #ff8a7a;
+  --cf-warning: #e8c38a;
+  --cf-on-forest: #0c1018;
+  --cf-nav: rgba(17, 18, 20, .92);
+  --cf-shadow: 0 18px 40px rgba(0, 0, 0, .5);
+  --cf-glow: rgba(138, 180, 255, .12);
+}
+
+.theme-snow .bf-app,
+.theme-sand .bf-app,
+.theme-sage .bf-app {
+  background: var(--cf-bg) !important;
+}
+.theme-snow .bf-app::before,
+.theme-sand .bf-app::before,
+.theme-sage .bf-app::before,
+.theme-navy .bf-app::before,
+.theme-graphite .bf-app::before { opacity: .08; }
+
+.bf-theme-option.snow .bf-theme-swatch { background: linear-gradient(135deg, #ffffff 0 48%, #0e7a5c 49% 72%, #121614 73%); }
+.bf-theme-option.sand .bf-theme-swatch { background: linear-gradient(135deg, #f7f1e6 0 48%, #9a5a32 49% 72%, #2a2118 73%); }
+.bf-theme-option.sage .bf-theme-swatch { background: linear-gradient(135deg, #eef3ee 0 48%, #3f7a5c 49% 72%, #1b2a22 73%); }
+.bf-theme-option.forest .bf-theme-swatch { background: linear-gradient(135deg, #07090c 0 48%, #7cffc4 49% 72%, #10151a 73%); }
+.bf-theme-option.navy .bf-theme-swatch { background: linear-gradient(135deg, #0b1220 0 48%, #d4b06a 49% 72%, #141c2e 73%); }
+.bf-theme-option.graphite .bf-theme-swatch { background: linear-gradient(135deg, #111214 0 48%, #8ab4ff 49% 72%, #1a1c1f 73%); }
+
+.bf-theme-preview.snow { --preview-bg:#ffffff; --preview-surface:#f4f6f5; --preview-ink:#121614; --preview-muted:#5c6964; --preview-line:#e2e7e4; --preview-primary:#0e7a5c; --preview-info:#2b6cb0; --preview-glow:rgba(14,122,92,.16); }
+.bf-theme-preview.sand { --preview-bg:#f7f1e6; --preview-surface:#fffaf2; --preview-ink:#2a2118; --preview-muted:#7a6b58; --preview-line:#e4d8c4; --preview-primary:#9a5a32; --preview-info:#b5812a; --preview-glow:rgba(154,90,50,.18); }
+.bf-theme-preview.sage { --preview-bg:#eef3ee; --preview-surface:#f8fbf8; --preview-ink:#1b2a22; --preview-muted:#5d7166; --preview-line:#d4ded6; --preview-primary:#3f7a5c; --preview-info:#4a7c8c; --preview-glow:rgba(63,122,92,.16); }
+.bf-theme-preview.forest { --preview-bg:#07090c; --preview-surface:#10151a; --preview-ink:#e8eeea; --preview-muted:#8a968f; --preview-line:#22302a; --preview-primary:#7cffc4; --preview-info:#7cffc4; --preview-glow:rgba(124,255,196,.22); }
+.bf-theme-preview.navy { --preview-bg:#0b1220; --preview-surface:#141c2e; --preview-ink:#eef2f8; --preview-muted:#9aa8be; --preview-line:#2a3854; --preview-primary:#d4b06a; --preview-info:#8bb4e8; --preview-glow:rgba(212,176,106,.2); }
+.bf-theme-preview.graphite { --preview-bg:#111214; --preview-surface:#1a1c1f; --preview-ink:#eceff3; --preview-muted:#9aa3ad; --preview-line:#2c3138; --preview-primary:#8ab4ff; --preview-info:#8ab4ff; --preview-glow:rgba(138,180,255,.2); }
+
+.bf-theme-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+@media (max-width: 640px) {
+  .bf-theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .bf-theme-option { min-height: 72px; padding: 8px; gap: 8px; }
+  .bf-theme-option b { font-size: 11px; }
+  .bf-theme-option small { font-size: 8px; }
+}
+
+.os-shell .bf-theme-picker {
+  font-family: Outfit, sans-serif !important;
+  border-color: var(--os-line) !important;
+  background: var(--os-surface) !important;
+  color: var(--os-fg) !important;
+}
+.os-shell .bf-theme-picker h2 {
+  font-family: Fraunces, Georgia, serif !important;
+  font-weight: 560 !important;
+}
+.os-shell .bf-theme-apply {
+  color: var(--os-mint-fg) !important;
+  background: var(--os-mint) !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+}
