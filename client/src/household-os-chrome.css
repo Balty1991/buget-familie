@@ -586,43 +586,73 @@ html.ai-guide-open .os-tools .os-tool:last-child {
 }
 
 .bf-command-search {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
+  position: relative !important;
+  display: block !important;
   margin: 16px 0 12px !important;
-  padding: 0 14px !important;
+  padding: 0 !important;
   min-height: 48px !important;
+  overflow: hidden !important;
   border: 1px solid var(--os-line, var(--cf-line)) !important;
   border-radius: 14px !important;
-  background: color-mix(in srgb, var(--os-bg, #07090c) 55%, var(--os-surface, #10151a)) !important;
+  background: color-mix(in srgb, var(--os-bg, #07090c) 70%, var(--os-surface, #10151a)) !important;
   box-shadow: none !important;
   outline: none !important;
 }
 
 .bf-command-search:focus-within {
   border-color: var(--os-mint, var(--cf-primary)) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent) !important;
-}
-
-.bf-command-search input,
-.bf-command-search input:focus,
-.bf-command-search input:focus-visible {
-  height: 48px !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  outline: none !important;
   box-shadow: none !important;
-  background: transparent !important;
-  color: var(--os-fg, var(--cf-ink)) !important;
-  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 500 !important;
 }
 
 .bf-command-search svg {
-  flex: 0 0 auto !important;
+  position: absolute !important;
+  z-index: 1 !important;
+  top: 50% !important;
+  left: 14px !important;
+  width: 17px !important;
+  height: 17px !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
   color: var(--os-muted, var(--cf-muted)) !important;
+}
+
+html body .bf-command-search input,
+html body .bf-command-search input:focus,
+html body .bf-command-search input:focus-visible,
+html.bf-high-contrast .bf-command-search input:focus-visible,
+.bf-app .bf-command-search input,
+.bf-app .bf-command-search input:focus,
+.bf-app .bf-command-search input:focus-visible {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 14px 0 42px !important;
+  border: 0 none transparent !important;
+  border-radius: 14px !important;
+  outline: 0 none transparent !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  color: var(--os-fg, var(--cf-ink)) !important;
+  caret-color: var(--os-mint, var(--cf-primary)) !important;
+  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 48px !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+html body .bf-command-search input::placeholder {
+  color: var(--os-muted, var(--cf-muted)) !important;
+  opacity: 1 !important;
 }
 
 @media (max-width: 760px) {

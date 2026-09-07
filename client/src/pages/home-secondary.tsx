@@ -163,7 +163,11 @@ export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => v
     { id: "calendar", label: "Deschide calendarul", detail: "Vezi veniturile, scadențele și obiectivele", icon: CalendarDays, run: () => onGo("calendar") },
   ];
   const visible = actions.filter((action) => `${action.label} ${action.detail}`.toLocaleLowerCase("ro-RO").includes(query.toLocaleLowerCase("ro-RO")));
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    const desktop = window.matchMedia("(pointer: fine)").matches;
+    if (desktop) inputRef.current?.focus();
+    else dialogRef.current?.focus();
+  }, []);
   const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget | null }) => {
     if (event.target === event.currentTarget) onClose();
   };
@@ -179,7 +183,7 @@ export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => v
         </header>
         <label className="bf-command-search">
           <Search size={17} aria-hidden="true" />
-          <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Caută o acțiune…" aria-label="Caută o acțiune" />
+          <input ref={inputRef} type="text" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" spellCheck={false} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Caută o acțiune…" aria-label="Caută o acțiune" />
         </label>
         <div className="bf-command-list" role="listbox" aria-label="Acțiuni disponibile">
           {visible.length ? visible.map((action) => {
