@@ -448,7 +448,7 @@ html:not(.dark) .bf-os-decide {
 @media (max-width: 760px) {
   .bf-today-situation-actions,
   .bf-os-actions {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr 1fr !important;
   }
 
   .bf-today-situation-number strong,
@@ -458,3 +458,370 @@ html:not(.dark) .bf-os-decide {
 
   .bf-os-day b { font-size: 12px; }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Household OS — tot ecranul, nu doar Astăzi                                 */
+/* -------------------------------------------------------------------------- */
+
+.dark {
+  --os-bg: #07090c;
+  --os-surface: #10141a;
+  --os-surface-2: #161d24;
+  --os-line: color-mix(in srgb, #7cffc4 16%, transparent);
+  --os-mint: #7cffc4;
+  --os-ink: #f3f6f4;
+  --os-muted: #9aa8a1;
+  --os-warn: #ffb087;
+}
+
+.dark .bf-app {
+  --cf-bg: #07090c;
+  --cf-surface: #10141a;
+  --cf-surface-alt: #161d24;
+  --cf-ink: #f3f6f4;
+  --cf-muted: #9aa8a1;
+  --cf-line: color-mix(in srgb, #7cffc4 16%, transparent);
+  --cf-primary: #7cffc4;
+  --cf-primary-strong: #5ee0aa;
+  --cf-info: #7cffc4;
+  --bf-major-bg: #07090c;
+  --bf-major-sheet: #10141a;
+  --bf-major-ink: #f3f6f4;
+  --bf-major-muted: #9aa8a1;
+  --bf-major-line: color-mix(in srgb, #7cffc4 16%, transparent);
+  --bf-major-green: #7cffc4;
+  --bf-major-green-deep: #14352b;
+  --bf-major-honey: #e8c38a;
+  color: #f3f6f4 !important;
+  background: #07090c !important;
+  font-family: Outfit, "IBM Plex Sans", system-ui, sans-serif !important;
+}
+
+.dark .bf-app h1,
+.dark .bf-app h2,
+.dark .bf-page h1,
+.dark .bf-page h2 {
+  font-family: Fraunces, "IBM Plex Serif", Georgia, serif !important;
+  font-weight: 560 !important;
+  letter-spacing: -.04em !important;
+}
+
+.dark .bf-app h1 em,
+.dark .bf-app h2 em {
+  color: #7cffc4 !important;
+  font-style: italic !important;
+  font-weight: inherit !important;
+}
+
+.dark .bf-kicker,
+.dark .bf-page .bf-kicker {
+  color: #9aa8a1 !important;
+  font-family: Outfit, sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: .18em !important;
+  text-transform: uppercase !important;
+}
+
+.dark .bf-appbar {
+  border-bottom-color: color-mix(in srgb, #7cffc4 14%, transparent) !important;
+  background: color-mix(in srgb, #07090c 88%, transparent) !important;
+  backdrop-filter: blur(18px) !important;
+  box-shadow: none !important;
+}
+
+.dark .bf-brand > b,
+.dark .bf-brand > b i {
+  color: #f3f6f4 !important;
+  text-decoration: none !important;
+}
+
+.dark .bf-brand > b i { color: #7cffc4 !important; }
+
+.dark .bf-appbar-tools > button,
+.dark .bf-theme,
+.dark .bf-command-trigger {
+  color: #f3f6f4 !important;
+  border-color: color-mix(in srgb, #7cffc4 16%, transparent) !important;
+  background: #10141a !important;
+}
+
+.dark .bf-appbar-tools > button.active {
+  color: #062016 !important;
+  border-color: #7cffc4 !important;
+  background: #7cffc4 !important;
+}
+
+.dark .bf-mobile-nav {
+  left: 10px !important;
+  right: 10px !important;
+  bottom: 10px !important;
+  padding: 6px !important;
+  border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
+  border-radius: 1.6rem !important;
+  background: #10141a !important;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45) !important;
+}
+
+.dark .bf-mobile-nav button {
+  color: #9aa8a1 !important;
+  background: transparent !important;
+  border-radius: 1.2rem !important;
+}
+
+.dark .bf-mobile-nav button.active {
+  color: #7cffc4 !important;
+  background: #14352b !important;
+  box-shadow: none !important;
+}
+
+.dark .bf-page,
+.dark .bf-today-workspace,
+.dark .bf-movements-ledger,
+.dark .bf-plan-workspace,
+.dark .bf-obligations-workspace,
+.dark .bf-insights-workspace,
+.dark .bf-goals-workspace,
+.dark .bf-utilities-workspace {
+  color: #f3f6f4 !important;
+  padding-bottom: 168px !important;
+}
+
+.dark .bf-today-workspace { gap: 16px !important; }
+
+/* Analog chrome off */
+.bf-health-gauge-tick,
+.bf-health-gauge-end,
+.bf-today-situation-number::after,
+.bf-journal-day-pulse::after,
+.bf-movements-ledger .bf-journal-day-pulse::after,
+.bf-movements-ledger .bf-movements-header > div::before,
+.bf-movements-ledger .bf-empty-state::before,
+.bf-utilities-workspace .bf-topline::before,
+.bf-utilities-workspace .bf-topline > div::before {
+  display: none !important;
+  content: none !important;
+}
+
+.bf-today-situation .bf-health-needle { opacity: .85; }
+
+.dark .bf-today-situation .bf-health-score {
+  position: absolute !important;
+  top: 18px !important;
+  right: 16px !important;
+  margin: 0 !important;
+  width: 118px !important;
+  padding: 8px 8px 6px !important;
+}
+
+.dark .bf-today-situation-top time { margin-right: 126px !important; }
+
+.dark .bf-today-brief,
+.dark .bf-spend-stamp,
+.dark .bf-today-ledger,
+.dark .bf-week-checkin,
+.dark .bf-today-decision,
+.dark .bf-today-measurements,
+.dark .bf-today-activity,
+.dark .bf-today-hub-links,
+.dark .bf-today-envelope-evolution,
+.dark .bf-allocation-history,
+.dark .bf-weekly-summary,
+.dark .bf-journal-day-pulse,
+.dark .bf-journal-quickbar,
+.dark .bf-movement-day,
+.dark .bf-plan-studio-header,
+.dark .bf-allocation-period,
+.dark .bf-allocation-progress-card,
+.dark .bf-plan-simulator,
+.dark .bf-insights-header,
+.dark .bf-obligations-header,
+.dark .bf-obligation-timeline,
+.dark .bf-obligation-ledger,
+.dark .bf-obligation-lane {
+  border-color: color-mix(in srgb, #7cffc4 16%, transparent) !important;
+  border-radius: 1.5rem !important;
+  background: #10141a !important;
+  box-shadow: none !important;
+  color: #f3f6f4 !important;
+}
+
+.dark .bf-spend-stamp strong,
+.dark .bf-journal-day-pulse b,
+.dark .bf-plan-header-stat b,
+.dark .bf-allocation-period-summary b,
+.dark .bf-insights-header h1,
+.dark .bf-obligations-header h1,
+.dark .bf-plan-studio-header h1,
+.dark .bf-movements-header h1 {
+  color: #f3f6f4 !important;
+  font-family: Fraunces, "IBM Plex Serif", Georgia, serif !important;
+}
+
+.dark .bf-movements-header h1 em,
+.dark .bf-plan-studio-header h1 em,
+.dark .bf-obligations-header h1 em,
+.dark .bf-insights-header h1 em {
+  color: #7cffc4 !important;
+}
+
+.dark .bf-movements-header .bf-kicker { display: none !important; }
+
+.dark .bf-movement-add,
+.dark .bf-primary,
+.dark .bf-os-decide,
+.dark .ai-companion-trigger.is-open {
+  color: #062016 !important;
+  background: #7cffc4 !important;
+  border-color: #7cffc4 !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+.dark .bf-journal-day-pulse {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, .8fr) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.dark .bf-journal-day-pulse > div,
+.dark .bf-journal-day-pulse > span {
+  padding: 16px 14px !important;
+  border-right: 1px solid color-mix(in srgb, #7cffc4 12%, transparent) !important;
+  background: transparent !important;
+}
+
+.dark .bf-journal-day-pulse > span:last-child { border-right: 0 !important; }
+
+.dark .bf-journal-day-pulse p,
+.dark .bf-journal-day-pulse small {
+  color: #9aa8a1 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+  font-size: 10px !important;
+}
+
+.dark .bf-journal-day-pulse .income { color: #7cffc4 !important; }
+.dark .bf-journal-day-pulse .expense { color: #ff8a7a !important; }
+
+.dark .bf-journal-quickbar {
+  display: grid !important;
+  gap: 10px !important;
+  padding: 12px !important;
+}
+
+.dark .bf-movement-kind {
+  background: #07090c !important;
+  border-radius: 999px !important;
+  padding: 4px !important;
+}
+
+.dark .bf-movement-kind button {
+  color: #9aa8a1 !important;
+  background: transparent !important;
+  border-radius: 999px !important;
+}
+
+.dark .bf-movement-kind button.active {
+  color: #062016 !important;
+  background: #7cffc4 !important;
+}
+
+.dark .bf-journal-search,
+.dark .bf-journal-filter-toggle {
+  border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
+  border-radius: 1.1rem !important;
+  background: #07090c !important;
+  color: #f3f6f4 !important;
+}
+
+.dark .bf-journal-search input {
+  color: #f3f6f4 !important;
+  background: transparent !important;
+}
+
+.dark .bf-movement-day header time,
+.dark .bf-movement-day article b,
+.dark .bf-today-activity-list b {
+  color: #f3f6f4 !important;
+}
+
+.dark .bf-tx-icon {
+  background: #14352b !important;
+  color: #7cffc4 !important;
+  border-radius: 999px !important;
+}
+
+.dark .bf-tx-icon.expense {
+  background: color-mix(in srgb, #ff8a7a 16%, #10141a) !important;
+  color: #ff8a7a !important;
+}
+
+.dark .bf-movement-timeline article,
+.dark .bf-today-activity-list article {
+  border-color: color-mix(in srgb, #7cffc4 10%, transparent) !important;
+  background: #07090c !important;
+  border-radius: 1.1rem !important;
+}
+
+.dark .bf-plan-studio-header,
+.dark .bf-insights-header,
+.dark .bf-obligations-header {
+  padding: 8px 2px 18px !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.dark .bf-allocation-period-tabs,
+.dark .bf-insights-switch,
+.dark .bf-more-tabs {
+  background: #10141a !important;
+  border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
+  border-radius: 999px !important;
+}
+
+.dark .bf-allocation-period-tabs button.active,
+.dark .bf-insights-switch button.active,
+.dark .bf-more-tabs button.active {
+  color: #062016 !important;
+  background: #7cffc4 !important;
+}
+
+.dark .bf-decision-row.primary {
+  color: #f3f6f4 !important;
+  background: #161d24 !important;
+  border-radius: 1.2rem !important;
+}
+
+.dark .bf-decision-row.primary.good { border-left-color: #7cffc4 !important; }
+
+.dark .ai-companion-trigger {
+  bottom: 86px !important;
+  border-color: color-mix(in srgb, #7cffc4 28%, transparent) !important;
+  background: #10141a !important;
+  color: #f3f6f4 !important;
+}
+
+.dark .ai-companion-panel {
+  background: #10141a !important;
+  border-color: color-mix(in srgb, #7cffc4 18%, transparent) !important;
+  color: #f3f6f4 !important;
+}
+
+.dark .ai-chat-bubble {
+  background: #161d24 !important;
+  color: #f3f6f4 !important;
+}
+
+.dark .ai-chat-row.user .ai-chat-bubble {
+  background: #14352b !important;
+  color: #7cffc4 !important;
+}
+
+@media (max-width: 600px) {
+  .dark .ai-companion-trigger {
+    right: 14px !important;
+    bottom: 88px !important;
+  }
+}
+

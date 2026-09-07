@@ -230,6 +230,10 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
           </details>
           <HealthScoreBadge data={data} />
         </div>
+        <div className="bf-today-situation-actions">
+          <button type="button" className="bf-os-decide" onClick={openHouseholdGuide}>Poți cheltui?</button>
+          <button type="button" className="bf-today-add bf-os-secondary" onClick={onAdd}><Plus size={18} /> Înregistrează</button>
+        </div>
       </section>
 
       <section className="bf-os-rhythm" aria-label="Ritm zilnic">
@@ -251,11 +255,6 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
         </div>
         <p className="bf-os-note">Fiecare zi primește {money(pace)}. Ce rămâne e ritmul; ce trece peste e excepție.</p>
       </section>
-
-      <div className="bf-os-actions">
-        <button type="button" className="bf-os-decide" onClick={openHouseholdGuide}>Poți cheltui?</button>
-        <button type="button" className="bf-today-add bf-os-secondary" onClick={onAdd}><Plus size={18} /> Înregistrează</button>
-      </div>
 
       <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenWeek={() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
 
