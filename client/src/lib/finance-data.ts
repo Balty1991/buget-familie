@@ -504,7 +504,7 @@ export const parseNaturalSpendScenario = (raw: string, categories: string[] = ex
   const amount = amountMatch ? parseRomanianAmount(amountMatch[1]) : 0;
   const categoryAliases: Array<[RegExp, string]> = [
     [/\b(taxi|uber|bolt|transport|metrou|benzina|motorina|combustibil|parcare|bilet)\b/, "Transport"],
-    [/\b(mancare|restaurant|lunch|pranz|cina|cumparaturi|supermarket|lidl|kaufland)\b/, "Alimente"],
+    [/\b(mancare|restaurant|lunch|pranz|cina|cumparaturi|supermarket|lidl|kaufland|patiserie|paine|covrig)\b/, "Alimente"],
     [/\b(apa|suc|cafea|ceai|bere)\b/, "Băuturi"],
     [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
     [/\b(factura|internet|curent|gaz|chirie|detergent|casa)\b/, "Casă & facturi"],

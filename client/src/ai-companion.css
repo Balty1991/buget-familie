@@ -253,3 +253,8 @@ html.ai-guide-max .ai-chat-panel{
 .ai-chat-row .ai-chat-action + .ai-chat-action{margin-left:22px}
 .ai-chat-choices{display:flex;flex-wrap:wrap;gap:6px;margin-left:22px;max-width:100%}
 .ai-chat-choices .ai-chat-action{margin-left:0}
+.ai-date-row{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin:0 0 2px}
+.ai-date-chip{appearance:none;border:1px solid #d5e0d4;background:#f4f7f2;color:#3e5348;border-radius:999px;padding:6px 10px;font:700 11px/1 Manrope,sans-serif}
+.ai-date-chip.is-on{background:#e7f1e4;border-color:#9cbf9a;color:#215c3b}
+.ai-date-cal{position:relative;overflow:hidden}
+.ai-date-cal input{position:absolute;inset:0;opacity:0;cursor:pointer}
