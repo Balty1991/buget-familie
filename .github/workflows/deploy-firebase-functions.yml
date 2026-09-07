@@ -81,7 +81,7 @@ jobs:
             --data-file=-
 
       - name: Deploy Firebase Functions
-        run: npx --yes firebase-tools@latest deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive
+        run: npx --yes firebase-tools@latest deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
 
       - name: Check aiGuide endpoint
         run: |

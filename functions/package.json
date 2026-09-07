@@ -16,5 +16,11 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "protobufjs"
+    ]
   }
 }
