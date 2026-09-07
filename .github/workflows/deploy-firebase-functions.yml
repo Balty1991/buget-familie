@@ -49,6 +49,10 @@ jobs:
         working-directory: functions
         run: ./node_modules/.bin/tsc --noEmit
 
+      - name: Build Firebase Functions
+        working-directory: functions
+        run: pnpm run build
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
