@@ -91,8 +91,9 @@ function GuideQuotaBar({ quota }: { quota: QuotaInfo }) {
 }
 
 function allAmounts(raw: string) {
-  return [...raw.matchAll(/\d[\d.\s]*(?:,\d{1,2})?/g)].map((match) => {
-    const token = match[0].replace(/\s/g, "");
+  const matches = raw.match(/\d[\d.\s]*(?:,\d{1,2})?/g) || [];
+  return matches.map((tokenRaw) => {
+    const token = tokenRaw.replace(/\s/g, "");
     const normalized = token.includes(",") ? token.replace(/\./g, "").replace(",", ".") : /^\d{1,3}(?:\.\d{3})+$/.test(token) ? token.replace(/\./g, "") : token;
     return parseFloat(normalized) || 0;
   }).filter((value) => value >= 20);
@@ -245,7 +246,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         if (!response.ok) throw new Error(payload.code || "AI unavailable");
         setTyping(false);
         const updates = updatesFromGuide(payload.intent, payload.extracted, raw, data, messages);
-        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || ""));
+        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "income");
         if (saveNow) applyGuide(updates);
         addMessage({
           role: "assistant",
