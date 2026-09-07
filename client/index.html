@@ -8,12 +8,19 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Buget Familie — atelierul deciziilor financiare</title>
     <meta name="description" content="Un spațiu personal sau comun pentru buget, datorii, economii și decizii financiare clare." />
-    <meta name="theme-color" content="#143C36" />
+    <meta name="theme-color" content="#07090c" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=22" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=22" />
     <link rel="manifest" href="manifest.webmanifest" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (reg) { void reg.update(); });
+        });
+      }
+    </script>
     <script>
       (function () {
         try {

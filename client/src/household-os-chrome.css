@@ -1,0 +1,561 @@
+/**
+ * Household OS chrome — clase noi (os-*), ca foile atelier să nu mai vopsească plicul galben,
+ * acul analog sau tab-ul verde. Importat ultimul.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640;9..144,700&family=Outfit:wght@400;500;600;700&display=swap");
+
+.os-shell.bf-app,
+.dark .os-shell.bf-app,
+.theme-forest .os-shell.bf-app,
+.theme-midnight .os-shell.bf-app {
+  --os-bg: #07090c;
+  --os-surface: #10151a;
+  --os-surface-2: #161d23;
+  --os-fg: #e8eeea;
+  --os-muted: #8a968f;
+  --os-subtle: #5c675f;
+  --os-mint: #7cffc4;
+  --os-mint-fg: #04140e;
+  --os-mint-dim: #14352b;
+  --os-line: #22302a;
+  --os-line-strong: #31463c;
+  --os-warn: #e8c38a;
+  --os-out: #ff8a7a;
+  color: var(--os-fg) !important;
+  background: #07090c !important;
+  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
+}
+
+.os-shell.bf-app::before,
+.os-shell.bf-app::after,
+.os-appbar::after,
+.os-appbar::before {
+  display: none !important;
+  content: none !important;
+}
+
+html.dark,
+html.dark body {
+  background: #07090c !important;
+}
+
+/* ---- App bar: cub + Buget / Familie + 3 butoane rotunde ---- */
+.os-appbar.bf-appbar {
+  min-height: 64px !important;
+  height: auto !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid var(--os-line) !important;
+  background: color-mix(in srgb, #07090c 86%, transparent) !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: none !important;
+}
+
+.os-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--os-fg) !important;
+  text-align: left !important;
+  box-shadow: none !important;
+}
+
+.os-brand::after { display: none !important; content: none !important; }
+
+.os-mark {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  flex: 0 0 44px !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  color: var(--os-mint) !important;
+  background: var(--os-surface-2) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+}
+
+.os-mark::before,
+.os-mark::after,
+.os-mark .bf-logo-roof,
+.os-mark .bf-logo-core,
+.os-mark .bf-logo-letter {
+  display: none !important;
+  content: none !important;
+}
+
+.os-mark svg {
+  display: block !important;
+  width: 24px !important;
+  height: 24px !important;
+  color: var(--os-mint) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+.os-brand-copy {
+  display: grid !important;
+  line-height: 1.05 !important;
+}
+
+.os-brand-copy b {
+  color: var(--os-fg) !important;
+  font-family: Fraunces, Georgia, serif !important;
+  font-size: 18px !important;
+  font-weight: 560 !important;
+  letter-spacing: -.03em !important;
+  text-decoration: none !important;
+}
+
+.os-brand-copy i {
+  color: var(--os-mint) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 12px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+.os-desktop-nav { display: none !important; }
+
+.os-tools {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.os-tool {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 16px !important;
+  color: var(--os-fg) !important;
+  background: var(--os-surface) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+}
+
+.os-tool.is-on {
+  color: var(--os-mint-fg) !important;
+  background: var(--os-mint) !important;
+}
+
+.os-tool kbd { display: none !important; }
+
+/* ---- Hero Astăzi — 1:1 cu preview ---- */
+.os-hero {
+  position: relative !important;
+  display: grid !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 20px 20px 22px !important;
+  border: 0 !important;
+  border-radius: 2rem !important;
+  color: var(--os-fg) !important;
+  background: var(--os-surface) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+}
+
+.os-hero::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  opacity: .7 !important;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--os-mint) 5.5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--os-mint) 5.5%, transparent) 1px, transparent 1px) !important;
+  background-size: 44px 44px !important;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 20%, transparent 75%) !important;
+}
+
+.os-hero::after { display: none !important; content: none !important; }
+
+.os-hero-top,
+.os-hero-copy,
+.os-gauge {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.os-hero-top {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.os-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 28px !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  color: var(--os-muted) !important;
+  background: var(--os-surface-2) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+
+.os-chip i {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 99px !important;
+  background: var(--os-mint) !important;
+  box-shadow: none !important;
+}
+
+.os-hero.is-risk .os-chip i { background: var(--os-warn) !important; }
+
+.os-date {
+  display: grid !important;
+  justify-items: end !important;
+  gap: 1px !important;
+  font-family: ui-monospace, "IBM Plex Mono", monospace !important;
+  text-transform: uppercase !important;
+}
+
+.os-date b {
+  color: var(--os-subtle) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: .22em !important;
+}
+
+.os-date span {
+  color: var(--os-muted) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: .18em !important;
+}
+
+.os-kicker-lg {
+  position: relative;
+  z-index: 1;
+  margin: 32px 0 0 !important;
+  color: var(--os-muted) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: .22em !important;
+  text-transform: uppercase !important;
+}
+
+.os-amount {
+  position: relative;
+  z-index: 1;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  gap: 12px !important;
+  margin: 8px 0 0 !important;
+  color: var(--os-fg) !important;
+  font-family: Fraunces, Georgia, serif !important;
+  font-size: clamp(48px, 14vw, 72px) !important;
+  font-weight: 560 !important;
+  letter-spacing: -.04em !important;
+  line-height: .92 !important;
+}
+
+.os-amount span { font-variant-numeric: tabular-nums; }
+
+.os-amount small {
+  color: var(--os-muted) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  letter-spacing: .28em !important;
+  text-transform: uppercase !important;
+}
+
+.os-hint {
+  position: relative;
+  z-index: 1;
+  max-width: 28rem;
+  margin: 16px 0 0 !important;
+  color: var(--os-muted) !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.55 !important;
+  text-transform: none !important;
+}
+
+.os-explainer {
+  position: relative;
+  z-index: 1;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: fit-content !important;
+  min-height: 44px !important;
+  margin: 20px 0 0 !important;
+  padding: 0 16px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: var(--os-fg) !important;
+  background: color-mix(in srgb, var(--os-bg) 40%, transparent) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.os-explainer span { color: var(--os-muted); }
+
+.os-explainer-body {
+  position: relative;
+  z-index: 1;
+  max-width: 28rem;
+  margin: 12px 0 0 !important;
+  color: var(--os-muted) !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+
+.os-gauge {
+  width: min(100%, 176px);
+  margin: 24px auto 0 !important;
+  padding: 12px !important;
+  border-radius: 1.5rem !important;
+  background: color-mix(in srgb, var(--os-bg) 50%, transparent) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+}
+
+.os-calm-btn {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.os-calm-btn,
+.os-hero .os-calm-btn,
+.os-gauge .os-calm-btn {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+.bf-calm-gauge { width: 100%; color: var(--os-mint); }
+.bf-calm-track { stroke: var(--os-line-strong); stroke-width: 6; stroke-linecap: round; fill: none; }
+.bf-calm-arc { stroke: var(--os-mint); stroke-width: 6; stroke-linecap: round; fill: none; }
+.bf-calm-tick { stroke: var(--os-line-strong); stroke-width: .8; }
+.bf-calm-tick.major { stroke: var(--os-muted); stroke-width: 1.2; }
+.bf-calm-score {
+  fill: var(--os-fg);
+  font-family: Fraunces, Georgia, serif;
+  font-size: 22px;
+  font-weight: 560;
+}
+.bf-calm-label {
+  fill: var(--os-muted);
+  font-family: Outfit, sans-serif;
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: .22em;
+}
+
+/* ---- Ghid: bară plină deasupra dock-ului ---- */
+.os-ghid {
+  position: fixed !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 45 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 10px 16px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: var(--os-fg) !important;
+  background: color-mix(in srgb, var(--os-surface) 95%, transparent) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+  backdrop-filter: blur(16px) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.os-ghid.is-open {
+  color: var(--os-fg) !important;
+  background: var(--os-surface) !important;
+}
+
+.os-ghid-bf {
+  display: grid !important;
+  place-items: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  flex: 0 0 24px !important;
+  border-radius: 999px !important;
+  color: var(--os-mint) !important;
+  background: var(--os-mint-dim) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em !important;
+}
+
+.os-ghid-label {
+  flex: 1 1 auto !important;
+  text-align: left !important;
+}
+
+.os-ghid-pace {
+  margin-left: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  color: var(--os-mint) !important;
+  background: transparent !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+
+/* ---- Dock mint, 5 tab-uri ---- */
+.os-dock {
+  position: fixed !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+  z-index: 40 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  height: auto !important;
+  padding: 6px !important;
+  border: 0 !important;
+  border-radius: 1.6rem !important;
+  background: color-mix(in srgb, var(--os-surface) 95%, transparent) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+  backdrop-filter: blur(16px) !important;
+  grid-template-columns: none !important;
+}
+
+.os-dock button {
+  display: flex !important;
+  flex: 1 1 0 !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+  min-height: 56px !important;
+  height: 56px !important;
+  padding: 4px 2px !important;
+  border: 0 !important;
+  border-radius: 1.2rem !important;
+  color: var(--os-muted) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+.os-dock button.is-on,
+.os-dock button.active {
+  color: var(--os-mint-fg) !important;
+  background: var(--os-mint) !important;
+  box-shadow: none !important;
+}
+
+.os-dock button svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: currentColor !important;
+}
+
+.os-shell main,
+.os-shell .bf-page,
+.os-shell .bf-today-workspace,
+.os-shell .bf-movements-ledger,
+.os-shell .bf-plan-workspace,
+.os-shell .bf-obligations-workspace,
+.os-shell .bf-insights-workspace,
+.os-shell .bf-utilities-workspace {
+  padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+@media (min-width: 761px) {
+  .os-desktop-nav {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  .os-desktop-nav button {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    height: 44px !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    color: var(--os-muted) !important;
+    background: transparent !important;
+    font-size: 13px !important;
+  }
+  .os-desktop-nav button.active,
+  .os-desktop-nav button.is-on {
+    color: var(--os-mint) !important;
+    background: var(--os-mint-dim) !important;
+  }
+  .os-dock,
+  .os-ghid { display: none !important; }
+  .os-shell main,
+  .os-shell .bf-page,
+  .os-shell .bf-today-workspace {
+    padding-bottom: 40px !important;
+  }
+}
+
+.os-ghid[hidden] { display: none !important; }
+
+.os-shell .bf-today-workspace {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 24px !important;
+  padding-top: 8px !important;
+}
+  --os-bg: #f4f7f5;
+  --os-surface: #ffffff;
+  --os-surface-2: #eef3f0;
+  --os-fg: #10241e;
+  --os-muted: #5e7169;
+  --os-subtle: #7b8c85;
+  --os-mint: #147a62;
+  --os-mint-fg: #f4fff9;
+  --os-mint-dim: #d7f3e8;
+  --os-line: #d5e1db;
+  --os-line-strong: #b7c9c0;
+  background: #f4f7f5 !important;
+  color: #10241e !important;
+}

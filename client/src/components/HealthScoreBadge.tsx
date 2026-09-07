@@ -18,7 +18,7 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
     <>
       <button
         type="button"
-        className={`bf-health-score ${health.tone}`}
+        className="os-calm-btn"
         aria-label={`Scor sănătate financiară ${health.score} din 100. Apasă pentru detalii.`}
         onClick={() => setOpen(true)}
       >
