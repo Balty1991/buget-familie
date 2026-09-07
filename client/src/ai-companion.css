@@ -222,10 +222,16 @@ html.ai-guide-max .ai-chat-panel{
     height: min(74dvh, calc(100dvh - 118px)) !important;
     max-height: calc(100dvh - 110px) !important;
   }
-  .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-quota,
   .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-privacy,
   .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-status {
     display: none !important;
+  }
+  .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-quota {
+    margin: 0 0 8px;
+    padding: 6px 8px 5px;
+  }
+  .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-quota p {
+    font-size: 8px;
   }
   .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-chat-history {
     flex: 1 1 auto !important;

@@ -28,30 +28,47 @@ function GuideText({ text }: { text: string }) {
   return <span className="ai-chat-text">{nodes}</span>;
 }
 
-type QuotaInfo = { remaining: number | null; limit: number | null; resetAt: string | null; mode: "online" | "local" };
-const QUOTA_KEY = "buget-familie:ai-quota-v1";
+const QUOTA_KEY = "buget-familie:ai-quota-v2";
+const DAILY_LIMIT = 40;
+
+type QuotaInfo = { remaining: number; limit: number; resetAt: string; mode: "online" | "local" };
+
+function nextLocalMidnight() {
+  const at = new Date();
+  at.setHours(24, 0, 0, 0);
+  return at.toISOString();
+}
 
 function emptyQuota(): QuotaInfo {
-  return { remaining: null, limit: null, resetAt: null, mode: "online" };
+  return { remaining: DAILY_LIMIT, limit: DAILY_LIMIT, resetAt: nextLocalMidnight(), mode: "online" };
+}
+
+function consumeQuota(current: QuotaInfo, payload: { remaining?: number | null; limit?: number | null; resetAt?: string | null } | undefined, ok: boolean, exhausted: boolean): QuotaInfo {
+  const resetAt = current.resetAt && Date.parse(current.resetAt) > Date.now() ? current.resetAt : nextLocalMidnight();
+  const limit = current.limit || DAILY_LIMIT;
+  if (exhausted) return { remaining: 0, limit, resetAt: payload?.resetAt || resetAt, mode: "local" };
+  if (!ok) return { remaining: current.remaining, limit, resetAt, mode: current.remaining > 0 ? current.mode : "local" };
+  const remaining = Math.max(0, current.remaining - 1);
+  return { remaining, limit, resetAt, mode: remaining > 0 ? "online" : "local" };
 }
 
 function loadQuota(): QuotaInfo {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(QUOTA_KEY) || "null") as QuotaInfo | null;
+    const parsed = JSON.parse(window.localStorage.getItem(QUOTA_KEY) || "null") as Partial<QuotaInfo> | null;
     if (!parsed || (parsed.mode !== "online" && parsed.mode !== "local")) return emptyQuota();
-    if (parsed.mode === "local" && parsed.resetAt && Date.parse(parsed.resetAt) <= Date.now()) {
-      return { ...parsed, mode: "online", remaining: parsed.limit };
-    }
-    return parsed;
+    if (!parsed.resetAt || Date.parse(parsed.resetAt) <= Date.now()) return emptyQuota();
+    const limit = Number(parsed.limit) > 0 ? Number(parsed.limit) : DAILY_LIMIT;
+    const remaining = Math.max(0, Math.min(limit, Number(parsed.remaining ?? limit)));
+    return { remaining, limit, resetAt: parsed.resetAt, mode: remaining <= 0 ? "local" : parsed.mode };
   } catch {
     return emptyQuota();
   }
 }
 
 function formatReset(iso: string | null) {
-  if (!iso) return "în curând";
+  if (!iso) return "mâine";
   const at = new Date(iso);
-  if (Number.isNaN(at.getTime())) return "în curând";
+  if (Number.isNaN(at.getTime())) return "mâine";
   const time = at.toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" });
   const now = new Date();
   const tomorrow = new Date(now);
@@ -62,30 +79,18 @@ function formatReset(iso: string | null) {
 }
 
 function quotaPercent(quota: QuotaInfo) {
-  if (quota.mode === "local") return 0;
-  if (quota.remaining == null) return 100;
-  return Math.max(4, Math.min(100, Math.round((quota.remaining / 40) * 100)));
-}
-
-function remainingCopy(remaining: number) {
-  if (remaining > 80) return "loc suficient azi";
-  if (remaining === 1) return "1 mesaj rămas";
-  return `${remaining} mesaje rămase`;
+  if (quota.mode === "local" || quota.remaining <= 0) return 0;
+  return Math.max(3, Math.min(100, Math.round((quota.remaining / Math.max(1, quota.limit)) * 100)));
 }
 
 function GuideQuotaBar({ quota }: { quota: QuotaInfo }) {
-  const percent = quotaPercent(quota);
-  const low = quota.mode === "online" && quota.remaining != null && quota.remaining <= 8;
-  const label = quota.mode === "local"
-    ? `Ghid local · online se reia ${formatReset(quota.resetAt)}`
-    : quota.remaining == null
-      ? "Ghid online · disponibil"
-      : low
-        ? `Ghid online aproape plin · ${remainingCopy(quota.remaining)} · se reia ${formatReset(quota.resetAt)}`
-        : `Ghid online · ${remainingCopy(quota.remaining)}`;
+  const low = quota.mode === "online" && quota.remaining <= 8;
+  const label = quota.mode === "local" || quota.remaining <= 0
+    ? `Ghid local · ${quota.remaining} / ${quota.limit} mesaje online azi · se reia ${formatReset(quota.resetAt)}`
+    : `Ghid online · ${quota.remaining} / ${quota.limit} mesaje rămase azi · se reia ${formatReset(quota.resetAt)}`;
   return (
-    <div className={`ai-quota ${quota.mode === "local" ? "is-local" : low ? "is-low" : "is-ok"}`} aria-live="polite">
-      <div className="ai-quota-track" aria-hidden="true"><i style={{ width: `${percent}%` }} /></div>
+    <div className={`ai-quota ${quota.mode === "local" || quota.remaining <= 0 ? "is-local" : low ? "is-low" : "is-ok"}`} aria-live="polite">
+      <div className="ai-quota-track" aria-hidden="true"><i style={{ width: `${quotaPercent(quota)}%` }} /></div>
       <p>{label}</p>
     </div>
   );
@@ -293,7 +298,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   useEffect(() => {
     if (quota.mode !== "local" || !quota.resetAt) return;
     const tick = () => {
-      if (Date.parse(quota.resetAt!) <= Date.now()) setQuota((current) => ({ ...current, mode: "online" }));
+      if (Date.parse(quota.resetAt) <= Date.now()) setQuota(emptyQuota());
     };
     tick();
     const id = window.setInterval(tick, 15000);
@@ -352,9 +357,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       applyChoice(pending.choices[0]);
       return;
     }
-    const blocked = quota.mode === "local" && quota.resetAt && Date.parse(quota.resetAt) > Date.now();
+    const blocked = quota.mode === "local" || quota.remaining <= 0;
     if (blocked) {
-      setQuota((current) => ({ ...current, mode: "local", remaining: 0 }));
+      setQuota((current) => ({ ...current, mode: "local", remaining: Math.min(current.remaining, 0) }));
       localSend(true, raw);
       return;
     }
@@ -373,12 +378,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
           quota?: { remaining?: number | null; limit?: number | null; resetAt?: string | null };
           code?: string;
         };
-        const nextQuota: QuotaInfo = {
-          remaining: payload.quota?.remaining ?? (response.ok ? quota.remaining : 0),
-          limit: payload.quota?.limit ?? quota.limit,
-          resetAt: payload.quota?.remaining != null && payload.quota.remaining > 8 && payload.quota.resetAt && Date.parse(payload.quota.resetAt) - Date.now() < 15 * 60 * 1000 ? null : payload.quota?.resetAt ?? quota.resetAt,
-          mode: response.ok ? "online" : "local",
-        };
+        const nextQuota = consumeQuota(quota, payload.quota, response.ok, response.status === 429 || payload.code === "quota");
         setQuota(nextQuota);
         if (!response.ok) throw new Error(payload.code || "AI unavailable");
         setTyping(false);
@@ -403,7 +403,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
           updates: !saveNow && updates.length ? updates : undefined,
         });
       } catch {
-        setQuota((current) => ({ ...current, mode: "local", remaining: 0, resetAt: current.resetAt || new Date(Date.now() + 60 * 60 * 1000).toISOString() }));
+        setQuota((current) => current.remaining <= 0 ? { ...current, mode: "local", remaining: 0 } : current);
         setTyping(false);
         localSend(true, raw);
       }
