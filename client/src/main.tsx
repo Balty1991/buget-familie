@@ -77,7 +77,7 @@ startPerformanceMonitoring();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=39`).then((registration) => {
+    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=40`).then((registration) => {
       void registration.update();
       if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
     }).catch(() => undefined);

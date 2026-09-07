@@ -559,6 +559,39 @@ html.ai-guide-open .os-tools .os-tool:last-child {
   background: var(--os-mint) !important;
 }
 
+.bf-command-backdrop {
+  z-index: 90 !important;
+}
+
+.bf-command-palette .bf-icon-button {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  flex: 0 0 44px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--os-line, var(--cf-line)) !important;
+  border-radius: 999px !important;
+  color: var(--os-fg, var(--cf-ink)) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.bf-command-palette .bf-icon-button:hover,
+.bf-command-palette .bf-icon-button:focus-visible {
+  color: var(--os-mint-fg, #04140e) !important;
+  border-color: var(--os-mint, var(--cf-primary)) !important;
+  background: var(--os-mint, var(--cf-primary)) !important;
+}
+
+@media (max-width: 760px) {
+  .bf-command-hint,
+  .bf-command-shortcut {
+    display: none !important;
+  }
+}
+
 /* Ghid — doar din antet. Panoul e Household OS, nu analog auriu. */
 .os-shell .ai-companion-panel.ai-chat-panel {
   position: fixed !important;

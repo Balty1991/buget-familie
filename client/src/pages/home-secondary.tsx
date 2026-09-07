@@ -3,7 +3,7 @@
  */
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, ChevronLeft, ChevronRight, Cloud, Command, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
+import { AlertTriangle, BellRing, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, SlidersHorizontal, Trash2, Users, WalletCards, X } from "lucide-react";
 import { allocationBudget, allocationSpent, allocationWeekStatus, createEmptyAppData, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
 import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageStorage, releaseReceiptObjectUrl, storeReceiptImages } from "@/lib/receipt-storage";
@@ -151,6 +151,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
 export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => void; onAdd: () => void; onGo: (view: MainView) => void }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const actions = [
     { id: "expense", label: "Înregistrează o mișcare", detail: "Adaugă rapid o cheltuială sau un venit", icon: ReceiptText, run: onAdd },
     { id: "plan", label: "Verifică plicurile", detail: "Vezi repartizarea și soldurile planului", icon: Goal, run: () => onGo("plan") },
@@ -163,7 +164,40 @@ export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => v
   ];
   const visible = actions.filter((action) => `${action.label} ${action.detail}`.toLocaleLowerCase("ro-RO").includes(query.toLocaleLowerCase("ro-RO")));
   useEffect(() => { inputRef.current?.focus(); }, []);
-  return <div className="bf-modal-backdrop bf-command-backdrop" role="presentation" onMouseDown={onClose}><section className="bf-command-palette" role="dialog" aria-modal="true" aria-labelledby="bf-command-title" onMouseDown={(event) => event.stopPropagation()}><header><div><p className="bf-kicker">NAVIGARE RAPIDĂ</p><h2 id="bf-command-title">Ce vrei să faci?</h2></div><span className="bf-command-shortcut"><Command size={12} /> K</span></header><label className="bf-command-search"><Search size={17} aria-hidden="true" /><input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Caută o acțiune…" aria-label="Caută o acțiune" /></label><div className="bf-command-list" role="listbox" aria-label="Acțiuni disponibile">{visible.length ? visible.map((action) => { const Icon = action.icon; return <button key={action.id} role="option" onClick={() => { action.run(); onClose(); }}><span className="bf-command-icon"><Icon size={17} /></span><span><b>{action.label}</b><small>{action.detail}</small></span><ChevronRight size={16} /></button>; }) : <p className="bf-command-empty">Nu am găsit o acțiune pentru „{query}”.</p>}</div><p className="bf-command-hint">Scurtătură: <kbd>Ctrl</kbd><span>+</span><kbd>K</kbd> sau <kbd>⌘</kbd><span>+</span><kbd>K</kbd></p></section></div>;
+  const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget | null }) => {
+    if (event.target === event.currentTarget) onClose();
+  };
+  return createPortal(
+    <div className="bf-modal-backdrop bf-command-backdrop" role="presentation" onPointerDown={closeIfBackdrop}>
+      <section ref={dialogRef} tabIndex={-1} className="bf-command-palette" role="dialog" aria-modal="true" aria-labelledby="bf-command-title" onPointerDown={(event) => event.stopPropagation()}>
+        <header>
+          <div>
+            <p className="bf-kicker">NAVIGARE RAPIDĂ</p>
+            <h2 id="bf-command-title">Ce vrei să faci?</h2>
+          </div>
+          <button type="button" className="bf-icon-button" aria-label="Închide" onClick={onClose}><X size={19} /></button>
+        </header>
+        <label className="bf-command-search">
+          <Search size={17} aria-hidden="true" />
+          <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Caută o acțiune…" aria-label="Caută o acțiune" />
+        </label>
+        <div className="bf-command-list" role="listbox" aria-label="Acțiuni disponibile">
+          {visible.length ? visible.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button key={action.id} type="button" role="option" onClick={() => { action.run(); onClose(); }}>
+                <span className="bf-command-icon"><Icon size={17} /></span>
+                <span><b>{action.label}</b><small>{action.detail}</small></span>
+                <ChevronRight size={16} />
+              </button>
+            );
+          }) : <p className="bf-command-empty">Nu am găsit o acțiune pentru „{query}”.</p>}
+        </div>
+        <p className="bf-command-hint">Scurtătură: <kbd>Ctrl</kbd><span>+</span><kbd>K</kbd> sau <kbd>⌘</kbd><span>+</span><kbd>K</kbd></p>
+      </section>
+    </div>,
+    document.body,
+  );
 }
 
 export function CalmOnboarding({ onClose, onAdd, onGo }: { onClose: () => void; onAdd: () => void; onGo: (view: MainView) => void }) {
