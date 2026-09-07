@@ -26,3 +26,11 @@
   .ai-chat-panel .ai-chat-history{min-height:0}
   .ai-chat-panel .ai-privacy{display:none}
 }
+/* Final mobile stacking fix: panelul ocupă zona dintre appbar și bottom-nav */
+@media(max-width:600px){
+  .ai-chat-panel{position:fixed!important;top:76px!important;right:8px!important;bottom:80px!important;left:8px!important;width:auto!important;height:auto!important;max-height:none!important;z-index:9999!important;transform:none!important}
+  .ai-chat-panel .ai-chat-history{min-height:0!important;max-height:none!important}
+}
+@media(max-width:600px) and (max-height:620px){
+  .ai-chat-panel:has(input:focus){top:8px!important;right:8px!important;bottom:8px!important;left:8px!important;height:auto!important}
+}
