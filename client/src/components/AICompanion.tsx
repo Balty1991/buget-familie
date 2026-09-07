@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, CircleCheck, Lightbulb, PieChart, Plus, Send, Sparkles, WalletCards, X } from "lucide-react";
 import { expenseCategories, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
 import type { MainView } from "@/pages/home-kit";
@@ -14,8 +14,22 @@ const today = () => new Date().toISOString().slice(0, 10);
 const money = (value: number) => `${Math.round(value).toLocaleString("ro-RO")} RON`;
 const naturalTitle = (raw: string, category?: string) => /combustibil|benzina|motorina/i.test(raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ? "Combustibil" : category || "Cheltuială";
 
+
+function GuideText({ text }: { text: string }) {
+  const nodes: ReactNode[] = [];
+  text.split(/\n+/).forEach((line, lineIndex) => {
+    if (lineIndex) nodes.push(<br key={`br-${lineIndex}`} />);
+    line.split(/(\*\*[^*]+\*\*)/g).forEach((chunk, chunkIndex) => {
+      const bold = chunk.match(/^\*\*([^*]+)\*\*$/);
+      nodes.push(bold ? <strong key={`${lineIndex}-${chunkIndex}`}>{bold[1]}</strong> : chunk);
+    });
+  });
+  return <span className="ai-chat-text">{nodes}</span>;
+}
+
 export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinancialUpdate }: Props) {
   const [open, setOpen] = useState(false);
+  const historyRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
   const [typing, setTyping] = useState(false);
   const [pendingDebtName, setPendingDebtName] = useState("");
@@ -27,6 +41,12 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   useEffect(() => { try { window.localStorage.setItem("buget-familie:ai-guide-stage-v1", guideStage); } catch { /* ignore */ } }, [guideStage]);
   useEffect(() => { if (!open || messages.length) return; setMessages([{ id: "welcome", role: "assistant", text: contextReply }]); }, [open, messages.length, contextReply]);
   useEffect(() => { try { window.localStorage.setItem(CHAT_KEY, JSON.stringify(messages.slice(-30))); } catch { /* spațiu local indisponibil */ } }, [messages]);
+
+  useEffect(() => {
+    const root = historyRef.current;
+    if (!root) return;
+    root.scrollTop = root.scrollHeight;
+  }, [messages, typing, open]);
 
   const addMessage = (entry: Omit<ChatMessage, "id">) => setMessages((current) => [...current, { ...entry, id: `${Date.now()}-${current.length}` }].slice(-30));
   const runAction = (type: "add" | "plan" | "journal" | "insights", label: string) => { addMessage({ role: "user", text: label }); setTyping(true); window.setTimeout(() => { setTyping(false); addMessage({ role: "assistant", text: type === "add" ? "Deschid formularul. Completează ce mai lipsește și verifică înainte să salvezi." : type === "plan" ? "Deschid planul. Acolo așezăm veniturile pe destinații și ritmuri." : type === "journal" ? "Deschid jurnalul și ne uităm la mișcările care contează." : "Deschid analiza ca să vedem tiparele lunii.", action: { type, label: type === "add" ? "Deschide formularul" : type === "plan" ? "Vezi planul" : type === "journal" ? "Vezi jurnalul" : "Vezi analiza" } }); }, 260); };
@@ -54,7 +74,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       } catch { setTyping(false); localSend(true, raw); }
     })();
   };
-  return <><button type="button" className={`ai-companion-trigger ${open ? "is-open" : ""}`} aria-label={open ? "Închide ghidul AI" : "Deschide ghidul AI"} onClick={() => setOpen((value) => !value)}><span className="ai-trigger-pulse" /><Sparkles size={21} /><span>Ghidul tău</span>{open ? <ChevronDown size={14} /> : <span className="ai-live">ONLINE</span>}</button>{open && <aside className="ai-companion-panel ai-chat-panel" aria-label="Conversație cu ghidul tău AI"><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div><p className="ai-eyebrow">GHIDUL TĂU · ONLINE</p><h2>Sunt aici cu tine</h2><span className="ai-status"><i /> Îți răspund din contextul bugetului tău</span></div><button type="button" className="ai-close" aria-label="Închide ghidul" onClick={() => setOpen(false)}><X size={17} /></button></header><div className="ai-chat-history" aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<span>{item.text}</span></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item.action!.type)}><CircleCheck size={14} /> {item.action.label}</button>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div><div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", "Vreau să adaug o mișcare")}>+ Adaugă o mișcare</button><button type="button" onClick={() => runAction("plan", "Ajută-mă cu repartizarea")}>Repartizare</button><button type="button" onClick={() => runAction("journal", "Vreau să văd luna")}>Situația mea</button></div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">Scrie-mi orice despre banii tăi</label><div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="ex. combustibil 50 lei" /><button type="submit" aria-label="Trimite mesajul"><Send size={16} /></button></div><p><Lightbulb size={12} /> Îți explic, te ghidez și îți cer confirmarea înainte să salvez.</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația este păstrată local pe acest dispozitiv.</p></aside>}</>;
+  return <><button type="button" className={`ai-companion-trigger ${open ? "is-open" : ""}`} aria-label={open ? "Închide ghidul AI" : "Deschide ghidul AI"} onClick={() => setOpen((value) => !value)}><span className="ai-trigger-pulse" /><Sparkles size={21} /><span>Ghidul tău</span>{open ? <ChevronDown size={14} /> : <span className="ai-live">ONLINE</span>}</button>{open && <aside className="ai-companion-panel ai-chat-panel" aria-label="Conversație cu ghidul tău AI"><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div><p className="ai-eyebrow">GHIDUL TĂU · ONLINE</p><h2>Sunt aici cu tine</h2><span className="ai-status"><i /> Îți răspund din contextul bugetului tău</span></div><button type="button" className="ai-close" aria-label="Închide ghidul" onClick={() => setOpen(false)}><X size={17} /></button></header><div className="ai-chat-history" ref={historyRef} aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item.action!.type)}><CircleCheck size={14} /> {item.action.label}</button>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div><div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", "Vreau să adaug o mișcare")}>+ Adaugă o mișcare</button><button type="button" onClick={() => runAction("plan", "Ajută-mă cu repartizarea")}>Repartizare</button><button type="button" onClick={() => runAction("journal", "Vreau să văd luna")}>Situația mea</button></div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">Scrie-mi orice despre banii tăi</label><div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="ex. combustibil 50 lei" /><button type="submit" aria-label="Trimite mesajul"><Send size={16} /></button></div><p><Lightbulb size={12} /> Îți explic, te ghidez și îți cer confirmarea înainte să salvez.</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația este păstrată local pe acest dispozitiv.</p></aside>}</>;
 }
 
 export default AICompanion;
