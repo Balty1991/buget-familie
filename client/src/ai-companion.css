@@ -34,3 +34,96 @@
 @media(max-width:600px) and (max-height:620px){
   .ai-chat-panel:has(input:focus){top:8px!important;right:8px!important;bottom:8px!important;left:8px!important;height:auto!important}
 }
+
+/* Compact mobile overlay: panoul rămâne deasupra triggerului și nu ocupă toată pagina. */
+@media (max-width: 600px) {
+  .ai-chat-panel {
+    position: fixed !important;
+    top: auto !important;
+    right: 12px !important;
+    bottom: calc(128px + env(safe-area-inset-bottom)) !important;
+    left: 12px !important;
+    width: auto !important;
+    height: min(460px, 58dvh) !important;
+    max-height: min(460px, 58dvh) !important;
+    min-height: 0 !important;
+    padding: 13px !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    transform: translateZ(0) !important;
+  }
+
+  .ai-chat-panel .ai-companion-head {
+    flex: 0 0 auto;
+    margin-bottom: 8px;
+  }
+
+  .ai-chat-panel .ai-companion-head h2 {
+    font-size: 20px;
+  }
+
+  .ai-chat-history {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    padding: 3px 2px 8px !important;
+  }
+
+  .ai-chat-bubble {
+    font-size: 11px;
+    line-height: 1.38;
+    padding: 9px 10px;
+  }
+
+  .ai-chat-suggestions {
+    flex: 0 0 auto;
+    min-height: 0;
+    padding: 6px 0 8px;
+  }
+
+  .ai-chat-input {
+    flex: 0 0 auto !important;
+    padding-top: 8px !important;
+  }
+
+  .ai-chat-input > div,
+  .ai-chat-input input {
+    height: 44px;
+  }
+
+  .ai-chat-input input {
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .ai-chat-input button {
+    width: 44px;
+  }
+
+  .ai-chat-panel .ai-privacy {
+    flex: 0 0 auto;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 600px) and (max-height: 620px) {
+  .ai-chat-panel {
+    bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+    height: min(420px, calc(100dvh - 144px)) !important;
+    max-height: min(420px, calc(100dvh - 144px)) !important;
+  }
+
+  .ai-chat-panel:has(input:focus) {
+    top: auto !important;
+    bottom: 8px !important;
+    height: min(520px, calc(100dvh - 16px)) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-chat-panel {
+    transform: none !important;
+  }
+}
