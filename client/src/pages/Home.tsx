@@ -18,7 +18,7 @@ import { TodayBrief } from "@/components/TodayBrief";
 import { MovementsJournal } from "@/components/MovementsJournal";
 import { scheduleFinancialReminders } from "@/lib/local-notifications";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { todayBrief } from "@/lib/household-insights";
+import { weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import {
   DeferBelowFold,
   LIGHT_THEMES,
@@ -120,23 +120,6 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
 
 const WEEKDAY_SHORT = ["L", "Ma", "Mi", "J", "V", "S", "D"];
 
-function isoFromDate(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function mondayIso(asOf: string) {
-  const date = new Date(`${asOf}T12:00:00`);
-  const weekday = (date.getDay() + 6) % 7;
-  date.setDate(date.getDate() - weekday);
-  return isoFromDate(date);
-}
-
-function addDaysIso(iso: string, days: number) {
-  const date = new Date(`${iso}T12:00:00`);
-  date.setDate(date.getDate() + days);
-  return isoFromDate(date);
-}
-
 function openHouseholdGuide() {
   window.dispatchEvent(new CustomEvent("buget-familie:open-guide"));
 }
@@ -156,7 +139,6 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
   const forecast = useMemo(() => planForecast(data), [data]);
   const signals = useMemo(() => advisorSignals(data), [data]);
   const balance = useMemo(() => financialBalance(data, math.plan.periodStart, math.planEnd), [data, math.plan.periodStart, math.planEnd]);
-  const brief = useMemo(() => todayBrief(data), [data]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [shownTrancheKey, setShownTrancheKey] = useState("");
   const [openHint, setOpenHint] = useState(false);
@@ -181,19 +163,14 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
   const openSignal = (action: AdvisorAction) => onGo(action === "plan" ? "plan" : action === "objectives" ? "obligations" : action === "journal" ? "journal" : "obligations");
 
   const todayIso = isoToday();
-  const pace = Math.max(0, brief.spendable || daily);
-  const rhythm = useMemo(() => {
-    const start = mondayIso(todayIso);
-    return Array.from({ length: 7 }, (_, index) => {
-      const day = addDaysIso(start, index);
-      const out = data.transactions.filter((item) => item.kind === "expense" && item.date === day).reduce((sum, item) => sum + item.amount, 0);
-      const isToday = day === todayIso;
-      const isFuture = day > todayIso;
-      const left = isFuture ? pace : Math.max(0, pace - out);
-      const fill = pace <= 0 ? (out > 0 ? 100 : 8) : Math.max(8, Math.min(100, (out / pace) * 100));
-      return { day, weekday: index, out, left, isToday, isFuture, over: !isFuture && pace > 0 && out > pace, fill: isFuture ? 36 : fill };
-    });
-  }, [data.transactions, todayIso, pace]);
+  const rhythm = useMemo(() => weeklyEnvelopeDailyRhythm(data, todayIso), [data, todayIso]);
+  const rhythmNote = !rhythm.hasWeekly
+    ? "Nu sunt plicuri cu ritm săptămânal de împărțit pe zile."
+    : rhythm.remaining <= 0 && rhythm.todayLeft <= 0
+      ? "Plicul săptămânii e gol până duminică."
+      : rhythm.days.some((row) => row.isToday && row.over)
+        ? `Azi a trecut peste partea de ${money(rhythm.todayShare)}. Mai rămân ${money(rhythm.remaining)}, cam ${money(rhythm.futureShare)} pe zi până duminică.`
+        : `Mai rămân ${money(rhythm.remaining)} în plicul săptămânii, cam ${money(rhythm.todayShare)} pe zi până duminică.`;
 
   const sourceRows = useMemo(
     () => data.settings.paymentSources.map((source) => ({ ...source, balance: sourceBalance(data, source.id) })),
@@ -247,10 +224,10 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
             <p className="bf-os-kicker">Ritm zilnic</p>
             <h2 className="bf-os-title">Cât mai ține ziua.</h2>
           </div>
-          <p className="bf-os-note" style={{ margin: 0 }}>azi <b>{money(pace)}</b></p>
+          <p className="bf-os-note" style={{ margin: 0 }}>azi <b>{money(rhythm.todayLeft)}</b></p>
         </div>
         <div className="bf-os-rhythm-grid">
-          {rhythm.map((row) => (
+          {rhythm.days.map((row) => (
             <div key={row.day} className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}>
               <span>{WEEKDAY_SHORT[row.weekday]}</span>
               <b>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}</b>
@@ -258,7 +235,7 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
             </div>
           ))}
         </div>
-        <p className="bf-os-note">Fiecare zi primește {money(pace)}. Ce rămâne e ritmul; ce trece peste e excepție.</p>
+        <p className="bf-os-note">{rhythmNote}</p>
       </section>
 
       <div className="bf-os-actions">

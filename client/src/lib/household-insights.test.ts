@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, detectSubscriptions, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief, weeklyCheckIn } from "./household-insights";
+import { ageOfMoney, detectSubscriptions, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief, weeklyCheckIn, weeklyEnvelopeDailyRhythm } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -155,5 +155,61 @@ describe("analize de gospodărie", () => {
   it("nu cere bilanțul în mijlocul săptămânii și rămâne gol fără mișcări", () => {
     const { data } = base();
     expect(weeklyCheckIn(data, "2026-08-31")).toMatchObject({ shouldPrompt: false, tone: "empty", transactionCount: 0 });
+  });
+
+  it("împarte restul plicului săptămânal egal pe zilele rămase, nu reperul până la salariu", () => {
+    const { data, source } = base();
+    data.settings.salaryPlan = {
+      ...data.settings.salaryPlan,
+      periodStart: "2026-09-07",
+      nextPayday: "2026-10-04",
+      allocations: [{ id: "food", label: "Alimente", amount: 2400, category: "Alimente" }],
+      transfers: [],
+    };
+    data.transactions = [
+      { id: "lidl", title: "Lidl", amount: 225, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-07", allocationId: "food" },
+      { id: "rent", title: "Chirie", amount: 1200, kind: "expense", category: "Casă & facturi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-07", allocationId: "outside" },
+    ];
+    const monday = weeklyEnvelopeDailyRhythm(data, "2026-09-07");
+    expect(monday.remaining).toBe(375);
+    expect(monday.remainingDays).toBe(7);
+    expect(monday.todayShare).toBe(85.71);
+    expect(monday.todayLeft).toBe(0);
+    expect(monday.futureShare).toBe(62.5);
+    expect(monday.days[0]).toMatchObject({ day: "2026-09-07", left: 0, over: true, isToday: true });
+    expect(monday.days.slice(1).map((item) => item.left)).toEqual([62.5, 62.5, 62.5, 62.5, 62.5, 62.5]);
+    expect(monday.days.every((item) => item.out === 0 || item.day === "2026-09-07")).toBe(true);
+
+    const wednesday = weeklyEnvelopeDailyRhythm(data, "2026-09-09");
+    expect(wednesday.remainingDays).toBe(5);
+    expect(wednesday.todayOut).toBe(0);
+    expect(wednesday.todayShare).toBe(75);
+    expect(wednesday.todayLeft).toBe(75);
+    expect(wednesday.futureShare).toBe(75);
+    expect(wednesday.days[0]).toMatchObject({ over: true, left: 0, isToday: false });
+    expect(wednesday.days[2]).toMatchObject({ day: "2026-09-09", left: 75, isToday: true, over: false });
+  });
+
+  it("nu consumă ritmul zilnic din plicuri lunare sau din plăți în afara plicurilor", () => {
+    const { data, source } = base();
+    data.settings.salaryPlan = {
+      ...data.settings.salaryPlan,
+      periodStart: "2026-09-07",
+      nextPayday: "2026-10-04",
+      allocations: [
+        { id: "food", label: "Alimente", amount: 2400, category: "Alimente" },
+        { id: "bills", label: "Facturi", amount: 800, category: "Casă & facturi", weeklyPace: false },
+      ],
+      transfers: [],
+    };
+    data.transactions = [
+      { id: "bill", title: "ENEL", amount: 400, kind: "expense", category: "Casă & facturi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-07", allocationId: "bills" },
+    ];
+    const rhythm = weeklyEnvelopeDailyRhythm(data, "2026-09-07");
+    expect(rhythm.remaining).toBe(600);
+    expect(rhythm.todayOut).toBe(0);
+    expect(rhythm.todayShare).toBeCloseTo(85.71, 1);
+    expect(rhythm.todayLeft).toBeCloseTo(85.71, 1);
+    expect(rhythm.days.every((item) => item.left === rhythm.todayShare)).toBe(true);
   });
 });

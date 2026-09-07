@@ -3,6 +3,7 @@
  * Nu persistă nimic în AppData și nu ating pachetul Firebase.
  */
 import {
+  addIsoDays,
   allocationBudget,
   allocationStatus,
   allocationWeekStatus,
@@ -394,6 +395,82 @@ const matchesAllocation = (item: Transaction, allocation: BudgetAllocation) => {
   return (!allocation.memberId || item.memberId === allocation.memberId)
     && (!allocation.category || item.category === allocation.category)
     && (!allocation.sourceId || item.sourceId === allocation.sourceId);
+};
+
+export type WeeklyEnvelopeDayRhythm = {
+  day: string;
+  weekday: number;
+  out: number;
+  left: number;
+  share: number;
+  isToday: boolean;
+  isFuture: boolean;
+  over: boolean;
+  fill: number;
+};
+
+export type WeeklyEnvelopeRhythm = {
+  days: WeeklyEnvelopeDayRhythm[];
+  remaining: number;
+  remainingDays: number;
+  todayLeft: number;
+  todayShare: number;
+  futureShare: number;
+  hasWeekly: boolean;
+  todayOut: number;
+};
+
+const mondayOf = (asOf: string) => {
+  const weekday = (new Date(`${asOf}T12:00:00`).getDay() + 6) % 7;
+  return addIsoDays(asOf, -weekday);
+};
+
+/**
+ * Cât mai ține fiecare zi din săptămâna luni–duminică: restul plicurilor cu ritm
+ * săptămânal, împărțit egal pe zilele rămase. Nu folosește reperul până la salariu.
+ */
+export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): WeeklyEnvelopeRhythm => {
+  const weekly = data.settings.salaryPlan.allocations.filter((item) => item.weeklyPace !== false);
+  const remainingRaw = weekly.reduce((sum, allocation) => sum + (allocationWeekStatus(data, allocation, asOf)?.remaining ?? 0), 0);
+  const start = mondayOf(asOf);
+  const spentByDay = Array.from({ length: 7 }, (_, index) => {
+    const day = addIsoDays(start, index);
+    const out = data.transactions.filter((item) => item.date === day && weekly.some((allocation) => matchesAllocation(item, allocation))).reduce((sum, item) => sum + item.amount, 0);
+    return { day, out };
+  });
+  const todayIndex = Math.max(0, spentByDay.findIndex((item) => item.day === asOf));
+  const remainingDays = 7 - todayIndex;
+  const todayOut = spentByDay[todayIndex]?.out ?? 0;
+  const startOfToday = remainingRaw + todayOut;
+  const todayShareRaw = remainingDays > 0 ? startOfToday / remainingDays : 0;
+  const todayLeftRaw = Math.max(0, todayShareRaw - todayOut);
+  const futureDays = remainingDays - 1;
+  const futureShareRaw = futureDays > 0 ? Math.max(0, remainingRaw - todayLeftRaw) / futureDays : 0;
+  const weekOut = spentByDay.reduce((sum, item) => sum + item.out, 0);
+  const pastShareRaw = (remainingRaw + weekOut) / 7;
+  const days = spentByDay.map((row, weekday) => {
+    const isToday = row.day === asOf;
+    const isFuture = row.day > asOf;
+    const shareRaw = isFuture ? futureShareRaw : isToday ? todayShareRaw : pastShareRaw;
+    const leftRaw = isFuture ? futureShareRaw : isToday ? todayLeftRaw : Math.max(0, pastShareRaw - row.out);
+    const over = !isFuture && shareRaw > 0 && row.out > shareRaw + 0.009;
+    const fill = shareRaw <= 0
+      ? (row.out > 0 ? 100 : 8)
+      : isFuture
+        ? 36
+        : Math.max(8, Math.min(100, (row.out / shareRaw) * 100));
+    return { day: row.day, weekday, out: roundMoney(row.out), left: roundMoney(leftRaw), share: roundMoney(shareRaw), isToday, isFuture, over, fill };
+  });
+  return {
+    days,
+    remaining: roundMoney(Math.max(0, remainingRaw)),
+    remainingDays,
+    todayLeft: roundMoney(todayLeftRaw),
+    todayShare: roundMoney(todayShareRaw),
+    futureShare: roundMoney(futureShareRaw),
+    hasWeekly: weekly.length > 0,
+    todayOut: roundMoney(todayOut),
+  };
 };
 
 export type WeeklyCheckInEnvelope = {
