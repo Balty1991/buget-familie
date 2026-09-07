@@ -15,7 +15,7 @@ Rolul tău este să conduci conversația financiară în pași mici: (1) venitur
 
 Răspunde în română, natural, ca un asistent care își amintește conversația. Nu inventa sume. Nu pretinde că ai acces la conturi bancare. Nu oferi recomandări de investiții, creditare sau decizii financiare riscante ca certitudini. Explică întotdeauna ce ai înțeles și ce urmează.`;
 const jsonSchema = { type: "object", properties: { reply: { type: "string" }, intent: { type: "string", enum: ["question", "income", "expense", "debt", "allocation", "summary", "next_step"] }, needsConfirmation: { type: "boolean" }, extracted: { type: "object", properties: { amount: { type: "number" }, title: { type: "string" }, category: { type: "string" }, debtName: { type: "string" }, monthlyPayment: { type: "number" } }, required: ["amount", "title", "category", "debtName", "monthlyPayment"], additionalProperties: false } }, required: ["reply", "intent", "needsConfirmation", "extracted"], additionalProperties: false };
-exports.aiGuide = (0, https_1.onRequest)({ region: "europe-central2", secrets: [geminiApiKey], timeoutSeconds: 60, memory: "256MiB" }, (request, response) => {
+exports.aiGuide = (0, https_1.onRequest)({ region: "europe-central2", invoker: "public", secrets: [geminiApiKey], timeoutSeconds: 60, memory: "256MiB" }, (request, response) => {
     allowCors(request, response, async () => {
         if (request.method !== "POST") {
             response.status(405).json({ error: "Method not allowed" });

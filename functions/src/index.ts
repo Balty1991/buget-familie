@@ -16,7 +16,7 @@ Răspunde în română, natural, ca un asistent care își amintește conversaț
 
 const jsonSchema = { type: "object", properties: { reply: { type: "string" }, intent: { type: "string", enum: ["question", "income", "expense", "debt", "allocation", "summary", "next_step"] }, needsConfirmation: { type: "boolean" }, extracted: { type: "object", properties: { amount: { type: "number" }, title: { type: "string" }, category: { type: "string" }, debtName: { type: "string" }, monthlyPayment: { type: "number" } }, required: ["amount", "title", "category", "debtName", "monthlyPayment"], additionalProperties: false } }, required: ["reply", "intent", "needsConfirmation", "extracted"], additionalProperties: false };
 
-export const aiGuide = onRequest({ region: "europe-central2", secrets: [geminiApiKey], timeoutSeconds: 60, memory: "256MiB" }, (request, response) => {
+export const aiGuide = onRequest({ region: "europe-central2", invoker: "public", secrets: [geminiApiKey], timeoutSeconds: 60, memory: "256MiB" }, (request, response) => {
   allowCors(request, response, async () => {
     if (request.method !== "POST") { response.status(405).json({ error: "Method not allowed" }); return; }
     const body = (request.body || {}) as RequestBody;
