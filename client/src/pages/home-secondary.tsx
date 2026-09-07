@@ -189,7 +189,7 @@ export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => v
           {visible.length ? visible.map((action) => {
             const Icon = action.icon;
             return (
-              <button key={action.id} type="button" role="option" onClick={() => { action.run(); onClose(); }}>
+              <button key={action.id} type="button" role="option" className={action.id === "expense" ? "is-primary" : undefined} onClick={() => { action.run(); onClose(); }}>
                 <span className="bf-command-icon"><Icon size={17} /></span>
                 <span><b>{action.label}</b><small>{action.detail}</small></span>
                 <ChevronRight size={16} />

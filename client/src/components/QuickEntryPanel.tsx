@@ -74,8 +74,12 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const projectedSourceBalance = selectedSourceBalance + (kind === "income" ? parsedAmount : -parsedAmount);
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
 
-  return <div className="bf-modal-backdrop" role="presentation" onMouseDown={onClose}>
-    <section ref={dialogRef} tabIndex={-1} className="bf-modal bf-quick-entry-panel" role="dialog" aria-modal="true" aria-label="Înregistrare rapidă" onMouseDown={(event) => event.stopPropagation()}>
+  const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget | null }) => {
+    if (event.target === event.currentTarget) onClose();
+  };
+
+  return <div className="bf-modal-backdrop" role="presentation" onPointerDown={closeIfBackdrop}>
+    <section ref={dialogRef} tabIndex={-1} className="bf-modal bf-quick-entry-panel" role="dialog" aria-modal="true" aria-label="Înregistrare rapidă" onPointerDown={(event) => event.stopPropagation()}>
       <header><div><p className="bf-kicker">CAPTURĂ ÎN CÂTEVA SECUNDE</p><h2>Înregistrare rapidă</h2></div><button className="bf-icon-button" aria-label="Închide" onClick={onClose}><X size={19} /></button></header>
       <p className="bf-quick-entry-intro">Salvezi o mișcare reală cu data de azi. Dacă există un plic pentru categoria și sursa aleasă, el este selectat automat.</p>
       <div className="bf-template-header-actions"><span>{data.settings.quickTemplates.length} șabloane active</span><button type="button" onClick={() => setShowArchive((value) => !value)}><Archive size={15} /> Arhivă{data.settings.archivedQuickTemplates.length ? ` (${data.settings.archivedQuickTemplates.length})` : ""}</button></div>
