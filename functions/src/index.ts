@@ -21,6 +21,8 @@ type GuideAnswer = {
     monthlyPayment?: number;
   };
 };
+type Quota = { remaining: number | null; limit: number | null; resetAt: string | null };
+type ProviderResult = { answer: GuideAnswer; source: "gemini" | "groq"; quota: Quota };
 
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-flash-latest"];
 const GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"];
@@ -58,9 +60,11 @@ const responseSchema = {
 
 class GuideCallError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  quota: Quota;
+  constructor(message: string, status: number, quota: Quota = { remaining: null, limit: null, resetAt: null }) {
     super(message);
     this.status = status;
+    this.quota = quota;
   }
 }
 
@@ -125,9 +129,46 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function parseDurationMs(raw: string) {
+  const value = raw.trim().toLowerCase();
+  if (!value) return null;
+  if (/^\d+(\.\d+)?$/.test(value)) return Number(value) * 1000;
+  let ms = 0;
+  const hours = value.match(/(\d+(?:\.\d+)?)h/);
+  const minutes = value.match(/(\d+(?:\.\d+)?)m(?!s)/);
+  const seconds = value.match(/(\d+(?:\.\d+)?)s/);
+  if (hours) ms += Number(hours[1]) * 3_600_000;
+  if (minutes) ms += Number(minutes[1]) * 60_000;
+  if (seconds) ms += Number(seconds[1]) * 1000;
+  return ms || null;
+}
+
+function nextPacificMidnight() {
+  const now = Date.now();
+  const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", hourCycle: "h23" }).format(now));
+  const minute = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", minute: "numeric" }).format(now));
+  const msLeft = Math.max(60_000, ((23 - hour) * 60 + (60 - minute)) * 60_000);
+  return new Date(now + msLeft).toISOString();
+}
+
+function quotaFrom(headers: Headers, detail = "", exhausted = false): Quota {
+  const remainingHeader = Number(headers.get("x-ratelimit-remaining-requests"));
+  const limitHeader = Number(headers.get("x-ratelimit-limit-requests"));
+  const resetHeader = headers.get("x-ratelimit-reset-requests") || headers.get("retry-after") || "";
+  const retryMatch = detail.match(/retry in ([\d.]+)\s*s/i);
+  const delayMs = parseDurationMs(resetHeader) || (retryMatch ? Number(retryMatch[1]) * 1000 : null);
+  const remaining = Number.isFinite(remainingHeader) ? remainingHeader : exhausted ? 0 : null;
+  return {
+    remaining,
+    limit: Number.isFinite(limitHeader) ? limitHeader : null,
+    resetAt: delayMs ? new Date(Date.now() + delayMs).toISOString() : exhausted ? nextPacificMidnight() : null,
+  };
+}
+
 async function callGemini(apiKey: string, contents: GeminiContent[]) {
   let lastStatus = 0;
   let lastDetail = "";
+  let lastQuota: Quota = { remaining: null, limit: null, resetAt: null };
 
   for (const model of GEMINI_MODELS) {
     for (const structured of [true, false]) {
@@ -157,32 +198,34 @@ async function callGemini(apiKey: string, contents: GeminiContent[]) {
             candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
           };
           const raw = body.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("\n") || "{}";
-          return parseGuideAnswer(raw);
+          return { answer: parseGuideAnswer(raw), source: "gemini" as const, quota: quotaFrom(apiResponse.headers) };
         }
         lastDetail = await apiResponse.text();
-        console.error("Gemini error", model, structured ? "schema" : "text", apiResponse.status, lastDetail.slice(0, 400));
+        lastQuota = quotaFrom(apiResponse.headers, lastDetail, apiResponse.status === 429);
         if (isInvalidKey(lastDetail)) {
-          throw new GuideCallError("INVALID_API_KEY", apiResponse.status);
+          throw new GuideCallError("INVALID_API_KEY", apiResponse.status, quotaFrom(apiResponse.headers, lastDetail));
         }
         if (apiResponse.status === 404) break;
         if (apiResponse.status === 429 || apiResponse.status === 503) {
+          const quota = quotaFrom(apiResponse.headers, lastDetail, apiResponse.status === 429);
           if (attempt === 0) {
             await sleep(500);
             continue;
           }
-          throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_BUSY", apiResponse.status);
+          throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_BUSY", apiResponse.status, quota);
         }
         break;
       }
     }
   }
 
-  throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_UPSTREAM_ERROR", lastStatus);
+  throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_UPSTREAM_ERROR", lastStatus, lastQuota);
 }
 
 async function callGroq(apiKey: string, contents: GeminiContent[]) {
   let lastStatus = 0;
   let lastDetail = "";
+  let lastQuota: Quota = { remaining: null, limit: null, resetAt: null };
   const messages = [
     { role: "system", content: systemInstruction },
     ...contents.map((item) => ({
@@ -212,12 +255,17 @@ async function callGroq(apiKey: string, contents: GeminiContent[]) {
           const body = (await apiResponse.json()) as {
             choices?: Array<{ message?: { content?: string } }>;
           };
-          return parseGuideAnswer(body.choices?.[0]?.message?.content || "{}");
+          return {
+            answer: parseGuideAnswer(body.choices?.[0]?.message?.content || "{}"),
+            source: "groq" as const,
+            quota: quotaFrom(apiResponse.headers),
+          };
         }
         lastDetail = await apiResponse.text();
+        lastQuota = quotaFrom(apiResponse.headers, lastDetail, apiResponse.status === 429);
         console.error("Groq error", model, structured ? "json" : "text", apiResponse.status, lastDetail.slice(0, 400));
         if (isInvalidKey(lastDetail)) {
-          throw new GuideCallError("INVALID_GROQ_KEY", apiResponse.status);
+          throw new GuideCallError("INVALID_GROQ_KEY", apiResponse.status, quotaFrom(apiResponse.headers, lastDetail));
         }
         if (apiResponse.status === 404) break;
         if (apiResponse.status === 400) break;
@@ -230,7 +278,7 @@ async function callGroq(apiKey: string, contents: GeminiContent[]) {
     }
   }
 
-  throw new GuideCallError(lastDetail.slice(0, 300) || "GROQ_UPSTREAM_ERROR", lastStatus);
+  throw new GuideCallError(lastDetail.slice(0, 300) || "GROQ_UPSTREAM_ERROR", lastStatus, lastQuota);
 }
 
 async function generateGuide(contents: GeminiContent[], geminiKey: string, groqKey: string) {
@@ -286,8 +334,8 @@ export const aiGuide = onRequest(
       }
 
       try {
-        const answer = await generateGuide(buildContents(messages, context), geminiKey, groqKey);
-        response.json(answer);
+        const result = await generateGuide(buildContents(messages, context), geminiKey, groqKey);
+        response.json({ ...result.answer, source: result.source, quota: result.quota });
       } catch (error) {
         const err = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
         console.error("AI guide failure", err.message.slice(0, 500));
@@ -299,9 +347,12 @@ export const aiGuide = onRequest(
           });
           return;
         }
-        response.status(502).json({
-          error: "Copilotul AI nu a putut răspunde acum.",
-          code: "guide_upstream",
+        const exhausted = err.status === 429;
+        response.status(exhausted ? 429 : 502).json({
+          error: exhausted ? "Limita ghidului online s-a epuizat temporar." : "Copilotul AI nu a putut răspunde acum.",
+          code: exhausted ? "quota" : "guide_upstream",
+          source: "none",
+          quota: err.quota?.remaining != null || err.quota?.resetAt ? err.quota : { remaining: exhausted ? 0 : null, limit: null, resetAt: exhausted ? nextPacificMidnight() : null },
           upstreamStatus: err.status,
         });
       }

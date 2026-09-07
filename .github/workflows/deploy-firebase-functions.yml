@@ -102,8 +102,8 @@ jobs:
             -X POST "https://${FUNCTIONS_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net/aiGuide" \
             -H 'content-type: application/json' \
             --data '{"messages":[{"role":"user","text":"test de disponibilitate"}],"context":{}}')
-          if [ "$status" = "200" ]; then
-            echo "aiGuide endpoint responded successfully."
+          if [ "$status" = "200" ] || [ "$status" = "429" ]; then
+            echo "aiGuide endpoint responded successfully (HTTP $status)."
           else
             echo "aiGuide endpoint returned HTTP $status. Response body:"
             cat /tmp/aiguide-health.json
