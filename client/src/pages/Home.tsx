@@ -3,7 +3,7 @@
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, BellRing, CalendarClock, Goal, Info, LayoutDashboard, MoreHorizontal, Palette, Plus, ReceiptText, Search, ShieldCheck, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BarChart3, BellRing, CalendarClock, CreditCard, Goal, Info, LayoutDashboard, MoreHorizontal, Palette, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, financialBalance, formatDate, inPlanPeriod, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
@@ -18,6 +18,7 @@ import { TodayBrief } from "@/components/TodayBrief";
 import { MovementsJournal } from "@/components/MovementsJournal";
 import { scheduleFinancialReminders } from "@/lib/local-notifications";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
+import { todayBrief } from "@/lib/household-insights";
 import {
   DeferBelowFold,
   automaticTheme,
@@ -27,6 +28,7 @@ import {
   defaultScheduleTimes,
   fmtExact,
   money,
+  sourceKindName,
   themeOptions,
   type BackgroundId,
   type MainView,
@@ -115,25 +117,313 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
   return signals.slice(0, 3);
 }
 
+const WEEKDAY_SHORT = ["L", "Ma", "Mi", "J", "V", "S", "D"];
+
+function isoFromDate(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function mondayIso(asOf: string) {
+  const date = new Date(`${asOf}T12:00:00`);
+  const weekday = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - weekday);
+  return isoFromDate(date);
+}
+
+function addDaysIso(iso: string, days: number) {
+  const date = new Date(`${iso}T12:00:00`);
+  date.setDate(date.getDate() + days);
+  return isoFromDate(date);
+}
+
+function openHouseholdGuide() {
+  window.dispatchEvent(new CustomEvent("buget-familie:open-guide"));
+}
+
+function SourceGlyph({ kind }: { kind: keyof typeof sourceKindName }) {
+  if (kind === "cash") return <Wallet size={16} />;
+  if (kind === "meal") return <Ticket size={16} />;
+  if (kind === "transfer") return <ArrowUpRight size={16} />;
+  return <CreditCard size={16} />;
+}
+
 /**
- * Atelierul Financiar 3.0 — spațiu mobil pentru situația zilei, nu un dashboard de module egale.
- * Marja, decizia și activitatea recentă au prioritate, iar detaliile se deschid în traseele proprii.
+ * Household OS — situația zilei: cât a rămas, ritmul, sursele și următorul venit.
  */
 function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void }) {
   const math = useMemo(() => planMath(data), [data]);
   const forecast = useMemo(() => planForecast(data), [data]);
   const signals = useMemo(() => advisorSignals(data), [data]);
   const balance = useMemo(() => financialBalance(data, math.plan.periodStart, math.planEnd), [data, math.plan.periodStart, math.planEnd]);
-  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]); const [shownTrancheKey, setShownTrancheKey] = useState("");
-  const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) })), [data]); const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0]; const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0]; const lastMoves = data.transactions.slice(0, 3); const overPlan = math.remaining < 0; const daily = math.plan.nextPayday ? forecast.safeDaily : 0;
+  const brief = useMemo(() => todayBrief(data), [data]);
+  const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
+  const [shownTrancheKey, setShownTrancheKey] = useState("");
+  const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) })), [data]);
+  const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
+  const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
+  const lastMoves = data.transactions.slice(0, 3);
+  const overPlan = math.remaining < 0;
+  const daily = math.plan.nextPayday ? forecast.safeDaily : 0;
   const weeklyEnvelopesRemaining = useMemo(() => envelopes.filter((entry) => entry.item.weeklyPace !== false).reduce((sum, entry) => sum + (allocationWeekStatus(data, entry.item)?.remaining ?? entry.remaining), 0), [data, envelopes]);
   const monthlyEnvelopesRemaining = useMemo(() => envelopes.filter((entry) => entry.item.weeklyPace === false).reduce((sum, entry) => sum + entry.remaining, 0), [envelopes]);
   const envelopeTotalRemaining = Math.max(0, weeklyEnvelopesRemaining + monthlyEnvelopesRemaining);
   const monthIncome = data.transactions.filter((item) => item.kind === "income" && item.date.startsWith(isoToday().slice(0, 7))).reduce((sum, item) => sum + item.amount, 0);
-  const activeTranche = math.planEnd ? currentCalendarBudgetWeek(math.weeklyPacedTotal, math.plan.periodStart, math.planEnd, isoToday()) : undefined; const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : ""; const showTrancheNotice = Boolean(activeTranche && shownTrancheKey === activeTrancheKey);
-  useEffect(() => { if (!activeTranche || !activeTrancheKey || data.settings.seenWeeklyPlanTranches.includes(activeTrancheKey) || shownTrancheKey === activeTrancheKey) return; setShownTrancheKey(activeTrancheKey); window.dispatchEvent(new CustomEvent("buget-familie:local-settings", { detail: { seenWeeklyPlanTranches: [...data.settings.seenWeeklyPlanTranches, activeTrancheKey].slice(-80) } })); }, [activeTranche, activeTrancheKey, data.settings.seenWeeklyPlanTranches, shownTrancheKey]);
+  const activeTranche = math.planEnd ? currentCalendarBudgetWeek(math.weeklyPacedTotal, math.plan.periodStart, math.planEnd, isoToday()) : undefined;
+  const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : "";
+  const showTrancheNotice = Boolean(activeTranche && shownTrancheKey === activeTrancheKey);
+  useEffect(() => {
+    if (!activeTranche || !activeTrancheKey || data.settings.seenWeeklyPlanTranches.includes(activeTrancheKey) || shownTrancheKey === activeTrancheKey) return;
+    setShownTrancheKey(activeTrancheKey);
+    window.dispatchEvent(new CustomEvent("buget-familie:local-settings", { detail: { seenWeeklyPlanTranches: [...data.settings.seenWeeklyPlanTranches, activeTrancheKey].slice(-80) } }));
+  }, [activeTranche, activeTrancheKey, data.settings.seenWeeklyPlanTranches, shownTrancheKey]);
   const openSignal = (action: AdvisorAction) => onGo(action === "plan" ? "plan" : action === "objectives" ? "obligations" : action === "journal" ? "journal" : "obligations");
-  return <div className="bf-page bf-today-workspace"><section className={`bf-today-situation ${overPlan ? "risk" : ""} ${!showTrancheNotice && !activeEnvelopeAlert ? "paired" : ""}`}><div className="bf-today-situation-top"><span className="bf-status-chip"><i /> {overPlan ? "Plan de revizuit" : "Ritm urmărit"}</span><time dateTime={isoToday()}>{dateText(isoToday(), true)}</time></div><div className="bf-today-situation-number"><p>{overPlan ? "Peste limita planului" : data.settings.salaryPlan.allocations.length ? "Rămas în plicuri" : monthIncome > 0 ? "Venit înregistrat luna asta" : "Plicuri neconfigurate"}</p><strong>{money(overPlan ? Math.abs(math.remaining) : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : monthIncome)}</strong><span>{overPlan ? "de acoperit prin limită, plicuri sau cheltuieli flexibile" : data.settings.salaryPlan.allocations.length ? `${money(Math.max(0, weeklyEnvelopesRemaining))} săptămânale · ${money(Math.max(0, monthlyEnvelopesRemaining))} lunare/fixe${math.plan.nextPayday ? ` · reper ${money(daily)}/zi` : ""}` : monthIncome > 0 ? "Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii." : "Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă"}</span><details className="bf-today-explainer"><summary><Info size={14} aria-hidden="true" /> Cum se citește suma?</summary><p>{overPlan ? "Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli." : data.settings.salaryPlan.allocations.length ? "Suma mare arată ce a mai rămas în plicurile tale. Reperul pe zi este doar o orientare pentru ritm; nu este o sumă în plus." : "Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi."}</p></details><HealthScoreBadge data={data} /></div><div className="bf-today-situation-actions"><button className="bf-today-add" onClick={onAdd}><Plus size={20} /> Înregistrează mișcare</button><button className="bf-today-plan-link" onClick={() => onGo("plan")}>Deschide planul <ChevronRight size={16} /></button></div></section><TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenWeek={() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} /><TodayLedger data={data} onGo={(view) => onGo(view)} />{(data.transactions.length > 0 || data.settings.members.length > 1 || data.settings.salaryPlan.allocations.length > 0) && <Suspense fallback={<div className="bf-lazy-panel">Pregătim bilanțul săptămânii…</div>}><WeeklySummaryPanel data={data} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} /></Suspense>}<DeferBelowFold><section className="bf-today-hub-links" aria-label="Acces rapid"><p className="bf-kicker">ACCES RAPID</p><div>{[{ label: "Plicuri", detail: "Repartizează", icon: Goal, view: "plan" as MainView }, { label: "Mișcări", detail: "Vezi registrul", icon: WalletCards, view: "journal" as MainView }, { label: "Obligații", detail: "Urmărește scadențele", icon: BellRing, view: "obligations" as MainView }, { label: "Analiză", detail: "Înțelege ritmul", icon: LayoutDashboard, view: "insights" as MainView }].map((item) => { const Icon = item.icon; return <button key={item.label} onClick={() => onGo(item.view)}><span><Icon size={16} /></span><b>{item.label}</b><small>{item.detail}</small><ChevronRight size={14} /></button>; })}</div></section>{showTrancheNotice && activeTranche && <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite"><CalendarClock size={19} /><div><p>TRANȘA S{activeTranche.index} A ÎNCEPUT</p><strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong><span>Ritmul acestei tranșe este {money(activeTranche.amount)} pentru {activeTranche.days} {activeTranche.days === 1 ? "zi" : "zile"}.</span></div><button onClick={() => onGo("plan")}>Plan</button><button className="dismiss" aria-label="Ascunde alerta tranșei săptămânale" onClick={() => setShownTrancheKey("")}><X size={16} /></button></aside>}{activeEnvelopeAlert && <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite"><BellRing size={19} /><div><p>{activeEnvelopeAlert.state === "over" ? "PLIC DEPĂȘIT" : "APROAPE DE LIMITĂ"}</p><strong>{activeEnvelopeAlert.item.label}</strong><span>{activeEnvelopeAlert.state === "over" ? `${money(Math.abs(activeEnvelopeAlert.remaining))} peste limita alocată.` : `${Math.round(activeEnvelopeAlert.usage * 100)}% din limită este deja consumată.`}</span></div><button onClick={() => onGo("plan")}>Vezi</button><button className="dismiss" aria-label={`Ascunde alerta pentru ${activeEnvelopeAlert.item.label}`} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button></aside>}<section className="bf-today-decision"><div className="bf-today-decision-heading"><div><p className="bf-kicker">DECIZIA URMĂTOARE</p><h1>Ce are nevoie <em>gospodăria acum.</em></h1></div><button onClick={() => onGo("insights")}><LayoutDashboard size={17} /> Vezi analiza</button></div><div className="bf-decision-stack">{signals.map((signal, index) => <button className={`bf-decision-row ${signal.tone} ${index === 0 ? "primary" : ""}`} key={signal.id} onClick={() => openSignal(signal.action)}><span className="bf-decision-index">0{index + 1}</span><span><small>{signal.eyebrow}</small><b>{signal.title}</b><em>{signal.detail}</em></span><ChevronRight size={19} /></button>)}{!signals.length && <button className="bf-decision-row good primary" onClick={() => onGo("plan")}><span className="bf-decision-index">01</span><span><small>PLANUL DE LUCRU</small><b>Configurează următorul venit</b><em>Gospodăria are nevoie de intervalul următor pentru a calcula ritmul.</em></span><ChevronRight size={19} /></button>}</div></section><section className="bf-today-measurements" aria-label="Măsurători financiare curente"><article><span>SURSE UTILIZABILE</span><b>{money(balance.liquidFunds)}</b><small>banii incluși în registru</small></article><article><span>OBLIGAȚII CONFIRMATE</span><b className={balance.monthlyRates > 0 ? "attention" : ""}>{money(balance.monthlyRates)}</b><small>{data.debts.length} de revizuit lunar</small></article><article><span>{topEnvelope ? `LIMITĂ: ${topEnvelope.item.label}` : "PLICURI / LIMITE"}</span><b className={topEnvelope?.state === "over" ? "negative" : ""}>{topEnvelope ? `${Math.round(topEnvelope.usage * 100)}%` : "—"}</b><small>{topEnvelope ? `${money(Math.max(0, topEnvelope.remaining))} rămași pentru perioadă` : "creează prima limită"}</small></article></section><section className="bf-today-activity"><div className="bf-section-heading"><div><p className="bf-kicker">ACTIVITATE RECENTĂ</p><h2>Ce s-a înregistrat</h2></div><button onClick={() => onGo("journal")}>Toate mișcările <ChevronRight size={15} /></button></div>{lastMoves.length ? <div className="bf-today-activity-list">{lastMoves.map((item) => <article key={item.id}><span className={`bf-tx-icon ${item.kind}`}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}</span><div><b>{item.title}</b><small>{dateText(item.date)} · {item.person} · {item.category}</small></div><strong className={item.kind}>{item.kind === "income" ? "+" : "−"}{fmtExact.format(item.amount)}</strong></article>)}</div> : <button className="bf-today-empty-activity" onClick={onAdd}><ReceiptText size={20} /><span><b>Registrul zilei este pregătit.</b><small>Înregistrează prima cheltuială sau încasare.</small></span><Plus size={18} /></button>}</section></DeferBelowFold>{data.settings.salaryPlan.allocations.length > 0 && <DeferBelowFold><section className="bf-today-envelope-evolution" aria-labelledby="today-envelope-evolution-title"><div className="bf-section-heading"><div><p className="bf-kicker">RITMUL PLICURILOR</p><h2 id="today-envelope-evolution-title">Evoluția în timp</h2></div><button onClick={() => onGo("plan")}>Vezi istoricul <ChevronRight size={15} /></button></div><Suspense fallback={<div className="bf-lazy-panel">Pregătim ritmul plicurilor…</div>}><AllocationHistoryChart entries={allocationHistorySnapshot(data)} /></Suspense></section></DeferBelowFold>}</div>;
+
+  const todayIso = isoToday();
+  const pace = Math.max(0, brief.spendable || daily);
+  const rhythm = useMemo(() => {
+    const start = mondayIso(todayIso);
+    return Array.from({ length: 7 }, (_, index) => {
+      const day = addDaysIso(start, index);
+      const out = data.transactions.filter((item) => item.kind === "expense" && item.date === day).reduce((sum, item) => sum + item.amount, 0);
+      const isToday = day === todayIso;
+      const isFuture = day > todayIso;
+      const left = isFuture ? pace : Math.max(0, pace - out);
+      const fill = pace <= 0 ? (out > 0 ? 100 : 8) : Math.max(8, Math.min(100, (out / pace) * 100));
+      return { day, weekday: index, out, left, isToday, isFuture, over: !isFuture && pace > 0 && out > pace, fill: isFuture ? 36 : fill };
+    });
+  }, [data.transactions, todayIso, pace]);
+
+  const sourceRows = useMemo(
+    () => data.settings.paymentSources.map((source) => ({ ...source, balance: sourceBalance(data, source.id) })),
+    [data],
+  );
+
+  const heroLabel = overPlan ? "Peste limita planului" : data.settings.salaryPlan.allocations.length ? "Rămas în plicuri" : monthIncome > 0 ? "Venit înregistrat luna asta" : "Plicuri neconfigurate";
+  const heroValue = overPlan ? Math.abs(math.remaining) : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : monthIncome;
+  const heroHint = overPlan
+    ? "de acoperit prin limită, plicuri sau cheltuieli flexibile"
+    : data.settings.salaryPlan.allocations.length
+      ? `${money(Math.max(0, weeklyEnvelopesRemaining))} săptămânale · ${money(Math.max(0, monthlyEnvelopesRemaining))} lunare/fixe${math.plan.nextPayday ? ` · reper ${money(daily)}/zi` : ""}`
+      : monthIncome > 0
+        ? "Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii."
+        : "Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă";
+  const explainer = overPlan
+    ? "Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli."
+    : data.settings.salaryPlan.allocations.length
+      ? `Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele ${forecast.remainingDays} zile până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.`
+      : "Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.";
+
+  return (
+    <div className="bf-page bf-today-workspace">
+      <section className={`bf-today-situation ${overPlan ? "risk" : ""}`}>
+        <div className="bf-today-situation-top">
+          <span className="bf-status-chip"><i /> {overPlan ? "Plan de revizuit" : "Ritm urmărit"}</span>
+          <time dateTime={todayIso}>{dateText(todayIso, true)}</time>
+        </div>
+        <div className="bf-today-situation-number">
+          <p>{heroLabel}</p>
+          <strong>{money(heroValue)}</strong>
+          <span>{heroHint}</span>
+          <details className="bf-today-explainer">
+            <summary><Info size={14} aria-hidden="true" /> Cum se citește suma?</summary>
+            <p>{explainer}</p>
+          </details>
+          <HealthScoreBadge data={data} />
+        </div>
+      </section>
+
+      <section className="bf-os-rhythm" aria-label="Ritm zilnic">
+        <div className="bf-os-rhythm-head">
+          <div>
+            <p className="bf-os-kicker">Ritm zilnic</p>
+            <h2 className="bf-os-title">Cât mai ține ziua.</h2>
+          </div>
+          <p className="bf-os-note" style={{ margin: 0 }}>azi <b>{money(pace)}</b></p>
+        </div>
+        <div className="bf-os-rhythm-grid">
+          {rhythm.map((row) => (
+            <div key={row.day} className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}>
+              <span>{WEEKDAY_SHORT[row.weekday]}</span>
+              <b>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}</b>
+              <span className="bf-os-bar" aria-hidden="true"><i style={{ height: `${row.fill}%` }} /></span>
+            </div>
+          ))}
+        </div>
+        <p className="bf-os-note">Fiecare zi primește {money(pace)}. Ce rămâne e ritmul; ce trece peste e excepție.</p>
+      </section>
+
+      <div className="bf-os-actions">
+        <button type="button" className="bf-os-decide" onClick={openHouseholdGuide}>Poți cheltui?</button>
+        <button type="button" className="bf-today-add bf-os-secondary" onClick={onAdd}><Plus size={18} /> Înregistrează</button>
+      </div>
+
+      <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenWeek={() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+
+      {sourceRows.length > 0 && (
+        <section className="bf-os-sources" aria-label="Surse">
+          <p className="bf-os-kicker">Surse</p>
+          <h2 className="bf-os-title">De unde pleacă banii.</h2>
+          <ul className="bf-os-source-list">
+            {sourceRows.map((source) => (
+              <li key={source.id}>
+                <span className="bf-os-source-icon"><SourceGlyph kind={source.kind} /></span>
+                <div>
+                  <b>{source.name}</b>
+                  <small>{sourceKindName[source.kind]}</small>
+                </div>
+                <strong>{money(source.balance)}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="bf-os-income" aria-label="Următorul venit">
+        <div className="bf-os-income-head">
+          <div>
+            <p className="bf-os-kicker">Următorul venit</p>
+            <h2 className="bf-os-title">{math.plan.nextPayday ? `${forecast.remainingDays} zile` : "Setează data"}</h2>
+            <p className="bf-os-note">{math.plan.nextPayday ? dateText(math.plan.nextPayday, true) : "Planul are nevoie de următorul salariu ca să calculeze ritmul."}</p>
+          </div>
+          <div>
+            <strong>{money(math.availableSources)}</strong>
+            <small>în surse acum</small>
+          </div>
+        </div>
+        <p className="bf-os-note">{money(Math.max(0, math.remaining))} disponibili după plicuri · {money(math.scheduled)} în scadențe încă neconfirmate</p>
+        <button type="button" className="bf-today-plan-link" style={{ marginTop: 12 }} onClick={() => onGo("plan")}>Deschide planul <ChevronRight size={16} /></button>
+      </section>
+
+      <TodayLedger data={data} onGo={(view) => onGo(view)} />
+      {(data.transactions.length > 0 || data.settings.members.length > 1 || data.settings.salaryPlan.allocations.length > 0) && (
+        <Suspense fallback={<div className="bf-lazy-panel">Pregătim bilanțul săptămânii…</div>}>
+          <WeeklySummaryPanel data={data} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
+        </Suspense>
+      )}
+      <DeferBelowFold>
+        <section className="bf-today-hub-links" aria-label="Acces rapid">
+          <p className="bf-kicker">ACCES RAPID</p>
+          <div>
+            {[{ label: "Plicuri", detail: "Repartizează", icon: Goal, view: "plan" as MainView }, { label: "Mișcări", detail: "Vezi registrul", icon: WalletCards, view: "journal" as MainView }, { label: "Obligații", detail: "Urmărește scadențele", icon: BellRing, view: "obligations" as MainView }, { label: "Analiză", detail: "Înțelege ritmul", icon: LayoutDashboard, view: "insights" as MainView }].map((item) => {
+              const Icon = item.icon;
+              return <button key={item.label} onClick={() => onGo(item.view)}><span><Icon size={16} /></span><b>{item.label}</b><small>{item.detail}</small><ChevronRight size={14} /></button>;
+            })}
+          </div>
+        </section>
+        {showTrancheNotice && activeTranche && (
+          <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
+            <CalendarClock size={19} />
+            <div>
+              <p>TRANȘA S{activeTranche.index} A ÎNCEPUT</p>
+              <strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong>
+              <span>Ritmul acestei tranșe este {money(activeTranche.amount)} pentru {activeTranche.days} {activeTranche.days === 1 ? "zi" : "zile"}.</span>
+            </div>
+            <button onClick={() => onGo("plan")}>Plan</button>
+            <button className="dismiss" aria-label="Ascunde alerta tranșei săptămânale" onClick={() => setShownTrancheKey("")}><X size={16} /></button>
+          </aside>
+        )}
+        {activeEnvelopeAlert && (
+          <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite">
+            <BellRing size={19} />
+            <div>
+              <p>{activeEnvelopeAlert.state === "over" ? "PLIC DEPĂȘIT" : "APROAPE DE LIMITĂ"}</p>
+              <strong>{activeEnvelopeAlert.item.label}</strong>
+              <span>{activeEnvelopeAlert.state === "over" ? `${money(Math.abs(activeEnvelopeAlert.remaining))} peste limita alocată.` : `${Math.round(activeEnvelopeAlert.usage * 100)}% din limită este deja consumată.`}</span>
+            </div>
+            <button onClick={() => onGo("plan")}>Vezi</button>
+            <button className="dismiss" aria-label={`Ascunde alerta pentru ${activeEnvelopeAlert.item.label}`} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
+          </aside>
+        )}
+        <section className="bf-today-decision">
+          <div className="bf-today-decision-heading">
+            <div>
+              <p className="bf-kicker">DECIZIA URMĂTOARE</p>
+              <h1>Ce are nevoie <em>gospodăria acum.</em></h1>
+            </div>
+            <button onClick={() => onGo("insights")}><LayoutDashboard size={17} /> Vezi analiza</button>
+          </div>
+          <div className="bf-decision-stack">
+            {signals.map((signal, index) => (
+              <button className={`bf-decision-row ${signal.tone} ${index === 0 ? "primary" : ""}`} key={signal.id} onClick={() => openSignal(signal.action)}>
+                <span className="bf-decision-index">0{index + 1}</span>
+                <span><small>{signal.eyebrow}</small><b>{signal.title}</b><em>{signal.detail}</em></span>
+                <ChevronRight size={19} />
+              </button>
+            ))}
+            {!signals.length && (
+              <button className="bf-decision-row good primary" onClick={() => onGo("plan")}>
+                <span className="bf-decision-index">01</span>
+                <span><small>PLANUL DE LUCRU</small><b>Configurează următorul venit</b><em>Gospodăria are nevoie de intervalul următor pentru a calcula ritmul.</em></span>
+                <ChevronRight size={19} />
+              </button>
+            )}
+          </div>
+        </section>
+        <section className="bf-today-measurements" aria-label="Măsurători financiare curente">
+          <article>
+            <span>SURSE UTILIZABILE</span>
+            <b>{money(balance.liquidFunds)}</b>
+            <small>banii incluși în registru</small>
+          </article>
+          <article>
+            <span>OBLIGAȚII CONFIRMATE</span>
+            <b className={balance.monthlyRates > 0 ? "attention" : ""}>{money(balance.monthlyRates)}</b>
+            <small>{data.debts.length} de revizuit lunar</small>
+          </article>
+          <article>
+            <span>{topEnvelope ? `LIMITĂ: ${topEnvelope.item.label}` : "PLICURI / LIMITE"}</span>
+            <b className={topEnvelope?.state === "over" ? "negative" : ""}>{topEnvelope ? `${Math.round(topEnvelope.usage * 100)}%` : "—"}</b>
+            <small>{topEnvelope ? `${money(Math.max(0, topEnvelope.remaining))} rămași pentru perioadă` : "creează prima limită"}</small>
+          </article>
+        </section>
+        <section className="bf-today-activity">
+          <div className="bf-section-heading">
+            <div>
+              <p className="bf-kicker">ACTIVITATE RECENTĂ</p>
+              <h2>Ce s-a înregistrat</h2>
+            </div>
+            <button onClick={() => onGo("journal")}>Toate mișcările <ChevronRight size={15} /></button>
+          </div>
+          {lastMoves.length ? (
+            <div className="bf-today-activity-list">
+              {lastMoves.map((item) => (
+                <article key={item.id}>
+                  <span className={`bf-tx-icon ${item.kind}`}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}</span>
+                  <div>
+                    <b>{item.title}</b>
+                    <small>{dateText(item.date)} · {item.person} · {item.category}</small>
+                  </div>
+                  <strong className={item.kind}>{item.kind === "income" ? "+" : "−"}{fmtExact.format(item.amount)}</strong>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <button className="bf-today-empty-activity" onClick={onAdd}>
+              <ReceiptText size={20} />
+              <span><b>Registrul zilei este pregătit.</b><small>Înregistrează prima cheltuială sau încasare.</small></span>
+              <Plus size={18} />
+            </button>
+          )}
+        </section>
+      </DeferBelowFold>
+      {data.settings.salaryPlan.allocations.length > 0 && (
+        <DeferBelowFold>
+          <section className="bf-today-envelope-evolution" aria-labelledby="today-envelope-evolution-title">
+            <div className="bf-section-heading">
+              <div>
+                <p className="bf-kicker">RITMUL PLICURILOR</p>
+                <h2 id="today-envelope-evolution-title">Evoluția în timp</h2>
+              </div>
+              <button onClick={() => onGo("plan")}>Vezi istoricul <ChevronRight size={15} /></button>
+            </div>
+            <Suspense fallback={<div className="bf-lazy-panel">Pregătim ritmul plicurilor…</div>}>
+              <AllocationHistoryChart entries={allocationHistorySnapshot(data)} />
+            </Suspense>
+          </section>
+        </DeferBelowFold>
+      )}
+    </div>
+  );
 }
 
 export default function Home() {
