@@ -5,7 +5,7 @@ import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
-export type FinancialUpdate = { kind: "income"; amount: number; title: string; memberId?: string } | { kind: "expense"; amount: number; title: string; category: string; allocationId?: string; sourceId?: string; memberId?: string } | { kind: "debt"; name: string; remaining: number } | { kind: "debt-monthly"; amount: number } | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string };
+export type FinancialUpdate = { kind: "income"; amount: number; title: string; memberId?: string } | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string } | { kind: "debt"; name: string; remaining: number } | { kind: "debt-monthly"; amount: number } | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string };
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void };
 type ChatChoice = { label: string; update: FinancialUpdate };
 type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" }; updates?: FinancialUpdate[]; choices?: ChatChoice[] };
@@ -203,17 +203,57 @@ function spendTitle(folded: string, extracted: ExtractedGuide | undefined, categ
   return extracted?.title || category;
 }
 
+function spendAmount(raw: string, extracted: ExtractedGuide | undefined, parsedAmount: number) {
+  if (extracted?.amount && extracted.amount > 0) return extracted.amount;
+  if (parsedAmount > 0) return parsedAmount;
+  const found = [...raw.matchAll(/(?:^|[^\d])(\d{1,4}(?:[.,]\d{1,2})?)/g)]
+    .map((item) => parseFloat(item[1].replace(",", ".")))
+    .filter((value) => value >= 1 && value < 1900);
+  return found[0] || 0;
+}
+
+function spendDate(raw: string) {
+  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const iso = (offset: number) => {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + offset);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
+  if (/\balaltaieri\b/.test(folded)) return iso(-2);
+  if (/\bieri\b/.test(folded)) return iso(-1);
+  if (/\bmaine\b/.test(folded)) return iso(1);
+  if (/\b(azi|astazi)\b/.test(folded)) return iso(0);
+  const dmy = raw.match(/\b(\d{1,2})[./-](\d{1,2})(?:[./-](20\d{2}))?\b/);
+  if (dmy && Number(dmy[2]) <= 12 && Number(dmy[1]) <= 31) {
+    const year = dmy[3] || String(new Date().getFullYear());
+    return `${year}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
+  }
+  return iso(0);
+}
+
+function dateCopy(iso: string) {
+  const diff = Math.round((Date.parse(`${iso}T12:00:00`) - Date.parse(`${today()}T12:00:00`)) / 86400000);
+  if (diff === 0) return "azi";
+  if (diff === -1) return "ieri";
+  if (diff === -2) return "alaltăieri";
+  if (diff === 1) return "mâine";
+  return new Date(`${iso}T12:00:00`).toLocaleDateString("ro-RO", { day: "numeric", month: "short" });
+}
+
 function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData, forced = false): { text: string; choices: ChatChoice[] } | undefined {
   const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
-  const amount = extracted?.amount || parsed.amount || allAmounts(raw)[0] || 0;
+  const amount = spendAmount(raw, extracted, parsed.amount);
   if (!amount || amount <= 0) return undefined;
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const looksSpend = forced
-    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|\bpe |\bpentru /.test(folded)
+    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|uitat|\bpe |\bpentru /.test(folded)
     || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
   if (!looksSpend || /venit|salariu|intrare/.test(folded)) return undefined;
   const category = parsed.category || extracted?.category || "Altele";
   const title = spendTitle(folded, extracted, category);
+  const date = spendDate(raw);
+  const when = dateCopy(date);
   const member = data.settings.members[0];
   const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
   const related = relatedCategories(category);
@@ -235,23 +275,23 @@ function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, dat
     });
   const choices: ChatChoice[] = funded.map(({ envelope, week, left }) => ({
     label: `Din ${envelope.label}${week ? ` · S${week.index}` : ""} · ${money(left)}`,
-    update: { kind: "expense" as const, amount, title, category, allocationId: envelope.id, sourceId: envelope.sourceId || fallbackSource?.id, memberId: envelope.memberId || member?.id },
+    update: { kind: "expense" as const, amount, title, category, date, allocationId: envelope.id, sourceId: envelope.sourceId || fallbackSource?.id, memberId: envelope.memberId || member?.id },
   }));
   data.settings.paymentSources.forEach((source) => {
     const left = sourceBalance(data, source.id);
     if (left < amount) return;
     choices.push({
       label: `Din nealocat · ${source.name} · ${money(left)}`,
-      update: { kind: "expense", amount, title, category, allocationId: "outside", sourceId: source.id, memberId: source.memberId || member?.id },
+      update: { kind: "expense", amount, title, category, date, allocationId: "outside", sourceId: source.id, memberId: source.memberId || member?.id },
     });
   });
   if (!choices.length) {
-    return { text: `Am înțeles **${title}**, ${money(amount)}. Nu am găsit un plic sau o sursă cu destui bani disponibili.`, choices: [] };
+    return { text: `Am înțeles **${title}**, ${money(amount)}, ${when}. Nu am găsit un plic sau o sursă cu destui bani disponibili.`, choices: [] };
   }
   const preferred = funded.find((item) => item.envelope.category === category) || funded.find((item) => related.includes(item.envelope.category || ""));
   const text = preferred
-    ? `Am înțeles **${title}**, ${money(amount)}. Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**. Alege doar din locurile unde sunt bani disponibili.`
-    : `Am înțeles **${title}**, ${money(amount)}. Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
+    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**. Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**. Alege de unde scoatem banii.`
+    : `Am înțeles **${title}**, ${money(amount)}, **${when}**. Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
   return { text, choices };
 }
 
