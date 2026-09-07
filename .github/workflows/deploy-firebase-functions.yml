@@ -63,23 +63,34 @@ jobs:
       - name: Enable Gemini API
         run: gcloud services enable generativelanguage.googleapis.com --project "$FIREBASE_PROJECT_ID"
 
-      - name: Sync Gemini secret to Secret Manager
+      - name: Sync Gemini and Groq secrets to Secret Manager
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
           set -euo pipefail
-          if [ -z "$GEMINI_API_KEY" ]; then
-            echo "GEMINI_API_KEY is not configured in GitHub repository secrets; keeping the existing Firebase secret."
-            exit 0
-          fi
-          if ! gcloud secrets describe GEMINI_API_KEY --project "$FIREBASE_PROJECT_ID" >/dev/null 2>&1; then
-            gcloud secrets create GEMINI_API_KEY \
-              --project "$FIREBASE_PROJECT_ID" \
-              --replication-policy=automatic
-          fi
-          printf '%s' "$GEMINI_API_KEY" | gcloud secrets versions add GEMINI_API_KEY \
-            --project "$FIREBASE_PROJECT_ID" \
-            --data-file=-
+          sync_secret() {
+            local name="$1"
+            local value="$2"
+            if ! gcloud secrets describe "$name" --project "$FIREBASE_PROJECT_ID" >/dev/null 2>&1; then
+              gcloud secrets create "$name" \
+                --project "$FIREBASE_PROJECT_ID" \
+                --replication-policy=automatic
+              printf '%s' "${value:-pending}" | gcloud secrets versions add "$name" \
+                --project "$FIREBASE_PROJECT_ID" \
+                --data-file=-
+              return
+            fi
+            if [ -n "$value" ]; then
+              printf '%s' "$value" | gcloud secrets versions add "$name" \
+                --project "$FIREBASE_PROJECT_ID" \
+                --data-file=-
+            else
+              echo "$name is not in GitHub secrets; keeping the existing Firebase secret."
+            fi
+          }
+          sync_secret GEMINI_API_KEY "$GEMINI_API_KEY"
+          sync_secret GROQ_API_KEY "$GROQ_API_KEY"
 
       - name: Deploy Firebase Functions
         run: npx --yes firebase-tools@latest deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force

@@ -10,6 +10,7 @@ Workflow-ul `.github/workflows/deploy-firebase-functions.yml` rulează la fiecar
 |---|---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | JSON-ul unei chei de service account Google Cloud pentru proiectul `buget-familie-a6a0d` | Da |
 | `GEMINI_API_KEY` | Cheia Gemini care va fi sincronizată în Secret Manager | Recomandat pentru activarea Gemini |
+| `GROQ_API_KEY` | Cheia Groq (gratuită) folosită ca rezervă când Gemini e ocupat | Opțional, dar recomandat |
 
 Valoarea `FIREBASE_SERVICE_ACCOUNT` trebuie păstrată ca secret GitHub și nu trebuie introdusă în repository. Workflow-ul folosește autentificarea Google doar în timpul jobului, iar valoarea cheii nu este afișată în loguri.
 

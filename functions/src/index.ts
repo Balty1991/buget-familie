@@ -3,6 +3,7 @@ import { defineSecret } from "firebase-functions/params";
 import cors from "cors";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
+const groqApiKey = defineSecret("GROQ_API_KEY");
 const allowCors = cors({ origin: true });
 
 type ChatMessage = { role: "user" | "assistant"; text: string };
@@ -21,7 +22,8 @@ type GuideAnswer = {
   };
 };
 
-const MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
+const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-flash-latest"];
+const GROQ_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
 
 const systemInstruction = `Ești Copilotul Financiar al aplicației Buget Familie. Ești un ghid calm, empatic și foarte practic, care rămâne activ pe tot parcursul folosirii aplicației. Nu răspunde generic și nu redirecționa utilizatorul către meniuri fără explicație.
 
@@ -54,7 +56,7 @@ const responseSchema = {
   required: ["reply", "intent", "needsConfirmation"],
 };
 
-class GeminiCallError extends Error {
+class GuideCallError extends Error {
   status: number;
   constructor(message: string, status: number) {
     super(message);
@@ -63,11 +65,13 @@ class GeminiCallError extends Error {
 }
 
 function sanitizeKey(raw: string) {
-  return raw.trim().replace(/^['"]+|['"]+$/g, "").replace(/^Bearer\s+/i, "");
+  const value = raw.trim().replace(/^['"]+|['"]+$/g, "").replace(/^Bearer\s+/i, "");
+  if (!value || value === "pending" || value === "undefined" || value === "null") return "";
+  return value;
 }
 
 function isInvalidKey(detail: string) {
-  return /API[_ ]?key not valid|API_KEY_INVALID|invalid api key|API key expired|PERMISSION_DENIED/i.test(detail);
+  return /API[_ ]?key not valid|API_KEY_INVALID|invalid api key|API key expired|PERMISSION_DENIED|invalid_api_key|Incorrect API key/i.test(detail);
 }
 
 function buildContents(messages: ChatMessage[], context: Record<string, unknown>): GeminiContent[] {
@@ -125,7 +129,7 @@ async function callGemini(apiKey: string, contents: GeminiContent[]) {
   let lastStatus = 0;
   let lastDetail = "";
 
-  for (const model of MODELS) {
+  for (const model of GEMINI_MODELS) {
     for (const structured of [true, false]) {
       const payload = {
         system_instruction: { parts: [{ text: systemInstruction }] },
@@ -138,7 +142,7 @@ async function callGemini(apiKey: string, contents: GeminiContent[]) {
             }
           : { temperature: 0.6 },
       };
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < 2; attempt++) {
         const apiResponse = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
           {
@@ -156,30 +160,96 @@ async function callGemini(apiKey: string, contents: GeminiContent[]) {
           return parseGuideAnswer(raw);
         }
         lastDetail = await apiResponse.text();
-        console.error("Gemini error", model, structured ? "schema" : "text", apiResponse.status, lastDetail.slice(0, 500));
+        console.error("Gemini error", model, structured ? "schema" : "text", apiResponse.status, lastDetail.slice(0, 400));
         if (isInvalidKey(lastDetail)) {
-          throw new GeminiCallError("INVALID_API_KEY", apiResponse.status);
+          throw new GuideCallError("INVALID_API_KEY", apiResponse.status);
         }
         if (apiResponse.status === 404) break;
         if (apiResponse.status === 429 || apiResponse.status === 503) {
-          const retryAfter = Number(apiResponse.headers.get("retry-after"));
-          const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 1200 * (attempt + 1);
-          await sleep(Math.min(waitMs, 8000));
-          continue;
+          if (attempt === 0) {
+            await sleep(800);
+            continue;
+          }
+          break;
         }
         break;
       }
     }
   }
 
-  throw new GeminiCallError(lastDetail.slice(0, 300) || "GEMINI_UPSTREAM_ERROR", lastStatus);
+  throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_UPSTREAM_ERROR", lastStatus);
+}
+
+async function callGroq(apiKey: string, contents: GeminiContent[]) {
+  let lastStatus = 0;
+  let lastDetail = "";
+  const messages = [
+    { role: "system", content: systemInstruction },
+    ...contents.map((item) => ({
+      role: item.role === "model" ? "assistant" : "user",
+      content: item.parts.map((part) => part.text).join("\n"),
+    })),
+  ];
+
+  for (const model of GROQ_MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.6,
+          messages,
+          response_format: { type: "json_object" },
+        }),
+      });
+      lastStatus = apiResponse.status;
+      if (apiResponse.ok) {
+        const body = (await apiResponse.json()) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+        return parseGuideAnswer(body.choices?.[0]?.message?.content || "{}");
+      }
+      lastDetail = await apiResponse.text();
+      console.error("Groq error", model, apiResponse.status, lastDetail.slice(0, 400));
+      if (isInvalidKey(lastDetail)) {
+        throw new GuideCallError("INVALID_GROQ_KEY", apiResponse.status);
+      }
+      if (apiResponse.status === 404) break;
+      if (apiResponse.status === 429 || apiResponse.status === 503) {
+        await sleep(700 * (attempt + 1));
+        continue;
+      }
+      break;
+    }
+  }
+
+  throw new GuideCallError(lastDetail.slice(0, 300) || "GROQ_UPSTREAM_ERROR", lastStatus);
+}
+
+async function generateGuide(contents: GeminiContent[], geminiKey: string, groqKey: string) {
+  if (geminiKey) {
+    try {
+      return await callGemini(geminiKey, contents);
+    } catch (error) {
+      if (!groqKey) throw error;
+      console.error("Gemini unavailable, trying Groq", error instanceof Error ? error.message.slice(0, 200) : "unknown");
+    }
+  }
+  if (groqKey) {
+    return await callGroq(groqKey, contents);
+  }
+  throw new GuideCallError("NO_GUIDE_PROVIDER", 503);
 }
 
 export const aiGuide = onRequest(
   {
     region: "europe-central2",
     invoker: "public",
-    secrets: [geminiApiKey],
+    secrets: [geminiApiKey, groqApiKey],
     timeoutSeconds: 60,
     memory: "256MiB",
   },
@@ -202,32 +272,33 @@ export const aiGuide = onRequest(
         return;
       }
 
-      const apiKey = sanitizeKey(geminiApiKey.value() || "");
-      if (!apiKey) {
+      const geminiKey = sanitizeKey(geminiApiKey.value() || "");
+      const groqKey = sanitizeKey(groqApiKey.value() || "");
+      if (!geminiKey && !groqKey) {
         response.status(503).json({
-          error: "Copilotul AI nu este configurat. Lipsește cheia Gemini.",
-          code: "gemini_key",
+          error: "Copilotul AI nu este configurat. Lipsește cheia Gemini sau Groq.",
+          code: "guide_key",
         });
         return;
       }
 
       try {
-        const answer = await callGemini(apiKey, buildContents(messages, context));
+        const answer = await generateGuide(buildContents(messages, context), geminiKey, groqKey);
         response.json(answer);
       } catch (error) {
-        const err = error instanceof GeminiCallError ? error : new GeminiCallError("unknown", 500);
+        const err = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
         console.error("AI guide failure", err.message.slice(0, 500));
-        if (err.message === "INVALID_API_KEY") {
+        if (err.message === "INVALID_API_KEY" || err.message === "INVALID_GROQ_KEY") {
           response.status(503).json({
-            error: "Cheia Gemini nu este validă. Folosește o cheie din Google AI Studio, nu cheia web Firebase.",
-            code: "gemini_key",
+            error: "Cheia AI nu este validă. Verifică GEMINI_API_KEY sau GROQ_API_KEY în secrete.",
+            code: "guide_key",
             upstreamStatus: err.status,
           });
           return;
         }
         response.status(502).json({
           error: "Copilotul AI nu a putut răspunde acum.",
-          code: "gemini_upstream",
+          code: "guide_upstream",
           upstreamStatus: err.status,
         });
       }
