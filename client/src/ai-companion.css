@@ -144,9 +144,51 @@
 .ai-companion-trigger.is-local .ai-live{color:#f3e2b5}
 .ai-chat-text{white-space:pre-wrap}
 .ai-chat-text strong{font-weight:800;color:#1d4a3e}
-.ai-head-actions{display:flex;align-items:center;gap:2px;margin-left:auto}
-.ai-head-actions .ai-close{margin-left:0}
-.ai-chat-panel.is-max{top:8px;right:8px;bottom:8px;left:8px;width:auto;height:auto;max-height:none;border-radius:18px;z-index:4000}
+.ai-head-copy{min-width:0;flex:1}
+.ai-head-copy h2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-head-actions{display:flex;flex:none;align-items:center;gap:6px;margin-left:auto;z-index:2}
 @media(max-width:600px){
-  .ai-chat-panel.is-max{top:0;right:0;bottom:0;left:0;width:100vw;height:100dvh;max-height:none;border-radius:0;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
+  .ai-companion-head{flex-wrap:wrap}
+  .ai-head-actions{width:100%;margin:8px 0 0;justify-content:flex-end}
+}
+.ai-tool{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 9px;border:1px solid #d9cfbf;border-radius:10px;background:#fff;color:#1a5144;font:800 10px Manrope,sans-serif;cursor:pointer}
+.ai-tool-close{width:32px;padding:0;justify-content:center}
+.ai-tool span{line-height:1}
+@media(max-width:380px){
+  .ai-tool span{display:none}
+  .ai-tool{width:32px;padding:0;justify-content:center}
+}
+
+html.ai-guide-max,
+html.ai-guide-max body{
+  overflow:hidden !important;
+}
+.ai-chat-panel.is-max,
+html.ai-guide-max .ai-chat-panel{
+  position:fixed !important;
+  top:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  left:0 !important;
+  width:100% !important;
+  height:100dvh !important;
+  max-height:none !important;
+  min-height:0 !important;
+  padding:14px !important;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom)) !important;
+  border-radius:0 !important;
+  z-index:100000 !important;
+  transform:none !important;
+}
+@media(min-width:601px){
+  .ai-chat-panel.is-max,
+  html.ai-guide-max .ai-chat-panel{
+    top:12px !important;
+    right:12px !important;
+    bottom:12px !important;
+    left:12px !important;
+    width:auto !important;
+    height:auto !important;
+    border-radius:22px !important;
+  }
 }
