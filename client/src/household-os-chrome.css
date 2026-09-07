@@ -585,6 +585,46 @@ html.ai-guide-open .os-tools .os-tool:last-child {
   background: var(--os-mint, var(--cf-primary)) !important;
 }
 
+.bf-command-search {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 16px 0 12px !important;
+  padding: 0 14px !important;
+  min-height: 48px !important;
+  border: 1px solid var(--os-line, var(--cf-line)) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--os-bg, #07090c) 55%, var(--os-surface, #10151a)) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.bf-command-search:focus-within {
+  border-color: var(--os-mint, var(--cf-primary)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent) !important;
+}
+
+.bf-command-search input,
+.bf-command-search input:focus,
+.bf-command-search input:focus-visible {
+  height: 48px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--os-fg, var(--cf-ink)) !important;
+  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+.bf-command-search svg {
+  flex: 0 0 auto !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+}
+
 @media (max-width: 760px) {
   .bf-command-hint,
   .bf-command-shortcut {
