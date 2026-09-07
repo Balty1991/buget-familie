@@ -106,8 +106,8 @@ function allAmounts(raw: string) {
 }
 
 function isConfirm(raw: string) {
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return /(^|\b)(da|ok|okay|adaug|adauga|adaga|creeaz|creaza|confirma|confirm|inregistreaz|salveaz|pune|treci|treceti)(\b|$)/.test(folded) || /intrare|in registru|doar venitul|la venituri/.test(folded);
+  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return /^(da+|ok|okay|confirm|confirma|confirmat|sigur|adauga|adaug[- ]o|inregistreaza|salveaza)([.! ]*)?$/.test(folded);
 }
 
 function claimsSaved(raw: string) {
@@ -195,6 +195,11 @@ function spendTitle(folded: string, extracted: ExtractedGuide | undefined, categ
   if (/dulce/.test(folded)) return "Dulciuri";
   if (/tigar|tutun/.test(folded)) return "Țigări";
   if (/cafea/.test(folded)) return "Cafea";
+  const named = folded.match(/\b(?:pe|pentru)\s+([a-zăâîșț -]{2,30}?)(?:\s+(?:lei|ron)|$)/);
+  if (named) {
+    const word = named[1].replace(/\s+(lei|ron)$/i, "").trim();
+    return word.charAt(0).toLocaleUpperCase("ro-RO") + word.slice(1);
+  }
   return extracted?.title || category;
 }
 
@@ -406,9 +411,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         setQuota(nextQuota);
         if (!response.ok) throw new Error(payload.code || "AI unavailable");
         setTyping(false);
+        const lastSpendText = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data))?.text || raw;
+        const sourceText = isConfirm(raw) ? lastSpendText : raw;
         const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt"
           ? undefined
-          : expenseProposal(raw, payload.extracted, data, payload.intent === "expense");
+          : expenseProposal(sourceText, payload.extracted, data, payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
         if (proposal) {
           addMessage({ role: "assistant", text: proposal.text, choices: proposal.choices });
           return;

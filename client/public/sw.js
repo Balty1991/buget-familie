@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v25";
+const CACHE = "buget-familie-shell-v26";
 
 const SHELL = ["./", "./manifest.webmanifest", "./icons/favicon-32.png", "./icons/icon-192.png"];
 
@@ -17,16 +17,13 @@ self.addEventListener("fetch", (event) => {
 
   const hashed = /\/assets\/.+\.[A-Za-z0-9_-]{8,}\.(js|css)$/.test(url.pathname) || /\.(woff2?|png|svg|webp|jpg)$/.test(url.pathname);
   if (hashed) {
-    event.respondWith(caches.match(request).then((cached) => {
-      const networked = fetch(request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          void caches.open(CACHE).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      }).catch(() => cached);
-      return cached || networked;
-    }));
+    event.respondWith(fetch(request).then((response) => {
+      if (response.ok) {
+        const copy = response.clone();
+        void caches.open(CACHE).then((cache) => cache.put(request, copy));
+      }
+      return response;
+    }).catch(() => caches.match(request)));
     return;
   }
 
