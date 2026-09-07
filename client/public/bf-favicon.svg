@@ -1,6 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Buget Familie">
-  <rect width="64" height="64" rx="15" fill="#EEC64D"/>
-  <path fill="#173F36" d="M12 26.5 32 7.2 52 26.5v22.6c0 3-2.4 5.4-5.4 5.4H17.4c-3 0-5.4-2.4-5.4-5.4Z"/>
-  <path fill="#F6E9B4" d="M13.8 26.2 32 41.4 50.2 26.2Z"/>
-  <circle cx="32" cy="28" r="5" fill="#EEC64D"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Buget Familie">
+  <rect width="32" height="32" rx="8" fill="#07090c"/>
+  <path fill="#3aa87c" d="M16 17.2 25.2 12.2v9.2L16 26.4Z"/>
+  <path fill="#7cffc4" d="M6.8 12.2 16 17.2v9.2L6.8 21.4Z"/>
+  <path fill="#d8fff0" d="M16 6.6 25.2 12.2 16 17.2 6.8 12.2Z"/>
+  <path fill="#f7fffb" d="M16 9.4 21.4 12.4 16 15.4 10.6 12.4Z"/>
 </svg>

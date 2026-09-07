@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appId: "ro.balty1991.bugetfamilie",
   appName: "Buget Familie",
   webDir: "dist/public",
-  android: { backgroundColor: "#f7f5ef" },
+  android: { backgroundColor: "#07090c" },
 };
 
 export default config;

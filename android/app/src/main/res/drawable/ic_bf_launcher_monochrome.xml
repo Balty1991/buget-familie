@@ -4,8 +4,16 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Cub-plic isometric, zona sigură adaptive. -->
     <path
         android:fillColor="#000000"
-        android:fillType="evenOdd"
-        android:pathData="M27.3,47.6L54,23.3L80.7,47.6L80.7,78.6C80.7,82.9 77.2,86.4 72.9,86.4L35.1,86.4C30.8,86.4 27.3,82.9 27.3,78.6Z M30.4,47.3L54,70.2L77.6,47.3Z M54,50.6m-7.3,0a7.3,7.3 0,1 1,14.6 0a7.3,7.3 0,1 1,-14.6 0"/>
+        android:pathData="M54,32 L78,45.5 L54,59 L30,45.5Z"/>
+    <path
+        android:fillColor="#000000"
+        android:fillAlpha="0.55"
+        android:pathData="M30,45.5 L54,59 L54,82 L30,68.5Z"/>
+    <path
+        android:fillColor="#000000"
+        android:fillAlpha="0.78"
+        android:pathData="M78,45.5 L54,59 L54,82 L78,68.5Z"/>
 </vector>
