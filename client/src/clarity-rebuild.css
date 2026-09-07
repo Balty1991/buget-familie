@@ -73,6 +73,7 @@ html body .bf-app .bf-plan-resource-band .bf-plan-resource-stats{display:grid!im
 
 /* În Plan, venitul real este o precompletare; păstrează-l larg și separat de datele alese manual. */
 .bf-cycle-setup-fields .bf-plan-field:nth-child(2){grid-column:1/-1!important}
+.bf-payday-window{margin:10px 0 0!important;padding:10px 12px!important;border-radius:12px!important;background:rgba(255,255,255,.08)!important;color:inherit!important;font:600 12px/1.45 "IBM Plex Sans",sans-serif!important}
 @media(max-width:380px){.bf-cycle-setup-fields .bf-plan-field:nth-child(2){grid-column:auto!important}}
 
 /* Captură rapidă: confirmarea plicului activ separă clar sursa plății de limita care se consumă. */

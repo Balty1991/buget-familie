@@ -13,7 +13,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -45,7 +45,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const planEnd = planEndDate(plan);
   const categories = [...expenseCategories, ...data.settings.customCategories.filter((category) => !expenseCategories.includes(category))];
   const [cycleStart, setCycleStart] = useState(plan.periodStart);
-  const [cycleEnd, setCycleEnd] = useState(planEnd || "");
+  const [cycleEnd, setCycleEnd] = useState(plan.nextPayday || "");
+  const [cycleFlex, setCycleFlex] = useState(plan.paydayFlexDays ?? 3);
   const [cycleError, setCycleError] = useState("");
   const [cycleTemplateLabel, setCycleTemplateLabel] = useState("");
   const [templateRenameId, setTemplateRenameId] = useState("");
@@ -92,14 +93,18 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return date.toISOString().slice(0, 10); };
   const allocationPeriodOptions = [{ id: "next-income" as const, label: "Până la următorul venit" }, { id: "month" as const, label: "Luna aceasta" }, { id: "week" as const, label: "Săptămâna aceasta" }, { id: "custom" as const, label: "Personalizat" }];
-  const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(planEnd || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)); setCycleEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)); } else if (periodId === "week") { const start = new Date(); setCycleStart(start.toISOString().slice(0, 10)); setCycleEnd(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)); } };
+  const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(plan.nextPayday || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)); setCycleEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)); } else if (periodId === "week") { const start = new Date(); setCycleStart(start.toISOString().slice(0, 10)); setCycleEnd(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)); } };
   const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
 
-  const autoApplyPeriod = () => {
-    if (!periodValid) return;
-    if (plan.periodStart === cycleStart && plan.nextPayday === cycleEnd) return;
-    updatePlan({ periodStart: cycleStart, nextPayday: cycleEnd, earliestPayday: undefined });
+  const windowPayday = paydayWindow(plan);
+  const persistCycle = (start: string, end: string, flex = cycleFlex) => {
+    if (!start || !end || end < start) return;
+    const earliest = flex > 0 ? addIsoDays(end, -flex) : undefined;
+    updatePlan({ periodStart: start, nextPayday: end, paydayFlexDays: flex, earliestPayday: earliest && earliest >= start ? earliest : start });
     setCycleError("");
+  };
+  const autoApplyPeriod = () => {
+    persistCycle(cycleStart, cycleEnd, cycleFlex);
   };
   const saveCycleTemplate = () => {
     if (!periodValid) return setCycleError("Alege perioada înainte de a salva șablonul.");
@@ -114,7 +119,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const applyCycleTemplate = (template: AppData["settings"]["salaryCycleTemplates"][number]) => {
     const start = cycleStart || isoToday(); const end = addDays(start, template.durationDays - 1);
     setCycleStart(start); setCycleEnd(end); setCycleError("");
-    updatePlan({ periodStart: start, nextPayday: end, earliestPayday: undefined });
+    persistCycle(start, end, cycleFlex);
   };
   const renameCycleTemplate = (id: string) => {
     const label = templateRename.trim(); if (!label) return;
@@ -243,11 +248,22 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
 
     <section className="bf-cycle-setup" aria-labelledby="cycle-setup-title">
       <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">CATEGORII</p><h2 id="cycle-setup-title">Unde merge fiecare leu</h2></div><span>{envelopes.length} plicuri · {money(allocated)}</span></div>
-      <p>Perioada e opțională — o folosesc doar categoriile cu ritm săptămânal, ca Alimente. Se salvează automat.</p>
+      <p>Perioada e opțională — o folosesc doar categoriile cu ritm săptămânal. Data salariului poate varia; alege o fereastră, nu o zi exactă.</p>
       <div className="bf-cycle-setup-fields">
         <PlanField label="Prima zi a perioadei (opțional)"><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
-        <PlanField label="Ultima zi a perioadei (opțional)"><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
+        <PlanField label="Data obișnuită a salariului" hint="Alege ziua la care vine de obicei, nu trebuie să fie exactă."><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
+        <PlanField label="Poate varia cu" hint="Dacă salariul întârzie sau vine mai devreme.">
+          <select value={cycleFlex} onChange={(event) => { const flex = Number(event.target.value); setCycleFlex(flex); persistCycle(cycleStart, cycleEnd, flex); }}>
+            <option value={0}>Nu variază</option>
+            <option value={1}>± 1 zi</option>
+            <option value={2}>± 2 zile</option>
+            <option value={3}>± 3 zile</option>
+            <option value={4}>± 4 zile</option>
+            <option value={5}>± 5 zile</option>
+          </select>
+        </PlanField>
       </div>
+      {windowPayday.typical && windowPayday.flex > 0 && <p className="bf-payday-window">Poate intra între {formatDate(windowPayday.earliest)} și {formatDate(windowPayday.latest)}. Ritmul zilnic e calculat ca și cum ar veni pe {formatDate(windowPayday.earliest)}; dacă întârzie, plicurile rămân active până pe {formatDate(windowPayday.latest)}.</p>}
       {activeCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV, DOAR CATEGORIILE CU RITM SĂPTĂMÂNAL</span><b>{money(activeCycle.weeklyAmount)} / săptămână</b></div><details className="bf-cycle-tools"><summary><span>Vezi cele {activeCycle.weeks.length} tranșe</span><ChevronDown size={17} /></summary><ol>{activeCycle.weeks.map((week) => { const spent = weekSpentByIndex.get(week.index) || 0; return <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{money(spent)} cheltuiți din {money(week.amount)}</small><strong>{money(Math.max(0, week.amount - spent))}</strong></li>; })}</ol></details></div>}
       {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
       <div className="bf-cycle-setup-actions"><button disabled={!activeCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> PDF plan</button></div>

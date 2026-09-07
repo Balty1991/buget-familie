@@ -144,3 +144,9 @@
 .ai-companion-trigger.is-local .ai-live{color:#f3e2b5}
 .ai-chat-text{white-space:pre-wrap}
 .ai-chat-text strong{font-weight:800;color:#1d4a3e}
+.ai-head-actions{display:flex;align-items:center;gap:2px;margin-left:auto}
+.ai-head-actions .ai-close{margin-left:0}
+.ai-chat-panel.is-max{top:8px;right:8px;bottom:8px;left:8px;width:auto;height:auto;max-height:none;border-radius:18px;z-index:4000}
+@media(max-width:600px){
+  .ai-chat-panel.is-max{top:0;right:0;bottom:0;left:0;width:100vw;height:100dvh;max-height:none;border-radius:0;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
+}

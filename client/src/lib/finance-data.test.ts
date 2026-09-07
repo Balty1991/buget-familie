@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
+import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -308,10 +308,18 @@ describe("registrul financiar Buget Familie", () => {
   it("folosește prima dată posibilă din fereastra de venit pentru un plan prudent", () => {
     const data = createEmptyAppData();
     const source = data.settings.paymentSources[0];
-    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", earliestPayday: "2026-08-07", sourceIds: [], totalLimit: 700, weeklyLimit: 0, allocations: [], transfers: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", earliestPayday: "2026-08-07", paydayFlexDays: 3, sourceIds: [], totalLimit: 700, weeklyLimit: 0, allocations: [], transfers: [] };
     data.transactions = [{ id: "pace", title: "Cheltuială", amount: 100, kind: "expense", category: "Altele", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-02" }];
-    expect(inPlanPeriod("2026-08-08", data.settings.salaryPlan)).toBe(false);
+    expect(inPlanPeriod("2026-08-08", data.settings.salaryPlan)).toBe(true);
+    expect(inPlanPeriod("2026-08-14", data.settings.salaryPlan)).toBe(false);
     expect(planForecast(data, "2026-08-02").remainingDays).toBe(6);
+  });
+
+  it("ține plicurile active dacă salariul întârzie cu fereastra aleasă", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", paydayFlexDays: 3, sourceIds: [], totalLimit: 700, weeklyLimit: 0, allocations: [], transfers: [] };
+    expect(paydayWindow(data.settings.salaryPlan)).toMatchObject({ typical: "2026-08-10", earliest: "2026-08-07", latest: "2026-08-13", flex: 3 });
+    expect(planEndDate(data.settings.salaryPlan)).toBe("2026-08-13");
   });
 
   it("interpretează local o cheltuială descrisă în limbaj natural", () => {
