@@ -820,8 +820,229 @@ html:not(.dark) .bf-os-decide {
 
 @media (max-width: 600px) {
   .dark .ai-companion-trigger {
-    right: 14px !important;
-    bottom: 88px !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+    width: auto !important;
   }
 }
+
+/* Preview lock — chrome 1:1 cu Household OS */
+.dark .bf-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.dark .bf-brand-mark,
+.dark .bf-brand-mark.bf-logo-3d {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  overflow: hidden !important;
+  border: 1px solid color-mix(in srgb, #7cffc4 18%, transparent) !important;
+  border-radius: 16px !important;
+  color: #7cffc4 !important;
+  background: #161d24 !important;
+  box-shadow: none !important;
+}
+
+.dark .bf-brand-mark::before,
+.dark .bf-brand-mark::after,
+.dark .bf-logo-3d::before,
+.dark .bf-logo-3d::after,
+.dark .bf-logo-roof,
+.dark .bf-logo-core,
+.dark .bf-logo-letter { display: none !important; }
+
+.dark .bf-brand-cube { display: block; }
+
+.dark .bf-brand-copy {
+  display: grid !important;
+  line-height: 1.05 !important;
+  text-align: left !important;
+}
+
+.dark .bf-brand-copy b {
+  color: #f3f6f4 !important;
+  font-family: Fraunces, "IBM Plex Serif", Georgia, serif !important;
+  font-size: 18px !important;
+  font-weight: 560 !important;
+  letter-spacing: -.03em !important;
+}
+
+.dark .bf-brand-copy i {
+  color: #7cffc4 !important;
+  font-style: normal !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+.dark .bf-command-trigger kbd { display: none !important; }
+
+.dark .bf-appbar-tools > button,
+.dark .bf-theme,
+.dark .bf-command-trigger {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 16px !important;
+}
+
+.dark .bf-os-date {
+  display: grid;
+  justify-items: end;
+  gap: 1px;
+  font-family: ui-monospace, "IBM Plex Sans", monospace;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: #9aa8a1;
+}
+
+.dark .bf-os-date b {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  color: #c5d0c9;
+}
+
+.dark .bf-os-date span { font-size: 10px; }
+
+.dark .bf-today-situation-number > strong small {
+  margin-left: 10px;
+  color: #9aa8a1 !important;
+  font-family: Outfit, "IBM Plex Sans", sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  letter-spacing: .28em !important;
+  vertical-align: 8px;
+}
+
+.dark .bf-os-gauge-wrap {
+  display: grid;
+  place-items: center;
+  margin-top: 8px;
+}
+
+.dark .bf-today-situation .bf-health-score,
+.dark .bf-os-gauge-wrap .bf-health-score {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  width: min(100%, 220px) !important;
+  margin: 4px auto 0 !important;
+  padding: 10px 12px 4px !important;
+  border-radius: 1.5rem !important;
+  background: color-mix(in srgb, #07090c 70%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #7cffc4 14%, transparent) !important;
+}
+
+.dark .bf-today-situation-top time,
+.dark .bf-today-situation-top { margin-right: 0 !important; }
+
+.bf-calm-gauge { width: 100%; color: #7cffc4; }
+.bf-calm-track { stroke: #2a3a34; stroke-width: 6; stroke-linecap: round; }
+.bf-calm-arc { stroke: #7cffc4; stroke-width: 6; stroke-linecap: round; }
+.bf-calm-tick { stroke: #31463c; stroke-width: .8; }
+.bf-calm-tick.major { stroke: #8a968f; stroke-width: 1.2; }
+.bf-calm-score {
+  fill: #f3f6f4;
+  font-family: Fraunces, Georgia, serif;
+  font-size: 22px;
+  font-weight: 560;
+}
+.bf-calm-label {
+  fill: #9aa8a1;
+  font-family: Outfit, sans-serif;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: .22em;
+}
+
+.dark .bf-health-sheet-ring-wrap { max-width: 260px; margin: 0 auto; }
+
+.dark .ai-companion-trigger {
+  left: 12px !important;
+  right: 12px !important;
+  bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  width: auto !important;
+  height: 46px !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
+  background: color-mix(in srgb, #10141a 94%, transparent) !important;
+  color: #f3f6f4 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(16px);
+  font-family: Outfit, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+.dark .ai-bf {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  color: #7cffc4;
+  background: #14352b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.dark .ai-companion-trigger .ai-pace {
+  margin-left: auto;
+  padding: 0;
+  color: #7cffc4;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.dark .bf-mobile-nav {
+  left: 12px !important;
+  right: 12px !important;
+  bottom: 10px !important;
+  height: auto !important;
+  padding: 6px !important;
+  border-radius: 1.6rem !important;
+  background: color-mix(in srgb, #10141a 95%, transparent) !important;
+}
+
+.dark .bf-mobile-nav button {
+  min-height: 56px !important;
+  border-radius: 1.2rem !important;
+  color: #9aa8a1 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.dark .bf-mobile-nav button.active {
+  color: #062016 !important;
+  background: #7cffc4 !important;
+  box-shadow: none !important;
+}
+
+.dark .bf-mobile-nav button span {
+  font-family: Outfit, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+.dark .bf-os-actions {
+  grid-template-columns: 1fr 1fr !important;
+}
+
+@media (max-width: 760px) {
+  .dark .bf-os-actions { grid-template-columns: 1fr !important; }
+}
+
 

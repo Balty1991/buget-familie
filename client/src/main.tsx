@@ -75,7 +75,7 @@ startPerformanceMonitoring();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=34`).then((registration) => {
+    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=35`).then((registration) => {
       void registration.update();
     }).catch(() => undefined);
     let refreshing = false;

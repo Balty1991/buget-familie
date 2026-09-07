@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { calculateHealthScore, type AppData, type HealthScoreBreakdown } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
+import { CalmGauge } from "@/components/CalmGauge";
 import { EnvelopeMark } from "@/components/EnvelopeMark";
-import { HealthGauge } from "@/components/LedgerArt";
 
 /**
  * Badge compact pentru ecranul Astăzi + sheet cu factorii explicabili.
@@ -22,10 +22,7 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
         aria-label={`Scor sănătate financiară ${health.score} din 100. Apasă pentru detalii.`}
         onClick={() => setOpen(true)}
       >
-        <HealthGauge score={health.score} tone={health.tone} size={92} />
-        <small>
-          {health.tone === "good" ? "Calm" : health.tone === "watch" ? "Atenție" : "Risc"}
-        </small>
+        <CalmGauge value={health.score} />
       </button>
 
       {open && <HealthScoreSheet health={health} onClose={() => setOpen(false)} />}
@@ -63,7 +60,7 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
         </p>
 
         <div className="bf-health-sheet-ring-wrap" aria-hidden="true">
-          <HealthGauge score={health.score} tone={health.tone} size={196} />
+          <CalmGauge value={health.score} />
         </div>
 
         <ul className="bf-health-factors">
