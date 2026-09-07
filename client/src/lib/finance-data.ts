@@ -500,7 +500,7 @@ const foldRomanian = (value: string) => value.toLocaleLowerCase("ro-RO").normali
  */
 export const parseNaturalSpendScenario = (raw: string, categories: string[] = expenseCategories): NaturalSpendScenario => {
   const folded = foldRomanian(raw.trim());
-  const amountMatch = raw.match(/(?:^|\s)(\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)(?=\s*(?:de\s+)?(?:lei|ron|leu|$))/i);
+  const amountMatch = raw.match(/(?:^|\s)(\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)(?=\s*(?:de\s+)?(?:lei|ron|leu|pe|pentru|$))/i);
   const amount = amountMatch ? parseRomanianAmount(amountMatch[1]) : 0;
   const categoryAliases: Array<[RegExp, string]> = [
     [/\b(taxi|uber|bolt|transport|metrou|benzina|motorina|combustibil|parcare|bilet)\b/, "Transport"],
@@ -510,6 +510,7 @@ export const parseNaturalSpendScenario = (raw: string, categories: string[] = ex
     [/\b(factura|internet|curent|gaz|chirie|detergent|casa)\b/, "Casă & facturi"],
     [/\b(medic|farmacie|doctor|sanatate)\b/, "Sănătate"],
     [/\b(film|joc|iesire|concert|timp liber)\b/, "Timp liber"],
+    [/\b(tigar|tutun|vape)\b/, "Altele"],
     [/\b(rata|credit|imprumut)\b/, "Rate produse"],
   ];
   const category = categories.find((item) => folded.includes(foldRomanian(item))) || categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];

@@ -186,18 +186,29 @@ function relatedCategories(category: string) {
     Transport: [],
     "Casă & facturi": ["Apă"],
   };
-  return map[category] || ["Alimente"];
+  return map[category] || [];
 }
 
-function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData): { text: string; choices: ChatChoice[] } | undefined {
+function spendTitle(folded: string, extracted: ExtractedGuide | undefined, category: string) {
+  if (/taxi|uber|bolt/.test(folded)) return "Taxi";
+  if (/\bapa\b/.test(folded)) return "Apă";
+  if (/dulce/.test(folded)) return "Dulciuri";
+  if (/tigar|tutun/.test(folded)) return "Țigări";
+  if (/cafea/.test(folded)) return "Cafea";
+  return extracted?.title || category;
+}
+
+function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData, forced = false): { text: string; choices: ChatChoice[] } | undefined {
   const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
-  const amount = extracted?.amount || parsed.amount;
+  const amount = extracted?.amount || parsed.amount || allAmounts(raw)[0] || 0;
   if (!amount || amount <= 0) return undefined;
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const looksSpend = /cheltui|taxi|uber|bolt|apa\b|dulce|dulciuri|platit|cumpar|cumpăr|factura|benzina|combustibil|mancare/.test(folded) || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
-  if (!looksSpend) return undefined;
+  const looksSpend = forced
+    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|\bpe |\bpentru /.test(folded)
+    || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
+  if (!looksSpend || /venit|salariu|intrare/.test(folded)) return undefined;
   const category = parsed.category || extracted?.category || "Altele";
-  const title = /taxi|uber|bolt/.test(folded) ? "Taxi" : /\bapa\b/.test(folded) ? "Apă" : /dulce/.test(folded) ? "Dulciuri" : extracted?.title || category;
+  const title = spendTitle(folded, extracted, category);
   const member = data.settings.members[0];
   const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
   const related = relatedCategories(category);
@@ -357,6 +368,19 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       applyChoice(pending.choices[0]);
       return;
     }
+    if (isConfirm(raw)) {
+      const lastSpend = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data));
+      const recovered = lastSpend ? expenseProposal(lastSpend.text, undefined, data, true) : undefined;
+      if (recovered) {
+        addMessage({ role: "assistant", text: recovered.text, choices: recovered.choices });
+        return;
+      }
+    }
+    const spendNow = expenseProposal(raw, undefined, data);
+    if (spendNow) {
+      addMessage({ role: "assistant", text: spendNow.text, choices: spendNow.choices });
+      return;
+    }
     const blocked = quota.mode === "local" || quota.remaining <= 0;
     if (blocked) {
       setQuota((current) => ({ ...current, mode: "local", remaining: Math.min(current.remaining, 0) }));
@@ -382,7 +406,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         setQuota(nextQuota);
         if (!response.ok) throw new Error(payload.code || "AI unavailable");
         setTyping(false);
-        const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt" ? undefined : expenseProposal(raw, payload.extracted, data);
+        const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt"
+          ? undefined
+          : expenseProposal(raw, payload.extracted, data, payload.intent === "expense");
         if (proposal) {
           addMessage({ role: "assistant", text: proposal.text, choices: proposal.choices });
           return;
