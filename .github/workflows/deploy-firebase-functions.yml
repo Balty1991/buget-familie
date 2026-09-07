@@ -38,12 +38,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: functions/pnpm-lock.yaml
 
       - name: Install function dependencies
         working-directory: functions
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: npm ci --ignore-scripts --legacy-peer-deps
 
       - name: Type-check Firebase Functions
         working-directory: functions
@@ -51,7 +49,7 @@ jobs:
 
       - name: Build Firebase Functions
         working-directory: functions
-        run: pnpm run build
+        run: npm run build
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
