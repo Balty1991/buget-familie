@@ -5,7 +5,7 @@ import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
-export type FinancialUpdate = { kind: "income"; amount: number; title: string; memberId?: string } | { kind: "debt"; name: string; remaining: number } | { kind: "debt-monthly"; amount: number } | { kind: "allocation"; category: string; amount: number; weekly: boolean };
+export type FinancialUpdate = { kind: "income"; amount: number; title: string; memberId?: string } | { kind: "debt"; name: string; remaining: number } | { kind: "debt-monthly"; amount: number } | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number };
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void };
 type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" }; updates?: FinancialUpdate[] };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
@@ -116,6 +116,36 @@ function memberIdFor(data: AppData, hint: string, index = 0) {
   return members[index]?.id || members[0]?.id;
 }
 
+function parseWeeks(raw: string) {
+  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const match = folded.match(/(\d{1,2})\s*(?:de\s+)?saptaman/);
+  const value = match ? Number(match[1]) : 0;
+  return value >= 2 && value <= 12 ? value : undefined;
+}
+
+function parseWeeklyAmount(raw: string) {
+  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const match = folded.match(/(\d[\d .]*)\s*(?:lei|ron)?\s*(?:\/|pe)\s*saptaman/);
+  return match ? allAmounts(match[1])[0] : undefined;
+}
+
+function parseAllocationUpdate(extracted: ExtractedGuide | undefined, userText: string): FinancialUpdate | undefined {
+  const folded = userText.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const looksLikeEnvelope = Boolean(extracted?.category) || /plic|imparte|repartiz|aloc|aliment|saptaman/.test(folded);
+  if (!looksLikeEnvelope) return undefined;
+  const weeklyAmount = parseWeeklyAmount(userText);
+  const amounts = allAmounts(userText).filter((value) => value !== weeklyAmount);
+  let amount = extracted?.amount;
+  if (!amount && amounts.length) {
+    amount = /din (cei|cei|cele)|imparte din/.test(folded) && amounts.length >= 2 ? Math.min(...amounts.filter((value) => value >= 100)) : amounts.find((value) => value >= 100) || amounts[0];
+  }
+  if (!amount) return undefined;
+  const category = extracted?.category
+    || (/aliment/.test(folded) ? "Alimente" : /transport|taxi/.test(folded) ? "Transport" : /factura|casa|chirie/.test(folded) ? "Casă & facturi" : /econom/.test(folded) ? "Economii" : "Alimente");
+  const weeks = parseWeeks(userText) || (weeklyAmount ? Math.round(amount / weeklyAmount) : 4);
+  return { kind: "allocation", category, amount, weekly: true, weeklyAmount, weeks: weeks >= 2 && weeks <= 12 ? weeks : 4 };
+}
+
 type ExtractedGuide = {
   amount?: number;
   title?: string;
@@ -130,8 +160,9 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
   if (intent === "debt" && (extracted?.debtName || extracted?.title) && (extracted.amount || extracted.monthlyPayment)) {
     return [{ kind: "debt", name: extracted.debtName || extracted.title || "Datorie", remaining: extracted.amount || 0 }];
   }
-  if (intent === "allocation" && extracted?.category && extracted.amount) {
-    return [{ kind: "allocation", category: extracted.category, amount: extracted.amount, weekly: /aliment|transport/i.test(extracted.category) }];
+  const envelope = parseAllocationUpdate(extracted, sourceText);
+  if (intent === "allocation" || envelope && /plic|imparte|repartiz|aloc|aliment.*saptaman|saptaman/.test(sourceText.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) {
+    if (envelope) return [envelope];
   }
   if (intent !== "income" && intent !== "next_step" && intent !== "summary") {
     if (!/venit|salariu|intrare|întrare/i.test(sourceText) && !extracted?.amount && !extracted?.items?.length) return [];
@@ -246,14 +277,16 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         if (!response.ok) throw new Error(payload.code || "AI unavailable");
         setTyping(false);
         const updates = updatesFromGuide(payload.intent, payload.extracted, raw, data, messages);
-        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "income");
+        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "income" || payload.intent === "allocation");
         if (saveNow) applyGuide(updates);
         addMessage({
           role: "assistant",
           text: payload.reply || "Am analizat mesajul. Spune-mi ce vrei să facem în continuare.",
           action: saveNow && updates.some((update) => update.kind === "income")
             ? { type: "journal", label: "Vezi în Mișcări" }
-            : !saveNow && updates.length
+            : saveNow && updates.some((update) => update.kind === "allocation")
+              ? { type: "plan", label: "Vezi tranșele în Plan" }
+              : !saveNow && updates.length
               ? { type: "apply", label: `Adaugă ${updates.filter((update) => "amount" in update).map((update) => money((update as { amount: number }).amount)).join(" + ")} în registru` }
               : payload.intent === "expense" && payload.extracted?.amount
                 ? { type: "add", label: "Deschide și verifică" }
