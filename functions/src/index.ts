@@ -117,6 +117,10 @@ function parseGuideAnswer(raw: string): GuideAnswer {
   };
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function callGemini(apiKey: string, contents: GeminiContent[]) {
   let lastStatus = 0;
   let lastDetail = "";
@@ -134,28 +138,37 @@ async function callGemini(apiKey: string, contents: GeminiContent[]) {
             }
           : { temperature: 0.6 },
       };
-      const apiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      lastStatus = apiResponse.status;
-      if (apiResponse.ok) {
-        const body = (await apiResponse.json()) as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-        };
-        const raw = body.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("\n") || "{}";
-        return parseGuideAnswer(raw);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const apiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        );
+        lastStatus = apiResponse.status;
+        if (apiResponse.ok) {
+          const body = (await apiResponse.json()) as {
+            candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+          };
+          const raw = body.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("\n") || "{}";
+          return parseGuideAnswer(raw);
+        }
+        lastDetail = await apiResponse.text();
+        console.error("Gemini error", model, structured ? "schema" : "text", apiResponse.status, lastDetail.slice(0, 500));
+        if (isInvalidKey(lastDetail)) {
+          throw new GeminiCallError("INVALID_API_KEY", apiResponse.status);
+        }
+        if (apiResponse.status === 404) break;
+        if (apiResponse.status === 429 || apiResponse.status === 503) {
+          const retryAfter = Number(apiResponse.headers.get("retry-after"));
+          const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 1200 * (attempt + 1);
+          await sleep(Math.min(waitMs, 8000));
+          continue;
+        }
+        break;
       }
-      lastDetail = await apiResponse.text();
-      console.error("Gemini error", model, structured ? "schema" : "text", apiResponse.status, lastDetail.slice(0, 500));
-      if (isInvalidKey(lastDetail)) {
-        throw new GeminiCallError("INVALID_API_KEY", apiResponse.status);
-      }
-      if (apiResponse.status === 404 || apiResponse.status === 429) break;
     }
   }
 
