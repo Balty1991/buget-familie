@@ -121,7 +121,7 @@ function seedMemory(current: GuideMemory, data: AppData): GuideMemory {
       lastAt: item.date,
     });
   });
-  return { phrases: [...map.values()].slice(-80), skippedOnline: current.skippedOnline };
+  return { phrases: Array.from(map.values()).slice(-80), skippedOnline: current.skippedOnline };
 }
 
 function localInsight(raw: string, data: AppData): string | undefined {
