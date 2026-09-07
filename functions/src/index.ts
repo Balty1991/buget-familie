@@ -19,6 +19,7 @@ type GuideAnswer = {
     category?: string;
     debtName?: string;
     monthlyPayment?: number;
+    items?: Array<{ amount?: number; title?: string }>;
   };
 };
 type Quota = { remaining: number | null; limit: number | null; resetAt: string | null };
@@ -29,7 +30,7 @@ const GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-
 
 const systemInstruction = `Ești Copilotul Financiar al aplicației Buget Familie. Ești un ghid calm, empatic și foarte practic, care rămâne activ pe tot parcursul folosirii aplicației. Nu răspunde generic și nu redirecționa utilizatorul către meniuri fără explicație.
 
-Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Dacă utilizatorul spune o cheltuială sau un venit, extrage datele și cere confirmarea înainte de a salva. Dacă lipsește o informație, întreabă un singur lucru concret.
+Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. needsConfirmation este true doar la prima propunere. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
 
 Răspunde în română, natural, ca un asistent care își amintește conversația. Nu folosi markdown: fără **, # sau liste cu asteriscuri. Răspunsuri scurte, maximum 4-5 propoziții. Dacă enumeri, scrie 1. 2. 3. pe rânduri separate. Nu inventa sume. Nu pretinde că ai acces la conturi bancare. Nu oferi recomandări de investiții, creditare sau decizii financiare riscante ca certitudini. Explică întotdeauna ce ai înțeles și ce urmează.
 
@@ -52,6 +53,16 @@ const responseSchema = {
         category: { type: "STRING" },
         debtName: { type: "STRING" },
         monthlyPayment: { type: "NUMBER" },
+        items: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              amount: { type: "NUMBER" },
+              title: { type: "STRING" },
+            },
+          },
+        },
       },
     },
   },
@@ -158,10 +169,11 @@ function quotaFrom(headers: Headers, detail = "", exhausted = false): Quota {
   const retryMatch = detail.match(/retry in ([\d.]+)\s*s/i);
   const delayMs = parseDurationMs(resetHeader) || (retryMatch ? Number(retryMatch[1]) * 1000 : null);
   const remaining = Number.isFinite(remainingHeader) ? remainingHeader : exhausted ? 0 : null;
+  const shortWindow = delayMs != null && delayMs < 15 * 60 * 1000 && (remaining == null || remaining > 8);
   return {
     remaining,
     limit: Number.isFinite(limitHeader) ? limitHeader : null,
-    resetAt: delayMs ? new Date(Date.now() + delayMs).toISOString() : exhausted ? nextPacificMidnight() : null,
+    resetAt: shortWindow ? null : delayMs ? new Date(Date.now() + delayMs).toISOString() : exhausted ? nextPacificMidnight() : null,
   };
 }
 
