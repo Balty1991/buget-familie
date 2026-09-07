@@ -60,6 +60,9 @@ jobs:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Enable Gemini API
+        run: gcloud services enable generativelanguage.googleapis.com --project "$FIREBASE_PROJECT_ID"
+
       - name: Sync Gemini secret to Secret Manager
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
