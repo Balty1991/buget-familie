@@ -35,7 +35,7 @@ function GuideText({ text }: { text: string }) {
 }
 
 const QUOTA_KEY = "buget-familie:ai-quota-v2";
-const DAILY_LIMIT = 40;
+const DAILY_LIMIT = 100;
 
 type QuotaInfo = { remaining: number; limit: number; resetAt: string; mode: "online" | "local" };
 
@@ -63,9 +63,9 @@ function loadQuota(): QuotaInfo {
     const parsed = JSON.parse(window.localStorage.getItem(QUOTA_KEY) || "null") as Partial<QuotaInfo> | null;
     if (!parsed || (parsed.mode !== "online" && parsed.mode !== "local")) return emptyQuota();
     if (!parsed.resetAt || Date.parse(parsed.resetAt) <= Date.now()) return emptyQuota();
-    const limit = Number(parsed.limit) > 0 ? Number(parsed.limit) : DAILY_LIMIT;
-    const remaining = Math.max(0, Math.min(limit, Number(parsed.remaining ?? limit)));
-    return { remaining, limit, resetAt: parsed.resetAt, mode: remaining <= 0 ? "local" : parsed.mode };
+    const used = Math.max(0, (Number(parsed.limit) || DAILY_LIMIT) - Number(parsed.remaining ?? DAILY_LIMIT));
+    const remaining = Math.max(0, DAILY_LIMIT - used);
+    return { remaining, limit: DAILY_LIMIT, resetAt: parsed.resetAt, mode: remaining <= 0 ? "local" : parsed.mode === "local" ? "local" : "online" };
   } catch {
     return emptyQuota();
   }
