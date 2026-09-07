@@ -35,17 +35,31 @@ html, body {
   background: var(--cf-bg, #07090c);
 }
 
+html {
+  --os-inset-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --os-inset-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --os-inset-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --os-inset-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+}
+
+html.capacitor-android {
+  --os-inset-top: var(--safe-area-inset-top, env(safe-area-inset-top, 28px));
+  --os-inset-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --os-inset-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 16px));
+  --os-inset-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+}
+
 /* ---- App bar: cub + Buget / Familie + 3 butoane rotunde ---- */
 .os-appbar.bf-appbar {
   min-height: 64px !important;
   height: auto !important;
-  padding-top: calc(10px + env(safe-area-inset-top, 0px)) !important;
-  padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
-  padding-bottom: 10px !important;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
+  padding-top: calc(8px + var(--os-inset-top)) !important;
+  padding-right: max(16px, var(--os-inset-right)) !important;
+  padding-bottom: 8px !important;
+  padding-left: max(16px, var(--os-inset-left)) !important;
   border-bottom: 1px solid var(--os-line) !important;
-  background: color-mix(in srgb, var(--os-bg) 86%, transparent) !important;
-  backdrop-filter: blur(16px) !important;
+  background: var(--os-bg) !important;
+  backdrop-filter: none !important;
   box-shadow: none !important;
 }
 
@@ -447,9 +461,9 @@ html, body {
 /* ---- Dock mint, 5 tab-uri ---- */
 .os-dock {
   position: fixed !important;
-  left: 12px !important;
-  right: 12px !important;
-  bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+  left: 8px !important;
+  right: 8px !important;
+  bottom: max(4px, var(--os-inset-bottom)) !important;
   z-index: 40 !important;
   display: flex !important;
   align-items: center !important;
@@ -509,7 +523,7 @@ html, body {
 .os-shell .bf-obligations-workspace,
 .os-shell .bf-insights-workspace,
 .os-shell .bf-utilities-workspace {
-  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+  padding-bottom: calc(88px + var(--os-inset-bottom)) !important;
 }
 
 @media (min-width: 761px) {

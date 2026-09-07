@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { Capacitor } from "@capacitor/core";
 import App from "./App";
 import "./fonts-local.css";
 import "./index.css";
@@ -72,12 +73,13 @@ import "./household-os-today.css";
 import "./household-os-chrome.css";
 import "./household-os-themes.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
+if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
 createRoot(document.getElementById("root")!).render(<App />);
 startPerformanceMonitoring();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=44`).then((registration) => {
+    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=45`).then((registration) => {
       void registration.update();
       if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
     }).catch(() => undefined);

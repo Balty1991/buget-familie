@@ -7,13 +7,12 @@ const config: CapacitorConfig = {
   webDir: "dist/public",
   android: {
     backgroundColor: "#07090c",
-    // Padding-ul e în MainActivity. Dacă și Capacitor mai adaugă margini, antetul coboară de două ori.
     adjustMarginsForEdgeToEdge: "disable",
   },
   plugins: {
     SystemBars: {
-      insetsHandling: "disable",
-      style: "DARK",
+      insetsHandling: "css",
+      style: "LIGHT",
     },
   },
 };
