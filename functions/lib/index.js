@@ -11,7 +11,7 @@ const geminiApiKey = (0, params_1.defineSecret)("GEMINI_API_KEY");
 const groqApiKey = (0, params_1.defineSecret)("GROQ_API_KEY");
 const allowCors = (0, cors_1.default)({ origin: true });
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-flash-latest"];
-const GROQ_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+const GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"];
 const systemInstruction = `Ești Copilotul Financiar al aplicației Buget Familie. Ești un ghid calm, empatic și foarte practic, care rămâne activ pe tot parcursul folosirii aplicației. Nu răspunde generic și nu redirecționa utilizatorul către meniuri fără explicație.
 
 Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Dacă utilizatorul spune o cheltuială sau un venit, extrage datele și cere confirmarea înainte de a salva. Dacă lipsește o informație, întreabă un singur lucru concret.
@@ -146,10 +146,10 @@ async function callGemini(apiKey, contents) {
                     break;
                 if (apiResponse.status === 429 || apiResponse.status === 503) {
                     if (attempt === 0) {
-                        await sleep(800);
+                        await sleep(500);
                         continue;
                     }
-                    break;
+                    throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_BUSY", apiResponse.status);
                 }
                 break;
             }
@@ -168,37 +168,41 @@ async function callGroq(apiKey, contents) {
         })),
     ];
     for (const model of GROQ_MODELS) {
-        for (let attempt = 0; attempt < 2; attempt++) {
-            const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "content-type": "application/json",
-                    authorization: `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    model,
-                    temperature: 0.6,
-                    messages,
-                    response_format: { type: "json_object" },
-                }),
-            });
-            lastStatus = apiResponse.status;
-            if (apiResponse.ok) {
-                const body = (await apiResponse.json());
-                return parseGuideAnswer(body.choices?.[0]?.message?.content || "{}");
-            }
-            lastDetail = await apiResponse.text();
-            console.error("Groq error", model, apiResponse.status, lastDetail.slice(0, 400));
-            if (isInvalidKey(lastDetail)) {
-                throw new GuideCallError("INVALID_GROQ_KEY", apiResponse.status);
-            }
-            if (apiResponse.status === 404)
+        for (const structured of [true, false]) {
+            for (let attempt = 0; attempt < 2; attempt++) {
+                const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "content-type": "application/json",
+                        authorization: `Bearer ${apiKey}`,
+                    },
+                    body: JSON.stringify({
+                        model,
+                        temperature: 0.6,
+                        messages,
+                        ...(structured ? { response_format: { type: "json_object" } } : {}),
+                    }),
+                });
+                lastStatus = apiResponse.status;
+                if (apiResponse.ok) {
+                    const body = (await apiResponse.json());
+                    return parseGuideAnswer(body.choices?.[0]?.message?.content || "{}");
+                }
+                lastDetail = await apiResponse.text();
+                console.error("Groq error", model, structured ? "json" : "text", apiResponse.status, lastDetail.slice(0, 400));
+                if (isInvalidKey(lastDetail)) {
+                    throw new GuideCallError("INVALID_GROQ_KEY", apiResponse.status);
+                }
+                if (apiResponse.status === 404)
+                    break;
+                if (apiResponse.status === 400)
+                    break;
+                if (apiResponse.status === 429 || apiResponse.status === 503) {
+                    await sleep(700 * (attempt + 1));
+                    continue;
+                }
                 break;
-            if (apiResponse.status === 429 || apiResponse.status === 503) {
-                await sleep(700 * (attempt + 1));
-                continue;
             }
-            break;
         }
     }
     throw new GuideCallError(lastDetail.slice(0, 300) || "GROQ_UPSTREAM_ERROR", lastStatus);
