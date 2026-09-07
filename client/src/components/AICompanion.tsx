@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, CircleCheck, Lightbulb, Maximize2, Minimize2, Send, Sparkles, Trash2, WalletCards, X } from "lucide-react";
-import { allocationStatus, allocationWeekStatus, expenseCategories, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, expenseCategories, parseNaturalSpendScenario, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 
@@ -196,34 +196,41 @@ function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, dat
   const member = data.settings.members[0];
   const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
   const related = relatedCategories(category);
-  const ranked = [...data.settings.salaryPlan.allocations].sort((left, right) => {
-    const score = (item: typeof left) => {
-      if (item.category === category) return 4;
-      if (related.includes(item.category || "")) return 3;
-      if ((item.category || item.label) === "Alimente") return 2;
-      return 1;
-    };
-    return score(right) - score(left);
-  });
-  const choices: ChatChoice[] = ranked.map((envelope) => {
-    const week = envelope.weeklyPace !== false ? allocationWeekStatus(data, envelope) : undefined;
-    const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
-    return {
-      label: `Din ${envelope.label}${week ? ` · S${week.index}` : ""} · ${money(Math.max(0, left))}`,
-      update: { kind: "expense" as const, amount, title, category, allocationId: envelope.id, sourceId: envelope.sourceId || fallbackSource?.id, memberId: envelope.memberId || member?.id },
-    };
-  });
+  const funded = [...data.settings.salaryPlan.allocations]
+    .map((envelope) => {
+      const week = envelope.weeklyPace !== false ? allocationWeekStatus(data, envelope) : undefined;
+      const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
+      return { envelope, week, left };
+    })
+    .filter((item) => item.left >= amount)
+    .sort((left, right) => {
+      const score = (item: typeof left) => {
+        if (item.envelope.category === category) return 4;
+        if (related.includes(item.envelope.category || "")) return 3;
+        if ((item.envelope.category || item.envelope.label) === "Alimente") return 2;
+        return 1;
+      };
+      return score(right) - score(left) || right.left - left.left;
+    });
+  const choices: ChatChoice[] = funded.map(({ envelope, week, left }) => ({
+    label: `Din ${envelope.label}${week ? ` · S${week.index}` : ""} · ${money(left)}`,
+    update: { kind: "expense" as const, amount, title, category, allocationId: envelope.id, sourceId: envelope.sourceId || fallbackSource?.id, memberId: envelope.memberId || member?.id },
+  }));
   data.settings.paymentSources.forEach((source) => {
+    const left = sourceBalance(data, source.id);
+    if (left < amount) return;
     choices.push({
-      label: `Din nealocat · ${source.name}`,
+      label: `Din nealocat · ${source.name} · ${money(left)}`,
       update: { kind: "expense", amount, title, category, allocationId: "outside", sourceId: source.id, memberId: source.memberId || member?.id },
     });
   });
-  if (!choices.length) return undefined;
-  const preferred = ranked.find((item) => item.category === category) || ranked.find((item) => related.includes(item.category || ""));
+  if (!choices.length) {
+    return { text: `Am înțeles **${title}**, ${money(amount)}. Nu am găsit un plic sau o sursă cu destui bani disponibili.`, choices: [] };
+  }
+  const preferred = funded.find((item) => item.envelope.category === category) || funded.find((item) => related.includes(item.envelope.category || ""));
   const text = preferred
-    ? `Am înțeles **${title}**, ${money(amount)}. Cea mai apropiată opțiune e **${preferred.label}**, dar poți lua și din alt plic (inclusiv Alimente săptămânal) sau din banii nealocați.`
-    : `Am înțeles **${title}**, ${money(amount)}. Nu am un plic exact pentru ${category}. Alege din plicurile existente sau din banii nealocați.`;
+    ? `Am înțeles **${title}**, ${money(amount)}. Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**. Alege doar din locurile unde sunt bani disponibili.`
+    : `Am înțeles **${title}**, ${money(amount)}. Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
   return { text, choices };
 }
 
