@@ -1,12 +1,20 @@
 {
   "name": "buget-familie-functions",
   "private": true,
-  "engines": { "node": "22" },
+  "engines": {
+    "node": "22"
+  },
   "main": "lib/index.js",
-  "scripts": { "build": "tsc", "serve": "npm run build" },
+  "scripts": {
+    "build": "tsc",
+    "serve": "npm run build"
+  },
   "dependencies": {
     "firebase-functions": "^7.3.2",
     "cors": "^2.8.5"
   },
-  "devDependencies": { "typescript": "^5.9.3" }
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "typescript": "^5.9.3"
+  }
 }
