@@ -210,3 +210,34 @@ html.ai-guide-max .ai-chat-panel{
     border-radius:22px !important;
   }
 }
+
+@media (max-width: 600px) {
+  .ai-companion-panel.ai-chat-panel:not(.is-max) {
+    top: auto !important;
+    right: 10px !important;
+    left: 10px !important;
+    bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    height: min(74dvh, calc(100dvh - 118px)) !important;
+    max-height: calc(100dvh - 110px) !important;
+  }
+  .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-quota,
+  .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-privacy,
+  .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-status {
+    display: none !important;
+  }
+  .ai-companion-panel.ai-chat-panel:not(.is-max) .ai-chat-history {
+    flex: 1 1 auto !important;
+    min-height: 220px !important;
+  }
+  .ai-companion-panel.ai-chat-panel:not(.is-max):has(#ai-natural-message:focus),
+  .ai-companion-panel.ai-chat-panel:not(.is-max):has(#ai-natural-message:not(:placeholder-shown)) {
+    top: 8px !important;
+    bottom: 8px !important;
+    height: auto !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+  .ai-companion-panel.ai-chat-panel:not(.is-max):has(#ai-natural-message:focus) .ai-chat-suggestions {
+    display: none !important;
+  }
+}
