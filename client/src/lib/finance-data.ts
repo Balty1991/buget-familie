@@ -258,7 +258,8 @@ export const sourceBalance = (data: AppData, sourceId: string) => {
   return source.openingBalance + data.transactions.filter((item) => item.sourceId === sourceId).reduce((total, item) => total + (item.kind === "income" ? item.amount : -item.amount), 0);
 };
 
-export const planEndDate = (plan: SalaryPlan) => paydayWindow(plan).latest || plan.nextPayday || plan.earliestPayday || "";
+export const planEndDate = (plan: SalaryPlan) => paydayWindow(plan).typical || plan.nextPayday || plan.earliestPayday || "";
+export const planCoverEndDate = (plan: SalaryPlan) => paydayWindow(plan).latest || planEndDate(plan);
 export const prudentPlanEndDate = (plan: SalaryPlan) => paydayWindow(plan).earliest || planEndDate(plan);
 export const addIsoDays = (iso: string, days: number) => {
   const date = new Date(`${iso}T12:00:00`);
@@ -276,7 +277,7 @@ export const paydayWindow = (plan: SalaryPlan) => {
     : (computedEarliest < plan.periodStart ? plan.periodStart : computedEarliest);
   return { typical, earliest, latest: addIsoDays(typical, flex), flex };
 };
-export const inPlanPeriod = (iso: string, plan: SalaryPlan) => { const end = planEndDate(plan); return iso >= plan.periodStart && (!end || iso <= end); };
+export const inPlanPeriod = (iso: string, plan: SalaryPlan) => { const end = planCoverEndDate(plan); return iso >= plan.periodStart && (!end || iso <= end); };
 export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, data.settings.salaryPlan)).filter((item) => item.allocationId ? item.allocationId === allocation.id : (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || item.sourceId === allocation.sourceId)).reduce((sum, item) => sum + item.amount, 0);
 export const allocationBudget = (data: AppData, allocation: BudgetAllocation) => allocation.amount + data.settings.salaryPlan.transfers.reduce((sum, transfer) => sum + (transfer.toAllocationId === allocation.id ? transfer.amount : 0) - (transfer.fromAllocationId === allocation.id ? transfer.amount : 0), 0);
 export const allocationStatus = (data: AppData, allocation: BudgetAllocation) => { const budget = allocationBudget(data, allocation); const spent = allocationSpent(data, allocation); const remaining = budget - spent; const usage = budget > 0 ? spent / budget : 0; const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80)); return { budget, spent, remaining, usage, alertThreshold, state: remaining < 0 ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const }; };

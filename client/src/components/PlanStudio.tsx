@@ -263,7 +263,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
           </select>
         </PlanField>
       </div>
-      {windowPayday.typical && windowPayday.flex > 0 && <p className="bf-payday-window">Poate intra între {formatDate(windowPayday.earliest)} și {formatDate(windowPayday.latest)}. Ritmul zilnic e calculat ca și cum ar veni pe {formatDate(windowPayday.earliest)}; dacă întârzie, plicurile rămân active până pe {formatDate(windowPayday.latest)}.</p>}
+      {windowPayday.typical && windowPayday.flex > 0 && <p className="bf-payday-window">Tranșele țin până pe {formatDate(windowPayday.typical)}. Dacă salariul întârzie, plicurile rămân active până pe {formatDate(windowPayday.latest)}; ritmul zilnic e calculat ca și cum ar veni pe {formatDate(windowPayday.earliest)}.</p>}
       {activeCycle && <div className="bf-cycle-tranches"><div><span>RITM ORIENTATIV, DOAR CATEGORIILE CU RITM SĂPTĂMÂNAL</span><b>{money(activeCycle.weeklyAmount)} / săptămână</b></div><details className="bf-cycle-tools"><summary><span>Vezi cele {activeCycle.weeks.length} tranșe</span><ChevronDown size={17} /></summary><ol>{activeCycle.weeks.map((week) => { const spent = weekSpentByIndex.get(week.index) || 0; return <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{money(spent)} cheltuiți din {money(week.amount)}</small><strong>{money(Math.max(0, week.amount - spent))}</strong></li>; })}</ol></details></div>}
       {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
       <div className="bf-cycle-setup-actions"><button disabled={!activeCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> PDF plan</button></div>

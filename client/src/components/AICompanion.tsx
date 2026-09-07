@@ -5,7 +5,7 @@ import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
-export type FinancialUpdate = { kind: "income"; amount: number; title: string; memberId?: string } | { kind: "debt"; name: string; remaining: number } | { kind: "debt-monthly"; amount: number } | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number };
+export type FinancialUpdate = { kind: "income"; amount: number; title: string; memberId?: string } | { kind: "debt"; name: string; remaining: number } | { kind: "debt-monthly"; amount: number } | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string };
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void };
 type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" }; updates?: FinancialUpdate[] };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
@@ -116,6 +116,14 @@ function memberIdFor(data: AppData, hint: string, index = 0) {
   return members[index]?.id || members[0]?.id;
 }
 
+function parsePayday(raw: string) {
+  const iso = raw.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/);
+  if (iso && Number(iso[2]) <= 12 && Number(iso[3]) <= 31) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
+  const dmy = raw.match(/\b(\d{1,2})[./-](\d{1,2})[./-](20\d{2})\b/);
+  if (dmy && Number(dmy[2]) <= 12 && Number(dmy[1]) <= 31) return `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
+  return undefined;
+}
+
 function parseWeeks(raw: string) {
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const match = folded.match(/(\d{1,2})\s*(?:de\s+)?saptaman/);
@@ -134,7 +142,7 @@ function parseAllocationUpdate(extracted: ExtractedGuide | undefined, userText: 
   const looksLikeEnvelope = Boolean(extracted?.category) || /plic|imparte|repartiz|aloc|aliment|saptaman/.test(folded);
   if (!looksLikeEnvelope) return undefined;
   const weeklyAmount = parseWeeklyAmount(userText);
-  const amounts = allAmounts(userText).filter((value) => value !== weeklyAmount);
+  const amounts = allAmounts(userText).filter((value) => value !== weeklyAmount && value < 1900);
   let amount = extracted?.amount;
   if (!amount && amounts.length) {
     amount = /din (cei|cei|cele)|imparte din/.test(folded) && amounts.length >= 2 ? Math.min(...amounts.filter((value) => value >= 100)) : amounts.find((value) => value >= 100) || amounts[0];
@@ -143,7 +151,7 @@ function parseAllocationUpdate(extracted: ExtractedGuide | undefined, userText: 
   const category = extracted?.category
     || (/aliment/.test(folded) ? "Alimente" : /transport|taxi/.test(folded) ? "Transport" : /factura|casa|chirie/.test(folded) ? "Casă & facturi" : /econom/.test(folded) ? "Economii" : "Alimente");
   const weeks = parseWeeks(userText) || (weeklyAmount ? Math.round(amount / weeklyAmount) : 4);
-  return { kind: "allocation", category, amount, weekly: true, weeklyAmount, weeks: weeks >= 2 && weeks <= 12 ? weeks : 4 };
+  return { kind: "allocation", category, amount, weekly: true, weeklyAmount, weeks: weeks >= 2 && weeks <= 12 ? weeks : 4, payday: parsePayday(userText) };
 }
 
 type ExtractedGuide = {
@@ -247,7 +255,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     if (!item.action || item.action.type === "apply") return;
     if (item.action.type === "add") onAdd();
     else onGo(item.action.type);
-    setOpen(false);
+    setExpanded(false);
   };
   const applyGuide = (updates: FinancialUpdate[]) => {
     updates.forEach((update) => onFinancialUpdate(update));

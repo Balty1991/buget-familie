@@ -319,7 +319,8 @@ describe("registrul financiar Buget Familie", () => {
     const data = createEmptyAppData();
     data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", paydayFlexDays: 3, sourceIds: [], totalLimit: 700, weeklyLimit: 0, allocations: [], transfers: [] };
     expect(paydayWindow(data.settings.salaryPlan)).toMatchObject({ typical: "2026-08-10", earliest: "2026-08-07", latest: "2026-08-13", flex: 3 });
-    expect(planEndDate(data.settings.salaryPlan)).toBe("2026-08-13");
+    expect(planEndDate(data.settings.salaryPlan)).toBe("2026-08-10");
+    expect(inPlanPeriod("2026-08-12", data.settings.salaryPlan)).toBe(true);
   });
 
   it("interpretează local o cheltuială descrisă în limbaj natural", () => {
