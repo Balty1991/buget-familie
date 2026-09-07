@@ -245,3 +245,5 @@ html.ai-guide-max .ai-chat-panel{
 
 .ai-chat-row .ai-chat-action{margin-left:22px}
 .ai-chat-row .ai-chat-action + .ai-chat-action{margin-left:22px}
+.ai-chat-choices{display:flex;flex-wrap:wrap;gap:6px;margin-left:22px;max-width:100%}
+.ai-chat-choices .ai-chat-action{margin-left:0}

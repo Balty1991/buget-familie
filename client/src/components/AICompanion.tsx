@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, CircleCheck, Lightbulb, Maximize2, Minimize2, Send, Sparkles, Trash2, WalletCards, X } from "lucide-react";
-import { allocationStatus, allocationWeekStatus, expenseCategories, matchingAllocationsForExpense, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, expenseCategories, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 
@@ -172,43 +172,58 @@ type ExtractedGuide = {
   items?: Array<{ amount?: number; title?: string }>;
 };
 
+function relatedCategories(category: string) {
+  const map: Record<string, string[]> = {
+    Dulciuri: ["Alimente"],
+    Băuturi: ["Alimente"],
+    Apă: ["Alimente", "Casă & facturi"],
+    Alimente: ["Dulciuri", "Băuturi"],
+    Transport: [],
+    "Casă & facturi": ["Apă"],
+  };
+  return map[category] || ["Alimente"];
+}
+
 function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData): { text: string; choices: ChatChoice[] } | undefined {
   const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
   const amount = extracted?.amount || parsed.amount;
   if (!amount || amount <= 0) return undefined;
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const looksSpend = /cheltui|taxi|uber|bolt|apa\b|platit|platit|cumpar|cumpăr|factura|benzina|combustibil|mancare/.test(folded) || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
+  const looksSpend = /cheltui|taxi|uber|bolt|apa\b|dulce|dulciuri|platit|cumpar|cumpăr|factura|benzina|combustibil|mancare/.test(folded) || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
   if (!looksSpend) return undefined;
   const category = parsed.category || extracted?.category || "Altele";
-  const title = /taxi|uber|bolt/.test(folded) ? "Taxi" : /\bapa\b/.test(folded) ? "Apă" : extracted?.title || category;
+  const title = /taxi|uber|bolt/.test(folded) ? "Taxi" : /\bapa\b/.test(folded) ? "Apă" : /dulce/.test(folded) ? "Dulciuri" : extracted?.title || category;
   const member = data.settings.members[0];
-  const source = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
-  const envelope = matchingAllocationsForExpense(data, { category, memberId: member?.id, sourceId: source?.id })[0]
-    || data.settings.salaryPlan.allocations.find((item) => item.category === category);
-  const choices: ChatChoice[] = [];
-  let envelopeHint = "";
-  if (envelope) {
-    const status = allocationStatus(data, envelope);
+  const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
+  const related = relatedCategories(category);
+  const ranked = [...data.settings.salaryPlan.allocations].sort((left, right) => {
+    const score = (item: typeof left) => {
+      if (item.category === category) return 4;
+      if (related.includes(item.category || "")) return 3;
+      if ((item.category || item.label) === "Alimente") return 2;
+      return 1;
+    };
+    return score(right) - score(left);
+  });
+  const choices: ChatChoice[] = ranked.map((envelope) => {
     const week = envelope.weeklyPace !== false ? allocationWeekStatus(data, envelope) : undefined;
-    const left = week ? week.remaining : status.remaining;
-    envelopeHint = week
-      ? `plicul **${envelope.label}**, săptămâna S${week.index} (rămas ${money(Math.max(0, left))})`
-      : `plicul **${envelope.label}** (rămas ${money(Math.max(0, left))})`;
-    choices.push({
-      label: `Din plicul ${envelope.label}${week ? ` · S${week.index}` : ""}`,
-      update: { kind: "expense", amount, title, category, allocationId: envelope.id, sourceId: envelope.sourceId || source?.id, memberId: envelope.memberId || member?.id },
-    });
-  }
-  if (source) {
+    const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
+    return {
+      label: `Din ${envelope.label}${week ? ` · S${week.index}` : ""} · ${money(Math.max(0, left))}`,
+      update: { kind: "expense" as const, amount, title, category, allocationId: envelope.id, sourceId: envelope.sourceId || fallbackSource?.id, memberId: envelope.memberId || member?.id },
+    };
+  });
+  data.settings.paymentSources.forEach((source) => {
     choices.push({
       label: `Din nealocat · ${source.name}`,
-      update: { kind: "expense", amount, title, category, allocationId: "outside", sourceId: source.id, memberId: member?.id },
+      update: { kind: "expense", amount, title, category, allocationId: "outside", sourceId: source.id, memberId: source.memberId || member?.id },
     });
-  }
+  });
   if (!choices.length) return undefined;
-  const text = envelope
-    ? `Am înțeles **${title}**, ${money(amount)}. Propun să scad din ${envelopeHint}. Dacă vrei, putem lua și din banii nealocați, fără plic.`
-    : `Am înțeles **${title}**, ${money(amount)}. Nu am un plic pentru ${category}, deci propun **bani nealocați** din ${source?.name || "sursă"}.`;
+  const preferred = ranked.find((item) => item.category === category) || ranked.find((item) => related.includes(item.category || ""));
+  const text = preferred
+    ? `Am înțeles **${title}**, ${money(amount)}. Cea mai apropiată opțiune e **${preferred.label}**, dar poți lua și din alt plic (inclusiv Alimente săptămânal) sau din banii nealocați.`
+    : `Am înțeles **${title}**, ${money(amount)}. Nu am un plic exact pentru ${category}. Alege din plicurile existente sau din banii nealocați.`;
   return { text, choices };
 }
 
@@ -305,11 +320,13 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     if (!item.action || item.action.type === "apply") return;
     if (item.action.type === "add") onAdd();
     else onGo(item.action.type);
+    setOpen(false);
+    setExpanded(false);
   };
   const applyChoice = (choice: ChatChoice) => {
     onFinancialUpdate(choice.update);
     const spent = choice.update.kind === "expense" ? `${choice.update.title} ${money(choice.update.amount)}` : money("amount" in choice.update ? choice.update.amount : 0);
-    addMessage({ role: "assistant", text: `Am salvat ${spent} · ${choice.label}. O vezi în Mișcări; ghidul rămâne deschis.`, action: { type: "journal", label: "Vezi în Mișcări" } });
+    addMessage({ role: "assistant", text: `Am salvat ${spent} · ${choice.label}.`, action: { type: "journal", label: "Vezi în Mișcări" } });
   };
   const applyGuide = (updates: FinancialUpdate[]) => {
     updates.forEach((update) => onFinancialUpdate(update));
@@ -385,7 +402,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       }
     })();
   };
-  return <><button type="button" className={`ai-companion-trigger ${open ? "is-open" : ""} ${quota.mode === "local" ? "is-local" : ""}`} hidden={open && expanded} aria-label={open ? "Închide ghidul AI" : "Deschide ghidul AI"} onClick={() => { setOpen((value) => !value); if (open) setExpanded(false); }}><span className="ai-trigger-pulse" /><Sparkles size={21} /><span>Ghidul tău</span>{open ? <ChevronDown size={14} /> : <span className="ai-live">{quota.mode === "local" ? "LOCAL" : "ONLINE"}</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel ${expanded ? "is-max" : ""}`} aria-label="Conversație cu ghidul tău AI"><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>Sunt aici cu tine</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? `Ghid local până ${formatReset(quota.resetAt)}` : "Îți răspund din contextul bugetului tău"}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>Golește</span></button><button type="button" className="ai-tool" onClick={() => setExpanded((value) => !value)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}<span>{expanded ? "Micșorează" : "Ecran"}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label="Închide ghidul" onClick={() => { setOpen(false); setExpanded(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} /><div className="ai-chat-history" ref={historyRef} aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.choices?.map((choice) => <button type="button" className="ai-chat-action" key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div><div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", "Vreau să adaug o mișcare")}>+ Adaugă o mișcare</button><button type="button" onClick={() => runAction("plan", "Ajută-mă cu repartizarea")}>Repartizare</button><button type="button" onClick={() => runAction("journal", "Vreau să văd luna")}>Situația mea</button></div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">Scrie-mi orice despre banii tăi</label><div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="ex. combustibil 50 lei" /><button type="submit" aria-label="Trimite mesajul"><Send size={16} /></button></div><p><Lightbulb size={12} /> Îți explic, te ghidez și îți cer confirmarea înainte să salvez.</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația este păstrată local pe acest dispozitiv.</p></aside>}</>;
+  return <><button type="button" className={`ai-companion-trigger ${open ? "is-open" : ""} ${quota.mode === "local" ? "is-local" : ""}`} hidden={open && expanded} aria-label={open ? "Închide ghidul AI" : "Deschide ghidul AI"} onClick={() => { setOpen((value) => !value); if (open) setExpanded(false); }}><span className="ai-trigger-pulse" /><Sparkles size={21} /><span>Ghidul tău</span>{open ? <ChevronDown size={14} /> : <span className="ai-live">{quota.mode === "local" ? "LOCAL" : "ONLINE"}</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel ${expanded ? "is-max" : ""}`} aria-label="Conversație cu ghidul tău AI"><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>Sunt aici cu tine</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? `Ghid local până ${formatReset(quota.resetAt)}` : "Îți răspund din contextul bugetului tău"}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>Golește</span></button><button type="button" className="ai-tool" onClick={() => setExpanded((value) => !value)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}<span>{expanded ? "Micșorează" : "Ecran"}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label="Închide ghidul" onClick={() => { setOpen(false); setExpanded(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} /><div className="ai-chat-history" ref={historyRef} aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className="ai-chat-action" key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div><div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", "Vreau să adaug o mișcare")}>+ Adaugă o mișcare</button><button type="button" onClick={() => runAction("plan", "Ajută-mă cu repartizarea")}>Repartizare</button><button type="button" onClick={() => runAction("journal", "Vreau să văd luna")}>Situația mea</button></div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">Scrie-mi orice despre banii tăi</label><div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder="ex. combustibil 50 lei" /><button type="submit" aria-label="Trimite mesajul"><Send size={16} /></button></div><p><Lightbulb size={12} /> Îți explic, te ghidez și îți cer confirmarea înainte să salvez.</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația este păstrată local pe acest dispozitiv.</p></aside>}</>;
 }
 
 export default AICompanion;
