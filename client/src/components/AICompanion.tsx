@@ -217,9 +217,13 @@ function spendTitle(folded: string, extracted: ExtractedGuide | undefined, categ
 function spendAmount(raw: string, extracted: ExtractedGuide | undefined, parsedAmount: number) {
   if (extracted?.amount && extracted.amount > 0) return extracted.amount;
   if (parsedAmount > 0) return parsedAmount;
-  const found = [...raw.matchAll(/(?:^|[^\d])(\d{1,4}(?:[.,]\d{1,2})?)/g)]
-    .map((item) => parseFloat(item[1].replace(",", ".")))
-    .filter((value) => value >= 1 && value < 1900);
+  const found: number[] = [];
+  const pattern = /(?:^|[^\d])(\d{1,4}(?:[.,]\d{1,2})?)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(raw))) {
+    const value = parseFloat(match[1].replace(",", "."));
+    if (value >= 1 && value < 1900) found.push(value);
+  }
   return found[0] || 0;
 }
 
