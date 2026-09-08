@@ -6,9 +6,11 @@ const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const groqApiKey = defineSecret("GROQ_API_KEY");
 const allowCors = cors({ origin: true });
 
-type ChatMessage = { role: "user" | "assistant"; text: string };
+type ChatAttachment = { name?: string; mimeType: string; data: string };
+type ChatMessage = { role: "user" | "assistant"; text: string; attachments?: ChatAttachment[] };
 type RequestBody = { messages?: ChatMessage[]; context?: Record<string, unknown> };
-type GeminiContent = { role: "user" | "model"; parts: Array<{ text: string }> };
+type GeminiPart = { text?: string; inlineData?: { mimeType: string; data: string } };
+type GeminiContent = { role: "user" | "model"; parts: GeminiPart[] };
 type GuideAnswer = {
   reply: string;
   intent: "question" | "income" | "expense" | "debt" | "allocation" | "summary" | "next_step";
@@ -20,6 +22,8 @@ type GuideAnswer = {
     debtName?: string;
     monthlyPayment?: number;
     items?: Array<{ amount?: number; title?: string }>;
+    vendor?: string;
+    date?: string;
   };
 };
 type Quota = { remaining: number | null; limit: number | null; resetAt: string | null };
@@ -53,6 +57,8 @@ const responseSchema = {
         category: { type: "STRING" },
         debtName: { type: "STRING" },
         monthlyPayment: { type: "NUMBER" },
+        vendor: { type: "STRING" },
+        date: { type: "STRING" },
         items: {
           type: "ARRAY",
           items: {
@@ -93,13 +99,25 @@ function buildContents(messages: ChatMessage[], context: Record<string, unknown>
   const contents: GeminiContent[] = [];
   for (const message of messages) {
     const text = (message.text || "").trim();
-    if (!text) continue;
+    const attachments = Array.isArray(message.attachments) ? message.attachments.slice(0, 2) : [];
+    if (!text && !attachments.length) continue;
     const role = message.role === "assistant" ? "model" : "user";
+    const parts: GeminiPart[] = [];
+    if (text) parts.push({ text });
+    for (const attachment of attachments) {
+      if (!attachment?.data || !/^data:|^[A-Za-z0-9+/=]+$/.test(attachment.data)) continue;
+      const data = attachment.data.replace(/^data:[^;]+;base64,/, "");
+      if (data.length > 8_000_000 || !/^image\/(jpeg|png|webp|heic|heif)$|^application\/pdf$/i.test(attachment.mimeType)) continue;
+      parts.push({ inlineData: { mimeType: attachment.mimeType, data } });
+    }
+    if (!parts.length) continue;
     const last = contents[contents.length - 1];
-    if (last && last.role === role) {
-      last.parts[0].text += `\n${text}`;
+    if (last && last.role === role && !attachments.length) {
+      const firstText = last.parts.find((part) => part.text);
+      if (firstText?.text) firstText.text += `\n${text}`;
+      else last.parts.push({ text });
     } else {
-      contents.push({ role, parts: [{ text }] });
+      contents.push({ role, parts });
     }
   }
 
@@ -107,7 +125,9 @@ function buildContents(messages: ChatMessage[], context: Record<string, unknown>
   if (!contents.length) {
     contents.push({ role: "user", parts: [{ text: contextText }] });
   } else if (contents[0].role === "user") {
-    contents[0].parts[0].text = `${contextText}\n\n${contents[0].parts[0].text}`;
+    const firstText = contents[0].parts.find((part) => part.text);
+    if (firstText?.text) firstText.text = `${contextText}\n\n${firstText.text}`;
+    else contents[0].parts.unshift({ text: contextText });
   } else {
     contents.unshift({ role: "user", parts: [{ text: contextText }] });
   }
@@ -242,7 +262,7 @@ async function callGroq(apiKey: string, contents: GeminiContent[]) {
     { role: "system", content: systemInstruction },
     ...contents.map((item) => ({
       role: item.role === "model" ? "assistant" : "user",
-      content: item.parts.map((part) => part.text).join("\n"),
+      content: item.parts.map((part) => part.text || (part.inlineData ? "[atașament imagine/PDF]" : "")).join("\n"),
     })),
   ];
 
@@ -328,7 +348,10 @@ export const aiGuide = onRequest(
       }
 
       const body = (request.body || {}) as RequestBody;
-      const messages = Array.isArray(body.messages) ? body.messages.slice(-20) : [];
+      const messages = Array.isArray(body.messages) ? body.messages.slice(-20).map((message) => ({
+        ...message,
+        attachments: Array.isArray(message.attachments) ? message.attachments.slice(0, 2) : undefined,
+      })) : [];
       const context = body.context || {};
       if (!messages.length) {
         response.status(400).json({ error: "Conversation is required" });

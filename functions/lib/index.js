@@ -36,6 +36,8 @@ const responseSchema = {
                 category: { type: "STRING" },
                 debtName: { type: "STRING" },
                 monthlyPayment: { type: "NUMBER" },
+                vendor: { type: "STRING" },
+                date: { type: "STRING" },
                 items: {
                     type: "ARRAY",
                     items: {
@@ -73,15 +75,33 @@ function buildContents(messages, context) {
     const contents = [];
     for (const message of messages) {
         const text = (message.text || "").trim();
-        if (!text)
+        const attachments = Array.isArray(message.attachments) ? message.attachments.slice(0, 2) : [];
+        if (!text && !attachments.length)
             continue;
         const role = message.role === "assistant" ? "model" : "user";
+        const parts = [];
+        if (text)
+            parts.push({ text });
+        for (const attachment of attachments) {
+            if (!attachment?.data || !/^data:|^[A-Za-z0-9+/=]+$/.test(attachment.data))
+                continue;
+            const data = attachment.data.replace(/^data:[^;]+;base64,/, "");
+            if (data.length > 8_000_000 || !/^image\/(jpeg|png|webp|heic|heif)$|^application\/pdf$/i.test(attachment.mimeType))
+                continue;
+            parts.push({ inlineData: { mimeType: attachment.mimeType, data } });
+        }
+        if (!parts.length)
+            continue;
         const last = contents[contents.length - 1];
-        if (last && last.role === role) {
-            last.parts[0].text += `\n${text}`;
+        if (last && last.role === role && !attachments.length) {
+            const firstText = last.parts.find((part) => part.text);
+            if (firstText?.text)
+                firstText.text += `\n${text}`;
+            else
+                last.parts.push({ text });
         }
         else {
-            contents.push({ role, parts: [{ text }] });
+            contents.push({ role, parts });
         }
     }
     const contextText = `Context financiar controlat (nu divulga datele ca listă decât dacă utilizatorul cere): ${JSON.stringify(context)}`;
@@ -89,7 +109,11 @@ function buildContents(messages, context) {
         contents.push({ role: "user", parts: [{ text: contextText }] });
     }
     else if (contents[0].role === "user") {
-        contents[0].parts[0].text = `${contextText}\n\n${contents[0].parts[0].text}`;
+        const firstText = contents[0].parts.find((part) => part.text);
+        if (firstText?.text)
+            firstText.text = `${contextText}\n\n${firstText.text}`;
+        else
+            contents[0].parts.unshift({ text: contextText });
     }
     else {
         contents.unshift({ role: "user", parts: [{ text: contextText }] });
@@ -218,7 +242,7 @@ async function callGroq(apiKey, contents) {
         { role: "system", content: systemInstruction },
         ...contents.map((item) => ({
             role: item.role === "model" ? "assistant" : "user",
-            content: item.parts.map((part) => part.text).join("\n"),
+            content: item.parts.map((part) => part.text || (part.inlineData ? "[atașament imagine/PDF]" : "")).join("\n"),
         })),
     ];
     for (const model of GROQ_MODELS) {
@@ -299,7 +323,10 @@ exports.aiGuide = (0, https_1.onRequest)({
             return;
         }
         const body = (request.body || {});
-        const messages = Array.isArray(body.messages) ? body.messages.slice(-20) : [];
+        const messages = Array.isArray(body.messages) ? body.messages.slice(-20).map((message) => ({
+            ...message,
+            attachments: Array.isArray(message.attachments) ? message.attachments.slice(0, 2) : undefined,
+        })) : [];
         const context = body.context || {};
         if (!messages.length) {
             response.status(400).json({ error: "Conversation is required" });
