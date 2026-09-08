@@ -295,6 +295,9 @@ type ExtractedGuide = {
   items?: Array<{ amount?: number; title?: string }>;
   vendor?: string;
   date?: string;
+  receiptLines?: Array<{ name?: string; quantity?: number; amount?: number }>;
+  totalLabel?: string;
+  confidence?: "high" | "medium" | "low";
 };
 
 function relatedCategories(category: string) {
@@ -423,9 +426,17 @@ function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, dat
     || funded.find((item) => related.includes(item.envelope.category || ""));
   const usual = habit && habit.count >= 2;
   const text = preferred
-    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**. ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`} Alege de unde scoatem banii.`
-    : `Am înțeles **${title}**, ${money(amount)}, **${when}**. Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
+    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`} Alege de unde scoatem banii.`
+    : `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
   return { text, choices };
+}
+
+function receiptDetails(extracted?: ExtractedGuide) {
+  if (!extracted?.receiptLines?.length && !extracted?.confidence) return "";
+  const lines = (extracted.receiptLines || []).slice(0, 8).filter((line) => line.name);
+  const products = lines.length ? ` Produse citite: ${lines.map((line) => `${line.quantity && line.quantity !== 1 ? `${line.quantity}× ` : ""}${line.name}${line.amount ? ` ${money(line.amount)}` : ""}`).join(", ")}.` : " Produsele nu au fost suficient de lizibile.";
+  const confidence = extracted.confidence === "low" ? " Verifică atent suma; fotografia nu este suficient de clară." : "";
+  return `${products}${confidence}`;
 }
 
 function matchEnvelope(data: AppData, token: string) {
