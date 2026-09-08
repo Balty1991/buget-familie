@@ -255,7 +255,16 @@ async function callGroq(apiKey, contents) {
         { role: "system", content: systemInstruction },
         ...contents.map((item) => ({
             role: item.role === "model" ? "assistant" : "user",
-            content: item.parts.map((part) => part.text || (part.inline_data ? "[atașament imagine/PDF]" : "")).join("\n"),
+            content: item.parts.flatMap((part) => {
+                if (part.text)
+                    return [{ type: "text", text: part.text }];
+                if (part.inline_data?.mime_type.startsWith("image/")) {
+                    return [{ type: "image_url", image_url: { url: `data:${part.inline_data.mime_type};base64,${part.inline_data.data}` } }];
+                }
+                if (part.inline_data)
+                    return [{ type: "text", text: "[atașament PDF disponibil doar pentru modelul principal]" }];
+                return [];
+            }),
         })),
     ];
     for (const model of GROQ_MODELS) {

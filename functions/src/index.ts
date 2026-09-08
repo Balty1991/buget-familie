@@ -11,6 +11,8 @@ type ChatMessage = { role: "user" | "assistant"; text: string; attachments?: Cha
 type RequestBody = { messages?: ChatMessage[]; context?: Record<string, unknown> };
 type GeminiPart = { text?: string; inline_data?: { mime_type: string; data: string } };
 type GeminiContent = { role: "user" | "model"; parts: GeminiPart[] };
+type GroqContentPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+type GroqMessage = { role: "system" | "user" | "assistant"; content: string | GroqContentPart[] };
 type GuideAnswer = {
   reply: string;
   intent: "question" | "income" | "expense" | "debt" | "allocation" | "summary" | "next_step";
@@ -274,11 +276,18 @@ async function callGroq(apiKey: string, contents: GeminiContent[]) {
   let lastStatus = 0;
   let lastDetail = "";
   let lastQuota: Quota = { remaining: null, limit: null, resetAt: null };
-  const messages = [
+  const messages: GroqMessage[] = [
     { role: "system", content: systemInstruction },
     ...contents.map((item) => ({
-      role: item.role === "model" ? "assistant" : "user",
-      content: item.parts.map((part) => part.text || (part.inline_data ? "[atașament imagine/PDF]" : "")).join("\n"),
+      role: item.role === "model" ? "assistant" as const : "user" as const,
+      content: item.parts.flatMap((part): GroqContentPart[] => {
+        if (part.text) return [{ type: "text", text: part.text }];
+        if (part.inline_data?.mime_type.startsWith("image/")) {
+          return [{ type: "image_url", image_url: { url: `data:${part.inline_data.mime_type};base64,${part.inline_data.data}` } }];
+        }
+        if (part.inline_data) return [{ type: "text", text: "[atașament PDF disponibil doar pentru modelul principal]" }];
+        return [];
+      }),
     })),
   ];
 
