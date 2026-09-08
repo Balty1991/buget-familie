@@ -720,9 +720,28 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     setTyping(true);
     void (async () => {
       try {
+        let onlineRequestText = requestText;
+        if (sentAttachment?.mimeType.startsWith("image/")) {
+          try {
+            const { readReceiptLocally } = await import("@/lib/receipt-utils");
+            const local = await readReceiptLocally([sentAttachment.data]);
+            const ocrItems = local.items.slice(0, 40).map((item) => `${item.label}=${item.amount}`).join("; ");
+            const ocrHint = [
+              "[OCR local de verificare — nu este autoritate contabilă]",
+              local.vendor ? `magazin: ${local.vendor}` : "",
+              local.date ? `data: ${local.date}` : "",
+              local.amount ? `total candidat: ${local.amount}` : "",
+              ocrItems ? `produse: ${ocrItems}` : "",
+              local.text ? `text brut: ${local.text.slice(0, 5000)}` : "",
+            ].filter(Boolean).join("\n");
+            onlineRequestText = `${requestText}\n\n${ocrHint}`;
+          } catch {
+            // Analiza vizuală online rămâne disponibilă și fără OCR local.
+          }
+        }
         const response = await fetch("https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/aiGuide", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ messages: [...messages, { role: "user", text: requestText, attachments: sentAttachment ? [sentAttachment] : undefined }].slice(-20), context: { view, income: monthSummary.income, expense: monthSummary.expense, members: data.settings.members.map((item) => ({ id: item.id, name: item.name })), transactions: data.transactions.slice(0, 30), debts: data.debts, allocations: data.settings.salaryPlan.allocations } }),
+          body: JSON.stringify({ messages: [...messages, { role: "user", text: onlineRequestText, attachments: sentAttachment ? [sentAttachment] : undefined }].slice(-20), context: { view, income: monthSummary.income, expense: monthSummary.expense, members: data.settings.members.map((item) => ({ id: item.id, name: item.name })), transactions: data.transactions.slice(0, 30), debts: data.debts, allocations: data.settings.salaryPlan.allocations } }),
         });
         const payload = await response.json() as {
           reply?: string;
