@@ -721,10 +721,12 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     void (async () => {
       try {
         let onlineRequestText = requestText;
+        let localReceiptAmount: number | undefined;
         if (sentAttachment?.mimeType.startsWith("image/")) {
           try {
             const { readReceiptLocally } = await import("@/lib/receipt-utils");
             const local = await readReceiptLocally([sentAttachment.data]);
+            localReceiptAmount = local.amount;
             const ocrItems = local.items.slice(0, 40).map((item) => `${item.label}=${item.amount}`).join("; ");
             const ocrHint = [
               "[OCR local de verificare — nu este autoritate contabilă]",
@@ -755,12 +757,15 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         setQuota(nextQuota);
         if (!response.ok) throw new Error(payload.code || "AI unavailable");
         setTyping(false);
+        const receiptExtracted = sentAttachment && localReceiptAmount && localReceiptAmount > 0
+          ? { ...payload.extracted, amount: localReceiptAmount }
+          : payload.extracted;
         const lastSpendText = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data))?.text || requestText;
         const extractedText = payload.extracted?.vendor ? `${sourceTextSafe(requestText)} ${payload.extracted.vendor}` : requestText;
         const sourceText = isConfirm(raw) ? lastSpendText : extractedText;
         const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt"
           ? undefined
-          : expenseProposal(sourceText, payload.extracted, data, Boolean(sentAttachment) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
+          : expenseProposal(sourceText, receiptExtracted, data, Boolean(sentAttachment) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
         if (proposal) {
           offerSpend(proposal);
           return;
