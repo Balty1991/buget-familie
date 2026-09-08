@@ -14,7 +14,7 @@ const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-
 const GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"];
 const systemInstruction = `Ești Copilotul Financiar al aplicației Buget Familie. Ești un ghid calm, empatic și foarte practic, care rămâne activ pe tot parcursul folosirii aplicației. Nu răspunde generic și nu redirecționa utilizatorul către meniuri fără explicație.
 
-Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. needsConfirmation este true doar la prima propunere. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
+Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. Dacă primești un atașament cu un bon, analizează imaginea/PDF-ul direct: identifică magazinul sau un titlu scurt, totalul final plătit (nu subtotalul sau restul), data și categoria probabilă. Pentru un bon cu total identificabil, răspunde direct cu propunerea de cheltuială și completează extracted.amount, extracted.title, extracted.vendor, extracted.date și extracted.category; nu cere utilizatorului să transcrie bonul. needsConfirmation este true doar la prima propunere. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
 
 Răspunde în română, natural, ca un asistent care își amintește conversația. Nu folosi markdown: fără **, # sau liste cu asteriscuri. Răspunsuri scurte, maximum 4-5 propoziții. Dacă enumeri, scrie 1. 2. 3. pe rânduri separate. Nu inventa sume. Nu pretinde că ai acces la conturi bancare. Nu oferi recomandări de investiții, creditare sau decizii financiare riscante ca certitudini. Explică întotdeauna ce ai înțeles și ce urmează.
 
@@ -88,7 +88,7 @@ function buildContents(messages, context) {
             const data = attachment.data.replace(/^data:[^;]+;base64,/, "");
             if (data.length > 8_000_000 || !/^image\/(jpeg|png|webp|heic|heif)$|^application\/pdf$/i.test(attachment.mimeType))
                 continue;
-            parts.push({ inlineData: { mimeType: attachment.mimeType, data } });
+            parts.push({ inline_data: { mime_type: attachment.mimeType, data } });
         }
         if (!parts.length)
             continue;
@@ -242,7 +242,7 @@ async function callGroq(apiKey, contents) {
         { role: "system", content: systemInstruction },
         ...contents.map((item) => ({
             role: item.role === "model" ? "assistant" : "user",
-            content: item.parts.map((part) => part.text || (part.inlineData ? "[atașament imagine/PDF]" : "")).join("\n"),
+            content: item.parts.map((part) => part.text || (part.inline_data ? "[atașament imagine/PDF]" : "")).join("\n"),
         })),
     ];
     for (const model of GROQ_MODELS) {

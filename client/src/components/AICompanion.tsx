@@ -730,7 +730,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         const sourceText = isConfirm(raw) ? lastSpendText : extractedText;
         const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt"
           ? undefined
-          : expenseProposal(sourceText, payload.extracted, data, payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
+          : expenseProposal(sourceText, payload.extracted, data, Boolean(sentAttachment) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
         if (proposal) {
           offerSpend(proposal);
           return;
