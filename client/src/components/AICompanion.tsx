@@ -493,7 +493,10 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
   const sourceText = allAmounts(userText).length ? userText : [...history].reverse().find((item) => item.role === "user" && allAmounts(item.text).length)?.text || userText;
   if (intent === "expense") return [];
   if (intent === "debt" && (extracted?.debtName || extracted?.title) && (extracted.amount || extracted.monthlyPayment)) {
-    return [{ kind: "debt", name: extracted.debtName || extracted.title || "Datorie", remaining: extracted.amount || 0 }];
+    const updates: FinancialUpdate[] = [];
+    if (extracted.amount) updates.push({ kind: "debt", name: extracted.debtName || extracted.title || "Datorie", remaining: extracted.amount });
+    if (extracted.monthlyPayment) updates.push({ kind: "debt-monthly", amount: extracted.monthlyPayment });
+    return updates;
   }
   const envelope = parseAllocationUpdate(extracted, sourceText);
   if (intent === "allocation" || envelope && /plic|imparte|repartiz|aloc|aliment.*saptaman|saptaman/.test(sourceText.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) {
@@ -778,7 +781,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
           return;
         }
         const updates = updatesFromGuide(payload.intent, payload.extracted, raw, data, messages);
-        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "income" || payload.intent === "allocation");
+        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt");
         if (saveNow) applyGuide(updates);
         addMessage({
           role: "assistant",
