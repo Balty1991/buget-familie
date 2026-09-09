@@ -134,6 +134,19 @@ function SourceGlyph({ kind }: { kind: keyof typeof sourceKindName }) {
 /**
  * Household OS — situația zilei: cât a rămas, ritmul, sursele și următorul venit.
  */
+function TodayPulse({ data, onGo }: { data: AppData; onGo: (view: MainView) => void }) {
+  const today = new Date();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (6 - index));
+    const iso = date.toISOString().slice(0, 10);
+    const amount = data.transactions.filter((item) => item.kind === "expense" && item.date === iso).reduce((sum, item) => sum + item.amount, 0);
+    return { iso, label: date.toLocaleDateString("ro-RO", { weekday: "short" }).replace(".", ""), amount, today: index === 6 };
+  });
+  const max = Math.max(...days.map((day) => day.amount), 1);
+  const weekTotal = days.reduce((sum, day) => sum + day.amount, 0);
+  const average = weekTotal / 7;
+  return <section className="bf-modern-pulse"><div className="bf-modern-pulse-copy"><p className="bf-kicker">PULSUL SĂPTĂMÂNII</p><h2>Vezi ritmul banilor dintr-o privire.</h2><p>{weekTotal ? <>Ai cheltuit <b>{money(weekTotal)}</b> în ultimele 7 zile, aproximativ <b>{money(average)}</b> pe zi.</> : "Începe să înregistrezi mișcări pentru a vedea ritmul real al gospodăriei."}</p><button type="button" onClick={() => onGo("journal")}>Deschide registrul <ChevronRight size={15} /></button></div><div className="bf-modern-pulse-chart" aria-label="Cheltuielile din ultimele 7 zile">{days.map((day) => <div key={day.iso} className={day.today ? "today" : ""}><span title={money(day.amount)}><i style={{ height: Math.max(8, Math.round((day.amount / max) * 100)) + "%" }} /></span><small>{day.label}</small></div>)}</div></section>;
+}
 function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void }) {
   const math = useMemo(() => planMath(data), [data]);
   const forecast = useMemo(() => planForecast(data), [data]);
@@ -362,6 +375,7 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
             <small>{topEnvelope ? `${money(Math.max(0, topEnvelope.remaining))} rămași pentru perioadă` : "creează prima limită"}</small>
           </article>
         </section>
+        <TodayPulse data={data} onGo={onGo} />
         <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
