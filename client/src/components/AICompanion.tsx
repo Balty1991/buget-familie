@@ -369,7 +369,14 @@ function dateCopy(iso: string) {
 
 function sourceTextSafe(raw: string) { return raw.replace(/data:[^ ]+/g, "").slice(0, 800); }
 
+function isDebtOrInstallmentMessage(raw: string) {
+  const folded = foldRo(raw);
+  return /\b(credit|credite|datorie|datorii|sold restant|suma restanta|rata lunara|rate lunare|scadenta|scadente|imprumut|banca|bancii)\b/.test(folded)
+    && !/\b(am platit|am achitat|plata ratei|achit rata)\b/.test(folded);
+}
+
 function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData, forced = false): { text: string; choices: ChatChoice[] } | undefined {
+  if (isDebtOrInstallmentMessage(raw)) return undefined;
   const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
   const amount = spendAmount(raw, extracted, parsed.amount);
   if (!amount || amount <= 0) return undefined;
