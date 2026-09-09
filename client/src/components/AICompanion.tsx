@@ -10,8 +10,8 @@ export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: 
 export type FinancialUpdate =
   | { kind: "income"; amount: number; title: string; date?: string; memberId?: string }
   | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string }
-  | { kind: "debt"; name: string; remaining: number }
-  | { kind: "debt-monthly"; amount: number }
+  | { kind: "debt"; name: string; remaining: number; due?: string }
+  | { kind: "debt-monthly"; amount: number; name?: string }
   | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string }
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string };
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void };
@@ -292,6 +292,7 @@ type ExtractedGuide = {
   category?: string;
   debtName?: string;
   monthlyPayment?: number;
+  dueDay?: number;
   items?: Array<{ amount?: number; title?: string }>;
   vendor?: string;
   date?: string;
@@ -494,8 +495,8 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
   if (intent === "expense") return [];
   if (intent === "debt" && (extracted?.debtName || extracted?.title) && (extracted.amount || extracted.monthlyPayment)) {
     const updates: FinancialUpdate[] = [];
-    if (extracted.amount) updates.push({ kind: "debt", name: extracted.debtName || extracted.title || "Datorie", remaining: extracted.amount });
-    if (extracted.monthlyPayment) updates.push({ kind: "debt-monthly", amount: extracted.monthlyPayment });
+    if (extracted.amount) updates.push({ kind: "debt", name: extracted.debtName || extracted.title || "Datorie", remaining: extracted.amount, due: extracted.dueDay ? `Ziua ${extracted.dueDay}` : undefined });
+    if (extracted.monthlyPayment) updates.push({ kind: "debt-monthly", amount: extracted.monthlyPayment, name: extracted.debtName || extracted.title || "Datorie" });
     return updates;
   }
   const envelope = parseAllocationUpdate(extracted, sourceText);
