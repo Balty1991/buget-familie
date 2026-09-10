@@ -192,3 +192,4 @@ html.dark .bf-week-share,
   .bf-week-rebalance{grid-template-columns:auto minmax(0,1fr)!important}
   .bf-week-rebalance button{grid-column:1/-1!important;width:100%!important}
 }
+.bf-week-rebalance-done{display:flex!important;align-items:center!important;gap:6px!important;margin:10px 0 0!important;padding:10px 12px!important;border:1px solid var(--cf-primary-strong)!important;border-radius:10px!important;color:var(--cf-ink)!important;background:var(--cf-surface-alt)!important;font:700 11px/1.45 "IBM Plex Sans",sans-serif!important}

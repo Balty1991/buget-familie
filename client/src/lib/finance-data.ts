@@ -61,7 +61,12 @@ export type Receipt = {
   memberId?: string;
 };
 
-export type FamilyMember = { id: string; name: string; color?: string };
+/**
+ * `kind` marchează un membru drept copil. Nu schimbă nimic în contabilitate — banii de
+ * buzunar sunt tot un plic al familiei, iar cheltuielile copilului sunt tot cheltuieli.
+ * Schimbă doar ecranul: un copil vede o singură cifră, nu un plan salarial.
+ */
+export type FamilyMember = { id: string; name: string; color?: string; kind?: "adult" | "child" };
 export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei. */ openingBalance: number };
 export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string; /** Implicit adevărat: arată tranșa săptămânii active. Fals pentru plicuri fără ritm fix, unde contează doar totalul ciclului. */ weeklyPace?: boolean };
 export type BudgetTransfer = { id: string; fromAllocationId: string; toAllocationId: string; amount: number; note?: string; createdAt: string };
@@ -183,7 +188,7 @@ export const normalizeAppData = (input: unknown): AppData => {
   const fallback = createEmptyAppData();
   const oldSettings = (old.settings || {}) as Partial<FamilySettings> & { paymentSources?: Array<Partial<PaymentSource> & { balance?: number }> };
   const memberName = oldSettings.memberName || fallback.settings.memberName;
-  const members = oldSettings.members?.length ? oldSettings.members.map((member, index) => ({ id: member.id || `member-${index}`, name: member.name || `Membru ${index + 1}`, color: member.color })) : [{ id: "member-me", name: memberName, color: "#256B5B" }];
+  const members = oldSettings.members?.length ? oldSettings.members.map((member, index) => ({ id: member.id || `member-${index}`, name: member.name || `Membru ${index + 1}`, color: member.color, kind: member.kind === "child" ? "child" as const : undefined })) : [{ id: "member-me", name: memberName, color: "#256B5B" }];
   const sources = oldSettings.paymentSources?.length ? oldSettings.paymentSources.map((source, index) => ({
     id: source.id || `source-${index}`,
     name: source.name || `Sursă ${index + 1}`,

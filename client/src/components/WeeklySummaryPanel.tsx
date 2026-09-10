@@ -13,7 +13,9 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
   const collaborative = data.settings.members.length > 1;
   const [scope, setScope] = useState("family");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
-  const [moved, setMoved] = useState(false);
+  // După transfer plicul nu mai e în deficit, deci propunerea dispare. Fără această confirmare,
+  // cardul s-ar evapora la apăsare și utilizatorul n-ar ști dacă s-a întâmplat ceva.
+  const [movedNote, setMovedNote] = useState("");
   const member = data.settings.members.find((item) => item.id === scope);
   const check = weeklyCheckIn(data, undefined, member?.id);
   // Propunerea se calculează pe familie: limitele plicurilor sunt comune, nu personale.
@@ -58,6 +60,9 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
         </div>
       )}
       <p className="bf-week-checkin-step">{check.nextStep}</p>
+      {!rebalance && movedNote && (
+        <p className="bf-week-rebalance-done" role="status"><Check size={14} /> {movedNote}</p>
+      )}
       {rebalance && (
         <div className="bf-week-rebalance" role="group" aria-label="Propunere de reechilibrare">
           <span aria-hidden="true"><ArrowLeftRight size={16} /></span>
@@ -73,15 +78,14 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
           {onChange && (
             <button
               type="button"
-              disabled={moved}
               onClick={() => {
                 const next = transferBetweenEnvelopes(data, { fromAllocationId: rebalance.fromId, toAllocationId: rebalance.toId, amount: rebalance.amount, note: "Reechilibrare din bilanțul săptămânii" });
                 if (!next) return;
+                setMovedNote(`Ai mutat ${money.format(rebalance.amount)} din „${rebalance.fromLabel}” în „${rebalance.toLabel}”.`);
                 onChange(next);
-                setMoved(true);
               }}
             >
-              {moved ? <><Check size={14} /> Mutat</> : "Mută acum"}
+              Mută acum
             </button>
           )}
         </div>
