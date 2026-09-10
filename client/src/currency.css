@@ -1,0 +1,6 @@
+/** Previzualizarea conversiei în formularul de mișcare, pentru o sursă valutară. */
+.bf-currency-preview{display:grid!important;gap:4px!important;margin-top:14px!important;padding:13px!important;border:1px solid var(--cf-primary-strong)!important;border-radius:12px!important;background:var(--cf-surface-alt)!important}
+.bf-currency-preview.pending{border-style:dashed!important;border-color:var(--cf-line)!important}
+.bf-currency-preview .bf-kicker{margin:0!important}
+.bf-currency-preview b{color:var(--cf-ink)!important;font:800 22px/1.1 "Fraunces",Georgia,serif!important;letter-spacing:-.03em!important}
+.bf-currency-preview span{color:var(--cf-muted)!important;font:600 11px/1.5 "IBM Plex Sans",sans-serif!important}

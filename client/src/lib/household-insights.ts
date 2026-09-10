@@ -6,6 +6,8 @@ import {
   addIsoDays,
   allocationBudget,
   allocationStatus,
+  exchangeRateFor,
+  toBaseAmount,
   allocationWeekStatus,
   financialBalance,
   formatDate,
@@ -53,7 +55,8 @@ export type AgeOfMoney = {
 
 /** FIFO simplu: câți zile stă un leu între încasare și cheltuială. Soldul inițial contează ca bani „deja prezenți”. */
 export const ageOfMoney = (data: AppData, asOf = isoToday()): AgeOfMoney | undefined => {
-  const opening = data.settings.paymentSources.reduce((sum, source) => sum + Math.max(0, source.openingBalance), 0);
+  // Soldurile inițiale valutare se convertesc, ca totalul să rămână în lei ca restul registrului.
+  const opening = data.settings.paymentSources.reduce((sum, source) => sum + Math.max(0, source.currency ? toBaseAmount(source.openingBalance, exchangeRateFor(data, source.currency)) ?? 0 : source.openingBalance), 0);
   const incomes = data.transactions.filter((item) => item.kind === "income" && item.date <= asOf).sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || "").localeCompare(b.createdAt || ""));
   const expenses = data.transactions.filter((item) => item.kind === "expense" && item.date <= asOf).sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || "").localeCompare(b.createdAt || ""));
   if (!expenses.length || (!incomes.length && opening <= 0)) return undefined;
