@@ -1021,6 +1021,13 @@ const en: Record<string, string> = {
   "Șterge {title}": "Delete {title}",
   "Ștergi mișcarea „{title}”?": "Delete the movement “{title}”?",
 
+  "Păstrează cel puțin o sursă de plată.": "Keep at least one paying source.",
+  "Ștergi sursa „{name}”? Cele {count} mișcări înregistrate pe ea rămân în registru, dar nu vor mai avea o sursă.": "Delete the source “{name}”? The {count} movements recorded against it stay in the ledger, but will no longer have a source.",
+  "Ștergi sursa „{name}”?": "Delete the source “{name}”?",
+  "Șterge sursa {name}": "Delete the source {name}",
+  "Sold inițial": "Opening balance",
+  "aproximativ": "approximate",
+
   // Stări și etichete comune
   "Nespecificat": "Not set",
   "Fără termen": "No deadline",

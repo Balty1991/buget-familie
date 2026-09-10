@@ -35,7 +35,32 @@ export function setNotificationsEnabled(enabled: boolean) {
   }
 }
 
+/**
+ * WebView-ul Android nu expune Notification API, așa că pe telefon verificarea
+ * „există Notification în window?” răspundea mereu „nu se poate” și butonul de
+ * activare nu avea ce face. Pe nativ întrebăm plugin-ul Capacitor, care cere
+ * permisiunea reală a sistemului.
+ */
+const isNative = () => {
+  if (typeof window === "undefined") return false;
+  const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  return Boolean(cap?.isNativePlatform?.());
+};
+
+const loadNativeNotifications = () => import("@capacitor/local-notifications").then((module) => module.LocalNotifications);
+
 export async function getNotificationPermission(): Promise<NotificationPref> {
+  if (isNative()) {
+    try {
+      const plugin = await loadNativeNotifications();
+      const status = await plugin.checkPermissions();
+      if (status.display === "granted") return "granted";
+      if (status.display === "denied") return "denied";
+      return "unknown";
+    } catch {
+      return "unsupported";
+    }
+  }
   if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
   if (Notification.permission === "granted") return "granted";
   if (Notification.permission === "denied") return "denied";
@@ -43,6 +68,21 @@ export async function getNotificationPermission(): Promise<NotificationPref> {
 }
 
 export async function requestNotificationPermission(): Promise<NotificationPref> {
+  if (isNative()) {
+    try {
+      const plugin = await loadNativeNotifications();
+      const current = await plugin.checkPermissions();
+      const status = current.display === "granted" ? current : await plugin.requestPermissions();
+      if (status.display === "granted") {
+        setNotificationsEnabled(true);
+        return "granted";
+      }
+      // „prompt-with-rationale” înseamnă că sistemul mai poate întreba o dată; nu e refuz definitiv.
+      return status.display === "denied" ? "denied" : "unknown";
+    } catch {
+      return "unsupported";
+    }
+  }
   if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
   if (Notification.permission === "granted") {
     setNotificationsEnabled(true);
@@ -152,11 +192,10 @@ function buildAlerts(data: AppData): PlannedAlert[] {
 
 async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
   try {
-    const Cap = typeof window !== "undefined" ? (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor : undefined;
-    if (!Cap?.isNativePlatform?.()) return false;
+    if (!isNative()) return false;
     // Încărcat doar pe nativ, ca să nu intre în bundle-ul web/PWA.
-    const { LocalNotifications } = await import("@capacitor/local-notifications");
-    const perm = await LocalNotifications.requestPermissions();
+    const LocalNotifications = await loadNativeNotifications();
+    const perm = await LocalNotifications.checkPermissions();
     if (perm.display !== "granted") return false;
     await LocalNotifications.cancel({ notifications: alerts.map((a) => ({ id: a.id })) }).catch(() => undefined);
     await LocalNotifications.schedule({
@@ -219,11 +258,10 @@ const writeFamilyAlertLog = (log: Record<string, string>) => {
 };
 
 async function showNow(title: string, body: string, tag: string) {
-  const Cap = typeof window !== "undefined" ? (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor : undefined;
-  if (Cap?.isNativePlatform?.()) {
+  if (isNative()) {
     try {
-      const { LocalNotifications } = await import("@capacitor/local-notifications");
-      const permission = await LocalNotifications.requestPermissions();
+      const LocalNotifications = await loadNativeNotifications();
+      const permission = await LocalNotifications.checkPermissions();
       if (permission.display !== "granted") return;
       await LocalNotifications.schedule({ notifications: [{ id: Math.floor(Math.random() * 100000) + 5000, title, body, extra: { tag } }] });
       return;
