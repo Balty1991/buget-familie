@@ -502,15 +502,21 @@ html.capacitor-android {
 
 .os-dock button.is-on,
 .os-dock button.active {
-  color: var(--os-mint-fg) !important;
-  background: var(--os-mint) !important;
-  box-shadow: none !important;
+  color: var(--os-mint) !important;
+  background: var(--os-mint-dim) !important;
+  box-shadow: inset 0 -2px 0 var(--os-mint) !important;
 }
 
 .os-dock button svg {
   width: 16px !important;
   height: 16px !important;
   color: currentColor !important;
+}
+
+.os-dock button:focus-visible,
+.os-desktop-nav button:focus-visible {
+  outline: 2px solid var(--os-mint) !important;
+  outline-offset: 2px !important;
 }
 
 .os-ghid { display: none !important; }
@@ -548,6 +554,7 @@ html.capacitor-android {
   .os-desktop-nav button.is-on {
     color: var(--os-mint) !important;
     background: var(--os-mint-dim) !important;
+    box-shadow: inset 0 -2px 0 var(--os-mint) !important;
   }
   .os-dock,
   .os-ghid { display: none !important; }
