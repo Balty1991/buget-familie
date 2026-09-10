@@ -134,6 +134,11 @@ function SourceGlyph({ kind }: { kind: keyof typeof sourceKindName }) {
 /**
  * Household OS — situația zilei: cât a rămas, ritmul, sursele și următorul venit.
  */
+function NextStepCard({ signal, onOpen }: { signal?: AdvisorSignal; onOpen: () => void }) {
+  if (!signal) return null;
+  const tone = signal.tone === "risk" ? "risk" : signal.tone === "watch" ? "watch" : "good";
+  return <section className={"bf-next-step-card " + tone}><div className="bf-next-step-icon"><PlayCircle size={21} /></div><div className="bf-next-step-copy"><p className="bf-kicker">RECOMANDAREA MEA PENTRU ACUM</p><h2>{signal.title}</h2><span>{signal.detail}</span></div><button type="button" onClick={onOpen}>{signal.actionLabel}<ChevronRight size={16} /></button></section>;
+}
 function TodayPulse({ data, onGo }: { data: AppData; onGo: (view: MainView) => void }) {
   const today = new Date();
   const days = Array.from({ length: 7 }, (_, index) => {
@@ -378,6 +383,7 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
           </article>
         </section>
         <TodayPulse data={data} onGo={onGo} />
+        <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />
         <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
