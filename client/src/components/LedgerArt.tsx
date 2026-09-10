@@ -50,7 +50,7 @@ export function HealthGauge({ score, tone, size = 120 }: { score: number; tone: 
         <polygon className="bf-health-needle" points="100,36 104,108 96,108" />
         <circle className="bf-health-needle-hub" cx="100" cy="108" r="6" />
       </g>
-      <text className="bf-health-gauge-score" x="100" y="92" textAnchor="middle">{clamped}</text>
+      <text className="bf-health-gauge-score" style={{ fill: "var(--os-fg, var(--cf-ink, #f2f7ff))" }} x="100" y="92" textAnchor="middle">{clamped}</text>
     </svg>
   );
 }

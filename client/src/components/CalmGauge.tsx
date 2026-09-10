@@ -40,8 +40,8 @@ export function CalmGauge({ value }: { value: number }) {
           className={tick.major ? "bf-calm-tick major" : "bf-calm-tick"}
         />
       ))}
-      <text x="50" y="52" textAnchor="middle" className="bf-calm-score">{clamped}</text>
-      <text x="50" y="66" textAnchor="middle" className="bf-calm-label">{label}</text>
+      <text x="50" y="52" textAnchor="middle" className="bf-calm-score" style={{ fill: "var(--os-fg, var(--cf-ink, #f2f7ff))" }}>{clamped}</text>
+      <text x="50" y="66" textAnchor="middle" className="bf-calm-label" style={{ fill: "var(--os-muted, var(--cf-muted, #9aa8a1))" }}>{label}</text>
     </svg>
   );
 }
