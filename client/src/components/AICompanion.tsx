@@ -443,8 +443,17 @@ function receiptDetails(extracted?: ExtractedGuide) {
   if (!extracted?.receiptLines?.length && !extracted?.confidence) return "";
   const lines = (extracted.receiptLines || []).slice(0, 8).filter((line) => line.name);
   const products = lines.length ? ` Produse citite: ${lines.map((line) => `${line.quantity && line.quantity !== 1 ? `${line.quantity}× ` : ""}${line.name}${line.amount ? ` ${money(line.amount)}` : ""}`).join(", ")}.` : " Produsele nu au fost suficient de lizibile.";
+  const lineTotal = lines.reduce((sum, line) => sum + (line.amount || 0), 0);
+  const difference = extracted.amount && lineTotal > 0 ? Math.round((extracted.amount - lineTotal) * 100) / 100 : 0;
+  const reconciliation = extracted.amount
+    ? lineTotal > 0
+      ? Math.abs(difference) <= 0.01
+        ? ` Total bon: **${money(extracted.amount)}**. Liniile se potrivesc cu totalul.`
+        : ` Total bon: **${money(extracted.amount)}**. Liniile însumează **${money(lineTotal)}**; diferență de **${money(Math.abs(difference))}**${difference > 0 ? " (posibilă reducere sau linie necitită)" : " (verifică o posibilă citire dublă)"}.`
+      : ` Total bon identificat: **${money(extracted.amount)}**.`
+    : "";
   const confidence = extracted.confidence === "low" ? " Verifică atent suma; fotografia nu este suficient de clară." : "";
-  return `${products}${confidence}`;
+  return `${reconciliation}${products}${confidence}`;
 }
 
 function matchEnvelope(data: AppData, token: string) {
