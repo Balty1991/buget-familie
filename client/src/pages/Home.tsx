@@ -304,7 +304,7 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
       <TodayLedger data={data} onGo={(view) => onGo(view)} />
       {(data.transactions.length > 0 || data.settings.members.length > 1 || data.settings.salaryPlan.allocations.length > 0) && (
         <Suspense fallback={<div className="bf-lazy-panel">Pregătim bilanțul săptămânii…</div>}>
-          <WeeklySummaryPanel data={data} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
+          <WeeklySummaryPanel data={data} onChange={onChange} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
         </Suspense>
       )}
       <DeferBelowFold>
