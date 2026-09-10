@@ -6,17 +6,20 @@ import { describe, expect, it } from "vitest";
 import { mergeFamilyData } from "./family-crypto";
 import {
   allocationSpent,
+  allocationStatus,
   allocationWeeksStatus,
   confirmRecurringPayment,
   createEmptyAppData,
   isoDate,
   pendingRecurringInPlan,
   recurringDueForMonth,
+  transferBetweenEnvelopes,
   weeklySummary,
   type Debt,
   type SavingsGoal,
 } from "./finance-data";
 import { interpretReceiptText, parseReceiptItems } from "./receipt-utils";
+import { checkInRebalance } from "./household-insights";
 
 const planWithFlex = () => {
   const data = createEmptyAppData();
@@ -136,5 +139,56 @@ describe("recunoașterea magazinului", () => {
   it("alege lanțul cunoscut, nu primul rând din antetul legal", () => {
     const result = interpretReceiptText(["SC EXPERT MAGAZIN COMPANY", "LIDL DISCOUNT S.R.L.", "STR. GARII NR. 4", "PAINE 3,00", "TOTAL 3,00"]);
     expect(result.vendor).toBe("Lidl");
+  });
+});
+
+describe("propunerea de reechilibrare din check-in", () => {
+  const withEnvelopes = (spent: Array<[string, number]>) => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan = {
+      ...data.settings.salaryPlan,
+      periodStart: "2026-09-01",
+      nextPayday: "2026-09-30",
+      allocations: [
+        { id: "alimente", label: "Alimente", category: "Alimente", amount: 1000 },
+        { id: "liber", label: "Timp liber", category: "Timp liber", amount: 600 },
+        { id: "transport", label: "Transport", category: "Transport", amount: 300 },
+      ],
+    };
+    data.transactions = spent.map(([allocationId, amount], index) => ({
+      id: `t${index}`, title: "Cheltuială", amount, kind: "expense" as const, category: "Alimente",
+      source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me",
+      date: "2026-09-08", allocationId,
+    }));
+    return data;
+  };
+
+  it("ia din plicul cu cel mai mult rămas și acoperă deficitul", () => {
+    const data = withEnvelopes([["alimente", 1120], ["liber", 100], ["transport", 50]]);
+    expect(checkInRebalance(data)).toMatchObject({ fromId: "liber", toId: "alimente", amount: 120, deficit: 120, covers: true });
+  });
+
+  it("nu propune mai mult decât a rămas în plicul donator", () => {
+    const data = withEnvelopes([["alimente", 1900], ["liber", 300], ["transport", 290]]);
+    const proposal = checkInRebalance(data);
+    // Timp liber are 300 rămași; deficitul de la Alimente este 900.
+    expect(proposal).toMatchObject({ fromId: "liber", amount: 300, deficit: 900, covers: false });
+  });
+
+  it("propune un transfer pe care planul chiar îl acceptă", () => {
+    const data = withEnvelopes([["alimente", 1120], ["liber", 100], ["transport", 50]]);
+    const proposal = checkInRebalance(data)!;
+    const next = transferBetweenEnvelopes(data, { fromAllocationId: proposal.fromId, toAllocationId: proposal.toId, amount: proposal.amount });
+    expect(next).toBeDefined();
+    expect(allocationStatus(next!, next!.settings.salaryPlan.allocations.find((item) => item.id === "alimente")!).remaining).toBe(0);
+  });
+
+  it("tace când niciun plic nu este depășit", () => {
+    expect(checkInRebalance(withEnvelopes([["alimente", 100]]))).toBeUndefined();
+  });
+
+  it("tace când niciun plic nu are de unde da", () => {
+    const data = withEnvelopes([["alimente", 1100], ["liber", 600], ["transport", 300]]);
+    expect(checkInRebalance(data)).toBeUndefined();
   });
 });

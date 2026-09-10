@@ -8,10 +8,13 @@
  * Detectăm formatul din conținut, nu îl cerem utilizatorului.
  */
 import {
+  BASE_CURRENCY,
+  exchangeRateFor,
   foldRomanian,
   guessCategoryFromText,
   isKnownTransaction,
   newId,
+  toBaseAmount,
   type AppData,
   type ReviewDraft,
   type Transaction,
@@ -224,11 +227,17 @@ export function statementDrafts(
   if (!source || !member) return { drafts: [], duplicates: 0 };
   const categories = [...data.settings.customCategories];
   const now = new Date().toISOString();
+  // Un extras al unui cont valutar are sumele în acea valută; registrul le păstrează în lei.
+  const foreign = source.currency && source.currency !== BASE_CURRENCY ? source.currency : undefined;
+  const rate = exchangeRateFor(data, foreign);
+  if (foreign && !rate) return { drafts: [], duplicates: 0 };
   const drafts: ReviewDraft[] = [];
   const staged: Array<Pick<Transaction, "date" | "amount" | "kind" | "sourceId">> = [];
   let duplicates = 0;
   for (const row of rows) {
-    const candidate = { date: row.date, amount: row.amount, kind: row.kind, sourceId: source.id };
+    const base = foreign ? toBaseAmount(row.amount, rate) : row.amount;
+    if (!base) continue;
+    const candidate = { date: row.date, amount: base, kind: row.kind, sourceId: source.id };
     const alreadyStaged = staged.some((item) => item.date === candidate.date && item.kind === candidate.kind && Math.abs(item.amount - candidate.amount) < 0.005);
     if (alreadyStaged || isKnownTransaction(data, candidate)) { duplicates += 1; continue; }
     staged.push(candidate);
@@ -236,7 +245,10 @@ export function statementDrafts(
     const transaction: Transaction = {
       id: newId("import-tx"),
       title: row.description.slice(0, 80),
-      amount: row.amount,
+      amount: base,
+      originalAmount: foreign ? row.amount : undefined,
+      originalCurrency: foreign,
+      exchangeRate: foreign ? rate : undefined,
       kind: row.kind,
       category,
       sourceId: source.id,

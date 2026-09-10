@@ -156,3 +156,33 @@ describe("reimportarea aceleiași perioade", () => {
     expect(result.duplicates).toBe(1);
   });
 });
+
+describe("extrasul unui cont valutar", () => {
+  const csv = ["Data;Descriere;Suma", "07.09.2026;Chirie Berlin;-450,00", "08.09.2026;Salariu;2.100,00"].join("\n");
+  const withEuro = (rate?: number) => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [{ id: "source-euro", name: "Cont euro", kind: "card", memberId: "member-me", openingBalance: 0, currency: "EUR" }];
+    if (rate) data.settings.exchangeRates = [{ currency: "EUR", rate, updatedAt: "2026-09-10T08:00:00.000Z" }];
+    return data;
+  };
+
+  it("trece sumele în lei și păstrează valoarea originală", () => {
+    const { drafts } = statementDrafts(withEuro(5), parseStatementCsv(csv).rows, { sourceId: "source-euro", memberId: "member-me" });
+    expect(drafts.map((item) => item.transaction.amount)).toEqual([2250, 10500]);
+    expect(drafts.map((item) => item.transaction.originalAmount)).toEqual([450, 2100]);
+    expect(drafts.every((item) => item.transaction.originalCurrency === "EUR" && item.transaction.exchangeRate === 5)).toBe(true);
+  });
+
+  it("refuză importul fără curs, în loc să trateze euro drept lei", () => {
+    const result = statementDrafts(withEuro(), parseStatementCsv(csv).rows, { sourceId: "source-euro", memberId: "member-me" });
+    expect(result).toEqual({ drafts: [], duplicates: 0 });
+  });
+
+  it("recunoaște dublurile după suma în lei, nu după cea din fișier", () => {
+    const data = withEuro(5);
+    const first = statementDrafts(data, parseStatementCsv(csv).rows, { sourceId: "source-euro", memberId: "member-me" });
+    const confirmed = { ...data, transactions: first.drafts.map((item) => item.transaction) };
+    const second = statementDrafts(confirmed, parseStatementCsv(csv).rows, { sourceId: "source-euro", memberId: "member-me" });
+    expect(second).toEqual({ drafts: [], duplicates: 2 });
+  });
+});

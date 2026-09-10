@@ -3,22 +3,27 @@
  * Calculat numai din registrul local; nu scrie în AppData.
  */
 import { useState } from "react";
-import { ArrowDownRight, ArrowUpRight, CalendarDays, ChevronRight, Share2 } from "lucide-react";
-import { formatDate, type AppData } from "@/lib/finance-data";
-import { formatWeeklyCheckInShare, weeklyCheckIn } from "@/lib/household-insights";
+import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, CalendarDays, Check, ChevronRight, Share2 } from "lucide-react";
+import { formatDate, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";
+import { checkInRebalance, formatWeeklyCheckInShare, weeklyCheckIn } from "@/lib/household-insights";
 
 const money = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 });
 
-export function WeeklySummaryPanel({ data, onOpenJournal, onOpenPlan }: { data: AppData; onOpenJournal: () => void; onOpenPlan?: () => void }) {
+export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }: { data: AppData; onChange?: (value: AppData) => void; onOpenJournal: () => void; onOpenPlan?: () => void }) {
   const collaborative = data.settings.members.length > 1;
   const [scope, setScope] = useState("family");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
+  // După transfer plicul nu mai e în deficit, deci propunerea dispare. Fără această confirmare,
+  // cardul s-ar evapora la apăsare și utilizatorul n-ar ști dacă s-a întâmplat ceva.
+  const [movedNote, setMovedNote] = useState("");
   const member = data.settings.members.find((item) => item.id === scope);
   const check = weeklyCheckIn(data, undefined, member?.id);
+  // Propunerea se calculează pe familie: limitele plicurilor sunt comune, nu personale.
+  const rebalance = checkInRebalance(data);
   const label = member ? member.name : collaborative ? "Familie" : "Personal";
   const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;
   const share = async () => {
-    const text = formatWeeklyCheckInShare(check);
+    const text = formatWeeklyCheckInShare(check, rebalance);
     try {
       if (typeof navigator.share === "function") {
         await navigator.share({ title: `Bilanț ${check.familyName}`, text });
@@ -55,6 +60,36 @@ export function WeeklySummaryPanel({ data, onOpenJournal, onOpenPlan }: { data: 
         </div>
       )}
       <p className="bf-week-checkin-step">{check.nextStep}</p>
+      {!rebalance && movedNote && (
+        <p className="bf-week-rebalance-done" role="status"><Check size={14} /> {movedNote}</p>
+      )}
+      {rebalance && (
+        <div className="bf-week-rebalance" role="group" aria-label="Propunere de reechilibrare">
+          <span aria-hidden="true"><ArrowLeftRight size={16} /></span>
+          <div>
+            <b>Mută {money.format(rebalance.amount)} din „{rebalance.fromLabel}” în „{rebalance.toLabel}”</b>
+            <small>
+              {rebalance.covers
+                ? `Acoperă tot deficitul de ${money.format(rebalance.deficit)}.`
+                : `Acoperă ${money.format(rebalance.amount)} din deficitul de ${money.format(rebalance.deficit)}; restul cere o reducere a cheltuielilor.`}
+              {" "}Se schimbă doar limitele plicurilor, nu se mișcă bani între surse.
+            </small>
+          </div>
+          {onChange && (
+            <button
+              type="button"
+              onClick={() => {
+                const next = transferBetweenEnvelopes(data, { fromAllocationId: rebalance.fromId, toAllocationId: rebalance.toId, amount: rebalance.amount, note: "Reechilibrare din bilanțul săptămânii" });
+                if (!next) return;
+                setMovedNote(`Ai mutat ${money.format(rebalance.amount)} din „${rebalance.fromLabel}” în „${rebalance.toLabel}”.`);
+                onChange(next);
+              }}
+            >
+              Mută acum
+            </button>
+          )}
+        </div>
+      )}
       <div className="bf-weekly-summary-values">
         <article className="income"><span><ArrowDownRight size={17} /></span><div><small>Venituri</small><b>{money.format(check.income)}</b></div></article>
         <article className="expense"><span><ArrowUpRight size={17} /></span><div><small>Cheltuieli</small><b>{money.format(check.expense)}</b></div></article>

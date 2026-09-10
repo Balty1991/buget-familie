@@ -6,6 +6,8 @@ import {
   addIsoDays,
   allocationBudget,
   allocationStatus,
+  exchangeRateFor,
+  toBaseAmount,
   allocationWeekStatus,
   financialBalance,
   formatDate,
@@ -53,7 +55,8 @@ export type AgeOfMoney = {
 
 /** FIFO simplu: câți zile stă un leu între încasare și cheltuială. Soldul inițial contează ca bani „deja prezenți”. */
 export const ageOfMoney = (data: AppData, asOf = isoToday()): AgeOfMoney | undefined => {
-  const opening = data.settings.paymentSources.reduce((sum, source) => sum + Math.max(0, source.openingBalance), 0);
+  // Soldurile inițiale valutare se convertesc, ca totalul să rămână în lei ca restul registrului.
+  const opening = data.settings.paymentSources.reduce((sum, source) => sum + Math.max(0, source.currency ? toBaseAmount(source.openingBalance, exchangeRateFor(data, source.currency)) ?? 0 : source.openingBalance), 0);
   const incomes = data.transactions.filter((item) => item.kind === "income" && item.date <= asOf).sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || "").localeCompare(b.createdAt || ""));
   const expenses = data.transactions.filter((item) => item.kind === "expense" && item.date <= asOf).sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || "").localeCompare(b.createdAt || ""));
   if (!expenses.length || (!incomes.length && opening <= 0)) return undefined;
@@ -573,7 +576,49 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
 };
 
 /** Text de trimis pe WhatsApp sau copiat — fără poze, fără date de sync. */
-export const formatWeeklyCheckInShare = (check: WeeklyCheckIn) => {
+
+/**
+ * Propunerea concretă de reechilibrare a check-in-ului: din ce plic, în ce plic și cât.
+ * „Mută lei în Alimente” este un sfat; „mută 120 lei din Timp liber în Alimente” este o
+ * acțiune. Suma este limitată de ce a rămas efectiv în plicul donator, ca transferul să
+ * fie acceptat de `transferBetweenEnvelopes` și să nu creeze un al doilea deficit.
+ */
+export type CheckInRebalance = {
+  fromId: string;
+  fromLabel: string;
+  toId: string;
+  toLabel: string;
+  amount: number;
+  deficit: number;
+  covers: boolean;
+};
+
+export const checkInRebalance = (data: AppData): CheckInRebalance | undefined => {
+  const allocations = data.settings.salaryPlan.allocations || [];
+  if (allocations.length < 2) return undefined;
+  const status = allocations.map((allocation) => ({ allocation, ...allocationStatus(data, allocation) }));
+  // Deficitul și donatorul se măsoară pe ciclu, nu pe săptămână: limitele plicurilor sunt ale ciclului.
+  const short = status.filter((item) => item.remaining < -0.005).sort((left, right) => left.remaining - right.remaining)[0];
+  if (!short) return undefined;
+  const donor = status
+    .filter((item) => item.allocation.id !== short.allocation.id && item.remaining > 0.005)
+    .sort((left, right) => right.remaining - left.remaining)[0];
+  if (!donor) return undefined;
+  const deficit = roundMoney(Math.abs(short.remaining));
+  const amount = roundMoney(Math.min(deficit, donor.remaining));
+  if (amount <= 0) return undefined;
+  return {
+    fromId: donor.allocation.id,
+    fromLabel: donor.allocation.label,
+    toId: short.allocation.id,
+    toLabel: short.allocation.label,
+    amount,
+    deficit,
+    covers: amount >= deficit - 0.005,
+  };
+};
+
+export const formatWeeklyCheckInShare = (check: WeeklyCheckIn, rebalance?: CheckInRebalance) => {
   const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;
   const lines = [
     `${check.familyName} · bilanț ${range}`,
@@ -592,6 +637,9 @@ export const formatWeeklyCheckInShare = (check: WeeklyCheckIn) => {
     });
   }
   lines.push("", `Următorul pas: ${check.nextStep}`);
+  if (rebalance) {
+    lines.push(`Propunere: mută ${lei(rebalance.amount)} din ${rebalance.fromLabel} în ${rebalance.toLabel}${rebalance.covers ? "" : ` (acoperă parțial ${lei(rebalance.deficit)})`}.`);
+  }
   return lines.join("\n");
 };
 

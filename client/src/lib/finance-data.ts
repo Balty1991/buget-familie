@@ -31,6 +31,14 @@ export type Transaction = {
   debtRemainingAfter?: number;
   createdAt?: string;
   updatedAt?: string;
+  /**
+   * `amount` este întotdeauna în lei, ca toate însumările să rămână corecte fără conversii.
+   * Când plata s-a făcut în altă valută, suma tastată și cursul folosit se păstrează aici,
+   * ca mișcarea să poată fi verificată față de extrasul băncii.
+   */
+  originalAmount?: number;
+  originalCurrency?: string;
+  exchangeRate?: number;
 };
 
 export type Debt = { id: string; name: string; remaining: number; monthly: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; updatedAt?: string };
@@ -61,8 +69,23 @@ export type Receipt = {
   memberId?: string;
 };
 
-export type FamilyMember = { id: string; name: string; color?: string };
-export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei. */ openingBalance: number };
+/**
+ * `kind` marchează un membru drept copil. Nu schimbă nimic în contabilitate — banii de
+ * buzunar sunt tot un plic al familiei, iar cheltuielile copilului sunt tot cheltuieli.
+ * Schimbă doar ecranul: un copil vede o singură cifră, nu un plan salarial.
+ */
+export type FamilyMember = { id: string; name: string; color?: string; kind?: "adult" | "child" };
+
+/**
+ * Registrul are o singură monedă de bază: leul. O sursă poate ține însă altă valută,
+ * iar cursul este introdus manual, cu data lui — aplicația nu întreabă niciun serviciu
+ * extern de cursuri și nu recalculează retroactiv istoricul.
+ */
+export const BASE_CURRENCY = "RON";
+export const supportedCurrencies = ["RON", "EUR", "USD", "GBP", "CHF", "MDL", "HUF"];
+/** `rate` este câți lei face o unitate din valuta respectivă. */
+export type ExchangeRate = { currency: string; rate: number; updatedAt: string };
+export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei, în valuta sursei. */ openingBalance: number; /** Implicit RON. */ currency?: string };
 export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string; /** Implicit adevărat: arată tranșa săptămânii active. Fals pentru plicuri fără ritm fix, unde contează doar totalul ciclului. */ weeklyPace?: boolean };
 export type BudgetTransfer = { id: string; fromAllocationId: string; toAllocationId: string; amount: number; note?: string; createdAt: string };
 /** Mută bani între tranșele săptămânale ale aceluiași plic, de exemplu când săptămâna curentă s-a epuizat. */
@@ -80,7 +103,7 @@ export type SalaryPlan = { periodStart: string; nextPayday: string; /** Prima zi
 export type QuickTransactionTemplate = { id: string; label: string; kind: TransactionKind; category: string; amount: number; memberId?: string; sourceId?: string; updatedAt?: string };
 export type ArchivedQuickTransactionTemplate = QuickTransactionTemplate & { archivedAt: string };
 export type SavedJournalFilter = { id: string; label: string; kind: "all" | TransactionKind; memberId?: string; sourceId?: string; query?: string; fromDate?: string; toDate?: string; updatedAt: string };
-export type FamilySettings = { familyName: string; memberName: string; familyCode: string; members: FamilyMember[]; paymentSources: PaymentSource[]; customCategories: string[]; quickTemplates: QuickTransactionTemplate[]; archivedQuickTemplates: ArchivedQuickTransactionTemplate[]; savedJournalFilters: SavedJournalFilter[]; salaryCycleTemplates: SalaryCycleTemplate[]; seenWeeklyPlanTranches: string[]; /** Cheile produselor alese pentru coșul etalon; preferință locală, calculată din bonuri. */ basketProducts: string[]; salaryPlan: SalaryPlan };
+export type FamilySettings = { familyName: string; memberName: string; familyCode: string; members: FamilyMember[]; paymentSources: PaymentSource[]; customCategories: string[]; quickTemplates: QuickTransactionTemplate[]; archivedQuickTemplates: ArchivedQuickTransactionTemplate[]; savedJournalFilters: SavedJournalFilter[]; salaryCycleTemplates: SalaryCycleTemplate[]; exchangeRates: ExchangeRate[]; seenWeeklyPlanTranches: string[]; /** Cheile produselor alese pentru coșul etalon; preferință locală, calculată din bonuri. */ basketProducts: string[]; salaryPlan: SalaryPlan };
 export type DeletedRecord = { entity: "transactions" | "debts" | "savings" | "receipts" | "recurring"; id: string; deletedAt: string };
 /** De unde vine o mișcare propusă. Determină explicația arătată lângă ea în centrul de revizuire. */
 export type ReviewOrigin = "import" | "bon" | "asistent" | "notificare";
@@ -171,7 +194,7 @@ export const createEmptyAppData = (): AppData => ({
       { id: "source-meal", name: "Bonuri de masă", kind: "meal", memberId: "member-me", openingBalance: 0 },
       { id: "source-transfer", name: "Transfer comun", kind: "transfer", openingBalance: 0 },
     ],
-    customCategories: [], quickTemplates: [], archivedQuickTemplates: [], savedJournalFilters: [], salaryCycleTemplates: [], seenWeeklyPlanTranches: [], basketProducts: [],
+    customCategories: [], quickTemplates: [], archivedQuickTemplates: [], savedJournalFilters: [], salaryCycleTemplates: [], exchangeRates: [], seenWeeklyPlanTranches: [], basketProducts: [],
     salaryPlan: { periodStart: isoToday(), nextPayday: "", sourceIds: [], totalLimit: 0, weeklyLimit: 0, allocations: [], transfers: [], weekTransfers: [], salaryAllocationRules: [], salaryAllocationApplications: [], allocationHistory: [] },
   },
 });
@@ -183,13 +206,14 @@ export const normalizeAppData = (input: unknown): AppData => {
   const fallback = createEmptyAppData();
   const oldSettings = (old.settings || {}) as Partial<FamilySettings> & { paymentSources?: Array<Partial<PaymentSource> & { balance?: number }> };
   const memberName = oldSettings.memberName || fallback.settings.memberName;
-  const members = oldSettings.members?.length ? oldSettings.members.map((member, index) => ({ id: member.id || `member-${index}`, name: member.name || `Membru ${index + 1}`, color: member.color })) : [{ id: "member-me", name: memberName, color: "#256B5B" }];
+  const members = oldSettings.members?.length ? oldSettings.members.map((member, index) => ({ id: member.id || `member-${index}`, name: member.name || `Membru ${index + 1}`, color: member.color, kind: member.kind === "child" ? "child" as const : undefined })) : [{ id: "member-me", name: memberName, color: "#256B5B" }];
   const sources = oldSettings.paymentSources?.length ? oldSettings.paymentSources.map((source, index) => ({
     id: source.id || `source-${index}`,
     name: source.name || `Sursă ${index + 1}`,
     kind: (source.kind || "card") as PaymentKind,
     memberId: source.memberId,
     openingBalance: Math.max(0, parseRomanianAmount(source.openingBalance ?? (source as Partial<PaymentSource> & { balance?: number }).balance ?? 0)),
+    currency: typeof source.currency === "string" && source.currency.trim() && source.currency.toUpperCase() !== BASE_CURRENCY ? source.currency.trim().toUpperCase().slice(0, 3) : undefined,
   })) : fallback.settings.paymentSources;
   const sourceByName = new Map(sources.map((source) => [source.name.toLowerCase(), source]));
   const memberByName = new Map(members.map((member) => [member.name.toLowerCase(), member]));
@@ -198,7 +222,9 @@ export const normalizeAppData = (input: unknown): AppData => {
     const rawSource = (item.source || "").toLowerCase();
     const source = sources.find((value) => value.id === item.sourceId) || sourceByName.get(rawSource) || (rawSource.includes("bon") ? sources.find((value) => value.kind === "meal") : undefined) || sources[0];
     const member = members.find((value) => value.id === item.memberId) || memberByName.get((item.person || "").toLowerCase());
-    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || new Date().toISOString() };
+    const originalCurrency = typeof item.originalCurrency === "string" && item.originalCurrency.trim().toUpperCase() !== BASE_CURRENCY ? item.originalCurrency.trim().toUpperCase().slice(0, 3) : undefined;
+    const originalAmount = originalCurrency ? Math.max(0, parseRomanianAmount(item.originalAmount ?? 0)) || undefined : undefined;
+    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || new Date().toISOString(), originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined };
   };
   const transactions = Array.isArray(old.transactions) ? old.transactions.map((entry, index) => normalizeTransaction(entry, index, "legacy-tx")) : [];
   const transactionIds = new Set(transactions.map((item) => item.id));
@@ -227,6 +253,13 @@ export const normalizeAppData = (input: unknown): AppData => {
   const archivedQuickTemplates = Array.isArray(oldSettings.archivedQuickTemplates) ? oldSettings.archivedQuickTemplates.map((item, index) => ({ ...normalizeQuickTemplate(item, index), archivedAt: /^\d{4}-\d{2}-\d{2}/.test(String(item.archivedAt || "")) ? String(item.archivedAt) : new Date().toISOString() })).filter((item) => item.label).slice(0, 60) : [];
   const savedJournalFilters = (Array.isArray(oldSettings.savedJournalFilters) ? oldSettings.savedJournalFilters.map((item, index) => ({ id: item.id || `saved-filter-${index}`, label: String(item.label || "Filtru salvat").trim(), kind: item.kind === "income" || item.kind === "expense" ? item.kind : "all" as const, memberId: members.some((member) => member.id === item.memberId) ? item.memberId : undefined, sourceId: sources.some((source) => source.id === item.sourceId) ? item.sourceId : undefined, query: String(item.query || "").trim() || undefined, fromDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.fromDate || "")) ? String(item.fromDate) : undefined, toDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.toDate || "")) ? String(item.toDate) : undefined, updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : new Date().toISOString() })).filter((item) => item.label && (!item.fromDate || !item.toDate || item.fromDate <= item.toDate)) : []).reduce<typeof fallback.settings.savedJournalFilters>((all, item) => all.some((saved) => saved.id === item.id || saved.label.toLocaleLowerCase("ro-RO") === item.label.toLocaleLowerCase("ro-RO")) ? all : [...all, item], []).slice(0, 8);
   const salaryCycleTemplates = (Array.isArray(oldSettings.salaryCycleTemplates) ? oldSettings.salaryCycleTemplates.map((item, index) => ({ id: String(item.id || `salary-cycle-${index}`), label: String(item.label || "Ciclu salarial").trim().slice(0, 42), amount: Math.max(0, parseRomanianAmount(item.amount)), durationDays: Math.min(93, Math.max(7, Math.round(parseRomanianAmount(item.durationDays || 28)))), updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : undefined })).filter((item) => item.label && item.amount > 0) : []).reduce<typeof fallback.settings.salaryCycleTemplates>((all, item) => all.some((saved) => saved.id === item.id || saved.label.toLocaleLowerCase("ro-RO") === item.label.toLocaleLowerCase("ro-RO")) ? all : [...all, item], []).slice(0, 12);
+  const exchangeRates = (Array.isArray(oldSettings.exchangeRates) ? oldSettings.exchangeRates.map((item) => ({
+    currency: String(item.currency || "").trim().toUpperCase().slice(0, 3),
+    rate: Math.max(0, parseRomanianAmount(item.rate)),
+    updatedAt: /^\d{4}-\d{2}-\d{2}/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : new Date().toISOString(),
+  })).filter((item) => item.currency && item.currency !== BASE_CURRENCY && item.rate > 0) : [])
+    .reduce<ExchangeRate[]>((all, item) => all.some((saved) => saved.currency === item.currency) ? all : [...all, item], [])
+    .slice(0, 12);
   const basketProducts = Array.isArray(oldSettings.basketProducts) ? Array.from(new Set(oldSettings.basketProducts.filter((item): item is string => typeof item === "string" && item.trim().length > 1))).slice(0, 30) : [];
   const seenWeeklyPlanTranches = Array.isArray(oldSettings.seenWeeklyPlanTranches) ? oldSettings.seenWeeklyPlanTranches.filter((item): item is string => typeof item === "string" && /^\d{4}-\d{2}-\d{2}:\d{4}-\d{2}-\d{2}:\d+$/.test(item)).slice(-80) : [];
   const allocationHistory = Array.isArray((oldPlan as Partial<SalaryPlan>).allocationHistory) ? (oldPlan as Partial<SalaryPlan>).allocationHistory!.map((item, index) => ({ id: String(item.id || `allocation-history-${index}`), referenceId: item.referenceId || undefined, kind: ["created", "updated", "deleted", "income-applied", "income-reverted", "envelope-transfer", "week-transfer"].includes(String(item.kind)) ? String(item.kind) as AllocationHistoryKind : "updated" as const, allocationId: item.allocationId || undefined, allocationLabel: item.allocationLabel || undefined, fromAllocationId: item.fromAllocationId || undefined, fromAllocationLabel: item.fromAllocationLabel || undefined, toAllocationId: item.toAllocationId || undefined, toAllocationLabel: item.toAllocationLabel || undefined, amount: item.amount === undefined ? undefined : Math.max(0, parseRomanianAmount(item.amount)), previousAmount: item.previousAmount === undefined ? undefined : Math.max(0, parseRomanianAmount(item.previousAmount)), newAmount: item.newAmount === undefined ? undefined : Math.max(0, parseRomanianAmount(item.newAmount)), incomeId: item.incomeId || undefined, incomeTitle: item.incomeTitle || undefined, fromWeekIndex: Number.isFinite(item.fromWeekIndex) ? Math.max(1, Math.round(item.fromWeekIndex as number)) : undefined, toWeekIndex: Number.isFinite(item.toWeekIndex) ? Math.max(1, Math.round(item.toWeekIndex as number)) : undefined, note: item.note || undefined, createdAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.createdAt || "")) ? String(item.createdAt) : new Date().toISOString() })).slice(0, 400) : [];
@@ -236,7 +269,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     savings: Array.isArray(old.savings) ? old.savings.map((item) => ({ ...item, current: Math.max(0, parseRomanianAmount(item.current)), target: Math.max(0, parseRomanianAmount(item.target)) })) : [],
     recurring: Array.isArray(old.recurring) ? old.recurring.map((item, index) => ({ id: item.id || `recurring-${index}`, name: item.name || `Plată recurentă ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), category: item.category || "Casă & facturi", sourceId: sources.some((source) => source.id === item.sourceId) ? String(item.sourceId) : sources[0]?.id || "", memberId: members.some((member) => member.id === item.memberId) ? String(item.memberId) : members[0]?.id || "", dueDay: Math.min(31, Math.max(1, Math.round(parseRomanianAmount(item.dueDay || 1)))), active: item.active !== false, autoPost: item.autoPost === true, note: item.note || undefined, updatedAt: item.updatedAt || undefined })) : [],
     deleted: Array.isArray(old.deleted) ? old.deleted.filter((item): item is DeletedRecord => Boolean(item && typeof item.id === "string" && typeof item.deletedAt === "string" && ["transactions", "debts", "savings", "receipts", "recurring"].includes(item.entity))).slice(-500) : [],
-    settings: { familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], quickTemplates, archivedQuickTemplates, savedJournalFilters, salaryCycleTemplates, seenWeeklyPlanTranches, basketProducts, salaryPlan: { periodStart, nextPayday, earliestPayday, paydayFlexDays: Number.isFinite((oldPlan as Partial<SalaryPlan>).paydayFlexDays) ? Math.min(5, Math.max(0, Math.round(Number((oldPlan as Partial<SalaryPlan>).paydayFlexDays)))) : undefined, sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: Array.isArray(oldPlan.allocations) ? oldPlan.allocations.map((item, index) => ({ ...item, id: item.id || `allocation-${index}`, label: item.label || item.category || `Plic ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), alertThreshold: Math.min(95, Math.max(50, Math.round(parseRomanianAmount(item.alertThreshold ?? 80)))) })) : [], transfers: Array.isArray((oldPlan as Partial<SalaryPlan>).transfers) ? (oldPlan as Partial<SalaryPlan>).transfers!.filter((item) => item && typeof item.id === "string" && typeof item.fromAllocationId === "string" && typeof item.toAllocationId === "string" && item.fromAllocationId !== item.toAllocationId).map((item) => ({ id: item.id, fromAllocationId: item.fromAllocationId, toAllocationId: item.toAllocationId, amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], weekTransfers: Array.isArray((oldPlan as Partial<SalaryPlan>).weekTransfers) ? (oldPlan as Partial<SalaryPlan>).weekTransfers!.filter((item) => item && typeof item.id === "string" && typeof item.allocationId === "string" && Number.isFinite(item.fromWeekIndex) && Number.isFinite(item.toWeekIndex) && item.fromWeekIndex !== item.toWeekIndex).map((item) => ({ id: item.id, allocationId: item.allocationId, fromWeekIndex: Math.max(1, Math.round(item.fromWeekIndex)), toWeekIndex: Math.max(1, Math.round(item.toWeekIndex)), amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], salaryAllocationRules: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationRules) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationRules!.map((item, index) => ({ id: item.id || `salary-rule-${index}`, label: String(item.label || "Repartizare venit").trim(), allocationId: String(item.allocationId || ""), mode: item.mode === "percent" ? "percent" as const : "fixed" as const, value: Math.max(0, item.mode === "percent" ? Math.min(100, parseRomanianAmount(item.value)) : parseRomanianAmount(item.value)), active: item.active !== false, updatedAt: item.updatedAt || undefined })).filter((item) => item.label && item.allocationId && item.value > 0).slice(0, 24) : [], salaryAllocationApplications: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationApplications!.map((item, index) => ({ id: item.id || `salary-application-${index}`, incomeId: String(item.incomeId || ""), incomeTitle: String(item.incomeTitle || "Venit"), incomeAmount: Math.max(0, parseRomanianAmount(item.incomeAmount)), sourceId: item.sourceId || undefined, memberId: item.memberId || undefined, appliedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.appliedAt || "")) ? String(item.appliedAt) : new Date().toISOString(), allocations: Array.isArray(item.allocations) ? item.allocations.map((entry) => ({ ruleId: String(entry.ruleId || ""), allocationId: String(entry.allocationId || ""), amount: Math.max(0, parseRomanianAmount(entry.amount)) })).filter((entry) => entry.ruleId && entry.allocationId && entry.amount > 0) : [] })).filter((item) => item.incomeId && item.allocations.length).slice(0, 80) : [], allocationHistory, updatedAt: oldPlan.updatedAt || undefined } },
+    settings: { familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], quickTemplates, archivedQuickTemplates, savedJournalFilters, salaryCycleTemplates, exchangeRates, seenWeeklyPlanTranches, basketProducts, salaryPlan: { periodStart, nextPayday, earliestPayday, paydayFlexDays: Number.isFinite((oldPlan as Partial<SalaryPlan>).paydayFlexDays) ? Math.min(5, Math.max(0, Math.round(Number((oldPlan as Partial<SalaryPlan>).paydayFlexDays)))) : undefined, sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: Array.isArray(oldPlan.allocations) ? oldPlan.allocations.map((item, index) => ({ ...item, id: item.id || `allocation-${index}`, label: item.label || item.category || `Plic ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), alertThreshold: Math.min(95, Math.max(50, Math.round(parseRomanianAmount(item.alertThreshold ?? 80)))) })) : [], transfers: Array.isArray((oldPlan as Partial<SalaryPlan>).transfers) ? (oldPlan as Partial<SalaryPlan>).transfers!.filter((item) => item && typeof item.id === "string" && typeof item.fromAllocationId === "string" && typeof item.toAllocationId === "string" && item.fromAllocationId !== item.toAllocationId).map((item) => ({ id: item.id, fromAllocationId: item.fromAllocationId, toAllocationId: item.toAllocationId, amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], weekTransfers: Array.isArray((oldPlan as Partial<SalaryPlan>).weekTransfers) ? (oldPlan as Partial<SalaryPlan>).weekTransfers!.filter((item) => item && typeof item.id === "string" && typeof item.allocationId === "string" && Number.isFinite(item.fromWeekIndex) && Number.isFinite(item.toWeekIndex) && item.fromWeekIndex !== item.toWeekIndex).map((item) => ({ id: item.id, allocationId: item.allocationId, fromWeekIndex: Math.max(1, Math.round(item.fromWeekIndex)), toWeekIndex: Math.max(1, Math.round(item.toWeekIndex)), amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], salaryAllocationRules: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationRules) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationRules!.map((item, index) => ({ id: item.id || `salary-rule-${index}`, label: String(item.label || "Repartizare venit").trim(), allocationId: String(item.allocationId || ""), mode: item.mode === "percent" ? "percent" as const : "fixed" as const, value: Math.max(0, item.mode === "percent" ? Math.min(100, parseRomanianAmount(item.value)) : parseRomanianAmount(item.value)), active: item.active !== false, updatedAt: item.updatedAt || undefined })).filter((item) => item.label && item.allocationId && item.value > 0).slice(0, 24) : [], salaryAllocationApplications: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationApplications!.map((item, index) => ({ id: item.id || `salary-application-${index}`, incomeId: String(item.incomeId || ""), incomeTitle: String(item.incomeTitle || "Venit"), incomeAmount: Math.max(0, parseRomanianAmount(item.incomeAmount)), sourceId: item.sourceId || undefined, memberId: item.memberId || undefined, appliedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.appliedAt || "")) ? String(item.appliedAt) : new Date().toISOString(), allocations: Array.isArray(item.allocations) ? item.allocations.map((entry) => ({ ruleId: String(entry.ruleId || ""), allocationId: String(entry.allocationId || ""), amount: Math.max(0, parseRomanianAmount(entry.amount)) })).filter((entry) => entry.ruleId && entry.allocationId && entry.amount > 0) : [] })).filter((item) => item.incomeId && item.allocations.length).slice(0, 80) : [], allocationHistory, updatedAt: oldPlan.updatedAt || undefined } },
   };
 };
 
@@ -327,11 +360,60 @@ export const revertSalaryAllocationApplication = (data: AppData, applicationId: 
   return appendAllocationHistory(nextData, { kind: "income-reverted", referenceId: application.id, allocationLabel: application.allocations.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat").join(", "), amount: application.allocations.reduce((sum, item) => sum + item.amount, 0), incomeId: application.incomeId, incomeTitle: application.incomeTitle, note: "Repartizarea a fost anulată." });
 };
 
+/** Valuta unei surse; absența ei înseamnă lei. */
+export const sourceCurrency = (data: AppData, sourceId?: string) =>
+  data.settings.paymentSources.find((item) => item.id === sourceId)?.currency || BASE_CURRENCY;
+
+/** Cursul salvat manual pentru o valută, în lei per unitate. Leul are mereu cursul 1. */
+export const exchangeRateFor = (data: AppData, currency?: string): number | undefined => {
+  const code = (currency || BASE_CURRENCY).toUpperCase();
+  if (code === BASE_CURRENCY) return 1;
+  return data.settings.exchangeRates.find((item) => item.currency === code)?.rate;
+};
+
+/** Transformă o sumă în lei folosind cursul dat. Fără curs nu inventăm unul. */
+export const toBaseAmount = (amount: number, rate?: number) =>
+  rate && rate > 0 ? Math.round(amount * rate * 100) / 100 : undefined;
+
+/**
+ * Soldul unei surse, în lei. Mișcările poartă deja suma în lei, deci singurul lucru de
+ * convertit este soldul inițial, tastat în valuta sursei. Fără un curs salvat soldul
+ * inițial valutar nu este presupus, ci lăsat la zero — o cifră inventată ar strica
+ * marja, prognoza și scorul.
+ */
 export const sourceBalance = (data: AppData, sourceId: string) => {
   const source = data.settings.paymentSources.find((item) => item.id === sourceId);
   if (!source) return 0;
-  return source.openingBalance + data.transactions.filter((item) => item.sourceId === sourceId).reduce((total, item) => total + (item.kind === "income" ? item.amount : -item.amount), 0);
+  const opening = source.currency ? toBaseAmount(source.openingBalance, exchangeRateFor(data, source.currency)) ?? 0 : source.openingBalance;
+  return opening + data.transactions.filter((item) => item.sourceId === sourceId).reduce((total, item) => total + (item.kind === "income" ? item.amount : -item.amount), 0);
 };
+
+/**
+ * Soldul unei surse valutare, în propria ei valută — ce vede utilizatorul în extrasul
+ * băncii. Mișcările fără sumă originală au fost introduse în lei; le convertim înapoi
+ * cu cursul curent, iar faptul că este o aproximare se spune în interfață.
+ */
+export const sourceBalanceInCurrency = (data: AppData, sourceId: string) => {
+  const source = data.settings.paymentSources.find((item) => item.id === sourceId);
+  const currency = source?.currency;
+  if (!source || !currency) return undefined;
+  const rate = exchangeRateFor(data, currency);
+  const total = data.transactions
+    .filter((item) => item.sourceId === sourceId)
+    .reduce((sum, item) => {
+      const own = item.originalCurrency === currency && item.originalAmount ? item.originalAmount : rate && rate > 0 ? item.amount / rate : 0;
+      return sum + (item.kind === "income" ? own : -own);
+    }, 0);
+  return { currency, amount: Math.round((source.openingBalance + total) * 100) / 100, exact: data.transactions.every((item) => item.sourceId !== sourceId || item.originalCurrency === currency) };
+};
+
+/** Valutele folosite efectiv de surse, fără leu. */
+export const activeCurrencies = (data: AppData) =>
+  Array.from(new Set(data.settings.paymentSources.map((item) => item.currency).filter((item): item is string => Boolean(item))));
+
+/** Valutele folosite de surse pentru care lipsește cursul; fără el soldul nu poate fi calculat. */
+export const currenciesMissingRate = (data: AppData) =>
+  activeCurrencies(data).filter((currency) => !exchangeRateFor(data, currency));
 
 export const planEndDate = (plan: SalaryPlan) => paydayWindow(plan).typical || plan.nextPayday || plan.earliestPayday || "";
 export const planCoverEndDate = (plan: SalaryPlan) => paydayWindow(plan).latest || planEndDate(plan);

@@ -180,3 +180,16 @@ html.dark .bf-week-share,
 .theme-rosewood .bf-week-share {
   color: #fffefa !important;
 }
+
+/** Propunerea concretă de reechilibrare: din ce plic, în care și cât. */
+.bf-week-rebalance{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;gap:10px!important;margin:10px 0 0!important;padding:12px!important;border:1px dashed var(--cf-line)!important;border-radius:12px!important;background:var(--cf-surface-alt)!important}
+.bf-week-rebalance>span{display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border-radius:9px!important;color:var(--cf-on-forest)!important;background:var(--cf-primary-strong)!important}
+.bf-week-rebalance b{display:block!important;color:var(--cf-ink)!important;font:750 12px/1.4 "IBM Plex Sans",sans-serif!important}
+.bf-week-rebalance small{display:block!important;margin-top:3px!important;color:var(--cf-muted)!important;font:600 10px/1.5 "IBM Plex Sans",sans-serif!important}
+.bf-week-rebalance button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;width:auto!important;height:auto!important;min-height:40px!important;padding:0 12px!important;border:1px solid var(--cf-primary-strong)!important;border-radius:10px!important;color:var(--cf-on-forest)!important;background:var(--cf-primary-strong)!important;font:750 11px/1 "IBM Plex Sans",sans-serif!important;white-space:nowrap!important}
+.bf-week-rebalance button:disabled{opacity:.6!important}
+@media (max-width:520px){
+  .bf-week-rebalance{grid-template-columns:auto minmax(0,1fr)!important}
+  .bf-week-rebalance button{grid-column:1/-1!important;width:100%!important}
+}
+.bf-week-rebalance-done{display:flex!important;align-items:center!important;gap:6px!important;margin:10px 0 0!important;padding:10px 12px!important;border:1px solid var(--cf-primary-strong)!important;border-radius:10px!important;color:var(--cf-ink)!important;background:var(--cf-surface-alt)!important;font:700 11px/1.45 "IBM Plex Sans",sans-serif!important}

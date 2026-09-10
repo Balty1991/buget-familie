@@ -153,8 +153,13 @@ membri și centrul de revizuire (tranșa 1), widgetul și dala din Setări rapid
 importul CSV (tranșa 3), și istoricul prețului pe produs împreună cu coșul etalon
 (tranșa 5). Tranșa 4 a fost oprită după verificarea politicii, din motivele de mai sus.
 
-Rămân de dezvoltat, în ordinea recomandată: check-in-ul familial săptămânal, alocația
-copilului și mai multe valute.
+Au fost livrate ulterior și cele trei rămase: check-in-ul familial săptămânal, completat cu
+o propunere de reechilibrare executabilă; alocația copilului, ca ecran simplificat peste un
+plic obișnuit al familiei; și mai multe valute, cu leul păstrat ca monedă de bază a
+registrului și cursul introdus manual.
+
+Rămâne de probat pe un telefon widgetul Android, singura parte care nu a putut fi compilată
+în mediul de dezvoltare.
 
 ## Referințe
 

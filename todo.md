@@ -487,6 +487,7 @@
 - [x] Verifică politica Play pentru citirea notificărilor bancare înainte de a scrie cod pentru ea. Rezultat: oprită — Play Protect blochează instalarea din afara magazinului pentru aplicațiile care cer această permisiune.
 - [x] Istoricul prețului pe produs din bonuri, apoi coșul etalon ca indice de inflație al gospodăriei.
 - [ ] Probează widgetul și dala pe un telefon: SDK-ul Android nu este disponibil în mediul de dezvoltare, deci APK-ul nu a putut fi compilat aici.
-- [ ] Check-in familial săptămânal, pe baza alertei de plic deja livrate.
-- [ ] Alocația copilului: membru marcat drept copil, plic propriu și ecran simplificat.
-- [ ] Mai multe valute, cu curs introdus manual și data lui.
+- [x] Check-in familial săptămânal: propunere concretă de reechilibrare, cu sumă, plic sursă și buton care o aplică.
+- [x] Alocația copilului: membru marcat drept copil, plic propriu și ecran simplificat de buzunar.
+- [x] Mai multe valute, cu curs introdus manual și data lui; leul rămâne moneda de bază a registrului.
+- [ ] Soldul unei surse valutare este exact doar pentru mișcările cu sumă originală; cele vechi, introduse în lei, sunt convertite înapoi la cursul curent și marcate drept aproximative.
