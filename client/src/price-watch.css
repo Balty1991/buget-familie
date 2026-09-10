@@ -1,0 +1,53 @@
+/** Prețuri pe produs și coșul etalon al gospodăriei, calculate din bonuri. */
+.bf-price-workspace{display:grid!important;gap:18px!important}
+.bf-price-basket,.bf-price-history{padding:18px!important;border:1px solid var(--cf-line)!important;border-radius:16px!important;background:var(--cf-surface)!important}
+.bf-price-intro{margin:0 0 12px!important;color:var(--cf-muted)!important;font:600 12px/1.6 "IBM Plex Sans",sans-serif!important}
+
+.bf-price-window{display:flex!important;gap:6px!important;margin-bottom:14px!important}
+.bf-price-window button{flex:1 1 auto!important;width:auto!important;height:auto!important;min-height:38px!important;padding:0 10px!important;border:1px solid var(--cf-line)!important;border-radius:9px!important;color:var(--cf-muted)!important;background:var(--cf-surface-alt)!important;font:750 11px/1 "IBM Plex Sans",sans-serif!important}
+.bf-price-window button.active{border-color:var(--cf-primary-strong)!important;color:var(--cf-on-forest)!important;background:var(--cf-primary-strong)!important}
+
+.bf-price-basket-total{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:8px!important;padding:13px!important;border:1px solid var(--cf-line)!important;border-radius:12px!important;background:var(--cf-surface-alt)!important}
+.bf-price-basket-total>div{display:grid!important;gap:3px!important;align-content:start!important}
+.bf-price-basket-total span{color:var(--cf-muted)!important;font:700 9px/1.3 "IBM Plex Sans",sans-serif!important;letter-spacing:.04em!important;text-transform:uppercase!important}
+.bf-price-basket-total strong{color:var(--cf-ink)!important;font:750 15px/1.15 "IBM Plex Sans",sans-serif!important}
+
+.bf-price-trend{display:inline-flex!important;align-items:center!important;gap:3px!important;font:750 11px/1.2 "IBM Plex Sans",sans-serif!important;white-space:nowrap!important}
+.bf-price-trend.up{color:#b4553f!important}
+.bf-price-trend.down{color:#1f7a5a!important}
+.bf-price-trend.flat{color:var(--cf-muted)!important}
+
+.bf-price-basket-lines{display:grid!important;gap:8px!important;margin-top:12px!important}
+.bf-price-basket-lines article{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:4px 10px!important;padding:11px!important;border:1px solid var(--cf-line)!important;border-radius:11px!important;background:var(--cf-surface-alt)!important}
+.bf-price-basket-lines b{display:block!important;color:var(--cf-ink)!important;font:750 12px/1.3 "IBM Plex Sans",sans-serif!important;overflow-wrap:anywhere!important}
+.bf-price-basket-lines small{display:block!important;margin-top:2px!important;color:var(--cf-muted)!important;font:600 9px/1.4 "IBM Plex Sans",sans-serif!important}
+.bf-price-basket-lines>article>span{color:var(--cf-muted)!important;font:700 11px/1.3 "IBM Plex Sans",sans-serif!important;white-space:nowrap!important}
+
+.bf-price-empty,.bf-price-pending{margin:10px 0 0!important;color:var(--cf-muted)!important;font:600 11px/1.55 "IBM Plex Sans",sans-serif!important}
+
+.bf-price-picker{margin-top:16px!important;padding-top:14px!important;border-top:1px solid var(--cf-line)!important}
+.bf-price-chips{display:flex!important;flex-wrap:wrap!important;gap:6px!important;margin-top:8px!important}
+.bf-price-chips button{display:inline-flex!important;align-items:center!important;gap:5px!important;width:auto!important;height:auto!important;min-height:36px!important;padding:0 10px!important;border:1px solid var(--cf-line)!important;border-radius:9px!important;color:var(--cf-link)!important;background:var(--cf-surface-alt)!important;font:700 11px/1.2 "IBM Plex Sans",sans-serif!important;text-align:left!important}
+.bf-price-chips button.active{border-color:var(--cf-primary-strong)!important;color:var(--cf-on-forest)!important;background:var(--cf-primary-strong)!important}
+.bf-price-chips small{opacity:.7!important;font-size:9px!important}
+
+.bf-price-list{display:grid!important;gap:10px!important}
+.bf-price-list article{display:grid!important;gap:8px!important;padding:13px!important;border:1px solid var(--cf-line)!important;border-radius:12px!important;background:var(--cf-surface-alt)!important}
+.bf-price-list article>header{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:12px!important}
+.bf-price-list article>header b{display:block!important;color:var(--cf-ink)!important;font:750 13px/1.35 "IBM Plex Sans",sans-serif!important;overflow-wrap:anywhere!important}
+.bf-price-list article>header small{display:block!important;margin-top:2px!important;color:var(--cf-muted)!important;font:600 10px/1.4 "IBM Plex Sans",sans-serif!important}
+.bf-price-list article>header strong{flex:0 0 auto!important;color:var(--cf-ink)!important;font:750 14px/1.2 "IBM Plex Sans",sans-serif!important;white-space:nowrap!important}
+.bf-price-vendors{display:flex!important;flex-wrap:wrap!important;gap:6px!important}
+.bf-price-vendors span{display:inline-flex!important;align-items:center!important;gap:5px!important;padding:4px 9px!important;border:1px solid var(--cf-line)!important;border-radius:99px!important;color:var(--cf-muted)!important;background:var(--cf-surface)!important;font:600 10px/1.4 "IBM Plex Sans",sans-serif!important}
+.bf-price-vendors span.cheapest{border-color:#1f7a5a!important;color:#1f7a5a!important}
+.bf-price-vendors b{color:var(--cf-ink)!important;font-weight:750!important}
+.bf-price-vendors span.cheapest b{color:#1f7a5a!important}
+.bf-price-list article>footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;flex-wrap:wrap!important}
+.bf-price-list article>footer small{color:var(--cf-muted)!important;font:600 10px/1.4 "IBM Plex Sans",sans-serif!important}
+.bf-price-privacy{margin:14px 0 0!important;color:var(--cf-muted)!important;font:600 10px/1.55 "IBM Plex Sans",sans-serif!important}
+
+@media (max-width:520px){
+  .bf-price-basket-total{grid-template-columns:1fr!important}
+  .bf-price-basket-lines article{grid-template-columns:1fr!important}
+  .bf-price-basket-lines>article>span{white-space:normal!important}
+}

@@ -1,0 +1,170 @@
+/**
+ * Prețuri și coșul etalon. Totul este calculat din liniile bonurilor deja salvate,
+ * fără nicio sursă externă de prețuri. Este o observație asupra propriilor cumpărături,
+ * nu un adevăr de piață: gramajul, promoția sau lotul pot explica o diferență.
+ */
+import { useMemo, useState } from "react";
+import { ArrowDownRight, ArrowUpRight, Minus, ShoppingBasket, ShoppingCart, Store } from "lucide-react";
+import { type AppData } from "@/lib/finance-data";
+import { basketCandidates, productPriceHistories, referenceBasket } from "@/lib/price-history";
+import { fmtExact, dateText } from "@/pages/home-kit";
+
+const WINDOWS = [30, 90, 180] as const;
+
+const Trend = ({ percent }: { percent: number }) => {
+  if (Math.abs(percent) < 0.05) return <span className="bf-price-trend flat"><Minus size={13} /> neschimbat</span>;
+  const up = percent > 0;
+  return (
+    <span className={`bf-price-trend ${up ? "up" : "down"}`}>
+      {up ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+      {up ? "+" : ""}{percent.toFixed(1)}%
+    </span>
+  );
+};
+
+export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (value: AppData) => void }) {
+  const [windowDays, setWindowDays] = useState<(typeof WINDOWS)[number]>(90);
+  const histories = useMemo(() => productPriceHistories(data), [data.receipts]);
+  const candidates = useMemo(() => basketCandidates(data, 24), [data.receipts]);
+  const selected = data.settings.basketProducts;
+  const basket = useMemo(() => referenceBasket(data, selected, { windowDays }), [data.receipts, selected, windowDays]);
+
+  const toggle = (key: string) => {
+    const next = selected.includes(key) ? selected.filter((item) => item !== key) : [...selected, key].slice(0, 30);
+    onChange({ ...data, settings: { ...data.settings, basketProducts: next } });
+  };
+
+  if (!histories.length) {
+    return (
+      <div className="bf-empty-state slim">
+        <ShoppingBasket size={23} />
+        <h2>Încă nu există istoric de prețuri</h2>
+        <p>
+          Fotografiază câteva bonuri și păstrează liniile de produse. După ce același produs apare pe două bonuri,
+          aici vei vedea cum i-a evoluat prețul și în ce magazin a fost mai ieftin.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bf-price-workspace">
+      <section className="bf-price-basket" aria-labelledby="basket-title">
+        <div className="bf-section-heading">
+          <div>
+            <p className="bf-kicker">COȘUL ETALON</p>
+            <h2 id="basket-title">Inflația coșului tău</h2>
+          </div>
+          <ShoppingCart size={19} />
+        </div>
+        <p className="bf-price-intro">
+          Alege produsele pe care le cumperi constant. Comparăm cât costau împreună acum, față de ultimul preț de
+          dinaintea ferestrei alese. Este indicele gospodăriei tale, calculat din bonurile tale.
+        </p>
+        <div className="bf-price-window" role="group" aria-label="Fereastra de comparație">
+          {WINDOWS.map((item) => (
+            <button key={item} className={windowDays === item ? "active" : ""} onClick={() => setWindowDays(item)}>
+              {item} zile
+            </button>
+          ))}
+        </div>
+
+        {basket.lines.length > 0 ? (
+          <>
+            <div className="bf-price-basket-total">
+              <div>
+                <span>Acum</span>
+                <strong>{fmtExact.format(basket.currentTotal)}</strong>
+              </div>
+              <div>
+                <span>Acum {basket.windowDays} de zile</span>
+                <strong>{fmtExact.format(basket.baselineTotal)}</strong>
+              </div>
+              <div>
+                <span>Diferență</span>
+                <strong>{basket.change > 0 ? "+" : ""}{fmtExact.format(basket.change)}</strong>
+                <Trend percent={basket.changePercent} />
+              </div>
+            </div>
+            <div className="bf-price-basket-lines">
+              {basket.lines.map((line) => (
+                <article key={line.key}>
+                  <div>
+                    <b>{line.label}</b>
+                    <small>{dateText(line.baselineDate)} → {dateText(line.currentDate)} · {line.vendor}</small>
+                  </div>
+                  <span>{fmtExact.format(line.baseline)} → {fmtExact.format(line.current)}</span>
+                  <Trend percent={line.changePercent} />
+                </article>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="bf-price-empty">
+            {selected.length
+              ? "Produsele alese nu au încă un preț mai vechi decât fereastra selectată. Încearcă o fereastră mai scurtă sau mai adaugă bonuri."
+              : "Bifează mai jos produsele pe care vrei să le urmărești."}
+          </p>
+        )}
+        {basket.pending.length > 0 && (
+          <p className="bf-price-pending">În așteptarea unui al doilea preț: {basket.pending.slice(0, 6).join(", ")}</p>
+        )}
+
+        <div className="bf-price-picker">
+          <p className="bf-kicker">PRODUSE DE URMĂRIT</p>
+          <div className="bf-price-chips">
+            {candidates.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                aria-pressed={selected.includes(item.key)}
+                className={selected.includes(item.key) ? "active" : ""}
+                onClick={() => toggle(item.key)}
+              >
+                {item.label} <small>{item.observations.length}×</small>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bf-price-history" aria-labelledby="price-history-title">
+        <div className="bf-section-heading">
+          <div>
+            <p className="bf-kicker">ISTORIC PE PRODUS</p>
+            <h2 id="price-history-title">Unde a fost mai ieftin</h2>
+          </div>
+          <Store size={19} />
+        </div>
+        <div className="bf-price-list">
+          {histories.slice(0, 30).map((item) => (
+            <article key={item.key}>
+              <header>
+                <div>
+                  <b>{item.label}</b>
+                  <small>{item.observations.length} cumpărături · ultima {dateText(item.latest.date)}</small>
+                </div>
+                <strong>{fmtExact.format(item.latest.amount)}</strong>
+              </header>
+              <div className="bf-price-vendors">
+                {item.byVendor.map((vendor) => (
+                  <span key={vendor.vendor} className={item.byVendor.length > 1 && vendor.vendor === item.cheapest?.vendor ? "cheapest" : ""}>
+                    {vendor.vendor} <b>{fmtExact.format(vendor.amount)}</b>
+                  </span>
+                ))}
+              </div>
+              <footer>
+                <Trend percent={item.changePercent} />
+                <small>de la {fmtExact.format(item.earliest.amount)} pe {dateText(item.earliest.date)}</small>
+              </footer>
+            </article>
+          ))}
+        </div>
+        <p className="bf-price-privacy">
+          Prețurile se potrivesc după denumirea citită de pe bon. Un gramaj diferit sau o promoție pot explica o
+          diferență, așa că tratează comparația ca pe un indiciu, nu ca pe o concluzie.
+        </p>
+      </section>
+    </div>
+  );
+}

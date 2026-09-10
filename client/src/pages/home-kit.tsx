@@ -8,7 +8,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { type SyncJournalEntry } from "@/lib/app-storage";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
-export type MoreView = "overview" | "review" | "debts" | "savings" | "receipts" | "recurring" | "reports" | "assistant" | "settings" | "sync" | "guide";
+export type MoreView = "overview" | "review" | "prices" | "debts" | "savings" | "receipts" | "recurring" | "reports" | "assistant" | "settings" | "sync" | "guide";
 export type ThemeId = "snow" | "ivory" | "sand" | "sage" | "slate" | "lagoon" | "forest" | "midnight" | "navy" | "graphite" | "copper" | "plum" | "rosewood";
 export type ThemeSchedule = "manual" | "auto";
 export type ThemeScheduleTimes = { dayStart: string; eveningStart: string; nightStart: string };
