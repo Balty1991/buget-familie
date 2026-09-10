@@ -480,9 +480,13 @@
 - [x] Împiedică dublarea unei plăți recurente deja confirmate în perioada activă.
 - [x] Păstrează produsele repetate de pe același bon, cu totalul ca arbitru între dublură reală și dublură de citire.
 - [x] Validează datele citite prin OCR și restrânge regula Firestore de la `read` la `get`.
-- [ ] Decide dacă cheltuielile din fereastra de flexibilitate a salariului trebuie să apară într-o tranșă săptămânală, nu doar în totalul plicului.
-- [ ] Alertă către ceilalți membri când un plic este consumat, plus centrul de revizuire „de verificat”.
-- [ ] Widget pe ecranul principal și tile în Setări rapide pentru adăugarea unei cheltuieli fără deschiderea aplicației.
-- [ ] Import CSV de extras de cont, cu previzualizare și detectarea mișcărilor deja existente.
-- [ ] Verifică politica Play pentru citirea notificărilor bancare înainte de a scrie cod pentru ea.
-- [ ] Istoricul prețului pe produs din bonuri, apoi coșul etalon ca indice de inflație al gospodăriei.
+- [x] Prelungește ultima tranșă săptămânală peste fereastra de flexibilitate, ca nicio cheltuială numărată în plic să nu rămână în afara săptămânilor.
+- [x] Alertă către ceilalți membri când un plic este consumat, plus centrul de revizuire „de verificat”.
+- [x] Widget pe ecranul principal și dală în Setări rapide pentru adăugarea unei cheltuieli fără deschiderea aplicației.
+- [x] Import CSV de extras de cont, cu detectarea coloanelor și a mișcărilor deja existente.
+- [x] Verifică politica Play pentru citirea notificărilor bancare înainte de a scrie cod pentru ea. Rezultat: oprită — Play Protect blochează instalarea din afara magazinului pentru aplicațiile care cer această permisiune.
+- [x] Istoricul prețului pe produs din bonuri, apoi coșul etalon ca indice de inflație al gospodăriei.
+- [ ] Probează widgetul și dala pe un telefon: SDK-ul Android nu este disponibil în mediul de dezvoltare, deci APK-ul nu a putut fi compilat aici.
+- [ ] Check-in familial săptămânal, pe baza alertei de plic deja livrate.
+- [ ] Alocația copilului: membru marcat drept copil, plic propriu și ecran simplificat.
+- [ ] Mai multe valute, cu curs introdus manual și data lui.

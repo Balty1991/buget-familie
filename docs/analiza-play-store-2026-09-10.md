@@ -49,12 +49,29 @@ Este cea mai mare diferență de efort între noi și categoria automată. Bănc
 
 Se potrivește exact cu poziționarea produsului: nimic nu pleacă de pe telefon, iar utilizatorul rămâne cel care confirmă. Alimentează direct „Centrul de revizuire” propus ca prioritatea 2 în analiza anterioară.
 
-**Două avertismente care trebuie tratate înainte de a începe:**
+> **Verificat la 10 septembrie 2026 — rezultatul schimbă recomandarea.** Google
+> tratează `NOTIFICATION_LISTENER` în **aceeași categorie de risc ridicat** cu `READ_SMS`,
+> `RECEIVE_SMS` și accesibilitatea, pentru că sunt permisiunile abuzate cel mai des în
+> fraude financiare. Play Protect **blochează automat instalarea** aplicațiilor care le
+> declară, atunci când instalarea vine din afara magazinului — browser, aplicație de
+> mesagerie sau manager de fișiere [10][11].
+>
+> Buget Familie se distribuie astăzi și ca APK descărcat direct. O versiune cu
+> `NotificationListenerService` **nu s-ar mai putea instala așa**, iar pe Play ar intra
+> într-o verificare suplimentară, cu declarație de funcție principală.
+>
+> **Concluzie: nu construim funcția acum.** Condițiile care ar schimba decizia sunt două,
+> ambele necesare: distribuția să se mute integral în Play, și cineva să accepte munca de
+> declarare și de menținere a formularului de permisiuni sensibile. Până atunci, punctul 3
+> (import CSV) acoperă aceeași nevoie fără niciun risc de magazin. Efortul planificat
+> pentru tranșa 4 este mai bine cheltuit pe acuratețea bonurilor.
 
-- **Politica Play.** Accesul la notificări are cerințe stricte de declarare și trebuie să fie funcție principală, explicată în listare. Permisiunea `READ_SMS` este și mai restricționată și, pentru o aplicație de buget, are șanse mari de respingere; varianta prin notificări este cea de urmărit, nu cea prin SMS.
-- **Fragilitatea formatelor.** Textul notificărilor se schimbă fără preaviz. Regulile de citire trebuie să fie date, nu cod: un tabel editabil de tipare per bancă, cu posibilitatea utilizatorului de a corecta o citire greșită și cu ignorare tăcută când nimic nu se potrivește.
+Dacă totuși se ajunge acolo, al doilea avertisment rămâne valabil: **textul notificărilor
+se schimbă fără preaviz**. Regulile de citire trebuie să fie date, nu cod — un tabel
+editabil de tipare per bancă, cu posibilitatea utilizatorului de a corecta o citire
+greșită și cu ignorare tăcută când nimic nu se potrivește.
 
-**Efect:** foarte mare. **Efort:** mare. **Risc:** mediu, din cauza politicii de magazin.
+**Efect:** foarte mare. **Efort:** mare. **Risc:** ridicat, confirmat — vezi caseta de mai sus.
 
 ### 3. Import de extras de cont (CSV/OFX)
 
@@ -124,10 +141,20 @@ Reluat din analiza anterioară fiindcă se leagă direct de punctul 4 de mai sus
 | 1 | Alertă pe plic către ceilalți membri; centrul de revizuire „de verificat” | Nicio mișcare propusă nu se salvează fără confirmare explicită |
 | 2 | Widget pe ecranul principal și tile în Setări rapide | O cheltuială se adaugă fără deschiderea aplicației, offline |
 | 3 | Import CSV cu previzualizare și detectarea dublurilor | Un extras importat de două ori nu dublează nicio mișcare |
-| 4 | Citirea notificărilor bancare, cu tipare editabile | Politica Play validată înainte de scrierea codului; ignorare tăcută la nepotrivire |
+| 4 | ~~Citirea notificărilor bancare~~ — **oprită după verificarea politicii** | Se reia doar dacă distribuția se mută integral în Play (vezi punctul 2) |
 | 5 | Istoricul prețului pe produs, apoi coșul etalon | Prețurile se potrivesc corect în interiorul aceluiași magazin |
 
 Ordinea pune înaintea automatizării lucrurile mici și sigure, pentru că tranșele 1 și 2 se pot livra fără risc de politică de magazin, iar tranșa 4 are nevoie de o verificare externă înainte de a consuma efort.
+
+## Stare la 10 septembrie 2026
+
+Din planul de mai sus au fost livrate în această tranșă: alerta pe plic către ceilalți
+membri și centrul de revizuire (tranșa 1), widgetul și dala din Setări rapide (tranșa 2),
+importul CSV (tranșa 3), și istoricul prețului pe produs împreună cu coșul etalon
+(tranșa 5). Tranșa 4 a fost oprită după verificarea politicii, din motivele de mai sus.
+
+Rămân de dezvoltat, în ordinea recomandată: check-in-ul familial săptămânal, alocația
+copilului și mai multe valute.
 
 ## Referințe
 
@@ -140,6 +167,10 @@ Ordinea pune înaintea automatizării lucrurile mici și sigure, pentru că tran
 [7]: https://iancuguda.ro/mim/ "Money in Motion — aplicație românească de buget familial"
 [8]: https://getfinny.app/blog/sms-expense-tracking-app "SMS Expense Tracking Apps, 2026"
 [9]: https://pocketclear.app/blog/best-budget-app-android-2026.html "Best Budget Apps for Android, 2026"
+
+[10]: https://developers.google.com/android/play-protect/warning-dev-guidance "Developer Guidance for Google Play Protect Warnings"
+
+[11]: https://www.bleepingcomputer.com/news/security/google-tests-blocking-side-loaded-android-apps-with-risky-permissions/ "Google blochează aplicațiile instalate din afara magazinului care cer permisiuni riscante"
 
 ---
 
