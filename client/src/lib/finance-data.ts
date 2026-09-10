@@ -80,14 +80,27 @@ export type SalaryPlan = { periodStart: string; nextPayday: string; /** Prima zi
 export type QuickTransactionTemplate = { id: string; label: string; kind: TransactionKind; category: string; amount: number; memberId?: string; sourceId?: string; updatedAt?: string };
 export type ArchivedQuickTransactionTemplate = QuickTransactionTemplate & { archivedAt: string };
 export type SavedJournalFilter = { id: string; label: string; kind: "all" | TransactionKind; memberId?: string; sourceId?: string; query?: string; fromDate?: string; toDate?: string; updatedAt: string };
-export type FamilySettings = { familyName: string; memberName: string; familyCode: string; members: FamilyMember[]; paymentSources: PaymentSource[]; customCategories: string[]; quickTemplates: QuickTransactionTemplate[]; archivedQuickTemplates: ArchivedQuickTransactionTemplate[]; savedJournalFilters: SavedJournalFilter[]; salaryCycleTemplates: SalaryCycleTemplate[]; seenWeeklyPlanTranches: string[]; salaryPlan: SalaryPlan };
+export type FamilySettings = { familyName: string; memberName: string; familyCode: string; members: FamilyMember[]; paymentSources: PaymentSource[]; customCategories: string[]; quickTemplates: QuickTransactionTemplate[]; archivedQuickTemplates: ArchivedQuickTransactionTemplate[]; savedJournalFilters: SavedJournalFilter[]; salaryCycleTemplates: SalaryCycleTemplate[]; seenWeeklyPlanTranches: string[]; /** Cheile produselor alese pentru coșul etalon; preferință locală, calculată din bonuri. */ basketProducts: string[]; salaryPlan: SalaryPlan };
 export type DeletedRecord = { entity: "transactions" | "debts" | "savings" | "receipts" | "recurring"; id: string; deletedAt: string };
-export type AppData = { version: 8; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; settings: FamilySettings };
+/** De unde vine o mișcare propusă. Determină explicația arătată lângă ea în centrul de revizuire. */
+export type ReviewOrigin = "import" | "bon" | "asistent" | "notificare";
+/**
+ * O mișcare propusă, nu una înregistrată. Stă într-o listă separată tocmai pentru ca
+ * soldurile, plicurile și prognozele să rămână neatinse până la confirmarea explicită.
+ */
+export type ReviewDraft = { id: string; origin: ReviewOrigin; reason: string; createdAt: string; transaction: Transaction };
+export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; settings: FamilySettings };
 
 export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Timp liber", "Rate produse", "Altele"];
 export const categoryColors: Record<string, string> = { Alimente: "#256B5B", "Consumabile copil": "#55877D", Abonamente: "#5D7283", "Casă & facturi": "#5D7283", Transport: "#D49A2A", "Timp liber": "#D56852", Sănătate: "#4987AA", "Rate produse": "#966E4A", Altele: "#7D8581" };
 
-export const isoToday = () => new Date().toISOString().slice(0, 10);
+/**
+ * Data calendaristică a telefonului, nu cea UTC. `toISOString()` ar întoarce ziua
+ * precedentă între miezul nopții și ora 03:00 în România (UTC+2/+3), iar mișcarea
+ * ar ajunge în ziua, săptămâna sau chiar perioada salarială greșită.
+ */
+export const isoDate = (value: Date) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+export const isoToday = () => isoDate(new Date());
 export const createFamilyCode = () => { const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(""); };
 
 /** UUID v4 criptografic; evită coliziunile de ID când două telefoane creează înregistrări simultan, înainte de sincronizare. */
@@ -147,8 +160,8 @@ export const formatDate = (iso?: string, options: Intl.DateTimeFormatOptions = {
 const safeDate = (value?: string) => /^\d{4}-\d{2}-\d{2}$/.test(value || "") ? String(value) : isoToday();
 
 export const createEmptyAppData = (): AppData => ({
-  version: 8,
-  transactions: [], debts: [], savings: [], receipts: [], recurring: [], deleted: [],
+  version: 9,
+  transactions: [], debts: [], savings: [], receipts: [], recurring: [], deleted: [], pendingReview: [],
   settings: {
     familyName: "Familia mea", memberName: "Eu", familyCode: createFamilyCode(),
     members: [{ id: "member-me", name: "Eu", color: "#256B5B" }],
@@ -158,7 +171,7 @@ export const createEmptyAppData = (): AppData => ({
       { id: "source-meal", name: "Bonuri de masă", kind: "meal", memberId: "member-me", openingBalance: 0 },
       { id: "source-transfer", name: "Transfer comun", kind: "transfer", openingBalance: 0 },
     ],
-    customCategories: [], quickTemplates: [], archivedQuickTemplates: [], savedJournalFilters: [], salaryCycleTemplates: [], seenWeeklyPlanTranches: [],
+    customCategories: [], quickTemplates: [], archivedQuickTemplates: [], savedJournalFilters: [], salaryCycleTemplates: [], seenWeeklyPlanTranches: [], basketProducts: [],
     salaryPlan: { periodStart: isoToday(), nextPayday: "", sourceIds: [], totalLimit: 0, weeklyLimit: 0, allocations: [], transfers: [], weekTransfers: [], salaryAllocationRules: [], salaryAllocationApplications: [], allocationHistory: [] },
   },
 });
@@ -180,13 +193,29 @@ export const normalizeAppData = (input: unknown): AppData => {
   })) : fallback.settings.paymentSources;
   const sourceByName = new Map(sources.map((source) => [source.name.toLowerCase(), source]));
   const memberByName = new Map(members.map((member) => [member.name.toLowerCase(), member]));
-  const transactions = Array.isArray(old.transactions) ? old.transactions.map((entry, index) => {
-    const item = entry as Transaction;
+  const normalizeTransaction = (entry: unknown, index: number, prefix: string): Transaction => {
+    const item = (entry || {}) as Transaction;
     const rawSource = (item.source || "").toLowerCase();
     const source = sources.find((value) => value.id === item.sourceId) || sourceByName.get(rawSource) || (rawSource.includes("bon") ? sources.find((value) => value.kind === "meal") : undefined) || sources[0];
     const member = members.find((value) => value.id === item.memberId) || memberByName.get((item.person || "").toLowerCase());
-    return { ...item, id: item.id || `legacy-tx-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || new Date().toISOString() };
-  }) : [];
+    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || new Date().toISOString() };
+  };
+  const transactions = Array.isArray(old.transactions) ? old.transactions.map((entry, index) => normalizeTransaction(entry, index, "legacy-tx")) : [];
+  const transactionIds = new Set(transactions.map((item) => item.id));
+  const reviewOrigins: ReviewOrigin[] = ["import", "bon", "asistent", "notificare"];
+  /** O propunere confirmată pe celălalt telefon există deja în registru; nu o mai cerem a doua oară. */
+  const pendingReview: ReviewDraft[] = Array.isArray((old as Partial<AppData>).pendingReview)
+    ? (old as Partial<AppData>).pendingReview!.map((entry, index) => {
+        const item = (entry || {}) as Partial<ReviewDraft>;
+        return {
+          id: String(item.id || `review-${index}`),
+          origin: reviewOrigins.includes(item.origin as ReviewOrigin) ? (item.origin as ReviewOrigin) : "import",
+          reason: String(item.reason || "Propunere de verificat").slice(0, 160),
+          createdAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.createdAt || "")) ? String(item.createdAt) : new Date().toISOString(),
+          transaction: normalizeTransaction(item.transaction, index, "review-tx"),
+        };
+      }).filter((item) => item.transaction.amount > 0 && !transactionIds.has(item.transaction.id)).slice(0, 300)
+    : [];
   const receipts = Array.isArray(old.receipts) ? old.receipts.map((entry, index) => { const item = entry as Receipt; const linked = transactions.find((transaction) => transaction.id === item.linkedTransactionId || transaction.receiptId === item.id || transaction.id === `receipt-tx-${item.id}`); const lines = Array.isArray(item.lines) ? item.lines.map((line, lineIndex) => ({ id: line.id || `receipt-line-${index}-${lineIndex}`, category: line.category || "Altele", amount: Math.max(0, parseRomanianAmount(line.amount)), label: line.label || undefined })).filter((line) => line.amount > 0) : undefined; const imageKeys = Array.isArray(item.imageKeys) ? item.imageKeys.filter((key): key is string => typeof key === "string" && key.length > 0).slice(0, 2) : undefined; return { ...item, id: item.id || `legacy-receipt-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), lines, imageKeys, linkedTransactionId: linked?.id || item.linkedTransactionId, linkedTransactionIds: item.linkedTransactionIds?.length ? item.linkedTransactionIds : linked?.id ? [linked.id] : undefined }; }) : [];
   const oldPlan = oldSettings.salaryPlan || fallback.settings.salaryPlan;
   const periodStart = safeDate(oldPlan.periodStart);
@@ -198,16 +227,62 @@ export const normalizeAppData = (input: unknown): AppData => {
   const archivedQuickTemplates = Array.isArray(oldSettings.archivedQuickTemplates) ? oldSettings.archivedQuickTemplates.map((item, index) => ({ ...normalizeQuickTemplate(item, index), archivedAt: /^\d{4}-\d{2}-\d{2}/.test(String(item.archivedAt || "")) ? String(item.archivedAt) : new Date().toISOString() })).filter((item) => item.label).slice(0, 60) : [];
   const savedJournalFilters = (Array.isArray(oldSettings.savedJournalFilters) ? oldSettings.savedJournalFilters.map((item, index) => ({ id: item.id || `saved-filter-${index}`, label: String(item.label || "Filtru salvat").trim(), kind: item.kind === "income" || item.kind === "expense" ? item.kind : "all" as const, memberId: members.some((member) => member.id === item.memberId) ? item.memberId : undefined, sourceId: sources.some((source) => source.id === item.sourceId) ? item.sourceId : undefined, query: String(item.query || "").trim() || undefined, fromDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.fromDate || "")) ? String(item.fromDate) : undefined, toDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.toDate || "")) ? String(item.toDate) : undefined, updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : new Date().toISOString() })).filter((item) => item.label && (!item.fromDate || !item.toDate || item.fromDate <= item.toDate)) : []).reduce<typeof fallback.settings.savedJournalFilters>((all, item) => all.some((saved) => saved.id === item.id || saved.label.toLocaleLowerCase("ro-RO") === item.label.toLocaleLowerCase("ro-RO")) ? all : [...all, item], []).slice(0, 8);
   const salaryCycleTemplates = (Array.isArray(oldSettings.salaryCycleTemplates) ? oldSettings.salaryCycleTemplates.map((item, index) => ({ id: String(item.id || `salary-cycle-${index}`), label: String(item.label || "Ciclu salarial").trim().slice(0, 42), amount: Math.max(0, parseRomanianAmount(item.amount)), durationDays: Math.min(93, Math.max(7, Math.round(parseRomanianAmount(item.durationDays || 28)))), updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : undefined })).filter((item) => item.label && item.amount > 0) : []).reduce<typeof fallback.settings.salaryCycleTemplates>((all, item) => all.some((saved) => saved.id === item.id || saved.label.toLocaleLowerCase("ro-RO") === item.label.toLocaleLowerCase("ro-RO")) ? all : [...all, item], []).slice(0, 12);
+  const basketProducts = Array.isArray(oldSettings.basketProducts) ? Array.from(new Set(oldSettings.basketProducts.filter((item): item is string => typeof item === "string" && item.trim().length > 1))).slice(0, 30) : [];
   const seenWeeklyPlanTranches = Array.isArray(oldSettings.seenWeeklyPlanTranches) ? oldSettings.seenWeeklyPlanTranches.filter((item): item is string => typeof item === "string" && /^\d{4}-\d{2}-\d{2}:\d{4}-\d{2}-\d{2}:\d+$/.test(item)).slice(-80) : [];
   const allocationHistory = Array.isArray((oldPlan as Partial<SalaryPlan>).allocationHistory) ? (oldPlan as Partial<SalaryPlan>).allocationHistory!.map((item, index) => ({ id: String(item.id || `allocation-history-${index}`), referenceId: item.referenceId || undefined, kind: ["created", "updated", "deleted", "income-applied", "income-reverted", "envelope-transfer", "week-transfer"].includes(String(item.kind)) ? String(item.kind) as AllocationHistoryKind : "updated" as const, allocationId: item.allocationId || undefined, allocationLabel: item.allocationLabel || undefined, fromAllocationId: item.fromAllocationId || undefined, fromAllocationLabel: item.fromAllocationLabel || undefined, toAllocationId: item.toAllocationId || undefined, toAllocationLabel: item.toAllocationLabel || undefined, amount: item.amount === undefined ? undefined : Math.max(0, parseRomanianAmount(item.amount)), previousAmount: item.previousAmount === undefined ? undefined : Math.max(0, parseRomanianAmount(item.previousAmount)), newAmount: item.newAmount === undefined ? undefined : Math.max(0, parseRomanianAmount(item.newAmount)), incomeId: item.incomeId || undefined, incomeTitle: item.incomeTitle || undefined, fromWeekIndex: Number.isFinite(item.fromWeekIndex) ? Math.max(1, Math.round(item.fromWeekIndex as number)) : undefined, toWeekIndex: Number.isFinite(item.toWeekIndex) ? Math.max(1, Math.round(item.toWeekIndex as number)) : undefined, note: item.note || undefined, createdAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.createdAt || "")) ? String(item.createdAt) : new Date().toISOString() })).slice(0, 400) : [];
   return {
-    version: 8, transactions, receipts,
+    version: 9, transactions, receipts, pendingReview,
     debts: Array.isArray(old.debts) ? old.debts.map((item) => ({ ...item, remaining: Math.max(0, parseRomanianAmount(item.remaining)), monthly: Math.max(0, parseRomanianAmount(item.monthly)) })) : [],
     savings: Array.isArray(old.savings) ? old.savings.map((item) => ({ ...item, current: Math.max(0, parseRomanianAmount(item.current)), target: Math.max(0, parseRomanianAmount(item.target)) })) : [],
     recurring: Array.isArray(old.recurring) ? old.recurring.map((item, index) => ({ id: item.id || `recurring-${index}`, name: item.name || `Plată recurentă ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), category: item.category || "Casă & facturi", sourceId: sources.some((source) => source.id === item.sourceId) ? String(item.sourceId) : sources[0]?.id || "", memberId: members.some((member) => member.id === item.memberId) ? String(item.memberId) : members[0]?.id || "", dueDay: Math.min(31, Math.max(1, Math.round(parseRomanianAmount(item.dueDay || 1)))), active: item.active !== false, autoPost: item.autoPost === true, note: item.note || undefined, updatedAt: item.updatedAt || undefined })) : [],
     deleted: Array.isArray(old.deleted) ? old.deleted.filter((item): item is DeletedRecord => Boolean(item && typeof item.id === "string" && typeof item.deletedAt === "string" && ["transactions", "debts", "savings", "receipts", "recurring"].includes(item.entity))).slice(-500) : [],
-    settings: { familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], quickTemplates, archivedQuickTemplates, savedJournalFilters, salaryCycleTemplates, seenWeeklyPlanTranches, salaryPlan: { periodStart, nextPayday, earliestPayday, paydayFlexDays: Number.isFinite((oldPlan as Partial<SalaryPlan>).paydayFlexDays) ? Math.min(5, Math.max(0, Math.round(Number((oldPlan as Partial<SalaryPlan>).paydayFlexDays)))) : undefined, sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: Array.isArray(oldPlan.allocations) ? oldPlan.allocations.map((item, index) => ({ ...item, id: item.id || `allocation-${index}`, label: item.label || item.category || `Plic ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), alertThreshold: Math.min(95, Math.max(50, Math.round(parseRomanianAmount(item.alertThreshold ?? 80)))) })) : [], transfers: Array.isArray((oldPlan as Partial<SalaryPlan>).transfers) ? (oldPlan as Partial<SalaryPlan>).transfers!.filter((item) => item && typeof item.id === "string" && typeof item.id === "string" && typeof item.fromAllocationId === "string" && typeof item.toAllocationId === "string" && item.fromAllocationId !== item.toAllocationId).map((item) => ({ id: item.id, fromAllocationId: item.fromAllocationId, toAllocationId: item.toAllocationId, amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], weekTransfers: Array.isArray((oldPlan as Partial<SalaryPlan>).weekTransfers) ? (oldPlan as Partial<SalaryPlan>).weekTransfers!.filter((item) => item && typeof item.id === "string" && typeof item.allocationId === "string" && Number.isFinite(item.fromWeekIndex) && Number.isFinite(item.toWeekIndex) && item.fromWeekIndex !== item.toWeekIndex).map((item) => ({ id: item.id, allocationId: item.allocationId, fromWeekIndex: Math.max(1, Math.round(item.fromWeekIndex)), toWeekIndex: Math.max(1, Math.round(item.toWeekIndex)), amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], salaryAllocationRules: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationRules) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationRules!.map((item, index) => ({ id: item.id || `salary-rule-${index}`, label: String(item.label || "Repartizare venit").trim(), allocationId: String(item.allocationId || ""), mode: item.mode === "percent" ? "percent" as const : "fixed" as const, value: Math.max(0, item.mode === "percent" ? Math.min(100, parseRomanianAmount(item.value)) : parseRomanianAmount(item.value)), active: item.active !== false, updatedAt: item.updatedAt || undefined })).filter((item) => item.label && item.allocationId && item.value > 0).slice(0, 24) : [], salaryAllocationApplications: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationApplications!.map((item, index) => ({ id: item.id || `salary-application-${index}`, incomeId: String(item.incomeId || ""), incomeTitle: String(item.incomeTitle || "Venit"), incomeAmount: Math.max(0, parseRomanianAmount(item.incomeAmount)), sourceId: item.sourceId || undefined, memberId: item.memberId || undefined, appliedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.appliedAt || "")) ? String(item.appliedAt) : new Date().toISOString(), allocations: Array.isArray(item.allocations) ? item.allocations.map((entry) => ({ ruleId: String(entry.ruleId || ""), allocationId: String(entry.allocationId || ""), amount: Math.max(0, parseRomanianAmount(entry.amount)) })).filter((entry) => entry.ruleId && entry.allocationId && entry.amount > 0) : [] })).filter((item) => item.incomeId && item.allocations.length).slice(0, 80) : [], allocationHistory, updatedAt: oldPlan.updatedAt || undefined } },
+    settings: { familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], quickTemplates, archivedQuickTemplates, savedJournalFilters, salaryCycleTemplates, seenWeeklyPlanTranches, basketProducts, salaryPlan: { periodStart, nextPayday, earliestPayday, paydayFlexDays: Number.isFinite((oldPlan as Partial<SalaryPlan>).paydayFlexDays) ? Math.min(5, Math.max(0, Math.round(Number((oldPlan as Partial<SalaryPlan>).paydayFlexDays)))) : undefined, sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: Array.isArray(oldPlan.allocations) ? oldPlan.allocations.map((item, index) => ({ ...item, id: item.id || `allocation-${index}`, label: item.label || item.category || `Plic ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), alertThreshold: Math.min(95, Math.max(50, Math.round(parseRomanianAmount(item.alertThreshold ?? 80)))) })) : [], transfers: Array.isArray((oldPlan as Partial<SalaryPlan>).transfers) ? (oldPlan as Partial<SalaryPlan>).transfers!.filter((item) => item && typeof item.id === "string" && typeof item.fromAllocationId === "string" && typeof item.toAllocationId === "string" && item.fromAllocationId !== item.toAllocationId).map((item) => ({ id: item.id, fromAllocationId: item.fromAllocationId, toAllocationId: item.toAllocationId, amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], weekTransfers: Array.isArray((oldPlan as Partial<SalaryPlan>).weekTransfers) ? (oldPlan as Partial<SalaryPlan>).weekTransfers!.filter((item) => item && typeof item.id === "string" && typeof item.allocationId === "string" && Number.isFinite(item.fromWeekIndex) && Number.isFinite(item.toWeekIndex) && item.fromWeekIndex !== item.toWeekIndex).map((item) => ({ id: item.id, allocationId: item.allocationId, fromWeekIndex: Math.max(1, Math.round(item.fromWeekIndex)), toWeekIndex: Math.max(1, Math.round(item.toWeekIndex)), amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], salaryAllocationRules: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationRules) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationRules!.map((item, index) => ({ id: item.id || `salary-rule-${index}`, label: String(item.label || "Repartizare venit").trim(), allocationId: String(item.allocationId || ""), mode: item.mode === "percent" ? "percent" as const : "fixed" as const, value: Math.max(0, item.mode === "percent" ? Math.min(100, parseRomanianAmount(item.value)) : parseRomanianAmount(item.value)), active: item.active !== false, updatedAt: item.updatedAt || undefined })).filter((item) => item.label && item.allocationId && item.value > 0).slice(0, 24) : [], salaryAllocationApplications: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationApplications!.map((item, index) => ({ id: item.id || `salary-application-${index}`, incomeId: String(item.incomeId || ""), incomeTitle: String(item.incomeTitle || "Venit"), incomeAmount: Math.max(0, parseRomanianAmount(item.incomeAmount)), sourceId: item.sourceId || undefined, memberId: item.memberId || undefined, appliedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.appliedAt || "")) ? String(item.appliedAt) : new Date().toISOString(), allocations: Array.isArray(item.allocations) ? item.allocations.map((entry) => ({ ruleId: String(entry.ruleId || ""), allocationId: String(entry.allocationId || ""), amount: Math.max(0, parseRomanianAmount(entry.amount)) })).filter((entry) => entry.ruleId && entry.allocationId && entry.amount > 0) : [] })).filter((item) => item.incomeId && item.allocations.length).slice(0, 80) : [], allocationHistory, updatedAt: oldPlan.updatedAt || undefined } },
   };
+};
+
+/**
+ * Centrul de revizuire. Propunerile stau separat de registru: nu ating soldurile,
+ * plicurile sau prognozele până când utilizatorul le confirmă. Ignorarea unei propuneri
+ * nu lasă urmă în registru, pentru că mișcarea nu a existat niciodată acolo.
+ */
+export const addReviewDrafts = (data: AppData, drafts: ReviewDraft[]): AppData => {
+  if (!drafts.length) return data;
+  const known = new Set([...data.pendingReview.map((item) => item.transaction.id), ...data.transactions.map((item) => item.id)]);
+  const fresh = drafts.filter((draft) => !known.has(draft.transaction.id));
+  if (!fresh.length) return data;
+  return { ...data, pendingReview: [...fresh, ...data.pendingReview].slice(0, 300) };
+};
+
+export const confirmReviewDraft = (data: AppData, draftId: string): AppData | undefined => {
+  const draft = data.pendingReview.find((item) => item.id === draftId);
+  if (!draft || data.transactions.some((item) => item.id === draft.transaction.id)) return undefined;
+  const now = new Date().toISOString();
+  return {
+    ...data,
+    transactions: [{ ...draft.transaction, updatedAt: now }, ...data.transactions],
+    pendingReview: data.pendingReview.filter((item) => item.id !== draftId),
+  };
+};
+
+export const confirmAllReviewDrafts = (data: AppData): AppData => data.pendingReview.reduce<AppData>((all, draft) => confirmReviewDraft(all, draft.id) || all, data);
+
+/** Ignorarea scoate propunerea din listă; registrul rămâne neatins, deci nu e nevoie de piatră funerară. */
+export const dismissReviewDraft = (data: AppData, draftId: string): AppData => ({ ...data, pendingReview: data.pendingReview.filter((item) => item.id !== draftId) });
+
+export const updateReviewDraft = (data: AppData, draftId: string, patch: Partial<Transaction>): AppData => ({
+  ...data,
+  pendingReview: data.pendingReview.map((item) => item.id === draftId ? { ...item, transaction: { ...item.transaction, ...patch } } : item),
+});
+
+/**
+ * O mișcare deja cunoscută: aceeași sursă, aceeași zi, aceeași sumă și același sens.
+ * Extrasele de cont se descarcă adesea suprapus, iar reimportarea aceleiași perioade
+ * nu trebuie să dubleze nimic.
+ */
+export const isKnownTransaction = (data: AppData, candidate: Pick<Transaction, "date" | "amount" | "kind" | "sourceId">) => {
+  const same = (item: Pick<Transaction, "date" | "amount" | "kind" | "sourceId">) =>
+    item.date === candidate.date && item.kind === candidate.kind && item.sourceId === candidate.sourceId && Math.abs(item.amount - candidate.amount) < 0.005;
+  return data.transactions.some(same) || data.pendingReview.some((draft) => same(draft.transaction));
 };
 
 export const appendAllocationHistory = (data: AppData, entry: Omit<AllocationHistoryEntry, "id" | "createdAt">): AppData => {
@@ -264,7 +339,7 @@ export const prudentPlanEndDate = (plan: SalaryPlan) => paydayWindow(plan).earli
 export const addIsoDays = (iso: string, days: number) => {
   const date = new Date(`${iso}T12:00:00`);
   date.setDate(date.getDate() + days);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return isoDate(date);
 };
 export const paydayFlexDays = (plan: SalaryPlan) => Math.min(5, Math.max(0, Math.round(plan.paydayFlexDays ?? 0)));
 export const paydayWindow = (plan: SalaryPlan) => {
@@ -292,16 +367,26 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
   const calendar = end ? calendarBudget(budget, plan.periodStart, end) : undefined;
   if (!calendar) return [];
   const weekTransfers = (plan.weekTransfers || []).filter((item) => item.allocationId === allocation.id);
-  return calendar.weeks.map((week) => {
+  /**
+   * Limita se împarte pe zile până la data obișnuită a venitului, dar plicul numără
+   * cheltuielile până la data cea mai târzie a ferestrei. Fără prelungirea ultimei tranșe,
+   * o cheltuială din zilele de flexibilitate scădea din totalul plicului fără să apară
+   * în nicio săptămână. Sumele rămân neschimbate; se lărgește doar intervalul acoperit.
+   */
+  const cover = planCoverEndDate(plan);
+  const lastIndex = calendar.weeks.length - 1;
+  return calendar.weeks.map((week, index) => {
     const adjustment = weekTransfers.reduce((sum, item) => sum + (item.toWeekIndex === week.index ? item.amount : 0) - (item.fromWeekIndex === week.index ? item.amount : 0), 0);
     const weekBudget = roundSigned(week.amount + adjustment);
+    const weekEnd = index === lastIndex && cover > week.end ? cover : week.end;
     const spent = data.transactions.filter((item) => {
-      if (item.kind !== "expense" || item.date < week.start || item.date > week.end) return false;
+      if (item.kind !== "expense" || item.date < week.start || item.date > weekEnd) return false;
       if (item.allocationId) return item.allocationId === allocation.id;
       return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || item.sourceId === allocation.sourceId);
     }).reduce((sum, item) => sum + item.amount, 0);
     const remaining = roundSigned(weekBudget - spent);
-    return { ...week, budget: weekBudget, spent: roundedMoney(spent), remaining, usage: weekBudget > 0 ? spent / weekBudget : 0, state: remaining < 0 ? "over" as const : "healthy" as const };
+    const days = weekEnd === week.end ? week.days : Math.round((new Date(`${weekEnd}T12:00:00`).valueOf() - new Date(`${week.start}T12:00:00`).valueOf()) / 86400000) + 1;
+    return { ...week, end: weekEnd, days, budget: weekBudget, spent: roundedMoney(spent), remaining, usage: weekBudget > 0 ? spent / weekBudget : 0, state: remaining < 0 ? "over" as const : "healthy" as const };
   });
 };
 
@@ -390,7 +475,7 @@ export const financialBalance = (data: AppData, start?: string, end?: string, me
 
 /** Recapitulare locală luni–duminică. Perspectiva unui membru include numai mișcările lui. */
 export const weeklySummary = (data: AppData, asOf = isoToday(), memberId?: string) => {
-  const basis = new Date(`${safeDate(asOf)}T12:00:00`); const shift = (basis.getDay() + 6) % 7; const start = new Date(basis); start.setDate(basis.getDate() - shift); const end = new Date(start); end.setDate(start.getDate() + 6); const startIso = start.toISOString().slice(0, 10); const endIso = end.toISOString().slice(0, 10);
+  const basis = new Date(`${safeDate(asOf)}T12:00:00`); const shift = (basis.getDay() + 6) % 7; const start = new Date(basis); start.setDate(basis.getDate() - shift); const end = new Date(start); end.setDate(start.getDate() + 6); const startIso = isoDate(start); const endIso = isoDate(end);
   const transactions = data.transactions.filter((item) => item.date >= startIso && item.date <= endIso && (!memberId || item.memberId === memberId)); const income = transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const categories = Object.entries(transactions.filter((item) => item.kind === "expense").reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {})).sort(([, left], [, right]) => right - left).slice(0, 3);
   return { start: startIso, end: endIso, income, expense, cashflow: income - expense, categories, transactionCount: transactions.length, memberId };
 };
@@ -412,7 +497,7 @@ export const recurringDueInPlan = (item: RecurringPayment, plan: SalaryPlan) => 
   for (let cursor = new Date(start.getFullYear(), start.getMonth(), 1); cursor <= end; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)) {
     const lastDay = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
     const due = new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(item.dueDay, lastDay), 12);
-    if (due >= start && due <= end) return due.toISOString().slice(0, 10);
+    if (due >= start && due <= end) return isoDate(due);
   }
   return undefined;
 };
@@ -430,9 +515,10 @@ export const confirmRecurringPayment = (data: AppData, recurringId: string): App
   const item = data.recurring.find((entry) => entry.id === recurringId);
   const source = item && data.settings.paymentSources.find((entry) => entry.id === item.sourceId);
   const member = item && data.settings.members.find((entry) => entry.id === item.memberId);
-  if (!item || !source || !member) return undefined;
+  /** Fără scadență în așteptare plata este deja înregistrată în perioada activă; o a doua apăsare nu trebuie s-o dubleze. */
+  if (!pending || !item || !source || !member) return undefined;
   const now = new Date().toISOString();
-  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending?.dueDate || isoToday(), note: "Plată recurentă confirmată", createdAt: now, updatedAt: now };
+  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending.dueDate, note: "Plată recurentă confirmată", createdAt: now, updatedAt: now };
   return { ...data, transactions: [transaction, ...data.transactions] };
 };
 
@@ -440,7 +526,7 @@ export const confirmRecurringPayment = (data: AppData, recurringId: string): App
 export const recurringDueForMonth = (item: RecurringPayment, asOf = isoToday()) => {
   const basis = new Date(`${asOf}T12:00:00`);
   const lastDay = new Date(basis.getFullYear(), basis.getMonth() + 1, 0).getDate();
-  return new Date(basis.getFullYear(), basis.getMonth(), Math.min(item.dueDay, lastDay), 12).toISOString().slice(0, 10);
+  return isoDate(new Date(basis.getFullYear(), basis.getMonth(), Math.min(item.dueDay, lastDay), 12));
 };
 
 /**
@@ -492,7 +578,27 @@ export type NaturalSpendScenario = { raw: string; amount: number; category?: str
 export type SavingSuggestion = { id: string; tone: "good" | "watch" | "risk"; title: string; detail: string; potential?: number; basis?: string; nextStep?: string };
 export type BudgetQuestionAnswer = { kind: "daily-average" | "weekly-average" | "remaining-daily"; amount: number; days: number; result: number; category?: string; source: "declared" | "envelope" | "plan" };
 
-const foldRomanian = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+export const foldRomanian = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/** O singură listă de indicii, folosită și de simulatorul de scenarii, și de importul de extras. */
+const categoryAliases: Array<[RegExp, string]> = [
+  [/\b(taxi|uber|bolt|transport|metrou|stb|ratb|cfr|benzina|motorina|combustibil|omv|mol|petrom|rompetrol|parcare|bilet|blueair|wizz|tarom)\b/, "Transport"],
+  [/\b(mancare|restaurant|lunch|pranz|cina|cumparaturi|supermarket|lidl|kaufland|carrefour|profi|auchan|penny|mega image|selgros|glovo|tazz|bolt food|patiserie|paine|covrig)\b/, "Alimente"],
+  [/\b(apa|suc|cafea|ceai|bere|starbucks|5 to go)\b/, "Băuturi"],
+  [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
+  [/\b(factura|internet|curent|gaz|chirie|detergent|casa|enel|electrica|engie|digi|rcs|orange|vodafone|telekom|apa nova|salubr)\b/, "Casă & facturi"],
+  [/\b(medic|farmacie|doctor|sanatate|catena|help ?net|dona|regina maria|medlife|sanador)\b/, "Sănătate"],
+  [/\b(film|joc|iesire|concert|timp liber|cinema|netflix|spotify|steam|hbo|disney)\b/, "Timp liber"],
+  [/\b(abonament|subscription)\b/, "Abonamente"],
+  [/\b(tigar|tutun|vape)\b/, "Altele"],
+  [/\b(rata|credit|imprumut|leasing)\b/, "Rate produse"],
+];
+
+/** Propune o categorie dintr-o descriere liberă. Rămâne o propunere: nimic nu se salvează fără confirmare. */
+export const guessCategoryFromText = (raw: string, categories: string[] = expenseCategories) => {
+  const folded = foldRomanian(raw);
+  return categories.find((item) => folded.includes(foldRomanian(item))) || categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
+};
 
 /**
  * Interpretează local expresii românești scurte, fără un model extern. Rezultatul
@@ -502,17 +608,6 @@ export const parseNaturalSpendScenario = (raw: string, categories: string[] = ex
   const folded = foldRomanian(raw.trim());
   const amountMatch = raw.match(/(?:^|\s)(\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)(?=\s*(?:de\s+)?(?:lei|ron|leu|pe|pentru|$))/i);
   const amount = amountMatch ? parseRomanianAmount(amountMatch[1]) : 0;
-  const categoryAliases: Array<[RegExp, string]> = [
-    [/\b(taxi|uber|bolt|transport|metrou|benzina|motorina|combustibil|parcare|bilet)\b/, "Transport"],
-    [/\b(mancare|restaurant|lunch|pranz|cina|cumparaturi|supermarket|lidl|kaufland|patiserie|paine|covrig)\b/, "Alimente"],
-    [/\b(apa|suc|cafea|ceai|bere)\b/, "Băuturi"],
-    [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
-    [/\b(factura|internet|curent|gaz|chirie|detergent|casa)\b/, "Casă & facturi"],
-    [/\b(medic|farmacie|doctor|sanatate)\b/, "Sănătate"],
-    [/\b(film|joc|iesire|concert|timp liber)\b/, "Timp liber"],
-    [/\b(tigar|tutun|vape)\b/, "Altele"],
-    [/\b(rata|credit|imprumut)\b/, "Rate produse"],
-  ];
   const category = categories.find((item) => folded.includes(foldRomanian(item))) || categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
   const timing: NaturalSpendScenario["timing"] = /\bmaine\b/.test(folded) ? "mâine" : /\b(azi|astazi)\b/.test(folded) ? "azi" : /\b(saptamana viitoare|luna viitoare|vineri|sambata|duminica|luni|marti|miercuri|joi)\b/.test(folded) ? "viitor" : "nespecificat";
   const title = category ? `cheltuială pentru ${category.toLocaleLowerCase("ro-RO")}` : "cheltuială propusă";
@@ -544,7 +639,7 @@ export const answerBudgetQuestion = (raw: string, data: AppData, asOf = isoToday
 };
 
 /** Sugestii observabile și calculate din registru; nu recomandă investiții și nu modifică datele. */
-const daysBefore = (iso: string, days: number) => { const value = new Date(`${iso}T12:00:00`); value.setDate(value.getDate() - days); return value.toISOString().slice(0, 10); };
+const daysBefore = (iso: string, days: number) => { const value = new Date(`${iso}T12:00:00`); value.setDate(value.getDate() - days); return isoDate(value); };
 
 export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSuggestion[] => {
   const forecast = planForecast(data, asOf); const plan = data.settings.salaryPlan; const balance = financialBalance(data);
@@ -623,7 +718,7 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
 
   const in7Days = new Date(`${asOf}T12:00:00`);
   in7Days.setDate(in7Days.getDate() + 7);
-  const horizon = in7Days.toISOString().slice(0, 10);
+  const horizon = isoDate(in7Days);
   const upcomingRecurring = pendingRecurringInPlan(data).filter((i) => i.dueDate <= horizon);
   const upcomingDebts = data.debts.filter((d) => d.dueDate && d.dueDate >= asOf && d.dueDate <= horizon);
   const upcomingAmount = upcomingRecurring.reduce((sum, i) => sum + i.amount, 0) +

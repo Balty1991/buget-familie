@@ -4,4 +4,10 @@
     <string name="title_activity_main">Buget Familie</string>
     <string name="package_name">ro.balty1991.bugetfamilie</string>
     <string name="custom_url_scheme">ro.balty1991.bugetfamilie</string>
+    <string name="widget_title">Buget Familie</string>
+    <string name="widget_subtitle">Notează acum, verifici mai târziu</string>
+    <string name="widget_expense">Cheltuială</string>
+    <string name="widget_receipt">Bon</string>
+    <string name="widget_description">Adaugă o cheltuială sau fotografiază un bon fără a deschide aplicația.</string>
+    <string name="tile_label">Cheltuială rapidă</string>
 </resources>

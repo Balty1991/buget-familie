@@ -196,6 +196,105 @@ async function scheduleWeb(alerts: PlannedAlert[]) {
   }
 }
 
+
+const FAMILY_ALERT_KEY = "buget-familie:family-envelope-alerts";
+
+const readFamilyAlertLog = (): Record<string, string> => {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(FAMILY_ALERT_KEY) || "{}") as unknown;
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeFamilyAlertLog = (log: Record<string, string>) => {
+  try {
+    const entries = Object.entries(log).slice(-60);
+    window.localStorage.setItem(FAMILY_ALERT_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch {
+    /* jurnalul de alerte nu trebuie să blocheze datele financiare */
+  }
+};
+
+async function showNow(title: string, body: string, tag: string) {
+  const Cap = typeof window !== "undefined" ? (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor : undefined;
+  if (Cap?.isNativePlatform?.()) {
+    try {
+      const { LocalNotifications } = await import("@capacitor/local-notifications");
+      const permission = await LocalNotifications.requestPermissions();
+      if (permission.display !== "granted") return;
+      await LocalNotifications.schedule({ notifications: [{ id: Math.floor(Math.random() * 100000) + 5000, title, body, extra: { tag } }] });
+      return;
+    } catch {
+      /* cădem pe Notification API */
+    }
+  }
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  try {
+    new Notification(title, { body, tag });
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Anunță imediat când o actualizare primită de la un alt telefon împinge un plic
+ * peste pragul lui. Alertele zilnice programate acoperă propriile cheltuieli; aceasta
+ * acoperă cazul în care altcineva din familie a cheltuit, iar tu afli abia la final de lună.
+ *
+ * Se declanșează doar la trecerea pragului, doar pentru mișcări ale altui membru și cel
+ * mult o dată pe zi pentru fiecare plic și stare, ca sincronizarea să nu devină o sursă
+ * de notificări repetate.
+ */
+export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppData): Promise<void> {
+  if (!isNotificationsEnabled()) return;
+  const permission = await getNotificationPermission();
+  if (permission !== "granted") return;
+
+  const me = next.settings.members.find((member) => member.name === next.settings.memberName);
+  const knownIds = new Set(previous.transactions.map((item) => item.id));
+  const incoming = next.transactions.filter((item) => !knownIds.has(item.id) && item.kind === "expense" && (!me || item.memberId !== me.id));
+  if (!incoming.length) return;
+
+  const day = isoToday();
+  const log = readFamilyAlertLog();
+  let changed = false;
+
+  for (const allocation of next.settings.salaryPlan.allocations || []) {
+    const before = previous.settings.salaryPlan.allocations.find((item) => item.id === allocation.id);
+    const beforeState = before ? allocationStatus(previous, before).state : "healthy";
+    const after = allocationStatus(next, allocation);
+    // Doar trecerea în sus contează: „încă sănătos” sau o revenire nu merită o notificare.
+    if (after.state === "healthy" || after.state === beforeState) continue;
+    if (beforeState === "over") continue;
+
+    const responsible = incoming.filter((item) => item.allocationId
+      ? item.allocationId === allocation.id
+      : (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || item.sourceId === allocation.sourceId));
+    if (!responsible.length) continue;
+
+    const key = `${allocation.id}:${after.state}`;
+    if (log[key] === day) continue;
+    log[key] = day;
+    changed = true;
+
+    const names = Array.from(new Set(responsible.map((item) => item.person).filter(Boolean)));
+    const who = names.length === 1 ? names[0] : names.length ? `${names.slice(0, -1).join(", ")} și ${names[names.length - 1]}` : "Un membru";
+    const spent = responsible.reduce((sum, item) => sum + item.amount, 0);
+    await showNow(
+      after.state === "over" ? `Plic depășit: ${allocation.label}` : `Plic aproape de limită: ${allocation.label}`,
+      after.state === "over"
+        ? `${who} a înregistrat ${money(spent)}. Plicul este la ${money(after.spent)} din ${money(after.budget)}.`
+        : `${who} a înregistrat ${money(spent)}. Mai rămân ${money(after.remaining)} din ${money(after.budget)}.`,
+      `family-env-${key}`,
+    );
+  }
+
+  if (changed) writeFamilyAlertLog(log);
+}
+
+
 /**
  * Programează alertele din datele locale. Debounce natural prin cheia zilnică.
  */

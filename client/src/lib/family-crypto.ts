@@ -34,7 +34,9 @@ export async function encryptFamilyData(data: AppData, secret: string): Promise<
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(secret, salt);
   // Preferințele de viteză și de lectură rămân pe telefon; registrul financiar rămâne partea sincronizată.
-  const shareable = { ...data, receipts: data.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...receipt }) => receipt), settings: { ...data.settings, quickTemplates: [], archivedQuickTemplates: [], savedJournalFilters: [], salaryCycleTemplates: [], seenWeeklyPlanTranches: [] } };
+  // Propunerile de verificat rămân pe telefonul care le-a creat: fără ele, o propunere
+  // ignorată pe un telefon ar fi readusă de celălalt la următoarea unire.
+  const shareable = { ...data, pendingReview: [], receipts: data.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...receipt }) => receipt), settings: { ...data.settings, quickTemplates: [], archivedQuickTemplates: [], savedJournalFilters: [], salaryCycleTemplates: [], seenWeeklyPlanTranches: [], basketProducts: [] } };
   const plain = encoder.encode(JSON.stringify(shareable));
   const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain);
   return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(ciphertext)) };
@@ -61,7 +63,14 @@ function mergeCollection<T extends { id: string; updatedAt?: string; createdAt?:
     const existing = all.get(item.id);
     if (!existing || timestamp(item) >= timestamp(existing)) all.set(item.id, item);
   });
-  return Array.from(all.values()).filter((item) => (Date.parse(tombstones.get(item.id)?.deletedAt || "") || 0) < timestamp(item));
+  return Array.from(all.values()).filter((item) => {
+    const tombstone = tombstones.get(item.id);
+    // Fără ștergere înregistrată păstrăm elementul chiar dacă nu are marcaj de timp:
+    // datoriile și obiectivele salvate din dialog nu poartă `updatedAt`, iar o comparație
+    // strictă le-ar fi scos definitiv din registru la prima unire a două telefoane.
+    if (!tombstone) return true;
+    return (Date.parse(tombstone.deletedAt) || 0) < timestamp(item);
+  });
 }
 
 /** Unește două copii de familie fără a expedia imagini de bon și fără a reintroduce elemente șterse. */
@@ -79,7 +88,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
   const salaryPlanBase = timestamp(local.settings.salaryPlan) >= timestamp(remote.settings.salaryPlan) ? local.settings.salaryPlan : remote.settings.salaryPlan;
   const allocationHistory: AllocationHistoryEntry[] = [...(remote.settings.salaryPlan.allocationHistory || []), ...(local.settings.salaryPlan.allocationHistory || [])].reduce<AllocationHistoryEntry[]>((all, item) => all.some((entry) => entry.id === item.id) ? all : [...all, item], []).sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt)).slice(0, 400);
   const salaryPlan = { ...salaryPlanBase, allocationHistory };
-  return normalizeAppData({ version: 8, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), quickTemplates: local.settings.quickTemplates, archivedQuickTemplates: local.settings.archivedQuickTemplates, savedJournalFilters: local.settings.savedJournalFilters, salaryCycleTemplates: local.settings.salaryCycleTemplates, seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches, salaryPlan } });
+  return normalizeAppData({ version: 9, pendingReview: local.pendingReview, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), quickTemplates: local.settings.quickTemplates, archivedQuickTemplates: local.settings.archivedQuickTemplates, savedJournalFilters: local.settings.savedJournalFilters, salaryCycleTemplates: local.settings.salaryCycleTemplates, seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches, basketProducts: local.settings.basketProducts, salaryPlan } });
 }
 
 /** Transformă parola de familie într-un identificator de cameră, fără a expune parola. */

@@ -140,8 +140,54 @@ const titleVendor = (raw: string) => {
   return cleaned.charAt(0).toLocaleUpperCase("ro-RO") + cleaned.slice(1).toLocaleLowerCase("ro-RO");
 };
 
+/**
+ * Antetul unui bon românesc are de obicei mai multe rânduri scurte (denumire legală,
+ * stradă, oraș), iar euristica generală alegea primul rând fără cifre — adesea greșit.
+ * Lanțurile cunoscute sunt verificate întâi, pentru că numele lor apare aproape mereu
+ * în antet și este ceea ce recunoaște utilizatorul.
+ */
+const knownVendors: Array<[RegExp, string]> = [
+  [/\blidl\b/i, "Lidl"],
+  [/\bkaufland\b/i, "Kaufland"],
+  [/\bcarrefour\b/i, "Carrefour"],
+  [/\bmega\s*image\b/i, "Mega Image"],
+  [/\bprofi\b/i, "Profi"],
+  [/\bauchan\b/i, "Auchan"],
+  [/\bpenny\b/i, "Penny"],
+  [/\bselgros\b/i, "Selgros"],
+  [/\bmetro\b/i, "Metro"],
+  [/\bcora\b/i, "Cora"],
+  [/\bla\s*doi\s*pasi\b/i, "La Doi Pași"],
+  [/\bannabella\b/i, "Annabella"],
+  [/\bdedeman\b/i, "Dedeman"],
+  [/\bhornbach\b/i, "Hornbach"],
+  [/\bleroy\s*merlin\b/i, "Leroy Merlin"],
+  [/\bbricostore|\bbrico\s*depot\b/i, "Brico Dépôt"],
+  [/\bjysk\b/i, "JYSK"],
+  [/\bpepco\b/i, "Pepco"],
+  [/\bsinsay\b/i, "Sinsay"],
+  [/\bdm\s+drogerie|\bdrogerie\s*markt\b/i, "dm drogerie markt"],
+  [/\brossmann\b/i, "Rossmann"],
+  [/\baltex\b/i, "Altex"],
+  [/\bflanco\b/i, "Flanco"],
+  [/\bemag\b/i, "eMAG"],
+  [/\bdecathlon\b/i, "Decathlon"],
+  [/\bcatena\b/i, "Catena"],
+  [/\bdona\b/i, "Farmacia Dona"],
+  [/\bhelp\s*net\b/i, "HelpNet"],
+  [/\btezyo\b/i, "Tezyo"],
+  [/\bmol\b/i, "MOL"],
+  [/\bomv\b/i, "OMV"],
+  [/\bpetrom\b/i, "Petrom"],
+  [/\brompetrol\b/i, "Rompetrol"],
+];
+
 function inferVendor(lines: string[]) {
   const head = lines.slice(0, 12).map((line) => line.replace(/\s+/g, " ").trim()).filter((line) => line.length >= 3);
+  const headText = head.join(" ");
+  for (const [pattern, name] of knownVendors) {
+    if (pattern.test(headText)) return name;
+  }
   for (const line of head) {
     const magazin = line.match(/\bmagazin\s+([A-ZĂÂÎȘȚa-zăâîșț]{3,})\b/i);
     if (magazin?.[1] && !legalVendorPattern.test(magazin[1])) return titleVendor(magazin[1]);
@@ -158,11 +204,17 @@ function inferVendor(lines: string[]) {
   return undefined;
 }
 
+/** Bonurile românești scriu ziua prima. Verificăm că ziua chiar există în luna citită, altfel data este ignorată. */
 function inferDate(text: string) {
-  const dateMatch = text.match(/\b(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})\b/);
-  if (!dateMatch) return undefined;
-  const year = dateMatch[3].length === 2 ? `20${dateMatch[3]}` : dateMatch[3];
-  return `${year}-${dateMatch[2].padStart(2, "0")}-${dateMatch[1].padStart(2, "0")}`;
+  for (const match of Array.from(text.matchAll(/\b(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})\b/g))) {
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3].length === 2 ? `20${match[3]}` : match[3]);
+    if (month < 1 || month > 12 || day < 1 || year < 2000 || year > 2100) continue;
+    if (day > new Date(year, month, 0).getDate()) continue;
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+  return undefined;
 }
 
 function inferTotal(lines: string[]) {
@@ -209,19 +261,35 @@ function parseProductLines(lines: string[]): ReceiptDetectedItem[] {
   return items;
 }
 
+/** Colapsează liniile identice; folosit numai când suma cu dubluri nu se potrivește cu totalul. */
+const collapseIdentical = (list: ReceiptDetectedItem[]) => {
+  const unique = new Map<string, ReceiptDetectedItem>();
+  for (const item of list) unique.set(`${item.label.toLowerCase()}-${item.amount}`, item);
+  return Array.from(unique.values());
+};
+
+/**
+ * Două produse identice cumpărate împreună și aceeași linie citită de două ori din poze
+ * suprapuse arată la fel în text. Totalul bonului decide între ele: încercăm întâi varianta
+ * completă, apoi cea colapsată, și o păstrăm pe cea care se reconciliază. Colapsarea
+ * necondiționată arunca liniile bonurilor cu produse repetate, pentru că suma nu mai
+ * atingea totalul.
+ */
 function reconcileItems(items: ReceiptDetectedItem[], total?: number) {
   if (!items.length) return { items, amount: total };
-  const unique = new Map<string, ReceiptDetectedItem>();
-  for (const item of items) unique.set(`${item.label.toLowerCase()}-${item.amount}`, item);
-  let next = Array.from(unique.values()).slice(0, 80);
   const sum = (list: ReceiptDetectedItem[]) => round2(list.reduce((value, item) => value + item.amount, 0));
+  const capped = items.slice(0, 80);
   if (total) {
-    const withoutTotalDupes = next.filter((item) => Math.abs(item.amount - total) > 0.05);
-    if (Math.abs(sum(withoutTotalDupes) - total) <= 0.06) next = withoutTotalDupes;
-    if (Math.abs(sum(next) - total) > 0.06) return { items: [], amount: total };
-    return { items: next, amount: total };
+    for (const candidate of [capped, collapseIdentical(capped)]) {
+      const withoutTotalDupes = candidate.filter((item) => Math.abs(item.amount - total) > 0.05);
+      for (const list of [withoutTotalDupes, candidate]) {
+        if (list.length && Math.abs(sum(list) - total) <= 0.06) return { items: list, amount: total };
+      }
+    }
+    return { items: [], amount: total };
   }
-  if (next.length === 1) return { items: next, amount: next[0].amount };
+  const unique = collapseIdentical(capped);
+  if (unique.length === 1) return { items: unique, amount: unique[0].amount };
   return { items: [], amount: undefined };
 }
 

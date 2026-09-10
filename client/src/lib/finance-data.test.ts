@@ -216,7 +216,7 @@ describe("registrul financiar Buget Familie", () => {
 
   it("migrează o dată veche ne-normalizată într-un format ISO", () => {
     const migrated = normalizeAppData({ version: 5, transactions: [{ id: "legacy", title: "Bon", amount: 20, kind: "expense", category: "Alimente", source: "Bon", person: "Eu", date: "26 aug." }], settings: {} });
-    expect(migrated.version).toBe(8);
+    expect(migrated.version).toBe(9);
     expect(migrated.transactions[0].date).toBe(isoToday());
     expect(migrated.transactions[0].sourceId).toBe(migrated.settings.paymentSources.find((source) => source.kind === "meal")?.id);
     expect(migrated.deleted).toEqual([]);

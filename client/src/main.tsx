@@ -72,6 +72,8 @@ import "./mobile-settings-pass.css";
 import "./household-os-today.css";
 import "./household-os-chrome.css";
 import "./household-os-themes.css";
+import "./review-center.css";
+import "./price-watch.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
 createRoot(document.getElementById("root")!).render(<App />);

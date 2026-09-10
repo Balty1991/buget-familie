@@ -1,4 +1,4 @@
-import { formatDate, type AllocationHistoryEntry, type AppData } from "./finance-data";
+import { formatDate, isoToday, type AllocationHistoryEntry, type AppData } from "./finance-data";
 
 const labelsFor = (data: AppData) => new Map(data.settings.salaryPlan.allocations.map((item) => [item.id, item.label]));
 
@@ -39,7 +39,7 @@ export function downloadAllocationHistoryCsv(data: AppData, entries = allocation
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `istoric-repartizari-${new Date().toISOString().slice(0, 10)}.csv`;
+  anchor.download = `istoric-repartizari-${isoToday()}.csv`;
   anchor.click();
   URL.revokeObjectURL(url);
 }

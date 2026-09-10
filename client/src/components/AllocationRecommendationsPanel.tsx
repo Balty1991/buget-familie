@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { Check, Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
-import type { AppData, BudgetAllocation } from "@/lib/finance-data";
+import { isoDate, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 type Recommendation = { allocation: BudgetAllocation; spent: number; count: number; average: number; recommended: number; direction: "up" | "down"; reason: string };
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const round10 = (value: number) => Math.max(0, Math.round(value / 10) * 10);
-const dateKey = (date: Date) => date.toISOString().slice(0, 10);
+const dateKey = isoDate;
 
 export function AllocationRecommendationsPanel({ data, allocations, periodDays, onApply }: { data: AppData; allocations: BudgetAllocation[]; periodDays: number; onApply: (allocation: BudgetAllocation, amount: number) => void }) {
   const recommendations = useMemo<Recommendation[]>(() => { const end = new Date(); const start = new Date(end.getTime() - 89 * 24 * 60 * 60 * 1000); const startKey = dateKey(start); const expenses = data.transactions.filter((item) => item.kind === "expense" && item.date >= startKey); return allocations.map((allocation) => { const matches = expenses.filter((item) => (item.allocationId ? item.allocationId === allocation.id : item.category === allocation.category && (!allocation.sourceId || item.sourceId === allocation.sourceId))); const spent = matches.reduce((sum, item) => sum + Math.max(0, item.amount), 0); const average = spent / 3; const targetForPeriod = average * Math.max(1, periodDays / 30); const currentForPeriod = Math.max(0, allocation.amount); const shouldIncrease = matches.length >= 3 && targetForPeriod > currentForPeriod * 1.12; const shouldDecrease = matches.length >= 3 && targetForPeriod < currentForPeriod * 0.78; if (!shouldIncrease && !shouldDecrease) return null; const recommended = round10(shouldIncrease ? targetForPeriod * 1.08 : Math.max(targetForPeriod * 1.12, currentForPeriod * 0.88)); return { allocation, spent, count: matches.length, average, recommended, direction: shouldIncrease ? "up" : "down", reason: shouldIncrease ? `Consumul mediu este cu ${Math.round((targetForPeriod / currentForPeriod - 1) * 100)}% peste suma actuală.` : `Consumul mediu este cu ${Math.round((1 - targetForPeriod / currentForPeriod) * 100)}% sub suma actuală.` }; }).filter((item): item is Recommendation => Boolean(item)).sort((a, b) => Math.abs(b.recommended - b.allocation.amount) - Math.abs(a.recommended - a.allocation.amount)).slice(0, 5); }, [allocations, data.transactions, periodDays]);
