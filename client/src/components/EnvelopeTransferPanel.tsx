@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { allocationStatus, appendAllocationHistory, parseRomanianAmount, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";
+import { getLocale, t } from "@/lib/i18n";
 
-const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 /**
  * Realocare între plicuri: mută o limită, nu o mișcare bancară.
@@ -41,15 +42,15 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
     <section className="bf-transfer-panel bf-envelope-move" aria-labelledby="envelope-move-title">
       <div className="bf-section-heading">
         <div>
-          <p className="bf-kicker">ÎNTRE PLICURI</p>
-          <h2 id="envelope-move-title">Mută lei dintr-un plic în altul.</h2>
-          <p>Schimbă doar limitele. Soldul cardului sau al cash-ului rămâne neschimbat.</p>
+          <p className="bf-kicker">{t("ÎNTRE PLICURI")}</p>
+          <h2 id="envelope-move-title">{t("Mută lei dintr-un plic în altul.")}</h2>
+          <p>{t("Schimbă doar limitele. Soldul cardului sau al cash-ului rămâne neschimbat.")}</p>
         </div>
         <ArrowLeftRight size={22} aria-hidden="true" />
       </div>
       <div className="bf-transfer-form">
         <label>
-          <span>Din</span>
+          <span>{t("Din")}</span>
           <select value={fromId} onChange={(event) => {
             const nextFrom = event.target.value;
             setFromId(nextFrom);
@@ -72,14 +73,14 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
           </select>
         </label>
         <label>
-          <span>Sumă</span>
+          <span>{t("Sumă")}</span>
           <input value={amount} onChange={(event) => { setAmount(event.target.value); setError(""); }} inputMode="decimal" placeholder={from ? `max. ${Math.round(Math.max(0, from.remaining))}` : "ex. 100"} />
         </label>
         <label>
-          <span>Notă (opțional)</span>
-          <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="ex. taxi mai puțin, alimente mai mult" />
+          <span>{t("Notă (opțional)")}</span>
+          <input value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("ex. taxi mai puțin, alimente mai mult")} />
         </label>
-        <button type="button" className="bf-primary" onClick={apply}>Mută între plicuri</button>
+        <button type="button" className="bf-primary" onClick={apply}>{t("Mută între plicuri")}</button>
       </div>
       {error && <p className="bf-form-error" role="alert">{error}</p>}
       {plan.transfers.slice(0, 4).length > 0 && (

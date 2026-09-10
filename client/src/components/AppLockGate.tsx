@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Delete, LockKeyhole } from "lucide-react";
 import { APP_LOCK_BACKGROUND_RELOCK_MS, hasAppLockPin, isAppLockEnabled, verifyAppLockPin } from "@/lib/app-lock";
+import { t } from "@/lib/i18n";
 
 const PIN_LENGTH = 4;
 const PAD_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"];
@@ -61,10 +62,10 @@ export function AppLockGate({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="bf-app-lock" role="dialog" aria-modal="true" aria-label="Aplicație blocată">
+    <div className="bf-app-lock" role="dialog" aria-modal="true" aria-label={t("Aplicație blocată")}>
       <LockKeyhole size={26} aria-hidden="true" />
       <h1>Introdu PIN-ul</h1>
-      <p className="bf-app-lock-hint">Registrul familiei rămâne blocat până la PIN-ul corect.</p>
+      <p className="bf-app-lock-hint">{t("Registrul familiei rămâne blocat până la PIN-ul corect.")}</p>
       <div className="bf-app-lock-dots" aria-hidden="true">
         {Array.from({ length: PIN_LENGTH }).map((_, index) => (
           <span key={index} className={index < pin.length ? "filled" : ""} />
@@ -76,7 +77,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
           key === "" ? (
             <span key={index} aria-hidden="true" />
           ) : key === "⌫" ? (
-            <button key={index} type="button" aria-label="Șterge o cifră" onClick={() => press(key)}>
+            <button key={index} type="button" aria-label={t("Șterge o cifră")} onClick={() => press(key)}>
               <Delete size={18} />
             </button>
           ) : (

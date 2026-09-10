@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { t } from "@/lib/i18n";
 
 type HealthTone = "good" | "watch" | "risk";
 
@@ -85,7 +86,7 @@ export function PaydayStrip({ elapsed, total, remaining }: { elapsed: number; to
   return (
     <div className="bf-payday-strip" aria-label={`${remaining} zile până la venit`}>
       <div className="bf-payday-copy">
-        <small>Până la venit</small>
+        <small>{t("Până la venit")}</small>
         <b>{remaining === 0 ? "Astăzi" : `${remaining} ${remaining === 1 ? "zi" : "zile"}`}</b>
       </div>
       <ol>

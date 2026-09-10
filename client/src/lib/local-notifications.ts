@@ -12,6 +12,7 @@ import {
   planForecast,
   type AppData,
 } from "@/lib/finance-data";
+import { getLocale, t } from "./i18n";
 
 const PREF_KEY = "buget-familie:notifications-enabled";
 const LAST_SCHEDULE_KEY = "buget-familie:notifications-last-schedule";
@@ -69,7 +70,7 @@ type PlannedAlert = {
 };
 
 const money = (value: number) =>
-  new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(
+  new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(
     Number.isFinite(value) ? value : 0,
   );
 
@@ -101,8 +102,8 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     if (when.getTime() <= Date.now() - 60_000) continue;
     alerts.push({
       id: id++,
-      title: days === 0 ? "Scadență azi" : "Scadență aproape",
-      body: `${item.name || "Obligație"} · ${money(item.amount)} · ${formatDate(item.dueDate)}`,
+      title: days === 0 ? t("Scadență azi") : t("Scadență aproape"),
+      body: `${item.name || t("Obligație")} · ${money(item.amount)} · ${formatDate(item.dueDate)}`,
       at: when,
       tag: `due-${item.id || item.dueDate}`,
     });
@@ -118,16 +119,16 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     if (usage >= 1) {
       alerts.push({
         id: id++,
-        title: "Plic epuizat",
-        body: `${alloc.label}: ${money(status.spent)} din ${money(status.budget)}. Ajustează sau mută bani.`,
+        title: t("Plic epuizat"),
+        body: t("{label}: {spent} din {budget}. Ajustează sau mută bani.", { label: alloc.label, spent: money(status.spent), budget: money(status.budget) }),
         at: atLocalHour(0, 10, 0),
         tag: `env-over-${alloc.id}`,
       });
     } else if (usage >= threshold) {
       alerts.push({
         id: id++,
-        title: "Plic aproape de limită",
-        body: `${alloc.label}: ${Math.round(usage * 100)}% folosit · mai ai ${money(status.remaining)}.`,
+        title: t("Plic aproape de limită"),
+        body: t("{label}: {percent}% folosit · mai ai {remaining}.", { label: alloc.label, percent: Math.round(usage * 100), remaining: money(status.remaining) }),
         at: atLocalHour(0, 10, 15),
         tag: `env-warn-${alloc.id}`,
       });
@@ -139,8 +140,8 @@ function buildAlerts(data: AppData): PlannedAlert[] {
   if (forecast.remainingDays > 0 && forecast.spentToDate > 0 && forecast.projectedRemaining < 0) {
     alerts.push({
       id: id++,
-      title: "Ritm peste plan",
-      body: `Cu ritmul actual, planul ar ieși în minus cu ${money(Math.abs(forecast.projectedRemaining))} până la salariu. Sigur pe zi: ${money(forecast.safeDaily)}.`,
+      title: t("Ritm peste plan"),
+      body: t("Cu ritmul actual, planul ar ieși în minus cu {amount} până la salariu. Sigur pe zi: {safe}.", { amount: money(Math.abs(forecast.projectedRemaining)), safe: money(forecast.safeDaily) }),
       at: atLocalHour(0, 10, 30),
       tag: "pace-over-plan",
     });
@@ -280,13 +281,13 @@ export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppDa
     changed = true;
 
     const names = Array.from(new Set(responsible.map((item) => item.person).filter(Boolean)));
-    const who = names.length === 1 ? names[0] : names.length ? `${names.slice(0, -1).join(", ")} și ${names[names.length - 1]}` : "Un membru";
+    const who = names.length === 1 ? names[0] : names.length ? t("{first} și {last}", { first: names.slice(0, -1).join(", "), last: names[names.length - 1] }) : t("Un membru");
     const spent = responsible.reduce((sum, item) => sum + item.amount, 0);
     await showNow(
-      after.state === "over" ? `Plic depășit: ${allocation.label}` : `Plic aproape de limită: ${allocation.label}`,
+      after.state === "over" ? t("Plic depășit: {label}", { label: allocation.label }) : t("Plic aproape de limită: {label}", { label: allocation.label }),
       after.state === "over"
-        ? `${who} a înregistrat ${money(spent)}. Plicul este la ${money(after.spent)} din ${money(after.budget)}.`
-        : `${who} a înregistrat ${money(spent)}. Mai rămân ${money(after.remaining)} din ${money(after.budget)}.`,
+        ? t("{who} a înregistrat {spent}. Plicul este la {used} din {budget}.", { who, spent: money(spent), used: money(after.spent), budget: money(after.budget) })
+        : t("{who} a înregistrat {spent}. Mai rămân {remaining} din {budget}.", { who, spent: money(spent), remaining: money(after.remaining), budget: money(after.budget) }),
       `family-env-${key}`,
     );
   }

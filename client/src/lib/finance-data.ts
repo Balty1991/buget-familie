@@ -3,6 +3,7 @@
  * Toate sumele sunt în RON, toate datele sunt ISO (YYYY-MM-DD), iar identitățile sunt stabile.
  */
 import { calendarBudget } from "./calendar-budget";
+import { getLocale, t } from "./i18n";
 
 export type TransactionKind = "income" | "expense";
 export type PaymentKind = "card" | "cash" | "meal" | "transfer";
@@ -177,7 +178,7 @@ export function resolveReceiptLines(
 export const formatDate = (iso?: string, options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short" }) => {
   if (!iso) return "Nespecificat";
   const date = new Date(`${iso}T12:00:00`);
-  return Number.isNaN(date.valueOf()) ? iso : new Intl.DateTimeFormat("ro-RO", options).format(date);
+  return Number.isNaN(date.valueOf()) ? iso : new Intl.DateTimeFormat(getLocale(), options).format(date);
 };
 
 const safeDate = (value?: string) => /^\d{4}-\d{2}-\d{2}$/.test(value || "") ? String(value) : isoToday();
@@ -337,18 +338,18 @@ export const applySalaryAllocationRules = (data: AppData, incomeId: string) => {
   const income = data.transactions.find((item) => item.id === incomeId);
   const plan = data.settings.salaryPlan;
   const previous = (plan.salaryAllocationApplications || []).find((item) => item.incomeId === incomeId);
-  if (!income || income.kind !== "income") return { data, applied: [], total: 0, remaining: 0, error: "Alege un venit înregistrat." };
-  if (previous) return { data, applied: [], total: 0, remaining: income.amount, error: "Acest venit a fost deja repartizat prin reguli." };
+  if (!income || income.kind !== "income") return { data, applied: [], total: 0, remaining: 0, error: t("Alege un venit înregistrat.") };
+  if (previous) return { data, applied: [], total: 0, remaining: income.amount, error: t("Acest venit a fost deja repartizat prin reguli.") };
   const rules = eligibleSalaryAllocationRules(data, income);
   const applied = rules.map((rule) => ({ ruleId: rule.id, allocationId: rule.allocationId, amount: roundedMoney(rule.mode === "percent" ? income.amount * rule.value / 100 : rule.value) })).filter((item) => item.amount > 0);
-  if (!applied.length) return { data, applied: [], total: 0, remaining: income.amount, error: "Nu există reguli active compatibile cu acest venit și sursa sa." };
+  if (!applied.length) return { data, applied: [], total: 0, remaining: income.amount, error: t("Nu există reguli active compatibile cu acest venit și sursa sa.") };
   const total = roundedMoney(applied.reduce((sum, item) => sum + item.amount, 0));
-  if (total > income.amount) return { data, applied: [], total, remaining: income.amount, error: "Regulile active depășesc suma venitului. Revizuiește valorile înainte de aplicare." };
+  if (total > income.amount) return { data, applied: [], total, remaining: income.amount, error: t("Regulile active depășesc suma venitului. Revizuiește valorile înainte de aplicare.") };
   const appliedAt = new Date().toISOString();
   const application: SalaryAllocationApplication = { id: newId("salary-application"), incomeId: income.id, incomeTitle: income.title, incomeAmount: income.amount, sourceId: income.sourceId, memberId: income.memberId, appliedAt, allocations: applied };
   const amounts = applied.reduce((all, item) => all.set(item.allocationId, roundedMoney((all.get(item.allocationId) || 0) + item.amount)), new Map<string, number>());
   const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: plan.allocations.map((item) => amounts.has(item.id) ? { ...item, amount: roundedMoney(item.amount + (amounts.get(item.id) || 0)) } : item), salaryAllocationApplications: [application, ...(plan.salaryAllocationApplications || [])].slice(0, 80), updatedAt: appliedAt } } };
-  return { data: appendAllocationHistory(nextData, { kind: "income-applied", referenceId: application.id, allocationLabel: applied.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat").join(", "), amount: total, incomeId: income.id, incomeTitle: income.title, note: `Venit de ${income.amount.toLocaleString("ro-RO")} RON` }), applied, total, remaining: roundedMoney(income.amount - total) };
+  return { data: appendAllocationHistory(nextData, { kind: "income-applied", referenceId: application.id, allocationLabel: applied.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || t("Plic eliminat")).join(", "), amount: total, incomeId: income.id, incomeTitle: income.title, note: `Venit de ${income.amount.toLocaleString("ro-RO")} RON` }), applied, total, remaining: roundedMoney(income.amount - total) };
 };
 
 /** Revocă o aplicare de reguli și scade numai limitele majorate prin ea; registrul și soldurile surselor rămân neschimbate. */
@@ -357,7 +358,7 @@ export const revertSalaryAllocationApplication = (data: AppData, applicationId: 
   if (!application) return data;
   const amounts = application.allocations.reduce((all, item) => all.set(item.allocationId, roundedMoney((all.get(item.allocationId) || 0) + item.amount)), new Map<string, number>());
   const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: plan.allocations.map((item) => amounts.has(item.id) ? { ...item, amount: roundedMoney(item.amount - (amounts.get(item.id) || 0)) } : item), salaryAllocationApplications: (plan.salaryAllocationApplications || []).filter((item) => item.id !== applicationId), updatedAt: new Date().toISOString() } } };
-  return appendAllocationHistory(nextData, { kind: "income-reverted", referenceId: application.id, allocationLabel: application.allocations.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat").join(", "), amount: application.allocations.reduce((sum, item) => sum + item.amount, 0), incomeId: application.incomeId, incomeTitle: application.incomeTitle, note: "Repartizarea a fost anulată." });
+  return appendAllocationHistory(nextData, { kind: "income-reverted", referenceId: application.id, allocationLabel: application.allocations.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat").join(", "), amount: application.allocations.reduce((sum, item) => sum + item.amount, 0), incomeId: application.incomeId, incomeTitle: application.incomeTitle, note: t("Repartizarea a fost anulată.") });
 };
 
 /** Valuta unei surse; absența ei înseamnă lei. */
@@ -568,7 +569,7 @@ export const debtPaymentHistory = (data: AppData, debtId: string) => data.transa
 export const recordDebtPayment = (data: AppData, input: { debtId: string; amount: number; sourceId: string; memberId: string; date?: string; note?: string }) => {
   const debt = data.debts.find((item) => item.id === input.debtId); const source = data.settings.paymentSources.find((item) => item.id === input.sourceId); const member = data.settings.members.find((item) => item.id === input.memberId); const amount = Math.round(Math.max(0, input.amount) * 100) / 100;
   if (!debt || !source || !member || (source.memberId && source.memberId !== member.id) || amount <= 0 || amount > debt.remaining) return undefined;
-  const now = new Date().toISOString(); const remainingAfter = Math.max(0, Math.round((debt.remaining - amount) * 100) / 100); const paymentState = remainingAfter === 0 ? "achitată integral" : "plată parțială"; const transaction: Transaction = { id: newId("debt-payment"), debtId: debt.id, debtRemainingAfter: remainingAfter, title: `Rată ${paymentState} — ${debt.name}`, amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || `Rată ${paymentState}; sold rămas ${remainingAfter.toFixed(2)} RON`, allocationId: "outside", createdAt: now, updatedAt: now };
+  const now = new Date().toISOString(); const remainingAfter = Math.max(0, Math.round((debt.remaining - amount) * 100) / 100); const paymentState = remainingAfter === 0 ? t("achitată integral") : t("plată parțială"); const transaction: Transaction = { id: newId("debt-payment"), debtId: debt.id, debtRemainingAfter: remainingAfter, title: t("Rată {state} — {name}", { state: paymentState, name: debt.name }), amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || t("Rată {state}; sold rămas {amount} RON", { state: paymentState, amount: remainingAfter.toFixed(2) }), allocationId: "outside", createdAt: now, updatedAt: now };
   return { ...data, transactions: [transaction, ...data.transactions], debts: data.debts.map((item) => item.id === debt.id ? { ...item, remaining: remainingAfter, updatedAt: now } : item) };
 };
 
@@ -600,7 +601,7 @@ export const confirmRecurringPayment = (data: AppData, recurringId: string): App
   /** Fără scadență în așteptare plata este deja înregistrată în perioada activă; o a doua apăsare nu trebuie s-o dubleze. */
   if (!pending || !item || !source || !member) return undefined;
   const now = new Date().toISOString();
-  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending.dueDate, note: "Plată recurentă confirmată", createdAt: now, updatedAt: now };
+  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending.dueDate, note: t("Plată recurentă confirmată"), createdAt: now, updatedAt: now };
   return { ...data, transactions: [transaction, ...data.transactions] };
 };
 
@@ -627,7 +628,7 @@ export const autoPostDueRecurring = (data: AppData, asOf = isoToday()): AppData 
     const id = `recurring-auto-${item.id}-${dueDate}`;
     const exists = data.transactions.some((transaction) => transaction.id === id || (transaction.recurringId === item.id && transaction.date === dueDate));
     if (exists) return;
-    additions.push({ id, recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: dueDate, note: "Adăugată automat din scadență recurentă", createdAt: `${asOf}T12:00:00.000Z` });
+    additions.push({ id, recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: dueDate, note: t("Adăugată automat din scadență recurentă"), createdAt: `${asOf}T12:00:00.000Z` });
   });
   return additions.length ? { ...data, transactions: [...additions, ...data.transactions] } : data;
 };
@@ -728,23 +729,23 @@ export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSugge
   const currentExpenses = data.transactions.filter((item) => item.kind === "expense" && item.date >= plan.periodStart && item.date <= asOf && inPlanPeriod(item.date, plan));
   const spendingByCategory = Object.entries(currentExpenses.reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {})).sort((a, b) => b[1] - a[1]);
   const suggestions: SavingSuggestion[] = [];
-  if (balance.debtRemaining > 0 && balance.netLiquidPosition < 0) suggestions.push({ id: "net-position", tone: "risk", title: "Datoria depășește lichiditatea actuală", detail: `Poziția lichidă netă este ${Math.round(balance.netLiquidPosition)} RON. Nu presupune că economiile urmărite sunt disponibile pentru cheltuieli; verifică planul și obligațiile apropiate.`, potential: Math.abs(balance.netLiquidPosition), basis: `Solduri utilizabile ${Math.round(balance.liquidFunds)} RON − datorii rămase ${Math.round(balance.debtRemaining)} RON`, nextStep: "Revizuiește ratele și planul" });
+  if (balance.debtRemaining > 0 && balance.netLiquidPosition < 0) suggestions.push({ id: "net-position", tone: "risk", title: t("Datoria depășește lichiditatea actuală"), detail: t("Poziția lichidă netă este {amount} RON. Nu presupune că economiile urmărite sunt disponibile pentru cheltuieli; verifică planul și obligațiile apropiate.", { amount: Math.round(balance.netLiquidPosition) }), potential: Math.abs(balance.netLiquidPosition), basis: t("Solduri utilizabile {funds} RON − datorii rămase {debts} RON", { funds: Math.round(balance.liquidFunds), debts: Math.round(balance.debtRemaining) }), nextStep: t("Revizuiește ratele și planul") });
   const incomeLast30 = data.transactions.filter((item) => item.kind === "income" && item.date >= daysBefore(asOf, 29) && item.date <= asOf).reduce((sum, item) => sum + item.amount, 0);
-  if (balance.monthlyRates > 0 && incomeLast30 > 0 && balance.monthlyRates / incomeLast30 >= 0.35) { const share = Math.round(balance.monthlyRates / incomeLast30 * 100); suggestions.push({ id: "rate-pressure", tone: "watch", title: "Ratele apasă vizibil în veniturile recente", detail: `Ratele declarate reprezintă ${share}% din veniturile înregistrate în ultimele 30 de zile. Include-le în limita planului înainte de cheltuielile flexibile.`, potential: balance.monthlyRates, basis: `${Math.round(balance.monthlyRates)} RON rate/lună din ${Math.round(incomeLast30)} RON venituri în 30 zile`, nextStep: "Deschide scadențele" }); }
-  if (plan.nextPayday && forecast.projectedRemaining < 0) suggestions.push({ id: "pace", tone: "risk", title: "Ritmul actual depășește planul", detail: `Estimarea indică un minus de ${Math.round(Math.abs(forecast.projectedRemaining))} RON până la următorul venit. Orice reducere a cheltuielilor flexibile micșorează direct această diferență.`, potential: Math.abs(forecast.projectedRemaining), basis: `${Math.round(forecast.spentToDate)} RON cheltuiți în ${forecast.elapsedDays} zile; orizont ${forecast.remainingDays} zile`, nextStep: "Compară ritmul cu planul" });
+  if (balance.monthlyRates > 0 && incomeLast30 > 0 && balance.monthlyRates / incomeLast30 >= 0.35) { const share = Math.round(balance.monthlyRates / incomeLast30 * 100); suggestions.push({ id: "rate-pressure", tone: "watch", title: t("Ratele apasă vizibil în veniturile recente"), detail: t("Ratele declarate reprezintă {share}% din veniturile înregistrate în ultimele 30 de zile. Include-le în limita planului înainte de cheltuielile flexibile.", { share }), potential: balance.monthlyRates, basis: t("{rates} RON rate/lună din {income} RON venituri în 30 zile", { rates: Math.round(balance.monthlyRates), income: Math.round(incomeLast30) }), nextStep: t("Deschide scadențele") }); }
+  if (plan.nextPayday && forecast.projectedRemaining < 0) suggestions.push({ id: "pace", tone: "risk", title: t("Ritmul actual depășește planul"), detail: t("Estimarea indică un minus de {amount} RON până la următorul venit. Orice reducere a cheltuielilor flexibile micșorează direct această diferență.", { amount: Math.round(Math.abs(forecast.projectedRemaining)) }), potential: Math.abs(forecast.projectedRemaining), basis: t("{spent} RON cheltuiți în {elapsed} zile; orizont {remaining} zile", { spent: Math.round(forecast.spentToDate), elapsed: forecast.elapsedDays, remaining: forecast.remainingDays }), nextStep: t("Compară ritmul cu planul") });
   const recentStart = daysBefore(asOf, 6); const previousStart = daysBefore(asOf, 13); const previousEnd = daysBefore(asOf, 7);
   const totalsFor = (start: string, end: string) => data.transactions.filter((item) => item.kind === "expense" && item.date >= start && item.date <= end).reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {});
   const recentByCategory = totalsFor(recentStart, asOf); const previousByCategory = totalsFor(previousStart, previousEnd);
   const trend = Object.entries(recentByCategory).map(([category, amount]) => ({ category, amount, previous: previousByCategory[category] || 0 })).filter((item) => item.previous > 0 && item.amount >= item.previous * 1.25 && item.amount - item.previous >= 40).sort((a, b) => (b.amount - b.previous) - (a.amount - a.previous))[0];
-  if (trend) { const increase = Math.round(trend.amount - trend.previous); suggestions.push({ id: "history-trend", tone: "watch", title: `${trend.category} crește față de săptămâna anterioară`, detail: `În ultimele 7 zile sunt ${Math.round(trend.amount)} RON, cu ${increase} RON peste cele 7 zile anterioare. Compară intrările înainte de a decide dacă este un vârf punctual sau un nou ritm.`, potential: increase, basis: `${recentStart}–${asOf} comparat cu ${previousStart}–${previousEnd}`, nextStep: "Vezi mișcările categoriei" }); }
+  if (trend) { const increase = Math.round(trend.amount - trend.previous); suggestions.push({ id: "history-trend", tone: "watch", title: t("{category} crește față de săptămâna anterioară", { category: t(trend.category) }), detail: t("În ultimele 7 zile sunt {amount} RON, cu {increase} RON peste cele 7 zile anterioare. Compară intrările înainte de a decide dacă este un vârf punctual sau un nou ritm.", { amount: Math.round(trend.amount), increase }), potential: increase, basis: t("{from}–{to} comparat cu {previousFrom}–{previousTo}", { from: recentStart, to: asOf, previousFrom: previousStart, previousTo: previousEnd }), nextStep: t("Vezi mișcările categoriei") }); }
   const envelope = plan.allocations.filter((item) => Boolean(item.category)).map((item) => ({ item, ...allocationStatus(data, item) })).filter((item) => item.state !== "healthy").sort((a, b) => b.usage - a.usage)[0];
-  if (envelope) suggestions.push({ id: "envelope", tone: envelope.state === "over" ? "risk" : "watch", title: envelope.state === "over" ? `${envelope.item.label} a depășit limita` : `${envelope.item.label} se apropie de limită`, detail: `${Math.round(envelope.spent)} RON au fost cheltuiți din limita ajustată de ${Math.round(envelope.budget)} RON. O realocare nu mută bani între surse; schimbă numai limitele plicurilor.`, potential: Math.abs(envelope.remaining), basis: `${Math.round(envelope.usage * 100)}% utilizat în perioada planului`, nextStep: "Vezi plicul și realocările" });
+  if (envelope) suggestions.push({ id: "envelope", tone: envelope.state === "over" ? "risk" : "watch", title: envelope.state === "over" ? t("{label} a depășit limita", { label: envelope.item.label }) : t("{label} se apropie de limită", { label: envelope.item.label }), detail: t("{spent} RON au fost cheltuiți din limita ajustată de {budget} RON. O realocare nu mută bani între surse; schimbă numai limitele plicurilor.", { spent: Math.round(envelope.spent), budget: Math.round(envelope.budget) }), potential: Math.abs(envelope.remaining), basis: t("{percent}% utilizat în perioada planului", { percent: Math.round(envelope.usage * 100) }), nextStep: t("Vezi plicul și realocările") });
   const top = spendingByCategory[0];
-  if (top && top[1] > 0) { const potential = Math.max(1, Math.round(top[1] * 0.1)); suggestions.push({ id: "category", tone: "watch", title: `Revizuiește ${top[0]}`, detail: `Aceasta este categoria principală în perioada curentă (${Math.round(top[1])} RON). O reducere orientativă de 10% ar păstra aproximativ ${potential} RON, fără să modifice nimic automat.`, potential, basis: `${Math.round(top[1])} RON din ${currentExpenses.length} cheltuieli ale planului`, nextStep: "Deschide jurnalul" }); }
-  if (forecast.scheduled > 0) suggestions.push({ id: "reserve", tone: "watch", title: "Păstrează rezerva pentru scadențe", detail: `${Math.round(forecast.scheduled)} RON sunt deja rezervați pentru plăți recurente din acest plan. Tratează suma ca indisponibilă înainte de a face o cheltuială nouă.`, potential: forecast.scheduled, basis: `${data.recurring.filter((item) => item.active).length} scadențe active înregistrate`, nextStep: "Verifică scadențele" });
+  if (top && top[1] > 0) { const potential = Math.max(1, Math.round(top[1] * 0.1)); suggestions.push({ id: "category", tone: "watch", title: t("Revizuiește {category}", { category: t(top[0]) }), detail: t("Aceasta este categoria principală în perioada curentă ({amount} RON). O reducere orientativă de 10% ar păstra aproximativ {potential} RON, fără să modifice nimic automat.", { amount: Math.round(top[1]), potential }), potential, basis: t("{amount} RON din {count} cheltuieli ale planului", { amount: Math.round(top[1]), count: currentExpenses.length }), nextStep: t("Deschide jurnalul") }); }
+  if (forecast.scheduled > 0) suggestions.push({ id: "reserve", tone: "watch", title: t("Păstrează rezerva pentru scadențe"), detail: t("{amount} RON sunt deja rezervați pentru plăți recurente din acest plan. Tratează suma ca indisponibilă înainte de a face o cheltuială nouă.", { amount: Math.round(forecast.scheduled) }), potential: forecast.scheduled, basis: t("{count} scadențe active înregistrate", { count: data.recurring.filter((item) => item.active).length }), nextStep: t("Verifică scadențele") });
   const goal = data.savings.find((item) => item.target > item.current);
-  if (goal && forecast.projectedRemaining > 0) suggestions.push({ id: "goal", tone: "good", title: `Protejează obiectivul „${goal.name}”`, detail: `Planul proiectează o marjă de ${Math.round(forecast.projectedRemaining)} RON. Poți compara această marjă cu deficitul obiectivului, fără ca aplicația să mute bani automat.`, potential: Math.min(forecast.projectedRemaining, goal.target - goal.current), basis: `${Math.round(goal.current)} RON din ținta de ${Math.round(goal.target)} RON`, nextStep: "Vezi obiectivul" });
-  if (!suggestions.length) suggestions.push({ id: "history", tone: "good", title: "Construiește un profil financiar observabil", detail: "Înregistrează câteva venituri și cheltuieli, apoi stabilește data următorului venit. Asistentul va compara istoricul, bilanțul și ritmul real fără să trimită datele către un serviciu extern.", basis: "Încă nu există suficiente mișcări pentru o comparație personală", nextStep: "Adaugă prima mișcare" });
+  if (goal && forecast.projectedRemaining > 0) suggestions.push({ id: "goal", tone: "good", title: t("Protejează obiectivul „{name}”", { name: goal.name }), detail: t("Planul proiectează o marjă de {amount} RON. Poți compara această marjă cu deficitul obiectivului, fără ca aplicația să mute bani automat.", { amount: Math.round(forecast.projectedRemaining) }), potential: Math.min(forecast.projectedRemaining, goal.target - goal.current), basis: t("{current} RON din ținta de {target} RON", { current: Math.round(goal.current), target: Math.round(goal.target) }), nextStep: t("Vezi obiectivul") });
+  if (!suggestions.length) suggestions.push({ id: "history", tone: "good", title: t("Construiește un profil financiar observabil"), detail: t("Înregistrează câteva venituri și cheltuieli, apoi stabilește data următorului venit. Asistentul va compara istoricul, bilanțul și ritmul real fără să trimită datele către un serviciu extern."), basis: t("Încă nu există suficiente mișcări pentru o comparație personală"), nextStep: t("Adaugă prima mișcare") });
   return suggestions.slice(0, 4);
 };
 
@@ -778,8 +779,8 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
   const remaining = availableSources - reserved - scheduled;
   const marginRatio = availableSources > 0 ? Math.max(0, Math.min(1, remaining / availableSources)) : (remaining >= 0 ? 0.6 : 0);
   const marginDetail = remaining >= 0
-    ? `${Math.round(remaining)} RON nerepartizați din ${Math.round(availableSources)} RON`
-    : `Planul este peste limită cu ${Math.round(Math.abs(remaining))} RON`;
+    ? t("{remaining} RON nerepartizați din {available} RON", { remaining: Math.round(remaining), available: Math.round(availableSources) })
+    : t("Planul este peste limită cu {amount} RON", { amount: Math.round(Math.abs(remaining)) });
 
   const envelopes = plan.allocations.map((a) => allocationStatus(data, a));
   let envelopeScore = 1;
@@ -792,11 +793,11 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
   const watchCount = envelopes.filter((e) => e.state === "watch").length;
   const envelopeDetail = envelopes.length
     ? overCount
-      ? `${overCount} plic${overCount > 1 ? "uri" : ""} depășit${overCount > 1 ? "e" : ""}`
+      ? t(overCount > 1 ? "{count} plicuri depășite" : "{count} plic depășit", { count: overCount })
       : watchCount
-        ? `${watchCount} plic${watchCount > 1 ? "uri" : ""} aproape de limită`
-        : "Toate plicurile sunt în limite"
-    : "Nu există încă plicuri";
+        ? t(watchCount > 1 ? "{count} plicuri aproape de limită" : "{count} plic aproape de limită", { count: watchCount })
+        : t("Toate plicurile sunt în limite")
+    : t("Nu există încă plicuri");
 
   const in7Days = new Date(`${asOf}T12:00:00`);
   in7Days.setDate(in7Days.getDate() + 7);
@@ -808,30 +809,30 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
   const dueScore = upcomingAmount === 0 ? 1 : Math.max(0, 1 - Math.min(1, upcomingAmount / Math.max(1, availableSources * 0.4)));
   const upcomingCount = upcomingRecurring.length + upcomingDebts.length;
   const dueDetail = upcomingCount
-    ? `${upcomingCount} scadenț${upcomingCount > 1 ? "e" : "ă"} în 7 zile (${Math.round(upcomingAmount)} RON)`
-    : "Nicio scadență în următoarele 7 zile";
+    ? t(upcomingCount > 1 ? "{count} scadențe în 7 zile ({amount} RON)" : "{count} scadență în 7 zile ({amount} RON)", { count: upcomingCount, amount: Math.round(upcomingAmount) })
+    : t("Nicio scadență în următoarele 7 zile");
 
   let paceScore = 0.7;
-  let paceDetail = "Setează următorul venit pentru a calcula ritmul";
+  let paceDetail = t("Setează următorul venit pentru a calcula ritmul");
   if (plan.nextPayday || plan.earliestPayday) {
     if (forecast.spentToDate <= 0) {
       paceScore = 0.85;
-      paceDetail = "Încă nu există cheltuieli în perioada curentă";
+      paceDetail = t("Încă nu există cheltuieli în perioada curentă");
     } else if (forecast.safeDaily <= 0) {
       paceScore = 0.2;
-      paceDetail = "Ritmul sigur este zero sau negativ";
+      paceDetail = t("Ritmul sigur este zero sau negativ");
     } else {
       const ratio = forecast.paceDaily / forecast.safeDaily;
       paceScore = ratio <= 0.85 ? 1 : ratio <= 1.05 ? 0.75 : ratio <= 1.3 ? 0.4 : 0.15;
-      paceDetail = `Ritm actual ${Math.round(forecast.paceDaily)} RON/zi vs sigur ${Math.round(forecast.safeDaily)} RON/zi`;
+      paceDetail = t("Ritm actual {pace} RON/zi vs sigur {safe} RON/zi", { pace: Math.round(forecast.paceDaily), safe: Math.round(forecast.safeDaily) });
     }
   }
 
   const factors = [
-    { id: "margin", label: "Marjă până la venit", value: marginRatio, weight: 0.35, detail: marginDetail },
-    { id: "envelopes", label: "Starea plicurilor", value: envelopeScore, weight: 0.25, detail: envelopeDetail },
-    { id: "dues", label: "Scadențe apropiate", value: dueScore, weight: 0.20, detail: dueDetail },
-    { id: "pace", label: "Ritm de cheltuire", value: paceScore, weight: 0.20, detail: paceDetail },
+    { id: "margin", label: t("Marjă până la venit"), value: marginRatio, weight: 0.35, detail: marginDetail },
+    { id: "envelopes", label: t("Starea plicurilor"), value: envelopeScore, weight: 0.25, detail: envelopeDetail },
+    { id: "dues", label: t("Scadențe apropiate"), value: dueScore, weight: 0.20, detail: dueDetail },
+    { id: "pace", label: t("Ritm de cheltuire"), value: paceScore, weight: 0.20, detail: paceDetail },
   ];
 
   const raw = factors.reduce((sum, f) => sum + f.value * f.weight, 0);

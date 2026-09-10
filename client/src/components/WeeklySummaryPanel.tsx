@@ -6,8 +6,9 @@ import { useState } from "react";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, CalendarDays, Check, ChevronRight, Share2 } from "lucide-react";
 import { formatDate, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";
 import { checkInRebalance, formatWeeklyCheckInShare, weeklyCheckIn } from "@/lib/household-insights";
+import { getLocale, t } from "@/lib/i18n";
 
-const money = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 });
+const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
 
 export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }: { data: AppData; onChange?: (value: AppData) => void; onOpenJournal: () => void; onOpenPlan?: () => void }) {
   const collaborative = data.settings.members.length > 1;
@@ -46,13 +47,13 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
       <div className="bf-weekly-summary-heading">
         <div>
           <p className="bf-kicker">BILANȚUL SĂPTĂMÂNII · {label.toUpperCase()}</p>
-          <h2>Planificat și realizat</h2>
+          <h2>{t("Planificat și realizat")}</h2>
           <span className="bf-weekly-range"><CalendarDays size={14} /> {range}</span>
         </div>
         <button type="button" onClick={onOpenJournal}>Jurnal <ChevronRight size={15} /></button>
       </div>
       {collaborative && (
-        <div className="bf-weekly-scope" role="group" aria-label="Perspectiva bilanțului">
+        <div className="bf-weekly-scope" role="group" aria-label={t("Perspectiva bilanțului")}>
           <button type="button" className={scope === "family" ? "active" : ""} onClick={() => setScope("family")}>Familie</button>
           {data.settings.members.map((item) => (
             <button type="button" key={item.id} className={scope === item.id ? "active" : ""} onClick={() => setScope(item.id)}>{item.name}</button>
@@ -64,7 +65,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
         <p className="bf-week-rebalance-done" role="status"><Check size={14} /> {movedNote}</p>
       )}
       {rebalance && (
-        <div className="bf-week-rebalance" role="group" aria-label="Propunere de reechilibrare">
+        <div className="bf-week-rebalance" role="group" aria-label={t("Propunere de reechilibrare")}>
           <span aria-hidden="true"><ArrowLeftRight size={16} /></span>
           <div>
             <b>Mută {money.format(rebalance.amount)} din „{rebalance.fromLabel}” în „{rebalance.toLabel}”</b>
@@ -93,7 +94,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
       <div className="bf-weekly-summary-values">
         <article className="income"><span><ArrowDownRight size={17} /></span><div><small>Venituri</small><b>{money.format(check.income)}</b></div></article>
         <article className="expense"><span><ArrowUpRight size={17} /></span><div><small>Cheltuieli</small><b>{money.format(check.expense)}</b></div></article>
-        <article className={`balance ${check.cashflow < 0 ? "negative" : ""}`}><div><small>Diferență</small><b>{check.cashflow >= 0 ? "+" : "−"}{money.format(Math.abs(check.cashflow))}</b></div><em>{check.transactionCount} mișcări</em></article>
+        <article className={`balance ${check.cashflow < 0 ? "negative" : ""}`}><div><small>{t("Diferență")}</small><b>{check.cashflow >= 0 ? "+" : "−"}{money.format(Math.abs(check.cashflow))}</b></div><em>{check.transactionCount} mișcări</em></article>
       </div>
       {collaborative && check.members.some((item) => item.expense > 0) && (
         <ul className="bf-week-members">
@@ -122,18 +123,18 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
       ) : check.categories.length ? (
         <div className="bf-weekly-categories">
           {check.categories.map(([category, amount], index) => (
-            <article key={category}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{category}</b><small>categorie urmărită săptămânal</small></div><strong>{money.format(amount)}</strong></article>
+            <article key={category}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{category}</b><small>{t("categorie urmărită săptămânal")}</small></div><strong>{money.format(amount)}</strong></article>
           ))}
         </div>
       ) : (
-        <p className="bf-weekly-empty">Nu există încă mișcări în această săptămână pentru perspectiva aleasă.</p>
+        <p className="bf-weekly-empty">{t("Nu există încă mișcări în această săptămână pentru perspectiva aleasă.")}</p>
       )}
       <div className="bf-week-checkin-actions">
         <button type="button" className="bf-week-share" onClick={() => void share()}>
           <Share2 size={16} /> {shareState === "copied" ? "Copiat în clipboard" : shareState === "shared" ? "Trimis" : "Trimite bilanțul"}
         </button>
         {check.envelopes.some((item) => item.state === "over") && onOpenPlan ? (
-          <button type="button" className="bf-week-plan" onClick={onOpenPlan}>Mută lei între plicuri <ChevronRight size={15} /></button>
+          <button type="button" className="bf-week-plan" onClick={onOpenPlan}>{t("Mută lei între plicuri")} <ChevronRight size={15} /></button>
         ) : null}
       </div>
     </section>

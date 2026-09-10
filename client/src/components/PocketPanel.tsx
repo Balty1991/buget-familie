@@ -9,6 +9,7 @@ import { CalendarDays, PiggyBank, Wallet } from "lucide-react";
 import { type AppData } from "@/lib/finance-data";
 import { childMembers, childPocket } from "@/lib/allowance";
 import { dateText, fmtExact, money } from "@/pages/home-kit";
+import { t } from "@/lib/i18n";
 
 export function PocketPanel({ data }: { data: AppData }) {
   const children = childMembers(data);
@@ -32,7 +33,7 @@ export function PocketPanel({ data }: { data: AppData }) {
     return (
       <div className="bf-empty-state slim">
         <Wallet size={23} />
-        <h2>Încă nu are un plic</h2>
+        <h2>{t("Încă nu are un plic")}</h2>
         <p>
           Creează în Plan un plic pe numele lui {children.find((item) => item.id === memberId)?.name || children[0].name} și
           pune-i suma de buzunar. Cheltuielile lui vor scădea din acel plic.
@@ -76,8 +77,8 @@ export function PocketPanel({ data }: { data: AppData }) {
       <section className="bf-pocket-history" aria-labelledby="pocket-history-title">
         <div className="bf-section-heading">
           <div>
-            <p className="bf-kicker">PE CE AI DAT</p>
-            <h2 id="pocket-history-title">Ultimele cumpărături</h2>
+            <p className="bf-kicker">{t("PE CE AI DAT")}</p>
+            <h2 id="pocket-history-title">{t("Ultimele cumpărături")}</h2>
           </div>
           <Wallet size={19} />
         </div>
@@ -94,7 +95,7 @@ export function PocketPanel({ data }: { data: AppData }) {
             ))}
           </ul>
         ) : (
-          <p className="bf-pocket-empty">Încă nu ai cheltuit nimic în perioada asta.</p>
+          <p className="bf-pocket-empty">{t("Încă nu ai cheltuit nimic în perioada asta.")}</p>
         )}
       </section>
     </div>

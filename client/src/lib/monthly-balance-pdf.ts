@@ -1,9 +1,10 @@
 /* Buget Familie — export PDF local: rezumat lunar explicabil, generat exclusiv din datele din browser. */
 import { financialBalance, type AppData } from "@/lib/finance-data";
+import { getLocale } from "./i18n";
 
 const plain = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const money = (value: number) => `${new Intl.NumberFormat("ro-RO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} RON`;
-const monthLabel = (month: string) => new Intl.DateTimeFormat("ro-RO", { month: "long", year: "numeric" }).format(new Date(`${month}-01T12:00:00`));
+const money = (value: number) => `${new Intl.NumberFormat(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)} RON`;
+const monthLabel = (month: string) => new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(new Date(`${month}-01T12:00:00`));
 const monthRange = (month: string) => { const [year, index] = month.split("-").map(Number); return { start: `${month}-01`, end: `${month}-${String(new Date(year, index, 0).getDate()).padStart(2, "0")}` }; };
 
 export type MonthlyBalanceSnapshot = ReturnType<typeof monthlyBalanceSnapshot>;

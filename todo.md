@@ -491,3 +491,12 @@
 - [x] Alocația copilului: membru marcat drept copil, plic propriu și ecran simplificat de buzunar.
 - [x] Mai multe valute, cu curs introdus manual și data lui; leul rămâne moneda de bază a registrului.
 - [ ] Soldul unei surse valutare este exact doar pentru mișcările cu sumă originală; cele vechi, introduse în lei, sunt convertite înapoi la cursul curent și marcate drept aproximative.
+
+## Limba engleză
+
+- [x] Infrastructură de traducere cu textul românesc drept cheie, ca un text netradus să rămână în română în loc să rupă ecranul.
+- [x] Selector de limbă în Setări, cu efect imediat, fără reîncărcare.
+- [x] Formatarea sumelor, a datelor și a zilelor săptămânii urmează limba activă, nu o listă fixă.
+- [x] Categoriile rămân stocate în română și se traduc doar la afișare, deci limba nu atinge datele salvate.
+- [x] Traduse: navigația, Astăzi, Mișcări, captura rapidă, revizuirea, prețurile, buzunarul, setările, plus sugestiile, scorul, check-in-ul, notificările și mesajele de import.
+- [ ] Rămân în română ecranele adânci: dialogul ghidat al asistentului AI, manualul, Plan Studio în detaliu, rapoartele și panourile premium. Se traduc adăugând intrări în dicționar, fără modificări de cod.

@@ -1,15 +1,16 @@
 import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
 import { recurringFromDetection, todayBrief, weeklyCheckIn } from "@/lib/household-insights";
+import { getLocale, t } from "@/lib/i18n";
 
 type Go = (view: "plan" | "obligations" | "insights") => void;
 
-const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 const dueLabel = (daysLeft: number) => {
-  if (daysLeft < 0) return "Întârziată";
+  if (daysLeft < 0) return t("Întârziată");
   if (daysLeft === 0) return "Azi";
-  if (daysLeft === 1) return "Mâine";
-  return `în ${daysLeft} zile`;
+  if (daysLeft === 1) return t("Mâine");
+  return t("în {days} zile", { days: daysLeft });
 };
 
 /**
@@ -40,13 +41,13 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData
   };
 
   return (
-    <section className="bf-today-brief" aria-label="Reperul zilnic din plan">
+    <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
       <button type="button" className={`bf-spend-stamp ${brief.hasPayday ? "" : "empty"} ${brief.spendable <= 0 && brief.hasPayday ? "tight" : ""}`} onClick={() => onGo("plan")}>
         <span className="bf-spend-stamp-top">
-          <p className="bf-kicker">REPER PENTRU AZI</p>
-          <strong>{brief.hasPayday ? money(brief.spendable) : "Setează venitul"}</strong>
+          <p className="bf-kicker">{t("REPER PENTRU AZI")}</p>
+          <strong>{brief.hasPayday ? money(brief.spendable) : t("Setează venitul")}</strong>
         </span>
-        <p>{brief.hasPayday ? `${brief.reason} Este un reper din plan, nu un sold separat.` : brief.reason}</p>
+        <p>{brief.hasPayday ? t("{reason} Este un reper din plan, nu un sold separat.", { reason: brief.reason }) : brief.reason}</p>
       </button>
 
       {pendingIncome && (
@@ -58,8 +59,8 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData
 
       {needsRitual && !pendingIncome && (
         <button type="button" className="bf-brief-salary setup" onClick={() => onGo("plan")}>
-          <b>Setează ritualul de salariu</b>
-          <small>Când înregistrezi venitul, plicurile se umplu după regulile tale.</small>
+          <b>{t("Setează ritualul de salariu")}</b>
+          <small>{t("Când înregistrezi venitul, plicurile se umplu după regulile tale.")}</small>
         </button>
       )}
 
@@ -72,7 +73,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData
                 <small>{dueLabel(due.daysLeft)} · {money(due.amount)}</small>
               </div>
               {due.confirmable ? (
-                <button type="button" onClick={() => pay(due.id)}>Confirmă</button>
+                <button type="button" onClick={() => pay(due.id)}>{t("Confirmă")}</button>
               ) : (
                 <button type="button" onClick={() => onGo("obligations")}>Vezi</button>
               )}
@@ -90,7 +91,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData
 
       {week.shouldPrompt && (
         <button type="button" className="bf-brief-week" onClick={() => onOpenWeek?.()}>
-          <b>Bilanțul săptămânii</b>
+          <b>{t("Bilanțul săptămânii")}</b>
           <small>{week.nextStep}</small>
         </button>
       )}

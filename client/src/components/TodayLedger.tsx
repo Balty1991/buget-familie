@@ -2,10 +2,11 @@ import { EnvelopeDeskScene, EnvelopeMark, EnvelopeStack } from "@/components/Env
 import { CashNote, PaydayStrip } from "@/components/LedgerArt";
 import { envelopeLane, lastDaysPulse, liquidSafeToSpend, paydayTrack } from "@/lib/household-insights";
 import { type AppData } from "@/lib/finance-data";
+import { getLocale, t } from "@/lib/i18n";
 
 type Go = (view: "plan" | "journal") => void;
 
-const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
   const pulse = lastDaysPulse(data);
@@ -19,8 +20,8 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
     <section className="bf-ledger-desk" aria-label="Registrul vizual al casei">
       <header className="bf-desk-heading">
         <div>
-          <p className="bf-kicker">MASA DE LUCRU</p>
-          <h2>Banii, așezați pe hârtie.</h2>
+          <p className="bf-kicker">{t("MASA DE LUCRU")}</p>
+          <h2>{t("Banii, așezați pe hârtie.")}</h2>
         </div>
         <button type="button" onClick={() => onGo("plan")}>Deschide plicurile</button>
       </header>
@@ -29,9 +30,9 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
         <CashNote amount={money(safe.available)} caption="Disponibil prudent" />
         <div className="bf-today-pulse">
           <div className="bf-today-pulse-copy">
-            <p className="bf-kicker">PULSUL SĂPTĂMÂNII</p>
-            <h2>{weekSpend > 0 ? money(weekSpend) : "Fără ieșiri"}</h2>
-            <p>Cerneală din registru — ultimele 7 zile, nu din bancă.</p>
+            <p className="bf-kicker">{t("PULSUL SĂPTĂMÂNII")}</p>
+            <h2>{weekSpend > 0 ? money(weekSpend) : t("Fără ieșiri")}</h2>
+            <p>{t("Cerneală din registru — ultimele 7 zile, nu din bancă.")}</p>
           </div>
           <div className="bf-today-pulse-chart" role="img" aria-label={`Cheltuieli pe 7 zile, total ${money(weekSpend)}`}>
             {pulse.map((day) => (
@@ -49,8 +50,8 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
       <div className="bf-today-envelopes">
         <div className="bf-today-envelopes-heading">
           <div>
-            <p className="bf-kicker">PLICURILE PE MASĂ</p>
-            <h2>Cât mai e în fiecare loc.</h2>
+            <p className="bf-kicker">{t("PLICURILE PE MASĂ")}</p>
+            <h2>{t("Cât mai e în fiecare loc.")}</h2>
           </div>
         </div>
         {envelopes.length ? (
@@ -78,8 +79,8 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
             <EnvelopeDeskScene size={220} />
             <span>
               <EnvelopeStack fill={0.35} size={72} />
-              <b>Masa e pregătită, plicurile încă nu.</b>
-              <small>Așază prima categorie în Plan — alimente, transport, facturi. Totalul e suma lor.</small>
+              <b>{t("Masa e pregătită, plicurile încă nu.")}</b>
+              <small>{t("Așază prima categorie în Plan — alimente, transport, facturi. Totalul e suma lor.")}</small>
             </span>
           </button>
         )}

@@ -19,6 +19,7 @@ import {
 } from "@/lib/finance-data";
 import { parseStatementCsv, statementDrafts, type StatementSkip } from "@/lib/statement-import";
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
+import { t } from "@/lib/i18n";
 
 const originLabel: Record<ReviewOrigin, string> = {
   import: "Extras de cont",
@@ -67,8 +68,8 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
       <section className="bf-review-import" aria-labelledby="review-import-title">
         <div className="bf-section-heading">
           <div>
-            <p className="bf-kicker">IMPORT DE EXTRAS</p>
-            <h2 id="review-import-title">Adu mișcările din bancă</h2>
+            <p className="bf-kicker">{t("IMPORT DE EXTRAS")}</p>
+            <h2 id="review-import-title">{t("Adu mișcările din bancă")}</h2>
           </div>
           <FileUp size={19} />
         </div>
@@ -77,12 +78,12 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           rând ajunge aici ca propunere de confirmat. Mișcările deja existente sunt recunoscute și nu se dublează.
         </p>
         <div className="bf-form-grid">
-          <Field label="În ce sursă intră">
+          <Field label={t("În ce sursă intră")}>
             <select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>
               {data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}
             </select>
           </Field>
-          <Field label="Al cui este contul">
+          <Field label={t("Al cui este contul")}>
             <select value={memberId} onChange={(event) => setMemberId(event.target.value)}>
               {data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
             </select>
@@ -109,7 +110,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
             </p>
             {summary.skipped.length > 0 && (
               <details>
-                <summary>Vezi rândurile sărite</summary>
+                <summary>{t("Vezi rândurile sărite")}</summary>
                 <ul>{summary.skipped.slice(0, 20).map((item) => <li key={item.line}>Rândul {item.line}: {item.reason}</li>)}</ul>
               </details>
             )}
@@ -120,15 +121,15 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
       <section className="bf-review-queue" aria-labelledby="review-queue-title">
         <div className="bf-section-heading">
           <div>
-            <p className="bf-kicker">DE VERIFICAT</p>
+            <p className="bf-kicker">{t("DE VERIFICAT")}</p>
             <h2 id="review-queue-title">{drafts.length ? `${drafts.length} propuneri` : "Nimic de verificat"}</h2>
           </div>
           <Inbox size={19} />
         </div>
         {drafts.length > 0 && (
           <div className="bf-review-actions">
-            <p>Total propus la cheltuieli: <strong>{fmtExact.format(total)}</strong></p>
-            <button className="bf-primary" onClick={() => onChange(confirmAllReviewDrafts(data))}><Check size={15} /> Confirmă toate</button>
+            <p>{t("Total propus la cheltuieli:")} <strong>{fmtExact.format(total)}</strong></p>
+            <button className="bf-primary" onClick={() => onChange(confirmAllReviewDrafts(data))}><Check size={15} /> {t("Confirmă toate")}</button>
           </div>
         )}
         {drafts.length ? (
@@ -165,9 +166,9 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                         </Field>
                       )}
                       {transaction.kind === "expense" && (
-                        <Field label="Plic" hint="„În afara plicurilor” lasă cheltuiala fără să consume o limită.">
+                        <Field label="Plic" hint={t("„În afara plicurilor” lasă cheltuiala fără să consume o limită.")}>
                           <select value={transaction.allocationId || "outside"} onChange={(event) => patch(draft, { allocationId: event.target.value })}>
-                            <option value="outside">În afara plicurilor</option>
+                            <option value="outside">{t("În afara plicurilor")}</option>
                             {envelopes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
                           </select>
                         </Field>
@@ -192,11 +193,11 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
         ) : (
           <div className="bf-empty-state slim">
             <X size={23} />
-            <h2>Coada este goală</h2>
-            <p>Aici ajung mișcările propuse din extrase de cont, bonuri sau ghid. Nimic nu intră în registru fără confirmarea ta.</p>
+            <h2>{t("Coada este goală")}</h2>
+            <p>{t("Aici ajung mișcările propuse din extrase de cont, bonuri sau ghid. Nimic nu intră în registru fără confirmarea ta.")}</p>
           </div>
         )}
-        <p className="bf-review-privacy"><ShieldCheck size={14} /> Fișierul importat este citit local. Propunerile rămân pe acest telefon până le confirmi.</p>
+        <p className="bf-review-privacy"><ShieldCheck size={14} /> {t("Fișierul importat este citit local. Propunerile rămân pe acest telefon până le confirmi.")}</p>
       </section>
     </div>
   );

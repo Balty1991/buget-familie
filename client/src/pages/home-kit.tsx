@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { formatDate } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { type SyncJournalEntry } from "@/lib/app-storage";
+import { moneyFormat, t } from "@/lib/i18n";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
 export type MoreView = "overview" | "review" | "prices" | "pocket" | "debts" | "savings" | "receipts" | "recurring" | "reports" | "assistant" | "settings" | "sync" | "guide";
@@ -41,9 +42,14 @@ export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eve
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };
 export const currentLocalMinutes = () => { const now = new Date(); return now.getHours() * 60 + now.getMinutes(); };
 export const automaticTheme = (minutes: number, times: ThemeScheduleTimes): ThemeId => { const dayStart = timeToMinutes(times.dayStart, 360); const eveningStart = timeToMinutes(times.eveningStart, 1020); const nightStart = timeToMinutes(times.nightStart, 1260); if (dayStart < eveningStart && eveningStart < nightStart) return minutes >= dayStart && minutes < eveningStart ? "ivory" : minutes >= eveningStart && minutes < nightStart ? "forest" : "midnight"; return minutes >= 6 * 60 && minutes < 17 * 60 ? "ivory" : minutes >= 17 * 60 && minutes < 21 * 60 ? "forest" : "midnight"; };
-export const fmt = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 });
-export const fmtExact = new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", minimumFractionDigits: 2, maximumFractionDigits: 2 });
-export const sourceKindName: Record<"card" | "cash" | "meal" | "transfer", string> = { card: "Card", cash: "Cash", meal: "Bonuri de masă", transfer: "Transfer" };
+/**
+ * Formatarea se face la fiecare apel, nu o dată la încărcarea modulului: altfel
+ * schimbarea limbii nu s-ar vedea până la reîncărcarea aplicației. `.format()` rămâne
+ * aceeași interfață, deci niciun apel existent nu se schimbă.
+ */
+export const fmt = { format: (value: number) => moneyFormat(value, { maximumFractionDigits: 0 }) };
+export const fmtExact = { format: (value: number) => moneyFormat(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
+export const sourceKindName: Record<"card" | "cash" | "meal" | "transfer", string> = { get card() { return t("Card"); }, get cash() { return t("Cash"); }, get meal() { return t("Bonuri de masă"); }, get transfer() { return t("Transfer"); } };
 export const money = (value: number) => fmt.format(Number.isFinite(value) ? value : 0);
 export const dateText = (value: string, full = false) => formatDate(value, full ? { day: "2-digit", month: "long", year: "numeric" } : { day: "2-digit", month: "short" });
 
@@ -54,7 +60,7 @@ export function Modal({ title, children, onClose }: { title: string; children: R
   const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget }) => {
     if (event.target === event.currentTarget) onClose();
   };
-  return <div className="bf-modal-backdrop" role="presentation" onPointerDown={closeIfBackdrop}><section ref={dialogRef} tabIndex={-1} className="bf-modal" role="dialog" aria-modal="true" aria-label={title} onPointerDown={(event) => event.stopPropagation()}><header><div><p className="bf-kicker">ÎNREGISTRARE RAPIDĂ</p><h2>{title}</h2></div><button type="button" className="bf-icon-button" aria-label="Închide" onClick={onClose}><X size={19} /></button></header>{children}</section></div>;
+  return <div className="bf-modal-backdrop" role="presentation" onPointerDown={closeIfBackdrop}><section ref={dialogRef} tabIndex={-1} className="bf-modal" role="dialog" aria-modal="true" aria-label={title} onPointerDown={(event) => event.stopPropagation()}><header><div><p className="bf-kicker">{t("ÎNREGISTRARE RAPIDĂ")}</p><h2>{title}</h2></div><button type="button" className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button></header>{children}</section></div>;
 }
 
 export function DeferBelowFold({ children }: { children: ReactNode }) {

@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n";
 function polar(cx: number, cy: number, r: number, angle: number) {
   const a = ((angle - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
@@ -16,7 +17,7 @@ export function CalmGauge({ value }: { value: number }) {
   const start = -120;
   const sweep = 240;
   const end = start + (clamped / 100) * sweep;
-  const label = clamped >= 72 ? "CALM" : clamped >= 45 ? "ATENȚIE" : "TENS.";
+  const label = clamped >= 72 ? "CALM" : clamped >= 45 ? t("ATENȚIE") : "TENS.";
   const ticks = Array.from({ length: 25 }, (_, i) => {
     const angle = start + (i / 24) * sweep;
     return {

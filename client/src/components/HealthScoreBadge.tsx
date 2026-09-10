@@ -5,6 +5,7 @@ import { calculateHealthScore, type AppData, type HealthScoreBreakdown } from "@
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { CalmGauge } from "@/components/CalmGauge";
 import { EnvelopeMark } from "@/components/EnvelopeMark";
+import { t } from "@/lib/i18n";
 
 /**
  * Badge compact pentru ecranul Astăzi + sheet cu factorii explicabili.
@@ -19,7 +20,7 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
       <button
         type="button"
         className="os-calm-btn"
-        aria-label={`Scor sănătate financiară ${health.score} din 100. Apasă pentru detalii.`}
+        aria-label={t("Scor sănătate financiară {score} din 100. Apasă pentru detalii.", { score: health.score })}
         onClick={() => setOpen(true)}
       >
         <CalmGauge value={health.score} />
@@ -32,7 +33,7 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
 
 function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; onClose: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
-  const toneLabel = health.tone === "good" ? "Calm" : health.tone === "watch" ? "Atenție" : "Risc";
+  const toneLabel = health.tone === "good" ? "Calm" : health.tone === "watch" ? t("Atenție") : "Risc";
 
   return createPortal(
     <div className="bf-modal-backdrop bf-health-backdrop" role="presentation" onMouseDown={onClose}>
@@ -47,10 +48,10 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
       >
         <header>
           <div>
-            <p className="bf-kicker">SĂNĂTATE FINANCIARĂ</p>
+            <p className="bf-kicker">{t("SĂNĂTATE FINANCIARĂ")}</p>
             <h2 id="bf-health-title">Scor {health.score} · {toneLabel}</h2>
           </div>
-          <button className="bf-icon-button" aria-label="Închide" onClick={onClose}>
+          <button className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}>
             <X size={19} />
           </button>
         </header>

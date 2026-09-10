@@ -8,6 +8,7 @@ import { ArrowDownRight, ArrowUpRight, Minus, ShoppingBasket, ShoppingCart, Stor
 import { type AppData } from "@/lib/finance-data";
 import { basketCandidates, productPriceHistories, referenceBasket } from "@/lib/price-history";
 import { fmtExact, dateText } from "@/pages/home-kit";
+import { t } from "@/lib/i18n";
 
 const WINDOWS = [30, 90, 180] as const;
 
@@ -38,7 +39,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
     return (
       <div className="bf-empty-state slim">
         <ShoppingBasket size={23} />
-        <h2>Încă nu există istoric de prețuri</h2>
+        <h2>{t("Încă nu există istoric de prețuri")}</h2>
         <p>
           Fotografiază câteva bonuri și păstrează liniile de produse. După ce același produs apare pe două bonuri,
           aici vei vedea cum i-a evoluat prețul și în ce magazin a fost mai ieftin.
@@ -52,8 +53,8 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
       <section className="bf-price-basket" aria-labelledby="basket-title">
         <div className="bf-section-heading">
           <div>
-            <p className="bf-kicker">COȘUL ETALON</p>
-            <h2 id="basket-title">Inflația coșului tău</h2>
+            <p className="bf-kicker">{t("COȘUL ETALON")}</p>
+            <h2 id="basket-title">{t("Inflația coșului tău")}</h2>
           </div>
           <ShoppingCart size={19} />
         </div>
@@ -61,7 +62,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
           Alege produsele pe care le cumperi constant. Comparăm cât costau împreună acum, față de ultimul preț de
           dinaintea ferestrei alese. Este indicele gospodăriei tale, calculat din bonurile tale.
         </p>
-        <div className="bf-price-window" role="group" aria-label="Fereastra de comparație">
+        <div className="bf-price-window" role="group" aria-label={t("Fereastra de comparație")}>
           {WINDOWS.map((item) => (
             <button key={item} className={windowDays === item ? "active" : ""} onClick={() => setWindowDays(item)}>
               {item} zile
@@ -81,7 +82,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
                 <strong>{fmtExact.format(basket.baselineTotal)}</strong>
               </div>
               <div>
-                <span>Diferență</span>
+                <span>{t("Diferență")}</span>
                 <strong>{basket.change > 0 ? "+" : ""}{fmtExact.format(basket.change)}</strong>
                 <Trend percent={basket.changePercent} />
               </div>
@@ -111,7 +112,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
         )}
 
         <div className="bf-price-picker">
-          <p className="bf-kicker">PRODUSE DE URMĂRIT</p>
+          <p className="bf-kicker">{t("PRODUSE DE URMĂRIT")}</p>
           <div className="bf-price-chips">
             {candidates.map((item) => (
               <button
@@ -131,8 +132,8 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
       <section className="bf-price-history" aria-labelledby="price-history-title">
         <div className="bf-section-heading">
           <div>
-            <p className="bf-kicker">ISTORIC PE PRODUS</p>
-            <h2 id="price-history-title">Unde a fost mai ieftin</h2>
+            <p className="bf-kicker">{t("ISTORIC PE PRODUS")}</p>
+            <h2 id="price-history-title">{t("Unde a fost mai ieftin")}</h2>
           </div>
           <Store size={19} />
         </div>
