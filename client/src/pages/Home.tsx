@@ -16,7 +16,7 @@ import { BrandMark } from "@/components/BrandMark";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { MovementsJournal } from "@/components/MovementsJournal";
-import { scheduleFinancialReminders } from "@/lib/local-notifications";
+import { notifyFamilyEnvelopeChanges, scheduleFinancialReminders } from "@/lib/local-notifications";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
 import { weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import {
@@ -485,7 +485,10 @@ export default function Home() {
       const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
       const mergedPortable = syncPortable(merged);
       if (mergedPortable === syncPortable(syncDataRef.current)) { setSyncLastSync(new Date().toISOString()); return; }
+      const previous = syncDataRef.current;
       syncLastPortableRef.current = mergedPortable; setData(merged); setSyncLastSync(new Date().toISOString());
+      // Anunță imediat dacă mișcarea primită a împins un plic peste prag; altfel afli abia la final de perioadă.
+      void notifyFamilyEnvelopeChanges(previous, merged).catch(() => undefined);
       syncAppendJournal({ createdAt: new Date().toISOString(), status: "resolved", message: "Actualizare primită de la un alt telefon conectat.", action: "Datele au fost reunite automat prin ID și marcaj de actualizare." });
     } catch (error) {
       syncAppendJournal({ createdAt: new Date().toISOString(), status: "failed", message: error instanceof Error ? error.message : "Pachetul primit nu a putut fi decriptat.", action: "Verifică să fie exact aceeași parolă pe toate telefoanele." });
