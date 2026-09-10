@@ -500,3 +500,12 @@
 - [x] Categoriile rămân stocate în română și se traduc doar la afișare, deci limba nu atinge datele salvate.
 - [x] Traduse: navigația, Astăzi, Mișcări, captura rapidă, revizuirea, prețurile, buzunarul, setările, plus sugestiile, scorul, check-in-ul, notificările și mesajele de import.
 - [ ] Rămân în română ecranele adânci: dialogul ghidat al asistentului AI, manualul, Plan Studio în detaliu, rapoartele și panourile premium. Se traduc adăugând intrări în dicționar, fără modificări de cod.
+
+## Corecții după prima probă pe telefon
+
+- [x] Notificările nu se puteau activa: WebView-ul Android nu expune Notification API, deci permisiunea se cere prin plugin-ul Capacitor.
+- [x] Sursele se pot redenumi, li se poate schimba proprietarul și pot fi șterse; soldul inițial se tastează liber, cu zecimale.
+- [x] Confirmarea plicului apărea sus în pagină; dialogurile sunt randate prin portal, peste `overflow: clip` de pe `.bf-app`.
+- [x] Asistentul citește intenții adevărate — plic, cheltuială, venit, datorie, scadență, obiectiv, dată de salariu — mai multe într-un mesaj, și salvează doar după confirmare.
+- [x] Exportul de backup funcționează și pe telefon, prin foaia de partajare a sistemului; importul acceptă tipul generic dat de Android.
+- [ ] Traducerea în engleză a ecranelor adânci: dialogul ghidat, manualul, Plan Studio, rapoartele.
