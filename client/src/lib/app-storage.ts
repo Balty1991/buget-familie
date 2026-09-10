@@ -89,15 +89,47 @@ export function parseBackup(raw: string): AppBackup {
   return parsed as AppBackup;
 }
 
-export function downloadBackup(data: AppData): void {
+/**
+ * Salvează backupul. Pe Android, în WebView-ul aplicației, un `<a download>` nu declanșează
+ * nicio descărcare — fișierul se pierde tăcut. Încercăm întâi foaia de partajare a
+ * sistemului, care lasă utilizatorul să aleagă Drive, e-mail sau Fișiere, și abia apoi
+ * descărcarea clasică. Întoarce felul în care a reușit, ca interfața să spună ce s-a
+ * întâmplat în loc să presupună.
+ */
+export async function downloadBackup(data: AppData): Promise<"shared" | "downloaded" | "failed"> {
+  const stamp = new Date();
+  const name = `buget-familie-backup-${stamp.getFullYear()}-${String(stamp.getMonth() + 1).padStart(2, "0")}-${String(stamp.getDate()).padStart(2, "0")}.json`;
   const blob = new Blob([JSON.stringify(makeBackup(data), null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `buget-familie-backup-${new Date().toISOString().slice(0, 10)}.json`;
-  anchor.click();
-  URL.revokeObjectURL(url);
+
+  try {
+    const file = new File([blob], name, { type: "application/json" });
+    const shareApi = navigator as Navigator & { canShare?: (value: { files: File[] }) => boolean };
+    if (typeof navigator.share === "function" && shareApi.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: name });
+      return "shared";
+    }
+  } catch (error) {
+    // Anularea foii de partajare nu este o eroare; nu mai încercăm altceva.
+    if (error instanceof Error && error.name === "AbortError") return "failed";
+  }
+
+  try {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = name;
+    anchor.rel = "noopener";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    // Revocarea imediată taie descărcarea pe unele browsere; îi lăsăm un moment.
+    window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return "downloaded";
+  } catch {
+    return "failed";
+  }
 }
+
 
 export async function clearAppStorage(): Promise<void> {
   const db = await openDatabase();

@@ -1021,6 +1021,22 @@ const en: Record<string, string> = {
   "Șterge {title}": "Delete {title}",
   "Ștergi mișcarea „{title}”?": "Delete the movement “{title}”?",
 
+  "Păstrează cel puțin o sursă de plată.": "Keep at least one paying source.",
+  "Ștergi sursa „{name}”? Cele {count} mișcări înregistrate pe ea rămân în registru, dar nu vor mai avea o sursă.": "Delete the source “{name}”? The {count} movements recorded against it stay in the ledger, but will no longer have a source.",
+  "Ștergi sursa „{name}”?": "Delete the source “{name}”?",
+  "Șterge sursa {name}": "Delete the source {name}",
+  "Sold inițial": "Opening balance",
+  "aproximativ": "approximate",
+
+  "Backupul a fost trimis către aplicația aleasă.": "The backup was sent to the app you chose.",
+  "Backupul a fost salvat în descărcări.": "The backup was saved to your downloads.",
+  "Nu am putut salva fișierul. Încearcă din nou sau folosește sincronizarea de familie.": "We could not save the file. Try again, or use family sync instead.",
+  "Alege backup": "Choose a backup",
+
+  "Scrie firesc: „am dat 50 lei pe benzină”, „fă-mi plic Alimente 2400 cu limită săptămânală 600”, „următorul salariu pe 07.10.2026”, „datorie card 1800, rata 150”. Îți arăt ce am înțeles și salvez doar după confirmarea ta.": "Write naturally: “spent 50 lei on fuel”, “make me a Groceries envelope, 2400, weekly limit 600”, “next payday on 07.10.2026”, “card debt 1800, instalment 150”. I show you what I understood and save only after you confirm.",
+  "Opțional: spune-mi ceva despre bon": "Optional: tell me something about the receipt",
+  "ex. am dat 50 lei pe benzină": "e.g. spent 50 lei on fuel",
+
   // Stări și etichete comune
   "Nespecificat": "Not set",
   "Fără termen": "No deadline",

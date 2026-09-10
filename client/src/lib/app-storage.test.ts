@@ -32,16 +32,38 @@ describe("backup Buget Familie", () => {
     expect(() => parseBackup("nu este JSON")).toThrow();
   });
 
-  it("descarcă backupul ca JSON cu nume de fișier datat", () => {
+  it("folosește foaia de partajare a sistemului când există — singura cale care merge în WebView-ul Android", async () => {
+    const share = vi.fn(async () => undefined);
+    vi.stubGlobal("navigator", { share, canShare: () => true });
+    vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
+    vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+
+    await expect(downloadBackup(data())).resolves.toBe("shared");
+    expect(share).toHaveBeenCalledOnce();
+    expect(share.mock.calls[0][0].title).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d\.json$/);
+  });
+
+  it("cade pe descărcarea clasică atunci când partajarea nu este disponibilă", async () => {
     const click = vi.fn();
-    const anchor = { href: "", download: "", click };
-    vi.stubGlobal("document", { createElement: vi.fn(() => anchor) });
+    const anchor = { href: "", download: "", rel: "", click, remove: vi.fn() };
+    vi.stubGlobal("navigator", {});
+    vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+    vi.stubGlobal("document", { createElement: vi.fn(() => anchor), body: { appendChild: vi.fn() } });
     vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:test"), revokeObjectURL: vi.fn() });
+    vi.stubGlobal("window", { setTimeout: vi.fn() });
 
-    downloadBackup(data());
-
+    await expect(downloadBackup(data())).resolves.toBe("downloaded");
     expect(anchor.download).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d\.json$/);
     expect(anchor.href).toBe("blob:test");
     expect(click).toHaveBeenCalledOnce();
+  });
+
+  it("nu raportează succes când utilizatorul închide foaia de partajare", async () => {
+    const abort = Object.assign(new Error("abort"), { name: "AbortError" });
+    vi.stubGlobal("navigator", { share: vi.fn(async () => { throw abort; }), canShare: () => true });
+    vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
+    vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+
+    await expect(downloadBackup(data())).resolves.toBe("failed");
   });
 });
