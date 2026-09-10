@@ -6,6 +6,7 @@ const MAX_ORIGINAL_BYTES = 25_000_000;
 const TARGET_COMPRESSED_BYTES = 600_000;
 const MAX_EDGE = 1600;
 const moneyPattern = /-?\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{2})|-?\d+[,.]\d{2}/g;
+const receiptTotalPattern = /-?(?:\d{1,3}(?:[.\s]\d{3})+|\d+)(?:[,.]\d{1,2})?/g;
 const footerLinePattern = /\b(subtotal|numerar|rest(?:\s*lei)?|tva|cash|card|visa|mastercard|bon\s*fiscal|operator|casa|aprob|cif|cui|nr\.?\s*tranzact|puncte|economisit)\b/i;
 const totalLinePattern = /\b(total\s*lei|suma(?:\s*de)?\s*plata|de\s*plata|total)\b/i;
 const discountLinePattern = /\b(reducere|rabat|discount|promo)\b/i;
@@ -169,7 +170,7 @@ function inferTotal(lines: string[]) {
   for (const raw of lines) {
     const line = raw.replace(/\s+/g, " ").trim();
     if (!totalLinePattern.test(line) || /\btva\b/i.test(line) || /\bnumerar\b/i.test(line) || /\brest\b/i.test(line)) continue;
-    const amounts = Array.from(line.matchAll(moneyPattern)).map((match) => parseAmount(match[0])).filter((value): value is number => Boolean(value));
+    const amounts = Array.from(line.matchAll(receiptTotalPattern)).map((match) => parseAmount(match[0])).filter((value): value is number => Boolean(value));
     const amount = amounts.at(-1);
     if (!amount) continue;
     const rank = /\btotal\s*lei\b/i.test(line) ? 3 : /\bsuma|\bde\s*plata\b/i.test(line) ? 2 : 1;

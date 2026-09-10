@@ -429,6 +429,10 @@ describe("registrul financiar Buget Familie", () => {
     expect(tvaLast.amount).toBe(8.57);
     expect(tvaLast.items).toHaveLength(1);
   });
+  it("păstrează totalurile tipărite cu o singură zecimală", () => {
+    expect(interpretReceiptText(["TOTAL 15,5"]).amount).toBe(15.5);
+    expect(interpretReceiptText(["TOTAL 15.5"]).amount).toBe(15.5);
+  });
   it("acceptă pozele de pe camera Android fără MIME, dar respinge PDF-urile", () => {
     expect(isReceiptImageFile(new File(["x"], "image.jpg", { type: "" }))).toBe(true);
     expect(isReceiptImageFile(new File(["x"], "IMG_001", { type: "application/octet-stream" }))).toBe(true);
