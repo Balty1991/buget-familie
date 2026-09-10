@@ -1181,3 +1181,19 @@ body .bf-command-palette .bf-icon-button,
 }
 
 
+
+/* Final theme contrast guard: niciun element OS nu păstrează culori hardcodate de la tema dark. */
+.os-shell .bf-calm-gauge { color: var(--os-mint) !important; }
+.os-shell .bf-calm-track { stroke: var(--os-line-strong) !important; }
+.os-shell .bf-calm-arc { stroke: var(--os-mint) !important; }
+.os-shell .bf-calm-tick { stroke: var(--os-line-strong) !important; }
+.os-shell .bf-calm-tick.major { stroke: var(--os-muted) !important; }
+.os-shell .bf-calm-score { fill: var(--os-fg) !important; }
+.os-shell .bf-calm-label { fill: var(--os-muted) !important; }
+.os-shell .bf-health-score { color: var(--os-fg) !important; background: color-mix(in srgb, var(--os-surface) 88%, transparent) !important; box-shadow: 0 0 0 1px var(--os-line) !important; }
+.os-shell .bf-health-score small { color: var(--os-muted) !important; }
+.os-shell .bf-health-gauge-score, .os-shell .bf-health-needle, .os-shell .bf-health-needle-hub { fill: var(--os-fg) !important; }
+.os-shell .bf-health-gauge-end { fill: var(--os-muted) !important; }
+.os-shell .bf-health-gauge-track { stroke: var(--os-line-strong) !important; }
+.os-shell .bf-health-gauge-tick { stroke: var(--os-muted) !important; }
+.os-shell .bf-os-gauge-wrap { background: var(--os-surface) !important; color: var(--os-fg) !important; box-shadow: 0 0 0 1px var(--os-line) !important; }
