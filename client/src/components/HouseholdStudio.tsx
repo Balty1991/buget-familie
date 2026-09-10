@@ -8,8 +8,9 @@ import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-da
 import { CashNote } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection } from "@/lib/household-insights";
+import { getLocale, t } from "@/lib/i18n";
 
-const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const month = currentMonthKey();
@@ -46,11 +47,11 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           <h2>{recap.title}</h2>
           <p>{recap.nextStep}</p>
         </div>
-        {closedThis && <span className="bf-statement-stamp">Închis</span>}
+        {closedThis && <span className="bf-statement-stamp">{t("Închis")}</span>}
         <div className="bf-household-flow">
           <article><small>Venituri</small><b>{money(recap.income)}</b><em>{recap.priorIncome ? `${recap.income - recap.priorIncome >= 0 ? "+" : ""}${money(recap.income - recap.priorIncome)} vs luna trecută` : "prima lună cu date"}</em></article>
           <article><small>Cheltuieli</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : "fără categorie dominantă"}</em></article>
-          <article><small>Bilanț</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? `${recap.envelopesOver} plicuri depășite` : recap.envelopesWatch ? `${recap.envelopesWatch} plicuri de urmărit` : "plicuri în ritm"}</em></article>
+          <article><small>{t("Bilanț")}</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? `${recap.envelopesOver} plicuri depășite` : recap.envelopesWatch ? `${recap.envelopesWatch} plicuri de urmărit` : "plicuri în ritm"}</em></article>
         </div>
         <div className="bf-household-actions">
           <button className="bf-primary" disabled={exporting} onClick={() => void close()}>
@@ -62,7 +63,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
 
       <section className="bf-household-card">
         <div className="bf-household-heading">
-          <div><p className="bf-kicker">VÂRSTA BANILOR</p><h2>Cât stă un leu înainte să plece</h2></div>
+          <div><p className="bf-kicker">{t("VÂRSTA BANILOR")}</p><h2>{t("Cât stă un leu înainte să plece")}</h2></div>
           <PiggyBank size={18} />
         </div>
         {age ? (
@@ -70,10 +71,10 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
             <CashNote amount={age.days < 1 ? "sub o zi" : `${age.days} zile`} caption="Vârsta medie a leului" />
             <p>Media ponderată pe {money(age.sampleAmount)} cheltuiți. {age.unfundedAmount > 0 ? `${money(age.unfundedAmount)} nu au avut încă un venit pereche — completează soldul inițial.` : "Fiecare leu cheltuit a avut o încasare în spate."}</p>
           </div>
-        ) : <p className="bf-helper">După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.</p>}
+        ) : <p className="bf-helper">{t("După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.")}</p>}
         <div className="bf-household-safe">
           <span><small>Lichid acum</small><b>{money(safe.liquidFunds)}</b></span>
-          <span><small>Rezervat scadențe</small><b>{money(safe.reservedRecurring)}</b></span>
+          <span><small>{t("Rezervat scadențe")}</small><b>{money(safe.reservedRecurring)}</b></span>
           <span><small>Disponibil prudent</small><b>{money(safe.available)}</b></span>
         </div>
       </section>
@@ -81,7 +82,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
       {collaborative && (
         <section className="bf-household-card">
           <div className="bf-household-heading">
-            <div><p className="bf-kicker">EL ȘI EA · GOSPODĂRIA</p><h2>Cine a mișcat banii luna aceasta</h2></div>
+            <div><p className="bf-kicker">{t("EL ȘI EA · GOSPODĂRIA")}</p><h2>{t("Cine a mișcat banii luna aceasta")}</h2></div>
             <Users size={18} />
           </div>
           <div className="bf-household-members">
@@ -89,7 +90,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
               <article key={member.memberId}>
                 <header><b>{member.name}</b><small>{member.count} mișcări</small></header>
                 <div><span>Cheltuit</span><strong>{money(member.expense)}</strong></div>
-                <div><span>Încasat</span><strong>{money(member.income)}</strong></div>
+                <div><span>{t("Încasat")}</span><strong>{money(member.income)}</strong></div>
                 <i><em style={{ width: `${Math.round(member.share * 100)}%` }} /></i>
                 <small>{Math.round(member.share * 100)}% din cheltuielile casei</small>
               </article>
@@ -100,7 +101,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
 
       <section className="bf-household-card">
         <div className="bf-household-heading">
-          <div><p className="bf-kicker">VÂNĂTOR DE ABONAMENTE</p><h2>Ce se repetă, fără să fie încă o scadență</h2></div>
+          <div><p className="bf-kicker">{t("VÂNĂTOR DE ABONAMENTE")}</p><h2>{t("Ce se repetă, fără să fie încă o scadență")}</h2></div>
           <Repeat size={18} />
         </div>
         {hunts.length ? hunts.map((item) => (
@@ -110,14 +111,14 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
               <small>{item.reason} · ultima dată {formatDate(item.lastDate)}</small>
             </div>
             <strong>{money(item.amount)}</strong>
-            <button type="button" onClick={() => addRecurring(item.key)}>Adaugă la scadențe</button>
+            <button type="button" onClick={() => addRecurring(item.key)}>{t("Adaugă la scadențe")}</button>
           </article>
-        )) : <p className="bf-helper">Nu am găsit comercianți cu sumă stabilă. După 2–3 luni de registru, Netflix, chiria sau factura de telefon apar aici.</p>}
+        )) : <p className="bf-helper">{t("Nu am găsit comercianți cu sumă stabilă. După 2–3 luni de registru, Netflix, chiria sau factura de telefon apar aici.")}</p>}
       </section>
 
       <section className="bf-household-card">
         <div className="bf-household-heading">
-          <div><p className="bf-kicker">ACTIVITATE RECENTĂ</p><h2>Ultimele mișcări ale casei</h2></div>
+          <div><p className="bf-kicker">{t("ACTIVITATE RECENTĂ")}</p><h2>{t("Ultimele mișcări ale casei")}</h2></div>
           <Shield size={18} />
         </div>
         {activity.recent.length ? (
@@ -130,8 +131,8 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
               </article>
             ))}
           </div>
-        ) : <p className="bf-helper">Activitatea casei apare aici după prima înregistrare.</p>}
-        <p className="bf-helper">Feed-ul se calculează din registrul deja sincronizat. Nu creăm un jurnal separat pe server.</p>
+        ) : <p className="bf-helper">{t("Activitatea casei apare aici după prima înregistrare.")}</p>}
+        <p className="bf-helper">{t("Feed-ul se calculează din registrul deja sincronizat. Nu creăm un jurnal separat pe server.")}</p>
       </section>
 
       <button className="bf-household-pdf" type="button" disabled={exporting} onClick={() => void downloadMonthlyBalancePdf(data, month)}>

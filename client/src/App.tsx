@@ -4,12 +4,13 @@ import { Route, Router as WouterRouter, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppLockGate } from "./components/AppLockGate";
 import Home from "./pages/Home";
+import { t } from "@/lib/i18n";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 function MissingPage() {
   return (
-    <Suspense fallback={<div className="bf-lazy-panel">Pagină lipsă…</div>}>
+    <Suspense fallback={<div className="bf-lazy-panel">{t("Pagină lipsă…")}</div>}>
       <NotFound />
     </Suspense>
   );

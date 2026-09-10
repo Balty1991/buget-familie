@@ -1,7 +1,8 @@
 import { Check, ListOrdered } from "lucide-react";
 import { debtSnowball, type AppData, type Debt } from "@/lib/finance-data";
+import { getLocale, t } from "@/lib/i18n";
 
-const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 /**
  * Minge de zăpadă: cea mai mică datorie rămasă întâi.
@@ -16,14 +17,14 @@ export function DebtSnowballCard({ data, onPay }: { data: AppData; onPay: (debt:
     <section className="bf-snowball" aria-labelledby="snowball-title">
       <div className="bf-snowball-head">
         <div>
-          <p className="bf-kicker">MINGE DE ZĂPADĂ</p>
-          <h2 id="snowball-title">Plătește întâi <em>{next.debt.name}.</em></h2>
-          <p>Cea mai mică datorie rămasă. După ce o închizi, treci la următoarea — fără dobândă estimată, doar ordine clară.</p>
+          <p className="bf-kicker">{t("MINGE DE ZĂPADĂ")}</p>
+          <h2 id="snowball-title">{t("Plătește întâi")} <em>{next.debt.name}.</em></h2>
+          <p>{t("Cea mai mică datorie rămasă. După ce o închizi, treci la următoarea — fără dobândă estimată, doar ordine clară.")}</p>
         </div>
         <ListOrdered size={22} aria-hidden="true" />
       </div>
       <div className="bf-snowball-next">
-        <span>01 · următoarea</span>
+        <span>{t("01 · următoarea")}</span>
         <strong>{money(next.remaining)}</strong>
         <small>rată {money(next.monthly)}{next.monthsAtMinimum ? ` · ~${next.monthsAtMinimum} luni la minim` : ""}</small>
         <button type="button" className="pay" onClick={() => onPay(next.debt)}><Check size={16} /> Confirmă {money(next.recommended)}</button>

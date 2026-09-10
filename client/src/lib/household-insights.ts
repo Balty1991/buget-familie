@@ -23,6 +23,7 @@ import {
   type Transaction,
   isoDate,
 } from "./finance-data";
+import { getLocale, t } from "./i18n";
 
 const fold = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const daysBetween = (from: string, to: string) => Math.round((new Date(`${to}T12:00:00`).valueOf() - new Date(`${from}T12:00:00`).valueOf()) / 86_400_000);
@@ -36,7 +37,7 @@ const previousMonth = (month: string) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 };
 export const currentMonthKey = (asOf = isoToday()) => asOf.slice(0, 7);
-export const monthTitle = (month: string) => new Intl.DateTimeFormat("ro-RO", { month: "long", year: "numeric" }).format(new Date(`${month}-01T12:00:00`));
+export const monthTitle = (month: string) => new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(new Date(`${month}-01T12:00:00`));
 
 const median = (values: number[]) => {
   if (!values.length) return 0;
@@ -127,14 +128,14 @@ export const monthlyRecap = (data: AppData, month = currentMonthKey()): MonthlyR
   const topCategory = categories[0] ? { name: categories[0][0], amount: categories[0][1] } : undefined;
   const tone = !selected.length ? "empty" as const : envelopesOver || cashflow < 0 ? "risk" as const : envelopesWatch ? "watch" as const : "good" as const;
   const nextStep = !selected.length
-    ? "Înregistrează prima mișcare ca să ai un recapitulativ de închis."
+    ? t("Înregistrează prima mișcare ca să ai un recapitulativ de închis.")
     : envelopesOver
-      ? "Ajustează plicurile depășite înainte să începi luna următoare."
+      ? t("Ajustează plicurile depășite înainte să începi luna următoare.")
       : cashflow < 0
-        ? "Cheltuielile au trecut peste venit. Mută o limită sau amână o plată neesențială."
+        ? t("Cheltuielile au trecut peste venit. Mută o limită sau amână o plată neesențială.")
         : topCategory
-          ? `Categoria ${topCategory.name} a condus luna. Verifică dacă plicul ei rămâne realist.`
-          : "Luna e în echilibru. Poți închide ritualul și descărca PDF-ul.";
+          ? t("Categoria {name} a condus luna. Verifică dacă plicul ei rămâne realist.", { name: t(topCategory.name) })
+          : t("Luna e în echilibru. Poți închide ritualul și descărca PDF-ul.");
   return { month, title: monthTitle(month), income, expense, cashflow, priorIncome, priorExpense, priorCashflow, transactionCount: selected.length, topCategory, envelopesOver, envelopesWatch, nextStep, tone };
 };
 
@@ -232,10 +233,10 @@ export const detectSubscriptions = (data: AppData, asOf = isoToday()): Subscript
       lastDate: last.date,
       confidence: labeled || (monthly && dates.length >= 3) ? "high" : "medium",
       reason: labeled
-        ? "Categoria Abonamente, cu sumă stabilă."
+        ? t("Categoria Abonamente, cu sumă stabilă.")
         : monthly
-          ? `Apare cam la ${intervalDays} zile, cu sumă aproape identică.`
-          : `Se repetă săptămânal de ${dates.length} ori.`,
+          ? t("Apare cam la {days} zile, cu sumă aproape identică.", { days: intervalDays })
+          : t("Se repetă săptămânal de {count} ori.", { count: dates.length }),
     });
   });
   return detections.sort((a, b) => b.amount - a.amount).slice(0, 8);
@@ -246,7 +247,7 @@ export const recurringFromDetection = (data: AppData, detection: SubscriptionDet
   const memberId = detection.memberId || data.settings.members[0]?.id;
   if (!sourceId || !memberId || detection.amount <= 0) return undefined;
   const dueDay = Math.min(28, Math.max(1, Number(detection.lastDate.slice(8, 10)) || 1));
-  return { id: newId("recurring"), name: detection.name, amount: detection.amount, category: detection.category, sourceId, memberId, dueDay, active: true, autoPost: false, note: "Adăugat din detectarea abonamentelor", updatedAt: new Date().toISOString() };
+  return { id: newId("recurring"), name: detection.name, amount: detection.amount, category: detection.category, sourceId, memberId, dueDay, active: true, autoPost: false, note: t("Adăugat din detectarea abonamentelor"), updatedAt: new Date().toISOString() };
 };
 
 const MONTH_CLOSE_KEY = "buget-familie:month-close-v1";
@@ -291,7 +292,7 @@ export const lastDaysPulse = (data: AppData, days = 7, asOf = isoToday()) => {
     const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
     return {
       date: iso,
-      weekday: new Intl.DateTimeFormat("ro-RO", { weekday: "short" }).format(date).replace(".", ""),
+      weekday: new Intl.DateTimeFormat(getLocale(), { weekday: "short" }).format(date).replace(".", ""),
       expense,
       income,
       isToday: iso === asOf,
@@ -347,10 +348,10 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const fromLiquid = Math.max(0, safe.available / remainingDays);
   const spendable = hasPayday ? Math.max(0, Math.min(fromPace, fromLiquid)) : 0;
   const reason = !hasPayday
-    ? "Setează următorul venit ca să calculăm cât poți cheltui azi."
+    ? t("Setează următorul venit ca să calculăm cât poți cheltui azi.")
     : spendable <= 0
-      ? "Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate."
-      : `Ritm ${Math.round(fromPace)} lei/zi, din ${Math.round(safe.available)} disponibili pe ${remainingDays} zile.`;
+      ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
+      : t("Ritm {pace} lei/zi, din {available} disponibili pe {days} zile.", { pace: Math.round(fromPace), available: Math.round(safe.available), days: remainingDays });
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);
@@ -549,14 +550,14 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
   const empty = summary.transactionCount === 0;
   const tone = empty ? "empty" as const : over.length || summary.cashflow < 0 ? "risk" as const : watch.length ? "watch" as const : "good" as const;
   const nextStep = empty
-    ? "Înregistrează mișcări ca să ai un bilanț de trimis familiei."
+    ? t("Înregistrează mișcări ca să ai un bilanț de trimis familiei.")
     : over[0]
-      ? `Mută lei în ${over[0].label} sau încetinește cheltuielile din acest plic (${lei(Math.abs(over[0].remaining))} peste plan).`
+      ? t("Mută lei în {label} sau încetinește cheltuielile din acest plic ({amount} peste plan).", { label: over[0].label, amount: lei(Math.abs(over[0].remaining)) })
       : summary.cashflow < 0 && summary.income > 0
-        ? "Cheltuielile au trecut peste veniturile săptămânii. Amână o plată neesențială."
+        ? t("Cheltuielile au trecut peste veniturile săptămânii. Amână o plată neesențială.")
         : watch[0]
-          ? `Urmărește ${watch[0].label} — s-a consumat ${Math.round(watch[0].usage * 100)}% din tranșa săptămânii.`
-          : "Săptămâna e în ritm. Poți trimite bilanțul familiei.";
+          ? t("Urmărește {label} — s-a consumat {percent}% din tranșa săptămânii.", { label: watch[0].label, percent: Math.round(watch[0].usage * 100) })
+          : t("Săptămâna e în ritm. Poți trimite bilanțul familiei.");
 
   return {
     start: summary.start,
@@ -571,7 +572,7 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
     nextStep,
     tone,
     shouldPrompt: weekend && !empty,
-    familyName: data.settings.familyName || "Familie",
+    familyName: data.settings.familyName || t("Familie"),
   };
 };
 
@@ -621,24 +622,24 @@ export const checkInRebalance = (data: AppData): CheckInRebalance | undefined =>
 export const formatWeeklyCheckInShare = (check: WeeklyCheckIn, rebalance?: CheckInRebalance) => {
   const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;
   const lines = [
-    `${check.familyName} · bilanț ${range}`,
-    `Venituri ${lei(check.income)}`,
-    `Cheltuieli ${lei(check.expense)}`,
-    `Diferență ${check.cashflow >= 0 ? "+" : "−"}${lei(Math.abs(check.cashflow))}`,
+    t("{family} · bilanț {range}", { family: check.familyName, range }),
+    t("Venituri {amount}", { amount: lei(check.income) }),
+    t("Cheltuieli {amount}", { amount: lei(check.expense) }),
+    t("Diferență {sign}{amount}", { sign: check.cashflow >= 0 ? "+" : "−", amount: lei(Math.abs(check.cashflow)) }),
   ];
   if (check.members.length > 1 && check.expense > 0) {
     lines.push(check.members.filter((item) => item.expense > 0).map((item) => `${item.name} ${lei(item.expense)}`).join(" · "));
   }
   if (check.envelopes.some((item) => item.spent > 0 || item.planned > 0)) {
-    lines.push("", "Plicuri (planificat → cheltuit)");
+    lines.push("", t("Plicuri (planificat → cheltuit)"));
     check.envelopes.slice(0, 8).forEach((item) => {
-      const mark = item.state === "over" ? "peste" : item.state === "watch" ? "atenție" : "ok";
+      const mark = item.state === "over" ? t("peste") : item.state === "watch" ? t("atenție") : t("ok");
       lines.push(`${item.label}  ${lei(item.planned)} → ${lei(item.spent)}  (${mark})`);
     });
   }
-  lines.push("", `Următorul pas: ${check.nextStep}`);
+  lines.push("", t("Următorul pas: {step}", { step: check.nextStep }));
   if (rebalance) {
-    lines.push(`Propunere: mută ${lei(rebalance.amount)} din ${rebalance.fromLabel} în ${rebalance.toLabel}${rebalance.covers ? "" : ` (acoperă parțial ${lei(rebalance.deficit)})`}.`);
+    lines.push(t("Propunere: mută {amount} din {from} în {to}{partial}.", { amount: lei(rebalance.amount), from: rebalance.fromLabel, to: rebalance.toLabel, partial: rebalance.covers ? "" : t(" (acoperă parțial {deficit})", { deficit: lei(rebalance.deficit) }) }));
   }
   return lines.join("\n");
 };

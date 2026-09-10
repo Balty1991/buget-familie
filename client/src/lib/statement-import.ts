@@ -20,6 +20,7 @@ import {
   type Transaction,
   type TransactionKind,
 } from "./finance-data";
+import { t } from "./i18n";
 
 export type StatementColumns = { date: number; description: number; amount?: number; debit?: number; credit?: number };
 export type StatementRow = { line: number; date: string; description: string; amount: number; kind: TransactionKind };
@@ -179,13 +180,13 @@ function inferColumns(rows: string[][]): StatementColumns | undefined {
 
 export function parseStatementCsv(text: string): StatementParse {
   const trimmed = text.replace(/^﻿/, "").trim();
-  if (!trimmed) throw new Error("Fișierul este gol.");
+  if (!trimmed) throw new Error(t("Fișierul este gol."));
   const delimiter = detectDelimiter(trimmed);
   const all = splitCsv(trimmed, delimiter).filter((row) => row.some((cell) => cell));
-  if (all.length < 2) throw new Error("Fișierul nu conține rânduri de citit. Verifică dacă este un export CSV al băncii.");
+  if (all.length < 2) throw new Error(t("Fișierul nu conține rânduri de citit. Verifică dacă este un export CSV al băncii."));
   const header = findColumns(all);
   const columns = header?.columns || inferColumns(all);
-  if (!columns) throw new Error("Nu am recunoscut coloanele de dată și sumă. Deschide fișierul și verifică dacă este extrasul de cont exportat în CSV.");
+  if (!columns) throw new Error(t("Nu am recunoscut coloanele de dată și sumă. Deschide fișierul și verifică dacă este extrasul de cont exportat în CSV."));
   const body = all.slice(header ? header.headerIndex + 1 : 0);
   const rows: StatementRow[] = [];
   const skipped: StatementSkip[] = [];
@@ -194,7 +195,7 @@ export function parseStatementCsv(text: string): StatementParse {
     if (rows.length >= MAX_ROWS) return;
     const date = parseStatementDate(row[columns.date] || "");
     if (!date) {
-      if (row.some((cell) => cell)) skipped.push({ line, reason: "Dată necitibilă" });
+      if (row.some((cell) => cell)) skipped.push({ line, reason: t("Dată necitibilă") });
       return;
     }
     const debit = columns.debit !== undefined ? parseStatementAmount(row[columns.debit] || "") : undefined;
@@ -205,9 +206,9 @@ export function parseStatementCsv(text: string): StatementParse {
     if (debit) { amount = Math.abs(debit); kind = "expense"; }
     else if (credit) { amount = Math.abs(credit); kind = "income"; }
     else if (single !== undefined && single !== 0) { amount = Math.abs(single); kind = single < 0 ? "expense" : "income"; }
-    if (!amount) { skipped.push({ line, reason: "Sumă lipsă sau zero" }); return; }
+    if (!amount) { skipped.push({ line, reason: t("Sumă lipsă sau zero") }); return; }
     const description = (row[columns.description] || "").replace(/\s+/g, " ").trim();
-    rows.push({ line, date, description: description || "Mișcare din extras", amount: Math.round(amount * 100) / 100, kind });
+    rows.push({ line, date, description: description || t("Mișcare din extras"), amount: Math.round(amount * 100) / 100, kind });
   });
   return { rows, skipped, delimiter, headers: header?.headers || [], columns };
 }
@@ -262,7 +263,7 @@ export function statementDrafts(
     drafts.push({
       id: newId("review"),
       origin: "import",
-      reason: `Rândul ${row.line} din extras · categorie propusă ${category}`,
+      reason: t("Rândul {line} din extras · categorie propusă {category}", { line: row.line, category: t(category) }),
       createdAt: now,
       transaction,
     });

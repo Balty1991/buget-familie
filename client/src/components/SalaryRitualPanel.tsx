@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Banknote, Check, RotateCcw, Trash2 } from "lucide-react";
 import { applySalaryAllocationRules, eligibleSalaryAllocationRules, formatDate, newId, parseRomanianAmount, revertSalaryAllocationApplication, unappliedSalaryIncomes, type AppData, type SalaryAllocationRule } from "@/lib/finance-data";
+import { getLocale, t } from "@/lib/i18n";
 
-const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 /**
  * Ritual de salariu: reguli de umplere a plicurilor când un venit e deja în registru.
@@ -54,9 +55,9 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
     <section className="bf-salary-ritual" aria-labelledby="salary-ritual-title">
       <div className="bf-section-heading">
         <div>
-          <p className="bf-kicker">RITUAL DE SALARIU</p>
+          <p className="bf-kicker">{t("RITUAL DE SALARIU")}</p>
           <h2 id="salary-ritual-title">A venit salariul? Umple plicurile.</h2>
-          <p>Regulile cresc limitele plicurilor dintr-un venit deja înregistrat. Nu mută bani din card sau cash.</p>
+          <p>{t("Regulile cresc limitele plicurilor dintr-un venit deja înregistrat. Nu mută bani din card sau cash.")}</p>
         </div>
         <Banknote size={22} aria-hidden="true" />
       </div>
@@ -82,10 +83,10 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
 
       <div className="bf-salary-rule-form">
         <label><span>Plic</span><select value={allocationId} onChange={(event) => setAllocationId(event.target.value)}>{plan.allocations.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-        <label><span>Mod</span><select value={mode} onChange={(event) => setMode(event.target.value as "fixed" | "percent")}><option value="percent">Procent din venit</option><option value="fixed">Sumă fixă</option></select></label>
+        <label><span>Mod</span><select value={mode} onChange={(event) => setMode(event.target.value as "fixed" | "percent")}><option value="percent">{t("Procent din venit")}</option><option value="fixed">{t("Sumă fixă")}</option></select></label>
         <label><span>{mode === "percent" ? "Procent" : "Sumă"}</span><input value={value} onChange={(event) => { setValue(event.target.value); setError(""); }} inputMode="decimal" placeholder={mode === "percent" ? "ex. 10" : "ex. 400"} /></label>
-        <label><span>Nume (opțional)</span><input value={label} onChange={(event) => setLabel(event.target.value)} maxLength={42} placeholder="ex. 10% alimente" /></label>
-        <button type="button" className="bf-primary" onClick={saveRule}>Adaugă regula</button>
+        <label><span>{t("Nume (opțional)")}</span><input value={label} onChange={(event) => setLabel(event.target.value)} maxLength={42} placeholder="ex. 10% alimente" /></label>
+        <button type="button" className="bf-primary" onClick={saveRule}>{t("Adaugă regula")}</button>
       </div>
       {error && <p className="bf-form-error" role="alert">{error}</p>}
 
@@ -105,7 +106,7 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
             </article>
           );
         })}
-        {!rules.length && <p className="bf-salary-empty">Nicio regulă încă. Adaugă un procent sau o sumă fixă pentru fiecare plic pe care vrei să-l umpli la salariu.</p>}
+        {!rules.length && <p className="bf-salary-empty">{t("Nicio regulă încă. Adaugă un procent sau o sumă fixă pentru fiecare plic pe care vrei să-l umpli la salariu.")}</p>}
       </div>
 
       {applications.length > 0 && (
@@ -117,7 +118,7 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
                 <b>{item.incomeTitle}</b>
                 <small>{formatDate(item.appliedAt.slice(0, 10))} · {money(item.allocations.reduce((sum, entry) => sum + entry.amount, 0))} în {item.allocations.length} plicuri</small>
               </div>
-              <button type="button" onClick={() => revert(item.id)}><RotateCcw size={14} /> Anulează</button>
+              <button type="button" onClick={() => revert(item.id)}><RotateCcw size={14} /> {t("Anulează")}</button>
             </article>
           ))}
         </div>
