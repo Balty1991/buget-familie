@@ -5,6 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { mergeFamilyData } from "./family-crypto";
 import {
+  allocationSpent,
+  allocationWeeksStatus,
   confirmRecurringPayment,
   createEmptyAppData,
   isoDate,
@@ -15,6 +17,12 @@ import {
   type SavingsGoal,
 } from "./finance-data";
 import { interpretReceiptText, parseReceiptItems } from "./receipt-utils";
+
+const planWithFlex = () => {
+  const data = createEmptyAppData();
+  data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-09-28", paydayFlexDays: 3, allocations: [{ id: "alloc-1", label: "Alimente", amount: 1400, category: "Alimente" }] };
+  return data;
+};
 
 describe("data calendaristică locală", () => {
   it("folosește componentele locale, nu ziua UTC", () => {
@@ -101,5 +109,32 @@ describe("citirea bonului", () => {
 
   it("citește o dată românească validă, zi înaintea lunii", () => {
     expect(interpretReceiptText(["MAGAZIN TEST", "07.09.2026 14:22", "PAINE 3,00", "TOTAL 3,00"]).date).toBe("2026-09-07");
+  });
+});
+
+describe("fereastra de flexibilitate a salariului", () => {
+  it("arată în ultima tranșă cheltuiala din zilele de flexibilitate", () => {
+    const data = planWithFlex();
+    const allocation = data.settings.salaryPlan.allocations[0];
+    data.transactions = [{ id: "t1", title: "Piață", amount: 90, kind: "expense", category: "Alimente", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: "2026-09-30", allocationId: "alloc-1" }];
+    const weeks = allocationWeeksStatus(data, allocation);
+    const last = weeks[weeks.length - 1];
+    // Cheltuiala scade oricum din totalul plicului; trebuie să apară și într-o tranșă.
+    expect(allocationSpent(data, allocation)).toBe(90);
+    expect(last.end).toBe("2026-10-01");
+    expect(last.spent).toBe(90);
+    expect(weeks.reduce((sum, week) => sum + week.spent, 0)).toBe(allocationSpent(data, allocation));
+  });
+
+  it("nu schimbă sumele tranșelor când se prelungește ultima", () => {
+    const weeks = allocationWeeksStatus(planWithFlex(), planWithFlex().settings.salaryPlan.allocations[0]);
+    expect(Math.round(weeks.reduce((sum, week) => sum + week.budget, 0))).toBe(1400);
+  });
+});
+
+describe("recunoașterea magazinului", () => {
+  it("alege lanțul cunoscut, nu primul rând din antetul legal", () => {
+    const result = interpretReceiptText(["SC EXPERT MAGAZIN COMPANY", "LIDL DISCOUNT S.R.L.", "STR. GARII NR. 4", "PAINE 3,00", "TOTAL 3,00"]);
+    expect(result.vendor).toBe("Lidl");
   });
 });

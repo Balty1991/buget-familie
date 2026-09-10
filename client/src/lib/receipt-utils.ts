@@ -140,8 +140,54 @@ const titleVendor = (raw: string) => {
   return cleaned.charAt(0).toLocaleUpperCase("ro-RO") + cleaned.slice(1).toLocaleLowerCase("ro-RO");
 };
 
+/**
+ * Antetul unui bon românesc are de obicei mai multe rânduri scurte (denumire legală,
+ * stradă, oraș), iar euristica generală alegea primul rând fără cifre — adesea greșit.
+ * Lanțurile cunoscute sunt verificate întâi, pentru că numele lor apare aproape mereu
+ * în antet și este ceea ce recunoaște utilizatorul.
+ */
+const knownVendors: Array<[RegExp, string]> = [
+  [/\blidl\b/i, "Lidl"],
+  [/\bkaufland\b/i, "Kaufland"],
+  [/\bcarrefour\b/i, "Carrefour"],
+  [/\bmega\s*image\b/i, "Mega Image"],
+  [/\bprofi\b/i, "Profi"],
+  [/\bauchan\b/i, "Auchan"],
+  [/\bpenny\b/i, "Penny"],
+  [/\bselgros\b/i, "Selgros"],
+  [/\bmetro\b/i, "Metro"],
+  [/\bcora\b/i, "Cora"],
+  [/\bla\s*doi\s*pasi\b/i, "La Doi Pași"],
+  [/\bannabella\b/i, "Annabella"],
+  [/\bdedeman\b/i, "Dedeman"],
+  [/\bhornbach\b/i, "Hornbach"],
+  [/\bleroy\s*merlin\b/i, "Leroy Merlin"],
+  [/\bbricostore|\bbrico\s*depot\b/i, "Brico Dépôt"],
+  [/\bjysk\b/i, "JYSK"],
+  [/\bpepco\b/i, "Pepco"],
+  [/\bsinsay\b/i, "Sinsay"],
+  [/\bdm\s+drogerie|\bdrogerie\s*markt\b/i, "dm drogerie markt"],
+  [/\brossmann\b/i, "Rossmann"],
+  [/\baltex\b/i, "Altex"],
+  [/\bflanco\b/i, "Flanco"],
+  [/\bemag\b/i, "eMAG"],
+  [/\bdecathlon\b/i, "Decathlon"],
+  [/\bcatena\b/i, "Catena"],
+  [/\bdona\b/i, "Farmacia Dona"],
+  [/\bhelp\s*net\b/i, "HelpNet"],
+  [/\btezyo\b/i, "Tezyo"],
+  [/\bmol\b/i, "MOL"],
+  [/\bomv\b/i, "OMV"],
+  [/\bpetrom\b/i, "Petrom"],
+  [/\brompetrol\b/i, "Rompetrol"],
+];
+
 function inferVendor(lines: string[]) {
   const head = lines.slice(0, 12).map((line) => line.replace(/\s+/g, " ").trim()).filter((line) => line.length >= 3);
+  const headText = head.join(" ");
+  for (const [pattern, name] of knownVendors) {
+    if (pattern.test(headText)) return name;
+  }
   for (const line of head) {
     const magazin = line.match(/\bmagazin\s+([A-ZĂÂÎȘȚa-zăâîșț]{3,})\b/i);
     if (magazin?.[1] && !legalVendorPattern.test(magazin[1])) return titleVendor(magazin[1]);
