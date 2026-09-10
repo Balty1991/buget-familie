@@ -87,7 +87,13 @@ export type AppData = { version: 8; transactions: Transaction[]; debts: Debt[]; 
 export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Timp liber", "Rate produse", "Altele"];
 export const categoryColors: Record<string, string> = { Alimente: "#256B5B", "Consumabile copil": "#55877D", Abonamente: "#5D7283", "Casă & facturi": "#5D7283", Transport: "#D49A2A", "Timp liber": "#D56852", Sănătate: "#4987AA", "Rate produse": "#966E4A", Altele: "#7D8581" };
 
-export const isoToday = () => new Date().toISOString().slice(0, 10);
+/**
+ * Data calendaristică a telefonului, nu cea UTC. `toISOString()` ar întoarce ziua
+ * precedentă între miezul nopții și ora 03:00 în România (UTC+2/+3), iar mișcarea
+ * ar ajunge în ziua, săptămâna sau chiar perioada salarială greșită.
+ */
+export const isoDate = (value: Date) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+export const isoToday = () => isoDate(new Date());
 export const createFamilyCode = () => { const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join(""); };
 
 /** UUID v4 criptografic; evită coliziunile de ID când două telefoane creează înregistrări simultan, înainte de sincronizare. */
@@ -264,7 +270,7 @@ export const prudentPlanEndDate = (plan: SalaryPlan) => paydayWindow(plan).earli
 export const addIsoDays = (iso: string, days: number) => {
   const date = new Date(`${iso}T12:00:00`);
   date.setDate(date.getDate() + days);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return isoDate(date);
 };
 export const paydayFlexDays = (plan: SalaryPlan) => Math.min(5, Math.max(0, Math.round(plan.paydayFlexDays ?? 0)));
 export const paydayWindow = (plan: SalaryPlan) => {
@@ -390,7 +396,7 @@ export const financialBalance = (data: AppData, start?: string, end?: string, me
 
 /** Recapitulare locală luni–duminică. Perspectiva unui membru include numai mișcările lui. */
 export const weeklySummary = (data: AppData, asOf = isoToday(), memberId?: string) => {
-  const basis = new Date(`${safeDate(asOf)}T12:00:00`); const shift = (basis.getDay() + 6) % 7; const start = new Date(basis); start.setDate(basis.getDate() - shift); const end = new Date(start); end.setDate(start.getDate() + 6); const startIso = start.toISOString().slice(0, 10); const endIso = end.toISOString().slice(0, 10);
+  const basis = new Date(`${safeDate(asOf)}T12:00:00`); const shift = (basis.getDay() + 6) % 7; const start = new Date(basis); start.setDate(basis.getDate() - shift); const end = new Date(start); end.setDate(start.getDate() + 6); const startIso = isoDate(start); const endIso = isoDate(end);
   const transactions = data.transactions.filter((item) => item.date >= startIso && item.date <= endIso && (!memberId || item.memberId === memberId)); const income = transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const categories = Object.entries(transactions.filter((item) => item.kind === "expense").reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {})).sort(([, left], [, right]) => right - left).slice(0, 3);
   return { start: startIso, end: endIso, income, expense, cashflow: income - expense, categories, transactionCount: transactions.length, memberId };
 };
@@ -412,7 +418,7 @@ export const recurringDueInPlan = (item: RecurringPayment, plan: SalaryPlan) => 
   for (let cursor = new Date(start.getFullYear(), start.getMonth(), 1); cursor <= end; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)) {
     const lastDay = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
     const due = new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(item.dueDay, lastDay), 12);
-    if (due >= start && due <= end) return due.toISOString().slice(0, 10);
+    if (due >= start && due <= end) return isoDate(due);
   }
   return undefined;
 };
@@ -430,9 +436,10 @@ export const confirmRecurringPayment = (data: AppData, recurringId: string): App
   const item = data.recurring.find((entry) => entry.id === recurringId);
   const source = item && data.settings.paymentSources.find((entry) => entry.id === item.sourceId);
   const member = item && data.settings.members.find((entry) => entry.id === item.memberId);
-  if (!item || !source || !member) return undefined;
+  /** Fără scadență în așteptare plata este deja înregistrată în perioada activă; o a doua apăsare nu trebuie s-o dubleze. */
+  if (!pending || !item || !source || !member) return undefined;
   const now = new Date().toISOString();
-  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending?.dueDate || isoToday(), note: "Plată recurentă confirmată", createdAt: now, updatedAt: now };
+  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending.dueDate, note: "Plată recurentă confirmată", createdAt: now, updatedAt: now };
   return { ...data, transactions: [transaction, ...data.transactions] };
 };
 
@@ -440,7 +447,7 @@ export const confirmRecurringPayment = (data: AppData, recurringId: string): App
 export const recurringDueForMonth = (item: RecurringPayment, asOf = isoToday()) => {
   const basis = new Date(`${asOf}T12:00:00`);
   const lastDay = new Date(basis.getFullYear(), basis.getMonth() + 1, 0).getDate();
-  return new Date(basis.getFullYear(), basis.getMonth(), Math.min(item.dueDay, lastDay), 12).toISOString().slice(0, 10);
+  return isoDate(new Date(basis.getFullYear(), basis.getMonth(), Math.min(item.dueDay, lastDay), 12));
 };
 
 /**
@@ -544,7 +551,7 @@ export const answerBudgetQuestion = (raw: string, data: AppData, asOf = isoToday
 };
 
 /** Sugestii observabile și calculate din registru; nu recomandă investiții și nu modifică datele. */
-const daysBefore = (iso: string, days: number) => { const value = new Date(`${iso}T12:00:00`); value.setDate(value.getDate() - days); return value.toISOString().slice(0, 10); };
+const daysBefore = (iso: string, days: number) => { const value = new Date(`${iso}T12:00:00`); value.setDate(value.getDate() - days); return isoDate(value); };
 
 export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSuggestion[] => {
   const forecast = planForecast(data, asOf); const plan = data.settings.salaryPlan; const balance = financialBalance(data);
@@ -623,7 +630,7 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
 
   const in7Days = new Date(`${asOf}T12:00:00`);
   in7Days.setDate(in7Days.getDate() + 7);
-  const horizon = in7Days.toISOString().slice(0, 10);
+  const horizon = isoDate(in7Days);
   const upcomingRecurring = pendingRecurringInPlan(data).filter((i) => i.dueDate <= horizon);
   const upcomingDebts = data.debts.filter((d) => d.dueDate && d.dueDate >= asOf && d.dueDate <= horizon);
   const upcomingAmount = upcomingRecurring.reduce((sum, i) => sum + i.amount, 0) +

@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Bell, BellRing, CalendarClock, CreditCard, Goal, Info, LayoutDashboard, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, financialBalance, formatDate, inPlanPeriod, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, readAppData, readSyncJournal, writeAppData, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
@@ -143,7 +143,7 @@ function TodayPulse({ data, onGo }: { data: AppData; onGo: (view: MainView) => v
   const today = new Date();
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (6 - index));
-    const iso = date.toISOString().slice(0, 10);
+    const iso = isoDate(date);
     const amount = data.transactions.filter((item) => item.kind === "expense" && item.date === iso).reduce((sum, item) => sum + item.amount, 0);
     return { iso, label: date.toLocaleDateString("ro-RO", { weekday: "short" }).replace(".", ""), amount, today: index === 6 };
   });

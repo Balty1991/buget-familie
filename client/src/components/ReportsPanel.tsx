@@ -4,13 +4,14 @@
  */
 import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, CalendarDays, Download, Landmark, PiggyBank, TrendingDown, TrendingUp, WalletCards } from "lucide-react";
-import { allocationStatus, categoryColors, financialBalance, type AppData } from "@/lib/finance-data";
+import { allocationStatus, categoryColors, financialBalance, isoDate, type AppData } from "@/lib/finance-data";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import type { MainView } from "@/pages/home-kit";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const months = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"];
-const monthRange = (month: string) => { const [year, index] = month.split("-").map(Number); const start = `${year}-${String(index).padStart(2, "0")}-01`; const end = new Date(year, index, 0).toISOString().slice(0, 10); return { start, end }; };
+/** `toISOString()` pe o dată locală de miezul nopții pierdea ultima zi a lunii în România (UTC+2/+3). */
+const monthRange = (month: string) => { const [year, index] = month.split("-").map(Number); const start = `${year}-${String(index).padStart(2, "0")}-01`; const end = isoDate(new Date(year, index, 0)); return { start, end }; };
 const previousMonth = (month: string) => { const [year, index] = month.split("-").map(Number); const date = new Date(year, index - 2, 1); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; };
 const titleFor = (month: string) => { const [year, index] = month.split("-").map(Number); return new Intl.DateTimeFormat("ro-RO", { month: "long", year: "numeric" }).format(new Date(year, index - 1, 1)); };
 

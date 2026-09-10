@@ -19,6 +19,7 @@ import {
   type BudgetAllocation,
   type RecurringPayment,
   type Transaction,
+  isoDate,
 } from "./finance-data";
 
 const fold = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -186,7 +187,7 @@ const groceryCategories = new Set(["Alimente", "Consumabile copil", "Dulciuri", 
 export const detectSubscriptions = (data: AppData, asOf = isoToday()): SubscriptionDetection[] => {
   const from = new Date(`${asOf}T12:00:00`);
   from.setDate(from.getDate() - 180);
-  const start = from.toISOString().slice(0, 10);
+  const start = isoDate(from);
   const tracked = new Set(data.recurring.map((item) => merchantKey(item.name)).filter(Boolean));
   const groups = new Map<string, Transaction[]>();
   data.transactions.filter((item) => item.kind === "expense" && item.date >= start && item.date <= asOf).forEach((item) => {
@@ -281,7 +282,7 @@ export const lastDaysPulse = (data: AppData, days = 7, asOf = isoToday()) => {
   return Array.from({ length: days }, (_, index) => {
     const date = new Date(basis);
     date.setDate(basis.getDate() - (days - 1 - index));
-    const iso = date.toISOString().slice(0, 10);
+    const iso = isoDate(date);
     const entries = data.transactions.filter((item) => item.date === iso);
     const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
     const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
@@ -350,7 +351,7 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);
-  const horizon = horizonDate.toISOString().slice(0, 10);
+  const horizon = isoDate(horizonDate);
   const dues: TodayDue[] = [
     ...pendingRecurringInPlan(data)
       .filter((item) => item.dueDate <= horizon)

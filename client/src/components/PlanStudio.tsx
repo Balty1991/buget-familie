@@ -13,7 +13,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, sourceBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 
 const money = (value: number) => new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -91,9 +91,9 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
-  const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return date.toISOString().slice(0, 10); };
+  const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return isoDate(date); };
   const allocationPeriodOptions = [{ id: "next-income" as const, label: "Până la următorul venit" }, { id: "month" as const, label: "Luna aceasta" }, { id: "week" as const, label: "Săptămâna aceasta" }, { id: "custom" as const, label: "Personalizat" }];
-  const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(plan.nextPayday || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)); setCycleEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)); } else if (periodId === "week") { const start = new Date(); setCycleStart(start.toISOString().slice(0, 10)); setCycleEnd(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)); } };
+  const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(plan.nextPayday || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(isoDate(new Date(now.getFullYear(), now.getMonth(), 1))); setCycleEnd(isoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0))); } else if (periodId === "week") { setCycleStart(isoToday()); setCycleEnd(isoDate(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000))); } };
   const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
 
   const windowPayday = paydayWindow(plan);

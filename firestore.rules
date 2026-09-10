@@ -11,7 +11,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /familySync/{roomId} {
-      allow read: if roomId.size() == 64;
+      // `get`, nu `read`: `read` acoperă și interogarea colecției, așa că oricine
+      // putea descărca pachetele criptate ale tuturor familiilor și le putea ataca
+      // offline. Un `get` cere ID-ul camerei, adică deja cunoașterea parolei.
+      allow get: if roomId.size() == 64;
       allow write: if roomId.size() == 64
         && request.resource.data.keys().hasOnly(['envelope', 'updatedAt'])
         && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])

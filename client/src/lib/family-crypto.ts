@@ -61,7 +61,14 @@ function mergeCollection<T extends { id: string; updatedAt?: string; createdAt?:
     const existing = all.get(item.id);
     if (!existing || timestamp(item) >= timestamp(existing)) all.set(item.id, item);
   });
-  return Array.from(all.values()).filter((item) => (Date.parse(tombstones.get(item.id)?.deletedAt || "") || 0) < timestamp(item));
+  return Array.from(all.values()).filter((item) => {
+    const tombstone = tombstones.get(item.id);
+    // Fără ștergere înregistrată păstrăm elementul chiar dacă nu are marcaj de timp:
+    // datoriile și obiectivele salvate din dialog nu poartă `updatedAt`, iar o comparație
+    // strictă le-ar fi scos definitiv din registru la prima unire a două telefoane.
+    if (!tombstone) return true;
+    return (Date.parse(tombstone.deletedAt) || 0) < timestamp(item);
+  });
 }
 
 /** Unește două copii de familie fără a expedia imagini de bon și fără a reintroduce elemente șterse. */
