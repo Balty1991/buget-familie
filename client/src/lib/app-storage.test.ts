@@ -14,7 +14,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe("backup Buget Familie", () => {
   it("creează un backup cu metadatele și datele aplicației", () => {
     const backup = makeBackup(data());
-    expect(backup).toMatchObject({ kind: "buget-familie-backup", version: 1, data: { version: 8 } });
+    expect(backup).toMatchObject({ kind: "buget-familie-backup", version: 1, data: { version: 9 } });
     expect(backup.exportedAt).toMatch(/^20\d\d-\d\d-\d\dT/);
     expect(backup.data.settings.familyName).toBe("Familia Test");
   });

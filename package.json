@@ -92,6 +92,7 @@
     "chrome-launcher": "^1.1.0",
     "esbuild": "^0.25.0",
     "lighthouse": "^12.8.2",
+    "playwright-core": "^1.63.0",
     "pnpm": "^10.15.1",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",
