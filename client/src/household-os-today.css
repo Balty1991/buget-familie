@@ -2,7 +2,6 @@
  * Household OS — ecranul Astăzi.
  * OLED, mint, ritm zilnic. Trebuie importat ultimul ca să bată restilizarea analog.
  */
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640;9..144,700&family=Outfit:wght@400;500;600;700&display=swap");
 
 .bf-today-workspace {
   --os-bg: #07090c;
