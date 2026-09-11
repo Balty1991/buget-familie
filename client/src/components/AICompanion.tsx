@@ -5,7 +5,7 @@ import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 import { getLocale, t } from "@/lib/i18n";
-import type { AssistantIntent, ParsedIntent } from "@/lib/assistant-intents";
+import { parseModelIntents, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText, SUGGESTED_QUESTIONS } from "@/lib/analyst";
 import {
@@ -721,6 +721,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         const payload = await response.json() as {
           reply?: string;
           intent?: string;
+          /** Intențiile citite de model, în aceeași formă ca cele citite pe telefon. */
+          readings?: unknown;
           needsConfirmation?: boolean;
           extracted?: ExtractedGuide;
           quota?: { remaining?: number | null; limit?: number | null; resetAt?: string | null };
@@ -730,6 +732,22 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         setQuota(nextQuota);
         if (!response.ok) throw new Error(payload.code || "AI unavailable");
         setTyping(false);
+        /**
+         * Ce a înțeles modelul este ce se scrie — dacă trece validarea. Până acum
+         * răspunsul lui era doar un cuvânt, iar propunerea se refăcea din textul
+         * brut prin euristici: două adevăruri paralele, din care câștiga cel mai
+         * slab. Acum trece prin aceeași poartă ca citirea locală, deci ajunge la
+         * aceeași confirmare, aceeași alegere a zilei și aceleași alternative.
+         *
+         * Nimic nu e crezut pe cuvânt: `parseModelIntents` aruncă orice intenție
+         * incompletă sau imposibilă, iar dacă nu rămâne nimic valid, mesajul cade
+         * pe drumul dinainte. Un răspuns stricat nu poate scrie în registru.
+         */
+        const modelIntents = sentAttachment ? [] : parseModelIntents(payload.readings, { asOf: isoToday() });
+        if (modelIntents.length) {
+          act({ kind: "intents", score: 100, why: "citit de model", intents: modelIntents });
+          return;
+        }
         const receiptExtracted = sentAttachment && localReceiptAmount && localReceiptAmount > 0
           ? { ...payload.extracted, amount: localReceiptAmount }
           : payload.extracted;

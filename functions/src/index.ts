@@ -13,9 +13,28 @@ type GeminiPart = { text?: string; inline_data?: { mime_type: string; data: stri
 type GeminiContent = { role: "user" | "model"; parts: GeminiPart[] };
 type GroqContentPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 type GroqMessage = { role: "system" | "user" | "assistant"; content: string | GroqContentPart[] };
+/**
+ * Ce citește modelul dintr-un mesaj, în aceeași formă pe care o produce și
+ * parserul de pe telefon. Aplicația o validează câmp cu câmp înainte să o
+ * folosească; ce nu trece se aruncă, iar mesajul cade pe citirea locală.
+ */
+type ModelReading =
+  | { kind: "expense"; amount: number; category: string; title?: string; date?: string }
+  | { kind: "income"; amount: number; title?: string; date?: string }
+  | { kind: "envelope"; label: string; amount: number; category?: string; weeklyLimit?: number; weeklyPace?: boolean }
+  | { kind: "debt"; name: string; remaining: number; monthly?: number }
+  | { kind: "recurring"; name: string; amount: number; dueDay: number; category?: string }
+  | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
+  | { kind: "payday"; date: string; flexDays?: number };
+
 type GuideAnswer = {
   reply: string;
   intent: "question" | "income" | "expense" | "debt" | "allocation" | "summary" | "next_step";
+  /**
+   * Câmpul care contează de acum. `intent` și `extracted` rămân pentru versiunile
+   * de aplicație deja instalate pe telefoane, care nu știu de el.
+   */
+  readings?: ModelReading[];
   needsConfirmation: boolean;
   extracted?: {
     amount?: number;
@@ -43,7 +62,18 @@ const systemInstruction = `Ești Copilotul Financiar al aplicației Buget Famili
 
 Răspunde în română, natural, ca un asistent care își amintește conversația. Nu folosi markdown: fără **, # sau liste cu asteriscuri. Răspunsuri scurte, maximum 4-5 propoziții. Dacă enumeri, scrie 1. 2. 3. pe rânduri separate. Nu inventa sume. Nu pretinde că ai acces la conturi bancare. Nu oferi recomandări de investiții, creditare sau decizii financiare riscante ca certitudini. Explică întotdeauna ce ai înțeles și ce urmează.
 
-Răspunsul trebuie să fie JSON cu: reply (textul către utilizator), intent (question|income|expense|debt|allocation|summary|next_step), needsConfirmation (boolean) și extracted (obiect opțional cu amount, title, category, debtName, monthlyPayment doar dacă au fost spuse clar).`;
+Răspunsul trebuie să fie JSON cu: reply (textul către utilizator), readings (lista de mai jos), intent (question|income|expense|debt|allocation|summary|next_step), needsConfirmation (boolean) și extracted (obiect opțional cu amount, title, category, debtName, monthlyPayment doar dacă au fost spuse clar).
+
+readings este partea care ajunge efectiv în registrul omului, deci contează cel mai mult. Pune în ea, ca listă, TOT ce ai înțeles că trebuie înregistrat din mesaj — un mesaj poate conține mai multe lucruri deodată („fă-mi plic Alimente 2400 și salariul vine pe 7 octombrie” înseamnă două intrări). Fiecare element are un câmp kind și doar câmpurile felului său:
+- expense: amount (număr, în lei), category (text), title (text scurt), date (AAAA-LL-ZZ)
+- income: amount, title, date
+- envelope: label, amount, category, weeklyLimit (dacă s-a spus o limită săptămânală), weeklyPace (boolean)
+- debt: name, remaining (soldul rămas), monthly (rata lunară, dacă se știe)
+- recurring: name, amount, dueDay (1-31), category
+- goal: name, target, current (dacă s-a spus cât s-a strâns), dueDate
+- payday: date, flexDays (0-5)
+
+Reguli pentru readings: pune un element DOAR dacă utilizatorul chiar a cerut să se înregistreze ceva. La o întrebare („cât am cheltuit luna asta?”, „îmi permit 300 de lei?”), la o mulțumire sau la o discuție, readings rămâne listă goală. Nu inventa câmpuri care nu s-au spus: mai bine lipsește decât să fie ghicit. Sumele sunt numere, nu text, cu zecimale exacte. Datele sunt scrise AAAA-LL-ZZ și trebuie să existe în calendar; dacă utilizatorul nu a spus o zi, lasă date necompletat, nu pune ziua de azi de la tine. Aplicația verifică fiecare element și îl aruncă dacă e incomplet sau imposibil, apoi cere confirmarea omului înainte să salveze ceva — deci nu scrie în reply că ai salvat.`;
 
 const responseSchema = {
   type: "OBJECT",
@@ -54,6 +84,31 @@ const responseSchema = {
       enum: ["question", "income", "expense", "debt", "allocation", "summary", "next_step"],
     },
     needsConfirmation: { type: "BOOLEAN" },
+    readings: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          kind: { type: "STRING", enum: ["expense", "income", "envelope", "debt", "recurring", "goal", "payday"] },
+          amount: { type: "NUMBER" },
+          category: { type: "STRING" },
+          title: { type: "STRING" },
+          date: { type: "STRING" },
+          label: { type: "STRING" },
+          weeklyLimit: { type: "NUMBER" },
+          weeklyPace: { type: "BOOLEAN" },
+          name: { type: "STRING" },
+          remaining: { type: "NUMBER" },
+          monthly: { type: "NUMBER" },
+          dueDay: { type: "NUMBER" },
+          target: { type: "NUMBER" },
+          current: { type: "NUMBER" },
+          dueDate: { type: "STRING" },
+          flexDays: { type: "NUMBER" },
+        },
+        required: ["kind"],
+      },
+    },
     extracted: {
       type: "OBJECT",
       properties: {
@@ -161,6 +216,9 @@ function parseGuideAnswer(raw: string): GuideAnswer {
       return {
         reply: parsed.reply.trim(),
         intent: parsed.intent || "question",
+        // Lista trece mai departe așa cum a venit; validarea o face aplicația,
+        // fiindcă acolo se știe ce plicuri și ce surse există cu adevărat.
+        readings: Array.isArray(parsed.readings) ? parsed.readings.slice(0, 8) : undefined,
         needsConfirmation: Boolean(parsed.needsConfirmation),
         extracted: parsed.extracted,
       };

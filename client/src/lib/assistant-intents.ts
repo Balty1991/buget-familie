@@ -333,3 +333,112 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
   });
   return results;
 }
+
+/* ------------------------------------------------- ce spune modelul online */
+
+/**
+ * Modelul întoarce acum aceleași intenții pe care le produce și parserul de pe
+ * telefon. Până acum întorcea un cuvânt („expense”) plus o pungă de câmpuri, iar
+ * aplicația relua textul brut prin euristici ca să construiască propunerea — deci
+ * ce înțelesese modelul nu era ce se scria în registru. Două adevăruri paralele,
+ * din care câștiga cel mai slab.
+ *
+ * Nimic din ce vine de pe rețea nu este crezut pe cuvânt. Un câmp lipsă, o sumă
+ * negativă, o zi de 45 sau o dată care nu există în calendar fac intenția să fie
+ * aruncată, nu reparată din ghicite: mai bine cade pe citirea locală decât să
+ * scrie în registrul omului ceva ce nimeni n-a verificat.
+ */
+const num = (value: unknown, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}): number | undefined => {
+  const parsed = typeof value === "number" ? value : typeof value === "string" ? Number(value.replace(",", ".")) : NaN;
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : undefined;
+};
+
+const text = (value: unknown, max = 120): string | undefined => {
+  const trimmed = typeof value === "string" ? value.trim().replace(/\s+/g, " ").slice(0, max) : "";
+  return trimmed ? trimmed : undefined;
+};
+
+/** O dată care chiar există: „2026-02-30” nu trece, deși are forma potrivită. */
+const isoDay = (value: unknown): string | undefined => {
+  const raw = typeof value === "string" ? value.trim() : "";
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return undefined;
+  const [year, month, day] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  if (year < 2000 || year > 2100 || !valid(month, day)) return undefined;
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  return probe.getUTCMonth() === month - 1 && probe.getUTCDate() === day ? raw : undefined;
+};
+
+function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined {
+  if (!row || typeof row !== "object") return undefined;
+  const item = row as Record<string, unknown>;
+  const kind = typeof item.kind === "string" ? item.kind : "";
+  switch (kind) {
+    case "expense": {
+      const amount = num(item.amount, { min: 0.01 });
+      const category = text(item.category, 60);
+      if (!amount || !category) return undefined;
+      return { kind: "expense", amount, category, title: text(item.title, 80) || category, date: isoDay(item.date) || asOf };
+    }
+    case "income": {
+      const amount = num(item.amount, { min: 0.01 });
+      if (!amount) return undefined;
+      return { kind: "income", amount, title: text(item.title, 80) || "Venit", date: isoDay(item.date) || asOf };
+    }
+    case "envelope": {
+      const amount = num(item.amount, { min: 0.01 });
+      const label = text(item.label, 60);
+      if (!amount || !label) return undefined;
+      const weeklyLimit = num(item.weeklyLimit, { min: 0.01, max: amount });
+      return {
+        kind: "envelope",
+        label,
+        amount,
+        category: text(item.category, 60),
+        weeklyLimit,
+        weeklyPace: typeof item.weeklyPace === "boolean" ? item.weeklyPace : Boolean(weeklyLimit),
+      };
+    }
+    case "debt": {
+      const remaining = num(item.remaining, { min: 0 });
+      const name = text(item.name, 60);
+      if (remaining === undefined || !name) return undefined;
+      return { kind: "debt", name, remaining, monthly: num(item.monthly, { min: 0.01 }) };
+    }
+    case "recurring": {
+      const amount = num(item.amount, { min: 0.01 });
+      const dueDay = num(item.dueDay, { min: 1, max: 31 });
+      const name = text(item.name, 60);
+      if (!amount || !dueDay || !name) return undefined;
+      return { kind: "recurring", name, amount, dueDay: Math.round(dueDay), category: text(item.category, 60) || "Casă & facturi" };
+    }
+    case "goal": {
+      const target = num(item.target, { min: 0.01 });
+      const name = text(item.name, 60);
+      if (!target || !name) return undefined;
+      return { kind: "goal", name, target, current: num(item.current, { min: 0, max: target }), dueDate: isoDay(item.dueDate) };
+    }
+    case "payday": {
+      const date = isoDay(item.date);
+      if (!date) return undefined;
+      return { kind: "payday", date, flexDays: Math.round(num(item.flexDays, { min: 0, max: 5 }) || 0) };
+    }
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Citește intențiile venite de la model. Întoarce lista curățată; ce nu trece
+ * validarea pur și simplu lipsește, iar un răspuns întreg fără nimic valid face
+ * aplicația să folosească citirea locală.
+ */
+export function parseModelIntents(value: unknown, options: { asOf?: string } = {}): ParsedIntent[] {
+  if (!Array.isArray(value)) return [];
+  const asOf = options.asOf || isoToday();
+  return value
+    .slice(0, 8)
+    .map((row) => oneModelIntent(row, asOf))
+    .filter((intent): intent is AssistantIntent => Boolean(intent))
+    .map((intent) => ({ intent, segment: "" }));
+}
