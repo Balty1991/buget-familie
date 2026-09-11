@@ -29,7 +29,7 @@ import {
 import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
-import { parseAssistantMessage, type ParsedIntent } from "./assistant-intents";
+import { extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
@@ -165,17 +165,15 @@ export function spendAmount(raw: string, extracted: ExtractedGuide | undefined, 
 }
 
 export function spendDate(raw: string) {
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const folded = foldRo(raw);
   if (/\balaltaieri\b/.test(folded)) return shiftDay(-2);
   if (/\bieri\b/.test(folded)) return shiftDay(-1);
   if (/\bmaine\b/.test(folded)) return shiftDay(1);
   if (/\b(azi|astazi)\b/.test(folded)) return shiftDay(0);
-  const dmy = raw.match(/\b(\d{1,2})[./-](\d{1,2})(?:[./-](20\d{2}))?\b/);
-  if (dmy && Number(dmy[2]) <= 12 && Number(dmy[1]) <= 31) {
-    const year = dmy[3] || String(new Date().getFullYear());
-    return `${year}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
-  }
-  return shiftDay(0);
+  // Același extractor ca restul aplicației: cunoaște și „3 septembrie”, și „05.09”.
+  const { hits } = extractDates(raw, shiftDay(0));
+  const explicit = hits.find((item) => item.explicit) || hits[0];
+  return explicit ? explicit.start : shiftDay(0);
 }
 
 export function isDebtOrInstallmentMessage(raw: string) {
@@ -221,7 +219,7 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   if (isDebtOrInstallmentMessage(raw)) return undefined;
   if (!forced && isQuestion(raw)) return undefined;
   const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
-  const amount = spendAmount(raw, extracted, parsed.amount);
+  const amount = spendAmount(raw, extracted, parsed.amount) * (extracted?.amount ? 1 : repeatFactor(raw));
   if (!amount || amount <= 0) return undefined;
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const draftTitle = spendTitle(folded, extracted, parsed.category || "Altele");

@@ -45,6 +45,21 @@ export type DateHit = { start: string; end?: string; index: number; length: numb
  * ar fi fost interpretat ca patru sume. Formatul cu interval este cel scris de mână:
  * „între data 07/10-10-2026” înseamnă de pe 7 până pe 10 octombrie.
  */
+/**
+ * O zi și o lună fără an înseamnă cea mai apropiată dintre ele, nu întotdeauna cea
+ * viitoare. „Pe 3 septembrie am plătit” privește înapoi, „salariul vine pe 15
+ * octombrie” privește înainte — iar omul, în ambele cazuri, se referă la varianta
+ * de lângă el. Rostogolirea automată în viitor trecea cheltuielile de acum o
+ * săptămână în anul următor.
+ */
+const nearestYear = (today: Date, month: number, day: number) => {
+  const candidates = [today.getFullYear() - 1, today.getFullYear(), today.getFullYear() + 1];
+  const now = today.getTime();
+  return candidates
+    .map((year) => ({ year, distance: Math.abs(new Date(year, month - 1, day, 12).getTime() - now) }))
+    .sort((a, b) => a.distance - b.distance)[0].year;
+};
+
 export function extractDates(raw: string, asOf = isoToday()): { hits: DateHit[]; masked: string } {
   const hits: DateHit[] = [];
   const today = new Date(`${asOf}T12:00:00`);
@@ -69,8 +84,7 @@ export function extractDates(raw: string, asOf = isoToday()): { hits: DateHit[];
     const day = Number(m[1]);
     const month = Number(m[2]);
     if (!valid(month, day)) continue;
-    const year = month < today.getMonth() + 1 || (month === today.getMonth() + 1 && day < today.getDate()) ? today.getFullYear() + 1 : today.getFullYear();
-    push({ start: iso(year, month, day), index: m.index!, length: m[0].length, explicit: true });
+    push({ start: iso(nearestYear(today, month, day), month, day), index: m.index!, length: m[0].length, explicit: true });
   }
 
   const folded = fold(raw);
@@ -84,11 +98,7 @@ export function extractDates(raw: string, asOf = isoToday()): { hits: DateHit[];
     const token = m[2].slice(0, 3);
     const month = MONTHS.findIndex((name) => name.slice(0, 3) === token) + 1;
     if (!month || !valid(month, day)) continue;
-    const year = m[3]
-      ? Number(m[3])
-      : month < today.getMonth() + 1 || (month === today.getMonth() + 1 && day < today.getDate())
-        ? today.getFullYear() + 1
-        : today.getFullYear();
+    const year = m[3] ? Number(m[3]) : nearestYear(today, month, day);
     push({ start: iso(year, month, day), index: m.index!, length: m[0].length, explicit: true });
   }
 
@@ -194,6 +204,20 @@ function findMarkers(folded: string, categories: string[] = []): Marker[] {
   return sorted.filter((marker, index) => index === 0 || sorted[index - 1].kind !== marker.kind);
 }
 
+/**
+ * „De trei ori câte 25 de lei” înseamnă 75, nu 25. Fără înmulțire, cheltuiala
+ * intra la o treime din cât a fost, iar propunerea arăta perfect normală.
+ */
+const WORD_COUNT: Record<string, number> = { o: 1, doua: 2, două: 2, trei: 3, patru: 4, cinci: 5, sase: 6, sapte: 7, opt: 8, noua: 9, zece: 10 };
+
+export function repeatFactor(raw: string): number {
+  const folded = fold(raw);
+  const match = folded.match(/\bde\s+(\d{1,2}|o|doua|trei|patru|cinci|sase|sapte|opt|noua|zece)\s+ori\b/);
+  if (!match) return 1;
+  const value = /^\d+$/.test(match[1]) ? Number(match[1]) : WORD_COUNT[match[1]] || 1;
+  return value >= 2 && value <= 20 ? value : 1;
+}
+
 /* ------------------------------------------------------------ extractoare */
 
 /**
@@ -202,7 +226,7 @@ function findMarkers(folded: string, categories: string[] = []): Marker[] {
  */
 const STOPWORDS = new Set([
   "lei", "ron", "de", "cu", "si", "in", "pe", "la", "un", "o", "pentru", "limita", "limite",
-  "saptamanala", "saptamanal", "saptamana", "lunar", "lunara", "luna", "total", "totalul",
+  "saptamanala", "saptamanal", "saptamana", "saptamani", "saptamanile", "ori", "lunar", "lunara", "luna", "total", "totalul",
   "suma", "sume", "mi", "imi", "vreau", "sa", "am", "e", "este", "banca", "estimativ", "intre", "data",
 ]);
 const cleanLabel = (raw: string) => raw
@@ -215,14 +239,42 @@ const cleanLabel = (raw: string) => raw
 
 const titleCase = (raw: string) => raw ? raw.charAt(0).toLocaleUpperCase("ro-RO") + raw.slice(1) : raw;
 
+/**
+ * Un mesaj poate conține mai multe lucruri de același fel: „am dat 50 la Lidl și 30
+ * la farmacie”, „cafea 12 lei, croissant 8 lei”, „salariu 5000 și bonus 700”.
+ *
+ * Până acum se înregistra doar primul, iar restul dispăreau în tăcere — cel mai
+ * urât fel de greșeală, fiindcă propunerea arăta completă. Tăiem segmentul acolo
+ * unde omul a pus „și” sau virgulă și păstrăm doar bucățile care au fiecare suma
+ * lor; dacă tăierea nu dă cel puțin două bucăți cu sumă, rămâne o singură intrare,
+ * ca înainte.
+ */
+function splitByAmount(segment: string): string[] {
+  const parts = segment.split(/\s+(?:si|și|iar)\s+|\s*[,;]\s*/i).map((item) => item.trim()).filter(Boolean);
+  if (parts.length < 2) return [segment];
+  const withAmount = parts.filter((part) => extractAmounts(extractDates(part).masked).length > 0);
+  return withAmount.length >= 2 ? withAmount : [segment];
+}
+
 function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], markerLength: number): AssistantIntent | undefined {
   if (!amounts.length) return undefined;
   const folded = fold(masked);
-  const weekly = amountNear(masked, amounts, WEEKLY);
+  /**
+   * „1600 pe 4 săptămâni” înseamnă patru săptămâni, nu o limită de 4 lei. Numărul
+   * lipit de cuvântul „săptămâni” este o durată; fără deosebirea asta, plicul
+   * primea o limită săptămânală de 4 lei și părea corect configurat.
+   */
+  const weekCount = folded.match(/\b(\d{1,2})\s*(?:de\s+)?saptaman/);
+  const weeks = weekCount ? Number(weekCount[1]) : 0;
+  const durations = weeks >= 2 && weeks <= 12 ? amounts.filter((item) => item.value === weeks) : [];
+  const usable = amounts.filter((item) => !durations.includes(item));
+  const weekly = amountNear(masked, usable, WEEKLY);
   // Totalul este cea mai mare sumă rămasă după ce scoatem limita săptămânală.
-  const rest = amounts.filter((item) => item !== weekly);
+  const rest = usable.filter((item) => item !== weekly);
   const total = rest.sort((a, b) => b.value - a.value)[0] || weekly;
   if (!total) return undefined;
+  // Spus ca durată, ritmul săptămânal se calculează: 1600 pe 4 săptămâni = 400.
+  const perWeek = weekly && weekly !== total ? weekly.value : weeks >= 2 && weeks <= 12 ? Math.round((total.value / weeks) * 100) / 100 : undefined;
   const label = titleCase(cleanLabel(segment.slice(markerLength)));
   const category = guessCategoryFromText(label || segment);
   return {
@@ -230,9 +282,9 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
     label: label || category || "Plic nou",
     amount: total.value,
     category,
-    weeklyLimit: weekly && weekly !== total ? weekly.value : undefined,
+    weeklyLimit: perWeek,
     // Un plic cu limită săptămânală are ritm săptămânal; altfel contează doar totalul ciclului.
-    weeklyPace: Boolean(weekly && weekly !== total) || WEEKLY.test(folded),
+    weeklyPace: Boolean(perWeek) || WEEKLY.test(folded),
   };
 }
 
@@ -246,20 +298,50 @@ function parsePayday(dates: DateHit[]): AssistantIntent | undefined {
   return { kind: "payday", date: hit.start, flexDays: flex };
 }
 
-function parseExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[]): AssistantIntent | undefined {
+function oneExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[]): AssistantIntent | undefined {
   const amount = amounts[0];
   if (!amount) return undefined;
+  const times = repeatFactor(segment);
   const category = guessCategoryFromText(segment, categories) || "Altele";
   const label = cleanLabel(segment.replace(/\b(am cheltuit|am dat|am platit|am luat|cheltuiala|plata de)\b/gi, ""));
-  return { kind: "expense", amount: amount.value, category, title: titleCase(label) || category, date: dates[0]?.start || asOf };
+  return { kind: "expense", amount: Math.round(amount.value * times * 100) / 100, category, title: titleCase(label) || category, date: dates[0]?.start || asOf };
 }
 
-function parseIncome(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string): AssistantIntent | undefined {
+function parseExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[]): AssistantIntent[] {
+  const parts = splitByAmount(segment);
+  if (parts.length < 2) {
+    const single = oneExpense(segment, amounts, dates, asOf, categories);
+    return single ? [single] : [];
+  }
+  return parts
+    .map((part) => {
+      const { hits, masked } = extractDates(part, asOf);
+      // O dată spusă o singură dată se aplică întregii fraze: „ieri cafea 12 și taxi 20”.
+      return oneExpense(part, extractAmounts(masked), hits.length ? hits : dates, asOf, categories);
+    })
+    .filter((item): item is AssistantIntent => Boolean(item));
+}
+
+function oneIncome(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string): AssistantIntent | undefined {
   const amount = amounts[0];
   if (!amount) return undefined;
   const salary = /salariu|leafa/.test(fold(segment));
   const label = cleanLabel(segment.replace(/\b(am primit|am incasat|mi-?a intrat|venit de)\b/gi, ""));
   return { kind: "income", amount: amount.value, title: salary ? "Salariu" : titleCase(label) || "Venit", date: dates[0]?.start || asOf };
+}
+
+function parseIncome(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string): AssistantIntent[] {
+  const parts = splitByAmount(segment);
+  if (parts.length < 2) {
+    const single = oneIncome(segment, amounts, dates, asOf);
+    return single ? [single] : [];
+  }
+  return parts
+    .map((part) => {
+      const { hits, masked } = extractDates(part, asOf);
+      return oneIncome(part, extractAmounts(masked), hits.length ? hits : dates, asOf);
+    })
+    .filter((item): item is AssistantIntent => Boolean(item));
 }
 
 function parseDebt(segment: string, masked: string, amounts: AmountHit[]): AssistantIntent | undefined {
@@ -312,15 +394,24 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
   const markers = findMarkers(folded, categories);
   if (!markers.length) return [];
 
+  /**
+   * Data spusă înaintea marcatorului rămânea în afara segmentului: „ieri am dat 40
+   * pe taxi” începe segmentul la „am dat”, deci „ieri” nu mai era văzut și mișcarea
+   * se trecea pe ziua de azi. O dată scrisă oriunde în mesaj ține loc de dată
+   * pentru bucățile care nu au una proprie.
+   */
+  const messageDates = extractDates(text, asOf).hits;
+
   const results: ParsedIntent[] = [];
   markers.forEach((marker, index) => {
     const from = marker.index;
     const to = index + 1 < markers.length ? markers[index + 1].index : text.length;
     const segment = text.slice(from, to).trim();
     if (!segment) return;
-    const { hits: dates, masked } = extractDates(segment, asOf);
+    const { hits: own, masked } = extractDates(segment, asOf);
+    const dates = own.length ? own : messageDates;
     const amounts = extractAmounts(masked);
-    const intent =
+    const found =
       marker.kind === "envelope" ? parseEnvelope(segment, masked, amounts, marker.length)
       : marker.kind === "payday" ? parsePayday(dates)
       : marker.kind === "expense" ? parseExpense(segment, amounts, dates, asOf, categories)
@@ -329,7 +420,8 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
       : marker.kind === "recurring" ? parseRecurring(segment, masked, amounts, dates)
       : marker.kind === "goal" ? parseGoal(segment, masked, amounts, dates)
       : undefined;
-    if (intent) results.push({ intent, segment });
+    // Un singur marcator poate da mai multe intrări: „50 la Lidl și 30 la farmacie”.
+    for (const intent of Array.isArray(found) ? found : found ? [found] : []) results.push({ intent, segment });
   });
   return results;
 }

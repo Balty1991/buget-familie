@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData } from "./finance-data";
 import { decide, understand, type Reading } from "./understand";
-import { CORPUS, CORPUS_EXTRA, type Outcome } from "./understand.corpus";
+import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
 /** O gospodărie obișnuită: două persoane, patru locuri cu bani, trei plicuri. */
 const house = (): AppData => {
@@ -52,7 +52,7 @@ const outcomeOf = (reading?: Reading): Outcome => {
 const read = (text: string, data = house()) => outcomeOf(decide(understand(text, data, { asOf: "2026-09-11" })).winner);
 
 describe("corpusul de fraze", () => {
-  const results = [...CORPUS, ...CORPUS_EXTRA].map((item) => ({ ...item, got: read(item.text) }));
+  const results = [...CORPUS, ...CORPUS_EXTRA, ...CORPUS_PARTIAL].map((item) => ({ ...item, got: read(item.text) }));
   const ok = (item: { want: Outcome | Outcome[]; got: Outcome }) => (Array.isArray(item.want) ? item.want.includes(item.got) : item.want === item.got);
   const wrong = results.filter((item) => !ok(item));
 

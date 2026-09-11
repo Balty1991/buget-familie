@@ -151,3 +151,21 @@ export const CORPUS_EXTRA: Case[] = [
   // --- o scadență plătită, fără să repeți suma ------------------------------
   { text: "am plătit chiria", want: "due", note: "suma o știe aplicația din Plan" },
 ];
+
+/**
+ * Fraze care erau înțelese pe JUMĂTATE — cel mai urât fel de greșeală, fiindcă
+ * propunerea arăta completă. Aici se verifică doar felul; conținutul (câte
+ * intrări, ce sumă, ce zi) se verifică în `multi-intent.test.ts`.
+ */
+export const CORPUS_PARTIAL: Case[] = [
+  { text: "am dat 50 la Lidl și 30 la farmacie", want: "expense", note: "două cheltuieli, nu una" },
+  { text: "am platit 20 lei benzina si 15 lei parcare", want: "expense" },
+  { text: "cafea 12 lei, croissant 8 lei", want: "expense" },
+  { text: "am primit salariu 5000 și bonus 700", want: "income", note: "două venituri" },
+  { text: "ieri am dat 40 pe taxi", want: "expense", note: "data stă înaintea verbului" },
+  { text: "pe 3 septembrie am plătit 120 lei la dentist", want: "expense" },
+  { text: "am dat de trei ori câte 25 de lei pe cafea", want: "expense", note: "75, nu 25" },
+  { text: "plic Consumabile 1600 pe 4 saptamani", want: "envelope", note: "durată, nu limită de 4 lei" },
+  { text: "am dat 1.250,50 lei pe mobilă", want: "expense" },
+  { text: "mi-a intrat salariul de 4.500,75", want: "income" },
+];
