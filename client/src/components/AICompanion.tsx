@@ -5,8 +5,9 @@ import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 import { getLocale, t } from "@/lib/i18n";
-import { parseAssistantMessage, type AssistantIntent } from "@/lib/assistant-intents";
+import { parseAssistantMessage, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
 import { analyze, answerToText, SUGGESTED_QUESTIONS } from "@/lib/analyst";
+import { planSpend, planIncome, type SpendPlan } from "@/lib/suggest-source";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
@@ -545,9 +546,13 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
 }
 
 /** Trece o intenție citită din text într-o acțiune pe care registrul o știe aplica. */
-function intentToUpdate(intent: AssistantIntent): FinancialUpdate {
+function intentToUpdate(intent: AssistantIntent, data?: AppData): FinancialUpdate {
   switch (intent.kind) {
-    case "expense": return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
+    case "expense": {
+      // Salvăm chiar sursa și plicul arătate în propunere, ca ce vede omul să fie ce se scrie.
+      const plan = data ? planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date }) : undefined;
+      return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date, sourceId: plan?.source?.source.id, allocationId: plan?.envelope?.allocation.id };
+    }
     case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date };
     case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit };
     case "debt": return { kind: "debt", name: intent.name, remaining: intent.remaining };
@@ -558,16 +563,71 @@ function intentToUpdate(intent: AssistantIntent): FinancialUpdate {
 }
 
 /** Ce spune asistentul înainte de confirmare — exact cifrele pe care le va scrie. */
-function describeIntent(intent: AssistantIntent): string {
+/**
+ * Ce a înțeles asistentul, scris pentru cineva care stă în magazin cu telefonul în
+ * mână. La o cheltuială, „40 RON · Alimente” nu e destul ca să apeși pe salvează:
+ * lipsește tocmai lucrul pe care îl decizi acolo — din ce sursă ies banii și din
+ * ce plic se scad. `planSpend` alege propunerea; alternativele le poate atinge.
+ */
+function describeIntent(intent: AssistantIntent, data?: AppData): string {
   switch (intent.kind) {
-    case "expense": return `cheltuială ${money(intent.amount)} · ${intent.category} · ${formatDate(intent.date)}`;
-    case "income": return `venit ${money(intent.amount)} · ${intent.title} · ${formatDate(intent.date)}`;
+    case "expense": {
+      const head = `cheltuială ${money(intent.amount)} · ${intent.category} · ${formatDate(intent.date)}`;
+      if (!data) return head;
+      const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date });
+      return [head, plan.summary && `  ↳ ${plan.summary}`, ...plan.warnings.map((item) => `  ⚠ ${item}`)].filter(Boolean).join("\n");
+    }
+    case "income": {
+      const head = `venit ${money(intent.amount)} · ${intent.title} · ${formatDate(intent.date)}`;
+      if (!data) return head;
+      const target = planIncome(data)[0];
+      return target ? `${head}\n  ↳ intră în ${target.source.name} (${money(target.balance)} acum)` : head;
+    }
     case "envelope": return `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ""}`;
     case "debt": return `datoria „${intent.name}”, sold ${money(intent.remaining)}${intent.monthly ? `, rată ${money(intent.monthly)}` : ""}`;
     case "recurring": return `scadența „${intent.name}”, ${money(intent.amount)} pe data de ${intent.dueDay}`;
     case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;
     case "payday": return `următorul venit pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.flexDays ? `, cu ${intent.flexDays} zile de flexibilitate` : ""}`;
   }
+}
+
+/**
+ * Alternativele la propunere: celelalte surse, fiecare cu soldul ei, gata de
+ * atins. Fără ele, „schimbă sursa” ar însemna să anulezi și să reiei în formular.
+ */
+function sourceChoices(data: AppData, intent: Extract<AssistantIntent, { kind: "expense" }>, plan: SpendPlan): ChatChoice[] {
+  /**
+   * Sursele goale sunt zgomot: trei rânduri de „0 RON (nu acoperă)” nu ajută pe
+   * nimeni să aleagă. Le ascundem, în afară de cazul în care chiar toate sunt
+   * goale — atunci tăcerea ar fi și mai rea decât zgomotul.
+   */
+  const others = plan.sources.filter((option) => option.source.id !== plan.source?.source.id);
+  const withMoney = others.filter((option) => option.balance > 0);
+  return (withMoney.length ? withMoney : others)
+    .sort((left, right) => right.balance - left.balance)
+    .slice(0, 4)
+    .map((option) => ({
+      label: `${option.source.name} · ${money(option.balance)}${option.covers ? "" : " (nu acoperă)"}`,
+      update: {
+        kind: "expense" as const,
+        amount: intent.amount,
+        title: intent.title,
+        category: intent.category,
+        date: intent.date,
+        sourceId: option.source.id,
+        allocationId: plan.envelopes.find((item) => item.allocation.sourceId === option.source.id)?.allocation.id,
+      },
+    }));
+}
+
+/** Alternativele se arată doar când mesajul conține exact o cheltuială; altfel ar fi ambiguu ce schimbă atingerea. */
+function spendAlternatives(data: AppData, parsed: ParsedIntent[]): ChatChoice[] | undefined {
+  if (parsed.length !== 1) return undefined;
+  const intent = parsed[0].intent;
+  if (intent.kind !== "expense") return undefined;
+  const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date });
+  const choices = sourceChoices(data, intent, plan);
+  return choices.length ? choices : undefined;
 }
 
 export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinancialUpdate, onRevert }: Props) {
@@ -706,9 +766,10 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     if (actionable.length) {
       addMessage({
         role: "assistant",
-        text: `${actionable.length === 1 ? "Am înțeles" : `Am înțeles ${actionable.length} lucruri`}:\n${actionable.map((item) => `• ${describeIntent(item.intent)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
-        updates: actionable.map((item) => intentToUpdate(item.intent)),
+        text: `${actionable.length === 1 ? "Am înțeles" : `Am înțeles ${actionable.length} lucruri`}:\n${actionable.map((item) => `• ${describeIntent(item.intent, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
+        updates: actionable.map((item) => intentToUpdate(item.intent, data)),
         action: { type: "apply", label: actionable.length === 1 ? "Confirmă și salvează" : "Confirmă pe toate" },
+        choices: spendAlternatives(data, actionable),
       });
       return;
     }
@@ -776,9 +837,10 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         setMemory(markLocalSave());
         addMessage({
           role: "assistant",
-          text: `${intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`}:\n${intents.map((item) => `• ${describeIntent(item.intent)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
-          updates: intents.map((item) => intentToUpdate(item.intent)),
+          text: `${intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`}:\n${intents.map((item) => `• ${describeIntent(item.intent, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
+          updates: intents.map((item) => intentToUpdate(item.intent, data)),
           action: { type: "apply", label: intents.length === 1 ? "Confirmă și salvează" : "Confirmă pe toate" },
+          choices: spendAlternatives(data, intents),
         });
         return;
       }
