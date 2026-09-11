@@ -6,6 +6,7 @@ import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 import { getLocale, t } from "@/lib/i18n";
 import { parseAssistantMessage, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
+import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText, SUGGESTED_QUESTIONS } from "@/lib/analyst";
 import { planSpend, planIncome, type SpendPlan } from "@/lib/suggest-source";
 
@@ -23,17 +24,10 @@ export type FinancialUpdate =
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string };
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void };
 type ChatChoice = { label: string; update: FinancialUpdate };
-type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" }; updates?: FinancialUpdate[]; choices?: ChatChoice[]; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
+type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
 type ChatAttachment = { name: string; mimeType: string; data: string };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
 const CHAT_KEY = "buget-familie:ai-chat-v1";
-const shiftDay = (offset: number) => {
-  const date = new Date();
-  date.setHours(12, 0, 0, 0);
-  date.setDate(date.getDate() + offset);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-};
-const today = () => shiftDay(0);
 const money = (value: number) => `${Number(value.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
 const naturalTitle = (raw: string, category?: string) => /combustibil|benzina|motorina/i.test(raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ? "Combustibil" : category || t("Cheltuială");
 
@@ -366,15 +360,6 @@ function spendDate(raw: string) {
   return shiftDay(0);
 }
 
-function dateCopy(iso: string) {
-  const diff = Math.round((Date.parse(`${iso}T12:00:00`) - Date.parse(`${today()}T12:00:00`)) / 86400000);
-  if (diff === 0) return "azi";
-  if (diff === -1) return "ieri";
-  if (diff === -2) return t("alaltăieri");
-  if (diff === 1) return t("mâine");
-  return new Date(`${iso}T12:00:00`).toLocaleDateString(getLocale(), { day: "numeric", month: "short" });
-}
-
 function sourceTextSafe(raw: string) { return raw.replace(/data:[^ ]+/g, "").slice(0, 800); }
 
 function isDebtOrInstallmentMessage(raw: string) {
@@ -434,7 +419,7 @@ function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, dat
     });
   });
   if (!choices.length) {
-    return { text: `Am înțeles **${title}**, ${money(amount)}, ${when}. Nu am găsit un plic sau o sursă cu destui bani disponibili.`, choices: [] };
+    return { text: noDoubleStop(`Am înțeles **${title}**, ${money(amount)}, ${when}. Nu am găsit un plic sau o sursă cu destui bani disponibili.`), choices: [] };
   }
   const preferred = (habit?.allocationId && funded.find((item) => item.envelope.id === habit.allocationId))
     || funded.find((item) => item.envelope.category === category)
@@ -443,7 +428,7 @@ function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, dat
   const text = preferred
     ? `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`} Alege de unde scoatem banii.`
     : `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
-  return { text, choices };
+  return { text: noDoubleStop(text), choices };
 }
 
 function receiptDetails(extracted?: ExtractedGuide) {
@@ -481,7 +466,7 @@ function incomeProposal(raw: string, data: AppData): { text: string; choices: Ch
   const title = /sotie|sotiei|partener/.test(folded) ? t("Salariul soției") : /salariu/.test(folded) ? "Salariu" : "Venit";
   const date = spendDate(raw);
   return {
-    text: `Am înțeles **${title}**, ${money(amount)}, **${dateCopy(date)}**. Îl trec în registru pe ziua aleasă?`,
+    text: noDoubleStop(`Am înțeles **${title}**, ${money(amount)}, **${dateCopy(date)}**. Îl trec în registru pe ziua aleasă?`),
     choices: [{ label: `Adaugă venitul · ${money(amount)}`, update: { kind: "income", amount, title, date, memberId: memberIdFor(data, raw, /sotie|sotiei|partener/.test(folded) ? 1 : 0) } }],
   };
 }
@@ -591,6 +576,15 @@ function describeIntent(intent: AssistantIntent, data?: AppData): string {
   }
 }
 
+/** Textul propunerii, scris o singură dată ca să poată fi refăcut la schimbarea zilei. */
+function proposalText(intents: AssistantIntent[], data?: AppData): string {
+  const head = intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`;
+  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`;
+}
+
+/** Ziua unei intenții care chiar are dată — cheltuială sau venit. */
+const intentDay = (intent: AssistantIntent) => (intent.kind === "expense" || intent.kind === "income" ? intent.date : undefined);
+
 /**
  * Alternativele la propunere: celelalte surse, fiecare cu soldul ei, gata de
  * atins. Fără ele, „schimbă sursa” ar însemna să anulezi și să reiei în formular.
@@ -697,7 +691,45 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     return () => window.removeEventListener("buget-familie:open-guide", openGuide);
   }, []);
 
-  const addMessage = (entry: Omit<ChatMessage, "id">) => setMessages((current) => [...current, { ...entry, id: `${Date.now()}-${current.length}` }].slice(-30));
+  const addMessage = (entry: Omit<ChatMessage, "id">) => {
+    const proposed = entry.updates?.find((item) => item.kind === "expense" || item.kind === "income");
+    if (proposed && (proposed.kind === "expense" || proposed.kind === "income") && proposed.date) setSpendDay(proposed.date);
+    setMessages((current) => [...current, { ...entry, id: `${Date.now()}-${current.length}` }].slice(-30));
+  };
+  /**
+   * Ziua se alege înainte de confirmare, la fel pentru venit și pentru cheltuială.
+   * Nu e de ajuns să reținem alegerea: propunerea de deasupra o scrie negru pe alb
+   * („venit 5.000 RON · Salariu · 11 sept.”), deci o rescriem odată cu ea. Altfel
+   * omul ar apăsa „Confirmă” cu două date diferite pe ecran.
+   */
+  const applySpendDay = (day: string) => {
+    setSpendDay(day);
+    setMessages((current) => {
+      const index = current.map((item) => item.role).lastIndexOf("assistant");
+      const target = current[index];
+      if (!target) return current;
+      const pendingUpdates = target.action?.type === "apply" ? target.updates : undefined;
+      if (!pendingUpdates?.length && !target.choices?.length) return current;
+      const dateOf = (item: FinancialUpdate) => (item.kind === "expense" || item.kind === "income" ? item.date : undefined);
+      const before = pendingUpdates?.map(dateOf).find(Boolean) || target.choices?.map((item) => dateOf(item.update)).find(Boolean);
+      const intents = target.intents?.map((item) => (item.kind === "expense" || item.kind === "income" ? { ...item, date: day } : item));
+      const next = [...current];
+      next[index] = {
+        ...target,
+        updates: pendingUpdates?.map((item) => (item.kind === "expense" || item.kind === "income" ? { ...item, date: day } : item)) || target.updates,
+        intents,
+        choices: target.choices?.map((item) => (item.update.kind === "expense" || item.update.kind === "income" ? { ...item, update: { ...item.update, date: day } } : item)),
+        // Propunerea scrisă de `describeIntent` se reface întreagă; cea cu alternative
+        // poartă ziua într-un singur loc, îngroșat, deci schimbăm exact acel cuvânt.
+        text: intents
+          ? proposalText(intents, data)
+          : before
+            ? retimeText(target.text, before, day)
+            : target.text,
+      };
+      return next;
+    });
+  };
   const clearChat = () => {
     const hasPlan = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0;
     const stage: GuideStage = hasPlan ? "ready" : "income";
@@ -714,7 +746,10 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const handleAction = (item: ChatMessage) => {
     if (item.action?.type === "apply" && item.updates?.length) {
       item.updates.forEach((update) => onFinancialUpdate(update));
-      addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
+      if (item.updates.some((update) => update.kind === "income")) setGuideStage("debts");
+      const dated = item.updates.find((update) => update.kind === "expense" || update.kind === "income");
+      const day = dated && (dated.kind === "expense" || dated.kind === "income") ? dated.date : "";
+      addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       return;
     }
     if (!item.action || item.action.type === "apply") return;
@@ -738,7 +773,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     const spent = update.kind === "expense" || update.kind === "income" ? `${update.title} ${money(update.amount)}` : money("amount" in update ? update.amount : 0);
     addMessage({
       role: "assistant",
-      text: `Am salvat ${spent} · ${choice.label} · ${dateCopy(day)}.`,
+      text: noDoubleStop(`Am salvat ${spent} · ${choice.label} · ${dateCopy(day)}.`),
       action: { type: "journal", label: t("Vezi în Mișcări") },
       undo: (update.kind === "expense" || update.kind === "income") ? { kind: update.kind, title: update.title, amount: update.amount, date: day } : undefined,
     });
@@ -766,8 +801,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     if (actionable.length) {
       addMessage({
         role: "assistant",
-        text: `${actionable.length === 1 ? "Am înțeles" : `Am înțeles ${actionable.length} lucruri`}:\n${actionable.map((item) => `• ${describeIntent(item.intent, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
+        text: proposalText(actionable.map((item) => item.intent), data),
         updates: actionable.map((item) => intentToUpdate(item.intent, data)),
+        intents: actionable.map((item) => item.intent),
         action: { type: "apply", label: actionable.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
         choices: spendAlternatives(data, actionable),
       });
@@ -837,8 +873,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         setMemory(markLocalSave());
         addMessage({
           role: "assistant",
-          text: `${intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`}:\n${intents.map((item) => `• ${describeIntent(item.intent, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
+          text: proposalText(intents.map((item) => item.intent), data),
           updates: intents.map((item) => intentToUpdate(item.intent, data)),
+          intents: intents.map((item) => item.intent),
           action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
           choices: spendAlternatives(data, intents),
         });
@@ -943,7 +980,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
           return;
         }
         const updates = updatesFromGuide(payload.intent, payload.extracted, raw, data, messages);
-        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt");
+        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "allocation" || payload.intent === "debt");
         if (saveNow) applyGuide(updates);
         addMessage({
           role: "assistant",
@@ -965,9 +1002,13 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     })();
   };
   const lastAssistant = [...messages].reverse().find((item) => item.role === "assistant");
-  const pendingKind = lastAssistant?.choices?.find((item) => item.update.kind === "expense" || item.update.kind === "income")?.update.kind;
+  const pendingUpdate = lastAssistant?.action?.type === "apply"
+    ? lastAssistant.updates?.find((item) => item.kind === "expense" || item.kind === "income")
+    : undefined;
+  const pendingKind = pendingUpdate?.kind
+    || lastAssistant?.choices?.find((item) => item.update.kind === "expense" || item.update.kind === "income")?.update.kind;
   const pendingSpend = Boolean(pendingKind);
-  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel ${expanded ? "is-max" : ""}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? `Ghid local până ${formatReset(quota.resetAt)}` : t("Îți răspund din contextul bugetului tău")}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool" onClick={() => setExpanded((value) => !value)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}<span>{expanded ? t("Micșorează") : "Ecran"}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); setExpanded(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} /><div className="ai-chat-history" ref={historyRef} aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: `Am anulat ${undone.title} ${money(undone.amount)}.` } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className="ai-chat-action" key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingSpend ? <div className="ai-date-bar"><p>Pe ce zi treci {pendingKind === "income" ? "venitul" : t("mișcarea")}? · {dateCopy(spendDay)}</p><div className="ai-date-row"><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(-1))}>Ieri</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(0))}>Azi</button><label className="ai-date-field">Calendar<input type="date" value={spendDay} onChange={(event) => event.target.value && setSpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", t("Vreau să adaug o mișcare"))}>{t("+ Adaugă o mișcare")}</button>{SUGGESTED_QUESTIONS.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachment && <div className="ai-attachment-chip"><FileText size={14} /><span>{attachment.name}</span><button type="button" onClick={() => setAttachment(null)} aria-label={t("Elimină atașamentul")}>×</button></div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachment ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" aria-label={t("Atașează bon sau fișier")}><Paperclip size={16} /><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing} /></label><button type="submit" aria-label="Trimite mesajul" disabled={attachmentBusy || typing || (!message.trim() && !attachment)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Scrie firesc: „am dat 50 lei pe benzină”, „fă-mi plic Alimente 2400 cu limită săptămânală 600”, „următorul salariu pe 07.10.2026”, „datorie card 1800, rata 150”. Îți arăt ce am înțeles și salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația și obiceiurile rămân pe acest telefon. Ghidul local învață din alegerile tale ca să consume mai puțin Gemini.</p></aside>}</>;
+  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel ${expanded ? "is-max" : ""}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? `Ghid local până ${formatReset(quota.resetAt)}` : t("Îți răspund din contextul bugetului tău")}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool" onClick={() => setExpanded((value) => !value)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}<span>{expanded ? t("Micșorează") : "Ecran"}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); setExpanded(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} /><div className="ai-chat-history" ref={historyRef} aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: `Am anulat ${undone.title} ${money(undone.amount)}.` } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className="ai-chat-action" key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingSpend ? <div className="ai-date-bar"><p>Pe ce zi treci {pendingKind === "income" ? "venitul" : t("mișcarea")}? · {dateCopy(spendDay)}</p><div className="ai-date-row"><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-1))}>Ieri</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(0))}>Azi</button><label className="ai-date-field">Calendar<input type="date" value={spendDay} onChange={(event) => event.target.value && applySpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", t("Vreau să adaug o mișcare"))}>{t("+ Adaugă o mișcare")}</button>{SUGGESTED_QUESTIONS.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachment && <div className="ai-attachment-chip"><FileText size={14} /><span>{attachment.name}</span><button type="button" onClick={() => setAttachment(null)} aria-label={t("Elimină atașamentul")}>×</button></div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachment ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" aria-label={t("Atașează bon sau fișier")}><Paperclip size={16} /><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing} /></label><button type="submit" aria-label="Trimite mesajul" disabled={attachmentBusy || typing || (!message.trim() && !attachment)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Scrie firesc: „am dat 50 lei pe benzină”, „fă-mi plic Alimente 2400 cu limită săptămânală 600”, „următorul salariu pe 07.10.2026”, „datorie card 1800, rata 150”. Îți arăt ce am înțeles și salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația și obiceiurile rămân pe acest telefon. Ghidul local învață din alegerile tale ca să consume mai puțin Gemini.</p></aside>}</>;
 }
 
 export default AICompanion;
