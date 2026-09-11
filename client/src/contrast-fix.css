@@ -1,0 +1,163 @@
+/**
+ * Corecții de contrast și de aspect, aplicate peste toate cele 12 teme.
+ *
+ * Fișierul se încarcă ultimul, anume: `index.css` este importat primul, iar cele
+ * peste șaptezeci de foi de redesign de după el îi suprascriu regulile. O corecție
+ * scrisă acolo nu ajunge niciodată pe ecran.
+ */
+/**
+ * Culoarea textului așezat peste umplutura primară.
+ *
+ * `--cf-on-primary` era folosit în trei locuri, dar nu era definit în nicio temă.
+ * Fără valoare, `var()` cade pe moștenire, deci butoanele pline primeau culoarea
+ * textului de pagină: pe tema Mint, verde-închis (#11261f) peste verde-închis
+ * (#0e5e4d) — raport de contrast 2,13, adică un buton aproape de necitit.
+ *
+ * Fundalul paginii este, în toate temele, opusul umpluturii primare — temele
+ * închise au umpluturi deschise și invers — deci el este alegerea sigură.
+ */
+/*
+ * Valorile de mai jos nu sunt alese din ochi: pentru fiecare temă am măsurat
+ * raportul de contrast al fiecărei culori candidate peste `--cf-primary-strong`
+ * și am păstrat-o pe cea mai bună. Raportul măsurat este scris lângă fiecare.
+ * Temele deschise au umpluturi închise, deci cer etichetă albă; cele închise au
+ * umpluturi deschise — auriu, albastru, roz — și cer etichetă închisă.
+ */
+:root { --cf-on-primary: #ffffff; }
+
+.theme-ivory       { --cf-on-primary: #ffffff; } /* 7,07 */
+.theme-porcelain   { --cf-on-primary: #ffffff; } /* 7,70 */
+.theme-paper       { --cf-on-primary: #ffffff; } /* 7,70 */
+.theme-sage        { --cf-on-primary: #ffffff; } /* 7,72 */
+.theme-slate       { --cf-on-primary: #ffffff; } /* 12,73 */
+.theme-lagoon      { --cf-on-primary: #ffffff; } /* 8,04 */
+.theme-mint        { --cf-on-primary: #ffffff; } /* 7,70 */
+.theme-ultraviolet { --cf-on-primary: #ffffff; } /* 7,70 */
+.theme-plum        { --cf-on-primary: #ffffff; } /* 5,69 */
+.theme-navy        { --cf-on-primary: #111111; } /* 7,25 */
+.theme-graphite    { --cf-on-primary: #111111; } /* 5,80 */
+.theme-rosewood    { --cf-on-primary: #111111; } /* 4,88 */
+
+/**
+ * Etichetele mici cu majuscule stăteau pe `--cf-muted`, care în temele deschise
+ * dă un raport de 3,9–4,4 — sub cei 4,5 ceruți pentru text mic. Sunt cel mai des
+ * întâlnit element din aplicație, deci și cel mai des greu de citit.
+ */
+.bf-kicker { color: var(--cf-ink, currentColor) !important; opacity: 0.72; }
+
+/**
+ * Butoanele pline: eticheta trebuie să contrasteze cu umplutura, nu cu pagina.
+ * Regulile existente scriu `color` cu `!important`, deci corecția trebuie să fie
+ * la fel de insistentă ca să ajungă pe ecran.
+ */
+.bf-movement-add,
+.bf-primary,
+.bf-recurring .bf-primary,
+.bf-week-share,
+button.pay { color: var(--cf-on-primary) !important; }
+
+/**
+ * Umplutura butoanelor pline: varianta „strong”, nu cea de mijloc.
+ *
+ * Peste `--cf-primary` (verde de mijloc, #218a71) nicio culoare de text nu ajunge
+ * la 4,5: fundalul de pagină dă 3,89, albul 4,05, cerneala 3,43 pe fila activă.
+ * Peste `--cf-primary-strong` aceeași etichetă urcă la peste 8 în fiecare temă,
+ * fiindcă temele sunt construite ca perechea fundal/primar-strong să contrasteze.
+ */
+.bf-primary,
+.bf-movement-add,
+.bf-analysis-scope .active,
+.bf-segment .active,
+button.pay { background-color: var(--cf-primary-strong) !important; }
+
+/**
+ * Butoanele secundare stau pe fundal transparent, deci eticheta lor trebuie să
+ * contrasteze cu pagina, nu cu o umplutură. `.bf-today-add` primise culoarea de
+ * pe umplutură — aproape alb pe o temă deschisă, adică 1,1.
+ */
+/*
+ * `.bf-today-add` este un buton secundar: `.bf-os-secondary` îi pune fundal
+ * transparent. Peste el se scria însă text aproape alb, dintr-o regulă
+ * `html:not(.dark) .bf-today-add` — alb pe pagină deschisă, raport 1,15.
+ * Corecția trebuie scrisă cu aceeași specificitate ca regula pe care o repară.
+ */
+html:not(.dark) .bf-today-add,
+html.dark .bf-today-add,
+.bf-today-add,
+.bf-os-secondary { color: var(--cf-ink) !important; }
+
+/**
+ * Obligații, pe ecran îngust: rândul se așază pe verticală.
+ *
+ * Rândul era o grilă cu două coloane, iar coloana cu butonul lua 134 din 330 de
+ * pixeli. Din cei 157 rămași, denumirea primea 34 — „Plată recurentă 1” se
+ * afișa pe 34px din cei 135 de care avea nevoie, adică vreo două litere.
+ */
+@media (max-width: 560px) {
+  .bf-obligation-entry { grid-template-columns: minmax(0, 1fr) !important; }
+  /*
+   * Nu e destul să lăsăm o singură coloană: butonul are `grid-column: 2` scris
+   * pe el, așa că își crea singur a doua coloană, oricât de îngustă era grila.
+   */
+  .bf-obligation-entry-actions { grid-column: 1 !important; justify-content: flex-start; }
+  .bf-obligation-entry-main { grid-template-columns: 34px minmax(0, 1fr) auto !important; }
+}
+
+/*
+ * Linia secundară („18 septembrie 2026 · Rată 350 RON/lună”) rămânea tăiată chiar
+ * și după ce rândul s-a așezat pe verticală: nu are voie să se rupă. O lăsăm să
+ * curgă pe două rânduri — un text întreg pe două rânduri se citește, unul tăiat nu.
+ */
+.bf-obligation-entry-main small { white-space: normal; overflow: visible; text-overflow: clip; }
+
+/**
+ * Setul de tokenuri `--os-*`, definit unde ajunge.
+ *
+ * `household-os-chrome.css` le declară pe `.os-shell.bf-app` — un element care nu
+ * există: rădăcina aplicației poartă doar `bf-app`. Deci niciuna dintre cele
+ * șaptesprezece variabile nu avea valoare, iar fiecare `var(--os-…)` fără rezervă
+ * era invalidă. Urmarea vizibilă: eroul de pe ecranul Astăzi rămânea alb pe toate
+ * temele de noapte, cu titlul scris în cerneală deschisă — adică nevăzut.
+ *
+ * Le legăm la tokenurile temei, pe `:root`, ca să prindă și ferestrele deschise
+ * prin portal, în afara rădăcinii aplicației.
+ */
+:root {
+  --os-bg: var(--cf-bg, #07090c);
+  --os-surface: var(--cf-surface, #10151a);
+  --os-surface-2: var(--cf-surface-alt, var(--cf-surface, #161d23));
+  --os-fg: var(--cf-ink, #e8eeea);
+  --os-muted: var(--cf-muted, #8a968f);
+  --os-subtle: var(--cf-muted, #5c675f);
+  --os-mint: var(--cf-primary, #7cffc4);
+  --os-mint-fg: var(--cf-on-primary, #04140e);
+  --os-mint-dim: color-mix(in srgb, var(--cf-primary, #7cffc4) 22%, var(--cf-surface, #10151a));
+  --os-line: var(--cf-line, #22302a);
+  --os-line-strong: color-mix(in srgb, var(--cf-primary, #7cffc4) 28%, var(--cf-line, #22302a));
+  --os-warn: var(--cf-warning, #e8c38a);
+  --os-out: var(--cf-danger, #ff8a7a);
+  /* Cardurile din interiorul eroului: aceeași suprafață ca restul temei. */
+  --os-card: var(--cf-surface-alt, var(--cf-surface, transparent));
+}
+
+/**
+ * Ecranul Astăzi: paleta vine din temă, nu din prezența clasei `dark`.
+ *
+ * `household-os-today.css` ține două palete fixe pentru `.bf-today-workspace`,
+ * una întunecată și una deschisă, aleasă prin `html:not(.dark)`. Clasa `dark` și
+ * clasa `theme-…` sunt însă scrise separat: dacă ajung vreodată nepotrivite —
+ * temă de noapte fără `dark` — se aplică paleta deschisă peste cerneala deschisă
+ * a temei, iar eroul rămâne alb cu titlul nevăzut.
+ *
+ * Legate la tokenurile temei, cele două nu mai pot să se contrazică: aceeași
+ * sursă de adevăr le hotărăște pe amândouă.
+ */
+.bf-today-workspace {
+  --os-bg: var(--cf-bg) !important;
+  --os-surface: var(--cf-surface) !important;
+  --os-line: var(--cf-line) !important;
+  --os-mint: var(--cf-primary) !important;
+  --os-ink: var(--cf-ink) !important;
+  --os-muted: var(--cf-muted) !important;
+  --os-warn: var(--cf-warning) !important;
+}

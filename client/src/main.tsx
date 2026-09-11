@@ -76,6 +76,8 @@ import "./review-center.css";
 import "./price-watch.css";
 import "./pocket.css";
 import "./currency.css";
+// Ultimul, ca să poată corecta contrastul peste toate foile de redesign de mai sus.
+import "./contrast-fix.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
 createRoot(document.getElementById("root")!).render(<App />);

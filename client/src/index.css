@@ -144,7 +144,7 @@
 
 /* Import de backup prin text lipit — plasa de siguranță când selectorul de fișiere
    al telefonului nu se deschide. */
-.bf-backup-paste { display: grid; gap: 8px; margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--bf-surface-sunken, rgba(0, 0, 0, 0.04)); }
+.bf-backup-paste { display: grid; gap: 8px; margin-top: 12px; padding: 12px; border-radius: 14px; background: var(--cf-surface-alt, var(--cf-surface, transparent)); }
 .bf-backup-paste label { font-size: 13px; line-height: 1.45; opacity: 0.85; }
 .bf-backup-paste textarea { width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 .bf-backup-paste-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
@@ -152,9 +152,9 @@
 /* Factori care nu intră în scor: prezenți, dar vizibil inactivi. */
 .bf-health-factor.unknown { opacity: 0.55; }
 .bf-health-factor.unknown .bf-health-factor-top span { font-style: italic; }
-.bf-health-missing { margin: 12px 0; padding: 12px 14px; border-radius: 14px; background: var(--bf-surface-sunken, rgba(0, 0, 0, 0.04)); }
+.bf-health-missing { margin: 12px 0; padding: 12px 14px; border-radius: 14px; background: var(--cf-surface-alt, var(--cf-surface, transparent)); }
 .bf-health-missing ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
-.bf-health-missing li { font-size: 14px; line-height: 1.45; }
+.bf-health-missing li { font-size: 14px; line-height: 1.45; color: var(--cf-ink, inherit); }
 
 /* Ținte de atins: Android cere 48dp, filtrele coborâseră la 29–33px. */
 .bf-analysis-scope button,
@@ -171,17 +171,17 @@
 .os-start-steps button {
   width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px;
   padding: 12px 14px; text-align: left; border-radius: 16px; cursor: pointer;
-  border: 1px solid var(--cf-line, rgba(0, 0, 0, 0.1)); background: var(--os-card, rgba(255, 255, 255, 0.65));
+  border: 1px solid var(--cf-line, currentColor); background: var(--cf-surface, transparent);
 }
 .os-start-steps button::before {
   content: counter(os-step); flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
   display: grid; place-items: center; font-size: 13px; font-weight: 600; line-height: 1;
-  background: var(--cf-accent, #1f6b4d); color: #fff;
+  background: var(--cf-primary, currentColor); color: var(--cf-bg, #fff);
 }
 .os-start-step-text { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
-.os-start-steps b { font-size: 15px; line-height: 1.25; }
-.os-start-steps small { font-size: 13px; line-height: 1.35; opacity: 0.75; }
-.os-start-steps button > svg { flex: 0 0 auto; opacity: 0.5; }
+.os-start-steps b { font-size: 15px; line-height: 1.25; color: var(--cf-ink, inherit); }
+.os-start-steps small { font-size: 13px; line-height: 1.35; color: var(--cf-muted, inherit); }
+.os-start-steps button > svg { flex: 0 0 auto; color: var(--cf-muted, inherit); }
 
 /* Bara de anulare: stă deasupra navigației, nu peste conținut. */
 .bf-undo-bar {
@@ -190,7 +190,7 @@
   width: min(560px, calc(100vw - 32px));
   display: flex; align-items: center; gap: 10px;
   padding: 10px 10px 10px 16px; border-radius: 16px;
-  background: var(--cf-ink, #14241d); color: #fff;
+  background: var(--cf-ink, #14241d); color: var(--cf-bg, #fff);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
   animation: bf-undo-in 180ms ease-out;
 }
@@ -209,8 +209,8 @@
 .ai-chat-followups button {
   min-height: 34px; padding: 0 12px; border-radius: 999px; cursor: pointer;
   font-size: 13px; line-height: 1;
-  border: 1px solid var(--cf-line, rgba(0, 0, 0, 0.12));
-  background: var(--os-card, rgba(255, 255, 255, 0.6)); color: inherit;
+  border: 1px solid var(--cf-line, currentColor);
+  background: var(--cf-surface, transparent); color: inherit;
 }
 .ai-chat-suggestions { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .ai-chat-suggestions::-webkit-scrollbar { display: none; }
@@ -220,14 +220,14 @@
 .bf-journal-more {
   width: 100%; min-height: 46px; margin-top: 10px; border-radius: 14px; cursor: pointer;
   font-weight: 600; font-size: 14px; color: inherit;
-  border: 1px dashed var(--cf-line, rgba(0, 0, 0, 0.18));
-  background: var(--os-card, rgba(255, 255, 255, 0.55));
+  border: 1px dashed var(--cf-line, currentColor);
+  background: var(--cf-surface, transparent);
 }
 
 /* Cât de greu e de ghicit parola de familie. */
 .bf-password-meter { display: grid; gap: 4px; margin-top: 8px; }
 .bf-password-bars { display: flex; gap: 4px; }
-.bf-password-bars i { flex: 1; height: 4px; border-radius: 999px; background: var(--cf-line, rgba(0, 0, 0, 0.14)); }
+.bf-password-bars i { flex: 1; height: 4px; border-radius: 999px; background: var(--cf-line, currentColor); }
 .bf-password-meter b { font-size: 13px; }
 .bf-password-meter small { font-size: 12px; line-height: 1.4; opacity: 0.78; }
 .bf-password-meter.s0 .bf-password-bars i.on, .bf-password-meter.s1 .bf-password-bars i.on { background: #c0392b; }
