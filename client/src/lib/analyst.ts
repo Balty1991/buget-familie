@@ -587,15 +587,6 @@ export function analyze(raw: string, data: AppData, asOf = isoToday()): AnalystA
   return undefined;
 }
 
-/** Întrebările pe care le poate pune omul, arătate ca sugestii. */
-export const SUGGESTED_QUESTIONS = [
-  "Unde se duc banii?",
-  "Cât pot cheltui pe zi?",
-  "Cât am cheltuit pe alimente luna asta?",
-  "Îmi permit 300 de lei?",
-  "Care e cea mai mare cheltuială?",
-  "Cât plătesc pe abonamente?",
-];
 
 /** Textul plat al unui răspuns, pentru chat sau pentru citire cu voce. */
 export function answerToText(answer: AnalystAnswer): string {

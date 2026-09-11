@@ -410,3 +410,42 @@ html .bf-quick-entry-grid > * { grid-column: auto !important; }
   white-space: normal !important;
   overflow-wrap: anywhere;
 }
+
+/* ---------------------------------------------------------------------------
+   Sugestiile de sub conversație
+   Rândul se derulează pe orizontală, dar ultimul buton rămânea tăiat în mijlocul
+   cuvântului — arăta stricat, nu ca „mai sunt”. Un strat de umbră la margine
+   spune că lista continuă, iar butoanele nu se mai strâng sub lățimea lor.
+   --------------------------------------------------------------------------- */
+.ai-chat-suggestions {
+  position: relative;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ai-chat-suggestions::-webkit-scrollbar { display: none; }
+.ai-chat-suggestions > button {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  white-space: nowrap;
+}
+/* Ultimul buton capătă loc cât umbra, ca să poată fi atins întreg. */
+.ai-chat-suggestions > button:last-child { margin-right: 22px; }
+
+.ai-chat-input { position: relative; }
+.ai-chat-input::before {
+  content: "";
+  position: absolute;
+  top: -46px;
+  right: 0;
+  width: 34px;
+  height: 40px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--cf-surface, transparent) 78%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-chat-suggestions { scroll-behavior: auto; }
+}
