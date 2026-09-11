@@ -33,7 +33,30 @@ export type EnvelopeOption = {
   covers: boolean;
   /** „S2” când suma arătată este a săptămânii active. */
   weekLabel?: string;
+  /**
+   * Cât de bine se potrivește cu ce s-a cumpărat: plicul pe exact acea categorie,
+   * unul înrudit ca subiect (dulciurile ies din alimente), sau doar unul care mai
+   * are bani. Propunerea se oprește la „înrudit”; restul rămân de ales cu mâna.
+   */
+  match: "exact" | "related" | "other";
 };
+
+/**
+ * Ce plic ține locul altuia. Dulciurile se iau din alimente, nu din transport:
+ * fără tabelul ăsta, „50 lei dulciuri” nu găsea niciun plic și ajungea în afara
+ * lor, deși alimentele aveau bani.
+ */
+export function relatedCategories(category: string): string[] {
+  const map: Record<string, string[]> = {
+    Dulciuri: ["Alimente"],
+    Băuturi: ["Alimente"],
+    Apă: ["Alimente", "Casă & facturi"],
+    Alimente: ["Dulciuri", "Băuturi"],
+    Transport: [],
+    "Casă & facturi": ["Apă"],
+  };
+  return map[category] || [];
+}
 
 export type SpendPlan = {
   sources: SourceOption[];
@@ -80,18 +103,37 @@ export function planSpend(
    * deci sursa nu există încă: alegem după categorie și membru, iar sursa o
    * propunem după plicul găsit. Un plic al familiei, fără membru, se potrivește
    * oricui.
+   *
+   * Trecem prin toate plicurile membrului, nu doar prin cele pe categoria exactă.
+   * Altfel „50 lei dulciuri” nu găsea nimic și pleca în afara plicurilor, deși
+   * alimentele aveau bani — iar omul rămânea cu o listă de surse goale, care nu-l
+   * ajută cu nimic. Notăm însă cât de bine se potrivește fiecare, ca propunerea să
+   * nu ajungă să scoată o cheltuială de sănătate din plicul de mâncare.
    */
-  const candidates = data.settings.salaryPlan.allocations.filter(
-    (allocation) => (allocation.category || allocation.label) === input.category
-      && (!allocation.memberId || allocation.memberId === memberId),
-  );
-  const envelopes: EnvelopeOption[] = candidates.map((allocation) => {
-    const { remaining, weekLabel } = envelopeRemaining(data, allocation, input.date);
-    return { allocation, remaining: Math.round(remaining * 100) / 100, covers: remaining >= amount, weekLabel };
-  });
+  const related = relatedCategories(input.category);
+  const rank = { exact: 0, related: 1, other: 2 } as const;
+  const envelopes: EnvelopeOption[] = data.settings.salaryPlan.allocations
+    .filter((allocation) => !allocation.memberId || allocation.memberId === memberId)
+    .map((allocation) => {
+      const subject = allocation.category || allocation.label;
+      const match: EnvelopeOption["match"] = subject === input.category ? "exact" : related.includes(subject) ? "related" : "other";
+      const { remaining, weekLabel } = envelopeRemaining(data, allocation, input.date);
+      return { allocation, remaining: Math.round(remaining * 100) / 100, covers: remaining >= amount, weekLabel, match };
+    })
+    .sort((left, right) => rank[left.match] - rank[right.match]
+      || Number(right.covers) - Number(left.covers)
+      || right.remaining - left.remaining);
 
-  // Întâi un plic care acoperă suma; dacă niciunul nu acoperă, cel cu cei mai mulți bani.
-  const envelope = envelopes.find((item) => item.covers) || [...envelopes].sort((a, b) => b.remaining - a.remaining)[0];
+  /**
+   * Propunerea: plicul pe categoria exactă, chiar dacă nu acoperă suma (atunci
+   * spunem cu cât se depășește). Dacă nu există niciunul, unul înrudit care chiar
+   * are banii. Mai departe nu mergem: un plic doar „cu bani în el” se alege cu
+   * mâna, nu îl propunem noi.
+   */
+  const exact = envelopes.filter((item) => item.match === "exact");
+  const envelope = exact.find((item) => item.covers)
+    || exact[0]
+    || envelopes.find((item) => item.match === "related" && item.covers);
 
   const bySourceId = new Map(sources.map((item) => [item.source.id, item]));
   const source =

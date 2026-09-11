@@ -8,7 +8,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { parseAssistantMessage, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText, SUGGESTED_QUESTIONS } from "@/lib/analyst";
-import { planSpend, planIncome, type SpendPlan } from "@/lib/suggest-source";
+import { planSpend, planIncome, relatedCategories, type SpendPlan } from "@/lib/suggest-source";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
@@ -302,18 +302,6 @@ type ExtractedGuide = {
   confidence?: "high" | "medium" | "low";
 };
 
-function relatedCategories(category: string) {
-  const map: Record<string, string[]> = {
-    Dulciuri: ["Alimente"],
-    Băuturi: ["Alimente"],
-    Apă: ["Alimente", "Casă & facturi"],
-    Alimente: ["Dulciuri", "Băuturi"],
-    Transport: [],
-    "Casă & facturi": ["Apă"],
-  };
-  return map[category] || [];
-}
-
 function spendTitle(folded: string, extracted: ExtractedGuide | undefined, category: string) {
   if (/taxi|uber|bolt/.test(folded)) return "Taxi";
   if (/\bapa\b/.test(folded) && !/patiserie/.test(folded)) return "Apă";
@@ -589,29 +577,49 @@ const intentDay = (intent: AssistantIntent) => (intent.kind === "expense" || int
  * Alternativele la propunere: celelalte surse, fiecare cu soldul ei, gata de
  * atins. Fără ele, „schimbă sursa” ar însemna să anulezi și să reiei în formular.
  */
-function sourceChoices(data: AppData, intent: Extract<AssistantIntent, { kind: "expense" }>, plan: SpendPlan): ChatChoice[] {
-  /**
-   * Sursele goale sunt zgomot: trei rânduri de „0 RON (nu acoperă)” nu ajută pe
-   * nimeni să aleagă. Le ascundem, în afară de cazul în care chiar toate sunt
-   * goale — atunci tăcerea ar fi și mai rea decât zgomotul.
-   */
-  const others = plan.sources.filter((option) => option.source.id !== plan.source?.source.id);
-  const withMoney = others.filter((option) => option.balance > 0);
-  return (withMoney.length ? withMoney : others)
+/**
+ * Alternativele la propunere. Regula, învățată dintr-o captură de pe telefon: se
+ * arată numai locurile unde chiar sunt bani. Trei rânduri de „0 RON (nu acoperă)”
+ * nu ajută pe nimeni să aleagă — ocupă ecranul și lasă impresia că altceva nu e.
+ *
+ * Se oferă întâi plicurile cu bani rămași, inclusiv tranșa săptămânii, fiindcă
+ * acolo stă bugetul repartizat; apoi sursele cu sold, pentru o cheltuială care nu
+ * ține de niciun plic. Când propunerea e un plic, adăugăm și ieșirea explicită „în
+ * afara plicurilor”, altfel nu s-ar mai putea alege.
+ */
+function spendChoices(data: AppData, intent: Extract<AssistantIntent, { kind: "expense" }>, plan: SpendPlan): ChatChoice[] {
+  const base = { kind: "expense" as const, amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
+  const choices: ChatChoice[] = [];
+
+  plan.envelopes
+    .filter((option) => option.remaining > 0 && option.allocation.id !== plan.envelope?.allocation.id)
+    .slice(0, 3)
+    .forEach((option) => {
+      choices.push({
+        label: `Din ${option.allocation.label}${option.weekLabel ? ` · ${option.weekLabel}` : ""} · ${money(option.remaining)}`,
+        update: { ...base, allocationId: option.allocation.id, sourceId: option.allocation.sourceId || plan.source?.source.id },
+      });
+    });
+
+  if (plan.envelope && plan.source && plan.source.balance > 0) {
+    choices.push({
+      label: `În afara plicurilor · ${plan.source.source.name} · ${money(plan.source.balance)}`,
+      update: { ...base, allocationId: "outside", sourceId: plan.source.source.id },
+    });
+  }
+
+  plan.sources
+    .filter((option) => option.balance > 0 && option.source.id !== plan.source?.source.id)
     .sort((left, right) => right.balance - left.balance)
-    .slice(0, 4)
-    .map((option) => ({
-      label: `${option.source.name} · ${money(option.balance)}${option.covers ? "" : " (nu acoperă)"}`,
-      update: {
-        kind: "expense" as const,
-        amount: intent.amount,
-        title: intent.title,
-        category: intent.category,
-        date: intent.date,
-        sourceId: option.source.id,
-        allocationId: plan.envelopes.find((item) => item.allocation.sourceId === option.source.id)?.allocation.id,
-      },
-    }));
+    .slice(0, 2)
+    .forEach((option) => {
+      choices.push({
+        label: `Din nealocat · ${option.source.name} · ${money(option.balance)}`,
+        update: { ...base, allocationId: "outside", sourceId: option.source.id },
+      });
+    });
+
+  return choices.slice(0, 5);
 }
 
 /** Alternativele se arată doar când mesajul conține exact o cheltuială; altfel ar fi ambiguu ce schimbă atingerea. */
@@ -620,7 +628,7 @@ function spendAlternatives(data: AppData, parsed: ParsedIntent[]): ChatChoice[] 
   const intent = parsed[0].intent;
   if (intent.kind !== "expense") return undefined;
   const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date });
-  const choices = sourceChoices(data, intent, plan);
+  const choices = spendChoices(data, intent, plan);
   return choices.length ? choices : undefined;
 }
 

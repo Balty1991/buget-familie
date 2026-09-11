@@ -100,3 +100,48 @@ describe("de unde iau banii", () => {
     expect(list.every((item) => typeof item.balance === "number")).toBe(true);
   });
 });
+
+describe("plicurile oferite când categoria exactă lipsește", () => {
+  it("propune un plic înrudit care are bani, în loc să iasă din plicuri", () => {
+    // Dulciurile se iau din alimente: fără asta, cheltuiala pleca „în afara
+    // plicurilor” deși bugetul de mâncare era plin.
+    const plan = planSpend(house(), { amount: 50, category: "Dulciuri", date: "2026-09-05" });
+    expect(plan.envelope?.allocation.label).toBe("Alimente");
+    expect(plan.envelope?.match).toBe("related");
+    expect(plan.summary).not.toContain("în afara plicurilor");
+  });
+
+  it("nu propune un plic doar fiindcă are bani în el", () => {
+    // Sănătatea nu are plic și nu seamănă cu niciunul: mai bine în afara lor
+    // decât să mănânce tăcut din alimente.
+    const plan = planSpend(house(), { amount: 40, category: "Sănătate", date: "2026-09-05" });
+    expect(plan.envelope).toBeUndefined();
+    expect(plan.envelopes.every((item) => item.match === "other")).toBe(true);
+  });
+
+  it("arată totuși toate plicurile membrului, ca alegerea să fie o atingere", () => {
+    const plan = planSpend(house(), { amount: 40, category: "Sănătate", date: "2026-09-05" });
+    expect(plan.envelopes.map((item) => item.allocation.label).sort()).toEqual(["Alimente", "Timp liber"]);
+  });
+
+  it("pune plicul potrivit înaintea celor care doar au bani", () => {
+    const plan = planSpend(house(), { amount: 40, category: "Alimente", date: "2026-09-05" });
+    expect(plan.envelopes[0].allocation.label).toBe("Alimente");
+    expect(plan.envelopes[0].match).toBe("exact");
+  });
+
+  it("nu oferă plicurile altui membru", () => {
+    const data = house();
+    data.settings.salaryPlan.allocations.push({ id: "env-sotie", label: "Taxi soție", category: "Transport", amount: 300, sourceId: "card2", memberId: "m2", weeklyPace: false });
+    const plan = planSpend(data, { amount: 40, category: "Transport", date: "2026-09-05" });
+    expect(plan.envelopes.map((item) => item.allocation.id)).not.toContain("env-sotie");
+  });
+
+  it("un plic înrudit gol nu devine propunere", () => {
+    const data = house();
+    data.settings.salaryPlan.allocations[0].amount = 0;
+    const plan = planSpend(data, { amount: 50, category: "Dulciuri", date: "2026-09-05" });
+    expect(plan.envelope).toBeUndefined();
+    expect(plan.summary).toContain("în afara plicurilor");
+  });
+});
