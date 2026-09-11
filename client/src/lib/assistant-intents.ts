@@ -74,6 +74,24 @@ export function extractDates(raw: string, asOf = isoToday()): { hits: DateHit[];
   }
 
   const folded = fold(raw);
+
+  // lună scrisă cu litere: „15 octombrie”, „7 oct 2026”. Fără asta, o dată spusă
+  // firesc nu exista pentru parser, iar „salariul vine pe 15 octombrie” rămânea
+  // fără dată, deci fără intenție.
+  const MONTHS = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
+  for (const m of Array.from(folded.matchAll(/\b(\d{1,2})\s+(?:de\s+)?([a-z]{3,10})\.?(?:\s+(20\d{2}))?\b/g))) {
+    const day = Number(m[1]);
+    const token = m[2].slice(0, 3);
+    const month = MONTHS.findIndex((name) => name.slice(0, 3) === token) + 1;
+    if (!month || !valid(month, day)) continue;
+    const year = m[3]
+      ? Number(m[3])
+      : month < today.getMonth() + 1 || (month === today.getMonth() + 1 && day < today.getDate())
+        ? today.getFullYear() + 1
+        : today.getFullYear();
+    push({ start: iso(year, month, day), index: m.index!, length: m[0].length, explicit: true });
+  }
+
   const relative: Array<[RegExp, () => string]> = [
     [/\bpoimaine\b/, () => isoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2))],
     [/\bmaine\b/, () => isoDate(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1))],
@@ -136,14 +154,21 @@ const MARKERS: Array<[AssistantIntent["kind"], RegExp]> = [
   // Ordinea contează: „următorul salariu” este o dată de plan, nu un venit încasat.
   ["payday", /\b(urmatorul salariu|urmatorul venit|urmatoarea leafa|salariul urmator|data salariului|salariul (vine|intra)|urmatoarea plata a salariului)\b/g],
   ["envelope", /\b(fa-?mi|fa |creeaza|creaza|adauga|vreau|pune)?\s*(un |o )?plic(ul)?\b/g],
-  ["recurring", /\b(abonament|chirie|factura|scadenta|rata lunara la)\b/g],
+  ["envelope", /\b(repartizeaz[ăa]|repartizez|imparte|impart)\b/g],
+  ["recurring", /\b(abonament|chiri[ae]|factura|scadenta|rata lunara la)\b/g],
   ["debt", /\b(datorie|datorii|credit|imprumut|mai am de (platit|achitat))\b/g],
   ["goal", /\b(obiectiv|vreau sa strang|sa strang|economisesc pentru|fond de (siguranta|urgenta))\b/g],
-  ["income", /\b(am primit|am incasat|mi-?a intrat|venit de|salariu)\b/g],
+  ["income", /\b(am primit|am incasat|mi-?a intrat|venit(uri)? (de|din)|salariu|leafa|bonus|prima de)\b/g],
   ["expense", /\b(am cheltuit|am dat|am platit|am luat|cheltuiala|plata de)\b/g],
 ];
 
-function findMarkers(folded: string): Marker[] {
+/**
+ * „Pune 800 lei pe casă și facturi” este o repartizare, deși nu spune „plic”. Se
+ * deosebește de „pune 800 lei pe card” printr-un singur lucru: ce urmează după
+ * verb — o categorie de cheltuială, nu o sursă. De aceea marcatorii au nevoie de
+ * lista de categorii; fără ea, fraza cădea în cheltuială și scotea banii din cont.
+ */
+function findMarkers(folded: string, categories: string[] = []): Marker[] {
   const found: Marker[] = [];
   for (const [kind, pattern] of MARKERS) {
     for (const m of Array.from(folded.matchAll(pattern))) {
@@ -151,6 +176,16 @@ function findMarkers(folded: string): Marker[] {
       // Un marcator mai specific, găsit mai devreme, acoperă zona: „următorul salariu” bate „salariu”.
       if (found.some((item) => index >= item.index && index < item.index + item.length)) continue;
       found.push({ kind, index, length: m[0].length });
+    }
+  }
+  const allocate = folded.match(/\b(pune|aloca|alocam)\b/);
+  if (allocate && typeof allocate.index === "number" && !found.some((item) => item.kind === "envelope")) {
+    const tail = folded.slice(allocate.index);
+    // „Casă & facturi” se scrie cu «și» când o spune omul; comparăm pe litere.
+    const plain = (value: string) => fold(value).replace(/&/g, " si ").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+    const tailPlain = plain(tail);
+    if (categories.some((category) => category.length > 3 && tailPlain.includes(plain(category)))) {
+      found.push({ kind: "envelope", index: allocate.index, length: allocate[0].length });
     }
   }
   const sorted = found.sort((a, b) => a.index - b.index);
@@ -240,8 +275,15 @@ function parseDebt(segment: string, masked: string, amounts: AmountHit[]): Assis
 function parseRecurring(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[]): AssistantIntent | undefined {
   const amount = amounts[0];
   if (!amount) return undefined;
+  /**
+   * O plată recurentă are o zi în lună. Fără ea, „factura de curent 340 lei” este o
+   * plată făcută acum, nu o scadență lunară — iar presupunând ziua 1 o transformam
+   * tăcut într-o obligație pe care omul nu o ceruse.
+   */
   const dayMatch = fold(masked).match(/\b(?:pe|in|din) (?:data (?:de )?)?(\d{1,2})\b/);
-  const dueDay = dates[0] ? Number(dates[0].start.slice(8, 10)) : dayMatch ? Math.min(31, Math.max(1, Number(dayMatch[1]))) : 1;
+  const saysMonthly = /\b(rata lunara|pe luna|lunar[ăa]?)\b/.test(fold(segment));
+  const dueDay = dates[0] ? Number(dates[0].start.slice(8, 10)) : dayMatch ? Math.min(31, Math.max(1, Number(dayMatch[1]))) : saysMonthly ? 1 : 0;
+  if (!dueDay) return undefined;
   const name = titleCase(cleanLabel(segment.replace(/\b(abonament(ul)?|scadenta|factura)\b/gi, ""))) || "Plată recurentă";
   return { kind: "recurring", name, amount: amount.value, dueDay, category: guessCategoryFromText(segment) || "Casă & facturi" };
 }
@@ -267,7 +309,7 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
   const asOf = options.asOf || isoToday();
   const categories = options.categories || expenseCategories;
   const folded = fold(text);
-  const markers = findMarkers(folded);
+  const markers = findMarkers(folded, categories);
   if (!markers.length) return [];
 
   const results: ParsedIntent[] = [];

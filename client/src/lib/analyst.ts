@@ -484,7 +484,7 @@ type Matcher = { kind: string; test: RegExp; run: (data: AppData, folded: string
  * „cât pot cheltui pe zi” nu trebuie să cadă pe „cât am cheltuit”.
  */
 const MATCHERS: Matcher[] = [
-  { kind: "afford", test: /\b(imi permit|mi permit|pot sa (dau|cheltui)|as putea sa (dau|cheltui)|am bani de|ajung banii)/, run: (d, f, a) => answerAfford(d, f, a) },
+  { kind: "afford", test: /\b(imi permit|mi permit|pot sa (dau|cheltui)|as putea sa (dau|cheltui)|am bani de|ajung banii|mai am \d|cat ar ramane|ce mi ar ramane)/, run: (d, f, a) => answerAfford(d, f, a) },
   { kind: "pace", test: /\b(cat pot cheltui|cat am voie|ritm|pe zi|zilnic)/, run: (d, _f, a) => answerPace(d, a) },
   { kind: "payday", test: /\b(cand (vine|intra) (salariul|venitul)|cate zile pana|pana la salariu)/, run: (d, _f, a) => answerPayday(d, a) },
   { kind: "subscriptions", test: /\b(abonament|scadent|facturi lunare|recurent)/, run: (d) => answerSubscriptions(d) },
@@ -494,7 +494,7 @@ const MATCHERS: Matcher[] = [
   { kind: "compare", test: /\b(compar|fata de luna|mai mult ca|mai putin ca|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
   { kind: "where", test: /\b(unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
   { kind: "spend", test: /\b(cat am (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos)/, run: (d, f, a) => answerSpend(d, f, a) },
-  { kind: "remaining", test: /\b(cat (mai )?am|ce mai am|cat mi a ramas|ramas|sold|situatia|bilant|disponibil)/, run: (d, _f, a) => answerRemaining(d, a) },
+  { kind: "remaining", test: /\b(cat (mai )?am|ce mai am|cat mi a ramas|ramas|sold|situatia|bilant|disponibil|cum stau cu|cum sta)/, run: (d, _f, a) => answerRemaining(d, a) },
 ];
 
 /**
@@ -514,6 +514,22 @@ export function analyze(raw: string, data: AppData, asOf = isoToday()): AnalystA
   const asksToRecord = /\b(adauga|adaug|treci|noteaza|trece|creeaza|fa mi|fa un|sterge)\b/.test(folded)
     || (!asksQuestion && /\b(am dat|am platit|am cumparat|am primit|am incasat)\b/.test(folded));
   if (asksToRecord) return undefined;
+
+  /**
+   * Trei feluri de mesaj seamănă cu o întrebare de analiză fără să fie:
+   *
+   * — o constatare cu sumă: „abonament telefon 45 lei” conține cuvântul
+   *   „abonament”, dar spune ce s-a plătit, nu întreabă ce abonamente există;
+   * — o întrebare despre aplicație: „cum funcționează plicurile?” cere o
+   *   explicație, nu o cifră din registru;
+   * — o negație: „nu am datorii” răspunde ghidului, nu întreabă de datorii.
+   *
+   * Pe toate trei, analistul trebuie să tacă și să lase mesajul mai departe.
+   */
+  const statesAnAmount = !asksQuestion && /\d/.test(folded);
+  const asksHowItWorks = /\b(cum (functioneaza|merge|se face|folosesc)|ce inseamna|la ce (foloseste|serveste)|de ce exista)\b/.test(folded);
+  const denies = /^(nu |n-?am |nu am |niciun|nicio)\b/.test(folded);
+  if (statesAnAmount || asksHowItWorks || denies) return undefined;
 
   for (const matcher of MATCHERS) {
     if (matcher.test.test(folded)) return matcher.run(data, folded, asOf);

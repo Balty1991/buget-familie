@@ -1,29 +1,44 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, CircleCheck, FileText, Lightbulb, Maximize2, Minimize2, Paperclip, Send, Trash2, WalletCards, X } from "lucide-react";
-import { allocationStatus, allocationWeekStatus, expenseCategories, formatDate, isoToday, parseNaturalSpendScenario, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
+import { expenseCategories, formatDate, isoToday, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
 import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 import { getLocale, t } from "@/lib/i18n";
-import { parseAssistantMessage, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
+import type { AssistantIntent, ParsedIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText, SUGGESTED_QUESTIONS } from "@/lib/analyst";
+import {
+  claimsSaved,
+  decide,
+  emptyGuideMemory,
+  expenseProposal,
+  foldRo,
+  habitKey,
+  incomeProposal,
+  isConfirm,
+  localInsight,
+  memberIdFor,
+  parsePayday,
+  parseWeeks,
+  sourceTextSafe,
+  spendAmount,
+  spendDate,
+  transferProposal,
+  understand,
+  type ChatChoice,
+  type ExtractedGuide,
+  type FinancialUpdate,
+  type GuideMemory,
+  type PhraseHabit,
+  type Reading,
+} from "@/lib/understand";
 import { planSpend, planIncome, relatedCategories, type SpendPlan } from "@/lib/suggest-source";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
-export type FinancialUpdate =
-  | { kind: "income"; amount: number; title: string; date?: string; memberId?: string }
-  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string }
-  | { kind: "debt"; name: string; remaining: number; due?: string }
-  | { kind: "debt-monthly"; amount: number; name?: string }
-  | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string }
-  | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
-  | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
-  | { kind: "payday"; date: string; flexDays: number }
-  | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string };
+export type { FinancialUpdate } from "@/lib/understand";
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void };
-type ChatChoice = { label: string; update: FinancialUpdate };
 type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
 type ChatAttachment = { name: string; mimeType: string; data: string };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
@@ -48,20 +63,10 @@ const QUOTA_KEY = "buget-familie:ai-quota-v2";
 const MEMORY_KEY = "buget-familie:ai-memory-v1";
 const DAILY_LIMIT = 100;
 
-type PhraseHabit = { key: string; title: string; category: string; allocationId?: string; sourceId?: string; count: number; lastAt: string };
-type GuideMemory = { phrases: PhraseHabit[]; skippedOnline: number };
 
-function foldRo(raw: string) {
-  return raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
 
-function habitKey(raw: string) {
-  return foldRo(raw).replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
-}
 
-function emptyMemory(): GuideMemory {
-  return { phrases: [], skippedOnline: 0 };
-}
+const emptyMemory = emptyGuideMemory;
 
 function loadMemory(): GuideMemory {
   try {
@@ -75,12 +80,6 @@ function loadMemory(): GuideMemory {
 
 let liveMemory: GuideMemory = emptyMemory();
 
-function findHabit(raw: string, title: string) {
-  const folded = habitKey(`${raw} ${title}`);
-  return [...liveMemory.phrases]
-    .filter((item) => item.key.length >= 2 && (folded.includes(item.key) || item.key.includes(habitKey(title))))
-    .sort((left, right) => right.count - left.count || right.key.length - left.key.length)[0];
-}
 
 function rememberExpense(update: Extract<FinancialUpdate, { kind: "expense" }>): GuideMemory {
   const key = habitKey(update.title);
@@ -134,20 +133,6 @@ function seedMemory(current: GuideMemory, data: AppData): GuideMemory {
   return { phrases: Array.from(map.values()).slice(-80), skippedOnline: current.skippedOnline };
 }
 
-function localInsight(raw: string, data: AppData): string | undefined {
-  const folded = foldRo(raw);
-  if (!/cat (mai )?am|ramas|sold|situat|bilant|plicur|nealo|obicei|ce mai am|cat am pe/.test(folded)) return undefined;
-  if (/adaug|cheltui|repartiz/.test(folded)) return undefined;
-  const envelopes = data.settings.salaryPlan.allocations.map((envelope) => {
-    const week = envelope.weeklyPace !== false ? allocationWeekStatus(data, envelope) : undefined;
-    const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
-    return `• ${envelope.label}${week ? ` · S${week.index}` : ""}: ${money(left)}`;
-  });
-  const sources = data.settings.paymentSources.map((source) => `• Nealocat · ${source.name}: ${money(sourceBalance(data, source.id))}`);
-  const known = liveMemory.phrases.filter((item) => item.count >= 2).slice(-6).map((item) => item.title);
-  const learned = known.length ? `\nȚin minte de la tine: ${known.join(", ")}.` : "";
-  return `Uite ce e disponibil, din registrul de pe telefon:${envelopes.length ? `\n${envelopes.join("\n")}` : ""}\n${sources.join("\n")}${learned}`;
-}
 
 type QuotaInfo = { remaining: number; limit: number; resetAt: string; mode: "online" | "local" };
 
@@ -224,45 +209,10 @@ function allAmounts(raw: string) {
   }).filter((value) => value >= 20);
 }
 
-function isConfirm(raw: string) {
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-  return /^(da+|ok|okay|confirm|confirma|confirmat|sigur|adauga|adaug[- ]o|inregistreaza|salveaza)([.! ]*)?$/.test(folded);
-}
 
-function claimsSaved(raw: string) {
-  return /am (adăugat|adaugat|înregistrat|inregistrat|trecut|notat|salvat)/i.test(raw);
-}
 
-function memberIdFor(data: AppData, hint: string, index = 0) {
-  const folded = hint.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const members = data.settings.members;
-  if (/sotie|sotiei|partenera|ea\b/.test(folded)) return members[1]?.id || members[0]?.id;
-  if (/sot\b|sotul|el\b/.test(folded) && !/sotie/.test(folded)) return members[0]?.id;
-  return members[index]?.id || members[0]?.id;
-}
 
-function parsePayday(raw: string) {
-  const iso = raw.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/);
-  if (iso && Number(iso[2]) <= 12 && Number(iso[3]) <= 31) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
-  const dmy = raw.match(/\b(\d{1,2})[./-](\d{1,2})[./-](20\d{2})\b/);
-  if (dmy && Number(dmy[2]) <= 12 && Number(dmy[1]) <= 31) return `${dmy[3]}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
-  const months = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const named = folded.match(/\b(\d{1,2})\s*(ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie|ian|feb|mar|apr|iun|iul|aug|sept|sep|oct|nov|dec)\.?\s*(20\d{2})?\b/);
-  if (!named) return undefined;
-  const monthToken = named[2].slice(0, 3);
-  const monthIndex = months.findIndex((item) => item.startsWith(monthToken) || (monthToken === "sep" && item === "septembrie"));
-  if (monthIndex < 0 || Number(named[1]) > 31) return undefined;
-  const year = named[3] || String(new Date().getFullYear());
-  return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${named[1].padStart(2, "0")}`;
-}
 
-function parseWeeks(raw: string) {
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const match = folded.match(/(\d{1,2})\s*(?:de\s+)?saptaman/);
-  const value = match ? Number(match[1]) : 0;
-  return value >= 2 && value <= 12 ? value : undefined;
-}
 
 function parseWeeklyAmount(raw: string) {
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -287,197 +237,16 @@ function parseAllocationUpdate(extracted: ExtractedGuide | undefined, userText: 
   return { kind: "allocation", category, amount, weekly: true, weeklyAmount, weeks: weeks >= 2 && weeks <= 12 ? weeks : 4, payday: parsePayday(userText) };
 }
 
-type ExtractedGuide = {
-  amount?: number;
-  title?: string;
-  category?: string;
-  debtName?: string;
-  monthlyPayment?: number;
-  dueDay?: number;
-  items?: Array<{ amount?: number; title?: string }>;
-  vendor?: string;
-  date?: string;
-  receiptLines?: Array<{ name?: string; quantity?: number; amount?: number }>;
-  totalLabel?: string;
-  confidence?: "high" | "medium" | "low";
-};
 
-function spendTitle(folded: string, extracted: ExtractedGuide | undefined, category: string) {
-  if (/taxi|uber|bolt/.test(folded)) return "Taxi";
-  if (/\bapa\b/.test(folded) && !/patiserie/.test(folded)) return "Apă";
-  if (/dulce|prajitur|ciocolat/.test(folded)) return "Dulciuri";
-  if (/tigar|tutun/.test(folded)) return t("Țigări");
-  if (/cafea/.test(folded)) return "Cafea";
-  const cleaned = folded
-    .replace(/\b(adaug[ae]?|adauga|cheltuiel[aei]*|lei|ron|pe data de|data de|alaltaieri|ieri|azi|astazi|maine|am uitat|sa trec|sa o trec|te rog|pentru|pe)\b/g, " ")
-    .replace(/\d[\d.,]*/g, " ")
-    .replace(/[^a-zăâîșț -]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (cleaned.length >= 3 && cleaned.length <= 42) {
-    return cleaned.charAt(0).toLocaleUpperCase("ro-RO") + cleaned.slice(1);
-  }
-  if (extracted?.title && !/^(altele|cheltuial)/i.test(extracted.title)) return extracted.title;
-  return category;
-}
 
-function spendAmount(raw: string, extracted: ExtractedGuide | undefined, parsedAmount: number) {
-  if (extracted?.amount && extracted.amount > 0) return extracted.amount;
-  if (parsedAmount > 0) return parsedAmount;
-  const found: number[] = [];
-  const pattern = /(?:^|[^\d])(\d{1,4}(?:[.,]\d{1,2})?)/g;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(raw))) {
-    const value = parseFloat(match[1].replace(",", "."));
-    if (value >= 1 && value < 1900) found.push(value);
-  }
-  return found[0] || 0;
-}
 
-function spendDate(raw: string) {
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  if (/\balaltaieri\b/.test(folded)) return shiftDay(-2);
-  if (/\bieri\b/.test(folded)) return shiftDay(-1);
-  if (/\bmaine\b/.test(folded)) return shiftDay(1);
-  if (/\b(azi|astazi)\b/.test(folded)) return shiftDay(0);
-  const dmy = raw.match(/\b(\d{1,2})[./-](\d{1,2})(?:[./-](20\d{2}))?\b/);
-  if (dmy && Number(dmy[2]) <= 12 && Number(dmy[1]) <= 31) {
-    const year = dmy[3] || String(new Date().getFullYear());
-    return `${year}-${dmy[2].padStart(2, "0")}-${dmy[1].padStart(2, "0")}`;
-  }
-  return shiftDay(0);
-}
 
-function sourceTextSafe(raw: string) { return raw.replace(/data:[^ ]+/g, "").slice(0, 800); }
 
-function isDebtOrInstallmentMessage(raw: string) {
-  const folded = foldRo(raw);
-  return /\b(credit|credite|datorie|datorii|sold restant|suma restanta|rata lunara|rate lunare|scadenta|scadente|imprumut|banca|bancii)\b/.test(folded)
-    && !/\b(am platit|am achitat|plata ratei|achit rata)\b/.test(folded);
-}
 
-function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData, forced = false): { text: string; choices: ChatChoice[] } | undefined {
-  if (isDebtOrInstallmentMessage(raw)) return undefined;
-  const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
-  const amount = spendAmount(raw, extracted, parsed.amount);
-  if (!amount || amount <= 0) return undefined;
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const draftTitle = spendTitle(folded, extracted, parsed.category || "Altele");
-  const habit = findHabit(raw, draftTitle);
-  const looksSpend = forced
-    || Boolean(habit)
-    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|uitat|\bpe |\bpentru /.test(folded)
-    || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
-  if (!looksSpend || /venit|salariu|intrare/.test(folded)) return undefined;
-  const category = (parsed.category && parsed.category !== "Altele") ? parsed.category : (habit?.category || extracted?.category || "Altele");
-  const title = draftTitle === "Altele" && habit ? habit.title : draftTitle;
-  const date = extracted?.date && /^20\d{2}-\d{2}-\d{2}$/.test(extracted.date) ? extracted.date : spendDate(raw);
-  const when = dateCopy(date);
-  const member = data.settings.members[0];
-  const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
-  const related = relatedCategories(category);
-  const funded = [...data.settings.salaryPlan.allocations]
-    .map((envelope) => {
-      const week = envelope.weeklyPace !== false ? allocationWeekStatus(data, envelope) : undefined;
-      const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
-      return { envelope, week, left };
-    })
-    .filter((item) => item.left >= amount)
-    .sort((left, right) => {
-      const score = (item: typeof left) => {
-        if (habit?.allocationId && item.envelope.id === habit.allocationId) return 6;
-        if (habit?.category && item.envelope.category === habit.category) return 5;
-        if (item.envelope.category === category) return 4;
-        if (related.includes(item.envelope.category || "")) return 3;
-        if ((item.envelope.category || item.envelope.label) === "Alimente") return 2;
-        return 1;
-      };
-      return score(right) - score(left) || right.left - left.left;
-    });
-  const choices: ChatChoice[] = funded.map(({ envelope, week, left }) => ({
-    label: `Din ${envelope.label}${week ? ` · S${week.index}` : ""} · ${money(left)}`,
-    update: { kind: "expense" as const, amount, title, category, date, allocationId: envelope.id, sourceId: envelope.sourceId || fallbackSource?.id, memberId: envelope.memberId || member?.id },
-  }));
-  data.settings.paymentSources.forEach((source) => {
-    const left = sourceBalance(data, source.id);
-    if (left < amount) return;
-    choices.push({
-      label: `Din nealocat · ${source.name} · ${money(left)}`,
-      update: { kind: "expense", amount, title, category, date, allocationId: "outside", sourceId: source.id, memberId: source.memberId || member?.id },
-    });
-  });
-  if (!choices.length) {
-    return { text: noDoubleStop(`Am înțeles **${title}**, ${money(amount)}, ${when}. Nu am găsit un plic sau o sursă cu destui bani disponibili.`), choices: [] };
-  }
-  const preferred = (habit?.allocationId && funded.find((item) => item.envelope.id === habit.allocationId))
-    || funded.find((item) => item.envelope.category === category)
-    || funded.find((item) => related.includes(item.envelope.category || ""));
-  const usual = habit && habit.count >= 2;
-  const text = preferred
-    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`} Alege de unde scoatem banii.`
-    : `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
-  return { text: noDoubleStop(text), choices };
-}
 
-function receiptDetails(extracted?: ExtractedGuide) {
-  if (!extracted?.receiptLines?.length && !extracted?.confidence) return "";
-  const lines = (extracted.receiptLines || []).slice(0, 8).filter((line) => line.name);
-  const products = lines.length ? ` Produse citite: ${lines.map((line) => `${line.quantity && line.quantity !== 1 ? `${line.quantity}× ` : ""}${line.name}${line.amount ? ` ${money(line.amount)}` : ""}`).join(", ")}.` : " Produsele nu au fost suficient de lizibile.";
-  const lineTotal = lines.reduce((sum, line) => sum + (line.amount || 0), 0);
-  const difference = extracted.amount && lineTotal > 0 ? Math.round((extracted.amount - lineTotal) * 100) / 100 : 0;
-  const reconciliation = extracted.amount
-    ? lineTotal > 0
-      ? Math.abs(difference) <= 0.01
-        ? ` Total bon: **${money(extracted.amount)}**. Liniile se potrivesc cu totalul.`
-        : ` Total bon: **${money(extracted.amount)}**. Liniile însumează **${money(lineTotal)}**; diferență de **${money(Math.abs(difference))}**${difference > 0 ? " (posibilă reducere sau linie necitită)" : " (verifică o posibilă citire dublă)"}.`
-      : ` Total bon identificat: **${money(extracted.amount)}**.`
-    : "";
-  const confidence = extracted.confidence === "low" ? t(" Verifică atent suma; fotografia nu este suficient de clară.") : "";
-  return `${reconciliation}${products}${confidence}`;
-}
 
-function matchEnvelope(data: AppData, token: string) {
-  const key = habitKey(token);
-  if (key.length < 3) return undefined;
-  return data.settings.salaryPlan.allocations.find((item) => {
-    const hay = habitKey(`${item.label} ${item.category || ""}`);
-    return hay.includes(key) || key.includes(hay);
-  });
-}
 
-function incomeProposal(raw: string, data: AppData): { text: string; choices: ChatChoice[] } | undefined {
-  const folded = foldRo(raw);
-  if (!/venit|salariu|intrare|am primit|mi-a venit/.test(folded)) return undefined;
-  if (/cheltui|tigar|tutun|taxi|suc|bere|paine|gume|factura/.test(folded) && !/salariu|venit/.test(folded)) return undefined;
-  const amount = spendAmount(raw, undefined, 0);
-  if (!amount || amount < 50) return undefined;
-  const title = /sotie|sotiei|partener/.test(folded) ? t("Salariul soției") : /salariu/.test(folded) ? "Salariu" : "Venit";
-  const date = spendDate(raw);
-  return {
-    text: noDoubleStop(`Am înțeles **${title}**, ${money(amount)}, **${dateCopy(date)}**. Îl trec în registru pe ziua aleasă?`),
-    choices: [{ label: `Adaugă venitul · ${money(amount)}`, update: { kind: "income", amount, title, date, memberId: memberIdFor(data, raw, /sotie|sotiei|partener/.test(folded) ? 1 : 0) } }],
-  };
-}
 
-function transferProposal(raw: string, data: AppData): { text: string; choices: ChatChoice[] } | undefined {
-  const folded = foldRo(raw);
-  if (!/\b(mut[ae]|transfer|treci|realoc)/.test(folded)) return undefined;
-  const amount = spendAmount(raw, undefined, 0);
-  if (!amount) return undefined;
-  const pair = folded.match(/\b(?:din|de pe)\s+([a-z0-9 &ăâîșț]+?)\s+(?:in|în|spre|catre|către)\s+([a-z0-9 &ăâîșț]+)/);
-  if (!pair) return undefined;
-  const from = matchEnvelope(data, pair[1]);
-  const to = matchEnvelope(data, pair[2]);
-  if (!from || !to || from.id === to.id) return undefined;
-  const left = allocationStatus(data, from).remaining;
-  if (left < amount) {
-    return { text: `În **${from.label}** mai sunt ${money(left)}, nu ajung ${money(amount)} de mutat.`, choices: [] };
-  }
-  return {
-    text: `Mut **${money(amount)}** din **${from.label}** în **${to.label}**? Banii rămân pe același card, se mută doar între plicuri.`,
-    choices: [{ label: `Mută ${money(amount)}`, update: { kind: "transfer", amount, fromId: from.id, toId: to.id, fromLabel: from.label, toLabel: to.label } }],
-  };
-}
 
 function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide | undefined, userText: string, data: AppData, history: ChatMessage[] = []): FinancialUpdate[] {
   const sourceText = allAmounts(userText).length ? userText : [...history].reverse().find((item) => item.role === "user" && allAmounts(item.text).length)?.text || userText;
@@ -804,26 +573,24 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
      * utilizatorul chiar spune lucrul pe care ghidul îl cere.
      */
     const stageKind = guideStage === "income" ? "income" : guideStage === "debts" || guideStage === "rate" ? "debt" : guideStage === "allocation" ? "envelope" : undefined;
-    const intents = parseAssistantMessage(raw, { asOf: isoToday(), categories: [...expenseCategories, ...data.settings.customCategories] });
-    const actionable = stageKind ? intents.filter((item) => item.intent.kind !== stageKind) : intents;
-    if (actionable.length) {
-      addMessage({
-        role: "assistant",
-        text: proposalText(actionable.map((item) => item.intent), data),
-        updates: actionable.map((item) => intentToUpdate(item.intent, data)),
-        intents: actionable.map((item) => item.intent),
-        action: { type: "apply", label: actionable.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
-        choices: spendAlternatives(data, actionable),
-      });
-      return;
+    /**
+     * Fără rețea se citește exact la fel ca în rest — aceeași funcție, aceleași
+     * scoruri. Înainte erau două cascade cu ordini diferite, deci aceeași frază
+     * putea însemna altceva online față de offline.
+     */
+    const offline = understand(raw, data, { memory: liveMemory, asOf: isoToday() }).filter((reading) => {
+      // Ghidul pas cu pas întreabă ceva anume; îi lăsăm lui răspunsul la întrebarea lui.
+      if (!stageKind || reading.kind !== "intents") return true;
+      return reading.intents.some((item) => item.intent.kind !== stageKind);
+    });
+    const { winner: offlineWinner } = decide(offline);
+    if (offlineWinner) {
+      const trimmed: Reading = offlineWinner.kind === "intents" && stageKind
+        ? { ...offlineWinner, intents: offlineWinner.intents.filter((item) => item.intent.kind !== stageKind) }
+        : offlineWinner;
+      if (act(trimmed)) return;
     }
-    // Aceeași analiză locală și când nu există rețea: datele sunt tot pe telefon.
-    const offlineAnalysis = analyze(raw, data);
-    if (offlineAnalysis) {
-      addMessage({ role: "assistant", text: answerToText(offlineAnalysis), followUps: offlineAnalysis.followUps });
-      return;
-    }
-    if (guideStage === "income") { if (!amount) { addMessage({ role: "assistant", text: t("Am nevoie doar de o sumă aproximativă. De exemplu: «salariul meu este 6.500 lei pe lună».") }); return; } onFinancialUpdate({ kind: "income", amount, title: /salariu/i.test(folded) ? "Salariu lunar" : t("Venit lunar") }); setGuideStage("debts"); addMessage({ role: "assistant", text: `Am notat ${money(amount)} ca venit lunar. Următoarea întrebare: ai datorii, credite, rate sau carduri de cumpărături?` }); return; } if (guideStage === "debts") { if (/nu\s+(am|exista)|fara\s+datorii|niciuna/.test(folded)) { setGuideStage("allocation"); addMessage({ role: "assistant", text: t("În regulă, fără datorii. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii. Ce sume vrei să rezervi?") }); return; } if (!amount) { addMessage({ role: "assistant", text: t("Spune-mi, de exemplu: «Credit auto, mai am 18.000 lei» sau «rată la bancă, sold 42.000 lei».") }); return; } const debtName = raw.replace(/\d[\d.,\s]*(?:lei|ron)?/gi, "").replace(/(mai am|sold|datorie|credit|rata|rată|la banca|la bancă)/gi, "").replace(/[,:-]/g, " ").trim() || "Datorie"; setPendingDebtName(debtName); onFinancialUpdate({ kind: "debt", name: debtName, remaining: amount }); setGuideStage("rate"); addMessage({ role: "assistant", text: `Am trecut „${debtName}” cu soldul de ${money(amount)}. Cât plătești lunar pentru această datorie?` }); return; } if (guideStage === "rate") { if (amount) onFinancialUpdate({ kind: "debt-monthly", amount }); setGuideStage("allocation"); addMessage({ role: "assistant", text: amount ? `Am notat rata de ${money(amount)}. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.` : t("În regulă, lăsăm rata de completat mai târziu. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.") }); return; } if (guideStage === "allocation") { const categories = ["alimente", "facturi", "casa", "transport", "economii", "datorii"]; const found = categories.map((category) => { const match = folded.match(new RegExp(`${category}[^\\d]{0,18}(\\d[\\d.,]*)`)); return match ? { category, amount: firstAmount(match[1]) } : undefined; }).filter((item): item is { category: string; amount: number } => Boolean(item?.amount)); if (!found.length) { addMessage({ role: "assistant", text: t("Nu am găsit categoriile și sumele. Scrie simplu: «alimente 1500, facturi 800, transport 400, economii 500».") }); return; } found.forEach((item) => onFinancialUpdate({ kind: "allocation", category: item.category === "facturi" || item.category === "casa" ? "Casă & facturi" : item.category[0].toLocaleUpperCase("ro-RO") + item.category.slice(1), amount: item.amount, weekly: item.category === "alimente" || item.category === "transport" })); setGuideStage("ready"); addMessage({ role: "assistant", text: `Am repartizat ${found.map((item) => `${item.category} ${money(item.amount)}`).join(", ")}. Putem ajusta orice sumă. De acum sunt disponibil să urmărim împreună cheltuielile, veniturile și ritmul lunii.` }); return; } const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); if (!parsed.understood) { addMessage({ role: "assistant", text: t("Spune-mi suma și ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil».") }); return; } const proposal = expenseProposal(raw, { amount: parsed.amount, category: parsed.category, title: naturalTitle(raw, parsed.category) }, data); if (proposal) { offerSpend(proposal); return; } addMessage({ role: "assistant", text: `Am înțeles ${parsed.title}, ${money(parsed.amount)}. Alege de unde scoatem banii.` }); }, 420); };
+    if (guideStage === "income") { if (!amount) { addMessage({ role: "assistant", text: t("Am nevoie doar de o sumă aproximativă. De exemplu: «salariul meu este 6.500 lei pe lună».") }); return; } onFinancialUpdate({ kind: "income", amount, title: /salariu/i.test(folded) ? "Salariu lunar" : t("Venit lunar") }); setGuideStage("debts"); addMessage({ role: "assistant", text: `Am notat ${money(amount)} ca venit lunar. Următoarea întrebare: ai datorii, credite, rate sau carduri de cumpărături?` }); return; } if (guideStage === "debts") { if (/nu\s+(am|exista)|fara\s+datorii|niciuna/.test(folded)) { setGuideStage("allocation"); addMessage({ role: "assistant", text: t("În regulă, fără datorii. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii. Ce sume vrei să rezervi?") }); return; } if (!amount) { addMessage({ role: "assistant", text: t("Spune-mi, de exemplu: «Credit auto, mai am 18.000 lei» sau «rată la bancă, sold 42.000 lei».") }); return; } const debtName = raw.replace(/\d[\d.,\s]*(?:lei|ron)?/gi, "").replace(/(mai am|sold|datorie|credit|rata|rată|la banca|la bancă)/gi, "").replace(/[,:-]/g, " ").trim() || "Datorie"; setPendingDebtName(debtName); onFinancialUpdate({ kind: "debt", name: debtName, remaining: amount }); setGuideStage("rate"); addMessage({ role: "assistant", text: `Am trecut „${debtName}” cu soldul de ${money(amount)}. Cât plătești lunar pentru această datorie?` }); return; } if (guideStage === "rate") { if (amount) onFinancialUpdate({ kind: "debt-monthly", amount }); setGuideStage("allocation"); addMessage({ role: "assistant", text: amount ? `Am notat rata de ${money(amount)}. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.` : t("În regulă, lăsăm rata de completat mai târziu. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.") }); return; } if (guideStage === "allocation") { const categories = ["alimente", "facturi", "casa", "transport", "economii", "datorii"]; const found = categories.map((category) => { const match = folded.match(new RegExp(`${category}[^\\d]{0,18}(\\d[\\d.,]*)`)); return match ? { category, amount: firstAmount(match[1]) } : undefined; }).filter((item): item is { category: string; amount: number } => Boolean(item?.amount)); if (!found.length) { addMessage({ role: "assistant", text: t("Nu am găsit categoriile și sumele. Scrie simplu: «alimente 1500, facturi 800, transport 400, economii 500».") }); return; } found.forEach((item) => onFinancialUpdate({ kind: "allocation", category: item.category === "facturi" || item.category === "casa" ? "Casă & facturi" : item.category[0].toLocaleUpperCase("ro-RO") + item.category.slice(1), amount: item.amount, weekly: item.category === "alimente" || item.category === "transport" })); setGuideStage("ready"); addMessage({ role: "assistant", text: `Am repartizat ${found.map((item) => `${item.category} ${money(item.amount)}`).join(", ")}. Putem ajusta orice sumă. De acum sunt disponibil să urmărim împreună cheltuielile, veniturile și ritmul lunii.` }); return; } const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); if (!parsed.understood) { addMessage({ role: "assistant", text: t("Spune-mi suma și ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil».") }); return; } const proposal = expenseProposal(raw, { amount: parsed.amount, category: parsed.category, title: naturalTitle(raw, parsed.category) }, data, liveMemory); if (proposal) { offerSpend(proposal); return; } addMessage({ role: "assistant", text: `Am înțeles ${parsed.title}, ${money(parsed.amount)}. Alege de unde scoatem banii.` }); }, 420); };
 
   const handleAttachment = async (file?: File) => {
     if (!file) return;
@@ -844,6 +611,38 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     } finally { setAttachmentBusy(false); }
   };
 
+  /**
+   * Ce se întâmplă cu citirea aleasă. Întoarce `false` când citirea nu duce la
+   * nimic de arătat, ca mesajul să meargă mai departe la model.
+   */
+  const act = (reading: Reading): boolean => {
+    if (reading.kind === "intents") {
+      const intents = reading.intents.map((item) => item.intent);
+      addMessage({
+        role: "assistant",
+        text: proposalText(intents, data),
+        updates: intents.map((item) => intentToUpdate(item, data)),
+        intents,
+        action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
+        choices: spendAlternatives(data, reading.intents),
+      });
+      return true;
+    }
+    if (reading.kind === "question") {
+      addMessage({ role: "assistant", text: answerToText(reading.answer), followUps: reading.answer.followUps });
+      return true;
+    }
+    if (reading.kind === "expense" || reading.kind === "transfer" || reading.kind === "income") {
+      offerSpend(reading.proposal);
+      return true;
+    }
+    if (reading.kind === "insight") {
+      addMessage({ role: "assistant", text: reading.text });
+      return true;
+    }
+    return false;
+  };
+
   const send = (draft?: string) => {
     const raw = (draft ?? message).trim();
     if (!raw && !attachment) return;
@@ -862,71 +661,28 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       return;
     }
     if (isConfirm(raw)) {
-      const lastSpend = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data));
-      const recovered = lastSpend ? expenseProposal(lastSpend.text, undefined, data, true) : undefined;
+      const lastSpend = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data, liveMemory));
+      const recovered = lastSpend ? expenseProposal(lastSpend.text, undefined, data, liveMemory, true) : undefined;
       if (recovered) {
         offerSpend(recovered);
         return;
       }
     }
     /**
-     * Intențiile scrise limpede se rezolvă local, înaintea oricărei propuneri euristice
-     * și înaintea drumului la server. Aici era eroarea vizibilă: „fă-mi plic … 2400 … cu
-     * limita săptămânală 600 lei” cădea în propunerea de venit, care lua prima sumă
-     * găsită. Așa răspunsul e imediat, funcționează offline și nu depinde de model.
-     */
-    if (!sentAttachment) {
-      const intents = parseAssistantMessage(requestText, { asOf: isoToday(), categories: [...expenseCategories, ...data.settings.customCategories] });
-      if (intents.length) {
-        setMemory(markLocalSave());
-        addMessage({
-          role: "assistant",
-          text: proposalText(intents.map((item) => item.intent), data),
-          updates: intents.map((item) => intentToUpdate(item.intent, data)),
-          intents: intents.map((item) => item.intent),
-          action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
-          choices: spendAlternatives(data, intents),
-        });
-        return;
-      }
-    }
-    /**
-     * Analistul local, înaintea oricărei propuneri de înregistrare. „Îmi permit 500
-     * de lei pe alimente?” este o întrebare, dar are formă de cheltuială: citită de
-     * `expenseProposal`, devenea o cerere de a scoate 500 de lei din plic. Analistul
-     * returnează `undefined` pentru cererile reale de înregistrare, deci nu fură nimic.
+     * O singură citire a mesajului, un singur loc unde se alege. Înainte, fiecare
+     * cititor avea propriul `if … return` și ordinea lor era ordinea liniilor din
+     * funcție: cine recunoștea primul lua mesajul, restul nu mai apucau să se uite.
+     * De aici veneau confuziile — o cerere de plic citită ca venit, o întrebare
+     * citită ca cheltuială. Acum toți citesc, iar `decide` compară.
      *
-     * Răspunde din registrul de pe telefon: instant, fără rețea, fără să consume cota.
+     * Bonul fotografiat nu trece pe aici: acolo suma nu se deduce din cuvinte, ci
+     * din imagine, deci merge direct la model.
      */
-    const analysis = analyze(raw, data);
-    if (analysis) {
+    const readings = sentAttachment ? [] : understand(requestText, data, { memory: liveMemory, asOf: isoToday() });
+    const { winner } = decide(readings);
+    if (winner) {
       setMemory(markLocalSave());
-      addMessage({ role: "assistant", text: answerToText(analysis), followUps: analysis.followUps });
-      return;
-    }
-    const spendNow = expenseProposal(requestText, undefined, data);
-    if (spendNow) {
-      setMemory(markLocalSave());
-      offerSpend(spendNow);
-      return;
-    }
-    const moved = transferProposal(requestText, data);
-    if (moved) {
-      setMemory(markLocalSave());
-      offerSpend(moved);
-      return;
-    }
-    const incomeNow = incomeProposal(requestText, data);
-    if (incomeNow) {
-      setMemory(markLocalSave());
-      offerSpend(incomeNow);
-      return;
-    }
-    const insight = localInsight(raw, data);
-    if (insight) {
-      setMemory(markLocalSave());
-      addMessage({ role: "assistant", text: insight });
-      return;
+      if (act(winner)) return;
     }
     const blocked = quota.mode === "local" || quota.remaining <= 0;
     if (blocked) {
@@ -977,12 +733,12 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         const receiptExtracted = sentAttachment && localReceiptAmount && localReceiptAmount > 0
           ? { ...payload.extracted, amount: localReceiptAmount }
           : payload.extracted;
-        const lastSpendText = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data))?.text || requestText;
+        const lastSpendText = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data, liveMemory))?.text || requestText;
         const extractedText = payload.extracted?.vendor ? `${sourceTextSafe(requestText)} ${payload.extracted.vendor}` : requestText;
         const sourceText = isConfirm(raw) ? lastSpendText : extractedText;
         const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt"
           ? undefined
-          : expenseProposal(sourceText, receiptExtracted, data, Boolean(sentAttachment) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
+          : expenseProposal(sourceText, receiptExtracted, data, liveMemory, Boolean(sentAttachment) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
         if (proposal) {
           offerSpend(proposal);
           return;
