@@ -73,10 +73,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           </div>
           <FileUp size={19} />
         </div>
-        <p className="bf-review-intro">
-          Alege fișierul CSV exportat din aplicația băncii. Este citit pe telefon, nu se trimite nicăieri, iar fiecare
-          rând ajunge aici ca propunere de confirmat. Mișcările deja existente sunt recunoscute și nu se dublează.
-        </p>
+        <p className="bf-review-intro">{t("Alege fișierul CSV exportat din aplicația băncii. Este citit pe telefon, nu se trimite nicăieri, iar fiecare rând ajunge aici ca propunere de confirmat. Mișcările deja existente sunt recunoscute și nu se dublează.")}</p>
         <div className="bf-form-grid">
           <Field label={t("În ce sursă intră")}>
             <select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>

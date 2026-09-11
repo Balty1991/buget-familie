@@ -90,7 +90,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
         {step === 0 && (
           <div className="bf-setup-copy">
             <h2 id="bf-setup-title">{t("Cine folosește")} <em>{t("aplicația?")}</em></h2>
-            <p>Poți ține evidența singur sau împreună cu partenerul. Numele ajută la identificarea persoanei care a adăugat o cheltuială.</p>
+            <p>{t("Poți ține evidența singur sau împreună cu partenerul. Numele ajută la identificarea persoanei care a adăugat o cheltuială.")}</p>
             <label className="bf-field"><span>Numele familiei</span><input value={familyName} onChange={(event) => setFamilyName(event.target.value)} placeholder="ex. Familia Popescu" /></label>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
@@ -113,7 +113,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
         {step === 2 && (
           <div className="bf-setup-copy">
             <h2 id="bf-setup-title">{t("Până când vrei să ajungă")} <em>banii?</em></h2>
-            <p>Alege ziua în care primești următorul venit. Apoi aplicația îți arată cât ai pus deoparte pentru fiecare scop până atunci.</p>
+            <p>{t("Alege ziua în care primești următorul venit. Apoi aplicația îți arată cât ai pus deoparte pentru fiecare scop până atunci.")}</p>
             <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
@@ -133,7 +133,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
           <div className="bf-setup-copy">
             <span className="bf-setup-shield"><ShieldCheck size={28} /></span>
             <h2 id="bf-setup-title">{t("Datele rămân")} <em>{t("la tine.")}</em></h2>
-            <p>Registrul stă pe telefon. Sincronizarea este opțională și criptată. Nu este nevoie de cont Google sau de conectare la bancă. Pozele bonurilor rămân pe dispozitiv.</p>
+            <p>{t("Registrul stă pe telefon. Sincronizarea este opțională și criptată. Nu este nevoie de cont Google sau de conectare la bancă. Pozele bonurilor rămân pe dispozitiv.")}</p>
             <ul className="bf-setup-privacy">
               <li>{t("Fără conectare la bancă, fără reclame în registru, fără vânzare de date.")}</li>
               <li>{t("Politica de confidențialitate o găsești în Instrumente → Încredere.")}</li>

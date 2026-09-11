@@ -40,10 +40,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
       <div className="bf-empty-state slim">
         <ShoppingBasket size={23} />
         <h2>{t("Încă nu există istoric de prețuri")}</h2>
-        <p>
-          Fotografiază câteva bonuri și păstrează liniile de produse. După ce același produs apare pe două bonuri,
-          aici vei vedea cum i-a evoluat prețul și în ce magazin a fost mai ieftin.
-        </p>
+        <p>{t("Fotografiază câteva bonuri și păstrează liniile de produse. După ce același produs apare pe două bonuri, aici vei vedea cum i-a evoluat prețul și în ce magazin a fost mai ieftin.")}</p>
       </div>
     );
   }
@@ -58,10 +55,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
           </div>
           <ShoppingCart size={19} />
         </div>
-        <p className="bf-price-intro">
-          Alege produsele pe care le cumperi constant. Comparăm cât costau împreună acum, față de ultimul preț de
-          dinaintea ferestrei alese. Este indicele gospodăriei tale, calculat din bonurile tale.
-        </p>
+        <p className="bf-price-intro">{t("Alege produsele pe care le cumperi constant. Comparăm cât costau împreună acum, față de ultimul preț de dinaintea ferestrei alese. Este indicele gospodăriei tale, calculat din bonurile tale.")}</p>
         <div className="bf-price-window" role="group" aria-label={t("Fereastra de comparație")}>
           {WINDOWS.map((item) => (
             <button key={item} className={windowDays === item ? "active" : ""} onClick={() => setWindowDays(item)}>
@@ -161,10 +155,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
             </article>
           ))}
         </div>
-        <p className="bf-price-privacy">
-          Prețurile se potrivesc după denumirea citită de pe bon. Un gramaj diferit sau o promoție pot explica o
-          diferență, așa că tratează comparația ca pe un indiciu, nu ca pe o concluzie.
-        </p>
+        <p className="bf-price-privacy">{t("Prețurile se potrivesc după denumirea citită de pe bon. Un gramaj diferit sau o promoție pot explica o diferență, așa că tratează comparația ca pe un indiciu, nu ca pe o concluzie.")}</p>
       </section>
     </div>
   );

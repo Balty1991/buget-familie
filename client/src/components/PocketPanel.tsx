@@ -21,10 +21,7 @@ export function PocketPanel({ data }: { data: AppData }) {
       <div className="bf-empty-state slim">
         <PiggyBank size={23} />
         <h2>Niciun copil marcat</h2>
-        <p>
-          În Setări → Membri poți marca un membru drept copil. Dă-i apoi un plic pe numele lui, în Plan, iar
-          aici va vedea cât mai are din banii de buzunar.
-        </p>
+        <p>{t("În Setări → Membri poți marca un membru drept copil. Dă-i apoi un plic pe numele lui, în Plan, iar aici va vedea cât mai are din banii de buzunar.")}</p>
       </div>
     );
   }

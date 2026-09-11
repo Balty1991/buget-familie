@@ -17,7 +17,7 @@ export function TrustCenter() {
         <li><b>{t("Nu sincronizăm:")}</b> {t("fotografiile bonurilor, șabloanele rapide, filtrele, tema și istoricul de sincronizare al acestui dispozitiv.")}</li>
         <li><b>{t("Fără cont de șters:")}</b> nu există cont Play/Google al aplicației. Resetarea din Setări golește doar acest telefon. O copie din cameră rămâne până schimbați parola de familie.</li>
       </ul>
-      <p>Permisiuni Android: internet (sincronizare opțională), notificări locale, alarmă exactă pentru reamintiri, pornire după restart. Camera se folosește doar prin selectorul de sistem, pentru bonuri.</p>
+      <p>{t("Permisiuni Android: internet (sincronizare opțională), notificări locale, alarmă exactă pentru reamintiri, pornire după restart. Camera se folosește doar prin selectorul de sistem, pentru bonuri.")}</p>
       <div className="bf-trust-links">
         <a href={privacy} target="_blank" rel="noreferrer"><ShieldCheck size={15} /> {t("Politică de confidențialitate")} <ExternalLink size={13} /></a>
         <a href={terms} target="_blank" rel="noreferrer">{t("Termeni de utilizare")} <ExternalLink size={13} /></a>

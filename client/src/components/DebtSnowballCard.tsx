@@ -26,8 +26,8 @@ export function DebtSnowballCard({ data, onPay }: { data: AppData; onPay: (debt:
       <div className="bf-snowball-next">
         <span>{t("01 · următoarea")}</span>
         <strong>{money(next.remaining)}</strong>
-        <small>rată {money(next.monthly)}{next.monthsAtMinimum ? ` · ~${next.monthsAtMinimum} luni la minim` : ""}</small>
-        <button type="button" className="pay" onClick={() => onPay(next.debt)}><Check size={16} /> Confirmă {money(next.recommended)}</button>
+        <small>{t("rată {amount}", { amount: money(next.monthly) })}{next.monthsAtMinimum ? t(" · ~{months} luni la minim", { months: next.monthsAtMinimum }) : ""}</small>
+        <button type="button" className="pay" onClick={() => onPay(next.debt)}><Check size={16} /> {t("Confirmă {amount}", { amount: money(next.recommended) })}</button>
       </div>
       {ball.order.length > 1 && (
         <ol className="bf-snowball-list">
