@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, CalendarDays, Download, Landmark, PiggyBank, TrendingDown, TrendingUp, WalletCards } from "lucide-react";
-import { allocationStatus, categoryColors, financialBalance, isoDate, type AppData } from "@/lib/finance-data";
+import { allocationStatus, categoryColors, financialBalance, formatDate, isoDate, type AppData } from "@/lib/finance-data";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import type { MainView } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
@@ -50,18 +50,32 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
   const activeCategory = categorySlices.find((slice) => slice.name === selectedCategory) || categorySlices[0];
   const alerts = data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) })).filter((entry) => entry.state !== "healthy" && (!memberId || entry.item.memberId === memberId));
   const change = (value: number, base: number) => base === 0 ? (value === 0 ? "fără mișcări comparabile" : "prima lună cu date") : `${value >= 0 ? "+" : ""}${money(value)} față de luna anterioară`;
+  /**
+   * Aplicația este construită pe cicluri de salariu, dar acest ecran compară luni
+   * calendaristice. O casă plătită pe 25 avea deci „cheltuielile au depășit veniturile”
+   * de la 1 până la 24 în fiecare lună — o alarmă falsă prin construcție. Când în luna
+   * aleasă nu a intrat niciun venit, dar planul spune că salariul vine mai târziu,
+   * spunem asta în loc să dăm alarma.
+   */
+  const plannedPayday = data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday;
+  const awaitingIncome = current.income === 0 && current.expense > 0 && Boolean(plannedPayday) && plannedPayday! >= range.start && plannedPayday! <= range.end;
+
   const snapshot = !selected.length && !previous.length
     ? { tone: "empty", eyebrow: "PUNCT DE PLECARE", title: "Începe cu prima mișcare.", detail: "După câteva înregistrări, aici vei vedea ce s-a schimbat și ce merită urmărit." }
     : !selected.length
       ? { tone: "empty", eyebrow: "LUNA ALEASĂ", title: "Nu există mișcări în această lună.", detail: "Poți alege o altă lună din ritmul anual sau poți înregistra prima mișcare." }
       : alerts.some((entry) => entry.state === "over")
         ? { tone: "risk", eyebrow: "DECIZIE NECESARĂ", title: "Un plic a trecut peste limită.", detail: `${alerts.filter((entry) => entry.state === "over").length} ${alerts.filter((entry) => entry.state === "over").length === 1 ? "limită cere" : "limite cer"} o revizuire înainte de următoarea plată.` }
+        : awaitingIncome
+          ? { tone: "empty", eyebrow: t("VENIT ÎNCĂ NEÎNREGISTRAT"), title: t("Salariul lunii nu a intrat încă."), detail: t("În luna aleasă sunt {expense} în cheltuieli și niciun venit — următorul venit este așteptat pe {date}, iar comparația devine corectă după ce intră banii.", { expense: money(current.expense), date: formatDate(plannedPayday || "") }) }
         : currentFlow < 0
           ? { tone: "watch", eyebrow: "RITM DE URMĂRIT", title: "Cheltuielile au depășit veniturile.", detail: `${selected.length} ${selected.length === 1 ? "mișcare este" : "mișcări sunt"} înregistrate; verifică distribuția pe categorii înainte de a ajusta planul.` }
           : { tone: "good", eyebrow: "SITUAȚIE LUNARĂ", title: "Luna rămâne pe plus.", detail: `${selected.length} ${selected.length === 1 ? "mișcare" : "mișcări"} și ${categories.length} ${categories.length === 1 ? "categorie urmărită" : "categorii urmărite"}; folosește comparația pentru următorul pas.` };
   const snapshotIcon = snapshot.tone === "risk" ? <AlertTriangle size={18} /> : snapshot.tone === "watch" ? <TrendingDown size={18} /> : snapshot.tone === "good" ? <TrendingUp size={18} /> : <CalendarDays size={18} />;
   const exportPdf = async () => { setExporting(true); try { await downloadMonthlyBalancePdf(data, focusMonth, memberId); } finally { setExporting(false); } };
-  const nextStep = alerts.some((entry) => entry.state === "over")
+  const nextStep = awaitingIncome
+    ? { title: t("Așteaptă venitul înainte de a trage concluzii"), detail: t("Gospodăriile plătite la mijlocul sau la finalul lunii au mereu cheltuieli înaintea încasării. Compară pe ciclul de salariu, în Plan."), label: t("Deschide Planul"), view: "plan" as MainView }
+    : alerts.some((entry) => entry.state === "over")
     ? { title: "Revizuiește plicurile depășite", detail: "Un plic a trecut peste limita ajustată. Verifică suma și mută doar ce este necesar.", label: "Deschide Planul", view: "plan" as MainView }
     : currentFlow < 0
       ? { title: "Verifică ritmul până la următorul venit", detail: "Cheltuielile lunii au depășit veniturile înregistrate. O ajustare în Plan poate preveni o surpriză la final de perioadă.", label: "Verifică Planul", view: "plan" as MainView }

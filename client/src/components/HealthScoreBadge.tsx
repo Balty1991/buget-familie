@@ -20,7 +20,9 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
       <button
         type="button"
         className="os-calm-btn"
-        aria-label={t("Scor sănătate financiară {score} din 100. Apasă pentru detalii.", { score: health.score })}
+        aria-label={health.score === null
+          ? t("Scor sănătate financiară indisponibil: încă nu sunt destule date. Apasă pentru a vedea ce lipsește.")
+          : t("Scor sănătate financiară {score} din 100. Apasă pentru detalii.", { score: health.score })}
         onClick={() => setOpen(true)}
       >
         <CalmGauge value={health.score} />
@@ -33,7 +35,7 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
 
 function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; onClose: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
-  const toneLabel = health.tone === "good" ? "Calm" : health.tone === "watch" ? t("Atenție") : "Risc";
+  const toneLabel = health.tone === "unknown" ? t("Încă nu se poate calcula") : health.tone === "good" ? "Calm" : health.tone === "watch" ? t("Atenție") : "Risc";
 
   return createPortal(
     <div className="bf-modal-backdrop bf-health-backdrop" role="presentation" onMouseDown={onClose}>
@@ -49,7 +51,7 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
         <header>
           <div>
             <p className="bf-kicker">{t("SĂNĂTATE FINANCIARĂ")}</p>
-            <h2 id="bf-health-title">Scor {health.score} · {toneLabel}</h2>
+            <h2 id="bf-health-title">{health.score === null ? toneLabel : t("Scor {score} · {tone}", { score: health.score, tone: toneLabel })}</h2>
           </div>
           <button className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}>
             <X size={19} />
@@ -57,8 +59,19 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
         </header>
 
         <p className="bf-health-sheet-intro">
-          Scor local, calculat din registrul tău. Nu estimează venituri viitoare și nu modifică datele.
+          {health.score === null
+            ? t("Un scor calculat din nimic ar fi o părere, nu o măsurătoare. Apar câteva date în registru și nota devine reală.")
+            : t("Scor local, calculat din registrul tău. Nu estimează venituri viitoare și nu modifică datele.")}
         </p>
+
+        {health.missing.length > 0 && (
+          <div className="bf-health-missing">
+            <p className="bf-kicker">{health.score === null ? t("CE LIPSEȘTE") : t("CE AR FACE SCORUL MAI EXACT")}</p>
+            <ul>
+              {health.missing.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+        )}
 
         <div className="bf-health-sheet-ring-wrap" aria-hidden="true">
           <CalmGauge value={health.score} />
@@ -66,15 +79,15 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
 
         <ul className="bf-health-factors">
           {health.factors.map((factor) => (
-            <li key={factor.id} className="bf-health-factor">
-              <EnvelopeMark remaining={factor.value} state={factor.value < 0.45 ? "over" : factor.value < 0.75 ? "watch" : "healthy"} size={42} />
+            <li key={factor.id} className={factor.known ? "bf-health-factor" : "bf-health-factor unknown"}>
+              <EnvelopeMark remaining={factor.known ? factor.value : 0} state={!factor.known ? "watch" : factor.value < 0.45 ? "over" : factor.value < 0.75 ? "watch" : "healthy"} size={42} />
               <div>
                 <div className="bf-health-factor-top">
                   <b>{factor.label}</b>
-                  <span>{Math.round(factor.value * 100)} · {Math.round(factor.weight * 100)}%</span>
+                  <span>{factor.known ? `${Math.round(factor.value * 100)} · ${Math.round(factor.weight * 100)}%` : t("nu intră în scor")}</span>
                 </div>
                 <div className="bf-health-factor-bar" aria-hidden="true">
-                  <i style={{ width: `${Math.round(factor.value * 100)}%` }} />
+                  <i style={{ width: factor.known ? `${Math.round(factor.value * 100)}%` : "0%" }} />
                 </div>
                 <small>{factor.detail}</small>
               </div>
@@ -83,7 +96,7 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
         </ul>
 
         <p className="bf-health-sheet-note">
-          Marja 35% · Plicuri 25% · Scadențe 20% · Ritm 20%
+          {t("Marja 35% · Plicuri 25% · Scadențe 20% · Ritm 20%. Factorii fără date nu sunt numărați, iar ponderile se împart între cei rămași.")}
         </p>
       </section>
     </div>,

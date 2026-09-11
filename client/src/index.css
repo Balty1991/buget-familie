@@ -148,3 +148,17 @@
 .bf-backup-paste label { font-size: 13px; line-height: 1.45; opacity: 0.85; }
 .bf-backup-paste textarea { width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 .bf-backup-paste-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Factori care nu intră în scor: prezenți, dar vizibil inactivi. */
+.bf-health-factor.unknown { opacity: 0.55; }
+.bf-health-factor.unknown .bf-health-factor-top span { font-style: italic; }
+.bf-health-missing { margin: 12px 0; padding: 12px 14px; border-radius: 14px; background: var(--bf-surface-sunken, rgba(0, 0, 0, 0.04)); }
+.bf-health-missing ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.bf-health-missing li { font-size: 14px; line-height: 1.45; }
+
+/* Ținte de atins: Android cere 48dp, filtrele coborâseră la 29–33px. */
+.bf-analysis-scope button,
+.bf-pocket-switch button,
+.bf-price-window button,
+.bf-segment button { min-height: 44px; }
+.bf-chip-list span button { min-width: 32px; min-height: 32px; }

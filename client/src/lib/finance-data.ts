@@ -750,21 +750,32 @@ export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSugge
 };
 
 export type HealthScoreBreakdown = {
-  score: number;
-  tone: "good" | "watch" | "risk";
+  /** `null` înseamnă „încă nu am din ce calcula”, nu „zero”. */
+  score: number | null;
+  tone: "good" | "watch" | "risk" | "unknown";
   factors: Array<{
     id: string;
     label: string;
     value: number;
     weight: number;
     detail: string;
+    /** Fals când factorul nu are pe ce se sprijini; atunci nu intră în scor. */
+    known: boolean;
   }>;
+  /** Ce îi lipsește registrului ca scorul să însemne ceva. */
+  missing: string[];
 };
 
 /**
  * Scor local 0–100 pentru ecranul Astăzi.
  * Combină marja, starea plicurilor, scadențele apropiate și ritmul de cheltuire.
  * Nu estimează venituri viitoare și nu modifică datele.
+ *
+ * Un factor intră în scor doar dacă are pe ce se sprijini. Altfel un registru gol
+ * primea 80 din 100 și eticheta „calm”: „toate plicurile sunt în limite” și „nicio
+ * scadență” sunt adevărate fără să însemne nimic atunci când nu există nici plicuri,
+ * nici scadențe. Când datele cunoscute cântăresc prea puțin, scorul este `null` și
+ * spunem ce lipsește, în loc să inventăm o notă de trecere.
  */
 export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthScoreBreakdown => {
   const plan = data.settings.salaryPlan;
@@ -778,6 +789,8 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
   const scheduled = pendingRecurringInPlan(data).reduce((sum, i) => sum + i.amount, 0);
   const remaining = availableSources - reserved - scheduled;
   const marginRatio = availableSources > 0 ? Math.max(0, Math.min(1, remaining / availableSources)) : (remaining >= 0 ? 0.6 : 0);
+  // Marja are sens doar dacă știm ce bani există: o mișcare înregistrată sau un sold de pornire.
+  const marginKnown = data.transactions.length > 0 || data.settings.paymentSources.some((item) => item.openingBalance > 0);
   const marginDetail = remaining >= 0
     ? t("{remaining} RON nerepartizați din {available} RON", { remaining: Math.round(remaining), available: Math.round(availableSources) })
     : t("Planul este peste limită cu {amount} RON", { amount: Math.round(Math.abs(remaining)) });
@@ -813,8 +826,10 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
     : t("Nicio scadență în următoarele 7 zile");
 
   let paceScore = 0.7;
+  let paceKnown = false;
   let paceDetail = t("Setează următorul venit pentru a calcula ritmul");
   if (plan.nextPayday || plan.earliestPayday) {
+    paceKnown = true;
     if (forecast.spentToDate <= 0) {
       paceScore = 0.85;
       paceDetail = t("Încă nu există cheltuieli în perioada curentă");
@@ -828,16 +843,29 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
     }
   }
 
+  const duesKnown = data.recurring.some((item) => item.active) || data.debts.length > 0;
+
   const factors = [
-    { id: "margin", label: t("Marjă până la venit"), value: marginRatio, weight: 0.35, detail: marginDetail },
-    { id: "envelopes", label: t("Starea plicurilor"), value: envelopeScore, weight: 0.25, detail: envelopeDetail },
-    { id: "dues", label: t("Scadențe apropiate"), value: dueScore, weight: 0.20, detail: dueDetail },
-    { id: "pace", label: t("Ritm de cheltuire"), value: paceScore, weight: 0.20, detail: paceDetail },
+    { id: "margin", label: t("Marjă până la venit"), value: marginRatio, weight: 0.35, known: marginKnown, detail: marginKnown ? marginDetail : t("Încă nu există mișcări sau solduri de pornire") },
+    { id: "envelopes", label: t("Starea plicurilor"), value: envelopeScore, weight: 0.25, known: envelopes.length > 0, detail: envelopeDetail },
+    { id: "dues", label: t("Scadențe apropiate"), value: dueScore, weight: 0.20, known: duesKnown, detail: duesKnown ? dueDetail : t("Nu urmărești încă scadențe sau datorii") },
+    { id: "pace", label: t("Ritm de cheltuire"), value: paceScore, weight: 0.20, known: paceKnown, detail: paceDetail },
   ];
 
-  const raw = factors.reduce((sum, f) => sum + f.value * f.weight, 0);
+  const missing = [
+    marginKnown ? "" : t("Adaugă o mișcare sau soldul unei surse"),
+    envelopes.length ? "" : t("Creează primul plic în Plan"),
+    duesKnown ? "" : t("Treci scadențele lunare sau o datorie"),
+    paceKnown ? "" : t("Stabilește data următorului venit"),
+  ].filter(Boolean);
+
+  // Sub jumătate din pondere cunoscută, orice număr ar fi o presupunere.
+  const knownWeight = factors.reduce((sum, f) => sum + (f.known ? f.weight : 0), 0);
+  if (knownWeight < 0.5) return { score: null, tone: "unknown", factors, missing };
+
+  const raw = factors.reduce((sum, f) => sum + (f.known ? f.value * f.weight : 0), 0) / knownWeight;
   const score = Math.round(Math.max(0, Math.min(100, raw * 100)));
   const tone: HealthScoreBreakdown["tone"] = score >= 75 ? "good" : score >= 45 ? "watch" : "risk";
 
-  return { score, tone, factors };
+  return { score, tone, factors, missing };
 };
