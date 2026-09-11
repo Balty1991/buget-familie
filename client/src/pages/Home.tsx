@@ -7,6 +7,7 @@ import { BarChart3, Bell, RotateCcw, BellRing, CalendarClock, CreditCard, Goal, 
 import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { buildUndo, type UndoAction } from "@/lib/undo-delete";
+import { checkFamilyPassword } from "@/lib/family-password";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, readAppData, readSyncJournal, writeAppData, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
@@ -593,7 +594,13 @@ export default function Home() {
     }
   };
   const syncConnect = async () => {
-    if (syncPassword.length < 12) { setSyncNotice("Introdu parola de familie, de cel puțin 12 caractere."); return; }
+    /**
+     * Din parolă se derivă și identificatorul camerei de sincronizare: cine îl
+     * află poate suprascrie pachetul familiei, chiar fără să-l poată citi. O
+     * lungime de 12 caractere nu spune nimic despre asta — „123456789012” are 12.
+     */
+    const strength = checkFamilyPassword(syncPassword);
+    if (!strength.ok) { setSyncNotice(`${strength.label}. ${strength.advice.join(" ")}`); return; }
     setSyncBusy(true);
     try {
       const crypto = await loadFamilyCrypto();

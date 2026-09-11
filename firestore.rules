@@ -15,12 +15,27 @@ service cloud.firestore {
       // putea descărca pachetele criptate ale tuturor familiilor și le putea ataca
       // offline. Un `get` cere ID-ul camerei, adică deja cunoașterea parolei.
       allow get: if roomId.size() == 64;
-      allow write: if roomId.size() == 64
+      // `create, update`, nu `write`: `write` acoperă și `delete`, deci oricine
+      // ajungea la ID-ul camerei putea șterge pachetul familiei dintr-o singură
+      // cerere. Nu există niciun motiv legitim ca aplicația să șteargă documentul —
+      // o familie care vrea să se retragă schimbă parola, iar camera veche rămâne
+      // orfană. Ce poate face cineva rămâne astfel „strică”, nu „distruge”.
+      allow create, update: if roomId.size() == 64
         && request.resource.data.keys().hasOnly(['envelope', 'updatedAt'])
         && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
         && request.resource.data.envelope.version == 1
         && request.resource.data.envelope.ciphertext is string
-        && request.resource.data.envelope.ciphertext.size() < 2000000;
+        && request.resource.data.envelope.ciphertext.size() < 2000000
+        // Sarea și vectorul de inițializare trebuie să existe și să aibă exact
+        // lungimea pe care o scrie aplicația: 16 octeți de sare și 12 de IV,
+        // adică 24 și 16 caractere base64. Fără ele, un pachet „valid” dar gol
+        // ar putea fi scris de oricine ajunge la ID-ul camerei.
+        // `client/src/lib/family-crypto.test.ts` verifică potrivirea, ca o
+        // schimbare de format să se vadă la teste, nu în sincronizarea oprită.
+        && request.resource.data.envelope.salt is string
+        && request.resource.data.envelope.salt.size() == 24
+        && request.resource.data.envelope.iv is string
+        && request.resource.data.envelope.iv.size() == 16;
     }
   }
 }

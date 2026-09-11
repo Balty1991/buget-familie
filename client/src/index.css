@@ -223,3 +223,16 @@
   border: 1px dashed var(--cf-line, rgba(0, 0, 0, 0.18));
   background: var(--os-card, rgba(255, 255, 255, 0.55));
 }
+
+/* Cât de greu e de ghicit parola de familie. */
+.bf-password-meter { display: grid; gap: 4px; margin-top: 8px; }
+.bf-password-bars { display: flex; gap: 4px; }
+.bf-password-bars i { flex: 1; height: 4px; border-radius: 999px; background: var(--cf-line, rgba(0, 0, 0, 0.14)); }
+.bf-password-meter b { font-size: 13px; }
+.bf-password-meter small { font-size: 12px; line-height: 1.4; opacity: 0.78; }
+.bf-password-meter.s0 .bf-password-bars i.on, .bf-password-meter.s1 .bf-password-bars i.on { background: #c0392b; }
+.bf-password-meter.s0 b, .bf-password-meter.s1 b { color: #c0392b; }
+.bf-password-meter.s2 .bf-password-bars i.on { background: #d49a2a; }
+.bf-password-meter.s2 b { color: #9a6f14; }
+.bf-password-meter.s3 .bf-password-bars i.on, .bf-password-meter.s4 .bf-password-bars i.on { background: #1f6b4d; }
+.bf-password-meter.s3 b, .bf-password-meter.s4 b { color: #1f6b4d; }
