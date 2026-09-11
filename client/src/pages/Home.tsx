@@ -362,7 +362,7 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
             <small>{t("în surse acum")}</small>
           </div>
         </div>
-        <p className="bf-os-note">{money(Math.max(0, math.remaining))} disponibili după plicuri · {money(math.scheduled)} în scadențe încă neconfirmate</p>
+        <p className="bf-os-note">{t("{available} disponibili după plicuri · {scheduled} în scadențe încă neconfirmate", { available: money(Math.max(0, math.remaining)), scheduled: money(math.scheduled) })}</p>
         <button type="button" className="bf-today-plan-link" style={{ marginTop: 12 }} onClick={() => onGo("plan")}>Deschide planul <ChevronRight size={16} /></button>
       </section>
 
