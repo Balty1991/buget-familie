@@ -1497,6 +1497,10 @@ const en: Record<string, string> = {
   "Rată {amount}/lună": "Instalment {amount}/month",
   "Suma sugerată pentru perioada curentă:": "Suggested amount for the current period:",
   "{count} mișcări · medie {average} / lună": "{count} movements · average {average} / month",
+  "ex. Ajung la salariu?": "e.g. Will I make it to payday?",
+  "ex. taxi mai puțin": "e.g. less on taxis",
+  "Între plicuri": "Between envelopes",
+  "Între săptămâni": "Between weeks",
 };
 
 export default t;

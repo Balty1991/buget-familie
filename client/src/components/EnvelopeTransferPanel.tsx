@@ -59,7 +59,7 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
           }}>
             {envelopes.map((entry) => (
               <option key={entry.item.id} value={entry.item.id} disabled={entry.remaining <= 0}>
-                {entry.item.label} · {money(Math.max(0, entry.remaining))} rămași
+                {entry.item.label} · {Math.round(Math.max(0, entry.remaining)).toLocaleString("ro-RO")}
               </option>
             ))}
           </select>
@@ -68,7 +68,7 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
           <span>Spre</span>
           <select value={toId} onChange={(event) => { setToId(event.target.value); setError(""); }}>
             {envelopes.filter((entry) => entry.item.id !== fromId).map((entry) => (
-              <option key={entry.item.id} value={entry.item.id}>{entry.item.label} · {money(entry.budget)}</option>
+              <option key={entry.item.id} value={entry.item.id}>{entry.item.label} · {Math.round(entry.budget).toLocaleString("ro-RO")}</option>
             ))}
           </select>
         </label>
@@ -78,7 +78,7 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
         </label>
         <label>
           <span>{t("Notă (opțional)")}</span>
-          <input value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("ex. taxi mai puțin, alimente mai mult")} />
+          <input value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("ex. taxi mai puțin")} />
         </label>
         <button type="button" className="bf-primary" onClick={apply}>{t("Mută între plicuri")}</button>
       </div>

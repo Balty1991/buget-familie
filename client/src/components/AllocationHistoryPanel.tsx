@@ -7,7 +7,7 @@ import { getLocale, t } from "@/lib/i18n";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const dateTime = (value: string) => new Intl.DateTimeFormat(getLocale(), { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const kindLabel: Record<AllocationHistoryEntry["kind"] | "all", string> = { all: t("Toate acțiunile"), created: t("Plic creat"), updated: t("Plic modificat"), deleted: t("Plic șters"), "income-applied": t("Repartizare din venit"), "income-reverted": t("Repartizare anulată"), "envelope-transfer": t("Realocare între plicuri"), "week-transfer": t("Transfer între săptămâni") };
+const kindLabel: Record<AllocationHistoryEntry["kind"] | "all", string> = { all: t("Toate acțiunile"), created: t("Plic creat"), updated: t("Plic modificat"), deleted: t("Plic șters"), "income-applied": t("Repartizare din venit"), "income-reverted": t("Repartizare anulată"), "envelope-transfer": t("Între plicuri"), "week-transfer": t("Între săptămâni") };
 const kindTone = (kind: AllocationHistoryEntry["kind"]) => kind === "deleted" || kind === "income-reverted" ? "danger" : kind === "created" || kind === "income-applied" ? "positive" : "neutral";
 
 function entryAllocationIds(entry: AllocationHistoryEntry) {
