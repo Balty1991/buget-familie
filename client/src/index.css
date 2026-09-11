@@ -203,3 +203,15 @@
   color: inherit; background: rgba(255, 255, 255, 0.16); border: 0;
 }
 .bf-undo-bar .bf-undo-close { min-width: 40px; padding: 0; justify-content: center; background: transparent; }
+
+/* Întrebări firești de după un răspuns de analiză, la o atingere distanță. */
+.ai-chat-followups { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px 26px; }
+.ai-chat-followups button {
+  min-height: 34px; padding: 0 12px; border-radius: 999px; cursor: pointer;
+  font-size: 13px; line-height: 1;
+  border: 1px solid var(--cf-line, rgba(0, 0, 0, 0.12));
+  background: var(--os-card, rgba(255, 255, 255, 0.6)); color: inherit;
+}
+.ai-chat-suggestions { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.ai-chat-suggestions::-webkit-scrollbar { display: none; }
+.ai-chat-suggestions button { flex: 0 0 auto; white-space: nowrap; min-height: 36px; }
