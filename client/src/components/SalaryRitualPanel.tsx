@@ -25,9 +25,9 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
   const saveRule = () => {
     const amount = parseRomanianAmount(value);
     const name = label.trim() || (mode === "percent" ? `${amount}% ${plan.allocations.find((item) => item.id === allocationId)?.label || "plic"}` : `${money(amount)} ${plan.allocations.find((item) => item.id === allocationId)?.label || "plic"}`);
-    if (!allocationId) return setError("Alege plicul care primește din venit.");
-    if (amount <= 0) return setError("Introdu o valoare mai mare decât zero.");
-    if (mode === "percent" && amount > 100) return setError("Procentul nu poate depăși 100%.");
+    if (!allocationId) return setError(t("Alege plicul care primește din venit."));
+    if (amount <= 0) return setError(t("Introdu o valoare mai mare decât zero."));
+    if (mode === "percent" && amount > 100) return setError(t("Procentul nu poate depăși 100%."));
     const rule: SalaryAllocationRule = { id: newId("salary-rule"), label: name.slice(0, 42), allocationId, mode, value: mode === "percent" ? Math.min(100, amount) : amount, active: true, updatedAt: new Date().toISOString() };
     onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, salaryAllocationRules: [rule, ...rules].slice(0, 24), updatedAt: rule.updatedAt } } });
     setLabel("");
@@ -47,7 +47,7 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
     setError("");
   };
   const revert = (applicationId: string) => {
-    if (!window.confirm("Anulezi umplerea plicurilor din acest venit? Limitele revin, registrul rămâne neschimbat.")) return;
+    if (!window.confirm(t("Anulezi umplerea plicurilor din acest venit? Limitele revin, registrul rămâne neschimbat."))) return;
     onChange(revertSalaryAllocationApplication(data, applicationId));
   };
 
@@ -84,7 +84,7 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
       <div className="bf-salary-rule-form">
         <label><span>Plic</span><select value={allocationId} onChange={(event) => setAllocationId(event.target.value)}>{plan.allocations.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
         <label><span>Mod</span><select value={mode} onChange={(event) => setMode(event.target.value as "fixed" | "percent")}><option value="percent">{t("Procent din venit")}</option><option value="fixed">{t("Sumă fixă")}</option></select></label>
-        <label><span>{mode === "percent" ? "Procent" : "Sumă"}</span><input value={value} onChange={(event) => { setValue(event.target.value); setError(""); }} inputMode="decimal" placeholder={mode === "percent" ? "ex. 10" : "ex. 400"} /></label>
+        <label><span>{mode === "percent" ? "Procent" : t("Sumă")}</span><input value={value} onChange={(event) => { setValue(event.target.value); setError(""); }} inputMode="decimal" placeholder={mode === "percent" ? "ex. 10" : "ex. 400"} /></label>
         <label><span>{t("Nume (opțional)")}</span><input value={label} onChange={(event) => setLabel(event.target.value)} maxLength={42} placeholder="ex. 10% alimente" /></label>
         <button type="button" className="bf-primary" onClick={saveRule}>{t("Adaugă regula")}</button>
       </div>
@@ -97,10 +97,10 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
             <article key={rule.id} className={rule.active ? "" : "paused"}>
               <div>
                 <b>{rule.label}</b>
-                <small>{envelope?.label || "Plic eliminat"} · {rule.mode === "percent" ? `${rule.value}% din venit` : money(rule.value)}</small>
+                <small>{envelope?.label || t("Plic eliminat")} · {rule.mode === "percent" ? `${rule.value}% din venit` : money(rule.value)}</small>
               </div>
               <div>
-                <button type="button" onClick={() => toggleRule(rule.id)}>{rule.active ? "Pauză" : "Activează"}</button>
+                <button type="button" onClick={() => toggleRule(rule.id)}>{rule.active ? t("Pauză") : t("Activează")}</button>
                 <button type="button" className="delete" aria-label={`Șterge regula ${rule.label}`} onClick={() => deleteRule(rule.id, rule.label)}><Trash2 size={15} /></button>
               </div>
             </article>

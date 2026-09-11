@@ -43,7 +43,7 @@ export function AppLockGate({ children }: { children: ReactNode }) {
         setError("");
       } else {
         setPin("");
-        setError("PIN greșit.");
+        setError(t("PIN greșit."));
       }
     });
     return () => {

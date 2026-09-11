@@ -35,7 +35,7 @@ const shiftDay = (offset: number) => {
 };
 const today = () => shiftDay(0);
 const money = (value: number) => `${Number(value.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
-const naturalTitle = (raw: string, category?: string) => /combustibil|benzina|motorina/i.test(raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ? "Combustibil" : category || "Cheltuială";
+const naturalTitle = (raw: string, category?: string) => /combustibil|benzina|motorina/i.test(raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ? "Combustibil" : category || t("Cheltuială");
 
 
 function GuideText({ text }: { text: string }) {
@@ -190,9 +190,9 @@ function loadQuota(): QuotaInfo {
 }
 
 function formatReset(iso: string | null) {
-  if (!iso) return "mâine";
+  if (!iso) return t("mâine");
   const at = new Date(iso);
-  if (Number.isNaN(at.getTime())) return "mâine";
+  if (Number.isNaN(at.getTime())) return t("mâine");
   const time = at.toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" });
   const now = new Date();
   const tomorrow = new Date(now);
@@ -324,7 +324,7 @@ function spendTitle(folded: string, extracted: ExtractedGuide | undefined, categ
   if (/taxi|uber|bolt/.test(folded)) return "Taxi";
   if (/\bapa\b/.test(folded) && !/patiserie/.test(folded)) return "Apă";
   if (/dulce|prajitur|ciocolat/.test(folded)) return "Dulciuri";
-  if (/tigar|tutun/.test(folded)) return "Țigări";
+  if (/tigar|tutun/.test(folded)) return t("Țigări");
   if (/cafea/.test(folded)) return "Cafea";
   const cleaned = folded
     .replace(/\b(adaug[ae]?|adauga|cheltuiel[aei]*|lei|ron|pe data de|data de|alaltaieri|ieri|azi|astazi|maine|am uitat|sa trec|sa o trec|te rog|pentru|pe)\b/g, " ")
@@ -370,8 +370,8 @@ function dateCopy(iso: string) {
   const diff = Math.round((Date.parse(`${iso}T12:00:00`) - Date.parse(`${today()}T12:00:00`)) / 86400000);
   if (diff === 0) return "azi";
   if (diff === -1) return "ieri";
-  if (diff === -2) return "alaltăieri";
-  if (diff === 1) return "mâine";
+  if (diff === -2) return t("alaltăieri");
+  if (diff === 1) return t("mâine");
   return new Date(`${iso}T12:00:00`).toLocaleDateString(getLocale(), { day: "numeric", month: "short" });
 }
 
@@ -459,7 +459,7 @@ function receiptDetails(extracted?: ExtractedGuide) {
         : ` Total bon: **${money(extracted.amount)}**. Liniile însumează **${money(lineTotal)}**; diferență de **${money(Math.abs(difference))}**${difference > 0 ? " (posibilă reducere sau linie necitită)" : " (verifică o posibilă citire dublă)"}.`
       : ` Total bon identificat: **${money(extracted.amount)}**.`
     : "";
-  const confidence = extracted.confidence === "low" ? " Verifică atent suma; fotografia nu este suficient de clară." : "";
+  const confidence = extracted.confidence === "low" ? t(" Verifică atent suma; fotografia nu este suficient de clară.") : "";
   return `${reconciliation}${products}${confidence}`;
 }
 
@@ -478,7 +478,7 @@ function incomeProposal(raw: string, data: AppData): { text: string; choices: Ch
   if (/cheltui|tigar|tutun|taxi|suc|bere|paine|gume|factura/.test(folded) && !/salariu|venit/.test(folded)) return undefined;
   const amount = spendAmount(raw, undefined, 0);
   if (!amount || amount < 50) return undefined;
-  const title = /sotie|sotiei|partener/.test(folded) ? "Salariul soției" : /salariu/.test(folded) ? "Salariu" : "Venit";
+  const title = /sotie|sotiei|partener/.test(folded) ? t("Salariul soției") : /salariu/.test(folded) ? "Salariu" : "Venit";
   const date = spendDate(raw);
   return {
     text: `Am înțeles **${title}**, ${money(amount)}, **${dateCopy(date)}**. Îl trec în registru pe ziua aleasă?`,
@@ -537,10 +537,10 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
     }));
   }
   if (extracted?.amount) {
-    return [{ kind: "income", amount: extracted.amount, title: extracted.title || "Venit lunar", date: spendDate(sourceText), memberId: memberIdFor(data, extracted.title || sourceText, 0) }];
+    return [{ kind: "income", amount: extracted.amount, title: extracted.title || t("Venit lunar"), date: spendDate(sourceText), memberId: memberIdFor(data, extracted.title || sourceText, 0) }];
   }
   if (spoken.length === 1 && /venit|salariu|intrare|întrare/i.test(sourceText)) {
-    return [{ kind: "income", amount: spoken[0], title: /salariu/i.test(sourceText) ? "Salariu" : "Venit lunar", date: spendDate(sourceText), memberId: data.settings.members[0]?.id }];
+    return [{ kind: "income", amount: spoken[0], title: /salariu/i.test(sourceText) ? "Salariu" : t("Venit lunar"), date: spendDate(sourceText), memberId: data.settings.members[0]?.id }];
   }
   return [];
 }
@@ -650,7 +650,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const lastSaveRef = useRef({ key: "", at: 0 });
   const monthSummary = useMemo(() => { const month = today().slice(0, 7); const current = data.transactions.filter((item) => item.date.startsWith(month)); return { income: current.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0), expense: current.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0) }; }, [data]);
   const todayPace = useMemo(() => Math.round(todayBrief(data).spendable), [data]);
-  const contextReply = useMemo(() => { if (guideStage === "income") return "Sunt aici cu tine și te ghidez pas cu pas. Începem cu veniturile: ce bani intră într-o lună obișnuită — salariu, pensie, freelancing sau alte venituri? Spune-mi suma și îți pun prima bază în aplicație."; if (guideStage === "debts") return "Perfect, am notat venitul. Acum vreau să expunem toate obligațiile: ai credite, rate, carduri de cumpărături sau bani împrumutați? Spune-mi numele și soldul aproximativ. Dacă nu ai, spune doar «nu am datorii»."; if (guideStage === "rate") return `Am trecut „${pendingDebtName || "datoria"}”. Mai știi cât plătești lunar pentru ea? Dacă nu știi exact, spune o estimare sau «nu știu».`; if (guideStage === "allocation") return "Acum împărțim venitul: cât vrei să rezervi pentru mâncare, casă și facturi, transport și economii? Poți scrie într-o singură frază, de exemplu «alimente 1500, facturi 800, transport 400, economii 500»."; if (!data.transactions.length) return "Sunt aici cu tine. Poți să-mi scrii orice mișcare în cuvintele tale, iar eu o verific înainte să o salvez."; if (monthSummary.income > 0 && monthSummary.expense > monthSummary.income) return `M-am uitat la luna aceasta: ai ${money(monthSummary.expense)} cheltuieli și ${money(monthSummary.income)} venituri. Nu te judec — hai să vedem împreună ce ajustăm.`; return `Sunt cu tine în ${view === "today" ? "tabloul de azi" : "secțiunea deschisă"}. Spune-mi ce vrei să înțelegi sau să schimbi.`; }, [data, guideStage, monthSummary, pendingDebtName, view]);
+  const contextReply = useMemo(() => { if (guideStage === "income") return t("Sunt aici cu tine și te ghidez pas cu pas. Începem cu veniturile: ce bani intră într-o lună obișnuită — salariu, pensie, freelancing sau alte venituri? Spune-mi suma și îți pun prima bază în aplicație."); if (guideStage === "debts") return t("Perfect, am notat venitul. Acum vreau să expunem toate obligațiile: ai credite, rate, carduri de cumpărături sau bani împrumutați? Spune-mi numele și soldul aproximativ. Dacă nu ai, spune doar «nu am datorii»."); if (guideStage === "rate") return `Am trecut „${pendingDebtName || "datoria"}”. Mai știi cât plătești lunar pentru ea? Dacă nu știi exact, spune o estimare sau «nu știu».`; if (guideStage === "allocation") return t("Acum împărțim venitul: cât vrei să rezervi pentru mâncare, casă și facturi, transport și economii? Poți scrie într-o singură frază, de exemplu «alimente 1500, facturi 800, transport 400, economii 500»."); if (!data.transactions.length) return t("Sunt aici cu tine. Poți să-mi scrii orice mișcare în cuvintele tale, iar eu o verific înainte să o salvez."); if (monthSummary.income > 0 && monthSummary.expense > monthSummary.income) return `M-am uitat la luna aceasta: ai ${money(monthSummary.expense)} cheltuieli și ${money(monthSummary.income)} venituri. Nu te judec — hai să vedem împreună ce ajustăm.`; return `Sunt cu tine în ${view === "today" ? "tabloul de azi" : "secțiunea deschisă"}. Spune-mi ce vrei să înțelegi sau să schimbi.`; }, [data, guideStage, monthSummary, pendingDebtName, view]);
 
   useEffect(() => { try { window.localStorage.setItem("buget-familie:ai-guide-stage-v1", guideStage); } catch { /* ignore */ } }, [guideStage]);
   useEffect(() => { if (!open || messages.length) return; setMessages([{ id: "welcome", role: "assistant", text: contextReply }]); }, [open, messages.length, contextReply]);
@@ -701,7 +701,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const clearChat = () => {
     const hasPlan = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0;
     const stage: GuideStage = hasPlan ? "ready" : "income";
-    const fresh: ChatMessage[] = [{ id: `welcome-${Date.now()}`, role: "assistant", text: "Am golit conversația. Mișcările și plicurile rămân în registru. Spune-mi cu ce vrei să începem." }];
+    const fresh: ChatMessage[] = [{ id: `welcome-${Date.now()}`, role: "assistant", text: t("Am golit conversația. Mișcările și plicurile rămân în registru. Spune-mi cu ce vrei să începem.") }];
     setMessages(fresh);
     setGuideStage(stage);
     setPendingDebtName("");
@@ -710,11 +710,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       window.localStorage.setItem("buget-familie:ai-guide-stage-v1", stage);
     } catch { /* ignore */ }
   };
-  const runAction = (type: "add" | "plan" | "journal" | "insights", label: string) => { addMessage({ role: "user", text: label }); setTyping(true); window.setTimeout(() => { setTyping(false); addMessage({ role: "assistant", text: type === "add" ? "Deschid formularul. Completează ce mai lipsește și verifică înainte să salvezi." : type === "plan" ? "Deschid planul. Acolo așezăm veniturile pe destinații și ritmuri." : type === "journal" ? "Deschid jurnalul și ne uităm la mișcările care contează." : "Deschid analiza ca să vedem tiparele lunii.", action: { type, label: type === "add" ? "Deschide formularul" : type === "plan" ? "Vezi planul" : type === "journal" ? "Vezi jurnalul" : "Vezi analiza" } }); }, 260); };
+  const runAction = (type: "add" | "plan" | "journal" | "insights", label: string) => { addMessage({ role: "user", text: label }); setTyping(true); window.setTimeout(() => { setTyping(false); addMessage({ role: "assistant", text: type === "add" ? t("Deschid formularul. Completează ce mai lipsește și verifică înainte să salvezi.") : type === "plan" ? t("Deschid planul. Acolo așezăm veniturile pe destinații și ritmuri.") : type === "journal" ? t("Deschid jurnalul și ne uităm la mișcările care contează.") : t("Deschid analiza ca să vedem tiparele lunii."), action: { type, label: type === "add" ? "Deschide formularul" : type === "plan" ? t("Vezi planul") : type === "journal" ? t("Vezi jurnalul") : t("Vezi analiza") } }); }, 260); };
   const handleAction = (item: ChatMessage) => {
     if (item.action?.type === "apply" && item.updates?.length) {
       item.updates.forEach((update) => onFinancialUpdate(update));
-      addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: "Vezi în Mișcări" } });
+      addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       return;
     }
     if (!item.action || item.action.type === "apply") return;
@@ -732,14 +732,14 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     onFinancialUpdate(update);
     if (update.kind === "expense") setMemory(rememberExpense(update));
     if (update.kind === "transfer") {
-      addMessage({ role: "assistant", text: `Am mutat ${money(update.amount)} din **${update.fromLabel}** în **${update.toLabel}**.`, action: { type: "plan", label: "Vezi în Plan" } });
+      addMessage({ role: "assistant", text: `Am mutat ${money(update.amount)} din **${update.fromLabel}** în **${update.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
       return;
     }
     const spent = update.kind === "expense" || update.kind === "income" ? `${update.title} ${money(update.amount)}` : money("amount" in update ? update.amount : 0);
     addMessage({
       role: "assistant",
       text: `Am salvat ${spent} · ${choice.label} · ${dateCopy(day)}.`,
-      action: { type: "journal", label: "Vezi în Mișcări" },
+      action: { type: "journal", label: t("Vezi în Mișcări") },
       undo: (update.kind === "expense" || update.kind === "income") ? { kind: update.kind, title: update.title, amount: update.amount, date: day } : undefined,
     });
   };
@@ -768,7 +768,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         role: "assistant",
         text: `${actionable.length === 1 ? "Am înțeles" : `Am înțeles ${actionable.length} lucruri`}:\n${actionable.map((item) => `• ${describeIntent(item.intent, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
         updates: actionable.map((item) => intentToUpdate(item.intent, data)),
-        action: { type: "apply", label: actionable.length === 1 ? "Confirmă și salvează" : "Confirmă pe toate" },
+        action: { type: "apply", label: actionable.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
         choices: spendAlternatives(data, actionable),
       });
       return;
@@ -779,16 +779,16 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       addMessage({ role: "assistant", text: answerToText(offlineAnalysis), followUps: offlineAnalysis.followUps });
       return;
     }
-    if (guideStage === "income") { if (!amount) { addMessage({ role: "assistant", text: "Am nevoie doar de o sumă aproximativă. De exemplu: «salariul meu este 6.500 lei pe lună»." }); return; } onFinancialUpdate({ kind: "income", amount, title: /salariu/i.test(folded) ? "Salariu lunar" : "Venit lunar" }); setGuideStage("debts"); addMessage({ role: "assistant", text: `Am notat ${money(amount)} ca venit lunar. Următoarea întrebare: ai datorii, credite, rate sau carduri de cumpărături?` }); return; } if (guideStage === "debts") { if (/nu\s+(am|exista)|fara\s+datorii|niciuna/.test(folded)) { setGuideStage("allocation"); addMessage({ role: "assistant", text: "În regulă, fără datorii. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii. Ce sume vrei să rezervi?" }); return; } if (!amount) { addMessage({ role: "assistant", text: "Spune-mi, de exemplu: «Credit auto, mai am 18.000 lei» sau «rată la bancă, sold 42.000 lei»." }); return; } const debtName = raw.replace(/\d[\d.,\s]*(?:lei|ron)?/gi, "").replace(/(mai am|sold|datorie|credit|rata|rată|la banca|la bancă)/gi, "").replace(/[,:-]/g, " ").trim() || "Datorie"; setPendingDebtName(debtName); onFinancialUpdate({ kind: "debt", name: debtName, remaining: amount }); setGuideStage("rate"); addMessage({ role: "assistant", text: `Am trecut „${debtName}” cu soldul de ${money(amount)}. Cât plătești lunar pentru această datorie?` }); return; } if (guideStage === "rate") { if (amount) onFinancialUpdate({ kind: "debt-monthly", amount }); setGuideStage("allocation"); addMessage({ role: "assistant", text: amount ? `Am notat rata de ${money(amount)}. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.` : "În regulă, lăsăm rata de completat mai târziu. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii." }); return; } if (guideStage === "allocation") { const categories = ["alimente", "facturi", "casa", "transport", "economii", "datorii"]; const found = categories.map((category) => { const match = folded.match(new RegExp(`${category}[^\\d]{0,18}(\\d[\\d.,]*)`)); return match ? { category, amount: firstAmount(match[1]) } : undefined; }).filter((item): item is { category: string; amount: number } => Boolean(item?.amount)); if (!found.length) { addMessage({ role: "assistant", text: "Nu am găsit categoriile și sumele. Scrie simplu: «alimente 1500, facturi 800, transport 400, economii 500»." }); return; } found.forEach((item) => onFinancialUpdate({ kind: "allocation", category: item.category === "facturi" || item.category === "casa" ? "Casă & facturi" : item.category[0].toLocaleUpperCase("ro-RO") + item.category.slice(1), amount: item.amount, weekly: item.category === "alimente" || item.category === "transport" })); setGuideStage("ready"); addMessage({ role: "assistant", text: `Am repartizat ${found.map((item) => `${item.category} ${money(item.amount)}`).join(", ")}. Putem ajusta orice sumă. De acum sunt disponibil să urmărim împreună cheltuielile, veniturile și ritmul lunii.` }); return; } const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); if (!parsed.understood) { addMessage({ role: "assistant", text: "Spune-mi suma și ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil»." }); return; } const proposal = expenseProposal(raw, { amount: parsed.amount, category: parsed.category, title: naturalTitle(raw, parsed.category) }, data); if (proposal) { offerSpend(proposal); return; } addMessage({ role: "assistant", text: `Am înțeles ${parsed.title}, ${money(parsed.amount)}. Alege de unde scoatem banii.` }); }, 420); };
+    if (guideStage === "income") { if (!amount) { addMessage({ role: "assistant", text: t("Am nevoie doar de o sumă aproximativă. De exemplu: «salariul meu este 6.500 lei pe lună».") }); return; } onFinancialUpdate({ kind: "income", amount, title: /salariu/i.test(folded) ? "Salariu lunar" : t("Venit lunar") }); setGuideStage("debts"); addMessage({ role: "assistant", text: `Am notat ${money(amount)} ca venit lunar. Următoarea întrebare: ai datorii, credite, rate sau carduri de cumpărături?` }); return; } if (guideStage === "debts") { if (/nu\s+(am|exista)|fara\s+datorii|niciuna/.test(folded)) { setGuideStage("allocation"); addMessage({ role: "assistant", text: t("În regulă, fără datorii. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii. Ce sume vrei să rezervi?") }); return; } if (!amount) { addMessage({ role: "assistant", text: t("Spune-mi, de exemplu: «Credit auto, mai am 18.000 lei» sau «rată la bancă, sold 42.000 lei».") }); return; } const debtName = raw.replace(/\d[\d.,\s]*(?:lei|ron)?/gi, "").replace(/(mai am|sold|datorie|credit|rata|rată|la banca|la bancă)/gi, "").replace(/[,:-]/g, " ").trim() || "Datorie"; setPendingDebtName(debtName); onFinancialUpdate({ kind: "debt", name: debtName, remaining: amount }); setGuideStage("rate"); addMessage({ role: "assistant", text: `Am trecut „${debtName}” cu soldul de ${money(amount)}. Cât plătești lunar pentru această datorie?` }); return; } if (guideStage === "rate") { if (amount) onFinancialUpdate({ kind: "debt-monthly", amount }); setGuideStage("allocation"); addMessage({ role: "assistant", text: amount ? `Am notat rata de ${money(amount)}. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.` : t("În regulă, lăsăm rata de completat mai târziu. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.") }); return; } if (guideStage === "allocation") { const categories = ["alimente", "facturi", "casa", "transport", "economii", "datorii"]; const found = categories.map((category) => { const match = folded.match(new RegExp(`${category}[^\\d]{0,18}(\\d[\\d.,]*)`)); return match ? { category, amount: firstAmount(match[1]) } : undefined; }).filter((item): item is { category: string; amount: number } => Boolean(item?.amount)); if (!found.length) { addMessage({ role: "assistant", text: t("Nu am găsit categoriile și sumele. Scrie simplu: «alimente 1500, facturi 800, transport 400, economii 500».") }); return; } found.forEach((item) => onFinancialUpdate({ kind: "allocation", category: item.category === "facturi" || item.category === "casa" ? "Casă & facturi" : item.category[0].toLocaleUpperCase("ro-RO") + item.category.slice(1), amount: item.amount, weekly: item.category === "alimente" || item.category === "transport" })); setGuideStage("ready"); addMessage({ role: "assistant", text: `Am repartizat ${found.map((item) => `${item.category} ${money(item.amount)}`).join(", ")}. Putem ajusta orice sumă. De acum sunt disponibil să urmărim împreună cheltuielile, veniturile și ritmul lunii.` }); return; } const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); if (!parsed.understood) { addMessage({ role: "assistant", text: t("Spune-mi suma și ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil».") }); return; } const proposal = expenseProposal(raw, { amount: parsed.amount, category: parsed.category, title: naturalTitle(raw, parsed.category) }, data); if (proposal) { offerSpend(proposal); return; } addMessage({ role: "assistant", text: `Am înțeles ${parsed.title}, ${money(parsed.amount)}. Alege de unde scoatem banii.` }); }, 420); };
 
   const handleAttachment = async (file?: File) => {
     if (!file) return;
     if (!/^image\/(jpeg|png|webp|heic|heif)$|^application\/pdf$/i.test(file.type)) {
-      addMessage({ role: "assistant", text: "Pot analiza imagini JPG, PNG, WEBP și fișiere PDF. Alege un bon într-unul dintre aceste formate." });
+      addMessage({ role: "assistant", text: t("Pot analiza imagini JPG, PNG, WEBP și fișiere PDF. Alege un bon într-unul dintre aceste formate.") });
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      addMessage({ role: "assistant", text: "Fișierul este prea mare pentru analiza online. Alege un bon de maximum 8 MB." });
+      addMessage({ role: "assistant", text: t("Fișierul este prea mare pentru analiza online. Alege un bon de maximum 8 MB.") });
       return;
     }
     setAttachmentBusy(true);
@@ -796,14 +796,14 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       const data = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("read")); reader.onerror = () => reject(reader.error || new Error("read")); reader.readAsDataURL(file); });
       setAttachment({ name: file.name, mimeType: file.type, data });
     } catch {
-      addMessage({ role: "assistant", text: "Nu am putut citi fișierul. Încearcă din nou cu o fotografie clară a bonului." });
+      addMessage({ role: "assistant", text: t("Nu am putut citi fișierul. Încearcă din nou cu o fotografie clară a bonului.") });
     } finally { setAttachmentBusy(false); }
   };
 
   const send = (draft?: string) => {
     const raw = (draft ?? message).trim();
     if (!raw && !attachment) return;
-    const requestText = raw || "Analizează bonul atașat și propune cheltuiala.";
+    const requestText = raw || t("Analizează bonul atașat și propune cheltuiala.");
     const sentAttachment = attachment;
     setMessage("");
     setAttachment(null);
@@ -814,7 +814,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         applyChoice(pending.choices[0]);
         return;
       }
-      addMessage({ role: "assistant", text: "Alege plicul sau sursa de mai sus — nu salvez până apeși o opțiune." });
+      addMessage({ role: "assistant", text: t("Alege plicul sau sursa de mai sus — nu salvez până apeși o opțiune.") });
       return;
     }
     if (isConfirm(raw)) {
@@ -839,7 +839,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
           role: "assistant",
           text: `${intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`}:\n${intents.map((item) => `• ${describeIntent(item.intent, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`,
           updates: intents.map((item) => intentToUpdate(item.intent, data)),
-          action: { type: "apply", label: intents.length === 1 ? "Confirmă și salvează" : "Confirmă pe toate" },
+          action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
           choices: spendAlternatives(data, intents),
         });
         return;
@@ -901,7 +901,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
             localReceiptAmount = local.amount;
             const ocrItems = local.items.slice(0, 40).map((item) => `${item.label}=${item.amount}`).join("; ");
             const ocrHint = [
-              "[OCR local de verificare — nu este autoritate contabilă]",
+              t("[OCR local de verificare — nu este autoritate contabilă]"),
               local.vendor ? `magazin: ${local.vendor}` : "",
               local.date ? `data: ${local.date}` : "",
               local.amount ? `total candidat: ${local.amount}` : "",
@@ -947,11 +947,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         if (saveNow) applyGuide(updates);
         addMessage({
           role: "assistant",
-          text: payload.reply || "Am analizat mesajul. Spune-mi ce vrei să facem în continuare.",
+          text: payload.reply || t("Am analizat mesajul. Spune-mi ce vrei să facem în continuare."),
           action: saveNow && updates.some((update) => update.kind === "income")
-            ? { type: "journal", label: "Vezi în Mișcări" }
+            ? { type: "journal", label: t("Vezi în Mișcări") }
             : saveNow && updates.some((update) => update.kind === "allocation")
-              ? { type: "plan", label: "Vezi tranșele în Plan" }
+              ? { type: "plan", label: t("Vezi tranșele în Plan") }
               : !saveNow && updates.length
               ? { type: "apply", label: `Adaugă ${updates.filter((update) => "amount" in update).map((update) => money((update as { amount: number }).amount)).join(" + ")} în registru` }
               : undefined,
@@ -967,7 +967,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const lastAssistant = [...messages].reverse().find((item) => item.role === "assistant");
   const pendingKind = lastAssistant?.choices?.find((item) => item.update.kind === "expense" || item.update.kind === "income")?.update.kind;
   const pendingSpend = Boolean(pendingKind);
-  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel ${expanded ? "is-max" : ""}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? `Ghid local până ${formatReset(quota.resetAt)}` : "Îți răspund din contextul bugetului tău"}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool" onClick={() => setExpanded((value) => !value)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}<span>{expanded ? "Micșorează" : "Ecran"}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); setExpanded(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} /><div className="ai-chat-history" ref={historyRef} aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: `Am anulat ${undone.title} ${money(undone.amount)}.` } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className="ai-chat-action" key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingSpend ? <div className="ai-date-bar"><p>Pe ce zi treci {pendingKind === "income" ? "venitul" : "mișcarea"}? · {dateCopy(spendDay)}</p><div className="ai-date-row"><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(-1))}>Ieri</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(0))}>Azi</button><label className="ai-date-field">Calendar<input type="date" value={spendDay} onChange={(event) => event.target.value && setSpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", "Vreau să adaug o mișcare")}>{t("+ Adaugă o mișcare")}</button>{SUGGESTED_QUESTIONS.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachment && <div className="ai-attachment-chip"><FileText size={14} /><span>{attachment.name}</span><button type="button" onClick={() => setAttachment(null)} aria-label={t("Elimină atașamentul")}>×</button></div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachment ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" aria-label={t("Atașează bon sau fișier")}><Paperclip size={16} /><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing} /></label><button type="submit" aria-label="Trimite mesajul" disabled={attachmentBusy || typing || (!message.trim() && !attachment)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Scrie firesc: „am dat 50 lei pe benzină”, „fă-mi plic Alimente 2400 cu limită săptămânală 600”, „următorul salariu pe 07.10.2026”, „datorie card 1800, rata 150”. Îți arăt ce am înțeles și salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația și obiceiurile rămân pe acest telefon. Ghidul local învață din alegerile tale ca să consume mai puțin Gemini.</p></aside>}</>;
+  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel ${expanded ? "is-max" : ""}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? `Ghid local până ${formatReset(quota.resetAt)}` : t("Îți răspund din contextul bugetului tău")}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool" onClick={() => setExpanded((value) => !value)}>{expanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}<span>{expanded ? t("Micșorează") : "Ecran"}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); setExpanded(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} /><div className="ai-chat-history" ref={historyRef} aria-live="polite">{messages.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: `Am anulat ${undone.title} ${money(undone.amount)}.` } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className="ai-chat-action" key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingSpend ? <div className="ai-date-bar"><p>Pe ce zi treci {pendingKind === "income" ? "venitul" : t("mișcarea")}? · {dateCopy(spendDay)}</p><div className="ai-date-row"><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(-1))}>Ieri</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => setSpendDay(shiftDay(0))}>Azi</button><label className="ai-date-field">Calendar<input type="date" value={spendDay} onChange={(event) => event.target.value && setSpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", t("Vreau să adaug o mișcare"))}>{t("+ Adaugă o mișcare")}</button>{SUGGESTED_QUESTIONS.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachment && <div className="ai-attachment-chip"><FileText size={14} /><span>{attachment.name}</span><button type="button" onClick={() => setAttachment(null)} aria-label={t("Elimină atașamentul")}>×</button></div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachment ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" aria-label={t("Atașează bon sau fișier")}><Paperclip size={16} /><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing} /></label><button type="submit" aria-label="Trimite mesajul" disabled={attachmentBusy || typing || (!message.trim() && !attachment)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Scrie firesc: „am dat 50 lei pe benzină”, „fă-mi plic Alimente 2400 cu limită săptămânală 600”, „următorul salariu pe 07.10.2026”, „datorie card 1800, rata 150”. Îți arăt ce am înțeles și salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> Conversația și obiceiurile rămân pe acest telefon. Ghidul local învață din alegerile tale ca să consume mai puțin Gemini.</p></aside>}</>;
 }
 
 export default AICompanion;

@@ -80,7 +80,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
             <button
               type="button"
               onClick={() => {
-                const next = transferBetweenEnvelopes(data, { fromAllocationId: rebalance.fromId, toAllocationId: rebalance.toId, amount: rebalance.amount, note: "Reechilibrare din bilanțul săptămânii" });
+                const next = transferBetweenEnvelopes(data, { fromAllocationId: rebalance.fromId, toAllocationId: rebalance.toId, amount: rebalance.amount, note: t("Reechilibrare din bilanțul săptămânii") });
                 if (!next) return;
                 setMovedNote(`Ai mutat ${money.format(rebalance.amount)} din „${rebalance.fromLabel}” în „${rebalance.toLabel}”.`);
                 onChange(next);
@@ -108,7 +108,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
         </ul>
       )}
       {check.envelopes.length > 0 ? (
-        <div className="bf-week-envelopes" aria-label="Plicuri planificat versus realizat">
+        <div className="bf-week-envelopes" aria-label={t("Plicuri planificat versus realizat")}>
           {check.envelopes.map((item) => (
             <article key={item.id} className={item.state}>
               <header>
@@ -131,7 +131,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
       )}
       <div className="bf-week-checkin-actions">
         <button type="button" className="bf-week-share" onClick={() => void share()}>
-          <Share2 size={16} /> {shareState === "copied" ? "Copiat în clipboard" : shareState === "shared" ? "Trimis" : "Trimite bilanțul"}
+          <Share2 size={16} /> {shareState === "copied" ? t("Copiat în clipboard") : shareState === "shared" ? "Trimis" : t("Trimite bilanțul")}
         </button>
         {check.envelopes.some((item) => item.state === "over") && onOpenPlan ? (
           <button type="button" className="bf-week-plan" onClick={onOpenPlan}>{t("Mută lei între plicuri")} <ChevronRight size={15} /></button>

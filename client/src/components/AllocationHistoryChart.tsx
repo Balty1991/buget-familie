@@ -24,8 +24,8 @@ const eventDelta = (entry: AllocationHistoryEntry) => {
 };
 
 const eventSeries = (entry: AllocationHistoryEntry) => {
-  if (entry.kind === "envelope-transfer") return entry.toAllocationLabel || entry.toAllocationId || "Realocări";
-  return entry.allocationLabel || entry.incomeTitle || "Alte repartizări";
+  if (entry.kind === "envelope-transfer") return entry.toAllocationLabel || entry.toAllocationId || t("Realocări");
+  return entry.allocationLabel || entry.incomeTitle || t("Alte repartizări");
 };
 
 export function AllocationHistoryChart({ entries, allocationFilter }: { entries: AllocationHistoryEntry[]; allocationFilter?: string }) {

@@ -17,26 +17,26 @@ export type BackgroundId = "plain" | "paper" | "grid" | "aurora" | "dots";
 export const LIGHT_THEMES: ThemeId[] = ["snow", "ivory", "sand", "sage", "slate", "lagoon"];
 
 export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: string }> = [
-  { id: "plain", name: "Lumină curată", detail: "Halo-uri moi, fără grilă" },
-  { id: "paper", name: "In de registru", detail: "Fibre calde, ca o coală" },
-  { id: "grid", name: "Hartă discretă", detail: "Grilă largă, aproape invizibilă" },
-  { id: "aurora", name: "Auroră profundă", detail: "Trei pete de lumină" },
-  { id: "dots", name: "Ceață fină", detail: "Puncte moi, adâncime" },
+  { id: "plain", name: t("Lumină curată"), detail: t("Halo-uri moi, fără grilă") },
+  { id: "paper", name: "In de registru", detail: t("Fibre calde, ca o coală") },
+  { id: "grid", name: t("Hartă discretă"), detail: t("Grilă largă, aproape invizibilă") },
+  { id: "aurora", name: t("Auroră profundă"), detail: t("Trei pete de lumină") },
+  { id: "dots", name: t("Ceață fină"), detail: t("Puncte moi, adâncime") },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
-  { id: "snow", name: "Studio Alb", detail: "Alb curat, cerneală cărbune și accent teal. Fundal alb, citire de zi.", mood: "ZI · ALB" },
-  { id: "ivory", name: "Porcelain Studio", detail: "Porțelan rece, teal dens și linii de cobalt pentru citire luminoasă.", mood: "ZI · EDITORIAL" },
-  { id: "sand", name: "Hârtie Caldă", detail: "Cremă de studio, espresso și teracotă. Calm, ca un dosar de hârtie.", mood: "ZI · CALD" },
-  { id: "sage", name: "Salvie", detail: "Verde-salvie deschis, alb mineral, accent pădure. Lin, profesional.", mood: "ZI · LINIȘTE" },
-  { id: "slate", name: "Nordic Slate", detail: "Gri-albăstrui de birou, accent auriu discret și alb cald pentru claritate profesională.", mood: "ZI · PROFESIONAL" },
-  { id: "lagoon", name: "Lagoon Glass", detail: "Turcoaz marin, alb mineral și accente de coral pentru un aer proaspăt.", mood: "ZI · LUMINOS" },
+  { id: "snow", name: "Studio Alb", detail: t("Alb curat, cerneală cărbune și accent teal. Fundal alb, citire de zi."), mood: "ZI · ALB" },
+  { id: "ivory", name: "Porcelain Studio", detail: t("Porțelan rece, teal dens și linii de cobalt pentru citire luminoasă."), mood: "ZI · EDITORIAL" },
+  { id: "sand", name: t("Hârtie Caldă"), detail: t("Cremă de studio, espresso și teracotă. Calm, ca un dosar de hârtie."), mood: "ZI · CALD" },
+  { id: "sage", name: "Salvie", detail: t("Verde-salvie deschis, alb mineral, accent pădure. Lin, profesional."), mood: t("ZI · LINIȘTE") },
+  { id: "slate", name: "Nordic Slate", detail: t("Gri-albăstrui de birou, accent auriu discret și alb cald pentru claritate profesională."), mood: "ZI · PROFESIONAL" },
+  { id: "lagoon", name: "Lagoon Glass", detail: t("Turcoaz marin, alb mineral și accente de coral pentru un aer proaspăt."), mood: "ZI · LUMINOS" },
   { id: "forest", name: "Mint OLED", detail: "Negru OLED, mint, cifre Fraunces. Household OS de noapte.", mood: "NOAPTE · MINT" },
-  { id: "midnight", name: "Ultraviolet Grid", detail: "Indigo profund, violet controlat și semnale cyan pentru focus nocturn.", mood: "NOAPTE · DIGITAL" },
-  { id: "navy", name: "Navy Cabinet", detail: "Bleumarin de birou, crem și auriu discret. Serios, de cabinet.", mood: "NOAPTE · BIROU" },
-  { id: "graphite", name: "Grafit", detail: "Negru grafit, accent albastru de ecran. Neutru, fără verde.", mood: "NOAPTE · NEUTRU" },
-  { id: "copper", name: "Ember Ledger", detail: "Cărbune cald, cupru ars și hârtie fumurie pentru un ton tactil.", mood: "CALD · TACTIL" },
-  { id: "plum", name: "Velvet Plum", detail: "Prună catifelată, accent auriu cald și contrast rafinat pentru seri elegante.", mood: "NOAPTE · RAFINAT" },
-  { id: "rosewood", name: "Rosewood Night", detail: "Cărbune prună, roz prăfuit și cupru pentru o atmosferă calmă de seară.", mood: "NOAPTE · CALM" },
+  { id: "midnight", name: "Ultraviolet Grid", detail: t("Indigo profund, violet controlat și semnale cyan pentru focus nocturn."), mood: "NOAPTE · DIGITAL" },
+  { id: "navy", name: "Navy Cabinet", detail: t("Bleumarin de birou, crem și auriu discret. Serios, de cabinet."), mood: "NOAPTE · BIROU" },
+  { id: "graphite", name: "Grafit", detail: t("Negru grafit, accent albastru de ecran. Neutru, fără verde."), mood: "NOAPTE · NEUTRU" },
+  { id: "copper", name: "Ember Ledger", detail: t("Cărbune cald, cupru ars și hârtie fumurie pentru un ton tactil."), mood: "CALD · TACTIL" },
+  { id: "plum", name: "Velvet Plum", detail: t("Prună catifelată, accent auriu cald și contrast rafinat pentru seri elegante."), mood: "NOAPTE · RAFINAT" },
+  { id: "rosewood", name: "Rosewood Night", detail: t("Cărbune prună, roz prăfuit și cupru pentru o atmosferă calmă de seară."), mood: "NOAPTE · CALM" },
 ];
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };

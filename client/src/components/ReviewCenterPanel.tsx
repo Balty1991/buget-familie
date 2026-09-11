@@ -25,7 +25,7 @@ const originLabel: Record<ReviewOrigin, string> = {
   import: "Extras de cont",
   bon: "Bon fotografiat",
   asistent: "Ghid AI",
-  notificare: "Notificare bancară",
+  notificare: t("Notificare bancară"),
 };
 
 type ImportSummary = { added: number; duplicates: number; skipped: StatementSkip[]; fileName: string };
@@ -54,7 +54,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
       if (fresh.length) onChange(addReviewDrafts(data, fresh));
       setSummary({ added: fresh.length, duplicates, skipped: parsed.skipped, fileName: file.name });
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Fișierul nu a putut fi citit.");
+      setError(reason instanceof Error ? reason.message : t("Fișierul nu a putut fi citit."));
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -97,14 +97,14 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           onChange={(event) => { const file = event.target.files?.[0]; if (file) void readFile(file); }}
         />
         <button className="bf-primary full" disabled={busy || !sourceId || !memberId} onClick={() => fileRef.current?.click()}>
-          <FileUp size={17} /> {busy ? "Citim fișierul…" : "Alege fișierul CSV"}
+          <FileUp size={17} /> {busy ? t("Citim fișierul…") : t("Alege fișierul CSV")}
         </button>
         {error && <p className="bf-form-error" role="alert">{error}</p>}
         {summary && (
           <div className="bf-review-summary" role="status">
             <b>{summary.fileName}</b>
             <p>
-              {summary.added ? `${summary.added} mișcări propuse` : "Nicio mișcare nouă"}
+              {summary.added ? `${summary.added} mișcări propuse` : t("Nicio mișcare nouă")}
               {summary.duplicates ? ` · ${summary.duplicates} existau deja` : ""}
               {summary.skipped.length ? ` · ${summary.skipped.length} rânduri necitibile` : ""}
             </p>
@@ -177,7 +177,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                   )}
                   <footer>
                     <button onClick={() => setEditing(open ? "" : draft.id)} aria-expanded={open}>
-                      <Pencil size={14} /> {open ? "Gata" : "Editează"}
+                      <Pencil size={14} /> {open ? "Gata" : t("Editează")}
                     </button>
                     <button onClick={() => onChange(dismissReviewDraft(data, draft.id))}>
                       <Trash2 size={14} /> Ignoră

@@ -121,7 +121,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{preset.category}</b>
-                    <small>{money(preset.amount)}{preset.weekly ? " · în fiecare săptămână" : " · pentru perioada aleasă"}</small>
+                    <small>{money(preset.amount)}{preset.weekly ? t(" · în fiecare săptămână") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );

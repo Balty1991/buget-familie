@@ -2,16 +2,16 @@ import { Sparkles } from "lucide-react";
 import { t } from "@/lib/i18n";
 
 const included = [
-  "Plicuri până la următorul venit, pe membru și pe sursă (card, cash, bonuri)",
-  "Sincronizare de familie criptată AES-GCM, fără cont",
-  "Bilanțul săptămânii: planificat vs realizat pe plic, de trimis familiei",
-  "Recapitulare lunară, vârstă a banilor, vânător de abonamente",
-  "PDF de bilanț, CSV, OCR local pe bonuri, asistent explicabil",
+  t("Plicuri până la următorul venit, pe membru și pe sursă (card, cash, bonuri)"),
+  t("Sincronizare de familie criptată AES-GCM, fără cont"),
+  t("Bilanțul săptămânii: planificat vs realizat pe plic, de trimis familiei"),
+  t("Recapitulare lunară, vârstă a banilor, vânător de abonamente"),
+  t("PDF de bilanț, CSV, OCR local pe bonuri, asistent explicabil"),
 ];
 
 const later = [
-  "Abonament Play Billing — îl activăm separat, după listare",
-  "Funcții de familie avansate plătite vor rămâne cele pe care le folosești deja; nu le blocăm acum",
+  t("Abonament Play Billing — îl activăm separat, după listare"),
+  t("Funcții de familie avansate plătite vor rămâne cele pe care le folosești deja; nu le blocăm acum"),
 ];
 
 export function PremiumStudio() {

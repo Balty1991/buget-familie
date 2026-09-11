@@ -103,8 +103,8 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
         ) : (
           <p className="bf-price-empty">
             {selected.length
-              ? "Produsele alese nu au încă un preț mai vechi decât fereastra selectată. Încearcă o fereastră mai scurtă sau mai adaugă bonuri."
-              : "Bifează mai jos produsele pe care vrei să le urmărești."}
+              ? t("Produsele alese nu au încă un preț mai vechi decât fereastra selectată. Încearcă o fereastră mai scurtă sau mai adaugă bonuri.")
+              : t("Bifează mai jos produsele pe care vrei să le urmărești.")}
           </p>
         )}
         {basket.pending.length > 0 && (

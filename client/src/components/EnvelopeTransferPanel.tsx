@@ -24,14 +24,14 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
   const from = envelopes.find((entry) => entry.item.id === fromId);
   const apply = () => {
     const value = parseRomanianAmount(amount);
-    if (!fromId || !toId) return setError("Alege plicul din care iei și plicul care primește.");
-    if (fromId === toId) return setError("Alege două plicuri diferite.");
-    if (value <= 0) return setError("Introdu o sumă mai mare decât zero.");
+    if (!fromId || !toId) return setError(t("Alege plicul din care iei și plicul care primește."));
+    if (fromId === toId) return setError(t("Alege două plicuri diferite."));
+    if (value <= 0) return setError(t("Introdu o sumă mai mare decât zero."));
     const next = transferBetweenEnvelopes(data, { fromAllocationId: fromId, toAllocationId: toId, amount: value, note });
-    if (!next) return setError(from ? `Poți muta cel mult ${money(Math.max(0, from.remaining))} din „${from.item.label}”.` : "Suma depășește ce a rămas în plicul sursă.");
+    if (!next) return setError(from ? `Poți muta cel mult ${money(Math.max(0, from.remaining))} din „${from.item.label}”.` : t("Suma depășește ce a rămas în plicul sursă."));
     const transfer = next.settings.salaryPlan.transfers[0];
-    const fromLabel = plan.allocations.find((item) => item.id === fromId)?.label || "Plic sursă";
-    const toLabel = plan.allocations.find((item) => item.id === toId)?.label || "Plic destinație";
+    const fromLabel = plan.allocations.find((item) => item.id === fromId)?.label || t("Plic sursă");
+    const toLabel = plan.allocations.find((item) => item.id === toId)?.label || t("Plic destinație");
     onChange(appendAllocationHistory(next, { kind: "envelope-transfer", referenceId: transfer?.id, fromAllocationId: fromId, fromAllocationLabel: fromLabel, toAllocationId: toId, toAllocationLabel: toLabel, amount: value, note: note.trim() || undefined }));
     setAmount("");
     setNote("");
@@ -86,8 +86,8 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
       {plan.transfers.slice(0, 4).length > 0 && (
         <div className="bf-transfer-history">
           {plan.transfers.slice(0, 4).map((item) => {
-            const fromLabel = plan.allocations.find((entry) => entry.id === item.fromAllocationId)?.label || "Plic eliminat";
-            const toLabel = plan.allocations.find((entry) => entry.id === item.toAllocationId)?.label || "Plic eliminat";
+            const fromLabel = plan.allocations.find((entry) => entry.id === item.fromAllocationId)?.label || t("Plic eliminat");
+            const toLabel = plan.allocations.find((entry) => entry.id === item.toAllocationId)?.label || t("Plic eliminat");
             return <span key={item.id}><b>{fromLabel}</b> → <b>{toLabel}</b> <strong>{money(item.amount)}</strong></span>;
           })}
         </div>

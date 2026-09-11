@@ -49,13 +49,13 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
         </div>
         {closedThis && <span className="bf-statement-stamp">{t("Închis")}</span>}
         <div className="bf-household-flow">
-          <article><small>Venituri</small><b>{money(recap.income)}</b><em>{recap.priorIncome ? `${recap.income - recap.priorIncome >= 0 ? "+" : ""}${money(recap.income - recap.priorIncome)} vs luna trecută` : "prima lună cu date"}</em></article>
-          <article><small>Cheltuieli</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : "fără categorie dominantă"}</em></article>
-          <article><small>{t("Bilanț")}</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? `${recap.envelopesOver} plicuri depășite` : recap.envelopesWatch ? `${recap.envelopesWatch} plicuri de urmărit` : "plicuri în ritm"}</em></article>
+          <article><small>Venituri</small><b>{money(recap.income)}</b><em>{recap.priorIncome ? `${recap.income - recap.priorIncome >= 0 ? "+" : ""}${money(recap.income - recap.priorIncome)} vs luna trecută` : t("prima lună cu date")}</em></article>
+          <article><small>Cheltuieli</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : t("fără categorie dominantă")}</em></article>
+          <article><small>{t("Bilanț")}</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? `${recap.envelopesOver} plicuri depășite` : recap.envelopesWatch ? `${recap.envelopesWatch} plicuri de urmărit` : t("plicuri în ritm")}</em></article>
         </div>
         <div className="bf-household-actions">
           <button className="bf-primary" disabled={exporting} onClick={() => void close()}>
-            <CalendarCheck size={16} /> {closedThis ? "Reînchide și descarcă PDF" : exporting ? "Generăm PDF-ul…" : "Închide luna · PDF local"}
+            <CalendarCheck size={16} /> {closedThis ? t("Reînchide și descarcă PDF") : exporting ? t("Generăm PDF-ul…") : t("Închide luna · PDF local")}
           </button>
           {closedThis && <small>Închisă local pe {formatDate(closedThis.closedAt.slice(0, 10), { day: "2-digit", month: "long" })}. Marcajul rămâne pe acest telefon.</small>}
         </div>
@@ -68,8 +68,8 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
         </div>
         {age ? (
           <div className="bf-household-age">
-            <CashNote amount={age.days < 1 ? "sub o zi" : `${age.days} zile`} caption="Vârsta medie a leului" />
-            <p>Media ponderată pe {money(age.sampleAmount)} cheltuiți. {age.unfundedAmount > 0 ? `${money(age.unfundedAmount)} nu au avut încă un venit pereche — completează soldul inițial.` : "Fiecare leu cheltuit a avut o încasare în spate."}</p>
+            <CashNote amount={age.days < 1 ? "sub o zi" : `${age.days} zile`} caption={t("Vârsta medie a leului")} />
+            <p>Media ponderată pe {money(age.sampleAmount)} cheltuiți. {age.unfundedAmount > 0 ? `${money(age.unfundedAmount)} nu au avut încă un venit pereche — completează soldul inițial.` : t("Fiecare leu cheltuit a avut o încasare în spate.")}</p>
           </div>
         ) : <p className="bf-helper">{t("După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.")}</p>}
         <div className="bf-household-safe">
