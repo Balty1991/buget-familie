@@ -34,11 +34,12 @@ export type EnvelopeOption = {
   /** „S2” când suma arătată este a săptămânii active. */
   weekLabel?: string;
   /**
-   * Cât de bine se potrivește cu ce s-a cumpărat: plicul pe exact acea categorie,
-   * unul înrudit ca subiect (dulciurile ies din alimente), sau doar unul care mai
-   * are bani. Propunerea se oprește la „înrudit”; restul rămân de ales cu mâna.
+   * Cât de bine se potrivește cu ce s-a cumpărat: plicul din care scoți de obicei
+   * pentru lucrul ăsta, cel pe exact acea categorie, unul înrudit ca subiect
+   * (dulciurile ies din alimente), sau doar unul care mai are bani. Propunerea se
+   * oprește la „înrudit”; restul rămân de ales cu mâna.
    */
-  match: "exact" | "related" | "other";
+  match: "habit" | "exact" | "related" | "other";
 };
 
 /**
@@ -87,7 +88,14 @@ const envelopeRemaining = (data: AppData, allocation: BudgetAllocation, date?: s
 
 export function planSpend(
   data: AppData,
-  input: { amount: number; category: string; date?: string; memberId?: string },
+  input: {
+    amount: number;
+    category: string;
+    date?: string;
+    memberId?: string;
+    /** Plicul din care a ales omul ultima oară pentru lucrul ăsta; bate categoria. */
+    preferAllocationId?: string;
+  },
 ): SpendPlan {
   const amount = Math.max(0, input.amount);
   const memberId = input.memberId || data.settings.members[0]?.id;
@@ -111,12 +119,14 @@ export function planSpend(
    * nu ajungă să scoată o cheltuială de sănătate din plicul de mâncare.
    */
   const related = relatedCategories(input.category);
-  const rank = { exact: 0, related: 1, other: 2 } as const;
+  const rank = { habit: 0, exact: 1, related: 2, other: 3 } as const;
   const envelopes: EnvelopeOption[] = data.settings.salaryPlan.allocations
     .filter((allocation) => !allocation.memberId || allocation.memberId === memberId)
     .map((allocation) => {
       const subject = allocation.category || allocation.label;
-      const match: EnvelopeOption["match"] = subject === input.category ? "exact" : related.includes(subject) ? "related" : "other";
+      const match: EnvelopeOption["match"] = allocation.id === input.preferAllocationId
+        ? "habit"
+        : subject === input.category ? "exact" : related.includes(subject) ? "related" : "other";
       const { remaining, weekLabel } = envelopeRemaining(data, allocation, input.date);
       return { allocation, remaining: Math.round(remaining * 100) / 100, covers: remaining >= amount, weekLabel, match };
     })
@@ -130,8 +140,10 @@ export function planSpend(
    * are banii. Mai departe nu mergem: un plic doar „cu bani în el” se alege cu
    * mâna, nu îl propunem noi.
    */
+  const habit = envelopes.find((item) => item.match === "habit" && item.remaining > 0);
   const exact = envelopes.filter((item) => item.match === "exact");
-  const envelope = exact.find((item) => item.covers)
+  const envelope = habit
+    || exact.find((item) => item.covers)
     || exact[0]
     || envelopes.find((item) => item.match === "related" && item.covers);
 

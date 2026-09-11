@@ -17,8 +17,11 @@ import {
   habitKey,
   incomeProposal,
   isConfirm,
+  isCorrection,
   localInsight,
+  findHabit,
   memberIdFor,
+  rememberExpense,
   parsePayday,
   parseWeeks,
   sourceTextSafe,
@@ -81,20 +84,9 @@ function loadMemory(): GuideMemory {
 let liveMemory: GuideMemory = emptyMemory();
 
 
-function rememberExpense(update: Extract<FinancialUpdate, { kind: "expense" }>): GuideMemory {
-  const key = habitKey(update.title);
-  if (key.length < 2 || key === "altele" || key === "cheltuiala") return liveMemory;
-  const phrases = liveMemory.phrases.filter((item) => item.key !== key);
-  phrases.push({
-    key,
-    title: update.title,
-    category: update.category,
-    allocationId: update.allocationId,
-    sourceId: update.sourceId,
-    count: (liveMemory.phrases.find((item) => item.key === key)?.count || 0) + 1,
-    lastAt: new Date().toISOString(),
-  });
-  liveMemory = { phrases: phrases.slice(-80), skippedOnline: liveMemory.skippedOnline };
+/** Reține alegerea și o salvează pe telefon. Corectura cântărește dublu. */
+function learn(update: Extract<FinancialUpdate, { kind: "expense" }>, weight: 1 | 2 = 1): GuideMemory {
+  liveMemory = rememberExpense(liveMemory, update, weight);
   return liveMemory;
 }
 
@@ -288,11 +280,15 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
 }
 
 /** Trece o intenție citită din text într-o acțiune pe care registrul o știe aplica. */
-function intentToUpdate(intent: AssistantIntent, data?: AppData): FinancialUpdate {
+/** Plicul din care scoți de obicei pentru asta, dacă asistentul a învățat deja. */
+const habitEnvelope = (intent: AssistantIntent, memory: GuideMemory) =>
+  intent.kind === "expense" ? findHabit(memory, intent.title, intent.title)?.allocationId : undefined;
+
+function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): FinancialUpdate {
   switch (intent.kind) {
     case "expense": {
       // Salvăm chiar sursa și plicul arătate în propunere, ca ce vede omul să fie ce se scrie.
-      const plan = data ? planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date }) : undefined;
+      const plan = data ? planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date, preferAllocationId: memory && habitEnvelope(intent, memory) }) : undefined;
       return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date, sourceId: plan?.source?.source.id, allocationId: plan?.envelope?.allocation.id };
     }
     case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date };
@@ -311,12 +307,12 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData): FinancialUpdat
  * lipsește tocmai lucrul pe care îl decizi acolo — din ce sursă ies banii și din
  * ce plic se scad. `planSpend` alege propunerea; alternativele le poate atinge.
  */
-function describeIntent(intent: AssistantIntent, data?: AppData): string {
+function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): string {
   switch (intent.kind) {
     case "expense": {
       const head = `cheltuială ${money(intent.amount)} · ${intent.category} · ${formatDate(intent.date)}`;
       if (!data) return head;
-      const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date });
+      const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date, preferAllocationId: memory && habitEnvelope(intent, memory) });
       return [head, plan.summary && `  ↳ ${plan.summary}`, ...plan.warnings.map((item) => `  ⚠ ${item}`)].filter(Boolean).join("\n");
     }
     case "income": {
@@ -334,9 +330,9 @@ function describeIntent(intent: AssistantIntent, data?: AppData): string {
 }
 
 /** Textul propunerii, scris o singură dată ca să poată fi refăcut la schimbarea zilei. */
-function proposalText(intents: AssistantIntent[], data?: AppData): string {
+function proposalText(intents: AssistantIntent[], data?: AppData, memory?: GuideMemory): string {
   const head = intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`;
-  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data)}`).join("\n")}\n\nConfirmi să le trec în registru?`;
+  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}\n\nConfirmi să le trec în registru?`;
 }
 
 /** Ziua unei intenții care chiar are dată — cheltuială sau venit. */
@@ -392,11 +388,11 @@ function spendChoices(data: AppData, intent: Extract<AssistantIntent, { kind: "e
 }
 
 /** Alternativele se arată doar când mesajul conține exact o cheltuială; altfel ar fi ambiguu ce schimbă atingerea. */
-function spendAlternatives(data: AppData, parsed: ParsedIntent[]): ChatChoice[] | undefined {
+function spendAlternatives(data: AppData, parsed: ParsedIntent[], memory?: GuideMemory): ChatChoice[] | undefined {
   if (parsed.length !== 1) return undefined;
   const intent = parsed[0].intent;
   if (intent.kind !== "expense") return undefined;
-  const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date });
+  const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date, preferAllocationId: memory && habitEnvelope(intent, memory) });
   const choices = spendChoices(data, intent, plan);
   return choices.length ? choices : undefined;
 }
@@ -499,7 +495,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         // Propunerea scrisă de `describeIntent` se reface întreagă; cea cu alternative
         // poartă ziua într-un singur loc, îngroșat, deci schimbăm exact acel cuvânt.
         text: intents
-          ? proposalText(intents, data)
+          ? proposalText(intents, data, liveMemory)
           : before
             ? retimeText(target.text, before, day)
             : target.text,
@@ -523,6 +519,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const handleAction = (item: ChatMessage) => {
     if (item.action?.type === "apply" && item.updates?.length) {
       item.updates.forEach((update) => onFinancialUpdate(update));
+      item.updates.forEach((update) => { if (update.kind === "expense") setMemory(learn(update)); });
       if (item.updates.some((update) => update.kind === "income")) setGuideStage("debts");
       const dated = item.updates.find((update) => update.kind === "expense" || update.kind === "income");
       const day = dated && (dated.kind === "expense" || dated.kind === "income") ? dated.date : "";
@@ -542,7 +539,10 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     lastSaveRef.current = { key: stamp, at: Date.now() };
     const update = choice.update.kind === "expense" || choice.update.kind === "income" ? { ...choice.update, date: day } : choice.update;
     onFinancialUpdate(update);
-    if (update.kind === "expense") setMemory(rememberExpense(update));
+    if (update.kind === "expense") {
+      const proposed = [...messages].reverse().find((item) => item.role === "assistant" && item.updates?.length)?.updates?.[0];
+      setMemory(learn(update, isCorrection(proposed, update) ? 2 : 1));
+    }
     if (update.kind === "transfer") {
       addMessage({ role: "assistant", text: `Am mutat ${money(update.amount)} din **${update.fromLabel}** în **${update.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
       return;
@@ -620,11 +620,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       const intents = reading.intents.map((item) => item.intent);
       addMessage({
         role: "assistant",
-        text: proposalText(intents, data),
-        updates: intents.map((item) => intentToUpdate(item, data)),
+        text: proposalText(intents, data, liveMemory),
+        updates: intents.map((item) => intentToUpdate(item, data, liveMemory)),
         intents,
         action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
-        choices: spendAlternatives(data, reading.intents),
+        choices: spendAlternatives(data, reading.intents, liveMemory),
       });
       return true;
     }

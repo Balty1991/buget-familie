@@ -145,3 +145,24 @@ describe("plicurile oferite când categoria exactă lipsește", () => {
     expect(plan.summary).toContain("în afara plicurilor");
   });
 });
+
+describe("plicul învățat din alegerile tale", () => {
+  it("bate categoria, fiindcă tu ai ales altfel data trecută", () => {
+    const plan = planSpend(house(), { amount: 40, category: "Alimente", date: "2026-09-05", preferAllocationId: "env-fun" });
+    expect(plan.envelope?.allocation.id).toBe("env-fun");
+    expect(plan.envelope?.match).toBe("habit");
+  });
+
+  it("nu îl propune dacă s-a golit între timp", () => {
+    const data = house();
+    data.settings.salaryPlan.allocations[1].amount = 0;
+    const plan = planSpend(data, { amount: 40, category: "Alimente", date: "2026-09-05", preferAllocationId: "env-fun" });
+    expect(plan.envelope?.allocation.id).toBe("env-food");
+  });
+
+  it("fără obicei, rămâne alegerea după categorie", () => {
+    const plan = planSpend(house(), { amount: 40, category: "Alimente", date: "2026-09-05" });
+    expect(plan.envelope?.allocation.id).toBe("env-food");
+    expect(plan.envelope?.match).toBe("exact");
+  });
+});

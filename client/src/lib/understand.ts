@@ -181,7 +181,7 @@ export function isDebtOrInstallmentMessage(raw: string) {
     && !/\b(am platit|am achitat|plata ratei|achit rata)\b/.test(folded);
 }
 
-function findHabit(memory: GuideMemory, raw: string, title: string) {
+export function findHabit(memory: GuideMemory, raw: string, title: string) {
   const folded = habitKey(`${raw} ${title}`);
   return [...memory.phrases]
     .filter((item) => item.key.length >= 2 && (folded.includes(item.key) || item.key.includes(habitKey(title))))
@@ -416,3 +416,46 @@ export function decide(readings: Reading[], margin = 10): { winner?: Reading; ru
   if (!winner) return { ambiguous: false };
   return { winner, runnerUp, ambiguous: Boolean(runnerUp && winner.score - runnerUp.score < margin) };
 }
+
+/**
+ * Ce a învățat din alegerile tale.
+ *
+ * O corectură valorează mai mult decât un acord. Când asistentul propune plicul
+ * „Alimente” și tu apeși „Din Casă & facturi”, ai spus ceva ce el nu știa; când
+ * apeși doar „Confirmă”, ai spus doar că nu s-a înșelat. De aceea corectura intră
+ * cu greutate dublă: ajunge la pragul de „de obicei scoți din…” din două atingeri,
+ * nu din patru.
+ */
+export function rememberExpense(
+  memory: GuideMemory,
+  update: Extract<FinancialUpdate, { kind: "expense" }>,
+  weight: 1 | 2 = 1,
+): GuideMemory {
+  const key = habitKey(update.title);
+  if (key.length < 2 || key === "altele" || key === "cheltuiala") return memory;
+  const before = memory.phrases.find((item) => item.key === key);
+  const phrases = memory.phrases.filter((item) => item.key !== key);
+  phrases.push({
+    key,
+    title: update.title,
+    category: update.category,
+    allocationId: update.allocationId,
+    sourceId: update.sourceId,
+    count: (before?.count || 0) + weight,
+    lastAt: new Date().toISOString(),
+  });
+  return { phrases: phrases.slice(-80), skippedOnline: memory.skippedOnline };
+}
+
+/**
+ * A fost o corectură? Adică: exista o propunere, iar omul a ales altceva decât ea.
+ * Fără propunere nu e corectură, ci prima alegere.
+ */
+export const isCorrection = (
+  proposed: FinancialUpdate | undefined,
+  chosen: FinancialUpdate,
+): boolean => {
+  if (!proposed || proposed.kind !== "expense" || chosen.kind !== "expense") return false;
+  return (proposed.allocationId || "") !== (chosen.allocationId || "")
+    || (proposed.sourceId || "") !== (chosen.sourceId || "");
+};
