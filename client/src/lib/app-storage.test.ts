@@ -58,12 +58,12 @@ describe("backup Buget Familie", () => {
     expect(click).toHaveBeenCalledOnce();
   });
 
-  it("nu raportează succes când utilizatorul închide foaia de partajare", async () => {
+  it("nu raportează nici succes, nici eroare când utilizatorul închide foaia de partajare", async () => {
     const abort = Object.assign(new Error("abort"), { name: "AbortError" });
     vi.stubGlobal("navigator", { share: vi.fn(async () => { throw abort; }), canShare: () => true });
     vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
     vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
 
-    await expect(downloadBackup(data())).resolves.toBe("failed");
+    await expect(downloadBackup(data())).resolves.toBe("cancelled");
   });
 });

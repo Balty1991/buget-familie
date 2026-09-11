@@ -93,10 +93,11 @@ export function parseBackup(raw: string): AppBackup {
  * Salvează backupul. Pe Android, în WebView-ul aplicației, un `<a download>` nu declanșează
  * nicio descărcare — fișierul se pierde tăcut. Încercăm întâi foaia de partajare a
  * sistemului, care lasă utilizatorul să aleagă Drive, e-mail sau Fișiere, și abia apoi
- * descărcarea clasică. Întoarce felul în care a reușit, ca interfața să spună ce s-a
- * întâmplat în loc să presupună.
+ * descărcarea clasică. Întoarce felul în care s-a terminat, ca interfața să spună ce s-a
+ * întâmplat în loc să presupună. „cancelled” înseamnă că utilizatorul a închis foaia de
+ * partajare — nu este o eroare și nu merită un mesaj de eșec.
  */
-export async function downloadBackup(data: AppData): Promise<"shared" | "downloaded" | "failed"> {
+export async function downloadBackup(data: AppData): Promise<"shared" | "downloaded" | "cancelled" | "failed"> {
   const stamp = new Date();
   const name = `buget-familie-backup-${stamp.getFullYear()}-${String(stamp.getMonth() + 1).padStart(2, "0")}-${String(stamp.getDate()).padStart(2, "0")}.json`;
   const blob = new Blob([JSON.stringify(makeBackup(data), null, 2)], { type: "application/json" });
@@ -110,7 +111,7 @@ export async function downloadBackup(data: AppData): Promise<"shared" | "downloa
     }
   } catch (error) {
     // Anularea foii de partajare nu este o eroare; nu mai încercăm altceva.
-    if (error instanceof Error && error.name === "AbortError") return "failed";
+    if (error instanceof Error && error.name === "AbortError") return "cancelled";
   }
 
   try {
