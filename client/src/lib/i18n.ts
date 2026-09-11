@@ -208,6 +208,7 @@ const en: Record<string, string> = {
   "Aici ajung mișcările propuse din extrase de cont, bonuri sau ghid. Nimic nu intră în registru fără confirmarea ta.": "Movements proposed from statements, receipts or the guide land here. Nothing enters the ledger without your confirmation.",
   "Ajung la următorul venit?": "Will I make it to the next payday?",
   "Al cui este contul": "Whose account is it",
+  "Asta nu pare un venit. Spune-mi întâi ce bani intră într-o lună obișnuită — salariu, pensie sau altceva — și ne întoarcem imediat la restul.": "That doesn't look like income. Tell me first what money comes in during a normal month — salary, pension or something else — and we'll get back to the rest right away.",
   "Alaltăieri": "The day before yesterday",
   "Alege o atmosferă, nu doar o culoare.": "Choose a mood, not just a colour.",
   "Alege o sumă mică pentru categoria care apare des și verifică săptămânal cum te simți cu ea.": "Pick a small cap for the category that keeps coming up, and check weekly how it feels.",

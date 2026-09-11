@@ -636,6 +636,28 @@ export default function Home() {
       const item = { id: newId("recurring"), name: change.name, amount: change.amount, category: change.category, sourceId: source.id, memberId: member.id, dueDay: Math.min(31, Math.max(1, change.dueDay)), active: true, autoPost: false, updatedAt: now };
       return { ...current, recurring: [...current.recurring, item] };
     }
+    /**
+     * Ștergerea și corectarea cerute prin asistent. Rândul pleacă din registru cu
+     * piatră de mormânt, ca sincronizarea între telefoane să nu-l readucă înapoi.
+     */
+    if (change.kind === "delete-transaction") {
+      const removed = current.transactions.find((item) => item.id === change.id);
+      if (!removed) return current;
+      const now = new Date().toISOString();
+      return {
+        ...current,
+        transactions: current.transactions.filter((item) => item.id !== change.id),
+        deleted: [...current.deleted, { entity: "transactions" as const, id: change.id, deletedAt: now }].slice(-500),
+      };
+    }
+    if (change.kind === "amend-transaction") {
+      if (!current.transactions.some((item) => item.id === change.id)) return current;
+      const now = new Date().toISOString();
+      return {
+        ...current,
+        transactions: current.transactions.map((item) => item.id === change.id ? { ...item, amount: change.amount, updatedAt: now } : item),
+      };
+    }
     if (change.kind === "goal") {
       const goal: SavingsGoal = { id: newId("goal"), name: change.name, current: change.current || 0, target: change.target, due: change.dueDate ? formatDate(change.dueDate, { day: "2-digit", month: "long", year: "numeric" }) : t("Fără termen"), dueDate: change.dueDate, memberId: member?.id, tone: "honey", updatedAt: now };
       return { ...current, savings: [goal, ...current.savings] };

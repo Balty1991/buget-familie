@@ -13,7 +13,7 @@
  */
 export type Outcome =
   | "expense" | "income" | "envelope" | "debt" | "recurring" | "goal" | "payday"
-  | "transfer" | "answer" | "confirm" | "none";
+  | "transfer" | "answer" | "confirm" | "revise" | "due" | "none";
 
 export type Case = {
   text: string;
@@ -128,4 +128,26 @@ export const CORPUS: Case[] = [
   { text: "cum funcționează plicurile?", want: "none", note: "întrebare despre aplicație, nu despre bani" },
   { text: "nu am datorii", want: "none" },
   { text: "ce părere ai?", want: "none" },
+];
+
+/** Fraze adăugate după ce am probat ce chiar spun oamenii, nu doar ce e ușor de citit. */
+export const CORPUS_EXTRA: Case[] = [
+  // --- corectarea unei greșeli ---------------------------------------------
+  { text: "șterge ultima cheltuială", want: "revise" },
+  { text: "sterge ultima miscare", want: "revise", note: "fără diacritice" },
+  { text: "anulează ce am adăugat", want: "revise" },
+  { text: "am greșit, era 60 nu 50", want: "revise" },
+  { text: "schimbă suma în 75", want: "revise" },
+
+  // --- cine a cheltuit ------------------------------------------------------
+  { text: "cât a cheltuit soția luna asta?", want: "answer" },
+  { text: "pe ce a dat soția banii?", want: "answer" },
+
+  // --- cereri de a vedea, nu de a înregistra --------------------------------
+  { text: "arată-mi cheltuielile de peste 100 de lei", want: "answer", note: "are sumă și formă de cheltuială, dar cere o listă" },
+  { text: "ce am cumpărat de la Kaufland?", want: "answer" },
+  { text: "de câte ori am dat pe taxi luna asta?", want: "answer" },
+
+  // --- o scadență plătită, fără să repeți suma ------------------------------
+  { text: "am plătit chiria", want: "due", note: "suma o știe aplicația din Plan" },
 ];

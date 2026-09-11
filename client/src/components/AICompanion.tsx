@@ -543,6 +543,14 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       const proposed = [...messages].reverse().find((item) => item.role === "assistant" && item.updates?.length)?.updates?.[0];
       setMemory(learn(update, isCorrection(proposed, update) ? 2 : 1));
     }
+    if (update.kind === "delete-transaction") {
+      addMessage({ role: "assistant", text: `Am șters **${update.title}**, ${money(update.amount)}.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
+      return;
+    }
+    if (update.kind === "amend-transaction") {
+      addMessage({ role: "assistant", text: `Am schimbat **${update.title}** din ${money(update.was)} în **${money(update.amount)}**.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
+      return;
+    }
     if (update.kind === "transfer") {
       addMessage({ role: "assistant", text: `Am mutat ${money(update.amount)} din **${update.fromLabel}** în **${update.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
       return;
@@ -590,6 +598,17 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         : offlineWinner;
       if (act(trimmed)) return;
     }
+    /**
+     * Ghidul de pornire întreabă de venit, dar nu orice cifră este un venit.
+     * „300 lei la dentist” ajungea în registru ca venit lunar, fără confirmare,
+     * fiindcă pasul de pornire revendica orice mesaj cu o sumă. Acum îl lăsăm să
+     * revendice doar ce chiar sună a venit; restul merge mai departe, ca oricând.
+     */
+    const soundsLikeIncome = /venit|salariu|leafa|pensie|primesc|castig|incasez|intra|bonus|chirie|freelanc/.test(foldRo(raw));
+    if (guideStage === "income" && !soundsLikeIncome && amount) {
+      addMessage({ role: "assistant", text: t("Asta nu pare un venit. Spune-mi întâi ce bani intră într-o lună obișnuită — salariu, pensie sau altceva — și ne întoarcem imediat la restul.") });
+      return;
+    }
     if (guideStage === "income") { if (!amount) { addMessage({ role: "assistant", text: t("Am nevoie doar de o sumă aproximativă. De exemplu: «salariul meu este 6.500 lei pe lună».") }); return; } onFinancialUpdate({ kind: "income", amount, title: /salariu/i.test(folded) ? "Salariu lunar" : t("Venit lunar") }); setGuideStage("debts"); addMessage({ role: "assistant", text: `Am notat ${money(amount)} ca venit lunar. Următoarea întrebare: ai datorii, credite, rate sau carduri de cumpărături?` }); return; } if (guideStage === "debts") { if (/nu\s+(am|exista)|fara\s+datorii|niciuna/.test(folded)) { setGuideStage("allocation"); addMessage({ role: "assistant", text: t("În regulă, fără datorii. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii. Ce sume vrei să rezervi?") }); return; } if (!amount) { addMessage({ role: "assistant", text: t("Spune-mi, de exemplu: «Credit auto, mai am 18.000 lei» sau «rată la bancă, sold 42.000 lei».") }); return; } const debtName = raw.replace(/\d[\d.,\s]*(?:lei|ron)?/gi, "").replace(/(mai am|sold|datorie|credit|rata|rată|la banca|la bancă)/gi, "").replace(/[,:-]/g, " ").trim() || "Datorie"; setPendingDebtName(debtName); onFinancialUpdate({ kind: "debt", name: debtName, remaining: amount }); setGuideStage("rate"); addMessage({ role: "assistant", text: `Am trecut „${debtName}” cu soldul de ${money(amount)}. Cât plătești lunar pentru această datorie?` }); return; } if (guideStage === "rate") { if (amount) onFinancialUpdate({ kind: "debt-monthly", amount }); setGuideStage("allocation"); addMessage({ role: "assistant", text: amount ? `Am notat rata de ${money(amount)}. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.` : t("În regulă, lăsăm rata de completat mai târziu. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.") }); return; } if (guideStage === "allocation") { const categories = ["alimente", "facturi", "casa", "transport", "economii", "datorii"]; const found = categories.map((category) => { const match = folded.match(new RegExp(`${category}[^\\d]{0,18}(\\d[\\d.,]*)`)); return match ? { category, amount: firstAmount(match[1]) } : undefined; }).filter((item): item is { category: string; amount: number } => Boolean(item?.amount)); if (!found.length) { addMessage({ role: "assistant", text: t("Nu am găsit categoriile și sumele. Scrie simplu: «alimente 1500, facturi 800, transport 400, economii 500».") }); return; } found.forEach((item) => onFinancialUpdate({ kind: "allocation", category: item.category === "facturi" || item.category === "casa" ? "Casă & facturi" : item.category[0].toLocaleUpperCase("ro-RO") + item.category.slice(1), amount: item.amount, weekly: item.category === "alimente" || item.category === "transport" })); setGuideStage("ready"); addMessage({ role: "assistant", text: `Am repartizat ${found.map((item) => `${item.category} ${money(item.amount)}`).join(", ")}. Putem ajusta orice sumă. De acum sunt disponibil să urmărim împreună cheltuielile, veniturile și ritmul lunii.` }); return; } const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); if (!parsed.understood) { addMessage({ role: "assistant", text: t("Spune-mi suma și ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil».") }); return; } const proposal = expenseProposal(raw, { amount: parsed.amount, category: parsed.category, title: naturalTitle(raw, parsed.category) }, data, liveMemory); if (proposal) { offerSpend(proposal); return; } addMessage({ role: "assistant", text: `Am înțeles ${parsed.title}, ${money(parsed.amount)}. Alege de unde scoatem banii.` }); }, 420); };
 
   const handleAttachment = async (file?: File) => {
@@ -632,7 +651,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       addMessage({ role: "assistant", text: answerToText(reading.answer), followUps: reading.answer.followUps });
       return true;
     }
-    if (reading.kind === "expense" || reading.kind === "transfer" || reading.kind === "income") {
+    if (reading.kind === "expense" || reading.kind === "transfer" || reading.kind === "income" || reading.kind === "revise" || reading.kind === "due") {
       offerSpend(reading.proposal);
       return true;
     }

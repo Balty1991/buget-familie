@@ -20,13 +20,14 @@ import {
   allocationStatus,
   allocationWeekStatus,
   expenseCategories,
+  inPlanPeriod,
   isoToday,
   parseNaturalSpendScenario,
   sourceBalance,
   type AppData,
 } from "./finance-data";
 import { t } from "./i18n";
-import { dateCopy, noDoubleStop, shiftDay } from "./proposal-date";
+import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
 import { parseAssistantMessage, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
@@ -40,7 +41,9 @@ export type FinancialUpdate =
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
   | { kind: "payday"; date: string; flexDays: number }
-  | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string };
+  | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string }
+  | { kind: "delete-transaction"; id: string; title: string; amount: number }
+  | { kind: "amend-transaction"; id: string; amount: number; title: string; was: number };
 
 export type ChatChoice = { label: string; update: FinancialUpdate };
 export type PhraseHabit = { key: string; title: string; category: string; allocationId?: string; sourceId?: string; count: number; lastAt: string };
@@ -80,7 +83,7 @@ export type ExtractedGuide = {
 export function isQuestion(raw: string) {
   const folded = foldRo(raw).replace(/\s+/g, " ").trim();
   return /\?\s*$/.test(raw.trim())
-    || /^(cat|cate|cati|unde|cand|care|cum|ce |imi permit|mi permit|pot sa|as putea|ajung |mai am |merita )/.test(folded);
+    || /^(cat|cate|cati|unde|cand|care|cum|ce |imi permit|mi permit|pot sa|as putea|ajung |mai am |merita |arata|listeaza|vreau sa vad|spune mi)/.test(folded);
 }
 
 export function isConfirm(raw: string) {
@@ -333,6 +336,95 @@ export function localInsight(raw: string, data: AppData, memory: GuideMemory): s
   return `Uite ce e disponibil, din registrul de pe telefon:${envelopes.length ? `\n${envelopes.join("\n")}` : ""}\n${sources.join("\n")}${learned}`;
 }
 
+/* ------------------------------------------------- corectarea unei greșeli */
+
+/**
+ * „Șterge ultima cheltuială”, „am greșit, era 60 nu 50”.
+ *
+ * Pe telefon se scrie repede și se greșește. Până acum, singura cale de anulare
+ * era butonul de sub mesaj, cât timp mesajul se mai vedea; după ce se derula,
+ * rămânea căutarea rândului în Mișcări. Iar o frază ca „șterge ultima cheltuială”
+ * nu era înțeleasă de nimeni, deci nu se întâmpla nimic.
+ *
+ * Nimic nu se șterge sau se schimbă fără confirmare: aici se face doar propunerea,
+ * cu mișcarea numită pe față, ca omul să vadă exact peste ce dă.
+ */
+const lastMovement = (data: AppData, amount?: number) => {
+  // Mișcările noi se pun în față, deci prima potrivire este cea mai recentă.
+  const rows = data.transactions.filter((item) => (amount === undefined ? true : Math.abs(item.amount - amount) < 0.005));
+  return rows[0];
+};
+
+export function reviseProposal(raw: string, data: AppData): Proposal | undefined {
+  const folded = foldRo(raw);
+
+  const amendment = folded.match(/\bera\s+(\d+(?:[.,]\d{1,2})?)\s*(?:lei|ron)?[,\s]+(?:nu|nu era)\s+(\d+(?:[.,]\d{1,2})?)/)
+    || folded.match(/\bschimba (?:suma|valoarea)\s+(?:in|la)\s+(\d+(?:[.,]\d{1,2})?)/);
+  if (amendment) {
+    const value = (token: string) => parseFloat(token.replace(",", "."));
+    // „era 60, nu 50”: 60 e corect, 50 e ce s-a scris greșit.
+    const corrected = value(amendment[1]);
+    const wrong = amendment[2] ? value(amendment[2]) : undefined;
+    const target = lastMovement(data, wrong);
+    if (!target) {
+      return { text: wrong !== undefined
+        ? `Nu găsesc o mișcare de ${money(wrong)} pe care s-o corectez. Spune-mi denumirea ei.`
+        : "Nu am ce corecta — nu ai încă nicio mișcare în registru.", choices: [] };
+    }
+    if (!corrected || corrected <= 0) return undefined;
+    return {
+      text: `Schimb **${target.title}** din ${money(target.amount)} în **${money(corrected)}**?`,
+      choices: [{ label: `Schimbă în ${money(corrected)}`, update: { kind: "amend-transaction", id: target.id, amount: corrected, title: target.title, was: target.amount } }],
+    };
+  }
+
+  const removal = /\b(sterge|sterg|anuleaza|anulez|elimina|scoate|scoate-o|da inapoi)\b/.test(folded)
+    && /\b(ultima|ultimul|ultim|ce am adaugat|ce am trecut|miscarea|cheltuiala|venitul|inregistrarea)\b/.test(folded);
+  if (!removal) return undefined;
+  const target = lastMovement(data);
+  if (!target) return { text: "Nu ai nicio mișcare în registru, deci nu am ce șterge.", choices: [] };
+  return {
+    text: `Șterg **${target.title}**, ${money(target.amount)} din ${dateCopy(target.date)}?`,
+    choices: [{ label: `Șterge ${target.title}`, update: { kind: "delete-transaction", id: target.id, title: target.title, amount: target.amount } }],
+  };
+}
+
+/**
+ * „Am plătit chiria.” Fără sumă — fiindcă suma o știe deja aplicația, din
+ * scadențele pe care le-ai trecut în Plan. Până acum o astfel de frază nu era
+ * înțeleasă de nimeni: cheltuiala are nevoie de o sumă, iar aici nu era niciuna.
+ *
+ * Propunem plata scadenței cu suma ei, dar numai dacă n-a fost deja trecută în
+ * perioada curentă — altfel am invita omul să plătească de două ori.
+ */
+export function paidRecurringProposal(raw: string, data: AppData): Proposal | undefined {
+  const folded = foldRo(raw);
+  if (!/\b(am platit|am achitat|platit|achitat)\b/.test(folded)) return undefined;
+  if (/\d/.test(folded)) return undefined; // cu sumă scrisă, o citește cheltuiala obișnuită
+  /**
+   * „Chiria” nu conține „chirie”: româna schimbă terminația, iar o potrivire
+   * exactă ar rata tocmai felul firesc de a spune lucrul. Comparăm pe rădăcină.
+   */
+  const due = data.recurring.find((item) => {
+    const name = foldRo(item.name);
+    if (item.active === false || name.length < 4) return false;
+    return folded.includes(name) || folded.includes(name.slice(0, name.length - 1));
+  });
+  if (!due) return undefined;
+  const already = data.transactions.some((item) => item.recurringId === due.id && inPlanPeriod(item.date, data.settings.salaryPlan));
+  if (already) {
+    return { text: `**${due.name}** este deja trecută în perioada asta. Nu o trec a doua oară.`, choices: [] };
+  }
+  const source = data.settings.paymentSources.find((item) => item.id === due.sourceId) || data.settings.paymentSources[0];
+  return {
+    text: `Am înțeles: **${due.name}**, ${money(due.amount)}${source ? `, din ${source.name}` : ""}. O trec în registru?`,
+    choices: [{
+      label: `Plătește ${due.name} · ${money(due.amount)}`,
+      update: { kind: "expense", amount: due.amount, title: due.name, category: due.category, date: today(), sourceId: source?.id, allocationId: "outside", memberId: due.memberId },
+    }],
+  };
+}
+
 /* ---------------------------------------------------------------------------
    Citirea mesajului
    --------------------------------------------------------------------------- */
@@ -342,10 +434,12 @@ export type Proposal = { text: string; choices: ChatChoice[] };
 /** O citire posibilă a mesajului, cu cât de tare o susține textul și de ce. */
 export type Reading =
   | { kind: "confirm"; score: number; why: string }
+  | { kind: "revise"; score: number; why: string; proposal: Proposal }
   | { kind: "intents"; score: number; why: string; intents: ParsedIntent[] }
   | { kind: "question"; score: number; why: string; answer: AnalystAnswer }
   | { kind: "expense"; score: number; why: string; proposal: Proposal }
   | { kind: "transfer"; score: number; why: string; proposal: Proposal }
+  | { kind: "due"; score: number; why: string; proposal: Proposal }
   | { kind: "income"; score: number; why: string; proposal: Proposal }
   | { kind: "insight"; score: number; why: string; text: string };
 
@@ -365,7 +459,7 @@ export type UnderstandContext = {
  * un corpus de fraze și se poate corecta acolo unde greșește, fără să se rupă
  * restul.
  */
-const BASE = { confirm: 100, intents: 90, question: 80, transfer: 75, expense: 70, income: 50, insight: 40 } as const;
+const BASE = { confirm: 100, revise: 95, intents: 90, question: 80, due: 78, transfer: 75, expense: 70, income: 50, insight: 40 } as const;
 
 export function understand(text: string, data: AppData, ctx: UnderstandContext = {}): Reading[] {
   const raw = text.trim();
@@ -374,6 +468,9 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
   if (!raw) return readings;
 
   if (isConfirm(raw)) readings.push({ kind: "confirm", score: BASE.confirm, why: "mesajul este doar o confirmare" });
+
+  const revise = reviseProposal(raw, data);
+  if (revise) readings.push({ kind: "revise", score: BASE.revise, why: "cere ștergerea sau corectarea unei mișcări", proposal: revise });
 
   const intents = parseAssistantMessage(raw, {
     asOf: ctx.asOf || isoToday(),
@@ -393,6 +490,9 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
 
   const spend = expenseProposal(raw, ctx.extracted, data, memory, ctx.forcedExpense);
   if (spend) readings.push({ kind: "expense", score: BASE.expense, why: "sumă plus un cuvânt de cheltuială", proposal: spend });
+
+  const due = paidRecurringProposal(raw, data);
+  if (due) readings.push({ kind: "due", score: BASE.due, why: "spune că a plătit o scadență cunoscută", proposal: due });
 
   const moved = transferProposal(raw, data);
   if (moved) readings.push({ kind: "transfer", score: BASE.transfer, why: "«mută … din … în …»", proposal: moved });

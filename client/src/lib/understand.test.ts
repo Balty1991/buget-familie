@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData } from "./finance-data";
 import { decide, understand, type Reading } from "./understand";
-import { CORPUS, type Outcome } from "./understand.corpus";
+import { CORPUS, CORPUS_EXTRA, type Outcome } from "./understand.corpus";
 
 /** O gospodărie obișnuită: două persoane, patru locuri cu bani, trei plicuri. */
 const house = (): AppData => {
@@ -21,6 +21,13 @@ const house = (): AppData => {
     { id: "env-trans", label: "Transport", category: "Transport", amount: 500, sourceId: "card", weeklyPace: true },
     { id: "env-house", label: "Casă & facturi", category: "Casă & facturi", amount: 900, sourceId: "card", weeklyPace: true },
   ];
+  data.recurring = [
+    { id: "rec-chirie", name: "Chirie", amount: 1500, dueDay: 5, category: "Casă & facturi", sourceId: "card", memberId: me.id, active: true },
+  ];
+  data.transactions = [
+    { id: "tx-1", title: "Lidl", amount: 240, kind: "expense", category: "Alimente", source: "Card debit", sourceId: "card", person: me.name, memberId: me.id, date: "2026-09-08", allocationId: "env-food" },
+    { id: "tx-2", title: "Taxi", amount: 50, kind: "expense", category: "Transport", source: "Card debit", sourceId: "card", person: "Soția", memberId: "m2", date: "2026-09-09", allocationId: "env-trans" },
+  ];
   return data;
 };
 
@@ -29,6 +36,8 @@ const outcomeOf = (reading?: Reading): Outcome => {
   if (!reading) return "none";
   switch (reading.kind) {
     case "confirm": return "confirm";
+    case "revise": return "revise";
+    case "due": return "due";
     case "question": case "insight": return "answer";
     case "expense": return "expense";
     case "income": return "income";
@@ -43,7 +52,7 @@ const outcomeOf = (reading?: Reading): Outcome => {
 const read = (text: string, data = house()) => outcomeOf(decide(understand(text, data, { asOf: "2026-09-11" })).winner);
 
 describe("corpusul de fraze", () => {
-  const results = CORPUS.map((item) => ({ ...item, got: read(item.text) }));
+  const results = [...CORPUS, ...CORPUS_EXTRA].map((item) => ({ ...item, got: read(item.text) }));
   const ok = (item: { want: Outcome | Outcome[]; got: Outcome }) => (Array.isArray(item.want) ? item.want.includes(item.got) : item.want === item.got);
   const wrong = results.filter((item) => !ok(item));
 

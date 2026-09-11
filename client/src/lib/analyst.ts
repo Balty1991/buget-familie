@@ -196,6 +196,42 @@ const firstAmount = (folded: string) => {
 
 // ----------------------------------------------------------------- răspunsuri
 
+/**
+ * Cine a cheltuit. Într-o aplicație de familie, „cât a cheltuit soția luna asta?”
+ * este una dintre primele întrebări — și până acum nu o înțelegea nimeni.
+ * Se recunoaște după numele scris în Setări sau după felul în care vorbește omul
+ * despre celălalt.
+ */
+function readMember(data: AppData, folded: string): { id: string; name: string } | undefined {
+  for (const member of data.settings.members) {
+    const name = foldRomanian(member.name);
+    if (name.length >= 3 && folded.includes(name)) return { id: member.id, name: member.name };
+  }
+  const second = data.settings.members[1];
+  const first = data.settings.members[0];
+  if (/\b(sotia|sotiei|nevasta|partenera)\b/.test(folded) && second) return { id: second.id, name: second.name };
+  if (/\b(sotul|sotului|barbatul|partenerul)\b/.test(folded) && first) return { id: first.id, name: first.name };
+  if (/\b(eu|mine|meu|mea)\b/.test(folded) && first) return { id: first.id, name: first.name };
+  return undefined;
+}
+
+/** Întrebarea numește o persoană? Folosit ca să nu răspundem despre toți când s-a întrebat despre unul. */
+const mentionsSomeone = (folded: string) =>
+  /\b(sotia|sotiei|nevasta|partenera|sotul|sotului|barbatul|partenerul|copilul|fiul|fiica)\b/.test(folded);
+
+const noSuchMember = (data: AppData, folded: string): AnalystAnswer | undefined => {
+  if (!mentionsSomeone(folded)) return undefined;
+  const names = data.settings.members.map((item) => item.name);
+  return {
+    kind: "spend",
+    headline: names.length > 1
+      ? `Nu recunosc persoana din întrebare. În familie am ${names.join(" și ")}.`
+      : `Deocamdată ești singur în familie, ca ${names[0] || "membru"}.`,
+    detail: sentences("Poți adăuga membri din Setări, iar de atunci pot răspunde separat pentru fiecare"),
+    followUps: ["Cât am cheltuit luna asta?", "Unde se duc banii?"],
+  };
+};
+
 function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer {
   const period = readPeriod(folded, asOf);
   /**
@@ -210,10 +246,18 @@ function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer
   const vendor = placeNamed || (named || guessed ? undefined : readVendor(folded, data));
   const category = named || guessed;
 
+  const member = readMember(data, folded);
+  if (!member) {
+    const missing = noSuchMember(data, folded);
+    if (missing) return missing;
+  }
+
   let items = expensesIn(data, period);
+  if (member) items = items.filter((item) => item.memberId === member.id);
   let subject = "";
   if (category) { items = items.filter((item) => item.category === category); subject = ` pe ${category}`; }
   else if (vendor) { items = items.filter((item) => foldRomanian(item.title) === foldRomanian(vendor)); subject = ` la ${vendor}`; }
+  if (member) subject += `, ${member.name}`;
 
   const total = totalOf(items);
   if (!items.length) {
@@ -227,6 +271,7 @@ function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer
 
   const prior = previousPeriod(period);
   let priorItems = expensesIn(data, prior);
+  if (member) priorItems = priorItems.filter((item) => item.memberId === member.id);
   if (category) priorItems = priorItems.filter((item) => item.category === category);
   else if (vendor) priorItems = priorItems.filter((item) => foldRomanian(item.title) === foldRomanian(vendor));
   const change = changeLine(total, totalOf(priorItems));
@@ -247,10 +292,15 @@ function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer
 
 function answerWhere(data: AppData, folded: string, asOf: string): AnalystAnswer {
   const period = readPeriod(folded, asOf);
-  const items = expensesIn(data, period);
+  const member = readMember(data, folded);
+  if (!member) {
+    const missing = noSuchMember(data, folded);
+    if (missing) return { ...missing, kind: "where" };
+  }
+  const items = member ? expensesIn(data, period).filter((item) => item.memberId === member.id) : expensesIn(data, period);
   const total = totalOf(items);
   if (!total) {
-    return { kind: "where", headline: `Nu există cheltuieli în ${period.label}.`, followUps: ["Cât am cheltuit luna trecută?"] };
+    return { kind: "where", headline: `Nu există cheltuieli${member ? ` pe numele lui ${member.name}` : ""} în ${period.label}.`, followUps: ["Cât am cheltuit luna trecută?"] };
   }
   const categories = byCategory(items);
   const [topName, topValue] = categories[0];
@@ -492,8 +542,8 @@ const MATCHERS: Matcher[] = [
   { kind: "savings", test: /\b(economi|strans|obiectiv|pusi deoparte)/, run: (d) => answerSavings(d) },
   { kind: "biggest", test: /\b(cea mai mare|cel mai mare|top cheltui|cele mai mari)/, run: (d, f, a) => answerBiggest(d, f, a) },
   { kind: "compare", test: /\b(compar|fata de luna|mai mult ca|mai putin ca|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
-  { kind: "where", test: /\b(unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
-  { kind: "spend", test: /\b(cat am (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos)/, run: (d, f, a) => answerSpend(d, f, a) },
+  { kind: "where", test: /\b(unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui|a dat|am dat)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
+  { kind: "spend", test: /\b(cat am (cheltuit|dat|platit)|cat a (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos|ce am cumparat|de cate ori am dat|arata[- ]?mi cheltuielile|listeaza cheltuielile)/, run: (d, f, a) => answerSpend(d, f, a) },
   { kind: "remaining", test: /\b(cat (mai )?am|ce mai am|cat mi a ramas|ramas|sold|situatia|bilant|disponibil|cum stau cu|cum sta)/, run: (d, _f, a) => answerRemaining(d, a) },
 ];
 
@@ -509,7 +559,7 @@ export function analyze(raw: string, data: AppData, asOf = isoToday()): AnalystA
    * „cât am dat la Lidl” conține și el „am dat”. Deosebirea o face începutul:
    * o întrebare se deschide cu un cuvânt de întrebare.
    */
-  const asksQuestion = /^(cat|cate|cati|unde|cand|care|cum|ce |imi permit|mi permit|pot sa|as putea|ajung |compar|arata|spune mi)/.test(folded)
+  const asksQuestion = /^(cat|cate|cati|unde|cand|care|cum|ce |imi permit|mi permit|pot sa|as putea|ajung |compar|arata|spune mi|listeaza|vreau sa vad)/.test(folded)
     || /\?$/.test(raw.trim());
   const asksToRecord = /\b(adauga|adaug|treci|noteaza|trece|creeaza|fa mi|fa un|sterge)\b/.test(folded)
     || (!asksQuestion && /\b(am dat|am platit|am cumparat|am primit|am incasat)\b/.test(folded));
