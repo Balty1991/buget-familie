@@ -1,6 +1,15 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createEmptyAppData } from "./finance-data";
 import { downloadBackup, makeBackup, parseBackup } from "./app-storage";
+
+/** Plugin-urile Capacitor nu există în Node; le înlocuim o singură dată, controlabil. */
+const native = vi.hoisted(() => ({ writeFile: vi.fn(), stat: vi.fn(), share: vi.fn() }));
+vi.mock("@capacitor/filesystem", () => ({
+  Filesystem: { writeFile: native.writeFile, stat: native.stat },
+  Directory: { Documents: "DOCUMENTS", Cache: "CACHE", Data: "DATA" },
+  Encoding: { UTF8: "utf8" },
+}));
+vi.mock("@capacitor/share", () => ({ Share: { share: native.share } }));
 
 const data = () => {
   const value = createEmptyAppData();
@@ -32,38 +41,102 @@ describe("backup Buget Familie", () => {
     expect(() => parseBackup("nu este JSON")).toThrow();
   });
 
-  it("folosește foaia de partajare a sistemului când există — singura cale care merge în WebView-ul Android", async () => {
-    const share = vi.fn(async () => undefined);
-    vi.stubGlobal("navigator", { share, canShare: () => true });
-    vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
-    vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+  describe("pe telefon (Capacitor)", () => {
+    // Cazul real raportat: în WebView-ul Android nu există nici `navigator.share`,
+    // nici descărcare prin ancoră. Fișierul trebuie scris de un plugin nativ.
+    beforeEach(() => {
+      vi.stubGlobal("window", { Capacitor: { isNativePlatform: () => true } });
+      native.writeFile.mockReset().mockResolvedValue({ uri: "file:///Documents/backup.json" });
+      native.stat.mockReset().mockResolvedValue({ size: 120, uri: "file:///Documents/backup.json" });
+      native.share.mockReset().mockResolvedValue({ activityType: "com.google.android.apps.docs" });
+    });
 
-    await expect(downloadBackup(data())).resolves.toBe("shared");
-    expect(share).toHaveBeenCalledOnce();
-    expect(share.mock.calls[0][0].title).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d\.json$/);
+    it("scrie fișierul în Documente și deschide foaia de partajare", async () => {
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+
+      expect(native.writeFile).toHaveBeenCalledOnce();
+      const call = native.writeFile.mock.calls[0][0];
+      expect(call.path).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d-\d{4}\.json$/);
+      expect(call.directory).toBe("DOCUMENTS");
+      expect(JSON.parse(call.data).data.settings.familyName).toBe("Familia Test");
+      expect(native.share).toHaveBeenCalledOnce();
+      expect(native.share.mock.calls[0][0].url).toBe("file:///Documents/backup.json");
+    });
+
+    it("nu crede o scriere care lasă fișierul gol — trece pe cache", async () => {
+      native.stat.mockResolvedValueOnce({ size: 0, uri: "file:///Documents/backup.json" });
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+      expect(native.writeFile).toHaveBeenCalledTimes(2);
+      expect(native.writeFile.mock.calls[1][0].directory).toBe("CACHE");
+    });
+
+    it("dacă Documente este refuzat, scrie în cache în loc să eșueze", async () => {
+      native.writeFile.mockRejectedValueOnce(new Error("Directory does not exist"));
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+      expect(native.writeFile).toHaveBeenCalledTimes(2);
+      expect(native.writeFile.mock.calls[1][0].directory).toBe("CACHE");
+    });
+
+    it("dacă utilizatorul închide foaia de partajare, fișierul rămâne în Documente și îi spunem unde", async () => {
+      native.share.mockRejectedValue(Object.assign(new Error("Share canceled"), { name: "AbortError" }));
+
+      const result = await downloadBackup(data());
+      expect(result.how).toBe("saved");
+      expect(result.how === "saved" && result.path).toMatch(/^Documente\/buget-familie-backup/);
+    });
+
+    it("nu pretinde că a salvat ceva când fișierul e doar în cache și partajarea a fost anulată", async () => {
+      native.writeFile.mockRejectedValueOnce(new Error("Directory does not exist"));
+      native.share.mockRejectedValue(Object.assign(new Error("Share canceled"), { name: "AbortError" }));
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "cancelled" });
+    });
+
+    it("raportează eroarea reală când nici scrierea nativă nu reușește", async () => {
+      native.writeFile.mockRejectedValue(new Error("Nu există spațiu"));
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "failed", reason: "Nu există spațiu" });
+    });
   });
 
-  it("cade pe descărcarea clasică atunci când partajarea nu este disponibilă", async () => {
-    const click = vi.fn();
-    const anchor = { href: "", download: "", rel: "", click, remove: vi.fn() };
-    vi.stubGlobal("navigator", {});
-    vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
-    vi.stubGlobal("document", { createElement: vi.fn(() => anchor), body: { appendChild: vi.fn() } });
-    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:test"), revokeObjectURL: vi.fn() });
-    vi.stubGlobal("window", { setTimeout: vi.fn() });
+  describe("pe web", () => {
+    const webWindow = () => vi.stubGlobal("window", { setTimeout: vi.fn() });
 
-    await expect(downloadBackup(data())).resolves.toBe("downloaded");
-    expect(anchor.download).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d\.json$/);
-    expect(anchor.href).toBe("blob:test");
-    expect(click).toHaveBeenCalledOnce();
-  });
+    it("folosește foaia de partajare a browserului când există", async () => {
+      webWindow();
+      const share = vi.fn(async () => undefined);
+      vi.stubGlobal("navigator", { share, canShare: () => true });
+      vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string, public options: unknown) {} });
+      vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
 
-  it("nu raportează nici succes, nici eroare când utilizatorul închide foaia de partajare", async () => {
-    const abort = Object.assign(new Error("abort"), { name: "AbortError" });
-    vi.stubGlobal("navigator", { share: vi.fn(async () => { throw abort; }), canShare: () => true });
-    vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
-    vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+      expect(share).toHaveBeenCalledOnce();
+    });
 
-    await expect(downloadBackup(data())).resolves.toBe("cancelled");
+    it("cade pe descărcarea clasică atunci când partajarea nu este disponibilă", async () => {
+      const click = vi.fn();
+      const anchor = { href: "", download: "", rel: "", click, remove: vi.fn() } as unknown as HTMLAnchorElement;
+      webWindow();
+      vi.stubGlobal("navigator", {});
+      vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+      vi.stubGlobal("URL", { createObjectURL: () => "blob:test", revokeObjectURL: vi.fn() });
+      vi.stubGlobal("document", { createElement: () => anchor, body: { appendChild: vi.fn() } });
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "downloaded" });
+      expect(anchor.download).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d-\d{4}\.json$/);
+      expect(click).toHaveBeenCalledOnce();
+    });
+
+    it("nu raportează nici succes, nici eroare când utilizatorul închide foaia de partajare", async () => {
+      webWindow();
+      const abort = Object.assign(new Error("abort"), { name: "AbortError" });
+      vi.stubGlobal("navigator", { share: vi.fn(async () => { throw abort; }), canShare: () => true });
+      vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
+      vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "cancelled" });
+    });
   });
 });

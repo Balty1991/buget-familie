@@ -90,28 +90,101 @@ export function parseBackup(raw: string): AppBackup {
 }
 
 /**
- * Salvează backupul. Pe Android, în WebView-ul aplicației, un `<a download>` nu declanșează
- * nicio descărcare — fișierul se pierde tăcut. Încercăm întâi foaia de partajare a
- * sistemului, care lasă utilizatorul să aleagă Drive, e-mail sau Fișiere, și abia apoi
- * descărcarea clasică. Întoarce felul în care s-a terminat, ca interfața să spună ce s-a
- * întâmplat în loc să presupună. „cancelled” înseamnă că utilizatorul a închis foaia de
- * partajare — nu este o eroare și nu merită un mesaj de eșec.
+ * Pe Android, în WebView-ul aplicației, nici `<a download>`, nici `navigator.share`
+ * nu există: ancora nu declanșează nimic, iar Web Share API este o funcție de Chrome,
+ * nu de WebView. Butonul „mergea”, dar nu producea niciun fișier. Pe telefon scriem
+ * deci fișierul cu plugin-ul nativ de fișiere și abia apoi îl oferim prin foaia de
+ * partajare a sistemului. Pe web rămân calea de partajare și descărcarea clasică.
+ *
+ * Întoarce felul în care s-a terminat, ca interfața să spună adevărul în loc să
+ * presupună; „cancelled” înseamnă că utilizatorul a închis foaia de partajare — nu
+ * este o eroare.
  */
-export async function downloadBackup(data: AppData): Promise<"shared" | "downloaded" | "cancelled" | "failed"> {
-  const stamp = new Date();
-  const name = `buget-familie-backup-${stamp.getFullYear()}-${String(stamp.getMonth() + 1).padStart(2, "0")}-${String(stamp.getDate()).padStart(2, "0")}.json`;
-  const blob = new Blob([JSON.stringify(makeBackup(data), null, 2)], { type: "application/json" });
+export type BackupOutcome =
+  | { how: "shared" }
+  | { how: "saved"; path: string }
+  | { how: "downloaded" }
+  | { how: "cancelled" }
+  | { how: "failed"; reason?: string };
+
+const backupFileName = (stamp = new Date()) =>
+  `buget-familie-backup-${stamp.getFullYear()}-${String(stamp.getMonth() + 1).padStart(2, "0")}-${String(stamp.getDate()).padStart(2, "0")}-${String(stamp.getHours()).padStart(2, "0")}${String(stamp.getMinutes()).padStart(2, "0")}.json`;
+
+export const isNativeApp = () => {
+  if (typeof window === "undefined") return false;
+  const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  return Boolean(cap?.isNativePlatform?.());
+};
+
+const isAbort = (error: unknown) =>
+  error instanceof Error && (error.name === "AbortError" || /abort|cancel|dismiss/i.test(error.message));
+
+/**
+ * Calea nativă. Două lucruri trebuie să meargă și niciunul nu e garantat pe toate
+ * telefoanele: scrierea în folderul public Documente (pe Android 10+ accesul direct
+ * este restrâns) și foaia de partajare. Așa că încercăm întâi Documente și verificăm
+ * prin `stat` că fișierul chiar există, iar dacă nu, scriem în cache — care merge
+ * întotdeauna și este expus de FileProvider. Abia apoi deschidem foaia de partajare.
+ *
+ * Dacă utilizatorul închide foaia, spunem „salvat” doar când fișierul a ajuns undeva
+ * unde chiar îl poate găsi; un fișier rămas în cache nu îi folosește la nimic.
+ */
+async function saveNatively(text: string, name: string): Promise<BackupOutcome> {
+  const [{ Filesystem, Directory, Encoding }, { Share }] = await Promise.all([
+    import("@capacitor/filesystem"),
+    import("@capacitor/share"),
+  ]);
+
+  const writeTo = async (directory: (typeof Directory)[keyof typeof Directory]) => {
+    const written = await Filesystem.writeFile({ path: name, data: text, directory, encoding: Encoding.UTF8, recursive: true });
+    // Scrierea poate „reuși” fără ca fișierul să existe pe stocarea restrânsă.
+    const info = await Filesystem.stat({ path: name, directory });
+    if (!info.size) throw new Error("Fișierul a rămas gol.");
+    return written.uri || info.uri;
+  };
+
+  let uri = "";
+  let visiblePath = "";
+  try {
+    uri = await writeTo(Directory.Documents);
+    visiblePath = `Documente/${name}`;
+  } catch {
+    uri = await writeTo(Directory.Cache);
+  }
+
+  try {
+    await Share.share({ title: name, text: name, url: uri, dialogTitle: "Salvează backupul" });
+    return { how: "shared" };
+  } catch (error) {
+    if (visiblePath) return { how: "saved", path: visiblePath };
+    if (isAbort(error)) return { how: "cancelled" };
+    return { how: "failed", reason: error instanceof Error ? error.message : undefined };
+  }
+}
+
+export async function downloadBackup(data: AppData): Promise<BackupOutcome> {
+  const name = backupFileName();
+  const text = JSON.stringify(makeBackup(data), null, 2);
+
+  if (isNativeApp()) {
+    try {
+      return await saveNatively(text, name);
+    } catch (error) {
+      return { how: "failed", reason: error instanceof Error ? error.message : undefined };
+    }
+  }
+
+  const blob = new Blob([text], { type: "application/json" });
 
   try {
     const file = new File([blob], name, { type: "application/json" });
     const shareApi = navigator as Navigator & { canShare?: (value: { files: File[] }) => boolean };
     if (typeof navigator.share === "function" && shareApi.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], title: name });
-      return "shared";
+      return { how: "shared" };
     }
   } catch (error) {
-    // Anularea foii de partajare nu este o eroare; nu mai încercăm altceva.
-    if (error instanceof Error && error.name === "AbortError") return "cancelled";
+    if (isAbort(error)) return { how: "cancelled" };
   }
 
   try {
@@ -125,9 +198,9 @@ export async function downloadBackup(data: AppData): Promise<"shared" | "downloa
     anchor.remove();
     // Revocarea imediată taie descărcarea pe unele browsere; îi lăsăm un moment.
     window.setTimeout(() => URL.revokeObjectURL(url), 4000);
-    return "downloaded";
-  } catch {
-    return "failed";
+    return { how: "downloaded" };
+  } catch (error) {
+    return { how: "failed", reason: error instanceof Error ? error.message : undefined };
   }
 }
 
