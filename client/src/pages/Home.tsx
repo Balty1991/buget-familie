@@ -201,6 +201,15 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
     [data],
   );
 
+  /**
+   * Un registru încă gol nu are ce număra. Arăta totuși „0 RON” cu litere mari — cel
+   * mai vizibil lucru de pe primul ecran era un zero fără înțeles, iar omul nu avea
+   * de unde ști ce se așteaptă de la el. Îi arătăm în loc cei trei pași.
+   */
+  const fresh = !data.transactions.length
+    && !data.settings.salaryPlan.allocations.length
+    && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
+
   const heroLabel = overPlan ? t("Peste limita planului") : data.settings.salaryPlan.allocations.length ? t("Rămas în plicuri") : monthIncome > 0 ? t("Venit înregistrat luna asta") : t("Plicuri neconfigurate");
   const heroValue = overPlan ? Math.abs(math.remaining) : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : monthIncome;
   const heroHint = overPlan
@@ -227,16 +236,67 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
             <span>{new Date(`${todayIso}T12:00:00`).getFullYear()}</span>
           </div>
         </div>
-        <p className="os-kicker-lg">{heroLabel}</p>
-        <h1 className="os-amount">
-          <span>{Math.round(heroValue).toLocaleString("ro-RO")}</span>
-          <small>RON</small>
-        </h1>
-        <p className="os-hint">{heroHint}</p>
-        <button type="button" className="os-explainer" onClick={() => setOpenHint((value) => !value)}>
-          <Info size={16} aria-hidden="true" /> {t("Cum se citește suma?")} <span>{openHint ? "−" : "+"}</span>
-        </button>
-        {openHint ? <p className="os-explainer-body">{explainer}</p> : null}
+        {fresh ? (
+          <div className="os-start">
+            <p className="os-kicker-lg">{t("De unde începi")}</p>
+            <h1 className="os-start-title">{t("Trei pași și cifrele devin ale tale.")}</h1>
+            <ol className="os-start-steps">
+              <li>
+                <button type="button" onClick={onAdd}>
+                  <span className="os-start-step-text">
+
+                    <b>{t("Treci prima mișcare")}</b>
+
+                    <small>{t("Un salariu încasat sau o cumpărătură de azi")}</small>
+
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => onGo("plan")}>
+                  <span className="os-start-step-text">
+
+                    <b>{t("Fă primul plic")}</b>
+
+                    <small>{t("Alimente, transport, facturi — cât aloci pentru fiecare")}</small>
+
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => onGo("plan")}>
+                  <span className="os-start-step-text">
+
+                    <b>{t("Spune când vine salariul")}</b>
+
+                    <small>{t("De aici se calculează cât poți cheltui pe zi")}</small>
+
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </li>
+            </ol>
+          </div>
+        ) : (
+          <>
+            <p className="os-kicker-lg">{heroLabel}</p>
+            <h1 className="os-amount">
+              <span>{Math.round(heroValue).toLocaleString("ro-RO")}</span>
+              <small>RON</small>
+            </h1>
+            <p className="os-hint">{heroHint}</p>
+          </>
+        )}
+        {!fresh && (
+          <>
+            <button type="button" className="os-explainer" onClick={() => setOpenHint((value) => !value)}>
+              <Info size={16} aria-hidden="true" /> {t("Cum se citește suma?")} <span>{openHint ? "−" : "+"}</span>
+            </button>
+            {openHint ? <p className="os-explainer-body">{explainer}</p> : null}
+          </>
+        )}
         <div className="os-gauge">
           <HealthScoreBadge data={data} />
         </div>

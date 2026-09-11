@@ -162,3 +162,23 @@
 .bf-price-window button,
 .bf-segment button { min-height: 44px; }
 .bf-chip-list span button { min-width: 32px; min-height: 32px; }
+
+/* Primul ecran, cât timp registrul e gol: pașii țin locul cifrei. */
+.os-start { display: grid; gap: 10px; }
+.os-start-title { font-size: clamp(22px, 6.4vw, 30px); line-height: 1.18; margin: 0; letter-spacing: -0.02em; }
+.os-start-steps { list-style: none; counter-reset: os-step; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; }
+.os-start-steps li { counter-increment: os-step; }
+.os-start-steps button {
+  width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; text-align: left; border-radius: 16px; cursor: pointer;
+  border: 1px solid var(--cf-line, rgba(0, 0, 0, 0.1)); background: var(--os-card, rgba(255, 255, 255, 0.65));
+}
+.os-start-steps button::before {
+  content: counter(os-step); flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 13px; font-weight: 600; line-height: 1;
+  background: var(--cf-accent, #1f6b4d); color: #fff;
+}
+.os-start-step-text { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.os-start-steps b { font-size: 15px; line-height: 1.25; }
+.os-start-steps small { font-size: 13px; line-height: 1.35; opacity: 0.75; }
+.os-start-steps button > svg { flex: 0 0 auto; opacity: 0.5; }
