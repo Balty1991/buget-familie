@@ -182,3 +182,24 @@
 .os-start-steps b { font-size: 15px; line-height: 1.25; }
 .os-start-steps small { font-size: 13px; line-height: 1.35; opacity: 0.75; }
 .os-start-steps button > svg { flex: 0 0 auto; opacity: 0.5; }
+
+/* Bara de anulare: stă deasupra navigației, nu peste conținut. */
+.bf-undo-bar {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 60;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+  width: min(560px, calc(100vw - 32px));
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 10px 10px 16px; border-radius: 16px;
+  background: var(--cf-ink, #14241d); color: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  animation: bf-undo-in 180ms ease-out;
+}
+@keyframes bf-undo-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@media (prefers-reduced-motion: reduce) { .bf-undo-bar { animation: none; } }
+.bf-undo-bar > span { flex: 1 1 auto; min-width: 0; font-size: 14px; line-height: 1.35; }
+.bf-undo-bar button {
+  flex: 0 0 auto; min-height: 40px; display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 14px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px;
+  color: inherit; background: rgba(255, 255, 255, 0.16); border: 0;
+}
+.bf-undo-bar .bf-undo-close { min-width: 40px; padding: 0; justify-content: center; background: transparent; }
