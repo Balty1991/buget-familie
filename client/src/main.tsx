@@ -3,56 +3,27 @@ import { Capacitor } from "@capacitor/core";
 import App from "./App";
 import "./fonts-local.css";
 import "./index.css";
-import "./atelier-refinement.css";
-import "./upgrade.css";
-import "./risk-state.css";
-import "./atelier-stationery.css";
-import "./workbench-final.css";
-import "./dark-mobile-repair.css";
-import "./atelier-review-pass.css";
-import "./personal-dashboard.css";
-import "./atelier-semantic-pass.css";
-import "./dark-night-premium.css";
-import "./mobile-decision-fix.css";
 import "./themes.css";
-import "./professional-type-navigation.css";
-import "./workbench-surface-system.css";
-import "./redesign-major-mobile.css";
-import "./clarity-rebuild.css";
-import "./ledger-decision-pass.css";
-import "./ledger-movements-pass.css";
-import "./priority-focus-pass.css";
-import "./secondary-button-contrast.css";
 import "./expanded-themes.css";
-import "./mono-theme.css";
-import "./theme-picker-scroll.css";
-import "./modernization-pass.css";
-import "./health-score.css";
-import "./theme-contrast-pass.css";
-import "./play-studio.css";
-import "./atelier-graphic-pass.css";
-import "./ledger-live.css";
-import "./ledger-atelier.css";
-import "./atelier-atmosphere.css";
-import "./mobile-speed.css";
-import "./brand-mark.css";
-import "./surface-texture.css";
-import "./redesign-2026.css";
-import "./visibility-safety.css";
 import "./household-os-today.css";
 import "./household-os-chrome.css";
-import "./play-ready-polish.css";
 import "./household-os-themes.css";
-import "./atelier-platinum-elevate.css";
-import "./atelier-premium-redesign.css";
-import "./ui-chrome-redesign.css";
-// Ultimul, ca să poată corecta contrastul peste toate foile de redesign de mai sus.
+import "./play-ready-polish.css";
+import "./visibility-safety.css";
+import "./mobile-speed.css";
+// Contrast pe critical path ca filled-urile din first paint să fie lizibile.
 import "./contrast-fix.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
+
 if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
 createRoot(document.getElementById("root")!).render(<App />);
 startPerformanceMonitoring();
+
+/** Foi atelier / ledger / redesign — după first paint; contrast-fix din nou la final. */
+void import("./deferred-atelier.css").then(() => {
+  void import("./contrast-fix.css");
+});
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
