@@ -4,6 +4,8 @@
  * (configurat o singură dată de administrator în firebase-config.ts); fiecare
  * familie primește propria "cameră" izolată, dedusă din parola ei de familie.
  * Firestore nu vede niciodată datele în clar — doar pachetul AES-GCM criptat local.
+ *
+ * Mod „doar offline” (ui-prefs): nu inițializează Firebase — sync rămâne local.
  */
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
@@ -11,11 +13,12 @@ import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Fi
 import { appCheckDebug, firebaseConfig, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { deriveFamilyRoomId } from "@/lib/family-crypto";
+import { isOfflineOnly } from "@/lib/ui-prefs";
 
 export { deriveFamilyRoomId };
 
 export class RealtimeSyncError extends Error {
-  constructor(public readonly kind: "not-configured" | "unavailable", message: string) { super(message); }
+  constructor(public readonly kind: "not-configured" | "unavailable" | "offline-only", message: string) { super(message); }
 }
 
 let app: FirebaseApp | undefined;
@@ -38,6 +41,9 @@ function ensureAppCheck(firebaseApp: FirebaseApp) {
 }
 
 function db(): Firestore {
+  if (isOfflineOnly()) {
+    throw new RealtimeSyncError("offline-only", "Modul „doar offline” este activ — sincronizarea cloud este oprită pe acest telefon.");
+  }
   if (!isFirebaseConfigured) throw new RealtimeSyncError("not-configured", "Sincronizarea nu a fost încă configurată de administratorul aplicației.");
   if (!firestore) {
     app = app || initializeApp(firebaseConfig);

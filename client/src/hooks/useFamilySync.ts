@@ -10,6 +10,7 @@ import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { notifyFamilyEnvelopeChanges } from "@/lib/local-notifications";
 import { t } from "@/lib/i18n";
+import { isOfflineOnly } from "@/lib/ui-prefs";
 import type { SyncPanelProps } from "@/pages/home-kit";
 
 const loadFamilySync = () => import("@/lib/realtime-sync");
@@ -118,6 +119,10 @@ export function useFamilySync(
   };
 
   const syncConnect = async () => {
+    if (isOfflineOnly()) {
+      setSyncNotice(t("Modul „doar offline” este activ. Dezactivează-l din Setări ca să folosești Sync."));
+      return;
+    }
     const strength = checkFamilyPassword(syncPassword);
     if (!strength.ok) {
       setSyncNotice(`${strength.label}. ${strength.advice.join(" ")}`);
@@ -170,11 +175,24 @@ export function useFamilySync(
     syncPushTimerRef.current = window.setTimeout(() => {
       void (async () => {
         try {
-          const { encryptFamilyData } = await loadFamilyCrypto();
-          const envelope = await encryptFamilyData(data, syncPasswordRef.current);
-          const { pushFamilyEnvelope } = await loadFamilySync();
-          await pushFamilyEnvelope(syncRoomIdRef.current!, envelope);
-          syncLastPortableRef.current = currentPortable;
+          const crypto = await loadFamilyCrypto();
+          const syncApi = await loadFamilySync();
+          const roomId = syncRoomIdRef.current!;
+          // Fetch+merge înainte de push — evită race „push fără pull recent”.
+          const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
+          let toPush = syncDataRef.current;
+          if (remoteEnvelope) {
+            const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncPasswordRef.current));
+            toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
+            const mergedPortable = syncPortable(toPush);
+            if (mergedPortable !== syncPortable(syncDataRef.current)) {
+              syncLastPortableRef.current = mergedPortable;
+              setData(toPush);
+            }
+          }
+          const envelope = await crypto.encryptFamilyData(toPush, syncPasswordRef.current);
+          await syncApi.pushFamilyEnvelope(roomId, envelope);
+          syncLastPortableRef.current = syncPortable(toPush);
           setSyncLastSync(new Date().toISOString());
           setSyncNotice(t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
         } catch (error) {

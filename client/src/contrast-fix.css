@@ -1164,3 +1164,49 @@ html .bf-movement-add svg,
   color: var(--cf-on-primary, #ffffff) !important;
   stroke: currentColor !important;
 }
+
+
+/* ============================================================
+ * Filled controls pe Noapte (theme-dark) + Aurora/Navy/Cyber — ink pe primary.
+ * ============================================================ */
+html.theme-dark .bf-os-decide,
+html.theme-dark .bf-today-add,
+html.theme-dark .bf-primary,
+html.theme-dark .bf-movement-add,
+html.theme-dark .bf-movement-kind button.active,
+html.theme-dark .bf-segment button.active,
+html.theme-dark .bf-journal-quickbar .active,
+html.theme-dark .bf-movement-scope button.active,
+html.theme-dark .os-dock button.is-on,
+html.theme-dark .os-desktop-nav button.is-on {
+  color: var(--cf-on-primary, #0d0b1c) !important;
+  background-color: var(--cf-primary-strong, #7dcea0) !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+html.theme-dark .bf-os-decide svg,
+html.theme-dark .bf-today-add svg,
+html.theme-dark .bf-primary svg,
+html.theme-dark .bf-movement-add svg {
+  color: var(--cf-on-primary, #0d0b1c) !important;
+  stroke: currentColor !important;
+}
+html.theme-dark .bf-secondary,
+html.theme-dark .bf-os-secondary {
+  color: var(--cf-ink, #eef2f6) !important;
+  background-color: var(--cf-surface, #1a1f27) !important;
+  border-color: var(--cf-line, #3a4450) !important;
+}
+
+/* Chip / tab filled pe aurora/navy/cyber — ținte ≥48dp pe dock active */
+html.theme-aurora .bf-more-tabs button.active,
+html.theme-navy .bf-more-tabs button.active,
+html.theme-cyber .bf-more-tabs button.active,
+html.theme-dark .bf-more-tabs button.active,
+html.theme-aurora .bf-allocation-period-tabs button.active,
+html.theme-navy .bf-allocation-period-tabs button.active,
+html.theme-cyber .bf-allocation-period-tabs button.active,
+html.theme-dark .bf-allocation-period-tabs button.active {
+  color: var(--cf-on-primary, #0d0b1c) !important;
+  background-color: var(--cf-primary-strong, #7dcea0) !important;
+}

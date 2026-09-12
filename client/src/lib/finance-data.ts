@@ -527,7 +527,10 @@ export const appendAllocationHistory = (data: AppData, entry: Omit<AllocationHis
   return { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocationHistory: [history, ...(plan.allocationHistory || [])].slice(0, 400), updatedAt: history.createdAt } } };
 };
 
-const roundedMoney = (value: number) => Math.round(Math.max(0, value) * 100) / 100;
+/** Rotunjire unică la 2 zecimale pentru ledger (semnat). */
+export const money2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+/** Alias istoric: rotunjire non-negativă la 2 zecimale. */
+const roundedMoney = (value: number) => money2(Math.max(0, value));
 
 /** Reguli eligibile pentru un venit: plicul trebuie să accepte aceeași sursă și, când este personal, același membru. */
 export const eligibleSalaryAllocationRules = (data: AppData, income: Transaction) => (data.settings.salaryPlan.salaryAllocationRules || []).filter((rule) => {
@@ -674,7 +677,7 @@ export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => 
 export const allocationBudget = (data: AppData, allocation: BudgetAllocation) => allocation.amount + data.settings.salaryPlan.transfers.reduce((sum, transfer) => sum + (transfer.toAllocationId === allocation.id ? transfer.amount : 0) - (transfer.fromAllocationId === allocation.id ? transfer.amount : 0), 0);
 export const allocationStatus = (data: AppData, allocation: BudgetAllocation) => { const budget = allocationBudget(data, allocation); const spent = allocationSpent(data, allocation); const remaining = budget - spent; const usage = budget > 0 ? spent / budget : 0; const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80)); return { budget, spent, remaining, usage, alertThreshold, state: remaining < 0 ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const }; };
 
-const roundSigned = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+const roundSigned = money2;
 
 /** Situația fiecărei tranșe calendaristice a unui plic, cu ajustările din transferurile între săptămâni. */
 export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocation) => {
@@ -879,9 +882,9 @@ export const weeklySummary = (data: AppData, asOf = isoToday(), memberId?: strin
 export const debtPaymentHistory = (data: AppData, debtId: string) => data.transactions.filter((item) => item.debtId === debtId).sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || ""));
 
 export const recordDebtPayment = (data: AppData, input: { debtId: string; amount: number; sourceId: string; memberId: string; date?: string; note?: string }) => {
-  const debt = data.debts.find((item) => item.id === input.debtId); const source = data.settings.paymentSources.find((item) => item.id === input.sourceId); const member = data.settings.members.find((item) => item.id === input.memberId); const amount = Math.round(Math.max(0, input.amount) * 100) / 100;
+  const debt = data.debts.find((item) => item.id === input.debtId); const source = data.settings.paymentSources.find((item) => item.id === input.sourceId); const member = data.settings.members.find((item) => item.id === input.memberId); const amount = roundedMoney(input.amount);
   if (!debt || !source || !member || (source.memberId && source.memberId !== member.id) || amount <= 0 || amount > debt.remaining) return undefined;
-  const now = new Date().toISOString(); const remainingAfter = Math.max(0, Math.round((debt.remaining - amount) * 100) / 100); const paymentState = remainingAfter === 0 ? t("achitată integral") : t("plată parțială"); const transaction: Transaction = { id: newId("debt-payment"), debtId: debt.id, debtRemainingAfter: remainingAfter, title: t("Rată {state} — {name}", { state: paymentState, name: debt.name }), amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || t("Rată {state}; sold rămas {amount} RON", { state: paymentState, amount: remainingAfter.toFixed(2) }), allocationId: "outside", createdAt: now, updatedAt: now };
+  const now = new Date().toISOString(); const remainingAfter = roundedMoney(debt.remaining - amount); const paymentState = remainingAfter === 0 ? t("achitată integral") : t("plată parțială"); const transaction: Transaction = { id: newId("debt-payment"), debtId: debt.id, debtRemainingAfter: remainingAfter, title: t("Rată {state} — {name}", { state: paymentState, name: debt.name }), amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || t("Rată {state}; sold rămas {amount} RON", { state: paymentState, amount: remainingAfter.toFixed(2) }), allocationId: "outside", createdAt: now, updatedAt: now };
   return { ...data, transactions: [transaction, ...data.transactions], debts: data.debts.map((item) => item.id === debt.id ? { ...item, remaining: remainingAfter, updatedAt: now } : item) };
 };
 

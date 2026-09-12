@@ -557,3 +557,39 @@ describe("plan săptămânal din scadențe și obiective", () => {
     expect(hint.suggestions.find((item) => item.allocationId === "a2")?.fromGoals).toBeGreaterThan(0);
   });
 });
+
+describe("money2 + invarianti pe mutatori", () => {
+  it("money2 rotunjește la 2 zecimale semnat", async () => {
+    const { money2 } = await import("./finance-data");
+    expect(money2(1.005)).toBe(1.01);
+    expect(money2(10.999)).toBe(11);
+    expect(money2(0.1 + 0.2)).toBe(0.3);
+    expect(money2(12.345)).toBe(12.35);
+    expect(money2(-2.5)).toBe(-2.5);
+  });
+
+  it("transfer plic păstrează suma totală a limitelor", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.allocations = [
+      { id: "a", label: "Alimente", category: "Alimente", amount: 100.555 },
+      { id: "b", label: "Transport", category: "Transport", amount: 50.445 },
+    ];
+    const before = data.settings.salaryPlan.allocations.reduce((s, a) => s + a.amount, 0);
+    const next = transferBetweenEnvelopes(data, { fromAllocationId: "a", toAllocationId: "b", amount: 10.333 });
+    expect(next).toBeTruthy();
+    const budgets = next!.settings.salaryPlan.allocations.map((a) => allocationBudget(next!, a));
+    expect(budgets.reduce((s, n) => s + n, 0)).toBeCloseTo(before, 1);
+    expect(sourceBalance(next!, data.settings.paymentSources[0].id)).toBe(sourceBalance(data, data.settings.paymentSources[0].id));
+  });
+
+  it("confirmReview + debt payment rămân deterministe pe sold", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    source.openingBalance = 500;
+    data.debts = [{ id: "d1", name: "Credit", remaining: 100, monthly: 20, due: "1" }];
+    const paid = recordDebtPayment(data, { debtId: "d1", amount: 30.555, sourceId: source.id, memberId: data.settings.members[0].id, date: isoToday() });
+    expect(paid).toBeTruthy();
+    expect(paid!.debts[0].remaining).toBe(69.44);
+    expect(sourceBalance(paid!, source.id)).toBe(469.44);
+  });
+});

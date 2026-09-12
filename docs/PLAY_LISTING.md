@@ -38,6 +38,7 @@ De ce e altfel
 • De verificat: bonuri și CSV bancă (BCR, BT, ING, Revolut) confirmate înainte de registru.
 • PDF de bilanț și CSV, generate în aplicație.
 • Teme: Alb Atelier, Noapte, Aurora, Navy, Cyber — contrast verificat pe controale.
+• Reamintiri locale pe orizont scurt (≤14 zile); la deschiderea aplicației se reprogramează. Fără spam WorkManager.
 
 Aplicația nu plătește facturi, nu investește și nu înlocuiește un consultant. Este un atelier de decizii, în română, în lei.
 ```

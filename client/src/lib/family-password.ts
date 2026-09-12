@@ -101,13 +101,19 @@ export function checkFamilyPassword(raw: string): PasswordVerdict {
 export function generateFamilyPassword(): string {
   const words = [
     "pisica", "gardul", "verde", "sare", "cafea", "ploaia", "muntele", "carte",
-    "fereastra", "soarele", "norul", "copacul", "strada", "lacul", "vântul", "casa",
+    "fereastra", "soarele", "norul", "copacul", "strada", "lacul", "vântul", "podul",
   ];
   const pick = () => words[Math.floor(Math.random() * words.length)];
-  const a = pick();
-  const b = pick();
-  const c = pick();
-  const n = Math.floor(10 + Math.random() * 89);
-  const phrase = `${a}${b[0].toUpperCase()}${b.slice(1)}${c[0].toUpperCase()}${c.slice(1)}${n}`;
-  return phrase.length >= 12 ? phrase : `${phrase}Casa${n}`;
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    const a = pick();
+    let b = pick();
+    let c = pick();
+    while (b === a) b = pick();
+    while (c === a || c === b) c = pick();
+    const n = Math.floor(10 + Math.random() * 89);
+    const phrase = `${a}${b[0].toUpperCase()}${b.slice(1)}${c[0].toUpperCase()}${c.slice(1)}${n}`;
+    const candidate = phrase.length >= 12 ? phrase : `${phrase}Podul${n}`;
+    if (checkFamilyPassword(candidate).ok) return candidate;
+  }
+  return "pisicaVerdeSareGardul7";
 }

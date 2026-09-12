@@ -34,6 +34,9 @@ Detalii: `docs/app-check-enforce-prep.md` · env: `.env.example`
 
 ## Reamintiri WorkManager (Android)
 
+> **Orizont 14 zile:** `ReminderScheduler` programează OneTimeWork pe un orizont scurt (≤14 zile), max 6 lucrări, fără spam. Facturile / salariile peste 14 zile **nu** primesc reminder până la redeschiderea app — la open se reprogramează ferestrele apropiate. Nu bifa hardware aici din CI.
+
+
 - [ ] Cu alertele activate, închide aplicația: o tranșă care începe mâine / salariu aproape ar trebui să notifice (orizont scurt, fără spam)
 - [ ] Canalul „Reamintiri plan” apare în Setări sistem → Aplicații → Buget Familie → Notificări
 - [ ] Widgetul / dala rămân neschimbate (probe hardware pe telefon — vezi secțiunile de mai sus)
