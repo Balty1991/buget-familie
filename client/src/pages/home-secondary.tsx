@@ -1084,7 +1084,18 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
   };
 
   return <div className="bf-sync">
-    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p><p className="bf-helper">{t("Nu se copiază: fotografiile bonurilor, coada De verificat, regulile de comerciant, cursurile și șabloanele rapide.")}</p></div>
+    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p></div>
+    <aside className="bf-sync-local-only" role="note">
+      <p className="bf-kicker">{t("CE NU SE SINCRONIZEAZĂ")}</p>
+      <p>{t("Rămân doar pe acest telefon — partenerul nu le vede automat:")}</p>
+      <ul>
+        <li>{t("Fotografiile bonurilor")}</li>
+        <li>{t("Coada De verificat (bonuri/CSV de confirmat)")}</li>
+        <li>{t("Regulile de comerciant")}</li>
+        <li>{t("Șabloanele rapide")}</li>
+        <li>{t("Cache-ul de curs valutar (FX)")}</li>
+      </ul>
+    </aside>
     <div className={`bf-sync-state ${stateClass}`} role="status"><span aria-hidden="true">{connected && !busy && !pendingMerge && !failedMerge ? <Check size={15} /> : busy || pendingMerge ? <RotateCcw size={15} /> : <Cloud size={15} />}</span><div><b>{stateLabel}</b><small>{stateDetail}</small></div></div>
 
     <section className="bf-sync-session">
