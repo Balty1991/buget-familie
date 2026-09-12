@@ -1,3 +1,4 @@
+import { safeSetItem } from "@/lib/safe-storage";
 /**
  * Blocare locală opțională a aplicației cu un PIN de 4 cifre, doar pe acest telefon.
  * PIN-ul nu este niciodată salvat în clar, nu intră în backup și nu face parte din
@@ -48,9 +49,11 @@ export async function setAppLockPin(pin: string): Promise<void> {
   if (!isValidPin(pin)) throw new Error("PIN-ul trebuie să aibă exact 4 cifre.");
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const hash = await deriveHash(pin, salt);
-  window.localStorage.setItem(SALT_KEY, toBase64(salt));
-  window.localStorage.setItem(HASH_KEY, hash);
-  window.localStorage.setItem(ENABLED_KEY, "true");
+  if (!safeSetItem(window.localStorage, SALT_KEY, toBase64(salt))
+    || !safeSetItem(window.localStorage, HASH_KEY, hash)
+    || !safeSetItem(window.localStorage, ENABLED_KEY, "true")) {
+    throw new Error("Nu am putut salva PIN-ul: spațiul local este plin.");
+  }
 }
 
 export async function verifyAppLockPin(pin: string): Promise<boolean> {

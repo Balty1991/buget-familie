@@ -13,6 +13,9 @@ const memory = () => {
     setItem: (key: string, value: string) => {
       map.set(key, value);
     },
+    removeItem: (key: string) => {
+      map.delete(key);
+    },
   };
 };
 
@@ -46,5 +49,30 @@ describe("turul primei săptămâni", () => {
 
   it("are cele trei tipuri: captură, plicuri, sync", () => {
     expect(FIRST_WEEK_TIPS.map((tip) => tip.id)).toEqual(["capture", "envelopes", "sync"]);
+  });
+
+  it("markSetupCompletedAt nu aruncă la QuotaExceededError", () => {
+    const map = new Map<string, string>();
+    let blocked = true;
+    const storage = {
+      getItem: (key: string) => map.get(key) ?? null,
+      setItem: (key: string, value: string) => {
+        if (blocked && key === "buget-familie:setup-completed-at") {
+          const err = new Error("Setting the value of 'buget-familie:setup-completed-at' exceeded the quota.");
+          err.name = "QuotaExceededError";
+          throw err;
+        }
+        map.set(key, value);
+      },
+      removeItem: (key: string) => {
+        map.delete(key);
+        if (key.startsWith("buget-familie:app-data")) blocked = false;
+      },
+    };
+    storage.setItem("buget-familie:setup-complete", "true");
+    storage.setItem("buget-familie:app-data-v6", "huge");
+    expect(() => markSetupCompletedAt(storage)).not.toThrow();
+    expect(storage.getItem("buget-familie:setup-completed-at")).toMatch(/^20/);
+    expect(storage.getItem("buget-familie:app-data-v6")).toBeNull();
   });
 });

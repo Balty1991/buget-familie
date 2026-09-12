@@ -1,4 +1,5 @@
 import type { AppData } from "./finance-data";
+import { freeHeavyLocalCache, isQuotaExceededError, safeSetItem } from "./safe-storage";
 
 const DB_NAME = "buget-familie";
 const DB_VERSION = 1;
@@ -37,11 +38,8 @@ export function readSyncJournal(): SyncJournalEntry[] {
 }
 
 export function writeSyncJournal(entries: SyncJournalEntry[]): void {
-  try {
-    window.localStorage.setItem(SYNC_JOURNAL_KEY, JSON.stringify(entries.slice(0, 40)));
-  } catch {
-    // The journal is diagnostic metadata; a full browser quota must not block finance data.
-  }
+  // Jurnal diagnostic — pe quota plină nu blocăm datele financiare.
+  safeSetItem(window.localStorage, SYNC_JOURNAL_KEY, JSON.stringify(entries.slice(0, 40)));
 }
 
 export const APP_STORAGE_META_KEY = "buget-familie:app-data-meta-v1";
@@ -125,15 +123,32 @@ export function readLocalStorageSnapshot(): { data: AppData | null; savedAt: str
   }
 }
 
-export function writeLocalStorageSnapshot(serialized: string, savedAt = new Date().toISOString()): AppStorageMeta {
+export type WriteLocalSnapshotResult = {
+  meta: AppStorageMeta;
+  /** true dacă payload-ul complet a încăput în localStorage */
+  wroteFull: boolean;
+  quotaExceeded: boolean;
+};
+
+/**
+ * Cache/meta în LS (hydrate rapid). IDB rămâne sursa primară.
+ * La QuotaExceeded nu aruncă: eliberează snapshot-ul greu și păstrează doar meta.
+ */
+export function writeLocalStorageSnapshot(serialized: string, savedAt = new Date().toISOString()): WriteLocalSnapshotResult {
   const meta: AppStorageMeta = { savedAt, hash: hashAppPayload(serialized) };
-  window.localStorage.setItem(APP_STORAGE_KEY, serialized);
   try {
-    window.localStorage.setItem(APP_STORAGE_META_KEY, JSON.stringify(meta));
-  } catch {
-    // Meta e diagnostic; quota plin nu trebuie să blocheze datele.
+    window.localStorage.setItem(APP_STORAGE_KEY, serialized);
+    safeSetItem(window.localStorage, APP_STORAGE_META_KEY, JSON.stringify(meta));
+    return { meta, wroteFull: true, quotaExceeded: false };
+  } catch (error) {
+    const quotaExceeded = isQuotaExceededError(error);
+    if (quotaExceeded) {
+      // Nu dual-write pe quota plină — IDB ține datele; LS doar meta mică.
+      freeHeavyLocalCache(window.localStorage);
+      safeSetItem(window.localStorage, APP_STORAGE_META_KEY, JSON.stringify(meta));
+    }
+    return { meta, wroteFull: false, quotaExceeded };
   }
-  return meta;
 }
 
 /** Normalizează stampile ISO; valori invalide / goale → null. */

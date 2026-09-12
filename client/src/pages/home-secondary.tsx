@@ -47,6 +47,7 @@ import {
 import { getLocale, languages, t } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
 import { matchCommandQuery, searchLedgerHits, writeJournalQuery } from "@/lib/command-search";
+import { safeSetItem } from "@/lib/safe-storage";
 
 const ReportsPanel = lazy(() => import("@/components/ReportsPanel").then((module) => ({ default: module.ReportsPanel })));
 const RecurringPanel = lazy(() => import("@/components/RecurringPanel").then((module) => ({ default: module.RecurringPanel })));
@@ -248,11 +249,11 @@ export function CalmOnboarding({ onClose, onAdd, onGo }: { onClose: () => void; 
   const current = steps[step]; const Icon = current.icon;
   const skipTour = () => {
     // Doar turul: FirstRunSetup (3 intenții) trebuie să rămână vizibil.
-    window.localStorage.setItem("buget-familie:onboarding-complete", "true");
+    safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true");
     onClose();
   };
   const startSetup = () => {
-    window.localStorage.setItem("buget-familie:onboarding-complete", "true");
+    safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true");
     onClose();
   };
   return <div className="bf-modal-backdrop bf-onboarding-backdrop" role="presentation"><section ref={dialogRef} tabIndex={-1} className={`bf-onboarding ${current.tone}`} role="dialog" aria-modal="true" aria-labelledby="bf-onboarding-title"><button type="button" className="bf-onboarding-skip" onPointerDown={(event) => { event.preventDefault(); event.stopPropagation(); skipTour(); }} onClick={(event) => { event.preventDefault(); event.stopPropagation(); skipTour(); }}>{t("Sari peste")}</button><div className="bf-onboarding-visual" aria-hidden="true"><EnvelopeStack fill={(step + 1) / 4} /><span className="bf-onboarding-orbit orbit-one" /><span className="bf-onboarding-orbit orbit-two" /><span className="bf-onboarding-icon"><Icon size={34} /></span><span className="bf-onboarding-number">0{step + 1}</span></div><div className="bf-onboarding-copy"><p className="bf-kicker">{current.kicker}</p><h2 id="bf-onboarding-title">{current.title}<em>{current.emphasis}</em></h2><p>{current.detail}</p></div><div className="bf-onboarding-progress" aria-label={`Pasul ${step + 1} din ${steps.length}`}>{steps.map((item, index) => <span key={item.kicker} className={index === step ? "active" : index < step ? "done" : ""} />)}</div>{step < steps.length - 1 ? <div className="bf-onboarding-actions"><button type="button" className="bf-primary" onClick={() => setStep((value) => value + 1)}>{t("Continuă")} <ChevronRight size={17} /></button></div> : <div className="bf-onboarding-actions"><button type="button" className="bf-primary" onClick={startSetup}>{t("Începem configurarea")} <ChevronRight size={17} /></button></div>}<small className="bf-onboarding-footnote">{t("Poți relua acest tur oricând din")} <b>{t("Instrumente → Ghid")}</b>.</small></section></div>;

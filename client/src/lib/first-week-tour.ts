@@ -2,18 +2,17 @@
  * Tur scurt „prima săptămână” după configurare.
  * Nu înlocuiește FirstRunSetup / CalmOnboarding — doar tipuri ușoare o dată.
  */
+import { safeSetItem, type StorageLike } from "./safe-storage";
+
 export const FIRST_WEEK_TOUR_KEY = "buget-familie:first-week-tour-dismissed";
 export const SETUP_COMPLETED_AT_KEY = "buget-familie:setup-completed-at";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-export type StorageLike = {
-  getItem(key: string): string | null;
-  setItem(key: string, value: string): void;
-};
+export type { StorageLike };
 
 export function markSetupCompletedAt(storage: StorageLike, when = new Date().toISOString()) {
-  if (!storage.getItem(SETUP_COMPLETED_AT_KEY)) storage.setItem(SETUP_COMPLETED_AT_KEY, when);
+  if (!storage.getItem(SETUP_COMPLETED_AT_KEY)) safeSetItem(storage, SETUP_COMPLETED_AT_KEY, when);
 }
 
 export function shouldShowFirstWeekTour(storage: StorageLike, blocked = false): boolean {
@@ -32,7 +31,7 @@ export function shouldShowFirstWeekTour(storage: StorageLike, blocked = false): 
 }
 
 export function markFirstWeekTourSeen(storage: StorageLike) {
-  storage.setItem(FIRST_WEEK_TOUR_KEY, "1");
+  safeSetItem(storage, FIRST_WEEK_TOUR_KEY, "1");
 }
 
 export type FirstWeekTipId = "capture" | "envelopes" | "sync";

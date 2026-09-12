@@ -10,6 +10,8 @@
  * Limba curentă stă și în afara React-ului, pentru că sugestiile, alertele locale și
  * rapoartele sunt generate în `lib/`, unde nu există hook-uri.
  */
+import { safeSetItem } from "@/lib/safe-storage";
+
 export type Lang = "ro" | "en";
 
 export const languages: Array<{ id: Lang; label: string; locale: string }> = [
@@ -39,11 +41,11 @@ export const getLocale = () => languages.find((item) => item.id === current)?.lo
 export function setLanguage(lang: Lang) {
   if (lang === current) return;
   current = lang;
+  safeSetItem(window.localStorage, STORAGE_KEY, lang);
   try {
-    window.localStorage.setItem(STORAGE_KEY, lang);
     document.documentElement.lang = lang;
   } catch {
-    /* preferința de limbă nu trebuie să blocheze aplicația */
+    /* ignore */
   }
   listeners.forEach((listener) => listener(lang));
 }

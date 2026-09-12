@@ -10,6 +10,7 @@ import { generateFamilyPassword } from "@/lib/family-password";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
+import { safeSetItem } from "@/lib/safe-storage";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -32,9 +33,9 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const [selected, setSelected] = useState<string[]>(["Alimente", "Casă & facturi"]);
 
   const complete = () => {
-    window.localStorage.setItem("buget-familie:setup-complete", "true");
+    safeSetItem(window.localStorage, "buget-familie:setup-complete", "true");
     markSetupCompletedAt(window.localStorage);
-    window.localStorage.setItem("buget-familie:onboarding-complete", "true");
+    safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true");
     onClose();
   };
 

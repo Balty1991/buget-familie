@@ -3,6 +3,7 @@
  * la cele păstrate, fără să strice sync/datele.
  */
 import type { ThemeId } from "@/pages/home-kit";
+import { safeSetItem } from "@/lib/safe-storage";
 
 export const THEME_STORAGE_KEY = "buget-familie:theme";
 /** Migrare anterioară ivory/snow → ink (păstrată ca semnal istoric). */
@@ -77,11 +78,7 @@ export type StorageLike = {
 };
 
 const write = (storage: StorageLike, key: string, value: string) => {
-  try {
-    storage.setItem(key, value);
-  } catch {
-    /* preferința de temă nu trebuie să blocheze aplicația */
-  }
+  safeSetItem(storage, key, value);
 };
 
 const clear = (storage: StorageLike, key: string) => {

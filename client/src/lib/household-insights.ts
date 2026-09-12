@@ -25,6 +25,7 @@ import {
   isoDate,
 } from "./finance-data";
 import { getLocale, t } from "./i18n";
+import { safeSetItem } from "@/lib/safe-storage";
 
 const fold = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const daysBetween = (from: string, to: string) => Math.round((new Date(`${to}T12:00:00`).valueOf() - new Date(`${from}T12:00:00`).valueOf()) / 86_400_000);
@@ -269,7 +270,7 @@ export const closeMonthLocally = (recap: MonthlyRecap, note?: string): MonthClos
   const record: MonthCloseRecord = { month: recap.month, closedAt: new Date().toISOString(), income: recap.income, expense: recap.expense, cashflow: recap.cashflow, note };
   if (typeof window !== "undefined") {
     const all = { ...readClosedMonths(), [recap.month]: record };
-    window.localStorage.setItem(MONTH_CLOSE_KEY, JSON.stringify(all));
+    safeSetItem(window.localStorage, MONTH_CLOSE_KEY, JSON.stringify(all));
   }
   return record;
 };

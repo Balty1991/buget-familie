@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { safeSetItem } from "@/lib/safe-storage";
 
 type Theme = "light" | "dark";
 
@@ -38,7 +39,7 @@ export function ThemeProvider({
     }
 
     if (switchable) {
-      localStorage.setItem("theme", theme);
+      safeSetItem(localStorage, "theme", theme);
     }
   }, [theme, switchable]);
 

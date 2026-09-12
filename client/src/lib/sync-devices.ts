@@ -2,6 +2,7 @@
  * Telefoanele din camera de familie — listă în pachetul criptat (nu pe server în clar).
  */
 import { newId, type AppData, type SyncDevice } from "@/lib/finance-data";
+import { safeSetItem } from "@/lib/safe-storage";
 
 const DEVICE_KEY = "buget-familie:device-id";
 
@@ -10,7 +11,7 @@ export function getOrCreateDeviceId(): string {
   const existing = window.localStorage.getItem(DEVICE_KEY);
   if (existing) return existing;
   const id = newId("device");
-  window.localStorage.setItem(DEVICE_KEY, id);
+  safeSetItem(window.localStorage, DEVICE_KEY, id);
   return id;
 }
 

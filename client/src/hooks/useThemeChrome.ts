@@ -14,6 +14,7 @@ import {
   type ThemeScheduleTimes,
 } from "@/pages/home-kit";
 import { ALL_THEME_CLASS_IDS, resolveInitialTheme } from "@/lib/theme-default";
+import { safeSetItem } from "@/lib/safe-storage";
 
 export function useThemeChrome() {
   const [themePickerOpen, setThemePickerOpen] = useState(false);
@@ -62,13 +63,13 @@ export function useThemeChrome() {
   }, [activeTheme]);
 
   useEffect(() => {
-    window.localStorage.setItem("buget-familie:theme", theme);
+    safeSetItem(window.localStorage, "buget-familie:theme", theme);
   }, [theme]);
   useEffect(() => {
-    window.localStorage.setItem("buget-familie:theme-schedule", themeSchedule);
+    safeSetItem(window.localStorage, "buget-familie:theme-schedule", themeSchedule);
   }, [themeSchedule]);
   useEffect(() => {
-    window.localStorage.setItem("buget-familie:theme-schedule-times", JSON.stringify(scheduleTimes));
+    safeSetItem(window.localStorage, "buget-familie:theme-schedule-times", JSON.stringify(scheduleTimes));
   }, [scheduleTimes]);
 
   useEffect(() => {
@@ -95,12 +96,12 @@ export function useThemeChrome() {
   useEffect(() => {
     document.documentElement.classList.remove("background-plain", "background-paper", "background-grid", "background-aurora", "background-dots");
     document.documentElement.classList.add(`background-${background}`);
-    window.localStorage.setItem("buget-familie:background", background);
+    safeSetItem(window.localStorage, "buget-familie:background", background);
   }, [background]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("bf-high-contrast", highContrast);
-    window.localStorage.setItem("buget-familie:high-contrast", String(highContrast));
+    safeSetItem(window.localStorage, "buget-familie:high-contrast", String(highContrast));
   }, [highContrast]);
 
   useEffect(() => {
