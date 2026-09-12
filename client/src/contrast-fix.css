@@ -637,7 +637,7 @@ html.theme-cyber .os-dock button.is-on svg {
   .os-shell .bf-insights-workspace,
   .os-shell .bf-utilities-workspace {
     padding-top: 14px !important;
-    padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .os-shell .bf-today-workspace > header h1,
@@ -851,3 +851,20 @@ html.theme-dark .os-dock button.is-on svg {
 .bf-review-partner-list b { font-size: 13px; color: var(--cf-ink, #1a2420); }
 .bf-review-partner-list span,
 .bf-review-partner-list small { color: var(--cf-muted, #66756c); font-size: 11px; }
+
+
+/* ui-chrome-dock-clearance — floating pill dock must not clip secondary tabs */
+@media (max-width: 760px) {
+  .os-shell .bf-page,
+  .os-shell .bf-today-workspace,
+  .os-shell .bf-obligations-workspace,
+  .os-shell .bf-movements-workspace,
+  .os-shell .bf-plan-workspace,
+  .os-shell .bf-insights-workspace,
+  .os-shell .bf-utilities-workspace,
+  .os-shell .bf-goals-workspace,
+  .os-shell .bf-habits-workspace,
+  .os-shell .bf-calendar-workspace {
+    padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}

@@ -1,0 +1,759 @@
+/**
+ * UI Chrome 2026-09 — structural redesign: fonts, buttons, menus, secondary tabs.
+ * Loaded after atelier-premium-redesign; contrast-fix stays last.
+ * Squircle system (14–18px) for buttons/fields; chips share the same language.
+ */
+
+:root {
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-ui: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
+  --bf-chrome-radius: 16px;
+  --bf-chrome-radius-sm: 12px;
+  --bf-chrome-radius-lg: 22px;
+  --bf-chrome-btn-h: 48px;
+  --bf-chrome-icon-gap: 10px;
+  --bf-chrome-motion: 200ms cubic-bezier(.22, 1.1, .36, 1);
+  --bf-chrome-press: 100ms ease-out;
+  --bf-dock-clearance: calc(124px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)));
+}
+
+/* ---------- Type stack across shell ---------- */
+.os-shell.bf-app,
+.os-shell.bf-app button,
+.os-shell.bf-app input,
+.os-shell.bf-app select,
+.os-shell.bf-app textarea,
+.bf-app,
+.bf-app button,
+.bf-app input,
+.bf-app select,
+.bf-app textarea {
+  font-family: var(--font-ui) !important;
+}
+
+.os-shell,
+.bf-app {
+  font-size: 15.5px;
+  line-height: 1.45;
+  letter-spacing: -.011em;
+}
+
+.os-shell h1,
+.bf-app h1,
+.os-shell .bf-topline h1,
+.os-shell .bf-obligations-header h1,
+.os-shell .bf-movements-header h1,
+.os-shell .bf-plan-studio-header h1,
+.os-shell .bf-insights-header h1,
+.os-shell .bf-goals-header h1,
+.os-shell .bf-os-title,
+.os-shell .bf-section-heading h2,
+.os-shell .bf-today-workspace > header h1 {
+  font-family: var(--font-display) !important;
+  font-weight: 640 !important;
+  letter-spacing: -.048em !important;
+  line-height: 1.02 !important;
+  text-wrap: balance;
+}
+
+.os-shell .bf-topline h1,
+.os-shell .bf-obligations-header h1,
+.os-shell .bf-movements-header h1,
+.os-shell .bf-plan-studio-header h1,
+.os-shell .bf-insights-header h1 {
+  font-size: clamp(1.85rem, 7.2vw, 2.55rem) !important;
+}
+
+.os-shell .bf-kicker,
+.os-shell .bf-section-heading .bf-kicker {
+  font-family: var(--font-ui) !important;
+  font-size: 0.68rem !important;
+  font-weight: 750 !important;
+  letter-spacing: .14em !important;
+}
+
+.os-shell p,
+.os-shell .bf-helper,
+.os-shell .bf-topline > div > p:not(.bf-kicker),
+.os-shell .bf-obligations-header > div:first-child > p:last-child {
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+}
+
+/* Amounts: tabular UI face — not orphan serif everywhere */
+.os-shell .bf-obligation-ledger article b,
+.os-shell .bf-obligation-entry-main strong,
+.os-shell .bf-more-list article > strong,
+.os-shell .bf-receipt-list strong,
+.os-shell .bf-journal strong,
+.os-shell .bf-pulse-grid strong {
+  font-family: var(--font-ui) !important;
+  font-weight: 720 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: -.03em !important;
+}
+
+/* ---------- Buttons: squircle language ---------- */
+.os-shell .bf-primary,
+.os-shell .bf-primary.full,
+.os-shell .bf-secondary,
+.os-shell .bf-ghost,
+.os-shell .bf-link-button,
+.os-shell .bf-os-decide,
+.os-shell .bf-os-secondary,
+.os-shell .bf-movement-add,
+.os-shell .bf-obligation-ai > button,
+.os-shell .bf-obligation-actions > button,
+.os-shell .bf-obligation-entry-actions > button,
+.os-shell .bf-goals-link,
+.os-shell .bf-file-button,
+.os-shell .bf-mini-form > button,
+.os-shell .bf-source-builder > button,
+.os-shell .bf-backup-actions > button,
+.os-shell .bf-notification-actions > button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--bf-chrome-icon-gap) !important;
+  min-height: var(--bf-chrome-btn-h) !important;
+  padding: 0 18px !important;
+  border-radius: var(--bf-chrome-radius) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 14.5px !important;
+  font-weight: 680 !important;
+  letter-spacing: -.015em !important;
+  white-space: nowrap !important;
+  transition:
+    transform var(--bf-chrome-press),
+    filter var(--bf-chrome-press),
+    background-color var(--bf-chrome-motion),
+    box-shadow var(--bf-chrome-motion),
+    border-color var(--bf-chrome-motion) !important;
+}
+
+.os-shell .bf-primary,
+.os-shell .bf-primary.full,
+.os-shell .bf-os-decide,
+.os-shell .bf-movement-add {
+  border: 0 !important;
+  color: var(--os-mint-fg, #fff) !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--os-mint, var(--cf-primary)) 92%, #fff),
+    var(--os-mint, var(--cf-primary-strong, var(--cf-primary)))
+  ) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 30%, transparent) inset,
+    0 10px 22px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+}
+
+.os-shell .bf-secondary,
+.os-shell .bf-os-secondary,
+.os-shell .bf-goals-link,
+.os-shell .bf-obligation-actions > button,
+.os-shell .bf-file-button {
+  border: 1.5px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, transparent) !important;
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset !important;
+}
+
+.os-shell .bf-ghost,
+.os-shell .bf-link-button {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--os-mint, var(--cf-primary-strong, var(--cf-primary))) !important;
+  min-height: 44px !important;
+  padding: 0 10px !important;
+  font-weight: 650 !important;
+}
+
+.os-shell .bf-danger > button,
+.os-shell .bf-obligation-entry-actions > button.delete,
+.os-shell .bf-row-actions button:last-child {
+  border: 1.5px solid color-mix(in srgb, var(--cf-danger, #b93d36) 35%, transparent) !important;
+  border-radius: var(--bf-chrome-radius) !important;
+  color: var(--cf-danger, #b93d36) !important;
+  background: color-mix(in srgb, var(--cf-danger, #b93d36) 8%, var(--os-surface, #fff)) !important;
+  font-weight: 680 !important;
+}
+
+.os-shell .bf-primary:hover,
+.os-shell .bf-secondary:hover,
+.os-shell .bf-goals-link:hover {
+  filter: brightness(1.03);
+}
+.os-shell .bf-primary:active,
+.os-shell .bf-secondary:active,
+.os-shell .bf-os-decide:active,
+.os-shell .bf-obligation-ai > button:active,
+.os-shell .bf-obligation-actions > button:active,
+.os-shell .bf-goals-link:active {
+  transform: scale(.975) translateY(1px) !important;
+  filter: brightness(.97) !important;
+}
+
+/* FAB / capture CTA stays distinct (pill) */
+.os-shell .bf-today-add,
+.os-shell .bf-today-add.bf-os-decide {
+  border-radius: 999px !important;
+  min-height: 56px !important;
+  font-size: 16px !important;
+  font-weight: 740 !important;
+  gap: 12px !important;
+}
+
+/* Segmented + chips — same squircle family */
+.os-shell .bf-segment,
+.os-shell .kind-switch,
+.os-shell .bf-more-tabs {
+  gap: 6px !important;
+  padding: 5px !important;
+  border-radius: var(--bf-chrome-radius) !important;
+  background: color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 75%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 70%, transparent) inset !important;
+}
+
+.os-shell .bf-segment button,
+.os-shell .kind-switch button,
+.os-shell .bf-more-tabs button,
+.os-shell .bf-filter-pills button,
+.os-shell .bf-chip-list > span,
+.os-shell .bf-language-switch button {
+  min-height: 40px !important;
+  border-radius: var(--bf-chrome-radius-sm) !important;
+  padding: 0 14px !important;
+  font-family: var(--font-ui) !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  border: 0 !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  background: transparent !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+.os-shell .bf-segment button.active,
+.os-shell .kind-switch button.is-active,
+.os-shell .bf-more-tabs button.active,
+.os-shell .bf-filter-pills button.is-selected,
+.os-shell .bf-language-switch button.active {
+  color: var(--os-mint-fg, #fff) !important;
+  background: var(--os-mint, var(--cf-primary)) !important;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 26%, transparent) !important;
+}
+
+.os-shell .bf-chip-list > span {
+  min-height: 34px !important;
+  gap: 6px !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 12%, var(--os-surface, #fff)) !important;
+}
+
+/* Form fields match button radius/weight */
+.os-shell .bf-field input,
+.os-shell .bf-field select,
+.os-shell .bf-field textarea,
+.os-shell .bf-filter-selects select,
+.os-shell .bf-mini-form input,
+.os-shell .bf-source-builder input,
+.os-shell .bf-source-builder select,
+.os-shell .bf-allocation-form input,
+.os-shell .bf-allocation-form select,
+.os-shell .bf-settings input,
+.os-shell .bf-settings select,
+.os-shell .bf-sync input,
+.os-shell .bf-sync select {
+  min-height: 46px !important;
+  padding: 0 14px !important;
+  border: 1.5px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 95%, transparent) !important;
+  border-radius: var(--bf-chrome-radius-sm) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 15px !important;
+  font-weight: 560 !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, transparent) !important;
+}
+
+.os-shell .bf-field > span,
+.os-shell .bf-field label,
+.os-shell label.bf-field {
+  font-family: var(--font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 680 !important;
+  letter-spacing: .06em !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  overflow: visible !important;
+}
+
+/* ---------- App bar tools ---------- */
+.os-shell .os-tools {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 70%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+}
+
+.os-shell .os-tool {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+}
+.os-shell .os-tool.is-on {
+  background: var(--os-mint, var(--cf-primary)) !important;
+  color: var(--os-mint-fg, #fff) !important;
+}
+
+/* ---------- Dock polish ---------- */
+.os-shell .os-dock button {
+  font-size: 10.5px !important;
+  font-weight: 680 !important;
+  gap: 4px !important;
+}
+.os-shell .os-dock button svg {
+  width: 21px !important;
+  height: 21px !important;
+}
+.os-shell .os-dock button span {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  max-width: none !important;
+  line-height: 1.15 !important;
+}
+
+/* Bottom clearance — floating dock must never clip content */
+@media (max-width: 760px) {
+  .os-shell .bf-page,
+  .os-shell .bf-today-workspace,
+  .os-shell .bf-obligations-workspace,
+  .os-shell .bf-movements-workspace,
+  .os-shell .bf-plan-workspace,
+  .os-shell .bf-insights-workspace,
+  .os-shell .bf-utilities-workspace,
+  .os-shell .bf-goals-workspace,
+  .os-shell .bf-habits-workspace,
+  .os-shell .bf-calendar-workspace {
+    padding-bottom: var(--bf-dock-clearance) !important;
+  }
+}
+
+/* ---------- Mai mult: iOS Settings rows ---------- */
+.os-shell .bf-more-overview {
+  display: grid !important;
+  gap: 22px !important;
+}
+
+.os-shell .bf-more-group {
+  display: grid !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.os-shell .bf-more-group > .bf-kicker,
+.os-shell .bf-more-section-label {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3 !important;
+  margin: 0 4px 2px !important;
+  padding: 6px 4px !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 11px !important;
+  font-weight: 720 !important;
+  letter-spacing: .12em !important;
+  background: color-mix(in srgb, var(--os-bg, var(--cf-bg)) 88%, transparent) !important;
+  backdrop-filter: blur(10px);
+}
+
+.os-shell .bf-more-grid,
+.os-shell .bf-settings-group {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  border-radius: var(--bf-chrome-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 88%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 94%, transparent) !important;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--os-ink, #000) 05%, transparent) !important;
+}
+
+.os-shell .bf-more-grid > button,
+.os-shell .bf-settings-row {
+  display: grid !important;
+  grid-template-columns: 40px minmax(0, 1fr) 18px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-height: 64px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 70%, transparent) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: left !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  transform: none !important;
+}
+
+.os-shell .bf-more-grid > button:last-child,
+.os-shell .bf-settings-row:last-child {
+  border-bottom: 0 !important;
+}
+
+.os-shell .bf-more-grid > button:active,
+.os-shell .bf-settings-row:active {
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 8%, transparent) !important;
+  transform: none !important;
+}
+
+.os-shell .bf-more-grid > button > svg:first-child,
+.os-shell .bf-settings-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  border-radius: 11px !important;
+  color: var(--os-mint, var(--cf-primary)) !important;
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
+  box-sizing: border-box !important;
+}
+
+.os-shell .bf-more-grid > button b,
+.os-shell .bf-settings-copy b {
+  display: block !important;
+  margin: 0 !important;
+  font-size: 15px !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+.os-shell .bf-more-grid > button span,
+.os-shell .bf-settings-copy {
+  display: grid !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+.os-shell .bf-more-grid > button > .bf-settings-copy,
+.os-shell .bf-settings-row > .bf-settings-copy {
+  margin: 0 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+.os-shell .bf-settings-copy small {
+  display: block !important;
+  margin: 2px 0 0 !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+.os-shell .bf-more-grid > button > svg:last-child,
+.os-shell .bf-settings-chevron {
+  width: 18px !important;
+  height: 18px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: color-mix(in srgb, var(--os-muted, var(--cf-muted)) 80%, transparent) !important;
+  justify-self: end !important;
+}
+
+/* Quick actions / command list */
+.os-shell .bf-command-list button,
+.os-shell .bf-command-list [role="option"] {
+  display: grid !important;
+  grid-template-columns: 36px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 56px !important;
+  padding: 10px 12px !important;
+  border-radius: var(--bf-chrome-radius-sm) !important;
+}
+.os-shell .bf-command-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
+}
+
+/* ---------- Obligații + secondary tabs = Astăzi system ---------- */
+.os-shell .bf-obligation-ai {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: start !important;
+  gap: 14px !important;
+  margin: 4px 0 8px !important;
+  padding: 18px 18px 16px !important;
+  border-radius: var(--bf-chrome-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, #fff),
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 78%, transparent)
+    ) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 10%, transparent),
+    0 16px 36px color-mix(in srgb, var(--os-ink, #000) 08%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(1.15) !important;
+}
+
+.os-shell .bf-obligation-ai-icon {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  color: var(--os-mint-fg, #fff) !important;
+  background: var(--os-mint, var(--cf-primary)) !important;
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+}
+
+.os-shell .bf-obligation-ai .bf-kicker {
+  color: var(--os-mint, var(--cf-primary)) !important;
+  margin: 0 0 4px !important;
+}
+
+.os-shell .bf-obligation-ai h2 {
+  margin: 0 !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.15rem, 4.5vw, 1.45rem) !important;
+  font-weight: 640 !important;
+  letter-spacing: -.035em !important;
+  line-height: 1.15 !important;
+}
+
+.os-shell .bf-obligation-ai p:not(.bf-kicker) {
+  margin: 6px 0 0 !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 13.5px !important;
+  line-height: 1.45 !important;
+}
+
+.os-shell .bf-obligation-ai > button {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+  border: 0 !important;
+  color: var(--os-mint-fg, #fff) !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--os-mint, var(--cf-primary)) 92%, #fff),
+    var(--os-mint, var(--cf-primary-strong, var(--cf-primary)))
+  ) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 28%, transparent) inset,
+    0 10px 22px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+  cursor: pointer !important;
+}
+
+.os-shell .bf-obligation-timeline,
+.os-shell .bf-obligation-lane,
+.os-shell .bf-obligation-ledger {
+  border-radius: var(--bf-chrome-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 88%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 94%, transparent) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--os-ink, #000) 06%, transparent) !important;
+}
+
+.os-shell .bf-obligation-timeline {
+  border-top: 0 !important;
+  border-left: 0 !important;
+  padding: 16px !important;
+}
+
+.os-shell .bf-obligation-timeline .bf-section-heading h2,
+.os-shell .bf-obligation-lane > header h2 {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.2rem, 4.8vw, 1.55rem) !important;
+  font-weight: 640 !important;
+  letter-spacing: -.035em !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+}
+
+.os-shell .bf-obligation-empty {
+  padding: 14px !important;
+  border-radius: var(--bf-chrome-radius) !important;
+  background: color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 70%, transparent) !important;
+  border: 1px dashed color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+}
+
+.os-shell .bf-obligation-ledger {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  padding: 12px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.os-shell .bf-obligation-ledger > article,
+.os-shell .bf-obligation-ledger > button {
+  min-height: 96px !important;
+  padding: 14px !important;
+  border-radius: var(--bf-chrome-radius) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 88%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 94%, transparent) !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--os-ink, #000) 05%, transparent) !important;
+  overflow: visible !important;
+}
+
+.os-shell .bf-obligation-ledger > article span,
+.os-shell .bf-obligation-ledger > button span {
+  font-size: 10.5px !important;
+  font-weight: 720 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+}
+
+.os-shell .bf-obligation-ledger > article b {
+  font-size: clamp(1.35rem, 5.5vw, 1.75rem) !important;
+  line-height: 1.1 !important;
+  margin: 6px 0 4px !important;
+}
+
+.os-shell .bf-obligation-ledger > article small {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  overflow: visible !important;
+  white-space: normal !important;
+}
+
+.os-shell .bf-obligation-ledger > button {
+  grid-column: 1 / -1 !important;
+  grid-template-columns: 36px minmax(0, 1fr) auto 18px !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 64px !important;
+  text-align: left !important;
+}
+
+.os-shell .bf-obligation-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+/* Plan / Analiză / Mișcări headers — same title language */
+.os-shell .bf-movements-header,
+.os-shell .bf-plan-studio-header,
+.os-shell .bf-insights-header,
+.os-shell .bf-obligations-header {
+  gap: 14px !important;
+}
+
+.os-shell .bf-movements-header h1 em,
+.os-shell .bf-plan-studio-header h1 em,
+.os-shell .bf-insights-header h1 em,
+.os-shell .bf-obligations-header h1 em,
+.os-shell .bf-topline h1 em {
+  color: var(--os-mint, var(--cf-primary)) !important;
+  font-style: italic !important;
+}
+
+.os-shell .bf-plan-hero,
+.os-shell .bf-insights-hero,
+.os-shell .analysis-hero {
+  border-radius: var(--bf-chrome-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, #fff),
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 78%, transparent)
+    ) !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--os-ink, #000) 08%, transparent) !important;
+}
+
+/* White default tokens for new chrome */
+:is(html.theme-ink, html.theme-white) .os-shell .bf-obligation-ai {
+  border-color: #c5cec8 !important;
+  background: linear-gradient(160deg, #ffffff, #eef2f0) !important;
+  color: #0c1612 !important;
+}
+:is(html.theme-ink, html.theme-white) .os-shell .bf-obligation-ai h2 {
+  color: #0c1612 !important;
+}
+:is(html.theme-ink, html.theme-white) .os-shell .bf-obligation-ai > button,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
+}
+
+/* Dark / aurora / navy / cyber keep legibility */
+html.theme-dark .os-shell .bf-obligation-ai,
+html.theme-aurora .os-shell .bf-obligation-ai,
+html.theme-navy .os-shell .bf-obligation-ai,
+html.theme-cyber .os-shell .bf-obligation-ai {
+  background: color-mix(in srgb, var(--os-surface, #16191e) 92%, transparent) !important;
+  border-color: var(--os-line, #2c323a) !important;
+  color: var(--os-ink, #f1f4f8) !important;
+}
+
+html.theme-dark .os-shell .bf-obligation-ai h2,
+html.theme-aurora .os-shell .bf-obligation-ai h2,
+html.theme-navy .os-shell .bf-obligation-ai h2,
+html.theme-cyber .os-shell .bf-obligation-ai h2 {
+  color: var(--os-ink, #f1f4f8) !important;
+}
+
+/* Labels never clip */
+.os-shell .bf-more-tabs button,
+.os-shell .bf-more-grid > button b,
+.os-shell .bf-more-grid > button span,
+.os-shell .bf-settings-copy b,
+.os-shell .bf-settings-copy small,
+.os-shell .os-dock button span,
+.os-shell .bf-obligation-ledger article small {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  max-width: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-shell .bf-primary,
+  .os-shell .bf-secondary,
+  .os-shell .bf-os-decide,
+  .os-shell .bf-today-add,
+  .os-shell .bf-obligation-ai > button,
+  .os-shell .bf-more-grid > button,
+  .os-shell .os-dock button,
+  .os-shell .bf-goals-link {
+    transition: none !important;
+    animation: none !important;
+  }
+  .os-shell .bf-primary:active,
+  .os-shell .bf-secondary:active,
+  .os-shell .bf-obligation-ai > button:active {
+    transform: none !important;
+  }
+}

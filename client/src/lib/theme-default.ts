@@ -19,6 +19,8 @@ export const THEME_MIGRATED_ATELIER_KEY = "buget-familie:theme-migrated-atelier-
  * look; cheile vechi de „skin” local sunt curățate o dată.
  */
 export const THEME_MIGRATED_PREMIUM_KEY = "buget-familie:theme-migrated-premium-2026-09";
+/** Migrare UI chrome 2026-09: fonts/buttons/menus + secondary tabs. */
+export const THEME_MIGRATED_UI_CHROME_KEY = "buget-familie:theme-migrated-ui-chrome-2026-09";
 export const WHATS_NEW_KEY = "buget-familie:whats-new-premium-2026-09";
 
 /** Chei locale vechi care puteau bloca look-ul nou pe Alb. */
@@ -148,6 +150,14 @@ export function resolveInitialTheme(storage: StorageLike): ThemeId {
       if (bg && bg !== "plain") {
         write(storage, "buget-familie:background", "plain");
       }
+    }
+  }
+
+  // O dată: UI chrome redesign (fonts/buttons/menus/Obligații).
+  if (!storage.getItem(THEME_MIGRATED_UI_CHROME_KEY)) {
+    write(storage, THEME_MIGRATED_UI_CHROME_KEY, "1");
+    for (const key of STALE_SKIN_KEYS) {
+      clear(storage, key);
     }
   }
 

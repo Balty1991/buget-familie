@@ -7,6 +7,7 @@ import {
   THEME_MIGRATED_CATALOG_KEY,
   THEME_MIGRATED_INK_KEY,
   THEME_MIGRATED_PREMIUM_KEY,
+  THEME_MIGRATED_UI_CHROME_KEY,
   THEME_STORAGE_KEY,
   WHATS_NEW_KEY,
   markWhatsNewSeen,
@@ -37,6 +38,7 @@ describe("catalog teme White/Dark/extras", () => {
     expect(storage.getItem(THEME_MIGRATED_INK_KEY)).toBe("1");
     expect(storage.getItem(THEME_MIGRATED_ATELIER_KEY)).toBe("1");
     expect(storage.getItem(THEME_MIGRATED_PREMIUM_KEY)).toBe("1");
+    expect(storage.getItem(THEME_MIGRATED_UI_CHROME_KEY)).toBe("1");
   });
 
   it("mapează ID-urile vechi o dată la catalogul slim", () => {
@@ -127,6 +129,20 @@ describe("catalog teme White/Dark/extras", () => {
     });
     expect(resolveInitialTheme(storage)).toBe("aurora");
     expect(storage.getItem("buget-familie:background")).toBe("aurora");
+    expect(storage.getItem("buget-familie:skin")).toBeNull();
+  });
+
+
+  it("migrarea UI chrome marchează flag-ul și curăță skin-uri vechi", () => {
+    const storage = memory({
+      [THEME_STORAGE_KEY]: "white",
+      [THEME_MIGRATED_CATALOG_KEY]: "1",
+      [THEME_MIGRATED_ATELIER_KEY]: "1",
+      [THEME_MIGRATED_PREMIUM_KEY]: "1",
+      "buget-familie:skin": "stale",
+    });
+    expect(resolveInitialTheme(storage)).toBe("white");
+    expect(storage.getItem(THEME_MIGRATED_UI_CHROME_KEY)).toBe("1");
     expect(storage.getItem("buget-familie:skin")).toBeNull();
   });
 

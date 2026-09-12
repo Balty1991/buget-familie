@@ -4,8 +4,10 @@
  */
 
 :root {
-  --bf-display: "Fraunces", "IBM Plex Serif", Georgia, serif;
-  --bf-ui: "IBM Plex Sans", "Manrope", system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-ui: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
+  --bf-display: var(--font-display);
+  --bf-ui: var(--font-ui);
   --bf-motion: 180ms cubic-bezier(.22, 1, .36, 1);
   --bf-press: 120ms ease-out;
 }
