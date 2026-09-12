@@ -2,6 +2,10 @@
  * Atelier Financiar — captură rapidă locală care respectă plicul compatibil și tranșa activă.
  * Filosofie: sursa plății poate aparține unui alt membru; plicul se alege după categoria și sursa reală.
  */
+import "../currency.css";
+import "../transaction-envelope-picker.css";
+import "../mobile-capture-pass.css";
+import "../receipt-form-fix.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, BookmarkPlus, Check, Plus, Trash2, X } from "lucide-react";
 import { BASE_CURRENCY, allocationStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";

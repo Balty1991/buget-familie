@@ -1,4 +1,5 @@
 /** Ecran de blocare locală: se afișează la deschidere și după ce aplicația a stat ascunsă un timp. */
+import "../app-lock.css";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Delete, LockKeyhole } from "lucide-react";
 import { APP_LOCK_BACKGROUND_RELOCK_MS, hasAppLockPin, isAppLockEnabled, verifyAppLockPin } from "@/lib/app-lock";

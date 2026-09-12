@@ -3,6 +3,9 @@
  * Filosofie: o familie adaugă bani direct pe categorii, unele cu ritm săptămânal, altele doar cu un total.
  * Perioada e opțională și comună — servește doar categoriilor cu ritm săptămânal; nu există o sumă „generală” separată.
  */
+import "../envelope-weekly-toggle.css";
+import "../week-transfer.css";
+import "../plan-header-stat.css";
 import "../plan-studio.css";
 import "../envelope-source.css";
 import "../envelope-transfer.css";

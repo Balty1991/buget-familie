@@ -1,6 +1,18 @@
 /**
  * Ecrane și formulare încărcate după Astăzi — nu intra în first paint.
  */
+import "../receipt-mobile.css";
+import "../receipt-form-fix.css";
+import "../family-guide.css";
+import "../report-balance.css";
+import "../balance-scope.css";
+import "../objective-edit.css";
+import "../currency.css";
+import "../transaction-envelope-picker.css";
+import "../mobile-capture-pass.css";
+import "../mobile-obligations-pass.css";
+import "../mobile-analysis-pass.css";
+import "../mobile-settings-pass.css";
 import "../analysis-studio.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
@@ -1045,7 +1057,7 @@ function PasswordMeter({ value }: { value: string }) {
   );
 }
 
-export function SyncPanel({ connected, busy, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, passwordRevealOnce, clearPasswordReveal }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, passwordRevealOnce, clearPasswordReveal }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
   useEffect(() => {
@@ -1060,6 +1072,8 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
   const failedMerge = connected && latest?.status === "failed";
   const stateLabel = busy
     ? t("Se conectează…")
+    : !online
+      ? (connected ? t("Offline — sesiune activă, fără rețea") : t("Fără conexiune"))
     : !connected
       ? t("Nu este conectat")
       : pendingMerge
@@ -1069,8 +1083,10 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
           : lastSync
             ? t("Conectat — sincronizat")
             : t("Conectat — așteptăm prima confirmare");
-  const stateClass = busy ? "busy" : !connected ? "idle" : pendingMerge || failedMerge ? "busy" : "connected";
-  const stateDetail = lastSync
+  const stateClass = busy ? "busy" : !online ? "offline" : !connected ? "idle" : pendingMerge || failedMerge ? "busy" : "connected";
+  const stateDetail = !online
+    ? t("Rețeaua lipsește. Registrul local rămâne intact; sync-ul se reia automat la reconectare.")
+    : lastSync
     ? t("Ultima confirmare: {time}", { time: new Intl.DateTimeFormat(getLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastSync)) })
     : connected
       ? t("Așteptăm prima confirmare de la spațiul familiei.")
@@ -1090,11 +1106,12 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
       <p>{t("Rămân doar pe acest telefon — partenerul nu le vede automat:")}</p>
       <ul>
         <li>{t("Fotografiile bonurilor")}</li>
-        <li>{t("Coada De verificat (bonuri/CSV de confirmat)")}</li>
+        <li>{t("Confirmarea din De verificat (doar pe telefonul care a creat propunerea)")}</li>
         <li>{t("Regulile de comerciant")}</li>
         <li>{t("Șabloanele rapide")}</li>
         <li>{t("Cache-ul de curs valutar (FX)")}</li>
       </ul>
+      <p>{t("Partenerul vede un rezumat al cozii De verificat (titlu, sumă, dată), fără poze.")}</p>
     </aside>
     <div className={`bf-sync-state ${stateClass}`} role="status"><span aria-hidden="true">{connected && !busy && !pendingMerge && !failedMerge ? <Check size={15} /> : busy || pendingMerge ? <RotateCcw size={15} /> : <Cloud size={15} />}</span><div><b>{stateLabel}</b><small>{stateDetail}</small></div></div>
 
@@ -1121,7 +1138,7 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
           )}
         </div>
         <p className="bf-helper">{t("Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată.")}</p>
-        <button className="bf-primary full" disabled={busy} onClick={onConnect}><Users size={17} /> {t("Conectează acest telefon")}</button>
+        <button className="bf-primary full" disabled={busy || !online} onClick={onConnect}><Users size={17} /> {t("Conectează acest telefon")}</button>
       </>}
     </section>
 

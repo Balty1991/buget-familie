@@ -2,6 +2,7 @@
  * Bilanțul săptămânii: planificat vs realizat pe plic, cine a mișcat banii, text de trimis familiei.
  * Calculat numai din registrul local; nu scrie în AppData.
  */
+import "../assistant-checkin.css";
 import "../weekly-checkin.css";
 import { useState } from "react";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, CalendarDays, Check, ChevronRight, Share2 } from "lucide-react";
