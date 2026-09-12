@@ -1,0 +1,191 @@
+/**
+ * Atelier Platinum elevate — tipografie, ierarhie butoane, foi, micro-interacțiuni.
+ * Mobile-first; respectă prefers-reduced-motion; fără neon.
+ */
+
+:root {
+  --bf-display: "Fraunces", "IBM Plex Serif", Georgia, serif;
+  --bf-ui: "IBM Plex Sans", "Manrope", system-ui, sans-serif;
+  --bf-motion: 180ms cubic-bezier(.22, 1, .36, 1);
+  --bf-press: 120ms ease-out;
+}
+
+.os-shell,
+.bf-app {
+  font-family: var(--bf-ui);
+  letter-spacing: -0.01em;
+}
+
+.os-shell h1,
+.bf-app h1,
+.bf-topline h1,
+.bf-os-title,
+.bf-today-workspace > header h1,
+.bf-movements-header h1 {
+  font-family: var(--bf-display);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.bf-kicker {
+  font-family: var(--bf-ui);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  font-size: 0.62rem;
+}
+
+/* Button hierarchy */
+.bf-primary,
+.bf-os-decide,
+.bf-movement-add {
+  border-radius: 14px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  transition: transform var(--bf-press), filter var(--bf-press), box-shadow var(--bf-motion);
+}
+.bf-secondary,
+.bf-os-secondary {
+  border-radius: 14px;
+  font-weight: 700;
+  transition: transform var(--bf-press), background-color var(--bf-motion), border-color var(--bf-motion);
+}
+.bf-link-button,
+.bf-ghost {
+  background: transparent;
+  border: 0;
+  font-weight: 700;
+  color: var(--cf-primary-strong, var(--primary));
+  min-height: 44px;
+  padding: 0 8px;
+}
+.bf-primary:active,
+.bf-os-decide:active,
+.bf-secondary:active,
+.bf-os-secondary:active,
+.bf-movement-add:active {
+  transform: scale(0.98);
+  filter: brightness(0.97);
+}
+
+/* Mai mult — card rhythm, less noise */
+.bf-more-grid > button,
+.bf-utilities-grid > button {
+  border-radius: 18px;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--cf-ink, #1a2420) 4%, transparent);
+  transition: transform var(--bf-press), box-shadow var(--bf-motion), border-color var(--bf-motion);
+}
+.bf-more-grid > button:active,
+.bf-utilities-grid > button:active {
+  transform: translateY(1px) scale(0.99);
+}
+.bf-more-tabs {
+  gap: 8px;
+  padding-bottom: 6px;
+}
+.bf-more-tabs button {
+  border-radius: 999px;
+  padding: 0 14px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+/* Sheets / modals — soft enter */
+.bf-modal-backdrop {
+  animation: bf-elevate-fade var(--bf-motion) both;
+}
+.bf-modal,
+.bf-journal-filter-sheet,
+.ai-financial-setup {
+  animation: bf-elevate-sheet var(--bf-motion) both;
+  border-radius: 22px;
+}
+@keyframes bf-elevate-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes bf-elevate-sheet {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Dock + chips micro */
+.os-dock button {
+  border-radius: 16px;
+  transition: background-color var(--bf-motion), color var(--bf-motion), transform var(--bf-press);
+}
+.os-dock button:active { transform: scale(0.96); }
+.os-dock button.is-on {
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--cf-primary-strong, #1f5240) 22%, transparent);
+}
+.bf-movement-kind button,
+.bf-movement-scope button,
+.bf-segment button {
+  border-radius: 12px;
+  transition: background-color var(--bf-motion), color var(--bf-motion), transform var(--bf-press);
+}
+.bf-movement-kind button:active,
+.bf-movement-scope button:active {
+  transform: scale(0.97);
+}
+
+/* Cards */
+.bf-today-workspace article,
+.bf-obligation-entry,
+.bf-goal-card,
+.bf-review-list article,
+.bf-sync-state {
+  transition: box-shadow var(--bf-motion), border-color var(--bf-motion);
+}
+
+/* Romanian labels: never clip on primary chrome */
+.os-dock button span,
+.os-desktop-nav button span,
+.bf-more-tabs button,
+.bf-movement-kind button {
+  overflow: visible;
+  text-overflow: unset;
+  max-width: none;
+}
+@media (max-width: 430px) {
+  .os-dock button span {
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1.15;
+    white-space: normal;
+    text-align: center;
+  }
+  .bf-more-tabs button {
+    font-size: 12px;
+  }
+}
+
+/* Dark + extras same quality bar */
+html.theme-dark .bf-modal,
+html.theme-aurora .bf-modal,
+html.theme-navy .bf-modal,
+html.theme-cyber .bf-modal {
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+html.theme-aurora .os-dock button.is-on,
+html.theme-navy .os-dock button.is-on,
+html.theme-cyber .os-dock button.is-on {
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--cf-primary, #7cffc4) 28%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-modal-backdrop,
+  .bf-modal,
+  .bf-journal-filter-sheet,
+  .ai-financial-setup,
+  .bf-primary,
+  .bf-secondary,
+  .bf-os-decide,
+  .os-dock button,
+  .bf-more-grid > button {
+    animation: none !important;
+    transition: none !important;
+  }
+}
