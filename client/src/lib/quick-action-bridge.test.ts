@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { consumeQuickAction, observeQuickActions } from "./quick-action-bridge";
+import { consumeQuickAction, observeQuickActions, publishWidgetTemplates } from "./quick-action-bridge";
 
 type Listener = () => void;
 
-function stubNative(queue: string[]) {
+function stubNative(queue: string[], publish?: (json: string) => void) {
   const listeners: Record<string, Listener[]> = {};
   const add = (target: Record<string, Listener[]>) => (type: string, fn: Listener) => {
     target[type] = [...(target[type] || []), fn];
@@ -14,7 +14,10 @@ function stubNative(queue: string[]) {
   const documentStub = { visibilityState: "visible", addEventListener: add(listeners), removeEventListener: remove(listeners) };
   Object.assign(globalThis, {
     window: {
-      BugetFamilieQuickAction: { consume: () => queue.shift() || "" },
+      BugetFamilieQuickAction: {
+        consume: () => queue.shift() || "",
+        publishTemplates: publish,
+      },
       addEventListener: add(listeners),
       removeEventListener: remove(listeners),
     },
@@ -40,6 +43,27 @@ describe("puntea către widget", () => {
     expect(consumeQuickAction()).toBeUndefined();
   });
 
+  it("citește un șablon de pe widget ca template:id", () => {
+    stubNative(["template:taxi-serviciu"]);
+    expect(consumeQuickAction()).toEqual({ kind: "template", templateId: "taxi-serviciu" });
+  });
+
+  it("publică pe widget doar id și etichetă, max 3", () => {
+    const publish = vi.fn();
+    stubNative([], publish);
+    publishWidgetTemplates([
+      { id: "a", label: "Taxi" },
+      { id: "b", label: "Lidl" },
+      { id: "c", label: "Benzină" },
+      { id: "d", label: "Extra" },
+    ]);
+    expect(publish).toHaveBeenCalledWith(JSON.stringify([
+      { id: "a", label: "Taxi" },
+      { id: "b", label: "Lidl" },
+      { id: "c", label: "Benzină" },
+    ]));
+  });
+
   it("nu face nimic fără puntea nativă", () => {
     vi.useFakeTimers();
     Object.assign(globalThis, {
@@ -60,7 +84,6 @@ describe("puntea către widget", () => {
     const stop = observeQuickActions(handle);
     expect(handle).toHaveBeenCalledWith("expense");
 
-    // A doua apăsare pe widget readuce aplicația fără reîncărcarea paginii.
     (globalThis as unknown as { window: { BugetFamilieQuickAction: { consume: () => string } } }).window.BugetFamilieQuickAction.consume = () => "receipt";
     native.fire("visibilitychange");
     expect(handle).toHaveBeenLastCalledWith("receipt");

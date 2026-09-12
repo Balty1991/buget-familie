@@ -10,9 +10,9 @@ import { getLocale, t } from "@/lib/i18n";
 
 const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
 
-type Props = { data: AppData; onSave: (item: Transaction) => void; onClose: () => void; onMore: () => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; };
+type Props = { data: AppData; onSave: (item: Transaction) => void; onClose: () => void; onMore: () => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; };
 
-export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate }: Props) {
+export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId }: Props) {
   const [kind, setKind] = useState<TransactionKind>("expense");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Alimente");
@@ -22,6 +22,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const [allocationId, setAllocationId] = useState("outside");
   const [allocationChoiceTouched, setAllocationChoiceTouched] = useState(false);
   const [templateId, setTemplateId] = useState("");
+  const initialTemplateApplied = useRef(false);
   const [templateLabel, setTemplateLabel] = useState("");
   const [showArchive, setShowArchive] = useState(false);
   const [error, setError] = useState("");
@@ -56,6 +57,13 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     setTemplateId(template.id); setKind(template.kind); setCategory(template.category); setAmount(template.amount ? String(template.amount) : "");
     if (template.memberId) setMemberId(template.memberId); if (template.sourceId) setSourceId(template.sourceId); setTemplateLabel(template.label); setIncomeLabel(template.kind === "income" ? template.label : ""); setAllocationChoiceTouched(false); setError("");
   };
+  useEffect(() => {
+    if (initialTemplateApplied.current || !initialTemplateId) return;
+    const template = data.settings.quickTemplates.find((item) => item.id === initialTemplateId && item.kind !== "income");
+    if (!template) return;
+    initialTemplateApplied.current = true;
+    selectTemplate(template);
+  }, [data.settings.quickTemplates, initialTemplateId]);
   const save = () => {
     const numeric = parseRomanianAmount(amount); const member = data.settings.members.find((item) => item.id === memberId); const source = data.settings.paymentSources.find((item) => item.id === sourceId);
     if (numeric <= 0) return setError(t("Introdu o sumă mai mare decât zero."));

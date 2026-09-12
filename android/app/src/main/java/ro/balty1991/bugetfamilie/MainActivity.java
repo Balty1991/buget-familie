@@ -31,7 +31,6 @@ public class MainActivity extends BridgeActivity {
       final Insets bars = insets.getInsets(
         WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
       );
-      // Nu paddăm WebView-ul — antetul trebuie să picteze sub ceas, nu un gol negru.
       injectSafeArea(webView, bars);
       return insets;
     });
@@ -50,13 +49,18 @@ public class MainActivity extends BridgeActivity {
   private String readQuickAction(Intent intent) {
     if (intent == null) return null;
     final String action = intent.getStringExtra(QuickActions.EXTRA_ACTION);
-    return QuickActions.isKnown(action) ? action : null;
+    if (!QuickActions.isKnown(action)) return null;
+    if (action.startsWith(QuickActions.ACTION_TEMPLATE_PREFIX)) return action;
+    final String templateId = intent.getStringExtra(QuickActions.EXTRA_TEMPLATE_ID);
+    if (templateId != null && !templateId.isEmpty() && QuickActions.ACTION_EXPENSE.equals(action)) {
+      return QuickActions.ACTION_TEMPLATE_PREFIX + templateId;
+    }
+    return action;
   }
 
   /**
    * Singurul lucru pe care îl expune este numele acțiunii cerute, o singură dată.
-   * Nu citește și nu scrie date financiare; WebView-ul încarcă doar fișierele
-   * împachetate în aplicație.
+   * publishTemplates scrie doar etichete pe widget — fără sume.
    */
   private final class QuickActionBridge {
     @JavascriptInterface
@@ -64,6 +68,12 @@ public class MainActivity extends BridgeActivity {
       final String action = pendingQuickAction;
       pendingQuickAction = null;
       return action == null ? "" : action;
+    }
+
+    @JavascriptInterface
+    public void publishTemplates(String json) {
+      WidgetTemplates.saveJson(MainActivity.this.getApplicationContext(), json);
+      QuickAddWidgetProvider.updateAll(MainActivity.this.getApplicationContext());
     }
   }
 
@@ -84,9 +94,6 @@ public class MainActivity extends BridgeActivity {
     webView.evaluateJavascript(js, null);
   }
 
-  /**
-   * Bridge minim: JS trimite doar titlu/text/ora; nativul nu citește registrul.
-   */
   private final class ReminderBridge {
     @JavascriptInterface
     public void schedule(String payloadJson) {

@@ -10,6 +10,10 @@ Nu putem testa widgetul / dala pe un dispozitiv fizic în mediul de build. Înai
 - [ ] Apăsarea pe titlul/widget root deschide **Astăzi**
 - [ ] Cu aplicația deja deschisă în fundal, widgetul tot livrează acțiunea (fără a pierde intent-ul)
 - [ ] Widgetul **nu** afișează sume (privacy pe ecranul de start)
+- [ ] Dacă ai șabloane de cheltuială: apar până la **3 etichete** pe widget (fără sume); o apăsare deschide captura cu șablonul selectat
+- [ ] Fără șabloane, rândul de șabloane pe widget rămâne ascuns
+
+> **Hardware necesar:** widgetul, șabloanele pe widget și dala nu pot fi validate în CI — bifează pe un telefon Android real după `cap:sync` / APK debug.
 
 ## Dala Setări rapide
 
