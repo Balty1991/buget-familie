@@ -11,7 +11,6 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
 import { safeSetItem } from "@/lib/safe-storage";
-import { setSimpleMode } from "@/lib/ui-prefs";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -88,7 +87,6 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
 
   const finishTrack = () => {
     applyBase({ withEnvelopes: false, withPayday: false });
-    setSimpleMode(true);
     complete();
     onAdd();
   };

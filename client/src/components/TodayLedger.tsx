@@ -30,18 +30,18 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
   const [pulseTip, setPulseTip] = useState<string | null>(null);
 
   return (
-    <section className="bf-ledger-desk" aria-label="Registrul vizual al casei">
+    <section className="bf-ledger-desk" aria-label={t("Registrul vizual al casei")}>
       <header className="bf-desk-heading">
         <div>
           <p className="bf-kicker">{t("MASA DE LUCRU")}</p>
           <h2>{t("Banii, așezați pe hârtie.")}</h2>
         </div>
-        <button type="button" onClick={() => onGo("plan")}>Deschide plicurile</button>
+        <button type="button" onClick={() => onGo("plan")}>{t("Deschide plicurile")}</button>
       </header>
 
       {!compact && (
         <div className="bf-desk-top">
-          <CashNote amount={money(safe.available)} caption="Disponibil prudent" />
+          <CashNote amount={money(safe.available)} caption={t("Disponibil prudent")} />
           <div className="bf-today-pulse">
             <div className="bf-today-pulse-copy">
               <p className="bf-kicker">{t("PULSUL SĂPTĂMÂNII")}</p>
@@ -100,7 +100,7 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
                     </span>
                     <small>
                       <span>{Math.round(entry.usage * 100)}%</span>
-                      <span>din {money(entry.budget)}</span>
+                      <span>{t("din {amount}", { amount: money(entry.budget) })}</span>
                     </small>
                     {burn && (
                       <span className={`bf-plic-pace pace-${burn.pace}`} title={burn.reason}>

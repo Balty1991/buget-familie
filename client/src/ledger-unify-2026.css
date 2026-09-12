@@ -392,6 +392,53 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   font-size: 13px;
 }
 
+.bf-opening-prompt {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 14px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--lu-line, #c9d2cc);
+  background: var(--lu-card, #f7f8f6);
+}
+.bf-opening-prompt h2 {
+  margin: 0;
+  font: 560 1.15rem/1.2 "IBM Plex Serif", Fraunces, Georgia, serif;
+}
+.bf-opening-prompt p {
+  margin: 0;
+  color: var(--lu-muted, #5d7283);
+  font-size: 13px;
+}
+.bf-opening-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bf-opening-actions button {
+  min-height: 44px;
+}
+
+.bf-today-activity-list article[role="button"],
+.bf-more-list article[role="button"] {
+  cursor: pointer;
+}
+.bf-today-activity-list article[role="button"]:focus-visible,
+.bf-more-list article[role="button"]:focus-visible {
+  outline: 2px solid var(--lu-accent, #143c36);
+  outline-offset: 2px;
+}
+.bf-journal-saved-list input {
+  min-height: 40px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--lu-line, #c9d2cc);
+  background: var(--lu-card, #fff);
+  color: inherit;
+  font: inherit;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .os-shell .os-hero,
   .os-shell .os-dock,

@@ -622,7 +622,7 @@ export const currenciesMissingRate = (data: AppData) =>
   activeCurrencies(data).filter((currency) => !exchangeRateFor(data, currency));
 
 export const planEndDate = (plan: SalaryPlan) => paydayWindow(plan).typical || plan.nextPayday || plan.earliestPayday || "";
-export const planCoverEndDate = (plan: SalaryPlan) => paydayWindow(plan).latest || planEndDate(plan);
+export const planCoverEndDate = (plan: SalaryPlan) => paydayWindow(plan).latest || planEndDate(plan) || addIsoDays(plan.periodStart, 31);
 export const prudentPlanEndDate = (plan: SalaryPlan) => paydayWindow(plan).earliest || planEndDate(plan);
 export const addIsoDays = (iso: string, days: number) => {
   const date = new Date(`${iso}T12:00:00`);
@@ -640,7 +640,10 @@ export const paydayWindow = (plan: SalaryPlan) => {
     : (computedEarliest < plan.periodStart ? plan.periodStart : computedEarliest);
   return { typical, earliest, latest: addIsoDays(typical, flex), flex };
 };
-export const inPlanPeriod = (iso: string, plan: SalaryPlan) => { const end = planCoverEndDate(plan); return iso >= plan.periodStart && (!end || iso <= end); };
+export const inPlanPeriod = (iso: string, plan: SalaryPlan) => {
+  const end = planCoverEndDate(plan);
+  return iso >= plan.periodStart && iso <= end;
+};
 
 /**
  * Cât s-a consumat dintr-un plic, într-o singură trecere.
@@ -916,7 +919,8 @@ export const confirmRecurringPayment = (data: AppData, recurringId: string): App
   /** Fără scadență în așteptare plata este deja înregistrată în perioada activă; o a doua apăsare nu trebuie s-o dubleze. */
   if (!pending || !item || !source || !member) return undefined;
   const now = new Date().toISOString();
-  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending.dueDate, note: t("Plată recurentă confirmată"), createdAt: now, updatedAt: now };
+  const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
+  const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending.dueDate, note: t("Plată recurentă confirmată"), allocationId: matched?.id || "outside", createdAt: now, updatedAt: now };
   return { ...data, transactions: [transaction, ...data.transactions] };
 };
 
@@ -933,17 +937,20 @@ export const recurringDueForMonth = (item: RecurringPayment, asOf = isoToday()) 
  */
 export const autoPostDueRecurring = (data: AppData, asOf = isoToday()): AppData => {
   const additions: Transaction[] = [];
+  const planEnd = planEndDate(data.settings.salaryPlan);
   data.recurring.forEach((item) => {
     if (!item.active || !item.autoPost || item.amount <= 0) return;
-    const dueDate = recurringDueForMonth(item, asOf);
-    if (dueDate > asOf) return;
+    const dueDate = recurringDueInPlan(item, data.settings.salaryPlan) || (!planEnd ? recurringDueForMonth(item, asOf) : undefined);
+    if (!dueDate || dueDate > asOf) return;
+    if (data.transactions.some((transaction) => transaction.recurringId === item.id && inPlanPeriod(transaction.date, data.settings.salaryPlan))) return;
     const source = data.settings.paymentSources.find((entry) => entry.id === item.sourceId);
     const member = data.settings.members.find((entry) => entry.id === item.memberId);
     if (!source || !member) return;
     const id = `recurring-auto-${item.id}-${dueDate}`;
     const exists = data.transactions.some((transaction) => transaction.id === id || (transaction.recurringId === item.id && transaction.date === dueDate));
     if (exists) return;
-    additions.push({ id, recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: dueDate, note: t("Adăugată automat din scadență recurentă"), createdAt: `${asOf}T12:00:00.000Z` });
+    const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
+    additions.push({ id, recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: dueDate, note: t("Adăugată automat din scadență recurentă"), allocationId: matched?.id || "outside", createdAt: `${asOf}T12:00:00.000Z` });
   });
   return additions.length ? { ...data, transactions: [...additions, ...data.transactions] } : data;
 };

@@ -14,7 +14,7 @@ import { getLocale, t } from "@/lib/i18n";
 
 const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
 
-type Props = { data: AppData; onSave: (item: Transaction) => void; onClose: () => void; onMore: () => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; };
+type Props = { data: AppData; onSave: (item: Transaction) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; };
 
 export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId }: Props) {
   const [kind, setKind] = useState<TransactionKind>("expense");
@@ -68,6 +68,31 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     initialTemplateApplied.current = true;
     selectTemplate(template);
   }, [data.settings.quickTemplates, initialTemplateId]);
+  const draftFromForm = (): Transaction => {
+    const member = data.settings.members.find((item) => item.id === memberId) || data.settings.members[0];
+    const source = data.settings.paymentSources.find((item) => item.id === sourceId) || data.settings.paymentSources[0];
+    const numeric = parseRomanianAmount(amount);
+    const foreign = source?.currency && source.currency !== BASE_CURRENCY ? source.currency : undefined;
+    const rate = exchangeRateFor(data, foreign);
+    const stored = foreign ? toBaseAmount(numeric, rate) : numeric;
+    return {
+      id: captureIdRef.current,
+      title: activeTemplate?.label || (kind === "expense" ? (numeric > 0 ? t("Cheltuială rapidă · {category}", { category: t(category) }) : "") : incomeLabel.trim()),
+      amount: stored || numeric,
+      originalAmount: foreign ? numeric || undefined : undefined,
+      originalCurrency: foreign,
+      exchangeRate: foreign ? rate : undefined,
+      kind,
+      category: kind === "expense" ? category : "Venit",
+      sourceId: source?.id || "",
+      source: source?.name || "",
+      memberId: member?.id || "",
+      person: member?.name || "",
+      date: isoToday(),
+      allocationId: kind === "expense" ? allocationId : undefined,
+      createdAt: new Date().toISOString(),
+    };
+  };
   const save = () => {
     const numeric = parseRomanianAmount(amount); const member = data.settings.members.find((item) => item.id === memberId); const source = data.settings.paymentSources.find((item) => item.id === sourceId);
     if (numeric <= 0) return setError(t("Introdu o sumă mai mare decât zero."));
@@ -116,7 +141,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
       {kind === "expense" && <section className="bf-quick-envelope"><p className="bf-kicker">{t("PLICUL SĂPTĂMÂNII")}</p><label className="bf-field"><span>{t("Se consumă din")}</span><select value={allocationId} onChange={(event) => { setAllocationId(event.target.value); setAllocationChoiceTouched(true); }}><option value="outside">{t("În afara plicurilor")}</option>{candidates.map((allocation) => { const activeWeek = allocation.weeklyPace === false ? undefined : allocationWeekStatus(data, allocation); const totalRemaining = allocation.weeklyPace === false ? allocationStatus(data, allocation).remaining : undefined; return <option key={allocation.id} value={allocation.id}>{allocation.label} · {activeWeek ? t("{amount} în S{index}", { amount: money.format(Math.max(0, activeWeek.remaining)), index: activeWeek.index }) : totalRemaining !== undefined ? t("{amount} rămași", { amount: money.format(Math.max(0, totalRemaining)) }) : t("fără tranșă activă")}</option>; })}</select></label>{matchedAllocation && <p className={(week && week.remaining - parseRomanianAmount(amount) < 0) || (matchedTotal && matchedTotal.remaining - parseRomanianAmount(amount) < 0) ? "over" : ""}>{week ? t("S{index}: {remaining} rămași din {budget}{after}", { index: week.index, remaining: money.format(Math.max(0, week.remaining)), budget: money.format(week.budget), after: parseRomanianAmount(amount) > 0 ? t(" · după plată {left}", { left: money.format(Math.max(0, week.remaining - parseRomanianAmount(amount))) }) : "" }) : matchedTotal ? t("{remaining} rămași din {budget}{after}", { remaining: money.format(Math.max(0, matchedTotal.remaining)), budget: money.format(matchedTotal.budget), after: parseRomanianAmount(amount) > 0 ? t(" · după plată {left}", { left: money.format(Math.max(0, matchedTotal.remaining - parseRomanianAmount(amount))) }) : "" }) : t("Plic selectat; încă nu este activă o tranșă calendaristică.")}</p>}{!candidates.length && <p>{t("Nu există plic pentru această categorie și sursă. Poți salva în afara plicurilor.")}</p>}</section>}
       <details className="bf-template-save"><summary><BookmarkPlus size={16} /> {templateId ? t("Editează șablonul selectat") : t("Salvează combinația ca șablon local")}</summary><label className="bf-field"><span>{t("Nume șablon")}</span><input value={templateLabel} onChange={(event) => setTemplateLabel(event.target.value)} placeholder="ex. Taxi serviciu" /></label><div className="bf-template-actions"><button type="button" onClick={remember}>{templateId ? t("Actualizează șablonul") : t("Păstrează pe acest telefon")}</button>{templateId && <><button type="button" onClick={archive}><Archive size={15} /> {t("Arhivează")}</button><button type="button" className="danger" onClick={remove}><Trash2 size={15} /> {t("Șterge")}</button></>}</div></details>
       {error && <p className="bf-form-error" role="alert">{error}</p>}
-      <button className="bf-primary full" onClick={save}><Check size={17} /> {t("Salvează acum")}</button><button className="bf-quick-entry-more" onClick={onMore}><Plus size={16} /> {t("Adaugă notiță, altă dată sau corectează")}</button>
+      <button className="bf-primary full" onClick={save}><Check size={17} /> {t("Salvează acum")}</button><button className="bf-quick-entry-more" onClick={() => onMore(draftFromForm())}><Plus size={16} /> {t("Adaugă notiță, altă dată sau corectează")}</button>
     </section>
   </div>;
 }

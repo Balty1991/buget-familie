@@ -97,7 +97,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
   const availableSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
   const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
-  const reservedInEnvelopes = envelopes.reduce((sum, envelope) => sum + envelope.remaining, 0);
+  const reservedInEnvelopes = envelopes.reduce((sum, envelope) => sum + Math.max(0, envelope.remaining), 0);
   const unrepartized = availableSources - reservedInEnvelopes - scheduled;
   const allocationPreview = planEnd ? calendarBudget(parseRomanianAmount(allocationAmount), plan.periodStart, planEnd) : undefined;
   const simulationTotal = plan.allocations.reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(simulationAmounts[item.id] ?? String(item.amount))), 0);
@@ -121,7 +121,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return isoDate(date); };
-  const allocationPeriodOptions = [{ id: "next-income" as const, label: t("Până la următorul venit") }, { id: "month" as const, label: t("Luna aceasta") }, { id: "week" as const, label: t("Săptămâna aceasta") }, { id: "custom" as const, label: "Personalizat" }];
+  const allocationPeriodOptions = [{ id: "next-income" as const, label: t("Până la următorul venit") }, { id: "month" as const, label: t("Luna aceasta") }, { id: "week" as const, label: t("Săptămâna aceasta") }, { id: "custom" as const, label: t("Personalizat") }];
   const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(plan.nextPayday || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(isoDate(new Date(now.getFullYear(), now.getMonth(), 1))); setCycleEnd(isoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0))); } else if (periodId === "week") { setCycleStart(isoToday()); setCycleEnd(addIsoDays(isoToday(), 6)); } };
   const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
 

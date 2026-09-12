@@ -18,7 +18,7 @@ const dueLabel = (daysLeft: number) => {
  * Briefing de dimineață: cât poți cheltui azi, scadențe din 7 zile, abonamente detectate, ritual de salariu.
  * Scrie în registru doar la confirmare explicită — aceeași formă sincronizată.
  */
-export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = false }: { data: AppData; onGo: Go; onChange: (next: AppData) => void; onOpenWeek?: () => void; hideSpendStamp?: boolean }) {
+export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = false, simpleMode = false }: { data: AppData; onGo: Go; onChange: (next: AppData) => void; onOpenWeek?: () => void; hideSpendStamp?: boolean; simpleMode?: boolean }) {
   const brief = todayBrief(data);
   const week = weeklyCheckIn(data);
   const rules = data.settings.salaryPlan.salaryAllocationRules || [];
@@ -61,7 +61,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
         </button>
       )}
 
-      {needsRitual && !pendingIncome && (
+      {needsRitual && !pendingIncome && !simpleMode && (
         <button type="button" className="bf-brief-salary setup" onClick={() => onGo("plan")}>
           <b>{t("Setează ritualul de salariu")}</b>
           <small>{t("Când înregistrezi venitul, plicurile se umplu după regulile tale.")}</small>
@@ -107,14 +107,14 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
         </div>
       )}
 
-      {week.shouldPrompt && (
+      {week.shouldPrompt && !simpleMode && onOpenWeek && (
         <button type="button" className="bf-brief-week" onClick={() => onOpenWeek?.()}>
           <b>{t("Bilanțul săptămânii")}</b>
           <small>{week.nextStep}</small>
         </button>
       )}
 
-      {brief.closeSoon && (
+      {brief.closeSoon && !simpleMode && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("insights")}>
           {t("Ciclu aproape gata — închide luna din Analiză → Gospodărie")}
         </button>

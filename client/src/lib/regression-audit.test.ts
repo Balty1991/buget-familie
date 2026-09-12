@@ -8,9 +8,12 @@ import {
   allocationSpent,
   allocationStatus,
   allocationWeeksStatus,
+  autoPostDueRecurring,
   confirmRecurringPayment,
   createEmptyAppData,
+  inPlanPeriod,
   isoDate,
+  paydayFlexDays,
   pendingRecurringInPlan,
   recurringDueForMonth,
   transferBetweenEnvelopes,
@@ -89,8 +92,37 @@ describe("plăți recurente", () => {
     const once = confirmRecurringPayment(data, "rec-1");
     expect(once?.transactions).toHaveLength(1);
     expect(once?.transactions[0].date).toBe("2026-09-05");
+    expect(once?.transactions[0].allocationId).toBe("outside");
     expect(pendingRecurringInPlan(once!)).toEqual([]);
     expect(confirmRecurringPayment(once!, "rec-1")).toBeUndefined();
+  });
+
+  it("leagă scadența de plicul cu aceeași categorie, nu o lasă să se potrivească implicit", () => {
+    const data = planned();
+    data.settings.salaryPlan.allocations = [{ id: "alloc-house", label: "Casă", amount: 800, category: "Casă & facturi", sourceId: "source-debit", memberId: "member-me" }];
+    const once = confirmRecurringPayment(data, "rec-1");
+    expect(once?.transactions[0].allocationId).toBe("alloc-house");
+  });
+
+  it("pune și plata automată pe plicul potrivit, nu pe potrivirea implicită după categorie", () => {
+    const data = planned();
+    data.settings.salaryPlan.allocations = [{ id: "alloc-house", label: "Casă", amount: 800, category: "Casă & facturi", sourceId: "source-debit", memberId: "member-me" }];
+    data.recurring[0] = { ...data.recurring[0], autoPost: true, dueDay: 10 };
+    const posted = autoPostDueRecurring(data, "2026-09-10");
+    expect(posted.transactions[0].allocationId).toBe("alloc-house");
+    const bare = planned();
+    bare.recurring[0] = { ...bare.recurring[0], autoPost: true };
+    const outside = autoPostDueRecurring(bare, "2026-09-05");
+    expect(outside.transactions[0].allocationId).toBe("outside");
+  });
+
+  it("nu scrie a doua chirie în același ciclu 15–15", () => {
+    const data = planned();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-15", nextPayday: "2026-10-15" };
+    data.recurring = [{ id: "rent", name: "Chirie", amount: 1800, category: "Casă & facturi", sourceId: "source-debit", memberId: "member-me", dueDay: 20, active: true, autoPost: true }];
+    data.transactions = [{ id: "paid", recurringId: "rent", title: "Chirie", amount: 1800, kind: "expense", category: "Casă & facturi", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: "2026-09-20" }];
+    const posted = autoPostDueRecurring(data, "2026-10-01");
+    expect(posted.transactions.filter((item) => item.recurringId === "rent")).toHaveLength(1);
   });
 });
 
@@ -139,6 +171,33 @@ describe("recunoașterea magazinului", () => {
   it("alege lanțul cunoscut, nu primul rând din antetul legal", () => {
     const result = interpretReceiptText(["SC EXPERT MAGAZIN COMPANY", "LIDL DISCOUNT S.R.L.", "STR. GARII NR. 4", "PAINE 3,00", "TOTAL 3,00"]);
     expect(result.vendor).toBe("Lidl");
+  });
+});
+
+describe("fereastra planului fără salariu", () => {
+  it("nu lasă perioada deschisă la infinit", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "";
+    expect(inPlanPeriod("2026-09-10", data.settings.salaryPlan)).toBe(true);
+    expect(inPlanPeriod("2026-11-01", data.settings.salaryPlan)).toBe(false);
+  });
+
+  it("folosește 0 zile de flexibilitate până când utilizatorul salvează ciclul", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.nextPayday = "2026-09-28";
+    expect(paydayFlexDays(data.settings.salaryPlan)).toBe(0);
+  });
+
+  it("un plic depășit nu umflă marja rămasă", () => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources[0].openingBalance = 800;
+    data.settings.salaryPlan.allocations = [{ id: "alloc-1", label: "Alimente", amount: 500, category: "Alimente" }];
+    data.transactions = [{ id: "t1", title: "Lidl", amount: 700, kind: "expense", category: "Alimente", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: isoDate(new Date()), allocationId: "alloc-1" }];
+    const status = allocationStatus(data, data.settings.salaryPlan.allocations[0]);
+    expect(status.remaining).toBe(-200);
+    const reserved = Math.max(0, status.remaining);
+    expect(reserved).toBe(0);
   });
 });
 

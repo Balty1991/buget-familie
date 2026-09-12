@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { allocationStatus, allocationWeekStatus, confirmRecurringPayment, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, confirmRecurringPayment, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
@@ -89,7 +89,7 @@ function planMath(data: AppData) {
   const weekly = plan.weeklyLimit || weeklyPacedTotal / weeks;
   const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
   /** Banii deja puși deoparte în plicuri nu se scad a doua oară de aici: o cheltuială dintr-un plic mișcă doar plicul, nu și marja generală. */
-  const reservedInEnvelopes = plan.allocations.reduce((sum, item) => sum + allocationStatus(data, item).remaining, 0);
+  const reservedInEnvelopes = plan.allocations.reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
   const remaining = availableSources - reservedInEnvelopes - scheduled;
   return { plan, planEnd, sourceIds, selected, availableSources, periodExpenses, scheduled, reservedInEnvelopes, remaining, days, weeks, weekly, weeklyPacedTotal };
 }
@@ -110,15 +110,21 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
     signals.push({ id: "daily-pace", tone: "good", eyebrow: t("RITM SIGUR"), title: t("{amount} pe zi până la venit", { amount: money(daily) }), detail: t("{amount} rămân după cheltuielile înregistrate și rezervele deja planificate.", { amount: money(math.remaining) }), action: "plan", actionLabel: t("Vezi calculele") });
   }
   if (pending[0]) {
-    signals.push({ id: "next-recurring", tone: "watch", eyebrow: t("SCADENȚĂ REZERVATĂ"), title: `${pending[0].name} · ${money(pending[0].amount)}`, detail: `Este programată pentru ${dateText(pending[0].dueDate, true)} și este deja exclusă din suma disponibilă.`, action: "recurring", actionLabel: t("Deschide scadențele") });
+    signals.push({ id: "next-recurring", tone: "watch", eyebrow: t("SCADENȚĂ REZERVATĂ"), title: t("{name} · {amount}", { name: pending[0].name, amount: money(pending[0].amount) }), detail: t("Este programată pentru {date} și este deja exclusă din suma disponibilă.", { date: dateText(pending[0].dueDate, true) }), action: "recurring", actionLabel: t("Deschide scadențele") });
   }
   const allocation = data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) })).sort((a, b) => b.usage - a.usage)[0];
   if (allocation && allocation.state !== "healthy") {
     const over = allocation.state === "over";
-    signals.push({ id: `allocation-${allocation.item.id}`, tone: over ? "risk" : "watch", eyebrow: over ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ"), title: `${allocation.item.label}: ${money(Math.max(0, allocation.remaining))} rămași`, detail: `${money(allocation.spent)} cheltuiți din limita ajustată de ${money(allocation.budget)} în perioada activă.`, action: "plan", actionLabel: t("Vezi plicul") });
+    signals.push({ id: `allocation-${allocation.item.id}`, tone: over ? "risk" : "watch", eyebrow: over ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ"), title: t("{label}: {amount} rămași", { label: allocation.item.label, amount: money(Math.max(0, allocation.remaining)) }), detail: t("{spent} cheltuiți din limita ajustată de {budget} în perioada activă.", { spent: money(allocation.spent), budget: money(allocation.budget) }), action: "plan", actionLabel: t("Vezi plicul") });
   }
   const goal = data.savings.filter((item) => item.target > item.current).sort((a, b) => (b.target - b.current) - (a.target - a.current))[0];
-  if (goal && signals.length < 3) signals.push({ id: `goal-${goal.id}`, tone: "good", eyebrow: t("OBIECTIV COMUN"), title: `${money(goal.target - goal.current)} până la ${goal.name}`, detail: `Progres actual: ${money(goal.current)} din ${money(goal.target)}.`, action: "objectives", actionLabel: t("Vezi obiectivul") });
+  if (goal && signals.length < 3) signals.push({ id: `goal-${goal.id}`, tone: "good", eyebrow: t("OBIECTIV COMUN"), title: t("{amount} până la {name}", { amount: money(goal.target - goal.current), name: goal.name }), detail: t("Progres actual: {current} din {target}.", { current: money(goal.current), target: money(goal.target) }), action: "objectives", actionLabel: t("Vezi obiectivul") });
+  const unrepartized = math.availableSources - math.reservedInEnvelopes - math.scheduled;
+  if (unrepartized > 50 && data.settings.salaryPlan.allocations.length > 0) {
+    const assign = { id: "ready-to-assign", tone: "watch" as const, eyebrow: t("DE REPARTIZAT"), title: t("{amount} fără un plic", { amount: money(unrepartized) }), detail: t("Banii din surse care nu au încă un loc. Dă-le un plic — altfel cifra de azi poate părea mai mare decât e."), action: "plan" as AdvisorAction, actionLabel: t("Repartizează") };
+    if (signals.some((item) => item.tone === "risk")) signals.splice(1, 0, assign);
+    else signals.unshift(assign);
+  }
   return signals.slice(0, 3);
 }
 
@@ -144,7 +150,39 @@ function NextStepCard({ signal, onOpen }: { signal?: AdvisorSignal; onOpen: () =
   const tone = signal.tone === "risk" ? "risk" : signal.tone === "watch" ? "watch" : "good";
   return <section className={"bf-next-step-card " + tone}><div className="bf-next-step-icon"><PlayCircle size={21} /></div><div className="bf-next-step-copy"><p className="bf-kicker">{t("RECOMANDAREA MEA PENTRU ACUM")}</p><h2>{signal.title}</h2><span>{signal.detail}</span></div><button type="button" onClick={onOpen}>{signal.actionLabel}<ChevronRight size={16} /></button></section>;
 }
-function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }: { data: AppData; onAdd: () => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void }) {
+function OpeningBalanceCard({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
+  const [value, setValue] = useState("");
+  const [dismissed, setDismissed] = useState(false);
+  const source = data.settings.paymentSources[0];
+  if (dismissed || !source || source.openingBalance > 0 || data.transactions.length === 0 || !shouldAskOpeningBalance()) return null;
+  const save = () => {
+    const amount = Math.max(0, parseRomanianAmount(value));
+    if (!amount) return;
+    markOpeningBalanceAsked();
+    setDismissed(true);
+    onChange({
+      ...data,
+      settings: {
+        ...data.settings,
+        paymentSources: data.settings.paymentSources.map((entry) => entry.id === source.id ? { ...entry, openingBalance: amount } : entry),
+      },
+    });
+  };
+  return (
+    <section className="bf-opening-prompt" aria-labelledby="bf-opening-title">
+      <p className="bf-kicker">{t("SOLD REAL")}</p>
+      <h2 id="bf-opening-title">{t("Cât ai acum pe {name}?", { name: source.name })}</h2>
+      <p>{t("Altfel cifra de azi poate părea 0. Poți sări — completezi oricând din Setări.")}</p>
+      <label className="bf-field"><span>{t("Sumă (lei)")}</span><input inputMode="decimal" value={value} onChange={(event) => setValue(event.target.value)} placeholder="0" /></label>
+      <div className="bf-opening-actions">
+        <button type="button" className="bf-secondary" onClick={() => { markOpeningBalanceAsked(); setDismissed(true); }}>{t("Mai târziu")}</button>
+        <button type="button" className="bf-primary" onClick={save}>{t("Salvează soldul")}</button>
+      </div>
+    </section>
+  );
+}
+
+function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings, onOpenRecurring }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void }) {
   const { simpleMode } = useSimpleMode();
   const math = useMemo(() => planMath(data), [data]);
   const forecast = useMemo(() => planForecast(data), [data]);
@@ -173,7 +211,12 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
     setShownTrancheKey(activeTrancheKey);
     window.dispatchEvent(new CustomEvent("buget-familie:local-settings", { detail: { seenWeeklyPlanTranches: [...data.settings.seenWeeklyPlanTranches, activeTrancheKey].slice(-80) } }));
   }, [activeTranche, activeTrancheKey, data.settings.seenWeeklyPlanTranches, shownTrancheKey]);
-  const openSignal = (action: AdvisorAction) => onGo(action === "plan" ? "plan" : action === "objectives" ? "obligations" : action === "journal" ? "journal" : "obligations");
+  const openSignal = (action: AdvisorAction) => {
+    if (action === "plan") onGo("plan");
+    else if (action === "journal") onGo("journal");
+    else if (action === "recurring") onOpenRecurring();
+    else onGo("obligations");
+  };
 
   const todayIso = isoToday();
   const rhythm = useMemo(() => weeklyEnvelopeDailyRhythm(data, todayIso), [data, todayIso]);
@@ -265,7 +308,7 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
           <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Ritm urmărit")}</span>
           <div className="os-date">
             <b>{String(new Date(`${todayIso}T12:00:00`).getDate()).padStart(2, "0")}</b>
-            <span>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { month: "long" }).toLocaleUpperCase("ro-RO")}</span>
+            <span>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { month: "long" }).toLocaleUpperCase(getLocale())}</span>
             <span>{new Date(`${todayIso}T12:00:00`).getFullYear()}</span>
           </div>
         </div>
@@ -351,10 +394,12 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
         <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Înregistrează")}</button>
       </div>
 
+      <OpeningBalanceCard data={data} onChange={onChange} />
+
       {!simpleMode && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
 
       {/* Acțiuni scurte (scadențe / abonamente) — fără al doilea număr de decizie */}
-      <TodayBrief data={data} onGo={onGo} onChange={onChange} hideSpendStamp onOpenWeek={() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
+      <TodayBrief data={data} onGo={onGo} onChange={onChange} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
 
       {!simpleMode && <DeferBelowFold>
         <section className="bf-os-rhythm" aria-label={t("Ritm zilnic")}>
@@ -436,16 +481,23 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
         })()}
           {lastMoves.length ? (
             <div className="bf-today-activity-list">
-              {lastMoves.map((item) => (
-                <article key={item.id}>
+              {lastMoves.map((item) => {
+                const envelope = item.allocationId && item.allocationId !== "outside"
+                  ? data.settings.salaryPlan.allocations.find((entry) => entry.id === item.allocationId)?.label
+                  : item.allocationId === "outside"
+                    ? t("în afara plicurilor")
+                    : undefined;
+                return (
+                <article key={item.id} role="button" tabIndex={0} onClick={() => onEdit(item)} onKeyDown={(event) => { if (event.key === "Enter") onEdit(item); }}>
                   <span className={`bf-tx-icon ${item.kind}`}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}</span>
                   <div>
                     <b>{item.title}</b>
-                    <small>{dateText(item.date)} · {item.person} · {item.category}</small>
+                    <small>{dateText(item.date)} · {item.person} · {t(item.category)}{envelope ? ` · ${envelope}` : ""}</small>
                   </div>
                   <strong className={item.kind}>{item.kind === "income" ? "+" : "−"}{fmtExact.format(item.amount)}</strong>
                 </article>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <button className="bf-today-empty-activity" onClick={onAdd}>
@@ -571,8 +623,6 @@ export default function Home() {
 
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; applyData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
   const saveTx = (item: Transaction | Transaction[]) => {
-    const wasEmpty = data.transactions.length === 0;
-    const noOpening = !data.settings.paymentSources.some((source) => source.openingBalance > 0);
     update((current) => {
       const list = Array.isArray(item) ? item : [item];
       let transactions = current.transactions;
@@ -584,24 +634,6 @@ export default function Home() {
       }
       return { ...current, transactions };
     });
-    if (wasEmpty && noOpening && shouldAskOpeningBalance()) {
-      markOpeningBalanceAsked();
-      window.setTimeout(() => {
-        const source = data.settings.paymentSources[0];
-        if (!source) return;
-        const raw = window.prompt(t("Adaugă cât ai acum pe {name} (lei). Poți lăsa gol.", { name: source.name }), "");
-        if (raw === null || !String(raw).trim()) return;
-        const amount = Math.max(0, Number(String(raw).replace(/\s/g, "").replace(",", ".")) || 0);
-        if (!amount) return;
-        update((current) => ({
-          ...current,
-          settings: {
-            ...current.settings,
-            paymentSources: current.settings.paymentSources.map((entry) => entry.id === source.id ? { ...entry, openingBalance: amount } : entry),
-          },
-        }));
-      }, 320);
-    }
   };
   const applyFinancialUpdate = (change: FinancialUpdate) => update((current) => { const member = current.settings.members.find((item) => "memberId" in change && change.memberId && item.id === change.memberId) || current.settings.members[0]; const source = current.settings.paymentSources.find((item) => item.memberId && member && item.memberId === member.id) || current.settings.paymentSources[0]; const now = new Date().toISOString(); if (change.kind === "income" && member && source) { const incomeCaptureId = ("clientCaptureId" in change && change.clientCaptureId) || newId("guided-income"); if (current.transactions.some((item) => item.id === incomeCaptureId || (item.kind === "income" && item.amount === change.amount && item.title === change.title && item.date === (change.date || isoToday())))) return current; const transaction: Transaction = { id: incomeCaptureId, title: change.title, amount: change.amount, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: change.date || isoToday(), note: t("Venit adăugat împreună cu ghidul AI"), createdAt: now }; return { ...current, transactions: [transaction, ...current.transactions], settings: { ...current.settings, salaryPlan: { ...current.settings.salaryPlan, totalLimit: Math.max(0, (current.settings.salaryPlan.totalLimit || 0) + change.amount), updatedAt: now } } }; } if (change.kind === "debt") { const key = change.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const existingIndex = current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key); const nextDebt: Debt = { id: existingIndex >= 0 ? current.debts[existingIndex].id : newId("guided-debt"), name: change.name, remaining: change.remaining, monthly: existingIndex >= 0 ? current.debts[existingIndex].monthly : 0, due: change.due || (existingIndex >= 0 ? current.debts[existingIndex].due : "Nespecificat"), memberId: member?.id, tone: existingIndex >= 0 ? current.debts[existingIndex].tone : "coral", updatedAt: now }; const debts = existingIndex >= 0 ? current.debts.map((item, index) => index === existingIndex ? nextDebt : item) : [nextDebt, ...current.debts]; return { ...current, debts }; } if (change.kind === "debt-monthly") { const key = change.name?.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const index = key ? current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key) : 0; if (index < 0) return current; return { ...current, debts: current.debts.map((item, itemIndex) => itemIndex === index ? { ...item, monthly: change.amount, updatedAt: now } : item) }; } if (change.kind === "expense" && member && source) { const day = change.date || isoToday(); const usedSource = current.settings.paymentSources.find((item) => item.id === change.sourceId) || source; const usedMember = current.settings.members.find((item) => item.id === change.memberId) || member; const expenseCaptureId = change.clientCaptureId || newId("guided-expense"); if (current.transactions.some((item) => item.id === expenseCaptureId)) return current; const transaction: Transaction = { id: expenseCaptureId, title: change.title, amount: change.amount, kind: "expense", category: change.category, sourceId: usedSource.id, source: usedSource.name, memberId: usedMember.id, person: usedMember.name, date: day, allocationId: change.allocationId || "outside", note: t("Cheltuială adăugată împreună cu ghidul AI"), createdAt: now }; return { ...current, transactions: [transaction, ...current.transactions] }; } if (change.kind === "transfer") return transferBetweenEnvelopes(current, { fromAllocationId: change.fromId, toAllocationId: change.toId, amount: change.amount, note: t("Realocare din ghidul AI") }) || current; if (change.kind === "recurring") {
       const source = current.settings.paymentSources.find((item) => item.memberId === member?.id) || current.settings.paymentSources[0];
@@ -697,10 +729,10 @@ export default function Home() {
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));
   }, [data.settings.quickTemplates]);
   const allNav = [{ id: "today" as MainView, label: t("Astăzi"), icon: LayoutGrid }, { id: "journal" as MainView, label: t("Mișcări"), icon: ListFilter }, { id: "plan" as MainView, label: t("Plan"), icon: PlayCircle }, { id: "obligations" as MainView, label: t("Obligații"), icon: Bell }, { id: "insights" as MainView, label: t("Analiză"), icon: BarChart3 }];
-  const nav = simpleMode ? allNav.filter((item) => item.id === "today" || item.id === "journal" || item.id === "plan") : allNav;
+  const nav = simpleMode ? allNav.filter((item) => item.id === "today" || item.id === "journal" || item.id === "plan" || item.id === "obligations") : allNav;
   useEffect(() => {
     if (!simpleMode) return;
-    if (view === "insights" || view === "obligations" || view === "habits" || view === "goals" || view === "calendar") go("today");
+    if (view === "insights" || view === "habits" || view === "goals" || view === "calendar") go("today");
   }, [simpleMode, view]);
   const current = () => { if (view === "journal") return <MovementsJournal data={data} onChange={applyData} onAdd={() => openTx()} onEdit={openTx} onOpenReview={() => { setMore("review"); go("utilities"); }} onDelete={(id) => deleteWithUndo(t("Mișcarea a fost ștearsă."), (currentData) => ({
       next: { ...currentData, transactions: currentData.transactions.filter((item) => item.id !== id), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId !== id), deleted: [...currentData.deleted, { entity: "transactions" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
@@ -715,7 +747,7 @@ export default function Home() {
     }))} onDeleteSaving={(id) => deleteWithUndo(t("Obiectivul a fost șters."), (currentData) => ({
       next: { ...currentData, savings: currentData.savings.filter((item) => item.id !== id), deleted: [...currentData.deleted, { entity: "savings" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
       removed: { savings: currentData.savings.filter((item) => item.id === id) },
-    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} onPayRecurring={(id) => update((currentData) => confirmRecurringPayment(currentData, id) || currentData)} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={applyData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={setMore} data={data} onChange={applyData} onAddReceipt={() => setModal("receipt")} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenCalendar={() => go("calendar")} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onGo={go} onChange={applyData} onOpenReview={() => { setMore("review"); go("utilities"); }} onOpenSettings={() => { setMore("settings"); go("utilities"); }} />; };
+    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} onPayRecurring={(id) => update((currentData) => confirmRecurringPayment(currentData, id) || currentData)} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={applyData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={setMore} data={data} onChange={applyData} onAddReceipt={() => setModal("receipt")} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onEditDebt={(item) => { setEditGoal(item); setModal("debt"); }} onEditSaving={(item) => { setEditGoal(item); setModal("saving"); }} onOpenCalendar={() => go("calendar")} onGo={go} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onEdit={openTx} onGo={go} onChange={applyData} onOpenReview={() => { setMore("review"); go("utilities"); }} onOpenSettings={() => { setMore("settings"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} />; };
   return <div className="bf-app os-shell">
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
@@ -735,12 +767,12 @@ export default function Home() {
     <nav className="os-dock" aria-label={t("Navigație mobilă")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={16} aria-hidden="true" /><span>{item.label}</span>{item.id === "journal" && data.pendingReview.length > 0 ? <i className="bf-dock-dot" aria-hidden="true" /> : null}</button>; })}</nav>
     {!simpleMode && <Suspense fallback={null}><AICompanion data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>}
     {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={theme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={null}><FirstRunSetup data={data} onChange={applyData} onClose={() => setSetupOpen(false)} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={(password) => { setSyncPassword(password); setSyncPasswordReveal(password); setMore("sync"); go("utilities"); }} /></Suspense>}
-    {modal === "quick" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); }} onMore={() => { setEditTx(undefined); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
+    {modal === "quick" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); }} onMore={(draft) => { setEditTx(draft); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
     {modal === "transaction" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); }} /></Suspense>}
     {modal === "receipt" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim bonul…")}</div></div>}><ReceiptForm data={data} onSave={saveReceipt} onClose={() => setModal(null)} /></Suspense>}
     {modal === "debt" && <Suspense fallback={null}><GoalForm data={data} type="debt" item={editGoal} onSave={saveDebt} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "saving" && <Suspense fallback={null}><GoalForm data={data} type="saving" item={editGoal} onSave={saveSaving} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
-    {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={setData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
+    {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {firstWeekTourOpen && !onboardingOpen && !setupOpen && <Suspense fallback={null}><FirstWeekTour onClose={dismissFirstWeekTour} onCapture={() => { dismissFirstWeekTour(); openTx(); }} onPlan={() => { dismissFirstWeekTour(); go("plan"); }} onSync={() => { dismissFirstWeekTour(); setMore("sync"); go("utilities"); }} /></Suspense>}
     {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTheme={() => { dismissWhatsNew(); setThemePickerOpen(true); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;

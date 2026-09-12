@@ -294,7 +294,7 @@ export const closeMonthLocally = (recap: MonthlyRecap, note?: string): MonthClos
 
 export const liquidSafeToSpend = (data: AppData, asOf = isoToday()) => {
   const balance = financialBalance(data);
-  const pending = data.recurring.filter((item) => item.active).reduce((sum, item) => sum + item.amount, 0);
+  const pending = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
   const envelopeLeft = data.settings.salaryPlan.allocations.reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
   const available = Math.max(0, balance.liquidFunds - pending);
   return { liquidFunds: balance.liquidFunds, reservedRecurring: pending, envelopeLeft, available, asOf };
