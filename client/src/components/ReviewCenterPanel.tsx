@@ -16,6 +16,8 @@ import {
   type AppData,
   type ReviewDraft,
   type ReviewOrigin,
+  type ShareScope,
+  transactionShareScope,
 } from "@/lib/finance-data";
 import { parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
@@ -165,6 +167,12 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                           </select>
                         </Field>
                       )}
+                      <Field label={t("Perspectivă")}>
+                        <select value={transactionShareScope(transaction)} onChange={(event) => patch(draft, { shareScope: event.target.value as ShareScope })}>
+                          <option value="shared">{t("Comun (familie)")}</option>
+                          <option value="personal">{t("Personal")}</option>
+                        </select>
+                      </Field>
                       {transaction.kind === "expense" && (
                         <Field label="Plic" hint={t("„În afara plicurilor” lasă cheltuiala fără să consume o limită.")}>
                           <select value={transaction.allocationId || "outside"} onChange={(event) => patch(draft, { allocationId: event.target.value })}>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
+import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary, transactionShareScope } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -510,5 +510,20 @@ describe("sugestia săptămânală din fluxul real", () => {
     expect(hint.suggestions.find((item) => item.allocationId === "a1")?.suggestedAmount).toBe(200);
     expect(hint.suggestions.find((item) => item.allocationId === "a2")?.suggestedAmount).toBe(45);
     expect(data.settings.salaryPlan.allocations).toEqual(before);
+  });
+});
+
+
+describe("perspectivă personală vs comună", () => {
+  it("tratează mișcările fără câmp ca shared și păstrează personal la normalizare", () => {
+    const data = createEmptyAppData();
+    data.transactions = [
+      { id: "t1", title: "Lidl", amount: 40, kind: "expense", category: "Alimente", source: "Card", person: "Eu", date: "2026-09-10", shareScope: "personal" },
+      { id: "t2", title: "Chirie", amount: 2000, kind: "expense", category: "Casă & facturi", source: "Card", person: "Eu", date: "2026-09-10" },
+    ];
+    const normalized = normalizeAppData(data);
+    expect(transactionShareScope(normalized.transactions.find((item) => item.id === "t1"))).toBe("personal");
+    expect(transactionShareScope(normalized.transactions.find((item) => item.id === "t2"))).toBe("shared");
+    expect(normalized.transactions.find((item) => item.id === "t2")?.shareScope).toBeUndefined();
   });
 });

@@ -4,7 +4,7 @@
  */
 import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, CalendarDays, Download, Landmark, PiggyBank, TrendingDown, TrendingUp, WalletCards } from "lucide-react";
-import { allocationStatus, categoryColors, financialBalance, formatDate, isoDate, type AppData } from "@/lib/finance-data";
+import { allocationStatus, categoryColors, financialBalance, formatDate, isoDate, transactionShareScope, type AppData, type ShareScope } from "@/lib/finance-data";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import type { MainView } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
@@ -20,6 +20,7 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
   const year = new Date().getFullYear();
   const currentMonth = `${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
   const [scope, setScope] = useState("family");
+  const [shareScope, setShareScope] = useState<"all" | ShareScope>("all");
   const [focusMonth, setFocusMonth] = useState(currentMonth);
   const [exporting, setExporting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -27,7 +28,7 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
   const selectedMember = data.settings.members.find((member) => member.id === scope);
   const perspective = selectedMember?.name || (isCollaborative ? "Familie" : "Personal");
   const memberId = selectedMember?.id;
-  const scopedTransactions = useMemo(() => data.transactions.filter((item) => !memberId || item.memberId === memberId), [data.transactions, memberId]);
+  const scopedTransactions = useMemo(() => data.transactions.filter((item) => (!memberId || item.memberId === memberId) && (shareScope === "all" || transactionShareScope(item) === shareScope)), [data.transactions, memberId, shareScope]);
   const range = monthRange(focusMonth);
   const priorRange = monthRange(previousMonth(focusMonth));
   const selected = scopedTransactions.filter((item) => item.date >= range.start && item.date <= range.end);
@@ -86,6 +87,7 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
   return <div className="bf-analysis">
     <section className="bf-analysis-control"><div><p className="bf-kicker">{t("CITEȘTE LUNA")}</p><h2>{titleFor(focusMonth)}</h2><p>{t("Perspectivele și valorile se calculează din mișcările înregistrate, nu dintr-un extras bancar.")}</p></div><label>{t("Luna analizată")}<input type="month" value={focusMonth} onChange={(event) => setFocusMonth(event.target.value)} /></label></section>
     {isCollaborative && <div className="bf-analysis-scope" role="group" aria-label="Perspectiva analizei"><button className={scope === "family" ? "active" : ""} onClick={() => setScope("family")}>Familie</button>{data.settings.members.map((member) => <button key={member.id} className={scope === member.id ? "active" : ""} onClick={() => setScope(member.id)}>{member.name}</button>)}</div>}
+    <div className="bf-analysis-scope bf-share-scope" role="group" aria-label={t("Perspectivă comună sau personală")}><button className={shareScope === "all" ? "active" : ""} onClick={() => setShareScope("all")}>{t("Toate")}</button><button className={shareScope === "shared" ? "active" : ""} onClick={() => setShareScope("shared")}>{t("Comun (familie)")}</button><button className={shareScope === "personal" ? "active" : ""} onClick={() => setShareScope("personal")}>{t("Personal")}</button></div>
     <section className={`bf-analysis-snapshot ${snapshot.tone}`} aria-labelledby="bf-analysis-snapshot-title"><div className="bf-analysis-snapshot-copy"><span className="bf-analysis-snapshot-icon" aria-hidden="true">{snapshotIcon}</span><div><p className="bf-kicker">{snapshot.eyebrow}</p><h2 id="bf-analysis-snapshot-title">{snapshot.title}</h2><p>{snapshot.detail}</p></div></div><div className="bf-analysis-snapshot-stats"><span><small>{t("MIȘCĂRI")}</small><b>{selected.length}</b></span><span><small>CHELTUIELI</small><b>{money(current.expense)}</b></span><span><small>{t("DE REVIZUIT")}</small><b>{alerts.length}</b></span></div></section>
     <section className="bf-analysis-next-step" aria-labelledby="bf-analysis-next-step-title"><div><p className="bf-kicker">{t("URMĂTORUL PAS")}</p><h2 id="bf-analysis-next-step-title">{nextStep.title}</h2><p>{nextStep.detail}</p></div>{onGo && <button type="button" onClick={() => onGo(nextStep.view)}>{nextStep.label} <ArrowDownRight size={16} /></button>}</section>
     <section className="bf-analysis-month"><div className="bf-analysis-month-heading"><div><p className="bf-kicker">REZULTATUL LUNII · {perspective.toUpperCase()}</p><h2>{currentFlow < 0 ? t("Au ieșit mai mulți bani decât au intrat.") : t("Luna rămâne în echilibru.")}</h2></div><span className={currentFlow < 0 ? "negative" : ""}>{money(currentFlow)}</span></div><div className="bf-analysis-flow"><article><span className="income"><ArrowDownRight size={16} /></span><div><small>Venituri</small><b>{money(current.income)}</b><em>{change(current.income - prior.income, prior.income)}</em></div></article><article><span className="expense"><ArrowUpRight size={16} /></span><div><small>Cheltuieli</small><b>{money(current.expense)}</b><em>{change(current.expense - prior.expense, prior.expense)}</em></div></article><article><span className="balance"><WalletCards size={16} /></span><div><small>{t("Bilanț înregistrat")}</small><b>{money(balance.cashflow)}</b><em>{change(currentFlow - priorFlow, priorFlow)}</em></div></article></div></section>

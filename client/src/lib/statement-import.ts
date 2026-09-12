@@ -300,6 +300,7 @@ export function statementDrafts(
       person: member.name,
       date: row.date,
       note: options.fileName ? `Import din ${options.fileName}, rândul ${row.line}` : `Import de extras, rândul ${row.line}`,
+      shareScope: "shared",
       createdAt: now,
     };
     drafts.push({

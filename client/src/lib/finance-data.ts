@@ -6,6 +6,8 @@ import { calendarBudget } from "./calendar-budget";
 import { getLocale, t } from "./i18n";
 
 export type TransactionKind = "income" | "expense";
+/** Personal = doar al membrului; shared = bugetul comun al familiei. Implicit shared pentru compatibilitate. */
+export type ShareScope = "personal" | "shared";
 export type PaymentKind = "card" | "cash" | "meal" | "transfer";
 
 export type Transaction = {
@@ -40,6 +42,8 @@ export type Transaction = {
   originalAmount?: number;
   originalCurrency?: string;
   exchangeRate?: number;
+  /** Lipsa valorii = shared (mișcări vechi și sync fără câmp). */
+  shareScope?: ShareScope;
 };
 
 export type Debt = { id: string; name: string; remaining: number; monthly: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; updatedAt?: string };
@@ -82,6 +86,10 @@ export type FamilyMember = { id: string; name: string; color?: string; kind?: "a
  * iar cursul este introdus manual, cu data lui — aplicația nu întreabă niciun serviciu
  * extern de cursuri și nu recalculează retroactiv istoricul.
  */
+
+/** Mișcările fără câmp sunt tratate ca shared — sync-safe, fără migrare forțată. */
+export const transactionShareScope = (item: Pick<Transaction, "shareScope"> | undefined): ShareScope =>
+  item?.shareScope === "personal" ? "personal" : "shared";
 export const BASE_CURRENCY = "RON";
 export const supportedCurrencies = ["RON", "EUR", "USD", "GBP", "CHF", "MDL", "HUF"];
 /** `rate` este câți lei face o unitate din valuta respectivă. */
@@ -103,7 +111,7 @@ export type SalaryPlan = { periodStart: string; nextPayday: string; /** Prima zi
 /** Preferință locală pentru completarea rapidă; nu este o mișcare financiară până la confirmare. */
 export type QuickTransactionTemplate = { id: string; label: string; kind: TransactionKind; category: string; amount: number; memberId?: string; sourceId?: string; updatedAt?: string };
 export type ArchivedQuickTransactionTemplate = QuickTransactionTemplate & { archivedAt: string };
-export type SavedJournalFilter = { id: string; label: string; kind: "all" | TransactionKind; memberId?: string; sourceId?: string; query?: string; fromDate?: string; toDate?: string; updatedAt: string };
+export type SavedJournalFilter = { id: string; label: string; kind: "all" | TransactionKind; memberId?: string; sourceId?: string; shareScope?: "all" | ShareScope; query?: string; fromDate?: string; toDate?: string; updatedAt: string };
 export type FamilySettings = { familyName: string; memberName: string; familyCode: string; members: FamilyMember[]; paymentSources: PaymentSource[]; customCategories: string[]; quickTemplates: QuickTransactionTemplate[]; archivedQuickTemplates: ArchivedQuickTransactionTemplate[]; savedJournalFilters: SavedJournalFilter[]; salaryCycleTemplates: SalaryCycleTemplate[]; exchangeRates: ExchangeRate[]; seenWeeklyPlanTranches: string[]; /** Cheile produselor alese pentru coșul etalon; preferință locală, calculată din bonuri. */ basketProducts: string[]; /** Telefoane văzute în camera de sync (în pachetul criptat). */ syncDevices: SyncDevice[]; salaryPlan: SalaryPlan };
 export type DeletedRecord = { entity: "transactions" | "debts" | "savings" | "receipts" | "recurring"; id: string; deletedAt: string };
 /** De unde vine o mișcare propusă. Determină explicația arătată lângă ea în centrul de revizuire. */
@@ -271,7 +279,8 @@ export const normalizeAppData = (input: unknown): AppData => {
     const member = members.find((value) => value.id === item.memberId) || memberByName.get((item.person || "").toLowerCase());
     const originalCurrency = typeof item.originalCurrency === "string" && item.originalCurrency.trim().toUpperCase() !== BASE_CURRENCY ? item.originalCurrency.trim().toUpperCase().slice(0, 3) : undefined;
     const originalAmount = originalCurrency ? Math.max(0, parseRomanianAmount(item.originalAmount ?? 0)) || undefined : undefined;
-    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || new Date().toISOString(), originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined };
+    const shareScope: ShareScope | undefined = item.shareScope === "personal" ? "personal" : item.shareScope === "shared" ? "shared" : undefined;
+    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || new Date().toISOString(), originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope };
   };
   const transactions = realRows<Partial<Transaction>>(old.transactions).map((entry, index) => normalizeTransaction(entry, index, "legacy-tx"));
   const transactionIds = new Set(transactions.map((item) => item.id));
@@ -298,7 +307,7 @@ export const normalizeAppData = (input: unknown): AppData => {
   const normalizeQuickTemplate = (item: Partial<QuickTransactionTemplate>, index: number) => ({ id: item.id || `quick-template-${index}`, label: String(item.label || item.category || "Șablon rapid").trim(), kind: item.kind === "income" ? "income" as const : "expense" as const, category: item.kind === "income" ? "Venit" : String(item.category || "Alimente"), amount: Math.max(0, parseRomanianAmount(item.amount ?? 0)), memberId: members.some((member) => member.id === item.memberId) ? item.memberId : undefined, sourceId: sources.some((source) => source.id === item.sourceId) ? item.sourceId : undefined, updatedAt: item.updatedAt || undefined });
   const quickTemplates = Array.isArray(oldSettings.quickTemplates) ? oldSettings.quickTemplates.map(normalizeQuickTemplate).filter((item) => item.label).slice(0, 12) : [];
   const archivedQuickTemplates = Array.isArray(oldSettings.archivedQuickTemplates) ? oldSettings.archivedQuickTemplates.map((item, index) => ({ ...normalizeQuickTemplate(item, index), archivedAt: /^\d{4}-\d{2}-\d{2}/.test(String(item.archivedAt || "")) ? String(item.archivedAt) : new Date().toISOString() })).filter((item) => item.label).slice(0, 60) : [];
-  const savedJournalFilters = (Array.isArray(oldSettings.savedJournalFilters) ? oldSettings.savedJournalFilters.map((item, index) => ({ id: item.id || `saved-filter-${index}`, label: String(item.label || "Filtru salvat").trim(), kind: item.kind === "income" || item.kind === "expense" ? item.kind : "all" as const, memberId: members.some((member) => member.id === item.memberId) ? item.memberId : undefined, sourceId: sources.some((source) => source.id === item.sourceId) ? item.sourceId : undefined, query: String(item.query || "").trim() || undefined, fromDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.fromDate || "")) ? String(item.fromDate) : undefined, toDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.toDate || "")) ? String(item.toDate) : undefined, updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : new Date().toISOString() })).filter((item) => item.label && (!item.fromDate || !item.toDate || item.fromDate <= item.toDate)) : []).reduce<typeof fallback.settings.savedJournalFilters>((all, item) => all.some((saved) => saved.id === item.id || saved.label.toLocaleLowerCase("ro-RO") === item.label.toLocaleLowerCase("ro-RO")) ? all : [...all, item], []).slice(0, 8);
+  const savedJournalFilters = (Array.isArray(oldSettings.savedJournalFilters) ? oldSettings.savedJournalFilters.map((item, index) => ({ id: item.id || `saved-filter-${index}`, label: String(item.label || "Filtru salvat").trim(), kind: item.kind === "income" || item.kind === "expense" ? item.kind : "all" as const, memberId: members.some((member) => member.id === item.memberId) ? item.memberId : undefined, sourceId: sources.some((source) => source.id === item.sourceId) ? item.sourceId : undefined, shareScope: (item.shareScope === "personal" || item.shareScope === "shared" || item.shareScope === "all" ? item.shareScope : undefined) as SavedJournalFilter["shareScope"], query: String(item.query || "").trim() || undefined, fromDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.fromDate || "")) ? String(item.fromDate) : undefined, toDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.toDate || "")) ? String(item.toDate) : undefined, updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : new Date().toISOString() })).filter((item) => item.label && (!item.fromDate || !item.toDate || item.fromDate <= item.toDate)) : []).reduce<typeof fallback.settings.savedJournalFilters>((all, item) => all.some((saved) => saved.id === item.id || saved.label.toLocaleLowerCase("ro-RO") === item.label.toLocaleLowerCase("ro-RO")) ? all : [...all, item], []).slice(0, 8);
   const salaryCycleTemplates = (Array.isArray(oldSettings.salaryCycleTemplates) ? oldSettings.salaryCycleTemplates.map((item, index) => ({ id: String(item.id || `salary-cycle-${index}`), label: String(item.label || "Ciclu salarial").trim().slice(0, 42), amount: Math.max(0, parseRomanianAmount(item.amount)), durationDays: Math.min(93, Math.max(7, Math.round(parseRomanianAmount(item.durationDays || 28)))), updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.updatedAt || "")) ? String(item.updatedAt) : undefined })).filter((item) => item.label && item.amount > 0) : []).reduce<typeof fallback.settings.salaryCycleTemplates>((all, item) => all.some((saved) => saved.id === item.id || saved.label.toLocaleLowerCase("ro-RO") === item.label.toLocaleLowerCase("ro-RO")) ? all : [...all, item], []).slice(0, 12);
   const exchangeRates = (Array.isArray(oldSettings.exchangeRates) ? oldSettings.exchangeRates.map((item) => ({
     currency: String(item.currency || "").trim().toUpperCase().slice(0, 3),
