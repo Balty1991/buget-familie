@@ -47,7 +47,7 @@ export function AllocationHistoryChart({ entries, allocationFilter }: { entries:
   }, [allocationFilter, entries]);
   const [tip, setTip] = useState<{ label: string; month: string; value: number } | null>(null);
   if (!chart) return <div className="bf-allocation-chart-empty"><TrendingUp size={20} /><strong>{t("Graficul va apărea după prima repartizare")}</strong><p>{t("Înregistrările noi vor fi grupate lunar și comparate pe plicuri.")}</p></div>;
-  const width = 720; const height = 250; const left = 62; const right = 18; const top = 24; const bottom = 38; const plotWidth = width - left - right; const plotHeight = height - top - bottom; const zeroY = top + plotHeight / 2;
+  const width = 720; const height = 268; const left = 72; const right = 20; const top = 28; const bottom = 44; const plotWidth = width - left - right; const plotHeight = height - top - bottom; const zeroY = top + plotHeight / 2;
   const x = (index: number) => left + (index / Math.max(1, chart.months.length - 1)) * plotWidth;
   const y = (value: number) => zeroY - (value / chart.maxAbs) * (plotHeight / 2 - 8);
   const colors = ["var(--cf-primary-strong)", "var(--cf-warning)", "var(--cf-danger)", "var(--cf-info)", "var(--cf-muted)"];
@@ -105,8 +105,11 @@ export function AllocationHistoryChart({ entries, allocationFilter }: { entries:
         </svg>
       </div>
       {tip && <ChartTip><b>{tip.label}</b><span>{monthLabel(tip.month)}</span><span>{leiLabel(tip.value)}</span></ChartTip>}
-      <div className="bf-allocation-chart-legend">
-        {chart.visibleLabels.map((label, index) => <span key={label}><i style={{ backgroundColor: colors[index] }} />{label}</span>)}
+      <div className="bf-allocation-chart-legend" aria-label={t("Legendă grafic")}>
+        {chart.visibleLabels.map((label, index) => {
+          const short = label.length > 22 ? `${label.slice(0, 20)}…` : label;
+          return <span key={label} title={label}><i style={{ backgroundColor: colors[index] }} />{short}</span>;
+        })}
         {chart.omitted > 0 && <small>+{chart.omitted} alte categorii în total</small>}
       </div>
       <p className="bf-allocation-chart-footnote">{t("Total net pe cele 12 luni:")} <b>{leiLabel(chart.total)}</b>. Graficul folosește doar repartizările care au fost jurnalizate; nu reconstruiește modificări vechi care nu aveau istoric.</p>

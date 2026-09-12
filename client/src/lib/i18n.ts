@@ -1649,6 +1649,7 @@ const en: Record<string, string> = {
   "PROGRES REPARTIZARE": "ALLOCATION PROGRESS",
   "Totul are un loc.": "Everything has a place.",
   "Deschide simularea": "Open the simulation",
+  "Legendă grafic": "Chart legend",
   "Total simulat": "Simulated total",
   "Interpretare": "Reading",
   "Peste disponibil": "Over available",

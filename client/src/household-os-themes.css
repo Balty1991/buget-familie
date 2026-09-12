@@ -165,13 +165,24 @@ html.theme-aurora {
 
 .theme-snow .bf-app,
 .theme-sand .bf-app,
-.theme-sage .bf-app {
+.theme-sage .bf-app,
+.theme-navy .bf-app,
+.theme-aurora .bf-app,
+.theme-cyber .bf-app,
+.theme-dark .bf-app,
+.theme-forest .bf-app,
+.theme-graphite .bf-app {
   background: var(--cf-bg) !important;
+  color: var(--cf-ink) !important;
 }
 .theme-snow .bf-app::before,
 .theme-sand .bf-app::before,
 .theme-sage .bf-app::before,
 .theme-navy .bf-app::before,
+.theme-aurora .bf-app::before,
+.theme-cyber .bf-app::before,
+.theme-dark .bf-app::before,
+.theme-forest .bf-app::before,
 .theme-graphite .bf-app::before { opacity: .08; }
 
 .bf-theme-option.snow .bf-theme-swatch { background: linear-gradient(135deg, #ffffff 0 48%, #0e7a5c 49% 72%, #121614 73%); }
