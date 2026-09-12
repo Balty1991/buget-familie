@@ -18,7 +18,7 @@ import { MovementsJournal } from "@/components/MovementsJournal";
 import { scheduleFinancialReminders } from "@/lib/local-notifications";
 import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { todayBrief, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
+import { householdActivity, todayBrief, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import {
   DeferBelowFold,
   WhatsNewSheet,
@@ -40,6 +40,7 @@ const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) =>
 const QuickEntryPanel = lazy(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel })));
 const FirstRunSetup = lazy(() => import("@/components/FirstRunSetup").then((module) => ({ default: module.FirstRunSetup })));
 const WeeklySummaryPanel = lazy(() => import("@/components/WeeklySummaryPanel").then((module) => ({ default: module.WeeklySummaryPanel })));
+const SafeSpendSheet = lazy(() => import("@/components/SafeSpendSheet").then((module) => ({ default: module.SafeSpendSheet })));
 const AllocationHistoryChart = lazy(() => import("@/components/AllocationHistoryChart").then((module) => ({ default: module.AllocationHistoryChart })));
 const FinancialCalendarView = lazy(() => import("@/components/FinancialCalendarView").then((module) => ({ default: module.FinancialCalendarView })));
 const loadSecondary = () => import("@/pages/home-secondary");
@@ -143,6 +144,7 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [shownTrancheKey, setShownTrancheKey] = useState("");
   const [openHint, setOpenHint] = useState(false);
+  const [safeSheetOpen, setSafeSheetOpen] = useState(false);
   const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) })), [data]);
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
@@ -295,8 +297,11 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
         )}
         {!fresh && (
           <>
-            <button type="button" className="os-explainer" onClick={() => setOpenHint((value) => !value)}>
-              <Info size={16} aria-hidden="true" /> {t("Cum se citește?")} <span>{openHint ? "−" : "+"}</span>
+            <button type="button" className="os-explainer" onClick={() => setSafeSheetOpen(true)}>
+              <Info size={16} aria-hidden="true" /> {t("Cum se citește?")}
+            </button>
+            <button type="button" className="os-explainer secondary" onClick={() => setOpenHint((value) => !value)}>
+              {t("Surse pe scurt")} <span>{openHint ? "−" : "+"}</span>
             </button>
             {openHint ? (
               <div className="os-explainer-body bf-today-read-more">
@@ -346,7 +351,7 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
           {rhythm.days.map((row) => (
             <div key={row.day} className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}>
               <span>{weekdayShort()[row.weekday]}</span>
-              <b>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}</b>
+              <b aria-label={`${Math.round(row.left)} lei`}>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}<small> lei</small></b>
               <span className="bf-os-bar" aria-hidden="true"><i style={{ height: `${row.fill}%` }} /></span>
             </div>
           ))}
@@ -378,6 +383,23 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
             </div>
             <button onClick={() => onGo("journal")}>{t("Toate mișcările")} <ChevronRight size={15} /></button>
           </div>
+
+        {data.settings.members.length > 1 && (() => {
+          const activity = householdActivity(data);
+          const sharers = activity.members.filter((item) => item.expense > 0 || item.income > 0);
+          if (!sharers.length) return null;
+          return (
+            <ul className="bf-today-family-share" aria-label={t("Cine a mișcat banii luna asta")}>
+              {sharers.map((member) => (
+                <li key={member.memberId}>
+                  <b>{member.name}</b>
+                  <i><em style={{ width: `${Math.round(member.share * 100)}%` }} /></i>
+                  <span>{Math.round(member.share * 100)}% · −{money(member.expense)}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        })()}
           {lastMoves.length ? (
             <div className="bf-today-activity-list">
               {lastMoves.map((item) => (
@@ -416,6 +438,12 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
           </section>
         </DeferBelowFold>
       )}
+      {safeSheetOpen && (
+        <Suspense fallback={null}>
+          <SafeSpendSheet data={data} onClose={() => setSafeSheetOpen(false)} onGoPlan={() => { setSafeSheetOpen(false); onGo("plan"); }} />
+        </Suspense>
+      )}
+
     </div>
   );
 }

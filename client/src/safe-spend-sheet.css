@@ -1,0 +1,68 @@
+.bf-safe-spend-backdrop { z-index: 90; align-items: end; }
+.bf-safe-spend-sheet {
+  width: min(520px, 100%);
+  max-height: min(88dvh, 720px);
+  overflow: auto;
+  margin: 0 auto;
+  padding: 18px 16px 22px;
+  border-radius: 22px 22px 0 0;
+  background: var(--cf-surface, #fffefa);
+  color: var(--cf-ink, #172d28);
+  box-shadow: 0 -18px 40px color-mix(in srgb, var(--cf-ink, #10231f) 22%, transparent);
+}
+.bf-safe-spend-sheet header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.bf-safe-spend-sheet h2 {
+  margin: 0;
+  font: 800 clamp(22px, 5vw, 28px)/1.05 "Fraunces", Georgia, serif;
+  letter-spacing: -.04em;
+}
+.bf-safe-spend-sheet h2 em { color: var(--cf-primary-strong, #185849); font-style: italic; }
+.bf-safe-spend-payday {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--cf-line, #e2dfd6);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cf-surface-alt, #edf3ec), var(--cf-surface, #fff) 55%);
+}
+.bf-safe-spend-payday > div:first-of-type { display: grid; gap: 2px; }
+.bf-safe-spend-payday b { font-size: 14px; }
+.bf-safe-spend-payday small { color: var(--cf-muted, #6c7f77); font-size: 11px; }
+.bf-safe-spend-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.bf-safe-spend-steps li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--cf-line, #e2dfd6);
+  border-radius: 12px;
+  background: var(--cf-surface, #fffefa);
+}
+.bf-safe-spend-steps span { font: 800 11px/1.2 "IBM Plex Sans", sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--cf-muted, #6c7f77); }
+.bf-safe-spend-steps strong { font: 700 15px/1 "IBM Plex Serif", Georgia, serif; }
+.bf-safe-spend-steps strong.neg { color: var(--cf-danger, #a44e3e); }
+.bf-safe-spend-steps small { grid-column: 1 / -1; color: var(--cf-muted, #6c7f77); font-size: 11px; line-height: 1.4; }
+.bf-safe-spend-summary { margin: 14px 0 8px; font-size: 13px; line-height: 1.55; }
+.bf-safe-spend-sheet footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.bf-safe-spend-sheet footer button { flex: 1; min-height: 46px; }
+@media (min-width: 640px) {
+  .bf-safe-spend-backdrop { align-items: center; }
+  .bf-safe-spend-sheet { border-radius: 20px; }
+}
