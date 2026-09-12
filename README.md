@@ -23,7 +23,7 @@
 | Asistent de decizie | Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit, întrebări rapide și calcule directe, de exemplu buget săptămânal împărțit pe zi. Se încarcă numai când este deschis. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
-| Aspect și control | Selector persistent cu Porcelain Studio (zi editorială), Aurora Moss (seară organică), Ultraviolet Grid (noapte digitală) și Ember Ledger (cald tactil). Include previzualizare mare, program local evaluat cât aplicația rămâne deschisă și contrast extra-ridicat. Fiecare temă schimbă fundalul, geometria suprafețelor, accentele și navigația, iar semnificația veniturilor, cheltuielilor și alertelor rămâne aceeași. Include monogramă B/F cu relief și favicon aferent, resetare controlată și export/import de rezervă. |
+| Aspect și control | Selector persistent cu cele 5 teme slim: Alb / Atelier Platinum, Întunecat, Aurora, Navy și Cyber. Include previzualizare mare, program local evaluat cât aplicația rămâne deschisă și contrast extra-ridicat. Fiecare temă schimbă fundalul, geometria suprafețelor, accentele și navigația, iar semnificația veniturilor, cheltuielilor și alertelor rămâne aceeași. Include monogramă B/F cu relief și favicon aferent, resetare controlată și export/import de rezervă. |
 | Familie conectată | Pachet AES-GCM criptat local, sincronizat în timp real printr-un Firestore Firebase comun, fără cont sau token per utilizator — doar o parolă de familie identică pe fiecare telefon. Fiecare actualizare primită este reunită automat prin ID și marcaj de actualizare. |
 
 > Aplicația începe fără date demo. Datele sunt locale până când alegi explicit exportul sau sincronizarea.
@@ -55,7 +55,7 @@ Componentele de Plan, Analiză, scadențe, OCR, asistent și captura rapidă sun
 
 ## Teme memorate
 
-Butonul de paletă din antet deschide alegerea temei și păstrează opțiunea local pe dispozitiv. **Porcelain Studio** combină porțelanul rece cu grilă de cobalt; **Aurora Moss** folosește reflexe organice în verde; **Ultraviolet Grid** combină indigo, violet și cyan, iar **Ember Ledger** folosește cărbune fumuriu și cupru ars. Textul, controalele și graficele sunt proiectate pentru contrast, iar coralul rămâne rezervat situațiilor de atenție.
+Butonul de paletă din antet deschide alegerea temei și păstrează opțiunea local pe dispozitiv. **Alb / Atelier Platinum** e hârtie caldă cu pin; **Întunecat** e grafit pe OLED; **Aurora**, **Navy** și **Cyber** sunt temele de noapte cu accent pe `--cf-on-primary` pentru etichete pe butoane filled. Textul, controalele și graficele sunt proiectate pentru contrast, iar coralul rămâne rezervat situațiilor de atenție.
 
 ## Familie conectată și sincronizare Firebase în timp real
 
