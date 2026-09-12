@@ -152,7 +152,7 @@ function namedCategory(folded: string, data: AppData): string | undefined {
 /** Categoria ghicită dintr-un indiciu („benzină” → Transport). */
 function guessedCategory(folded: string, data: AppData): string | undefined {
   const all = [...expenseCategories, ...data.settings.customCategories];
-  const guessed = guessCategoryFromText(folded);
+  const guessed = guessCategoryFromText(folded, all, data.settings.merchantRules || []);
   return guessed && all.includes(guessed) ? guessed : undefined;
 }
 

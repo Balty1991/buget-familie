@@ -10,9 +10,12 @@
 import {
   BASE_CURRENCY,
   exchangeRateFor,
+  expenseCategories,
   foldRomanian,
+  guessAllocationFromText,
   guessCategoryFromText,
   isKnownTransaction,
+  matchingAllocationsForExpense,
   newId,
   toBaseAmount,
   type AppData,
@@ -268,7 +271,7 @@ export function statementDrafts(
   const source = data.settings.paymentSources.find((item) => item.id === options.sourceId);
   const member = data.settings.members.find((item) => item.id === options.memberId);
   if (!source || !member) return { drafts: [], duplicates: 0 };
-  const categories = [...data.settings.customCategories];
+  const categories = [...expenseCategories, ...data.settings.customCategories];
   const now = new Date().toISOString();
   // Un extras al unui cont valutar are sumele în acea valută; registrul le păstrează în lei.
   const foreign = source.currency && source.currency !== BASE_CURRENCY ? source.currency : undefined;
@@ -284,7 +287,14 @@ export function statementDrafts(
     const alreadyStaged = staged.some((item) => item.date === candidate.date && item.kind === candidate.kind && Math.abs(item.amount - candidate.amount) < 0.005);
     if (alreadyStaged || isKnownTransaction(data, candidate)) { duplicates += 1; continue; }
     staged.push(candidate);
-    const category = row.kind === "income" ? "Venit" : guessCategoryFromText(row.description, categories.length ? [...categories] : undefined) || "Altele";
+    const category = row.kind === "income"
+      ? "Venit"
+      : guessCategoryFromText(row.description, categories, data.settings.merchantRules || []) || "Altele";
+    const allocationId = row.kind === "expense"
+      ? (guessAllocationFromText(data, row.description)
+        || matchingAllocationsForExpense(data, { category, memberId: member.id, sourceId: source.id })[0]?.id
+        || "outside")
+      : undefined;
     const transaction: Transaction = {
       id: newId("import-tx"),
       title: row.description.slice(0, 80),
@@ -301,6 +311,7 @@ export function statementDrafts(
       date: row.date,
       note: options.fileName ? `Import din ${options.fileName}, rândul ${row.line}` : `Import de extras, rândul ${row.line}`,
       shareScope: "shared",
+      allocationId,
       createdAt: now,
     };
     drafts.push({

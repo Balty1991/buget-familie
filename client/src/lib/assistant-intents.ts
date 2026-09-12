@@ -9,7 +9,7 @@
  * Modulul este pur și nu scrie nimic: întoarce propuneri pe care interfața le arată
  * spre confirmare. Nicio mișcare nu intră în registru fără o apăsare explicită.
  */
-import { expenseCategories, guessCategoryFromText, isoDate, isoToday, parseRomanianAmount } from "./finance-data";
+import { expenseCategories, guessCategoryFromText, isoDate, isoToday, parseRomanianAmount, type MerchantRule } from "./finance-data";
 
 /**
  * Normalizare care păstrează lungimea textului. `foldRomanian` descompune în NFD și
@@ -256,7 +256,7 @@ function splitByAmount(segment: string): string[] {
   return withAmount.length >= 2 ? withAmount : [segment];
 }
 
-function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], markerLength: number): AssistantIntent | undefined {
+function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], markerLength: number, rules: MerchantRule[] = []): AssistantIntent | undefined {
   if (!amounts.length) return undefined;
   const folded = fold(masked);
   /**
@@ -276,7 +276,7 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
   // Spus ca durată, ritmul săptămânal se calculează: 1600 pe 4 săptămâni = 400.
   const perWeek = weekly && weekly !== total ? weekly.value : weeks >= 2 && weeks <= 12 ? Math.round((total.value / weeks) * 100) / 100 : undefined;
   const label = titleCase(cleanLabel(segment.slice(markerLength)));
-  const category = guessCategoryFromText(label || segment);
+  const category = guessCategoryFromText(label || segment, expenseCategories, rules);
   return {
     kind: "envelope",
     label: label || category || "Plic nou",
@@ -298,26 +298,26 @@ function parsePayday(dates: DateHit[]): AssistantIntent | undefined {
   return { kind: "payday", date: hit.start, flexDays: flex };
 }
 
-function oneExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[]): AssistantIntent | undefined {
+function oneExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[], rules: MerchantRule[] = []): AssistantIntent | undefined {
   const amount = amounts[0];
   if (!amount) return undefined;
   const times = repeatFactor(segment);
-  const category = guessCategoryFromText(segment, categories) || "Altele";
+  const category = guessCategoryFromText(segment, categories, rules) || "Altele";
   const label = cleanLabel(segment.replace(/\b(am cheltuit|am dat|am platit|am luat|cheltuiala|plata de)\b/gi, ""));
   return { kind: "expense", amount: Math.round(amount.value * times * 100) / 100, category, title: titleCase(label) || category, date: dates[0]?.start || asOf };
 }
 
-function parseExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[]): AssistantIntent[] {
+function parseExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[], rules: MerchantRule[] = []): AssistantIntent[] {
   const parts = splitByAmount(segment);
   if (parts.length < 2) {
-    const single = oneExpense(segment, amounts, dates, asOf, categories);
+    const single = oneExpense(segment, amounts, dates, asOf, categories, rules);
     return single ? [single] : [];
   }
   return parts
     .map((part) => {
       const { hits, masked } = extractDates(part, asOf);
       // O dată spusă o singură dată se aplică întregii fraze: „ieri cafea 12 și taxi 20”.
-      return oneExpense(part, extractAmounts(masked), hits.length ? hits : dates, asOf, categories);
+      return oneExpense(part, extractAmounts(masked), hits.length ? hits : dates, asOf, categories, rules);
     })
     .filter((item): item is AssistantIntent => Boolean(item));
 }
@@ -354,7 +354,7 @@ function parseDebt(segment: string, masked: string, amounts: AmountHit[]): Assis
   return { kind: "debt", name: name || "Datorie", remaining: remaining.value, monthly: monthly && monthly !== remaining ? monthly.value : undefined };
 }
 
-function parseRecurring(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[]): AssistantIntent | undefined {
+function parseRecurring(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[], rules: MerchantRule[] = []): AssistantIntent | undefined {
   const amount = amounts[0];
   if (!amount) return undefined;
   /**
@@ -367,7 +367,7 @@ function parseRecurring(segment: string, masked: string, amounts: AmountHit[], d
   const dueDay = dates[0] ? Number(dates[0].start.slice(8, 10)) : dayMatch ? Math.min(31, Math.max(1, Number(dayMatch[1]))) : saysMonthly ? 1 : 0;
   if (!dueDay) return undefined;
   const name = titleCase(cleanLabel(segment.replace(/\b(abonament(ul)?|scadenta|factura)\b/gi, ""))) || "Plată recurentă";
-  return { kind: "recurring", name, amount: amount.value, dueDay, category: guessCategoryFromText(segment) || "Casă & facturi" };
+  return { kind: "recurring", name, amount: amount.value, dueDay, category: guessCategoryFromText(segment, expenseCategories, rules) || "Casă & facturi" };
 }
 
 function parseGoal(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[]): AssistantIntent | undefined {
@@ -385,11 +385,12 @@ function parseGoal(segment: string, masked: string, amounts: AmountHit[], dates:
  * Citește un mesaj și întoarce toate intențiile găsite, în ordinea din text.
  * Un mesaj poate conține mai multe: „fă-mi plic X … Următorul salariu pe …”.
  */
-export function parseAssistantMessage(raw: string, options: { asOf?: string; categories?: string[] } = {}): ParsedIntent[] {
+export function parseAssistantMessage(raw: string, options: { asOf?: string; categories?: string[]; merchantRules?: MerchantRule[] } = {}): ParsedIntent[] {
   const text = raw.trim();
   if (!text) return [];
   const asOf = options.asOf || isoToday();
   const categories = options.categories || expenseCategories;
+  const rules = options.merchantRules || [];
   const folded = fold(text);
   const markers = findMarkers(folded, categories);
   if (!markers.length) return [];
@@ -412,12 +413,12 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
     const dates = own.length ? own : messageDates;
     const amounts = extractAmounts(masked);
     const found =
-      marker.kind === "envelope" ? parseEnvelope(segment, masked, amounts, marker.length)
+      marker.kind === "envelope" ? parseEnvelope(segment, masked, amounts, marker.length, rules)
       : marker.kind === "payday" ? parsePayday(dates)
-      : marker.kind === "expense" ? parseExpense(segment, amounts, dates, asOf, categories)
+      : marker.kind === "expense" ? parseExpense(segment, amounts, dates, asOf, categories, rules)
       : marker.kind === "income" ? parseIncome(segment, amounts, dates, asOf)
       : marker.kind === "debt" ? parseDebt(segment, masked, amounts)
-      : marker.kind === "recurring" ? parseRecurring(segment, masked, amounts, dates)
+      : marker.kind === "recurring" ? parseRecurring(segment, masked, amounts, dates, rules)
       : marker.kind === "goal" ? parseGoal(segment, masked, amounts, dates)
       : undefined;
     // Un singur marcator poate da mai multe intrări: „50 la Lidl și 30 la farmacie”.

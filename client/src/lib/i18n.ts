@@ -1612,6 +1612,17 @@ const en: Record<string, string> = {
   "Produs": "Product",
   "Categorie bon": "Receipt category",
   "Fotografiază": "Take photo",
+  "REGULI COMERCIANT": "MERCHANT RULES",
+  "Dacă titlul conține…": "If the title contains…",
+  "Propune categorie sau plic la import, OCR și asistent. Nu salvează nimic fără confirmarea ta.": "Proposes a category or envelope for import, OCR and the assistant. Never saves without your confirmation.",
+  "Text în titlu": "Text in title",
+  "ex. Glovo, ENEL, Starbucks": "e.g. Glovo, ENEL, Starbucks",
+  "Categorie propusă": "Proposed category",
+  "Plic propus (opțional)": "Proposed envelope (optional)",
+  "Fără plic preferat": "No preferred envelope",
+  "Șterge regula {match}": "Delete rule {match}",
+  "fără categorie": "no category",
+  "Nicio regulă încă. Exemplu: „detergent” → Casă & facturi.": "No rules yet. Example: “detergent” → Home & bills.",
   "Azi": "Today"
 };
 

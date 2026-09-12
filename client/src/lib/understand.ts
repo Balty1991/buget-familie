@@ -473,6 +473,7 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
   const intents = parseAssistantMessage(raw, {
     asOf: ctx.asOf || isoToday(),
     categories: ctx.categories || [...expenseCategories, ...data.settings.customCategories],
+    merchantRules: data.settings.merchantRules || [],
   });
   if (intents.length) {
     readings.push({

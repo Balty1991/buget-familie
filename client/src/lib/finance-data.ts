@@ -839,10 +839,28 @@ const categoryAliases: Array<[RegExp, string]> = [
   [/\b(rata|credit|imprumut|leasing)\b/, "Rate produse"],
 ];
 
+/** Prima regulă locală al cărei text apare în titlu/descriere (fără autosave). */
+export const matchMerchantRule = (raw: string, rules: MerchantRule[] = []) => {
+  const folded = foldRomanian(raw);
+  return rules.find((rule) => {
+    const needle = foldRomanian(rule.match || "");
+    return needle.length >= 2 && folded.includes(needle);
+  });
+};
+
 /** Propune o categorie dintr-o descriere liberă. Rămâne o propunere: nimic nu se salvează fără confirmare. */
-export const guessCategoryFromText = (raw: string, categories: string[] = expenseCategories) => {
+export const guessCategoryFromText = (raw: string, categories: string[] = expenseCategories, rules: MerchantRule[] = []) => {
+  const fromRule = matchMerchantRule(raw, rules)?.category;
+  if (fromRule && (categories.includes(fromRule) || expenseCategories.includes(fromRule))) return fromRule;
   const folded = foldRomanian(raw);
   return categories.find((item) => folded.includes(foldRomanian(item))) || categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
+};
+
+/** Propune plic din reguli locale, dacă există și e încă în plan. */
+export const guessAllocationFromText = (data: AppData, raw: string) => {
+  const rule = matchMerchantRule(raw, data.settings.merchantRules || []);
+  if (!rule?.allocationId) return undefined;
+  return data.settings.salaryPlan.allocations.some((item) => item.id === rule.allocationId) ? rule.allocationId : undefined;
 };
 
 /**
