@@ -1018,7 +1018,7 @@ const en: Record<string, string> = {
   "RITMUL PLICURILOR": "ENVELOPE PACE",
   "Vezi istoricul": "View history",
   "Deschide ghidul": "Open the guide",
-  "PE ROMÂNEȘTE": "IN PLAIN ROMANIAN",
+  "PE SCURT": "IN PLAIN TERMS",
   "Cuvinte scurte, fără confuzie": "Short words, without confusion",
   "Plic": "Envelope",
   "Nu e un cont bancar. E o limită pe care ți-o pui singur pentru o categorie (mâncare, transport). Banii stau în surse; plicul spune cât poți cheltui din ele pe acel scop.": "It is not a bank account. It is a limit you set yourself for a category (food, transport). Money stays in sources; the envelope says how much you can spend from them on that purpose.",

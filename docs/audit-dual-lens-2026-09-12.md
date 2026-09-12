@@ -83,7 +83,7 @@ Pentru Play, blocajul nu e Billing. Este: **claritatea soldului**, **captura în
 9. Explicație scurtă: plic ≠ cont; reper ≠ sold.
 
 **P2**
-10. Șabloane pe widget; glosar „Pe românește” din strategie.
+10. Șabloane pe widget; glosar „Pe scurt” din strategie.
 11. EN pe Plan Studio, ghid, rapoarte (todo deja le marchează).
 12. README încă vorbește de Porcelain Studio / 4 teme — încredere de magazin.
 

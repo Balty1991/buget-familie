@@ -742,3 +742,542 @@ html.theme-dark .bf-plan-workspace > .bf-plan-studio-header {
     radial-gradient(120% 90% at 100% -10%, rgba(197, 203, 212, .16), transparent 55%),
     linear-gradient(155deg, rgba(31, 36, 43, .96), rgba(22, 25, 30, .88)) !important;
 }
+
+/* ============================================================
+ * WOW+ 2026-09-12 — cinematic Plan/shell depth (no new themes).
+ * Mobile-first; contrast on white/dark/aurora/navy/cyber.
+ * Simple mode untouched structurally; motion respects reduce.
+ * ============================================================ */
+
+@keyframes bf-hero-shimmer {
+  0% { transform: translate3d(-12%, -8%, 0) rotate(0deg); opacity: .55; }
+  50% { transform: translate3d(8%, 4%, 0) rotate(8deg); opacity: .85; }
+  100% { transform: translate3d(-12%, -8%, 0) rotate(0deg); opacity: .55; }
+}
+
+@keyframes bf-dock-pulse {
+  0%, 100% { opacity: .55; }
+  50% { opacity: .95; }
+}
+
+/* ---- App shell: soft atmospheric wash behind content ---- */
+.os-shell.bf-app {
+  position: relative;
+  isolation: isolate;
+}
+
+.os-shell.bf-app::before {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: -20% -10% auto -10% !important;
+  height: min(52vh, 420px) !important;
+  width: auto !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(55% 70% at 78% 18%, color-mix(in srgb, var(--cf-primary, var(--os-mint)) 22%, transparent), transparent 70%),
+    radial-gradient(45% 60% at 12% 0%, color-mix(in srgb, var(--cf-info, #6aa8ff) 14%, transparent), transparent 65%) !important;
+  opacity: .9 !important;
+}
+
+.os-shell.bf-app > * {
+  position: relative;
+  z-index: 1;
+}
+
+html.theme-white .os-shell.bf-app::before {
+  background:
+    radial-gradient(55% 70% at 82% 12%, color-mix(in srgb, #0e7a5c 14%, transparent), transparent 70%),
+    radial-gradient(40% 55% at 8% 8%, color-mix(in srgb, #2f6fed 8%, transparent), transparent 65%);
+  opacity: .7;
+}
+
+html.theme-aurora .os-shell.bf-app::before {
+  background:
+    radial-gradient(55% 70% at 80% 10%, rgba(124, 91, 255, .28), transparent 70%),
+    radial-gradient(40% 55% at 10% 5%, rgba(101, 211, 166, .16), transparent 65%);
+}
+
+html.theme-navy .os-shell.bf-app::before {
+  background:
+    radial-gradient(55% 70% at 80% 10%, rgba(212, 176, 106, .2), transparent 70%),
+    radial-gradient(40% 55% at 10% 5%, rgba(139, 180, 232, .14), transparent 65%);
+}
+
+html.theme-cyber .os-shell.bf-app::before {
+  background:
+    radial-gradient(55% 70% at 80% 10%, rgba(124, 255, 196, .18), transparent 70%),
+    radial-gradient(40% 55% at 10% 5%, rgba(80, 220, 200, .1), transparent 65%);
+}
+
+html.theme-dark .os-shell.bf-app::before {
+  background:
+    radial-gradient(55% 70% at 80% 10%, rgba(197, 203, 212, .12), transparent 70%),
+    radial-gradient(40% 55% at 10% 5%, rgba(120, 140, 170, .08), transparent 65%);
+}
+
+/* ---- Cinematic Plan hero ---- */
+.bf-plan-workspace > .bf-plan-studio-header,
+.bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass {
+  padding: 26px 20px 24px !important;
+  border-radius: 28px !important;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 75%, transparent) !important;
+  background:
+    radial-gradient(120% 100% at 108% -18%, color-mix(in srgb, var(--cf-primary) 38%, transparent), transparent 52%),
+    radial-gradient(90% 80% at -18% 120%, color-mix(in srgb, var(--cf-info, #6aa8ff) 22%, transparent), transparent 48%),
+    radial-gradient(60% 50% at 50% 120%, color-mix(in srgb, var(--cf-primary) 10%, transparent), transparent 60%),
+    linear-gradient(
+      148deg,
+      color-mix(in srgb, var(--cf-surface) 96%, transparent),
+      color-mix(in srgb, var(--cf-surface-alt) 62%, transparent) 55%,
+      color-mix(in srgb, var(--cf-surface) 78%, transparent)
+    ) !important;
+  box-shadow:
+    0 28px 56px color-mix(in srgb, var(--cf-ink) 16%, transparent),
+    0 8px 18px color-mix(in srgb, var(--cf-ink) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 16%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--cf-ink) 6%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.22);
+}
+
+.bf-plan-workspace > .bf-plan-studio-header::before {
+  content: "";
+  position: absolute;
+  inset: -30% 35% auto -20%;
+  height: 140%;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in srgb, #fff 14%, transparent) 48%,
+    transparent 62%
+  );
+  pointer-events: none;
+  opacity: .55;
+  animation: bf-hero-shimmer 9s ease-in-out infinite;
+}
+
+.bf-plan-workspace > .bf-plan-studio-header::after {
+  right: -28px;
+  bottom: -56px;
+  width: 190px;
+  height: 190px;
+  border-width: 22px;
+  border-color: color-mix(in srgb, var(--cf-primary) 42%, transparent);
+  opacity: .5;
+  filter: blur(.2px);
+}
+
+.bf-plan-workspace > .bf-plan-studio-header h1 {
+  font-size: clamp(36px, 9.5vw, 54px) !important;
+  line-height: .98 !important;
+  letter-spacing: -.06em !important;
+  font-weight: 650 !important;
+  text-wrap: balance;
+}
+
+.bf-plan-workspace > .bf-plan-studio-header h1 em {
+  background: linear-gradient(
+    120deg,
+    var(--cf-primary),
+    color-mix(in srgb, var(--cf-primary) 55%, var(--cf-info, #6aa8ff))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  font-style: italic;
+}
+
+.bf-plan-workspace > .bf-plan-studio-header p:not(.bf-kicker) {
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+  max-width: 36ch !important;
+}
+
+.bf-plan-workspace > .bf-plan-studio-header .bf-kicker {
+  font-size: 10px !important;
+  letter-spacing: .18em !important;
+  font-weight: 800 !important;
+}
+
+.bf-plan-workspace .bf-plan-header-stat {
+  position: relative;
+  z-index: 1;
+  padding: 12px 14px !important;
+  border-radius: 18px !important;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 70%, transparent);
+  background: color-mix(in srgb, var(--cf-surface) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent),
+    0 10px 24px color-mix(in srgb, var(--cf-ink) 10%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.bf-plan-workspace .bf-plan-header-stat b {
+  font-size: clamp(18px, 4.5vw, 22px) !important;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+html.theme-white .bf-plan-workspace > .bf-plan-studio-header,
+html.theme-white .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass {
+  background:
+    radial-gradient(120% 100% at 108% -18%, rgba(14, 122, 92, .2), transparent 52%),
+    radial-gradient(90% 80% at -18% 120%, rgba(47, 111, 237, .1), transparent 48%),
+    linear-gradient(148deg, rgba(255, 255, 255, .96), rgba(244, 248, 246, .9) 55%, rgba(255, 255, 255, .94)) !important;
+  box-shadow:
+    0 24px 48px rgba(18, 32, 28, .1),
+    0 6px 14px rgba(18, 32, 28, .05),
+    inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+
+html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
+  background: linear-gradient(120deg, #0e7a5c, #1a8f8a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+/* ---- Stronger glass depth + refined card motion ---- */
+.bf-plan-workspace :is(
+  .bf-cycle-setup,
+  .bf-cycle-tools,
+  .bf-plan-simulator,
+  .bf-plan-simulation,
+  .bf-plan-cashflow-suggest,
+  .bf-plan-cashflow-panel,
+  .bf-allocation-period,
+  .bf-allocation-progress-card,
+  .bf-allocation-guidance,
+  .bf-allocation-builder,
+  .bf-allocation-list > article,
+  .bf-plan-flow,
+  .bf-monthly-wizard,
+  .bf-allocation-recommendations,
+  .bf-allocation-history,
+  .bf-allocation-chart,
+  .bf-plan-sheet,
+  .bf-plan-sources,
+  .bf-plan-envelope-workbench,
+  .bf-envelope-glossary-tip,
+  .bf-plan-simple-tip,
+  .bf-active-week
+) {
+  border-radius: 20px !important;
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--cf-ink) 12%, transparent),
+    0 4px 12px color-mix(in srgb, var(--cf-ink) 6%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--cf-line) 55%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(1.12);
+  transition:
+    transform 220ms cubic-bezier(.22, 1.1, .36, 1),
+    box-shadow 220ms cubic-bezier(.22, 1.1, .36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bf-plan-workspace :is(
+    .bf-allocation-list > article,
+    .bf-allocation-progress-card,
+    .bf-plan-simulator,
+    .bf-allocation-period,
+    .bf-allocation-guidance,
+    .bf-plan-cashflow-suggest
+  ):hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 22px 48px color-mix(in srgb, var(--cf-ink) 15%, transparent),
+      0 6px 14px color-mix(in srgb, var(--cf-ink) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--cf-primary) 28%, transparent) !important;
+  }
+}
+
+/* Premium typography scale on Plan */
+.bf-plan-workspace :is(
+  .bf-allocation-period h2,
+  .bf-allocation-guidance h2,
+  .bf-plan-flow h2,
+  .bf-plan-simulator h2,
+  .bf-plan-cashflow-suggest h2,
+  .bf-allocation-progress-card h2,
+  .bf-plan-sheet-heading h2
+) {
+  font-size: clamp(1.15rem, 3.6vw, 1.45rem) !important;
+  letter-spacing: -.035em !important;
+  line-height: 1.12 !important;
+  font-weight: 650 !important;
+}
+
+.bf-plan-workspace .bf-kicker {
+  font-size: 10px !important;
+  letter-spacing: .14em !important;
+  font-weight: 800 !important;
+}
+
+.bf-plan-workspace .bf-allocation-progress-top strong {
+  font-size: clamp(1.5rem, 5vw, 1.85rem) !important;
+  letter-spacing: -.05em;
+  background: linear-gradient(
+    135deg,
+    var(--cf-ink),
+    color-mix(in srgb, var(--cf-primary) 70%, var(--cf-ink))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+/* Glossary tip polish */
+.bf-plan-workspace .bf-envelope-glossary-tip,
+.bf-plan-workspace .bf-plan-simple-tip {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 16px 14px !important;
+  border-left: 3px solid var(--cf-primary, #0e7a5c) !important;
+}
+
+.bf-plan-workspace .bf-envelope-glossary-tip .bf-kicker,
+.bf-plan-workspace .bf-plan-simple-tip .bf-kicker {
+  color: var(--cf-primary) !important;
+}
+
+.bf-plan-workspace .bf-envelope-glossary-tip b,
+.bf-plan-workspace .bf-plan-simple-tip b {
+  display: block;
+  margin: 2px 0 6px;
+  font-size: 1.02rem;
+  letter-spacing: -.02em;
+  color: var(--cf-ink) !important;
+}
+
+/* ---- Distinctive empty states ---- */
+.bf-plan-workspace .bf-allocation-empty {
+  position: relative;
+  justify-items: center !important;
+  text-align: center;
+  gap: 0.55rem !important;
+  margin: 0.4rem 0 0.2rem;
+  padding: 1.6rem 1.1rem 1.4rem !important;
+  border-radius: 22px;
+  border: 1px dashed color-mix(in srgb, var(--cf-primary) 42%, var(--cf-line));
+  background:
+    radial-gradient(90% 80% at 50% 0%, color-mix(in srgb, var(--cf-primary) 14%, transparent), transparent 65%),
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--cf-surface) 80%, transparent),
+      color-mix(in srgb, var(--cf-surface-alt) 50%, transparent)
+    );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+}
+
+.bf-plan-workspace .bf-allocation-empty::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 55%, transparent);
+  pointer-events: none;
+  opacity: .55;
+}
+
+.bf-plan-workspace .bf-allocation-empty svg {
+  margin-bottom: 0.35rem;
+  filter: drop-shadow(0 8px 16px color-mix(in srgb, var(--cf-primary) 28%, transparent));
+}
+
+.bf-plan-workspace .bf-allocation-empty b {
+  position: relative;
+  z-index: 1;
+  font-size: 1.08rem;
+  letter-spacing: -.03em;
+  color: var(--cf-ink) !important;
+}
+
+.bf-plan-workspace .bf-allocation-empty span {
+  position: relative;
+  z-index: 1;
+  max-width: 34ch;
+  color: var(--cf-muted) !important;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.os-shell .bf-empty-soft,
+.os-shell .bf-empty-state {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px !important;
+  border: 1px dashed color-mix(in srgb, var(--cf-line, var(--os-line)) 85%, transparent) !important;
+  background:
+    radial-gradient(80% 70% at 50% -10%, color-mix(in srgb, var(--cf-primary, var(--os-mint)) 12%, transparent), transparent 60%),
+    color-mix(in srgb, var(--cf-surface, var(--os-surface)) 88%, transparent) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent);
+}
+
+.os-shell .bf-empty-soft::after,
+.os-shell .bf-empty-state::after {
+  content: "";
+  position: absolute;
+  right: -24px;
+  bottom: -28px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 14px solid color-mix(in srgb, var(--cf-primary, var(--os-mint)) 22%, transparent);
+  pointer-events: none;
+  opacity: .45;
+}
+
+/* ---- Polished dock glow ---- */
+.os-shell .os-dock {
+  border: 1px solid color-mix(in srgb, var(--os-line) 80%, transparent) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--os-surface) 92%, transparent),
+      color-mix(in srgb, var(--os-surface) 78%, transparent)
+    ) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #fff 6%, transparent),
+    0 16px 40px color-mix(in srgb, var(--os-fg, var(--cf-ink)) 22%, transparent),
+    0 0 48px color-mix(in srgb, var(--os-mint) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.2) !important;
+}
+
+.os-shell .os-dock button.active,
+.os-shell .os-dock button.is-on {
+  color: var(--os-mint) !important;
+  background:
+    radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--os-mint) 28%, transparent), transparent 70%),
+    var(--os-mint-dim) !important;
+  box-shadow:
+    inset 0 -2px 0 var(--os-mint),
+    0 0 18px color-mix(in srgb, var(--os-mint) 35%, transparent),
+    0 6px 14px color-mix(in srgb, var(--os-mint) 18%, transparent) !important;
+}
+
+.os-shell .os-dock button.active::after,
+.os-shell .os-dock button.is-on::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 5px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--os-mint);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--os-mint) 80%, transparent);
+  animation: bf-dock-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.os-shell .os-dock button {
+  position: relative;
+}
+
+html.theme-white .os-shell .os-dock {
+  box-shadow:
+    0 0 0 1px rgba(18, 32, 28, .06),
+    0 14px 32px rgba(18, 32, 28, .12),
+    0 0 36px color-mix(in srgb, #0e7a5c 12%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .85) !important;
+}
+
+html.theme-aurora .os-shell .os-dock {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .06),
+    0 16px 40px rgba(10, 6, 24, .45),
+    0 0 48px rgba(124, 91, 255, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .1) !important;
+}
+
+html.theme-navy .os-shell .os-dock {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .05),
+    0 16px 40px rgba(6, 12, 28, .5),
+    0 0 48px rgba(212, 176, 106, .16),
+    inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html.theme-cyber .os-shell .os-dock {
+  box-shadow:
+    0 0 0 1px rgba(124, 255, 196, .08),
+    0 16px 40px rgba(4, 12, 10, .5),
+    0 0 48px rgba(124, 255, 196, .2),
+    inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html.theme-dark .os-shell .os-dock {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .05),
+    0 16px 40px rgba(0, 0, 0, .45),
+    0 0 40px rgba(160, 180, 200, .1),
+    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+/* Simple mode: keep tip/dock calm — no hover lift, no shimmer noise */
+html[data-simple-mode="1"] .bf-plan-workspace > .bf-plan-studio-header::before {
+  animation: none !important;
+  opacity: .28;
+}
+
+html[data-simple-mode="1"] .bf-plan-workspace :is(
+  .bf-allocation-list > article,
+  .bf-allocation-progress-card,
+  .bf-plan-simulator,
+  .bf-allocation-period,
+  .bf-allocation-guidance,
+  .bf-plan-cashflow-suggest
+):hover {
+  transform: none !important;
+}
+
+html[data-simple-mode="1"] .os-shell .os-dock button.active::after,
+html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-plan-workspace > .bf-plan-studio-header::before,
+  .os-shell .os-dock button.active::after,
+  .os-shell .os-dock button.is-on::after {
+    animation: none !important;
+  }
+  .bf-plan-workspace :is(
+    .bf-cycle-setup,
+    .bf-allocation-list > article,
+    .bf-allocation-progress-card,
+    .bf-plan-simulator,
+    .bf-allocation-period,
+    .bf-allocation-guidance,
+    .bf-plan-cashflow-suggest
+  ) {
+    transition: none !important;
+  }
+  .bf-plan-workspace :is(
+    .bf-allocation-list > article,
+    .bf-allocation-progress-card,
+    .bf-plan-simulator,
+    .bf-allocation-period,
+    .bf-allocation-guidance,
+    .bf-plan-cashflow-suggest
+  ):hover {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .bf-plan-workspace > .bf-plan-studio-header,
+  .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass {
+    padding: 20px 16px 18px !important;
+    border-radius: 22px !important;
+  }
+  .bf-plan-workspace > .bf-plan-studio-header h1 {
+    font-size: clamp(32px, 9vw, 42px) !important;
+  }
+  .os-shell.bf-app::before {
+    height: min(42vh, 320px);
+  }
+}

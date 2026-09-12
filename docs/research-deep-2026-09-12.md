@@ -38,7 +38,7 @@
 - Detectare abonamente (`detectSubscriptions`) + hunt pe Astăzi / Gospodărie  
 - Weekly check-in + share + reechilibrare plicuri  
 - Activitate recentă (3) pe Astăzi; feed + El/Ea în HouseholdStudio  
-- Widget fără sume + 3 șabloane; glosar Pe românește; touch ≥44px pe filtre Mișcări  
+- Widget fără sume + 3 șabloane; glosar Pe scurt; touch ≥44px pe filtre Mișcări  
 
 ### P0 — lipsă, implementabil acum (fără bancă / Billing / notification listen)
 

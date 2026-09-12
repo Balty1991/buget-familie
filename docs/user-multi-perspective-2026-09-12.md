@@ -165,7 +165,7 @@
 
 **Ce sugerează**
 - Mod „Simplu”: Astăzi + Adaugă + Plan (3 ecrane).
-- Glosar „Pe românește” la prima apariție a cuvântului plic.
+- Glosar „Pe scurt” la prima apariție a cuvântului plic.
 - Ținte ≥48dp peste tot (filtre Mișcări au fost semnalate mici).
 
 **Ce și-ar mai dori**
@@ -232,7 +232,7 @@ Scor relativ pe baza overlap persona + audit + pattern-uri piață (nu din surve
 | 7 | **Confirmare la detecții / OCR** (nimic silent în registru) | Privacy; Monarch review | De verificat = diferențiator; confirmare recurente de întărit |
 | 8 | **Check-in săptămânal cu headline** | Familie; research-deep | Check-in există; digest headline |
 | 9 | **Fără ads / fără paywall pe datele deja introduse** | Skeptic; anti-YNAB price rage | Strategie freemium — Billing încă afară |
-| 10 | **Mod simplu / glosar pe românește** | Bunici; PRODUCT_STRATEGY | Glosar în Ghid; nu pe first paint |
+| 10 | **Mod simplu / glosar pe scurt** | Bunici; PRODUCT_STRATEGY | Glosar în Ghid; nu pe first paint |
 
 **Explicit nu cerem acum (OUT):** Open Banking PSD2, Notification Listener, Play Billing live, AI cloud inventat.
 

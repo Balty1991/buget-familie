@@ -57,7 +57,7 @@ Oferta inițială ar trebui să aibă un plan lunar și unul anual, cu o perioad
 
 | Etapă | Rezultat | Criteriu de acceptare |
 | --- | --- | --- |
-| 1. Claritate | Texte simple, card Astăzi explicat, onboarding scurt, glosar „Pe românește” | Un utilizator nou poate explica ce înseamnă fiecare sumă fără ajutor extern. |
+| 1. Claritate | Texte simple, card Astăzi explicat, onboarding scurt, glosar „Pe scurt” | Un utilizator nou poate explica ce înseamnă fiecare sumă fără ajutor extern. |
 | 2. Viteză | Mișcări și Astăzi fără fallback vizibil, input rapid și șabloane | Prima cheltuială se poate salva fără așteptare perceptibilă pe telefon mediu. |
 | 3. Decizia zilnică | „Ce pot folosi”, „Ce urmează”, „Ce am depășit” | Utilizatorul primește o singură acțiune următoare, nu un zid de grafice. |
 | 4. Familie | Roluri simple, jurnal partajat și sincronizare clară | Două persoane înțeleg cine a înregistrat și unde se află modificarea. |

@@ -241,7 +241,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
 
     {(simpleMode || showGlossary) && (
       <aside className={simpleMode ? "bf-plan-simple-tip" : "bf-envelope-glossary-tip"} role="note">
-        <p className="bf-kicker">{t("PE ROMÂNEȘTE")}</p>
+        <p className="bf-kicker">{t("PE SCURT")}</p>
         <b>{t("Plicul e o limită, nu un sold.")}</b>
         <p>{t("Banii stau în surse (card, cash). Plicul spune cât poți cheltui pe o categorie până la următorul venit — nu „mută” lei din cont.")}</p>
         {!simpleMode && <button type="button" className="bf-link-button" onClick={() => { markEnvelopeGlossarySeen(); setShowGlossary(false); }}>{t("Am înțeles")}</button>}
