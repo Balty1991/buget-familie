@@ -1677,6 +1677,21 @@ const en: Record<string, string> = {
   "Termen obiectiv azi": "Savings goal due today",
   "Obiectiv aproape de termen": "Savings goal due soon",
   "{name}: mai ai {remaining} până la {date}.": "{name}: {remaining} left until {date}.",
+  "Ciclu curent": "Current cycle",
+  "Ciclu −{n}": "Cycle −{n}",
+  "{label} a crescut cu {delta} puncte față de ciclul anterior.": "{label} rose by {delta} points vs the previous cycle.",
+  "{label} a scăzut cu {delta} puncte față de ciclul anterior.": "{label} fell by {delta} points vs the previous cycle.",
+  "Scor pe cicluri salariale": "Score across salary cycles",
+  "PE CICLURI": "ACROSS CYCLES",
+  "Cum s-a mișcat scorul": "How the score moved",
+  "Serie scor pe cicluri": "Score series across cycles",
+  "Încă nu e o diferență clară față de ciclul anterior.": "No clear difference from the previous cycle yet.",
+  "Economii / obiective": "Savings / goals",
+  "Combină ultimele 7 zile de cheltuieli cu scadențele și obiectivele din săptămâna următoare. Tu confirmi fiecare sumă.": "Combines the last 7 days of spending with dues and goals for the next week. You confirm every amount.",
+  "Cheltuieli, scadențe și obiective → 7 zile": "Spending, dues and goals → 7 days",
+  "acum {current} · propus {actual}{dues}{goals}": "now {current} · suggested {actual}{dues}{goals}",
+  " · scadențe {amount}": " · dues {amount}",
+  " · obiective {amount}": " · goals {amount}",
   "Azi": "Today"
 };
 

@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { calculateHealthScore, type AppData, type HealthScoreBreakdown } from "@/lib/finance-data";
+import { healthScoreStory, type AppData, type HealthScoreStory } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { CalmGauge } from "@/components/CalmGauge";
 import { EnvelopeMark } from "@/components/EnvelopeMark";
 import { t } from "@/lib/i18n";
 
 /**
- * Badge compact pentru ecranul Astăzi + sheet cu factorii explicabili.
+ * Badge compact pentru ecranul Astăzi + sheet cu factorii explicabili și povestea pe cicluri.
  * Folosește doar date locale; nu modifică registrul.
  */
 export function HealthScoreBadge({ data }: { data: AppData }) {
-  const health = calculateHealthScore(data);
+  const story = healthScoreStory(data);
+  const health = story.current;
   const [open, setOpen] = useState(false);
 
   return (
@@ -28,14 +29,16 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
         <CalmGauge value={health.score} />
       </button>
 
-      {open && <HealthScoreSheet health={health} onClose={() => setOpen(false)} />}
+      {open && <HealthScoreSheet story={story} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
-function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; onClose: () => void }) {
+function HealthScoreSheet({ story, onClose }: { story: HealthScoreStory; onClose: () => void }) {
+  const health = story.current;
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const toneLabel = health.tone === "unknown" ? t("Încă nu se poate calcula") : health.tone === "good" ? t("Calm") : health.tone === "watch" ? t("Atenție") : t("Risc");
+  const maxSeries = Math.max(1, ...story.series.map((item) => item.score ?? 0));
 
   return createPortal(
     <div className="bf-modal-backdrop bf-health-backdrop" role="presentation" onMouseDown={onClose}>
@@ -63,6 +66,34 @@ function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; o
             ? t("Un scor calculat din nimic ar fi o părere, nu o măsurătoare. Apar câteva date în registru și nota devine reală.")
             : t("Scor local, calculat din registrul tău. Nu estimează venituri viitoare și nu modifică datele.")}
         </p>
+
+        {story.series.some((item) => item.score !== null) && (
+          <section className="bf-health-story" aria-label={t("Scor pe cicluri salariale")}>
+            <p className="bf-kicker">{t("PE CICLURI")}</p>
+            <h3>{t("Cum s-a mișcat scorul")}</h3>
+            <div className="bf-health-story-bars" role="img" aria-label={t("Serie scor pe cicluri")}>
+              {story.series.map((point) => (
+                <div key={point.end} className={`bf-health-story-bar ${point.tone}`}>
+                  <i style={{ height: point.score === null ? "8%" : `${Math.max(8, (point.score / maxSeries) * 100)}%` }} />
+                  <b>{point.score === null ? "—" : point.score}</b>
+                  <small>{point.label}</small>
+                </div>
+              ))}
+            </div>
+            {story.moved.length > 0 ? (
+              <ul className="bf-health-moved">
+                {story.moved.map((item) => (
+                  <li key={item.id}>
+                    <b className={item.delta >= 0 ? "up" : "down"}>{item.delta >= 0 ? `+${item.delta}` : item.delta}</b>
+                    <span>{item.detail}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="bf-health-moved-empty">{t("Încă nu e o diferență clară față de ciclul anterior.")}</p>
+            )}
+          </section>
+        )}
 
         {health.missing.length > 0 && (
           <div className="bf-health-missing">

@@ -691,29 +691,75 @@ export const matchingAllocationsForExpense = (data: AppData, input: { category: 
  */
 export const suggestWeeklyAllocationsFromCashflow = (data: AppData, asOf = isoToday()) => {
   const start = addIsoDays(asOf, -6);
+  const horizonEnd = addIsoDays(asOf, 6);
   const spentByCategory = new Map<string, number>();
   for (const item of data.transactions) {
     if (item.kind !== "expense" || item.date < start || item.date > asOf) continue;
     const key = item.category || "Altele";
     spentByCategory.set(key, (spentByCategory.get(key) || 0) + item.amount);
   }
+  // Scadențe din următoarele 7 zile — se adaugă pe categoria plicului potrivit.
+  const dueByCategory = new Map<string, number>();
+  for (const item of pendingRecurringInPlan(data)) {
+    if (item.dueDate < asOf || item.dueDate > horizonEnd) continue;
+    const key = item.category || "Casă & facturi";
+    dueByCategory.set(key, (dueByCategory.get(key) || 0) + item.amount);
+  }
+  for (const debt of data.debts) {
+    if (!debt.dueDate || debt.dueDate < asOf || debt.dueDate > horizonEnd) continue;
+    const key = "Rate produse";
+    dueByCategory.set(key, (dueByCategory.get(key) || 0) + (debt.monthly || 0));
+  }
+  // Obiective cu termen în orizont: ritm săptămânal necesar pe un plic „Economii” sau Altele.
+  let goalsWeekly = 0;
+  for (const goal of data.savings) {
+    if (!goal.dueDate || goal.dueDate < asOf) continue;
+    const remaining = Math.max(0, goal.target - goal.current);
+    if (remaining <= 0) continue;
+    const daysLeft = Math.max(1, Math.round((new Date(`${goal.dueDate}T12:00:00`).valueOf() - new Date(`${asOf}T12:00:00`).valueOf()) / 86_400_000));
+    goalsWeekly += remaining / daysLeft * 7;
+  }
+  goalsWeekly = Math.round(goalsWeekly * 100) / 100;
+
   const suggestions = data.settings.salaryPlan.allocations.map((allocation) => {
     const category = allocation.category || allocation.label;
-    const actual = Math.round((spentByCategory.get(category) || 0) * 100) / 100;
+    const spent = spentByCategory.get(category) || 0;
+    const dues = dueByCategory.get(category) || 0;
+    const goalPart = /econom/i.test(category) || /econom/i.test(allocation.label) ? goalsWeekly : 0;
+    const suggestedAmount = Math.round((spent + dues + goalPart) * 100) / 100;
     return {
       allocationId: allocation.id,
       label: allocation.label,
       category,
       currentAmount: allocation.amount,
-      suggestedAmount: actual,
-      delta: Math.round((actual - allocation.amount) * 100) / 100,
+      suggestedAmount,
+      fromSpend: Math.round(spent * 100) / 100,
+      fromDues: Math.round(dues * 100) / 100,
+      fromGoals: Math.round(goalPart * 100) / 100,
+      delta: Math.round((suggestedAmount - allocation.amount) * 100) / 100,
     };
   }).filter((item) => item.suggestedAmount > 0 || item.currentAmount > 0);
   const unallocated = Array.from(spentByCategory.entries())
     .filter(([category]) => !data.settings.salaryPlan.allocations.some((item) => (item.category || item.label) === category))
     .map(([category, amount]) => ({ category, amount: Math.round(amount * 100) / 100 }))
     .filter((item) => item.amount > 0);
-  return { asOf, start, end: asOf, suggestions, unallocated, totalSuggested: suggestions.reduce((sum, item) => sum + item.suggestedAmount, 0) };
+  // Scadențe fără plic + obiective fără plic de economii
+  for (const [category, amount] of Array.from(dueByCategory.entries())) {
+    if (data.settings.salaryPlan.allocations.some((item) => (item.category || item.label) === category)) continue;
+    if (amount > 0) unallocated.push({ category, amount: Math.round(amount * 100) / 100 });
+  }
+  if (goalsWeekly > 0 && !data.settings.salaryPlan.allocations.some((item) => /econom/i.test(item.category || "") || /econom/i.test(item.label))) {
+    unallocated.push({ category: t("Economii / obiective"), amount: goalsWeekly });
+  }
+  return {
+    asOf,
+    start,
+    end: horizonEnd,
+    suggestions,
+    unallocated,
+    totalSuggested: suggestions.reduce((sum, item) => sum + item.suggestedAmount, 0),
+    goalsWeekly,
+  };
 };
 
 export const financialBalance = (data: AppData, start?: string, end?: string, memberId?: string) => { const entries = data.transactions.filter((item) => (!start || item.date >= start) && (!end || item.date <= end) && (!memberId || item.memberId === memberId)); const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const scopedDebts = data.debts.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const scopedSavings = data.savings.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const monthlyRates = scopedDebts.reduce((sum, item) => sum + item.monthly, 0); const debtRemaining = scopedDebts.reduce((sum, item) => sum + item.remaining, 0); const savingsCurrent = scopedSavings.reduce((sum, item) => sum + item.current, 0); const sources = data.settings.paymentSources.filter((source) => !memberId || !source.memberId || source.memberId === memberId); const liquidFunds = sources.reduce((sum, source) => sum + sourceBalance(data, source.id), 0); return { income, expense, cashflow: income - expense, monthlyRates, debtRemaining, savingsCurrent, liquidFunds, netLiquidPosition: liquidFunds - debtRemaining, memberId }; };
@@ -1049,3 +1095,86 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
 
   return { score, tone, factors, missing };
 };
+export type HealthScoreCyclePoint = {
+  end: string;
+  start: string;
+  score: number | null;
+  tone: HealthScoreBreakdown["tone"];
+  label: string;
+};
+
+export type HealthScoreStory = {
+  current: HealthScoreBreakdown;
+  series: HealthScoreCyclePoint[];
+  moved: Array<{ id: string; label: string; delta: number; detail: string }>;
+};
+
+/**
+ * Povestea scorului pe cicluri salariale anterioare: serie + ce a mișcat nota.
+ * Folosește lungimea ciclului curent (periodStart → nextPayday) ca pas înapoi.
+ */
+export const healthScoreStory = (data: AppData, asOf = isoToday(), cycles = 3): HealthScoreStory => {
+  const current = calculateHealthScore(data, asOf);
+  const plan = data.settings.salaryPlan;
+  const payday = plan.nextPayday || plan.earliestPayday || asOf;
+  const start = plan.periodStart || asOf;
+  const lengthDays = Math.max(7, Math.round((new Date(`${payday}T12:00:00`).valueOf() - new Date(`${start}T12:00:00`).valueOf()) / 86_400_000)) || 28;
+  const series: HealthScoreCyclePoint[] = [];
+  for (let i = cycles - 1; i >= 0; i -= 1) {
+    const end = addIsoDays(asOf, -i * lengthDays);
+    const cycleStart = addIsoDays(end, -(lengthDays - 1));
+    const snapshot: AppData = {
+      ...data,
+      settings: {
+        ...data.settings,
+        salaryPlan: {
+          ...plan,
+          periodStart: cycleStart,
+          nextPayday: addIsoDays(end, 1),
+          earliestPayday: addIsoDays(end, 1),
+        },
+      },
+    };
+    const health = calculateHealthScore(snapshot, end);
+    series.push({
+      end,
+      start: cycleStart,
+      score: health.score,
+      tone: health.tone,
+      label: i === 0 ? t("Ciclu curent") : t("Ciclu −{n}", { n: i }),
+    });
+  }
+  const previous = series.length >= 2 ? series[series.length - 2] : undefined;
+  const moved: HealthScoreStory["moved"] = [];
+  if (previous && previous.score !== null && current.score !== null) {
+    const prevHealth = calculateHealthScore({
+      ...data,
+      settings: {
+        ...data.settings,
+        salaryPlan: {
+          ...plan,
+          periodStart: previous.start,
+          nextPayday: addIsoDays(previous.end, 1),
+          earliestPayday: addIsoDays(previous.end, 1),
+        },
+      },
+    }, previous.end);
+    for (const factor of current.factors) {
+      const before = prevHealth.factors.find((item) => item.id === factor.id);
+      if (!before || !factor.known || !before.known) continue;
+      const delta = Math.round((factor.value - before.value) * 100);
+      if (Math.abs(delta) < 4) continue;
+      moved.push({
+        id: factor.id,
+        label: factor.label,
+        delta,
+        detail: delta > 0
+          ? t("{label} a crescut cu {delta} puncte față de ciclul anterior.", { label: factor.label, delta })
+          : t("{label} a scăzut cu {delta} puncte față de ciclul anterior.", { label: factor.label, delta: Math.abs(delta) }),
+      });
+    }
+    moved.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  }
+  return { current, series, moved: moved.slice(0, 3) };
+};
+
