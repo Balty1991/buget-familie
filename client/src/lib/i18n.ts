@@ -1835,6 +1835,19 @@ const en: Record<string, string> = {
   "LA PARTENER": "ON PARTNER PHONE",
   "{count} propuneri pe celălalt telefon": "{count} proposals on the other phone",
   "Rezumat sincronizat, fără poze. Confirmarea se face pe telefonul care a creat propunerea. Poți anunța partenerul pe canalul vostru (mesaj, apel).": "Synced summary, no photos. Confirmation happens on the phone that created the proposal. You can notify your partner on your usual channel (message, call).",
+  "CITEȘTE CICLUL": "READ THE CYCLE",
+  "Caută o mișcare sau o acțiune": "Search a movement or an action",
+  "Caută o mișcare sau o acțiune…": "Search a movement or an action…",
+  "Mișcări din registru": "Movements from the ledger",
+  "Nu am găsit o mișcare sau o acțiune pentru „{query}”.": "I could not find a movement or an action for “{query}”.",
+  "Comparația urmează ciclul de salariu, nu luna calendaristică — evită alarma falsă înainte să intre venitul.": "The comparison follows the payday cycle, not the calendar month — it avoids the false alarm before income arrives.",
+  "Lună calendar": "Calendar month",
+  "Ciclu salariu": "Payday cycle",
+  "Compară pe ciclul de salariu": "Compare on the payday cycle",
+  "Setează data venitului în Plan pentru a compara pe ciclu.": "Set the payday in Plan to compare on the cycle.",
+  "primul ciclu cu date": "the first cycle with data",
+  "{change} față de ciclul anterior": "{change} against the previous cycle",
+  "Nu există cheltuieli în această fereastră pentru perspectiva aleasă.": "There are no expenses in this window for the chosen perspective.",
   "Deschide instrumentele · {count} de verificat": "Open tools · {count} to review"
 };
 

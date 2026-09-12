@@ -4,16 +4,12 @@
 import "../receipt-mobile.css";
 import "../receipt-form-fix.css";
 import "../family-guide.css";
-import "../report-balance.css";
-import "../balance-scope.css";
 import "../objective-edit.css";
 import "../currency.css";
 import "../transaction-envelope-picker.css";
 import "../mobile-capture-pass.css";
 import "../mobile-obligations-pass.css";
-import "../mobile-analysis-pass.css";
 import "../mobile-settings-pass.css";
-import "../analysis-studio.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
@@ -50,6 +46,7 @@ import {
 } from "@/pages/home-kit";
 import { getLocale, languages, t } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
+import { matchCommandQuery, searchLedgerHits, writeJournalQuery } from "@/lib/command-search";
 
 const ReportsPanel = lazy(() => import("@/components/ReportsPanel").then((module) => ({ default: module.ReportsPanel })));
 const RecurringPanel = lazy(() => import("@/components/RecurringPanel").then((module) => ({ default: module.RecurringPanel })));
@@ -168,7 +165,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
   );
 }
 
-export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => void; onAdd: () => void; onGo: (view: MainView) => void }) {
+export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: AppData; onClose: () => void; onAdd: () => void; onGo: (view: MainView) => void }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
@@ -182,7 +179,13 @@ export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => v
     { id: "habits", label: t("Înțelege obiceiurile"), detail: t("Observă tipare fără judecată"), icon: WalletCards, run: () => onGo("habits") },
     { id: "calendar", label: "Deschide calendarul", detail: t("Vezi veniturile, scadențele și obiectivele"), icon: CalendarDays, run: () => onGo("calendar") },
   ];
-  const visible = actions.filter((action) => `${action.label} ${action.detail}`.toLocaleLowerCase("ro-RO").includes(query.toLocaleLowerCase("ro-RO")));
+  const visible = actions.filter((action) => matchCommandQuery(`${action.label} ${action.detail}`, query));
+  const ledgerHits = searchLedgerHits(data?.transactions || [], query, 6);
+  const openLedger = (term: string) => {
+    writeJournalQuery(window.sessionStorage, term);
+    onGo("journal");
+    onClose();
+  };
   useEffect(() => {
     const desktop = window.matchMedia("(pointer: fine)").matches;
     if (desktop) inputRef.current?.focus();
@@ -203,10 +206,10 @@ export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => v
         </header>
         <label className="bf-command-search">
           <Search size={17} aria-hidden="true" />
-          <input ref={inputRef} type="text" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" spellCheck={false} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Caută o acțiune…")} aria-label={t("Caută o acțiune")} />
+          <input ref={inputRef} type="text" inputMode="search" enterKeyHint="search" autoComplete="off" autoCorrect="off" spellCheck={false} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Caută o mișcare sau o acțiune…")} aria-label={t("Caută o mișcare sau o acțiune")} />
         </label>
         <div className="bf-command-list" role="listbox" aria-label={t("Acțiuni disponibile")}>
-          {visible.length ? visible.map((action) => {
+          {visible.map((action) => {
             const Icon = action.icon;
             return (
               <button key={action.id} type="button" role="option" className={action.id === "expense" ? "is-primary" : undefined} onClick={() => { action.run(); onClose(); }}>
@@ -215,7 +218,16 @@ export function QuickActionsPalette({ onClose, onAdd, onGo }: { onClose: () => v
                 <ChevronRight size={16} />
               </button>
             );
-          }) : <p className="bf-command-empty">{t("Nu am găsit o acțiune pentru „{query}”.", { query })}</p>}
+          })}
+          {ledgerHits.length > 0 && <p className="bf-command-section">{t("Mișcări din registru")}</p>}
+          {ledgerHits.map((item) => (
+            <button key={item.id} type="button" role="option" onClick={() => openLedger(item.title)}>
+              <span className="bf-command-icon"><ReceiptText size={17} /></span>
+              <span><b>{item.title}</b><small>{item.category}{item.person ? ` · ${item.person}` : ""}</small></span>
+              <ChevronRight size={16} />
+            </button>
+          ))}
+          {query.trim() && !visible.length && !ledgerHits.length && <p className="bf-command-empty">{t("Nu am găsit o mișcare sau o acțiune pentru „{query}”.", { query })}</p>}
         </div>
         <p className="bf-command-hint">{t("Scurtătură:")} <kbd>Ctrl</kbd><span>+</span><kbd>K</kbd> {t("sau")} <kbd>⌘</kbd><span>+</span><kbd>K</kbd></p>
       </section>
@@ -1207,5 +1219,5 @@ export function FamilyGuide() { return <div className="bf-guide"><section classN
 /** Atelierul Financiar 3.0 — Analiza este o destinație de lucru, cu rapoarte și asistent separat încărcate la cerere. */
 export function InsightsView({ data, onChange, onGo }: { data: AppData; onChange: (next: AppData) => void; onGo?: (view: MainView) => void }) {
   const [panel, setPanel] = useState<"reports" | "household" | "assistant">("reports");
-  return <div className="bf-page bf-insights-workspace"><header className="bf-insights-header"><div><p className="bf-kicker">{t("ANALIZĂ FINANCIARĂ")}</p><h1>{t("Înțelege")} <em>{t("schimbarea.")}</em></h1><p>{t("Compară lunile, închide ritualul gospodăriei și cere o explicație locală.")}</p></div><span><LayoutDashboard size={25} /></span></header><div className="bf-insights-switch" role="tablist" aria-label={t("Tip analiză")}><button role="tab" aria-selected={panel === "reports"} className={panel === "reports" ? "active" : ""} onClick={() => setPanel("reports")}><LayoutDashboard size={16} /> {t("Istoric")}</button><button role="tab" aria-selected={panel === "household"} className={panel === "household" ? "active" : ""} onClick={() => setPanel("household")}><Users size={16} /> {t("Gospodărie")}</button><button role="tab" aria-selected={panel === "assistant"} className={panel === "assistant" ? "active" : ""} onClick={() => setPanel("assistant")}><Bot size={16} /> {t("Asistent")}</button></div>{panel === "reports" ? <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><ReportsPanel data={data} onGo={onGo} /></Suspense> : panel === "household" ? <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim gospodăria…")}</div>}><HouseholdStudio data={data} onChange={onChange} /></Suspense> : <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim asistentul…")}</div>}><AdvisorPanel data={data} onChange={onChange} /></Suspense>}</div>;
+  return <div className="bf-page bf-insights-workspace"><header className="bf-insights-header"><div><p className="bf-kicker">{t("ANALIZĂ FINANCIARĂ")}</p><h1>{t("Înțelege")} <em>{t("schimbarea.")}</em></h1><p>{t("Compară lunile, închide ritualul gospodăriei și cere o explicație locală.")}</p></div><span><LayoutDashboard size={25} /></span></header><div className="bf-insights-switch bf-segment" role="tablist" aria-label={t("Tip analiză")}><button role="tab" aria-selected={panel === "reports"} className={panel === "reports" ? "active" : ""} onClick={() => setPanel("reports")}><LayoutDashboard size={16} /> {t("Istoric")}</button><button role="tab" aria-selected={panel === "household"} className={panel === "household" ? "active" : ""} onClick={() => setPanel("household")}><Users size={16} /> {t("Gospodărie")}</button><button role="tab" aria-selected={panel === "assistant"} className={panel === "assistant" ? "active" : ""} onClick={() => setPanel("assistant")}><Bot size={16} /> {t("Asistent")}</button></div>{panel === "reports" ? <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><ReportsPanel data={data} onGo={onGo} /></Suspense> : panel === "household" ? <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim gospodăria…")}</div>}><HouseholdStudio data={data} onChange={onChange} /></Suspense> : <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim asistentul…")}</div>}><AdvisorPanel data={data} onChange={onChange} /></Suspense>}</div>;
 }

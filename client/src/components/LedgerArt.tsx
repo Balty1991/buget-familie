@@ -105,3 +105,14 @@ export function PaydayStrip({ elapsed, total, remaining }: { elapsed: number; to
     </div>
   );
 }
+
+/** Semn gol, fără ilustrație grea — Analiză / Obligații / Gospodărie. */
+export function EmptyMark() {
+  return (
+    <svg className="bf-empty-mark" viewBox="0 0 72 56" aria-hidden="true">
+      <rect x="8" y="14" width="56" height="34" rx="10" />
+      <circle cx="36" cy="16" r="8" />
+      <path d="M20 30h32M20 38h20" />
+    </svg>
+  );
+}

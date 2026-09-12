@@ -868,3 +868,90 @@ html.theme-dark .os-dock button.is-on svg {
     padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+
+/* Analiză / Plan / Sync: last-word contrast — light glass, never muted-on-emerald */
+html .bf-advisor-hero,
+html .bf-sync-hero,
+html .bf-plan-resource-band,
+html .bf-reports-hero,
+html .bf-assistant-panel,
+html .bf-coach-card {
+  color: var(--cf-ink, #0c1612) !important;
+}
+html .bf-advisor-hero h2,
+html .bf-sync-hero h2,
+html .bf-reports-hero h2,
+html .bf-assistant-panel h2,
+html .bf-coach-card h2 {
+  color: var(--cf-ink, #0c1612) !important;
+}
+html .bf-advisor-hero > p:not(.bf-kicker),
+html .bf-sync-hero p:not(.bf-kicker),
+html .bf-reports-hero p:not(.bf-kicker),
+html .bf-assistant-panel > p:not(.bf-kicker),
+html .bf-coach-card p:not(.bf-kicker) {
+  color: var(--cf-muted, #4d5f58) !important;
+}
+html .bf-advisor-hero .bf-kicker,
+html .bf-sync-hero .bf-kicker,
+html .bf-reports-hero .bf-kicker,
+html .bf-assistant-panel .bf-kicker {
+  color: var(--cf-primary-strong, #0e4f3e) !important;
+  opacity: 1 !important;
+}
+html .bf-advisor-metrics small {
+  color: var(--cf-muted, #4d5f58) !important;
+}
+html .bf-advisor-metrics b {
+  color: var(--cf-ink, #0c1612) !important;
+}
+
+:is(html.theme-ink, html.theme-white) .bf-advisor-hero,
+:is(html.theme-ink, html.theme-white) .bf-sync-hero,
+:is(html.theme-ink, html.theme-white) .bf-plan-resource-band {
+  background: linear-gradient(160deg, #ffffff, #eef2f0) !important;
+  border-color: #c5cec8 !important;
+  color: #0c1612 !important;
+}
+
+html.theme-dark .bf-advisor-hero,
+html.theme-aurora .bf-advisor-hero,
+html.theme-navy .bf-advisor-hero,
+html.theme-cyber .bf-advisor-hero,
+html.theme-dark .bf-sync-hero,
+html.theme-aurora .bf-sync-hero,
+html.theme-navy .bf-sync-hero,
+html.theme-cyber .bf-sync-hero {
+  background: color-mix(in srgb, var(--cf-surface, #16191e) 94%, transparent) !important;
+  color: var(--cf-ink, #f1f4f8) !important;
+}
+html.theme-dark .bf-advisor-hero h2,
+html.theme-aurora .bf-advisor-hero h2,
+html.theme-navy .bf-advisor-hero h2,
+html.theme-cyber .bf-advisor-hero h2,
+html.theme-dark .bf-advisor-metrics b,
+html.theme-aurora .bf-advisor-metrics b,
+html.theme-navy .bf-advisor-metrics b,
+html.theme-cyber .bf-advisor-metrics b {
+  color: var(--cf-ink, #f1f4f8) !important;
+}
+html.theme-dark .bf-advisor-hero > p:not(.bf-kicker),
+html.theme-aurora .bf-advisor-hero > p:not(.bf-kicker),
+html.theme-navy .bf-advisor-hero > p:not(.bf-kicker),
+html.theme-cyber .bf-advisor-hero > p:not(.bf-kicker),
+html.theme-dark .bf-advisor-metrics small,
+html.theme-aurora .bf-advisor-metrics small,
+html.theme-navy .bf-advisor-metrics small,
+html.theme-cyber .bf-advisor-metrics small {
+  color: var(--cf-muted, #c5d0c8) !important;
+}
+
+@media (max-width: 760px) {
+  .os-shell .bf-insights-workspace,
+  .os-shell .bf-advisor-studio,
+  .os-shell .bf-household,
+  .os-shell .bf-analysis {
+    padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+

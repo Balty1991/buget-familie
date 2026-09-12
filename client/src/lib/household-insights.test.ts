@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, detectSubscriptions, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief, weeklyCheckIn, weeklyEnvelopeDailyRhythm } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief, weeklyCheckIn, weeklyEnvelopeDailyRhythm } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -211,5 +211,40 @@ describe("analize de gospodărie", () => {
     expect(rhythm.todayShare).toBeCloseTo(85.71, 1);
     expect(rhythm.todayLeft).toBeCloseTo(85.71, 1);
     expect(rhythm.days.every((item) => item.left === rhythm.todayShare)).toBe(true);
+  });
+});
+
+describe("fereastra de comparație Analiză", () => {
+  it("luna calendaristică compară cu luna anterioară", () => {
+    const { data } = base();
+    const window = analysisCompareWindow(data.settings.salaryPlan, "2026-09", "calendar");
+    expect(window).toMatchObject({
+      mode: "calendar",
+      start: "2026-09-01",
+      end: "2026-09-30",
+      priorStart: "2026-08-01",
+      priorEnd: "2026-08-31",
+    });
+  });
+
+  it("ciclul de salariu compară intervalul anterior de aceeași lungime", () => {
+    const { data } = base();
+    data.settings.salaryPlan.periodStart = "2026-08-26";
+    data.settings.salaryPlan.nextPayday = "2026-09-25";
+    const window = analysisCompareWindow(data.settings.salaryPlan, "2026-09", "cycle");
+    expect(window.mode).toBe("cycle");
+    expect(window.start).toBe("2026-08-26");
+    expect(window.end).toBe("2026-09-25");
+    expect(window.priorEnd).toBe("2026-08-25");
+    expect(window.priorStart).toBe("2026-07-26");
+  });
+
+  it("fără dată de salariu, ciclul cade pe luna calendaristică", () => {
+    const { data } = base();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "";
+    const window = analysisCompareWindow(data.settings.salaryPlan, "2026-09", "cycle");
+    expect(window.mode).toBe("calendar");
+    expect(window.start).toBe("2026-09-01");
   });
 });

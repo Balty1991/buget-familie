@@ -5,7 +5,7 @@
 import { useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, PiggyBank, Repeat, Shield, Users } from "lucide-react";
 import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-data";
-import { CashNote } from "@/components/LedgerArt";
+import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection } from "@/lib/household-insights";
 import { getLocale, t } from "@/lib/i18n";
@@ -71,7 +71,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
             <CashNote amount={age.days < 1 ? "sub o zi" : `${age.days} zile`} caption={t("Vârsta medie a leului")} />
             <p>Media ponderată pe {money(age.sampleAmount)} cheltuiți. {age.unfundedAmount > 0 ? `${money(age.unfundedAmount)} nu au avut încă un venit pereche — completează soldul inițial.` : t("Fiecare leu cheltuit a avut o încasare în spate.")}</p>
           </div>
-        ) : <p className="bf-helper">{t("După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.")}</p>}
+        ) : <div className="bf-empty-soft"><EmptyMark /><p>{t("După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.")}</p></div>}
         <div className="bf-household-safe">
           <span><small>Lichid acum</small><b>{money(safe.liquidFunds)}</b></span>
           <span><small>{t("Rezervat scadențe")}</small><b>{money(safe.reservedRecurring)}</b></span>
@@ -113,7 +113,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
             <strong>{money(item.amount)}</strong>
             <button type="button" onClick={() => addRecurring(item.key)}>{t("Adaugă la scadențe")}</button>
           </article>
-        )) : <p className="bf-helper">{t("Nu am găsit comercianți cu sumă stabilă. După 2–3 luni de registru, Netflix, chiria sau factura de telefon apar aici.")}</p>}
+        )) : <div className="bf-empty-soft"><EmptyMark /><p>{t("Nu am găsit comercianți cu sumă stabilă. După 2–3 luni de registru, Netflix, chiria sau factura de telefon apar aici.")}</p></div>}
       </section>
 
       <section className="bf-household-card">
@@ -131,7 +131,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
               </article>
             ))}
           </div>
-        ) : <p className="bf-helper">{t("Activitatea casei apare aici după prima înregistrare.")}</p>}
+        ) : <div className="bf-empty-soft"><EmptyMark /><p>{t("Activitatea casei apare aici după prima înregistrare.")}</p></div>}
         <p className="bf-helper">{t("Feed-ul se calculează din registrul deja sincronizat. Nu creăm un jurnal separat pe server.")}</p>
       </section>
 

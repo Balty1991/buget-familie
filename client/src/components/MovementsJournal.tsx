@@ -9,6 +9,7 @@ import { formatDate, isoToday, newId, transactionShareScope, type AppData, type 
 import { downloadJournalCsv } from "@/lib/journal-csv";
 import { getLocale, t } from "@/lib/i18n";
 import { MovementConflictBanner } from "@/components/EnvelopeConflictBanner";
+import { takeJournalQuery } from "@/lib/command-search";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 const exactMoney = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
@@ -18,7 +19,7 @@ const dateText = (value: string) => formatDate(value, { day: "2-digit", month: "
 const DAYS_PER_PAGE = 30;
 
 export function MovementsJournal({ data, onEdit, onDelete, onAdd, onOpenReview, onChange }: { data: AppData; onEdit: (item: Transaction) => void; onDelete: (id: string) => void; onAdd: () => void; onOpenReview?: () => void; onChange?: (next: AppData) => void }) {
-  const [kind, setKind] = useState<"all" | TransactionKind>("all"); const [member, setMember] = useState("all"); const [source, setSource] = useState("all"); const [shareScope, setShareScope] = useState<"all" | ShareScope>("all"); const [query, setQuery] = useState(""); const [fromDate, setFromDate] = useState(""); const [toDate, setToDate] = useState(""); const [filtersOpen, setFiltersOpen] = useState(false); const [showSaved, setShowSaved] = useState(false); const [saveName, setSaveName] = useState("");
+  const [kind, setKind] = useState<"all" | TransactionKind>("all"); const [member, setMember] = useState("all"); const [source, setSource] = useState("all"); const [shareScope, setShareScope] = useState<"all" | ShareScope>("all"); const [query, setQuery] = useState(() => (typeof window === "undefined" ? "" : takeJournalQuery(window.sessionStorage))); const [fromDate, setFromDate] = useState(""); const [toDate, setToDate] = useState(""); const [filtersOpen, setFiltersOpen] = useState(false); const [showSaved, setShowSaved] = useState(false); const [saveName, setSaveName] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase("ro-RO"); const invalidRange = Boolean(fromDate && toDate && fromDate > toDate);
   const clearFilters = () => { setKind("all"); setMember("all"); setSource("all"); setShareScope("all"); setQuery(""); setFromDate(""); setToDate(""); };
   const filtersActive = [kind !== "all", member !== "all", source !== "all", shareScope !== "all", Boolean(query), Boolean(fromDate), Boolean(toDate)].filter(Boolean).length;

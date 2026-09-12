@@ -20,6 +20,7 @@ import {
   type AppData,
   type BudgetAllocation,
   type RecurringPayment,
+  type SalaryPlan,
   type Transaction,
   isoDate,
 } from "./finance-data";
@@ -618,6 +619,55 @@ export const checkInRebalance = (data: AppData): CheckInRebalance | undefined =>
     covers: amount >= deficit - 0.005,
   };
 };
+
+
+export type AnalysisCompareWindow = {
+  mode: "calendar" | "cycle";
+  start: string;
+  end: string;
+  priorStart: string;
+  priorEnd: string;
+  title: string;
+};
+
+/**
+ * Fereastra de comparație pentru Analiză.
+ * Calendar = luna civilă (implicit). Ciclu = periodStart → nextPayday,
+ * comparat cu intervalul anterior de aceeași lungime — evită alarma falsă
+ * „cheltuieli fără venit” între 1 și ziua de salariu.
+ */
+export function analysisCompareWindow(
+  plan: Pick<SalaryPlan, "periodStart" | "nextPayday" | "earliestPayday" | "paydayFlexDays">,
+  focusMonth: string,
+  mode: "calendar" | "cycle",
+): AnalysisCompareWindow {
+  const cycleEnd = planEndDate(plan as SalaryPlan);
+  if (mode === "cycle" && plan.periodStart && cycleEnd) {
+    const start = plan.periodStart;
+    const end = cycleEnd < start ? start : cycleEnd;
+    const length = Math.max(1, Math.round((new Date(`${end}T12:00:00`).valueOf() - new Date(`${start}T12:00:00`).valueOf()) / 86_400_000) + 1);
+    const priorEnd = addIsoDays(start, -1);
+    const priorStart = addIsoDays(priorEnd, -(length - 1));
+    return {
+      mode: "cycle",
+      start,
+      end,
+      priorStart,
+      priorEnd,
+      title: `${formatDate(start, { day: "2-digit", month: "short" })} – ${formatDate(end, { day: "2-digit", month: "short" })}`,
+    };
+  }
+  const range = monthRange(focusMonth);
+  const prior = monthRange(previousMonth(focusMonth));
+  return {
+    mode: "calendar",
+    start: range.start,
+    end: range.end,
+    priorStart: prior.start,
+    priorEnd: prior.end,
+    title: monthTitle(focusMonth),
+  };
+}
 
 export const formatWeeklyCheckInShare = (check: WeeklyCheckIn, rebalance?: CheckInRebalance) => {
   const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;

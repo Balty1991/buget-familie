@@ -208,7 +208,9 @@
 /* Segmented + chips — same squircle family */
 .os-shell .bf-segment,
 .os-shell .kind-switch,
-.os-shell .bf-more-tabs {
+.os-shell .bf-more-tabs,
+.os-shell .bf-insights-switch,
+.os-shell .bf-analysis-scope {
   gap: 6px !important;
   padding: 5px !important;
   border-radius: var(--bf-chrome-radius) !important;
@@ -219,6 +221,8 @@
 .os-shell .bf-segment button,
 .os-shell .kind-switch button,
 .os-shell .bf-more-tabs button,
+.os-shell .bf-insights-switch button,
+.os-shell .bf-analysis-scope button,
 .os-shell .bf-filter-pills button,
 .os-shell .bf-chip-list > span,
 .os-shell .bf-language-switch button {
@@ -238,6 +242,8 @@
 .os-shell .bf-segment button.active,
 .os-shell .kind-switch button.is-active,
 .os-shell .bf-more-tabs button.active,
+.os-shell .bf-insights-switch button.active,
+.os-shell .bf-analysis-scope button.active,
 .os-shell .bf-filter-pills button.is-selected,
 .os-shell .bf-language-switch button.active {
   color: var(--os-mint-fg, #fff) !important;
@@ -681,7 +687,11 @@
 
 .os-shell .bf-plan-hero,
 .os-shell .bf-insights-hero,
-.os-shell .analysis-hero {
+.os-shell .analysis-hero,
+.os-shell .bf-plan-resource-band,
+.os-shell .bf-sync-hero,
+.os-shell .bf-reports-hero,
+.os-shell .bf-assistant-panel {
   border-radius: var(--bf-chrome-radius-lg) !important;
   border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
   background:
@@ -756,4 +766,266 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
   .os-shell .bf-obligation-ai > button:active {
     transform: none !important;
   }
+}
+
+/* ---------- Analiză / Plan / Sync: light glass, no dark-on-dark ---------- */
+.os-shell .bf-insights-switch {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  margin: 4px 0 14px !important;
+}
+.os-shell .bf-insights-switch button {
+  min-height: 44px !important;
+  padding: 0 8px !important;
+  font-size: 13px !important;
+  gap: 6px !important;
+}
+.os-shell .bf-insights-switch button svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 auto;
+}
+
+.os-shell .bf-advisor-hero,
+.os-shell .bf-coach-card,
+.os-shell .bf-scenario-card,
+.os-shell .bf-advisor-answer,
+.os-shell .bf-household-recap,
+.os-shell .bf-household-card,
+.os-shell .bf-sync-hero,
+.os-shell .bf-plan-resource-band,
+.os-shell .bf-reports-hero,
+.os-shell .bf-assistant-panel {
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: var(--bf-chrome-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, #fff),
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 78%, transparent)
+    ) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 10%, transparent),
+    0 16px 36px color-mix(in srgb, var(--os-ink, #000) 08%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.os-shell .bf-advisor-hero {
+  display: grid !important;
+  gap: 6px !important;
+  padding: 20px 18px 16px !important;
+}
+.os-shell .bf-advisor-hero:after {
+  display: none !important;
+}
+.os-shell .bf-advisor-studio .bf-assistant-symbol,
+.os-shell .bf-advisor-hero .bf-assistant-symbol {
+  width: 44px !important;
+  height: 44px !important;
+  margin: 0 0 10px !important;
+  border-radius: 14px !important;
+  border: 0 !important;
+  color: var(--os-mint-fg, #fff) !important;
+  background: var(--os-mint, var(--cf-primary)) !important;
+  box-shadow: 0 8px 16px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+}
+.os-shell .bf-advisor-hero .bf-kicker,
+.os-shell .bf-sync-hero .bf-kicker,
+.os-shell .bf-plan-resource-band .bf-kicker,
+.os-shell .bf-reports-hero .bf-kicker,
+.os-shell .bf-assistant-panel .bf-kicker {
+  color: var(--os-mint, var(--cf-primary)) !important;
+  opacity: 1 !important;
+}
+.os-shell .bf-advisor-hero h2,
+.os-shell .bf-sync-hero h2,
+.os-shell .bf-reports-hero h2,
+.os-shell .bf-assistant-panel h2,
+.os-shell .bf-coach-card h2,
+.os-shell .bf-household-recap h2,
+.os-shell .bf-household-card h2 {
+  margin: 0 !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.2rem, 5vw, 1.7rem) !important;
+  font-weight: 640 !important;
+  letter-spacing: -.035em !important;
+  line-height: 1.15 !important;
+}
+.os-shell .bf-advisor-hero > p:not(.bf-kicker),
+.os-shell .bf-sync-hero p:not(.bf-kicker),
+.os-shell .bf-reports-hero p:not(.bf-kicker),
+.os-shell .bf-assistant-panel > p:not(.bf-kicker),
+.os-shell .bf-coach-card p:not(.bf-kicker),
+.os-shell .bf-household-recap > div > p:not(.bf-kicker),
+.os-shell .bf-plan-resource-band p,
+.os-shell .bf-plan-resource-band > div:first-child > span {
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  max-width: 54ch;
+}
+
+.os-shell .bf-advisor-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 14px !important;
+}
+.os-shell .bf-advisor-metrics span {
+  min-width: 0 !important;
+  padding: 10px 8px !important;
+  border-radius: var(--bf-chrome-radius-sm) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 70%, transparent) !important;
+}
+.os-shell .bf-advisor-metrics small {
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 10px !important;
+  font-weight: 720 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+.os-shell .bf-advisor-metrics b {
+  color: var(--os-ink, var(--cf-ink)) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 14px !important;
+  font-weight: 720 !important;
+  letter-spacing: -.03em !important;
+  white-space: nowrap !important;
+}
+.os-shell .bf-advisor-metrics b.risk {
+  color: var(--cf-danger, #b93d36) !important;
+}
+.os-shell .bf-advisor-hero-cta {
+  width: 100% !important;
+  margin-top: 12px !important;
+}
+
+.os-shell .bf-plan-resource-band {
+  color: var(--os-ink, var(--cf-ink)) !important;
+}
+.os-shell .bf-plan-resource-band strong,
+.os-shell .bf-plan-resource-band b {
+  color: var(--os-ink, var(--cf-ink)) !important;
+}
+.os-shell .bf-plan-resource-band > div:first-child {
+  border-right-color: color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+}
+.os-shell .bf-plan-resource-band > div:last-child > span {
+  border-bottom-color: color-mix(in srgb, var(--os-line, var(--cf-line)) 70%, transparent) !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+}
+
+.os-shell .bf-analysis-next-step {
+  display: grid !important;
+  gap: 12px !important;
+  padding: 16px 16px 14px !important;
+  border-radius: var(--bf-chrome-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 94%, transparent) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--os-ink, #000) 06%, transparent) !important;
+}
+.os-shell .bf-analysis-next-step h2 {
+  font-family: var(--font-display) !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+}
+.os-shell .bf-analysis-next-step button,
+.os-shell .bf-analysis-empty-cta {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+.os-shell .bf-empty-soft {
+  display: grid !important;
+  justify-items: center !important;
+  gap: 8px !important;
+  padding: 22px 14px !important;
+  text-align: center !important;
+  border-radius: var(--bf-chrome-radius) !important;
+  border: 1px dashed color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 55%, transparent) !important;
+}
+.os-shell .bf-empty-soft p,
+.os-shell .bf-empty-soft small {
+  max-width: 38ch !important;
+  margin: 0 !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 13.5px !important;
+  line-height: 1.45 !important;
+}
+.os-shell .bf-empty-mark {
+  width: 72px;
+  height: 56px;
+  color: var(--os-mint, var(--cf-primary));
+}
+.os-shell .bf-empty-mark rect,
+.os-shell .bf-empty-mark circle {
+  fill: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent);
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+.os-shell .bf-empty-mark path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.os-shell .bf-analysis-window {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+  margin: 0 0 4px !important;
+}
+
+/* Dark / aurora / navy / cyber: keep glass, force readable ink */
+html.theme-dark .os-shell .bf-advisor-hero,
+html.theme-aurora .os-shell .bf-advisor-hero,
+html.theme-navy .os-shell .bf-advisor-hero,
+html.theme-cyber .os-shell .bf-advisor-hero,
+html.theme-dark .os-shell .bf-sync-hero,
+html.theme-aurora .os-shell .bf-sync-hero,
+html.theme-navy .os-shell .bf-sync-hero,
+html.theme-cyber .os-shell .bf-sync-hero,
+html.theme-dark .os-shell .bf-plan-resource-band,
+html.theme-aurora .os-shell .bf-plan-resource-band,
+html.theme-navy .os-shell .bf-plan-resource-band,
+html.theme-cyber .os-shell .bf-plan-resource-band {
+  background: color-mix(in srgb, var(--os-surface, #16191e) 92%, transparent) !important;
+  border-color: var(--os-line, #2c323a) !important;
+  color: var(--os-ink, #f1f4f8) !important;
+}
+html.theme-dark .os-shell .bf-advisor-hero h2,
+html.theme-aurora .os-shell .bf-advisor-hero h2,
+html.theme-navy .os-shell .bf-advisor-hero h2,
+html.theme-cyber .os-shell .bf-advisor-hero h2,
+html.theme-dark .os-shell .bf-advisor-metrics b,
+html.theme-aurora .os-shell .bf-advisor-metrics b,
+html.theme-navy .os-shell .bf-advisor-metrics b,
+html.theme-cyber .os-shell .bf-advisor-metrics b {
+  color: var(--os-ink, #f1f4f8) !important;
+}
+
+@media (max-width: 370px) {
+  .os-shell .bf-insights-switch button span,
+  .os-shell .bf-insights-switch button {
+    font-size: 11.5px !important;
+  }
+  .os-shell .bf-advisor-metrics {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.os-shell .bf-command-section {
+  margin: 10px 4px 4px !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 11px !important;
+  font-weight: 720 !important;
+  letter-spacing: .1em !important;
+  text-transform: uppercase !important;
 }
