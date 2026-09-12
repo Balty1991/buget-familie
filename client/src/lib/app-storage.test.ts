@@ -141,7 +141,7 @@ describe("backup Buget Familie", () => {
   });
 });
 
-import { chooseFresherAppData, hashAppPayload } from "./app-storage";
+import { chooseFresherAppData, hashAppPayload, normalizeSavedAt, resolveHydrateMerge } from "./app-storage";
 
 describe("stocare LS ↔ IndexedDB", () => {
   const sample = (familyName: string) => {
@@ -180,5 +180,53 @@ describe("stocare LS ↔ IndexedDB", () => {
       { data: local, savedAt: null, hash: "1" },
       { data: indexed, savedAt: null, hash: "2" },
     )).toBe(local);
+  });
+
+  it("stampă invalidă e tratată ca lipsă", () => {
+    expect(normalizeSavedAt("nu-e-dată")).toBeNull();
+    expect(normalizeSavedAt("")).toBeNull();
+    expect(normalizeSavedAt("2026-09-12T12:00:00.000Z")).toBe("2026-09-12T12:00:00.000Z");
+  });
+
+  it("la același savedAt cu hash diferit preferă LS (debounce IDB)", () => {
+    const local = sample("Taste");
+    const indexed = sample("IDB");
+    const stamp = "2026-09-12T12:00:00.000Z";
+    expect(chooseFresherAppData(
+      { data: local, savedAt: stamp, hash: "aaa" },
+      { data: indexed, savedAt: stamp, hash: "bbb" },
+    )).toBe(local);
+  });
+
+  it("savedAt invalid pe IDB nu bate LS cu stampă validă", () => {
+    const local = sample("Local");
+    const indexed = sample("Indexed");
+    expect(chooseFresherAppData(
+      { data: local, savedAt: "2026-09-12T12:00:00.000Z", hash: "a" },
+      { data: indexed, savedAt: "ieri", hash: "b" },
+    )).toBe(local);
+  });
+
+  it("hydrate: editarea din memorie înainte de IDB nu e rescrisă de IDB mai vechi", () => {
+    const memory = sample("Editat-acum");
+    const indexed = sample("IDB-vechi");
+    const picked = resolveHydrateMerge({
+      local: { data: sample("LS-vechi"), savedAt: "2026-09-12T10:00:00.000Z", hash: "ls" },
+      indexed: { data: indexed, savedAt: "2026-09-12T11:00:00.000Z", hash: "idb" },
+      memory,
+      editedBeforeHydrate: true,
+    });
+    expect(picked?.settings.familyName).toBe("Editat-acum");
+  });
+
+  it("hydrate: fără editări, IDB mai nou înlocuiește LS", () => {
+    const memory = sample("LS-vechi");
+    const picked = resolveHydrateMerge({
+      local: { data: memory, savedAt: "2026-09-12T10:00:00.000Z", hash: "ls" },
+      indexed: { data: sample("IDB-nou"), savedAt: "2026-09-12T12:00:00.000Z", hash: "idb" },
+      memory,
+      editedBeforeHydrate: false,
+    });
+    expect(picked?.settings.familyName).toBe("IDB-nou");
   });
 });

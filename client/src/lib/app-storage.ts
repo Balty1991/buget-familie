@@ -136,9 +136,24 @@ export function writeLocalStorageSnapshot(serialized: string, savedAt = new Date
   return meta;
 }
 
+/** Normalizează stampile ISO; valori invalide / goale → null. */
+export function normalizeSavedAt(value: string | null | undefined): string | null {
+  if (!value || typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const ms = Date.parse(trimmed);
+  if (!Number.isFinite(ms)) return null;
+  return new Date(ms).toISOString();
+}
+
 /**
- * Alege copia mai nouă. IDB e primar când stampile/hash-urile sunt egale;
- * dacă diferă fără stampă, preferăm LS (scris sincron, înainte de debounce-ul IDB).
+ * Alege copia mai nouă între LS (sau memorie) și IndexedDB.
+ * Reguli, în ordine:
+ * 1. o singură parte are date → aceea;
+ * 2. hash egal → IDB (sursă primară stabilă);
+ * 3. stampă mai nouă câștigă;
+ * 4. stampă egală dar hash diferit → LS (taste recente înainte de debounce IDB ~280ms);
+ * 5. fără stampă → LS (migrare / debounce).
  */
 export function chooseFresherAppData(
   local: { data: AppData | null; savedAt: string | null; hash: string | null },
@@ -148,13 +163,43 @@ export function chooseFresherAppData(
   if (!local.data) return indexed.data;
   if (!indexed.data) return local.data;
   if (local.hash && indexed.hash && local.hash === indexed.hash) return indexed.data;
-  if (local.savedAt && indexed.savedAt) {
-    return local.savedAt >= indexed.savedAt ? local.data : indexed.data;
+  const localAt = normalizeSavedAt(local.savedAt);
+  const indexedAt = normalizeSavedAt(indexed.savedAt);
+  if (localAt && indexedAt) {
+    if (localAt > indexedAt) return local.data;
+    if (indexedAt > localAt) return indexed.data;
+    // Același milisecund: preferăm LS — poate conține taste după ultimul put IDB.
+    return local.data;
   }
-  if (local.savedAt && !indexed.savedAt) return local.data;
-  if (indexed.savedAt && !local.savedAt) return indexed.data;
+  if (localAt && !indexedAt) return local.data;
+  if (indexedAt && !localAt) return indexed.data;
   // Migrare: fără meta, LS e mai aproape de ultimele taste (IDB e întârziat ~280ms).
   return local.data;
+}
+
+/**
+ * Rezolvă hydrate-ul de start: dacă utilizatorul a editat înainte ca IDB să răspundă,
+ * memoria/LS cu stampă „acum” câștigă; altfel comparăm LS ↔ IDB clasic.
+ */
+export function resolveHydrateMerge(options: {
+  local: { data: AppData | null; savedAt: string | null; hash: string | null };
+  indexed: { data: AppData | null; savedAt: string | null; hash: string | null };
+  memory: AppData;
+  editedBeforeHydrate: boolean;
+}): AppData | null {
+  const memoryHash = hashAppPayload(JSON.stringify(options.memory));
+  if (options.editedBeforeHydrate) {
+    const stamped = {
+      data: options.memory,
+      savedAt: new Date().toISOString(),
+      hash: memoryHash,
+    };
+    return chooseFresherAppData(stamped, options.indexed) || options.memory;
+  }
+  const localSide = options.local.data
+    ? options.local
+    : { data: options.memory, savedAt: options.local.savedAt, hash: options.local.hash || memoryHash };
+  return chooseFresherAppData(localSide, options.indexed);
 }
 
 export async function readAppData(): Promise<AppData | null> {
