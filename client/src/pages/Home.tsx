@@ -6,47 +6,35 @@ import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState }
 import { BarChart3, Bell, RotateCcw, BellRing, CalendarClock, CreditCard, Goal, Inbox, Info, LayoutDashboard, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
-import { buildUndo, type UndoAction } from "@/lib/undo-delete";
-import { checkFamilyPassword } from "@/lib/family-password";
-import { touchSyncDevice, revokeSyncDevice, isThisDeviceRevoked, listActiveSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
-import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, chooseFresherAppData, readAppDataRecord, readLocalStorageSnapshot, readSyncJournal, writeAppData, writeLocalStorageSnapshot, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
-import type { EncryptedEnvelope } from "@/lib/family-crypto";
+import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, chooseFresherAppData, readAppDataRecord, readLocalStorageSnapshot, writeAppData, writeLocalStorageSnapshot } from "@/lib/app-storage";
 import { HealthScoreBadge } from "@/components/HealthScoreBadge";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { BrandMark } from "@/components/BrandMark";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { MovementsJournal } from "@/components/MovementsJournal";
-import { notifyFamilyEnvelopeChanges, scheduleFinancialReminders } from "@/lib/local-notifications";
+import { scheduleFinancialReminders } from "@/lib/local-notifications";
 import { observeQuickActions } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
 import { todayBrief, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import {
   DeferBelowFold,
-  LIGHT_THEMES,
   WhatsNewSheet,
-  automaticTheme,
-  backgroundOptions,
-  currentLocalMinutes,
   dateText,
-  defaultScheduleTimes,
   fmtExact,
   money,
   sourceKindName,
-  themeOptions,
-  type BackgroundId,
   type MainView,
   type MoreView,
-  type SyncPanelProps,
-  type ThemeId,
-  type ThemeSchedule,
-  type ThemeScheduleTimes,
 } from "@/pages/home-kit";
-import { ALL_THEME_CLASS_IDS, markWhatsNewSeen, resolveInitialTheme, shouldShowWhatsNew } from "@/lib/theme-default";
+import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/theme-default";
 import { getLocale, t } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
+import { useUndo } from "@/hooks/useUndo";
+import { useThemeChrome } from "@/hooks/useThemeChrome";
+import { useFamilySync, syncPortable } from "@/hooks/useFamilySync";
 
 const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio })));
 const QuickEntryPanel = lazy(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel })));
@@ -68,8 +56,6 @@ const ObjectivesView = lazy(() => loadSecondary().then((module) => ({ default: m
 const InsightsView = lazy(() => loadSecondary().then((module) => ({ default: module.InsightsView })));
 const MoreViewScreen = lazy(() => loadSecondary().then((module) => ({ default: module.MoreView })));
 const AICompanion = lazy(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion })));
-const loadFamilySync = () => import("@/lib/realtime-sync");
-const loadFamilyCrypto = () => import("@/lib/family-crypto");
 
 const initialMainView = (): MainView => { const requested = new URLSearchParams(window.location.search).get("view"); return requested === "journal" || requested === "plan" || requested === "obligations" || requested === "insights" || requested === "utilities" ? requested : "today"; };
 type AdvisorAction = "plan" | "recurring" | "objectives" | "journal";
@@ -438,7 +424,24 @@ export default function Home() {
   const [data, setData] = useState<AppData>(() => { try { const raw = window.localStorage.getItem(APP_STORAGE_KEY) || window.localStorage.getItem(LEGACY_STORAGE_KEY); return raw ? normalizeAppData(JSON.parse(raw)) : createEmptyAppData(); } catch { return createEmptyAppData(); } });
   const [storageNotice, setStorageNotice] = useState<string | null>(null); const [storageReady, setStorageReady] = useState(false); const [onboardingOpen, setOnboardingOpen] = useState(false); const [setupOpen, setSetupOpen] = useState(false);
   const storageHydrated = useRef(false);
-  useLanguage(); const [view, setView] = useState<MainView>(initialMainView); const [more, setMore] = useState<MoreView>("overview"); const [quickActionsOpen, setQuickActionsOpen] = useState(false); const [modal, setModal] = useState<"quick" | "transaction" | "receipt" | "debt" | "saving" | "debt-payment" | null>(null); const [editTx, setEditTx] = useState<Transaction>(); const [editGoal, setEditGoal] = useState<Debt | SavingsGoal>(); const [receiptStorageNotice, setReceiptStorageNotice] = useState(""); const legacyReceiptMigrationStarted = useRef(false); const [themePickerOpen, setThemePickerOpen] = useState(false); const [theme, setTheme] = useState<ThemeId>(() => resolveInitialTheme(window.localStorage)); const [whatsNewOpen, setWhatsNewOpen] = useState(false); const [themeSchedule, setThemeSchedule] = useState<ThemeSchedule>(() => window.localStorage.getItem("buget-familie:theme-schedule") === "auto" ? "auto" : "manual"); const [background, setBackground] = useState<BackgroundId>(() => { const saved = window.localStorage.getItem("buget-familie:background"); return backgroundOptions.some((item) => item.id === saved) ? saved as BackgroundId : "plain"; }); const previousBackgroundRef = useRef<BackgroundId>(background); const backgroundTransitionReady = useRef(false); const [highContrast, setHighContrast] = useState(() => window.localStorage.getItem("buget-familie:high-contrast") === "true"); const [scheduleTimes, setScheduleTimes] = useState<ThemeScheduleTimes>(() => { try { const saved = JSON.parse(window.localStorage.getItem("buget-familie:theme-schedule-times") || "null") as Partial<ThemeScheduleTimes> | null; return { dayStart: typeof saved?.dayStart === "string" ? saved.dayStart : defaultScheduleTimes.dayStart, eveningStart: typeof saved?.eveningStart === "string" ? saved.eveningStart : defaultScheduleTimes.eveningStart, nightStart: typeof saved?.nightStart === "string" ? saved.nightStart : defaultScheduleTimes.nightStart }; } catch { return defaultScheduleTimes; } }); const activeTheme = themeSchedule === "auto" ? automaticTheme(currentLocalMinutes(), scheduleTimes) : theme; const previousThemeRef = useRef<ThemeId>(activeTheme); const themeTransitionReady = useRef(false);
+  useLanguage();
+  const [view, setView] = useState<MainView>(initialMainView);
+  const [more, setMore] = useState<MoreView>("overview");
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [modal, setModal] = useState<"quick" | "transaction" | "receipt" | "debt" | "saving" | "debt-payment" | null>(null);
+  const [editTx, setEditTx] = useState<Transaction>();
+  const [editGoal, setEditGoal] = useState<Debt | SavingsGoal>();
+  const [receiptStorageNotice, setReceiptStorageNotice] = useState("");
+  const legacyReceiptMigrationStarted = useRef(false);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  const {
+    themePickerOpen, setThemePickerOpen,
+    theme, setTheme,
+    themeSchedule, setThemeSchedule,
+    background, setBackground,
+    highContrast, setHighContrast,
+    scheduleTimes, setScheduleTimes,
+  } = useThemeChrome();
 
   useEffect(() => {
     let active = true;
@@ -496,7 +499,8 @@ export default function Home() {
     };
     const id = window.setTimeout(warm, 250);
     return () => window.clearTimeout(id);
-  }, [storageReady]); useEffect(() => { if (legacyReceiptMigrationStarted.current || !data.receipts.some((receipt) => (receipt.imageData || receipt.imageData2) && !receipt.imageKeys?.length)) return; legacyReceiptMigrationStarted.current = true; void migrateLegacyReceiptImages(data.receipts).then((migrated) => { if (!migrated.size) return; setData((current) => ({ ...current, receipts: current.receipts.map((receipt) => { const imageKeys = migrated.get(receipt.id); return imageKeys ? { ...receipt, imageKeys, imageData: undefined, imageData2: undefined } : receipt; }) })); setReceiptStorageNotice(`${migrated.size} bon${migrated.size === 1 ? " a fost mutat" : "uri au fost mutate"} în stocarea locală a telefonului.`); }).catch((reason) => setReceiptStorageNotice(reason instanceof Error ? reason.message : t("Nu am putut muta fotografiile vechi ale bonurilor; acestea nu au fost șterse."))); }, [data.receipts]); useEffect(() => { const root = document.documentElement; const previous = previousThemeRef.current; root.classList.remove(...ALL_THEME_CLASS_IDS.map((id) => `theme-${id}`)); root.classList.add(`theme-${activeTheme}`); root.classList.toggle("dark", !LIGHT_THEMES.includes(activeTheme)); if (themeTransitionReady.current && previous !== activeTheme) { root.classList.remove("theme-transitioning"); root.classList.add("theme-transitioning"); const timer = window.setTimeout(() => root.classList.remove("theme-transitioning"), 420); previousThemeRef.current = activeTheme; return () => window.clearTimeout(timer); } themeTransitionReady.current = true; previousThemeRef.current = activeTheme; }, [activeTheme]); useEffect(() => { window.localStorage.setItem("buget-familie:theme", theme); }, [theme]); useEffect(() => { window.localStorage.setItem("buget-familie:theme-schedule", themeSchedule); }, [themeSchedule]); useEffect(() => { window.localStorage.setItem("buget-familie:theme-schedule-times", JSON.stringify(scheduleTimes)); }, [scheduleTimes]); useEffect(() => { const root = document.documentElement; const previous = previousBackgroundRef.current; if (backgroundTransitionReady.current && previous !== background) { root.classList.remove("background-transitioning", "background-from-plain", "background-from-paper", "background-from-grid", "background-from-aurora", "background-from-dots"); root.classList.add("background-transitioning", `background-from-${previous}`); const timer = window.setTimeout(() => root.classList.remove("background-transitioning", `background-from-${previous}`), 520); previousBackgroundRef.current = background; return () => window.clearTimeout(timer); } backgroundTransitionReady.current = true; previousBackgroundRef.current = background; }, [background]); useEffect(() => { document.documentElement.classList.remove("background-plain", "background-paper", "background-grid", "background-aurora", "background-dots"); document.documentElement.classList.add(`background-${background}`); window.localStorage.setItem("buget-familie:background", background); }, [background]); useEffect(() => { document.documentElement.classList.toggle("bf-high-contrast", highContrast); window.localStorage.setItem("buget-familie:high-contrast", String(highContrast)); }, [highContrast]); useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) window.localStorage.setItem("buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:onboarding-complete") && !hasStarted) setOnboardingOpen(true); if (storageReady && window.localStorage.getItem("buget-familie:onboarding-complete") && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
+  }, [storageReady]); useEffect(() => { if (legacyReceiptMigrationStarted.current || !data.receipts.some((receipt) => (receipt.imageData || receipt.imageData2) && !receipt.imageKeys?.length)) return; legacyReceiptMigrationStarted.current = true; void migrateLegacyReceiptImages(data.receipts).then((migrated) => { if (!migrated.size) return; setData((current) => ({ ...current, receipts: current.receipts.map((receipt) => { const imageKeys = migrated.get(receipt.id); return imageKeys ? { ...receipt, imageKeys, imageData: undefined, imageData2: undefined } : receipt; }) })); setReceiptStorageNotice(`${migrated.size} bon${migrated.size === 1 ? " a fost mutat" : "uri au fost mutate"} în stocarea locală a telefonului.`); }).catch((reason) => setReceiptStorageNotice(reason instanceof Error ? reason.message : t("Nu am putut muta fotografiile vechi ale bonurilor; acestea nu au fost șterse."))); }, [data.receipts]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) window.localStorage.setItem("buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:onboarding-complete") && !hasStarted) setOnboardingOpen(true); if (storageReady && window.localStorage.getItem("buget-familie:onboarding-complete") && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
   useEffect(() => {
     if (!storageReady || onboardingOpen || setupOpen) return;
     if (shouldShowWhatsNew(window.localStorage)) setWhatsNewOpen(true);
@@ -505,129 +509,15 @@ export default function Home() {
 
   const update = (fn: (current: AppData) => AppData) => setData((current) => fn(current));
 
-  /**
-   * Ștergerea este un gest dintr-o singură atingere, deci și greșeala este.
-   * Ținem lângă ea rândurile scoase, câteva secunde, ca revenirea să fie tot
-   * o singură atingere. Vezi `lib/undo-delete.ts` pentru de ce nu e de ajuns
-   * lista de „tombstones”.
-   */
-  const [undo, setUndo] = useState<UndoAction | null>(null);
-  const undoTimer = useRef<number | undefined>(undefined);
-  const offerUndo = (action: UndoAction | undefined) => {
-    window.clearTimeout(undoTimer.current);
-    if (!action) return;
-    setUndo(action);
-    undoTimer.current = window.setTimeout(() => setUndo(null), 9000);
-  };
-  const runUndo = () => {
-    window.clearTimeout(undoTimer.current);
-    if (undo) update(undo.apply);
-    setUndo(null);
-  };
-  useEffect(() => () => window.clearTimeout(undoTimer.current), []);
-
-  /**
-   * Șterge rândurile alese și pregătește anularea, dintr-un singur loc.
-   * Calculul se face pe starea curentă, nu într-un `setData(fn)`: acela rulează
-   * abia la randare, deci rândurile scoase ar fi ajuns la bara de anulare goale.
-   */
-  const deleteWithUndo = (label: string, pick: (current: AppData) => { next: AppData; removed: Parameters<typeof buildUndo>[1] }) => {
-    const { next, removed } = pick(data);
-    setData(next);
-    offerUndo(buildUndo(label, removed));
-  };
+  const { undo, setUndo, runUndo, deleteWithUndo } = useUndo(data, setData);
   const go = (next: MainView) => { preloadView(next); startTransition(() => setView(next)); };
   useEffect(() => {
     const skip = document.querySelector(".bf-skip-link");
     if (skip instanceof HTMLElement && skip === document.activeElement) skip.blur();
   }, []);
 
-  const [syncPassword, setSyncPassword] = useState(""); const [syncPasswordReveal, setSyncPasswordReveal] = useState(""); const [syncNotice, setSyncNotice] = useState(""); const [syncBusy, setSyncBusy] = useState(false); const [syncConnected, setSyncConnected] = useState(false); const [syncLastSync, setSyncLastSync] = useState(""); const [syncJournal, setSyncJournal] = useState<SyncJournalEntry[]>(readSyncJournal);
-  const syncDataRef = useRef(data); syncDataRef.current = data; const syncPasswordRef = useRef(syncPassword); syncPasswordRef.current = syncPassword; const syncRoomIdRef = useRef<string | undefined>(undefined); const syncUnsubscribeRef = useRef<(() => void) | undefined>(undefined); const syncLastPortableRef = useRef(""); const syncPushTimerRef = useRef<number | undefined>(undefined);
-  const syncAppendJournal = (entry: Omit<SyncJournalEntry, "id">) => setSyncJournal((current) => { const next = [{ ...entry, id: newId("sync-log") }, ...current].slice(0, 40); writeSyncJournal(next); return next; });
-  const syncPortable = (value: AppData) => JSON.stringify({ ...value, receipts: value.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...rest }) => rest) });
-  const syncRetainLocalReceiptImages = (value: AppData): AppData => ({ ...value, receipts: value.receipts.map((receipt) => { const local = syncDataRef.current.receipts.find((item) => item.id === receipt.id); return { ...receipt, imageData: local?.imageData, imageData2: local?.imageData2, imageKeys: local?.imageKeys }; }) });
-  const syncDisconnect = () => { syncUnsubscribeRef.current?.(); syncUnsubscribeRef.current = undefined; syncRoomIdRef.current = undefined; window.clearTimeout(syncPushTimerRef.current); setSyncConnected(false); setSyncPassword(""); setSyncNotice(t("Sesiunea a fost închisă pe acest telefon.")); };
-  const syncHandleRemoteEnvelope = async (envelope: EncryptedEnvelope) => {
-    try {
-      const crypto = await loadFamilyCrypto();
-      const remoteData = normalizeAppData(await crypto.decryptFamilyData(envelope, syncPasswordRef.current));
-      const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
-      const mergedPortable = syncPortable(merged);
-      if (mergedPortable === syncPortable(syncDataRef.current)) { setSyncLastSync(new Date().toISOString()); return; }
-      const previous = syncDataRef.current;
-      if (isThisDeviceRevoked(merged)) { setData(merged); syncDisconnect(); setSyncNotice(t("Acest telefon a fost revocat din cameră. Schimbă parola pe celelalte telefoane dacă e nevoie.")); return; }
-      syncLastPortableRef.current = mergedPortable; setData(merged); setSyncLastSync(new Date().toISOString());
-      // Anunță imediat dacă mișcarea primită a împins un plic peste prag; altfel afli abia la final de perioadă.
-      void notifyFamilyEnvelopeChanges(previous, merged).catch(() => undefined);
-      syncAppendJournal({ createdAt: new Date().toISOString(), status: "resolved", message: t("Actualizare primită de la un alt telefon conectat."), action: t("Datele au fost reunite automat prin ID și marcaj de actualizare.") });
-    } catch (error) {
-      syncAppendJournal({ createdAt: new Date().toISOString(), status: "failed", message: error instanceof Error ? error.message : "Pachetul primit nu a putut fi decriptat.", action: t("Verifică să fie exact aceeași parolă pe toate telefoanele.") });
-      setSyncNotice(error instanceof Error ? error.message : "Un pachet primit nu a putut fi decriptat.");
-    }
-  };
-  const syncConnect = async () => {
-    /**
-     * Din parolă se derivă și identificatorul camerei de sincronizare: cine îl
-     * află poate suprascrie pachetul familiei, chiar fără să-l poată citi. O
-     * lungime de 12 caractere nu spune nimic despre asta — „123456789012” are 12.
-     */
-    const strength = checkFamilyPassword(syncPassword);
-    if (!strength.ok) { setSyncNotice(`${strength.label}. ${strength.advice.join(" ")}`); return; }
-    setSyncBusy(true);
-    try {
-      const crypto = await loadFamilyCrypto();
-      const roomId = await crypto.deriveFamilyRoomId(syncPassword);
-      const syncApi = await loadFamilySync();
-      const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
-      let merged = syncDataRef.current;
-      if (remoteEnvelope) { const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncPassword)); merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData)); }
-      merged = touchSyncDevice(merged);
-      const mergedPortable = syncPortable(merged);
-      syncLastPortableRef.current = mergedPortable;
-      setData(merged);
-      const envelope = await crypto.encryptFamilyData(merged, syncPassword);
-      await syncApi.pushFamilyEnvelope(roomId, envelope);
-      syncRoomIdRef.current = roomId;
-      syncUnsubscribeRef.current = syncApi.subscribeFamilyRoom(roomId, (incoming) => void syncHandleRemoteEnvelope(incoming), (error) => setSyncNotice(error.message));
-      setSyncConnected(true); setSyncLastSync(new Date().toISOString());
-      setSyncNotice(t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
-    } catch (error) {
-      setSyncNotice(error instanceof Error ? error.message : t("Familia nu a putut fi conectată."));
-    } finally { setSyncBusy(false); }
-  };
-  useEffect(() => { if (!syncConnected || !syncRoomIdRef.current) return; const currentPortable = syncPortable(data); if (currentPortable === syncLastPortableRef.current) return; window.clearTimeout(syncPushTimerRef.current); syncPushTimerRef.current = window.setTimeout(() => { void (async () => { try { const { encryptFamilyData } = await loadFamilyCrypto();
-          const envelope = await encryptFamilyData(data, syncPasswordRef.current); const { pushFamilyEnvelope } = await loadFamilySync();
-          await pushFamilyEnvelope(syncRoomIdRef.current!, envelope); syncLastPortableRef.current = currentPortable; setSyncLastSync(new Date().toISOString()); } catch (error) { setSyncNotice(error instanceof Error ? error.message : t("Actualizarea nu a putut fi trimisă.")); } })(); }, 800); return () => window.clearTimeout(syncPushTimerRef.current); }, [data, syncConnected]);
-  useEffect(() => () => syncUnsubscribeRef.current?.(), []);
-  const syncPanelProps: SyncPanelProps = {
-    connected: syncConnected,
-    busy: syncBusy,
-    password: syncPassword,
-    setPassword: setSyncPassword,
-    passwordRevealOnce: syncPasswordReveal || undefined,
-    clearPasswordReveal: () => setSyncPasswordReveal(""),
-    notice: syncNotice,
-    lastSync: syncLastSync,
-    journal: syncJournal,
-    devices: listActiveSyncDevices(data),
-    thisDeviceId: getOrCreateDeviceId(),
-    onConnect: () => void syncConnect(),
-    onDisconnect: syncDisconnect,
-    onClearJournal: () => { setSyncJournal([]); writeSyncJournal([]); },
-    onRevokeDevice: (deviceId: string) => {
-      const next = revokeSyncDevice(data, deviceId);
-      setData(next);
-      if (deviceId === getOrCreateDeviceId()) {
-        syncDisconnect();
-        setSyncNotice(t("Ai revocat acest telefon. Sesiunea s-a închis."));
-      } else {
-        setSyncNotice(t("Dispozitivul a fost marcat ca revocat. Se propagă la următoarea sincronizare."));
-      }
-    },
-  };
+  const { syncPanelProps, setSyncPassword, setSyncPasswordReveal } = useFamilySync(data, setData);
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; setData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
-  useEffect(() => { const openTheme = () => setThemePickerOpen(true); window.addEventListener("buget-familie:open-theme", openTheme); return () => window.removeEventListener("buget-familie:open-theme", openTheme); }, []);
   const saveTx = (item: Transaction | Transaction[]) => update((current) => {
     const list = Array.isArray(item) ? item : [item];
     let transactions = current.transactions;
