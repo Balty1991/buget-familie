@@ -25,12 +25,16 @@ import { t } from "./i18n";
 export type StatementColumns = { date: number; description: number; amount?: number; debit?: number; credit?: number };
 export type StatementRow = { line: number; date: string; description: string; amount: number; kind: TransactionKind };
 export type StatementSkip = { line: number; reason: string };
+export type StatementBank = "bcr" | "bt" | "ing" | "revolut" | "generic";
+
 export type StatementParse = {
   rows: StatementRow[];
   skipped: StatementSkip[];
   delimiter: string;
   headers: string[];
   columns: StatementColumns;
+  /** Banca recunoscută din antet, pentru mesajul de previzualizare. */
+  bank: StatementBank;
 };
 
 const DELIMITERS = [";", ",", "\t", "|"];
@@ -124,18 +128,47 @@ export function parseStatementDate(raw: string): string | undefined {
   return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
 }
 
-const HEADER_DATE = /\bdata\b|\bdate\b|\bdata\s*(tranzactiei|procesarii|valutei|operatiunii)\b/;
-const HEADER_DESCRIPTION = /descri|detalii|explicat|beneficiar|comerciant|ordonator|narrative|reference|referinta|tranzactie|denumire/;
+const HEADER_DATE = /\bdata\b|\bdate\b|\bdata\s*(tranzactiei|procesarii|valutei|operatiunii)\b|completed\s*date|started\s*date|booking\s*date|value\s*date/;
+const HEADER_DESCRIPTION = /descri|detalii|explicat|beneficiar|comerciant|ordonator|narrative|reference|referinta|denumire|\bdescription\b|\bmerchant\b|\bnume\b|(?<!data )tranzacti[ei]/;
 const HEADER_AMOUNT = /\bsuma\b|\bvaloare\b|\bamount\b/;
-const HEADER_DEBIT = /debit|plati|iesiri|retrageri/;
-const HEADER_CREDIT = /credit|incasari|intrari|alimentari/;
+const HEADER_DEBIT = /debit|plati|iesiri|retrageri|suma\s*debit/;
+const HEADER_CREDIT = /credit|incasari|intrari|alimentari|suma\s*credit/;
+
+/** Preferă „Completed Date” față de „Started Date” pe exporturile Revolut. */
+const HEADER_DATE_PREFERRED = /completed\s*date|data\s*(procesarii|valutei)|booking\s*date/;
+
+export const STATEMENT_BANK_LABELS: Record<StatementBank, string> = {
+  bcr: "BCR",
+  bt: "Banca Transilvania",
+  ing: "ING",
+  revolut: "Revolut",
+  generic: "Extras CSV",
+};
+
+/**
+ * Recunoaște formatul din antet, fără a cere utilizatorului banca.
+ * Heuristici pe coloane tipice din exporturile românești (BCR, BT, ING, Revolut RO).
+ */
+export function detectStatementBank(headers: string[]): StatementBank {
+  const folded = headers.map((cell) => foldRomanian(cell)).join(" | ");
+  if (/revolut|completed date|started date|product/.test(folded) && /\bamount\b|\bdescription\b/.test(folded)) return "revolut";
+  if (/banca\s*transilvania|\bbt\b/.test(folded)) return "bt";
+  if (/\bbcr\b|banca\s*comerciala\s*romana/.test(folded)) return "bcr";
+  if (/\bing\b/.test(folded)) return "ing";
+  // Antete tipice fără marca băncii în fișier
+  if (/data tranzactiei/.test(folded) && /debit/.test(folded) && /credit/.test(folded) && /data procesarii|data valutei/.test(folded)) return "bcr";
+  if (/detalii tranzactie|detalii/.test(folded) && /debit/.test(folded) && /credit/.test(folded) && !/data procesarii/.test(folded)) return "bt";
+  if (/\bnume\b/.test(folded) && /debit/.test(folded) && /credit/.test(folded)) return "ing";
+  return "generic";
+}
 
 function findColumns(rows: string[][]): { headerIndex: number; headers: string[]; columns: StatementColumns } | undefined {
   for (let index = 0; index < Math.min(rows.length, 15); index += 1) {
     const row = rows[index];
     if (row.length < 2) continue;
     const folded = row.map((cell) => foldRomanian(cell));
-    const date = folded.findIndex((cell) => HEADER_DATE.test(cell));
+    const preferredDate = folded.findIndex((cell) => HEADER_DATE_PREFERRED.test(cell));
+    const date = preferredDate >= 0 ? preferredDate : folded.findIndex((cell) => HEADER_DATE.test(cell));
     if (date < 0) continue;
     const debit = folded.findIndex((cell) => HEADER_DEBIT.test(cell));
     const credit = folded.findIndex((cell) => HEADER_CREDIT.test(cell));
@@ -188,11 +221,20 @@ export function parseStatementCsv(text: string): StatementParse {
   const columns = header?.columns || inferColumns(all);
   if (!columns) throw new Error(t("Nu am recunoscut coloanele de dată și sumă. Deschide fișierul și verifică dacă este extrasul de cont exportat în CSV."));
   const body = all.slice(header ? header.headerIndex + 1 : 0);
+  const headers = header?.headers || [];
   const rows: StatementRow[] = [];
   const skipped: StatementSkip[] = [];
+  const stateIndex = headers.findIndex((cell) => /\bstate\b|\bstare\b|\bstatus\b/.test(foldRomanian(cell)));
   body.forEach((row, index) => {
     const line = (header ? header.headerIndex + 2 : 1) + index;
     if (rows.length >= MAX_ROWS) return;
+    if (stateIndex >= 0) {
+      const state = foldRomanian(row[stateIndex] || "");
+      if (state && !/complet|completed|booked|posted|finalizat|reusit|success/.test(state) && /reverted|failed|pending|anulat|respins|declined/.test(state)) {
+        skipped.push({ line, reason: t("Stare nefinalizată") });
+        return;
+      }
+    }
     const date = parseStatementDate(row[columns.date] || "");
     if (!date) {
       if (row.some((cell) => cell)) skipped.push({ line, reason: t("Dată necitibilă") });
@@ -210,7 +252,7 @@ export function parseStatementCsv(text: string): StatementParse {
     const description = (row[columns.description] || "").replace(/\s+/g, " ").trim();
     rows.push({ line, date, description: description || t("Mișcare din extras"), amount: Math.round(amount * 100) / 100, kind });
   });
-  return { rows, skipped, delimiter, headers: header?.headers || [], columns };
+  return { rows, skipped, delimiter, headers, columns, bank: detectStatementBank(headers) };
 }
 
 /**

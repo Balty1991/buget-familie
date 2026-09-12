@@ -186,3 +186,59 @@ describe("extrasul unui cont valutar", () => {
     expect(second).toEqual({ drafts: [], duplicates: 2 });
   });
 });
+
+describe("exporturi bancare românești", () => {
+  it("recunoaște BCR cu debit/credit și data procesării", () => {
+    const csv = [
+      "Data tranzactiei;Data procesarii;Descriere operatiune;Debit;Credit;Sold",
+      "07.09.2026;07.09.2026;Plata POS MEGA IMAGE;145,90;;2.100,00",
+      "08.09.2026;08.09.2026;Virament salariu;;4.500,00;6.600,00",
+    ].join("\n");
+    const parsed = parseStatementCsv(csv);
+    expect(parsed.bank).toBe("bcr");
+    expect(parsed.rows).toEqual([
+      { line: 2, date: "2026-09-07", description: "Plata POS MEGA IMAGE", amount: 145.9, kind: "expense" },
+      { line: 3, date: "2026-09-08", description: "Virament salariu", amount: 4500, kind: "income" },
+    ]);
+  });
+
+  it("recunoaște Banca Transilvania", () => {
+    const csv = [
+      "Data,Detalii tranzactie,Debit,Credit,Sold",
+      "07/09/2026,Cumparaturi PROFI,89.50,,1200.00",
+      "08/09/2026,Transfer primit,,250.00,1450.00",
+    ].join("\n");
+    const parsed = parseStatementCsv(csv);
+    expect(parsed.bank).toBe("bt");
+    expect(parsed.rows.map((row) => row.kind)).toEqual(["expense", "income"]);
+    expect(parsed.rows.map((row) => row.amount)).toEqual([89.5, 250]);
+  });
+
+  it("recunoaște ING cu coloana Nume", () => {
+    const csv = [
+      "Data;Nume;Debit;Credit",
+      "07.09.2026;LIDL ROMANIA;62,30;",
+      "09.09.2026;Salariu;;8500,00",
+    ].join("\n");
+    const parsed = parseStatementCsv(csv);
+    expect(parsed.bank).toBe("ing");
+    expect(parsed.rows).toHaveLength(2);
+    expect(parsed.rows[0].description).toBe("LIDL ROMANIA");
+  });
+
+  it("citește Revolut RO (Completed Date + Amount semnat) și sare stările nefinalizate", () => {
+    const csv = [
+      "Type,Product,Started Date,Completed Date,Description,Amount,Fee,Currency,State,Balance",
+      "Card payment,Current,2026-09-07 10:00:00,2026-09-07 10:01:00,Glovo,-45.50,0.00,RON,COMPLETED,1200.00",
+      "Topup,Current,2026-09-08 09:00:00,2026-09-08 09:00:01,Salary,3000.00,0.00,RON,COMPLETED,4200.00",
+      "Card payment,Current,2026-09-08 11:00:00,2026-09-08 11:00:01,Failed shop,-12.00,0.00,RON,REVERTED,4200.00",
+    ].join("\n");
+    const parsed = parseStatementCsv(csv);
+    expect(parsed.bank).toBe("revolut");
+    expect(parsed.rows).toEqual([
+      { line: 2, date: "2026-09-07", description: "Glovo", amount: 45.5, kind: "expense" },
+      { line: 3, date: "2026-09-08", description: "Salary", amount: 3000, kind: "income" },
+    ]);
+    expect(parsed.skipped).toEqual([{ line: 4, reason: "Stare nefinalizată" }]);
+  });
+});

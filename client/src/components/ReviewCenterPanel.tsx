@@ -17,7 +17,7 @@ import {
   type ReviewDraft,
   type ReviewOrigin,
 } from "@/lib/finance-data";
-import { parseStatementCsv, statementDrafts, type StatementSkip } from "@/lib/statement-import";
+import { parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 
@@ -28,7 +28,7 @@ const originLabel: Record<ReviewOrigin, string> = {
   notificare: t("Notificare bancară"),
 };
 
-type ImportSummary = { added: number; duplicates: number; skipped: StatementSkip[]; fileName: string };
+type ImportSummary = { added: number; duplicates: number; skipped: StatementSkip[]; fileName: string; bank: StatementBank; rowCount: number };
 
 export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange: (value: AppData) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -52,7 +52,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
       const parsed = parseStatementCsv(text);
       const { drafts: fresh, duplicates } = statementDrafts(data, parsed.rows, { sourceId, memberId, fileName: file.name });
       if (fresh.length) onChange(addReviewDrafts(data, fresh));
-      setSummary({ added: fresh.length, duplicates, skipped: parsed.skipped, fileName: file.name });
+      setSummary({ added: fresh.length, duplicates, skipped: parsed.skipped, fileName: file.name, bank: parsed.bank, rowCount: parsed.rows.length });
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("Fișierul nu a putut fi citit."));
     } finally {
@@ -74,6 +74,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           <FileUp size={19} />
         </div>
         <p className="bf-review-intro">{t("Alege fișierul CSV exportat din aplicația băncii. Este citit pe telefon, nu se trimite nicăieri, iar fiecare rând ajunge aici ca propunere de confirmat. Mișcările deja existente sunt recunoscute și nu se dublează.")}</p>
+        <p className="bf-review-banks">{t("Formate verificate:")} <b>BCR · Banca Transilvania · ING · Revolut</b>. {t("Alte CSV-uri cu dată, descriere și sumă (sau debit/credit) sunt citite automat.")}</p>
         <div className="bf-form-grid">
           <Field label={t("În ce sursă intră")}>
             <select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>
@@ -101,9 +102,11 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           <div className="bf-review-summary" role="status">
             <b>{summary.fileName}</b>
             <p>
-              {summary.added ? `${summary.added} mișcări propuse` : t("Nicio mișcare nouă")}
-              {summary.duplicates ? ` · ${summary.duplicates} existau deja` : ""}
-              {summary.skipped.length ? ` · ${summary.skipped.length} rânduri necitibile` : ""}
+              {STATEMENT_BANK_LABELS[summary.bank]} · {summary.rowCount} {t("rânduri citite")}
+              {" · "}
+              {summary.added ? t("{count} mișcări propuse", { count: summary.added }) : t("Nicio mișcare nouă")}
+              {summary.duplicates ? ` · ${summary.duplicates} ${t("existau deja")}` : ""}
+              {summary.skipped.length ? ` · ${summary.skipped.length} ${t("rânduri necitibile")}` : ""}
             </p>
             {summary.skipped.length > 0 && (
               <details>
