@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkFamilyPassword } from "./family-password";
+import { checkFamilyPassword, generateFamilyPassword } from "./family-password";
 
 const verdict = (value: string) => checkFamilyPassword(value);
 
@@ -51,5 +51,15 @@ describe("parola de familie", () => {
 
   it("tratează diacriticele româneşti ca litere", () => {
     expect(verdict("ștrandulRoșu99").ok).toBe(true);
+  });
+});
+
+describe("generarea parolei", () => {
+  it("produce o parolă acceptabilă de cel puțin 12 caractere", () => {
+    for (let i = 0; i < 8; i += 1) {
+      const value = generateFamilyPassword();
+      expect(value.length).toBeGreaterThanOrEqual(12);
+      expect(checkFamilyPassword(value).ok).toBe(true);
+    }
   });
 });

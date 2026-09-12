@@ -41,11 +41,17 @@ describe("puntea către widget", () => {
   });
 
   it("nu face nimic fără puntea nativă", () => {
-    Object.assign(globalThis, { window: {}, document: { addEventListener: () => undefined, removeEventListener: () => undefined } });
+    vi.useFakeTimers();
+    Object.assign(globalThis, {
+      window: { setTimeout: globalThis.setTimeout.bind(globalThis), addEventListener: () => undefined, removeEventListener: () => undefined },
+      document: { addEventListener: () => undefined, removeEventListener: () => undefined, visibilityState: "visible" },
+    });
     const handle = vi.fn();
     const stop = observeQuickActions(handle);
+    vi.runAllTimers();
     stop();
     expect(handle).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it("verifică la montare și la revenirea în prim-plan", () => {

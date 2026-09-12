@@ -6,9 +6,9 @@
  * Firestore nu vede niciodată datele în clar — doar pachetul AES-GCM criptat local.
  */
 import { initializeApp, type FirebaseApp } from "firebase/app";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from "firebase/app-check";
 import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
-import { firebaseConfig, isAppCheckConfigured, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
+import { appCheckDebug, firebaseConfig, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { deriveFamilyRoomId } from "@/lib/family-crypto";
 
@@ -20,13 +20,28 @@ export class RealtimeSyncError extends Error {
 
 let app: FirebaseApp | undefined;
 let firestore: Firestore | undefined;
+let appCheck: AppCheck | undefined;
+
+function ensureAppCheck(firebaseApp: FirebaseApp) {
+  if (appCheck) return;
+  if (!recaptchaSiteKey) return; // fără cheie: sync merge; Enforce NU trebuie activat în Console
+  if (appCheckDebug && typeof self !== "undefined") {
+    const existing = (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: string | boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN;
+    if (existing === undefined) {
+      (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    }
+  }
+  appCheck = initializeAppCheck(firebaseApp, {
+    provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 
 function db(): Firestore {
   if (!isFirebaseConfigured) throw new RealtimeSyncError("not-configured", "Sincronizarea nu a fost încă configurată de administratorul aplicației.");
   if (!firestore) {
     app = app || initializeApp(firebaseConfig);
-    // No-op până când administratorul completează recaptchaSiteKey în firebase-config.ts.
-    if (isAppCheckConfigured) initializeAppCheck(app, { provider: new ReCaptchaV3Provider(recaptchaSiteKey), isTokenAutoRefreshEnabled: true });
+    ensureAppCheck(app);
     firestore = getFirestore(app);
   }
   return firestore;

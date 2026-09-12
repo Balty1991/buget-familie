@@ -509,3 +509,12 @@
 - [x] Asistentul citește intenții adevărate — plic, cheltuială, venit, datorie, scadență, obiectiv, dată de salariu — mai multe într-un mesaj, și salvează doar după confirmare.
 - [x] Exportul de backup funcționează și pe telefon, prin foaia de partajare a sistemului; importul acceptă tipul generic dat de Android.
 - [ ] Traducerea în engleză a ecranelor adânci: dialogul ghidat, manualul, Plan Studio, rapoartele.
+
+## Play foundation batch (2026-09-12)
+
+- [x] App Check: env `VITE_RECAPTCHA_SITE_KEY` + docs; fără Enforce forțat
+- [x] Conflict UI pe plicuri (Keep local / remote / Undo) — fără LWW tăcut pe sume
+- [x] Pairing Sync: generare parolă o dată, lista dispozitive, revocare, reminder backup
+- [x] Widget / Tile polish + `PLAY_CHECKLIST.md`
+- [x] Design polish mobil (os-shell + play-ready-polish.css, meniu Mai mult grupat)
+- [ ] Abonamente / Play Billing — **ultimul**, după versiune stabilă pe Play

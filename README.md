@@ -69,7 +69,7 @@ Sincronizarea între telefoane nu mai cere niciun cont sau token per utilizator.
 | 2 | **Project settings** → **Your apps** → **Web (`</>`)** → **Register app**; copiază obiectul de configurare afișat. |
 | 3 | Lipește valorile în `client/src/lib/firebase-config.ts` (`apiKey`, `authDomain`, `projectId` etc. — acestea nu sunt secrete, sunt publice prin design în orice aplicație Firebase). |
 | 4 | În Firebase Console → **Firestore Database → Rules**, lipește conținutul din `firestore.rules` din acest repo. |
-| 5 (opțional) | **App Check** (protecție anti-abuz a cotei gratuite): Build → App Check → aplicația web înregistrată → provider **reCAPTCHA v3** → generează o cheie de site și lipește valoarea în `recaptchaSiteKey` din `firebase-config.ts`. Activează „Enforce" pentru Firestore abia după ce confirmi că versiunea publicată trimite tokenul (altfel blochezi accesul tuturor familiilor). |
+| 5 (opțional) | **App Check** — vezi secțiunea de mai jos. **Nu** activa Enforce până confirmi tokenul pe build-ul publicat. |
 
 **Pentru orice familie care instalează aplicația**, odată ce administratorul a făcut configurarea de mai sus:
 
@@ -80,6 +80,18 @@ Sincronizarea între telefoane nu mai cere niciun cont sau token per utilizator.
 | 3 | Introduceți exact aceeași parolă pe fiecare telefon și apăsați **Conectează acest telefon**. |
 
 După conectare, modificările apar automat pe toate telefoanele conectate în câteva secunde, prin actualizări live Firestore — nu este nevoie de reîmprospătare manuală sau de interval de verificare. Unirea intrărilor se face prin ID și marcaj de actualizare, iar ștergerile — inclusiv scadențele recurente — sunt păstrate pentru a evita reapariția datelor eliminate. Fotografiile și cheile IndexedDB ale bonurilor, filtrele salvate, șabloanele active/arhivate, șabloanele de ciclu și marcajele alertelor de tranșă sunt excluse intenționat din pachetul sincronizat și rămân locale. Manualul pas cu pas este în **Mai mult → Ghid**.
+
+## App Check (Firebase)
+
+Protecție anti-abuz a cotei Firestore. Sync-ul funcționează și **fără** App Check; cheia goală nu mai e tăcută — consola afișează un mesaj de setup.
+
+1. Firebase Console → **Build → App Check** → aplicația web (și Android, dacă e înregistrată).
+2. Provider **reCAPTCHA v3** → creează cheia de site (site key).
+3. La build: `VITE_RECAPTCHA_SITE_KEY=... pnpm build` **sau** lipește cheia în `RECAPTCHA_SITE_KEY_PLACEHOLDER` din `client/src/lib/firebase-config.ts`.
+4. Debug Capacitor: `VITE_APPCHECK_DEBUG=true` + debug token din App Check → Manage debug tokens (setează `self.FIREBASE_APPCHECK_DEBUG_TOKEN` înainte de init dacă e nevoie).
+5. **Enforce pe Firestore: doar după** ce build-ul din Play / Pages trimite token. Până atunci, lasă Monitor — altfel blochezi familiile existente.
+
+Checklist pe telefon: `PLAY_CHECKLIST.md`.
 
 ## Limite importante
 

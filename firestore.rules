@@ -8,6 +8,9 @@ rules_version = '2';
 // pe cel în clar). Oricine nu cunoaște parola nu poate ghici sau enumera
 // ID-ul; conținutul propriu-zis este oricum criptat AES-GCM înainte să
 // ajungă aici, așa că Firestore nu vede niciodată date financiare în clar.
+// App Check: poți activa pe proiect pentru anti-abuz, dar NU pune Enforce pe Firestore
+// până confirmi că build-ul publicat trimite token (altfel blochezi familiile existente).
+// Regulile de mai jos rămân pe get/create/update — fără list/delete.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /familySync/{roomId} {

@@ -71,6 +71,7 @@ import "./mobile-analysis-pass.css";
 import "./mobile-settings-pass.css";
 import "./household-os-today.css";
 import "./household-os-chrome.css";
+import "./play-ready-polish.css";
 import "./household-os-themes.css";
 import "./review-center.css";
 import "./price-watch.css";

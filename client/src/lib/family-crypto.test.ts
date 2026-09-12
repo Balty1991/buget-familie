@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { createEmptyAppData } from "./finance-data";
-import { encryptFamilyData, decryptFamilyData, deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
+import { encryptFamilyData, decryptFamilyData, deriveFamilyRoomId, mergeFamilyData, applyAllocationConflictChoice, undoAllocationConflictChoice } from "./family-crypto";
 
 const rules = readFileSync(new URL("../../../firestore.rules", import.meta.url), "utf8");
 const ruleNumber = (field: string) => {
@@ -89,7 +89,7 @@ describe("unirea planului pe plicuri, nu pe obiect întreg", () => {
     expect(merged.settings.salaryPlan.salaryAllocationRules?.map((item) => item.id)).toContain("rule-1");
   });
 
-  it("la același plic câștigă varianta mai recentă", () => {
+  it("la același plic cu sume diferite nu aplică LWW tăcut — păstrează local și înregistrează conflict", () => {
     const local = createEmptyAppData();
     const remote = createEmptyAppData();
     local.settings.salaryPlan.allocations = [{ id: "alloc-1", label: "Alimente", amount: 1500, category: "Alimente", updatedAt: "2026-09-12T12:00:00.000Z" }];
@@ -99,5 +99,39 @@ describe("unirea planului pe plicuri, nu pe obiect întreg", () => {
     const merged = mergeFamilyData(local, remote);
     expect(merged.settings.salaryPlan.allocations).toHaveLength(1);
     expect(merged.settings.salaryPlan.allocations[0].amount).toBe(1500);
+    expect(merged.allocationConflicts).toHaveLength(1);
+    expect(merged.allocationConflicts[0].remoteAmount).toBe(900);
+    expect(merged.allocationConflicts[0].localAmount).toBe(1500);
+  });
+
+  it("plicuri cu aceeași sumă se unesc fără conflict", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    local.settings.salaryPlan.allocations = [{ id: "alloc-1", label: "Alimente", amount: 900, category: "Alimente", updatedAt: "2026-09-12T12:00:00.000Z", note: "local" }];
+    remote.settings.salaryPlan.allocations = [{ id: "alloc-1", label: "Alimente", amount: 900, category: "Alimente", updatedAt: "2026-09-12T08:00:00.000Z", note: "remote" }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.allocationConflicts).toHaveLength(0);
+    expect(merged.settings.salaryPlan.allocations[0].note).toBe("local");
+  });
+});
+
+describe("rezolvarea conflictelor de plic", () => {
+  it("Keep remote aplică suma remote și Undo o readuce", () => {
+    const base = createEmptyAppData();
+    base.settings.salaryPlan.allocations = [{ id: "alloc-1", label: "Alimente", amount: 1500, category: "Alimente" }];
+    base.allocationConflicts = [{
+      id: "conflict-alloc-1",
+      allocationId: "alloc-1",
+      label: "Alimente",
+      localAmount: 1500,
+      remoteAmount: 900,
+      detectedAt: "2026-09-12T12:00:00.000Z",
+    }];
+    const kept = applyAllocationConflictChoice(base, "conflict-alloc-1", "remote");
+    expect(kept.settings.salaryPlan.allocations[0].amount).toBe(900);
+    expect(kept.allocationConflicts[0].resolvedChoice).toBe("remote");
+    const undone = undoAllocationConflictChoice(kept, "conflict-alloc-1");
+    expect(undone.settings.salaryPlan.allocations[0].amount).toBe(1500);
+    expect(undone.allocationConflicts[0].resolvedChoice).toBeUndefined();
   });
 });

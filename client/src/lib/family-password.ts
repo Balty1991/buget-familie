@@ -95,3 +95,19 @@ export function checkFamilyPassword(raw: string): PasswordVerdict {
     advice: score >= 3 ? [] : advice.length ? advice : ["Fă-o mai lungă sau amestecă mai multe feluri de caractere."],
   };
 }
+
+
+/** Generează o parolă de propoziție (afișată o singură dată pe ecranul Sync). */
+export function generateFamilyPassword(): string {
+  const words = [
+    "pisica", "gardul", "verde", "sare", "cafea", "ploaia", "muntele", "carte",
+    "fereastra", "soarele", "norul", "copacul", "strada", "lacul", "vântul", "casa",
+  ];
+  const pick = () => words[Math.floor(Math.random() * words.length)];
+  const a = pick();
+  const b = pick();
+  const c = pick();
+  const n = Math.floor(10 + Math.random() * 89);
+  const phrase = `${a}${b[0].toUpperCase()}${b.slice(1)}${c[0].toUpperCase()}${c.slice(1)}${n}`;
+  return phrase.length >= 12 ? phrase : `${phrase}Casa${n}`;
+}

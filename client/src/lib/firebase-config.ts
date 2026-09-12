@@ -9,13 +9,12 @@
  * 2. Project settings → Your apps → Web (</>) → Register app.
  * 3. Copiază obiectul `firebaseConfig` afișat de Firebase exact în locul valorilor de mai jos.
  *
- * `recaptchaSiteKey` este opțional și activează Firebase App Check (protecție anti-abuz
- * a cotei gratuite Firestore, comună tuturor familiilor). Se completează după:
- * 1. console.firebase.google.com → proiectul tău → Build → App Check.
- * 2. Alege aplicația web înregistrată → Provider: reCAPTCHA v3 → urmează linkul spre
- *    Google Cloud reCAPTCHA Enterprise / admin.recaptcha.net pentru a genera o cheie de site.
- * 3. Copiază cheia de site (site key) mai jos și activează „Enforce" pentru Firestore
- *    din tab-ul App Check, după ce ai confirmat că aplicația publicată trimite tokenul.
+ * App Check (reCAPTCHA v3 / Debug) — vezi README „App Check” și docs din acest fișier:
+ * - Pe web/prod: setează `VITE_RECAPTCHA_SITE_KEY` la build SAU completează
+ *   `RECAPTCHA_SITE_KEY_PLACEHOLDER` mai jos cu cheia de site din Firebase App Check.
+ * - Pe Capacitor debug: `VITE_APPCHECK_DEBUG=true` activează Debug provider (token de debug
+ *   din Firebase Console → App Check → Manage debug tokens). NU activa Enforce pe Firestore
+ *   până confirmi că build-ul publicat trimite token — altfel blochezi familiile existente.
  */
 export const firebaseConfig = {
   apiKey: "AIzaSyCblae37WNgd9kpkSMPQxfFN9kRRU_5Djs",
@@ -26,7 +25,31 @@ export const firebaseConfig = {
   appId: "1:119097201129:web:d46d0e3889dd6e50b53b78",
 };
 
-export const recaptchaSiteKey = "";
+/** Înlocuiește doar dacă nu folosești VITE_RECAPTCHA_SITE_KEY la build. Lasă gol până ai cheia. */
+const RECAPTCHA_SITE_KEY_PLACEHOLDER = "";
+
+const envSiteKey =
+  typeof import.meta !== "undefined" && import.meta.env?.VITE_RECAPTCHA_SITE_KEY
+    ? String(import.meta.env.VITE_RECAPTCHA_SITE_KEY).trim()
+    : "";
+
+export const recaptchaSiteKey = envSiteKey || RECAPTCHA_SITE_KEY_PLACEHOLDER;
+
+/** Debug App Check: VITE_APPCHECK_DEBUG=true sau Capacitor Android în DEV. */
+export const appCheckDebug =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_APPCHECK_DEBUG === "true") ||
+  (typeof import.meta !== "undefined" &&
+    import.meta.env?.DEV === true &&
+    typeof window !== "undefined" &&
+    Boolean((window as unknown as { Capacitor?: { getPlatform?: () => string } }).Capacitor?.getPlatform?.() === "android"));
 
 export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
 export const isAppCheckConfigured = Boolean(recaptchaSiteKey);
+
+if (typeof console !== "undefined" && isFirebaseConfigured && !recaptchaSiteKey && !appCheckDebug) {
+  console.info(
+    "[Buget Familie] App Check: recaptchaSiteKey e gol. Sync funcționează fără Enforce. " +
+      "Pentru protecție anti-abuz: setează VITE_RECAPTCHA_SITE_KEY sau completează RECAPTCHA_SITE_KEY_PLACEHOLDER. " +
+      "Nu activa Enforce în Firebase până confirmi tokenul pe build-ul publicat.",
+  );
+}

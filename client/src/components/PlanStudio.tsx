@@ -16,6 +16,7 @@ import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, sourceBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
+import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/EnvelopeConflictBanner";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -205,6 +206,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
   };
 
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
+    <EnvelopeConflictBanner data={data} onChange={onChange} />
     <header className="bf-plan-studio-header">
       <div><p className="bf-kicker">{t("PLANUL FAMILIEI, PE CATEGORII")}</p><h1>Fiecare leu <em>{t("are un loc.")}</em></h1><p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p></div>
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{t("NEREPARTIZAȚI")}</small><b>{money(unrepartized)}</b></div>
@@ -351,7 +353,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       <div className="bf-allocation-list bf-envelope-desk" aria-live="polite">
         {envelopes.map(({ item, budget, remaining, usage, state, week, weeks }) => <article key={item.id} className={state}>
           <div className="bf-envelope-portrait" aria-hidden="true"><EnvelopeMark remaining={Math.max(0, 1 - usage)} state={state} size={58} /></div>
-          <div className="bf-allocation-list-heading"><span className={`bf-allocation-state ${state}`}>{state === "over" ? t("depășit") : state === "watch" ? t("aproape de limită") : t("în plan")}</span><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
+          <div className="bf-allocation-list-heading"><span className={`bf-allocation-state ${state}`}>{state === "over" ? t("depășit") : state === "watch" ? t("aproape de limită") : t("în plan")}</span><EnvelopeConflictBadge allocationId={item.id} data={data} /><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>rămași din {money(budget)}</small></div>
           {week && <div className={`bf-allocation-week ${week.state === "over" ? "over" : ""}`}><span>S{week.index} · {formatDate(week.start)} – {formatDate(week.end)}</span><b>{money(Math.max(0, week.remaining))}</b><small>{money(week.spent)} cheltuiți din {money(week.budget)} în această tranșă</small></div>}
           <p className="bf-allocation-why"><b>{state === "over" ? t("De ce cere atenție") : state === "watch" ? "De ce apare aici" : t("Cum se citește")}:</b> {state === "over" ? `Ai depășit limita cu ${money(Math.abs(remaining))}. Redu suma planificată sau revizuiește cheltuielile înainte de următorul venit.` : state === "watch" ? `${Math.round(usage * 100)}% din plic este consumat; mai ai ${money(Math.max(0, remaining))} pentru perioada aleasă.` : week ? `Mai ai ${money(Math.max(0, remaining))} în plic, iar ritmul săptămânal este ${money(week.budget)}.` : `Ai planificat ${money(budget)} pentru această categorie, fără presiune pe o tranșă săptămânală.`}</p>

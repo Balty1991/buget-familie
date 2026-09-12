@@ -1,0 +1,271 @@
+/**
+ * Play-ready polish — rafinare Household OS pentru telefon 360–430px.
+ * Nu schimbă paleta; clarifică ierarhia, țintele tactile și suprafețele.
+ */
+
+.os-shell.bf-app {
+  --os-radius-card: 18px;
+  --os-tap: 44px;
+}
+
+/* Dock: ținte mai mari, etichete lizibile pe 360px */
+.os-shell .os-dock {
+  left: 10px !important;
+  right: 10px !important;
+  bottom: max(8px, var(--os-inset-bottom)) !important;
+  padding: 8px !important;
+  border-radius: 22px !important;
+  background: color-mix(in srgb, var(--os-surface) 92%, #000) !important;
+  box-shadow:
+    0 0 0 1px var(--os-line),
+    0 12px 32px rgba(0, 0, 0, 0.35) !important;
+}
+
+.os-shell .os-dock button {
+  min-height: var(--os-tap) !important;
+  height: 58px !important;
+  gap: 4px !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+
+.os-shell .os-dock button svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.os-shell .os-tool {
+  width: var(--os-tap) !important;
+  height: var(--os-tap) !important;
+  min-width: var(--os-tap) !important;
+  min-height: var(--os-tap) !important;
+  border-radius: 14px !important;
+}
+
+/* App bar mai aerisit */
+.os-shell .os-appbar.bf-appbar {
+  min-height: 68px !important;
+  padding-top: calc(10px + var(--os-inset-top)) !important;
+  padding-bottom: 10px !important;
+}
+
+.os-shell .os-brand-copy b {
+  font-size: 15px !important;
+  letter-spacing: -0.01em !important;
+}
+
+.os-shell .os-brand-copy i {
+  font-size: 12px !important;
+  opacity: 0.72 !important;
+}
+
+/* Carduri / pagini: ierarhie clară */
+.os-shell .bf-page > header h1,
+.os-shell .bf-today-workspace > header h1,
+.os-shell .bf-plan-studio-header h1 {
+  font-size: clamp(1.45rem, 5.5vw, 1.85rem) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.os-shell .bf-kicker {
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+  opacity: 0.85 !important;
+}
+
+.os-shell .bf-sync,
+.os-shell .bf-settings > section,
+.os-shell .bf-envelope-conflicts,
+.os-shell .bf-sync-devices,
+.os-shell .bf-sync-session {
+  border-radius: var(--os-radius-card) !important;
+}
+
+.os-shell .bf-primary,
+.os-shell .bf-secondary,
+.os-shell .bf-mini-form button,
+.os-shell .bf-sync-generate .bf-secondary {
+  min-height: var(--os-tap) !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  border-radius: 14px !important;
+  font-weight: 650 !important;
+}
+
+.os-shell .bf-link-button {
+  min-height: 40px !important;
+  padding: 8px 4px !important;
+}
+
+/* Utilities / meniuri: grilă thumb-friendly */
+.os-shell .bf-utilities-grid,
+.os-shell .bf-more-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+.os-shell .bf-utilities-grid > button,
+.os-shell .bf-more-grid > button,
+.os-shell .bf-more-nav button {
+  min-height: 72px !important;
+  border-radius: 16px !important;
+  padding: 14px 12px !important;
+  text-align: left !important;
+}
+
+/* Sync pairing */
+.os-shell .bf-sync-backup-reminder {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--os-warn, #e8c38a) 14%, var(--os-surface));
+  color: var(--os-fg);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.os-shell .bf-sync-generate {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 12px;
+}
+
+.os-shell .bf-sync-password-once {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--os-surface-2);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.os-shell .bf-sync-device-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.os-shell .bf-sync-device-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--os-surface-2);
+  border: 1px solid var(--os-line);
+}
+
+.os-shell .bf-sync-device-list b {
+  display: block;
+  font-size: 14px;
+}
+
+.os-shell .bf-sync-device-list small {
+  color: var(--os-muted);
+  font-size: 12px;
+}
+
+/* Conflicts pe Plan */
+.os-shell .bf-envelope-conflicts {
+  margin: 0 0 16px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--os-warn, #e8c38a) 45%, var(--os-line));
+  background: color-mix(in srgb, var(--os-warn, #e8c38a) 10%, var(--os-surface));
+}
+
+.os-shell .bf-envelope-conflicts-heading {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.os-shell .bf-envelope-conflicts-heading h2 {
+  margin: 2px 0 4px;
+  font-size: 1.05rem;
+}
+
+.os-shell .bf-envelope-conflicts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.os-shell .bf-envelope-conflicts-list li {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--os-surface);
+  border: 1px solid var(--os-line);
+}
+
+.os-shell .bf-envelope-conflicts-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.os-shell .bf-conflict-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--os-warn, #e8c38a) 22%, transparent);
+  color: var(--os-warn, #e8c38a);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.os-shell .bf-envelope-conflict-undo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+@media (min-width: 400px) {
+  .os-shell .bf-envelope-conflicts-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Mișcări / Astăzi: spațiere */
+.os-shell .bf-movements-ledger,
+.os-shell .bf-today-workspace {
+  padding-left: max(16px, var(--os-inset-left)) !important;
+  padding-right: max(16px, var(--os-inset-right)) !important;
+}
+
+.os-shell .bf-more-overview {
+  display: grid;
+  gap: 18px;
+}
+.os-shell .bf-more-group {
+  display: grid;
+  gap: 10px;
+}
+.os-shell .bf-more-group > .bf-kicker {
+  margin: 0 2px;
+}
+.os-shell .bf-utilities-workspace > header .bf-helper {
+  margin: 6px 0 0;
+  max-width: 36ch;
+}

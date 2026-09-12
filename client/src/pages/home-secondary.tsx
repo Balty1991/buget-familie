@@ -3,10 +3,10 @@
  */
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X } from "lucide-react";
+import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
 import { BASE_CURRENCY, activeCurrencies, currenciesMissingRate, supportedCurrencies, addIsoDays, allocationBudget, allocationSpent, allocationWeekStatus, createEmptyAppData, exchangeRateFor, sourceBalanceInCurrency, sourceCurrency, toBaseAmount, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoDate, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
-import { checkFamilyPassword } from "@/lib/family-password";
+import { checkFamilyPassword, generateFamilyPassword } from "@/lib/family-password";
 import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageStorage, releaseReceiptObjectUrl, storeReceiptImages } from "@/lib/receipt-storage";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
@@ -695,7 +695,37 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
   const isCollaborative = data.settings.members.length > 1; const tabs: { id: MoreView; label: string; icon: typeof SlidersHorizontal }[] = [{ id: "overview", label: "Instrumente", icon: MoreHorizontal }, { id: "review", label: "De verificat", icon: Inbox }, { id: "prices", label: t("Prețuri"), icon: ShoppingBasket }, ...(data.settings.members.some((item) => item.kind === "child") ? [{ id: "pocket" as const, label: "Buzunar", icon: PiggyBankIcon }] : []), { id: "debts", label: "Datorii", icon: BellRing }, { id: "savings", label: "Economii", icon: PiggyBank }, { id: "receipts", label: "Bonuri", icon: ReceiptText }, { id: "recurring", label: t("Scadențe"), icon: CalendarDays }, { id: "reports", label: "Statistici", icon: LayoutDashboard }, { id: "assistant", label: "Asistent", icon: Bot }, { id: "settings", label: t("Setări"), icon: Settings }, { id: "sync", label: "Sync", icon: Cloud }, { id: "guide", label: "Ghid", icon: BookOpen }];
   const setSettings = (patch: Partial<AppData["settings"]>) => onChange({ ...data, settings: { ...data.settings, ...patch } });
   const content = () => {
-    if (tab === "overview") return <div className="bf-more-grid"><button onClick={() => setTab("review")}><Inbox size={20} /><b>{t("De verificat")}</b><span>{data.pendingReview.length ? `${data.pendingReview.length} propuneri` : t("import și confirmări")}</span></button><button onClick={() => setTab("debts")}><BellRing size={20} /><b>Datorii</b><span>{data.debts.length} active</span></button><button onClick={() => setTab("savings")}><PiggyBank size={20} /><b>Economii</b><span>{data.savings.length} obiective</span></button><button onClick={() => setTab("prices")}><ShoppingBasket size={20} /><b>{t("Prețuri")}</b><span>{t("istoric și coșul etalon")}</span></button>{data.settings.members.some((item) => item.kind === "child") && <button onClick={() => setTab("pocket")}><PiggyBankIcon size={20} /><b>Buzunar</b><span>banii copilului</span></button>}<button onClick={() => setTab("receipts")}><ReceiptText size={20} /><b>Bonuri</b><span>{data.receipts.length} salvate</span></button><button onClick={() => setTab("recurring")}><CalendarClock size={20} /><b>{t("Scadențe")}</b><span>{data.recurring.length} programate</span></button><button onClick={() => setTab("reports")}><LayoutDashboard size={20} /><b>Statistici</b><span>{t("istoric și categorii")}</span></button><button onClick={() => setTab("assistant")}><Bot size={20} /><b>Asistent</b><span>{t("explică datele")}</span></button><button onClick={() => setTab("settings")}><Settings size={20} /><b>{isCollaborative ? t("Setări familie") : t("Setări profil")}</b><span>{isCollaborative ? t("membri și surse") : t("surse și categorii")}</span></button><button onClick={() => setTab("sync")}><Cloud size={20} /><b>Sincronizare</b><span>{isCollaborative ? t("spațiu conectat") : t("opțională între telefoane")}</span></button><button onClick={() => setTab("guide")}><BookOpen size={20} /><b>Manual</b><span>{t("configurare și utilizare")}</span></button><button onClick={onOpenCalendar}><CalendarDays size={20} /><b>Calendar</b><span>{t("scadențe și obiective")}</span></button><button onClick={() => window.dispatchEvent(new CustomEvent("buget-familie:open-theme"))}><Palette size={20} /><b>Aspect</b><span>{t("teme și texturi")}</span></button></div>;
+    if (tab === "overview") return <div className="bf-more-overview">
+      <section className="bf-more-group" aria-labelledby="more-daily-title">
+        <p className="bf-kicker" id="more-daily-title">{t("ZILNIC")}</p>
+        <div className="bf-more-grid">
+          <button onClick={() => setTab("review")}><Inbox size={20} /><b>{t("De verificat")}</b><span>{data.pendingReview.length ? `${data.pendingReview.length} propuneri` : t("import și confirmări")}</span></button>
+          <button onClick={() => setTab("receipts")}><ReceiptText size={20} /><b>{t("Bonuri")}</b><span>{data.receipts.length} {t("salvate")}</span></button>
+          <button onClick={() => setTab("recurring")}><CalendarClock size={20} /><b>{t("Scadențe")}</b><span>{data.recurring.length} {t("programate")}</span></button>
+          <button onClick={onOpenCalendar}><CalendarDays size={20} /><b>{t("Calendar")}</b><span>{t("scadențe și obiective")}</span></button>
+        </div>
+      </section>
+      <section className="bf-more-group" aria-labelledby="more-money-title">
+        <p className="bf-kicker" id="more-money-title">{t("BANI PE TERMEN LUNG")}</p>
+        <div className="bf-more-grid">
+          <button onClick={() => setTab("debts")}><BellRing size={20} /><b>{t("Datorii")}</b><span>{data.debts.length} {t("active")}</span></button>
+          <button onClick={() => setTab("savings")}><PiggyBank size={20} /><b>{t("Economii")}</b><span>{data.savings.length} {t("obiective")}</span></button>
+          <button onClick={() => setTab("prices")}><ShoppingBasket size={20} /><b>{t("Prețuri")}</b><span>{t("istoric și coșul etalon")}</span></button>
+          {data.settings.members.some((item) => item.kind === "child") && <button onClick={() => setTab("pocket")}><PiggyBankIcon size={20} /><b>{t("Buzunar")}</b><span>{t("banii copilului")}</span></button>}
+        </div>
+      </section>
+      <section className="bf-more-group" aria-labelledby="more-house-title">
+        <p className="bf-kicker" id="more-house-title">{t("CASĂ ȘI TELEFOANE")}</p>
+        <div className="bf-more-grid">
+          <button onClick={() => setTab("settings")}><Settings size={20} /><b>{isCollaborative ? t("Setări familie") : t("Setări profil")}</b><span>{isCollaborative ? t("membri și surse") : t("surse și categorii")}</span></button>
+          <button onClick={() => setTab("sync")}><Cloud size={20} /><b>{t("Sincronizare")}</b><span>{isCollaborative ? t("spațiu conectat") : t("opțională între telefoane")}</span></button>
+          <button onClick={() => setTab("reports")}><LayoutDashboard size={20} /><b>{t("Statistici")}</b><span>{t("istoric și categorii")}</span></button>
+          <button onClick={() => setTab("assistant")}><Bot size={20} /><b>{t("Asistent")}</b><span>{t("explică datele")}</span></button>
+          <button onClick={() => setTab("guide")}><BookOpen size={20} /><b>{t("Manual")}</b><span>{t("configurare și utilizare")}</span></button>
+          <button onClick={() => window.dispatchEvent(new CustomEvent("buget-familie:open-theme"))}><Palette size={20} /><b>{t("Aspect")}</b><span>{t("teme și texturi")}</span></button>
+        </div>
+      </section>
+    </div>;
     if (tab === "debts") return <div className="bf-more-list"><button className="bf-primary bf-inline-add" onClick={onOpenDebt}><Plus size={16} /> {t("Adaugă datorie")}</button>{data.debts.map((debt) => <article key={debt.id}><span><b>{debt.name}</b><small>{debt.due}</small></span><strong>{money(debt.remaining)}</strong><em>{money(debt.monthly)}/lună</em></article>)}{!data.debts.length && <div className="bf-empty-state slim"><BellRing size={23} /><h2>Nicio datorie</h2></div>}</div>;
     if (tab === "savings") return <div className="bf-more-list"><button className="bf-primary bf-inline-add" onClick={onOpenSaving}><Plus size={16} /> {t("Creează obiectiv")}</button>{data.savings.map((saving) => <article key={saving.id}><span><b>{saving.name}</b><small>{saving.due}</small></span><strong>{money(saving.current)}</strong><BudgetBar used={saving.current} total={saving.target} tone="gold" /></article>)}{!data.savings.length && <div className="bf-empty-state slim"><PiggyBank size={23} /><h2>Niciun obiectiv</h2></div>}</div>;
     if (tab === "receipts") return <div>{receiptStorageNotice && <p className="bf-notice" role="status"><ShieldCheck size={15} /> {receiptStorageNotice}</p>}<button className="bf-primary bf-inline-add" onClick={onAddReceipt}><ReceiptText size={17} /> {t("Adaugă bon")}</button><div className="bf-receipt-list">{data.receipts.map((receipt) => <article key={receipt.id}><ReceiptThumbnail receipt={receipt} /><div><b>{receipt.vendor}</b><small>{dateText(receipt.date)} · {receipt.lines?.length || 1} categorie{(receipt.lines?.length || 1) === 1 ? "" : "i"}</small><p>{receipt.lines?.map((line) => `${line.category}: ${money(line.amount)}`).join(" · ") || receipt.note || t("Fără detalii")}</p>{(receipt.imageKeys?.length || (receipt.imageData2 ? 2 : receipt.imageData ? 1 : 0)) > 1 && <small>{t("Bon în două fotografii")}</small>}</div><strong>{money(receipt.amount)}</strong><button aria-label={`Șterge bonul ${receipt.vendor}`} onClick={() => onDeleteReceipt(receipt.id)}><Trash2 size={16} /></button></article>)}{!data.receipts.length && <div className="bf-empty-state slim"><ReceiptText size={23} /><h2>Niciun bon</h2><p>{t("Adaugă magazinul și totalul. Fotografiile sunt opționale; fiecare categorie creează o cheltuială legată de același bon.")}</p></div>}</div></div>;
@@ -709,7 +739,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
     if (tab === "guide") return <FamilyGuide />;
     return <SyncPanel {...sync} />;
   };
-  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">INSTRUMENTE</p><h1>{t("Alege un")} <em>instrument.</em></h1></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">{t("Glisează pentru mai multe")}</p><div className="bf-more-tabs" role="tablist" aria-label={t("Categorii de instrumente")}>{tabs.map((item) => { const Icon = item.icon; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}</button>; })}</div></div>{content()}</div>;
+  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">{t("MAI MULT")}</p><h1>{t("Tot ce nu e zilnic,")} <em>{t("la un loc.")}</em></h1><p className="bf-helper">{t("Sync, setări, bonuri și scadențe — fără să înghesuim bara de jos.")}</p></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">{t("Glisează pentru mai multe")}</p><div className="bf-more-tabs" role="tablist" aria-label={t("Categorii de instrumente")}>{tabs.map((item) => { const Icon = item.icon; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}</button>; })}</div></div>{content()}</div>;
 }
 
 /**
@@ -886,7 +916,9 @@ function PasswordMeter({ value }: { value: string }) {
   );
 }
 
-export function SyncPanel({ connected, busy, password, setPassword, notice, lastSync, journal, onConnect, onDisconnect, onClearJournal }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice }: SyncPanelProps) {
+  const [showGenerated, setShowGenerated] = useState(false);
+  const [generatedOnce, setGeneratedOnce] = useState("");
   const latest = journal[0];
   const pendingMerge = connected && latest?.status === "detected";
   const failedMerge = connected && latest?.status === "failed";
@@ -907,8 +939,104 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
     : connected
       ? t("Așteptăm prima confirmare de la spațiul familiei.")
       : t("Conectează acest telefon pentru a vedea actualizările celorlalte dispozitive.");
-  return <div className="bf-sync"><div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p></div><div className={`bf-sync-state ${stateClass}`} role="status"><span aria-hidden="true">{connected && !busy && !pendingMerge && !failedMerge ? <Check size={15} /> : busy || pendingMerge ? <RotateCcw size={15} /> : <Cloud size={15} />}</span><div><b>{stateLabel}</b><small>{stateDetail}</small></div></div><section className="bf-sync-session"><p className="bf-kicker">{connected ? "CONECTAT" : t("CONECTEAZĂ FAMILIA")}</p>{connected ? <><p><b>{t("Actualizare live, fără reîmprospătare manuală")}</b><br />{t("Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.")}</p><button className="bf-link-button" onClick={onDisconnect}>{t("Închide sesiunea acestui telefon")}</button></> : <><Field label={t("Parola familiei")} hint={t("Orice parolă inventată de voi. O propoziție scurtă e mai bună decât un cuvânt cu simboluri: „pisicaVerdeSareGardul7”. Trebuie să fie identică, literă cu literă, pe toate telefoanele.")}><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="minimum 12 caractere" autoComplete="new-password" />{password.length > 0 && <PasswordMeter value={password} />}</Field><p className="bf-helper">{t("Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată.")}</p><button className="bf-primary full" disabled={busy} onClick={onConnect}><Users size={17} /> {t("Conectează acest telefon")}</button></>}</section>{lastSync && <p className="bf-helper">Ultima actualizare: {new Intl.DateTimeFormat(getLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastSync))}</p>}{notice && <p className="bf-notice" role="status"><Check size={15} /> {notice}</p>}<section className="bf-sync-journal" aria-labelledby="sync-journal-title"><div className="bf-sync-journal-heading"><div><p className="bf-kicker">{t("ISTORIC DE ACTUALIZĂRI")}</p><h3 id="sync-journal-title">{t("Ce s-a întâmplat la sincronizare")}</h3></div>{journal.length > 0 && <button className="bf-link-button" onClick={onClearJournal}>{t("Curăță istoricul")}</button>}</div>{journal.length ? <div className="bf-sync-journal-list">{journal.map((entry) => <article key={entry.id} className={`bf-sync-journal-entry ${entry.status}`}><div className="bf-sync-journal-icon" aria-hidden="true">{entry.status === "resolved" ? <Check size={15} /> : entry.status === "failed" ? <X size={15} /> : <RotateCcw size={15} />}</div><div><strong>{entry.status === "resolved" ? t("Actualizare reunită") : entry.status === "failed" ? t("Actualizare eșuată") : t("Actualizare detectată")}</strong><p>{entry.message}</p><small>{new Intl.DateTimeFormat(getLocale(), { dateStyle: "short", timeStyle: "short" }).format(new Date(entry.createdAt))} · {entry.action}</small></div></article>)}</div> : <p className="bf-helper">{t("Nu există actualizări înregistrate pe acest dispozitiv. Când un alt telefon trimite mișcări noi, aici vei vedea ce a fost reunit automat.")}</p>}</section></div>;
+
+  const generateOnce = () => {
+    const next = generateFamilyPassword();
+    setPassword(next);
+    setGeneratedOnce(next);
+    setShowGenerated(true);
+  };
+
+  return <div className="bf-sync">
+    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p></div>
+    <div className={`bf-sync-state ${stateClass}`} role="status"><span aria-hidden="true">{connected && !busy && !pendingMerge && !failedMerge ? <Check size={15} /> : busy || pendingMerge ? <RotateCcw size={15} /> : <Cloud size={15} />}</span><div><b>{stateLabel}</b><small>{stateDetail}</small></div></div>
+
+    <section className="bf-sync-session">
+      <p className="bf-kicker">{connected ? "CONECTAT" : t("CONECTEAZĂ FAMILIA")}</p>
+      {connected ? <>
+        <p><b>{t("Actualizare live, fără reîmprospătare manuală")}</b><br />{t("Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.")}</p>
+        <button className="bf-link-button" onClick={onDisconnect}>{t("Închide sesiunea acestui telefon")}</button>
+      </> : <>
+        <div className="bf-sync-backup-reminder" role="note">
+          <ShieldAlert size={16} aria-hidden="true" />
+          <p>{t("Înainte de reinstalare sau de schimbarea telefonului: exportă un backup din Setări. Parola de familie nu se salvează pe aparat.")}</p>
+        </div>
+        <Field label={t("Parola familiei")} hint={t("Orice parolă inventată de voi. O propoziție scurtă e mai bună decât un cuvânt cu simboluri: „pisicaVerdeSareGardul7”. Trebuie să fie identică, literă cu literă, pe toate telefoanele.")}>
+          <input type={showGenerated ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setShowGenerated(false); }} placeholder="minimum 12 caractere" autoComplete="new-password" />
+          {password.length > 0 && <PasswordMeter value={password} />}
+        </Field>
+        <div className="bf-sync-generate">
+          <button type="button" className="bf-secondary" onClick={generateOnce}><KeyRound size={16} /> {t("Generează o parolă")}</button>
+          {showGenerated && generatedOnce && (
+            <p className="bf-notice" role="status">
+              <KeyRound size={14} /> {t("Arată-o o singură dată partenerului, apoi noteaz-o în afara telefonului:")} <code className="bf-sync-password-once">{generatedOnce}</code>
+            </p>
+          )}
+        </div>
+        <p className="bf-helper">{t("Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată.")}</p>
+        <button className="bf-primary full" disabled={busy} onClick={onConnect}><Users size={17} /> {t("Conectează acest telefon")}</button>
+      </>}
+    </section>
+
+    {(connected || devices.length > 0) && (
+      <section className="bf-sync-devices" aria-labelledby="sync-devices-title">
+        <div className="bf-sync-journal-heading">
+          <div>
+            <p className="bf-kicker">{t("DISPOZITIVE")}</p>
+            <h3 id="sync-devices-title">{t("Telefoane în cameră")}</h3>
+          </div>
+        </div>
+        {devices.length ? (
+          <ul className="bf-sync-device-list">
+            {devices.map((device) => (
+              <li key={device.id}>
+                <Smartphone size={16} aria-hidden="true" />
+                <div>
+                  <b>{device.label}{device.id === thisDeviceId ? ` · ${t("acest telefon")}` : ""}</b>
+                  <small>{t("Ultima dată văzut")}: {new Intl.DateTimeFormat(getLocale(), { dateStyle: "short", timeStyle: "short" }).format(new Date(device.lastSeenAt))}</small>
+                </div>
+                <button type="button" className="bf-link-button" onClick={() => onRevokeDevice(device.id)}>
+                  {device.id === thisDeviceId ? t("Revocă acest telefon") : t("Revocă")}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="bf-helper">{t("După conectare, telefoanele apar aici cu ultima dată văzută.")}</p>
+        )}
+      </section>
+    )}
+
+    {lastSync && <p className="bf-helper">Ultima actualizare: {new Intl.DateTimeFormat(getLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastSync))}</p>}
+    {notice && <p className="bf-notice" role="status"><Check size={15} /> {notice}</p>}
+    <section className="bf-sync-journal" aria-labelledby="sync-journal-title">
+      <div className="bf-sync-journal-heading">
+        <div>
+          <p className="bf-kicker">{t("ISTORIC DE ACTUALIZĂRI")}</p>
+          <h3 id="sync-journal-title">{t("Ce s-a întâmplat la sincronizare")}</h3>
+        </div>
+        {journal.length > 0 && <button className="bf-link-button" onClick={onClearJournal}>{t("Curăță istoricul")}</button>}
+      </div>
+      {journal.length ? (
+        <div className="bf-sync-journal-list">
+          {journal.map((entry) => (
+            <article key={entry.id} className={`bf-sync-journal-entry ${entry.status}`}>
+              <div className="bf-sync-journal-icon" aria-hidden="true">{entry.status === "resolved" ? <Check size={15} /> : entry.status === "failed" ? <X size={15} /> : <RotateCcw size={15} />}</div>
+              <div>
+                <strong>{entry.status === "resolved" ? t("Actualizare reunită") : entry.status === "failed" ? t("Actualizare eșuată") : t("Actualizare detectată")}</strong>
+                <p>{entry.message}</p>
+                <small>{new Intl.DateTimeFormat(getLocale(), { dateStyle: "short", timeStyle: "short" }).format(new Date(entry.createdAt))} · {entry.action}</small>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="bf-helper">{t("Nu există actualizări înregistrate pe acest dispozitiv. Când un alt telefon trimite mișcări noi, aici vei vedea ce a fost reunit automat.")}</p>
+      )}
+    </section>
+  </div>;
 }
+
 
 export function FamilyGuide() { return <div className="bf-guide"><section className="bf-guide-hero"><BookOpen size={25} /><p className="bf-kicker">MANUAL RAPID</p><h2>{t("Doar tu sau împreună.")}</h2><p>{t("Poți urmări banii proprii de la prima deschidere. Membrii și conectarea telefoanelor sunt opționale.")}</p><button className="bf-guide-replay" onClick={() => window.dispatchEvent(new Event("buget-familie:replay-onboarding"))}><BookOpen size={16} /> Reia turul „Calm financiar”</button><button className="bf-guide-replay" onClick={() => window.dispatchEvent(new Event("buget-familie:replay-setup"))}><WalletCards size={16} /> Reia configurarea casei</button></section><section><p className="bf-kicker">{t("1. PORNEȘTE CU TINE")}</p><h3>{t("Configurează profilul și banii reali")}</h3><p>În <b>{t("Setări familie")}</b>, păstrează un singur membru pentru monitorizare personală sau adaugă mai mulți membri când aveți un buget comun. Configurează sursele și soldurile inițiale, apoi creează planul până la următorul venit.</p></section><section><p className="bf-kicker">{t("2. CONECTEAZĂ OPȚIONAL")}</p><h3>{t("O parolă de familie, în loc de conturi și tokenuri")}</h3><p>{t("Dacă vrei același registru pe mai multe telefoane, mergi în")} <b>{t("Mai mult → Sincronizare")}</b> și alegeți împreună o parolă de familie de minimum 12 caractere. Introduceți exact aceeași parolă pe fiecare telefon, apoi apăsați „Conectează acest telefon”. De acolo, mișcările apar automat, în timp real, pe toate telefoanele conectate.</p></section><section><p className="bf-kicker">{t("3. LUCREAZĂ ZILNIC")}</p><h3>{t("Înregistrează, verifică, decide")}</h3><p>{t("Adaugă mișcările la momentul plății. Pentru cumpărături, un bon se salvează cu magazin și total; pozele sunt opționale. Verifică zilnic punctul de decizie și confirmă scadențele când sunt plătite.")}</p></section><section><p className="bf-kicker">{t("4. PROTEJEAZĂ DATELE")}</p><h3>{t("Parola de familie rămâne la voi")}</h3><p>{t("Parola de sincronizare nu este salvată. Nu o pune în conversații, bonuri sau capturi de ecran. Dacă un telefon se pierde, schimbați parola pe telefoanele rămase — camera veche nu mai decriptează pachetul. Pozele bonurilor nu părăsesc telefonul. Politica, termenii și ștergerea datelor sunt în Setări → Încredere.")}</p></section></div>; }
 

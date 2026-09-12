@@ -8,6 +8,7 @@ import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRe
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { buildUndo, type UndoAction } from "@/lib/undo-delete";
 import { checkFamilyPassword } from "@/lib/family-password";
+import { touchSyncDevice, revokeSyncDevice, isThisDeviceRevoked, listActiveSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, readAppData, readSyncJournal, writeAppData, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
@@ -584,6 +585,7 @@ export default function Home() {
       const mergedPortable = syncPortable(merged);
       if (mergedPortable === syncPortable(syncDataRef.current)) { setSyncLastSync(new Date().toISOString()); return; }
       const previous = syncDataRef.current;
+      if (isThisDeviceRevoked(merged)) { setData(merged); syncDisconnect(); setSyncNotice(t("Acest telefon a fost revocat din cameră. Schimbă parola pe celelalte telefoane dacă e nevoie.")); return; }
       syncLastPortableRef.current = mergedPortable; setData(merged); setSyncLastSync(new Date().toISOString());
       // Anunță imediat dacă mișcarea primită a împins un plic peste prag; altfel afli abia la final de perioadă.
       void notifyFamilyEnvelopeChanges(previous, merged).catch(() => undefined);
@@ -609,9 +611,10 @@ export default function Home() {
       const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
       let merged = syncDataRef.current;
       if (remoteEnvelope) { const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncPassword)); merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData)); }
+      merged = touchSyncDevice(merged);
       const mergedPortable = syncPortable(merged);
       syncLastPortableRef.current = mergedPortable;
-      if (mergedPortable !== syncPortable(syncDataRef.current)) setData(merged);
+      setData(merged);
       const envelope = await crypto.encryptFamilyData(merged, syncPassword);
       await syncApi.pushFamilyEnvelope(roomId, envelope);
       syncRoomIdRef.current = roomId;
@@ -626,7 +629,30 @@ export default function Home() {
           const envelope = await encryptFamilyData(data, syncPasswordRef.current); const { pushFamilyEnvelope } = await loadFamilySync();
           await pushFamilyEnvelope(syncRoomIdRef.current!, envelope); syncLastPortableRef.current = currentPortable; setSyncLastSync(new Date().toISOString()); } catch (error) { setSyncNotice(error instanceof Error ? error.message : t("Actualizarea nu a putut fi trimisă.")); } })(); }, 800); return () => window.clearTimeout(syncPushTimerRef.current); }, [data, syncConnected]);
   useEffect(() => () => syncUnsubscribeRef.current?.(), []);
-  const syncPanelProps: SyncPanelProps = { connected: syncConnected, busy: syncBusy, password: syncPassword, setPassword: setSyncPassword, notice: syncNotice, lastSync: syncLastSync, journal: syncJournal, onConnect: () => void syncConnect(), onDisconnect: syncDisconnect, onClearJournal: () => { setSyncJournal([]); writeSyncJournal([]); } };
+  const syncPanelProps: SyncPanelProps = {
+    connected: syncConnected,
+    busy: syncBusy,
+    password: syncPassword,
+    setPassword: setSyncPassword,
+    notice: syncNotice,
+    lastSync: syncLastSync,
+    journal: syncJournal,
+    devices: listActiveSyncDevices(data),
+    thisDeviceId: getOrCreateDeviceId(),
+    onConnect: () => void syncConnect(),
+    onDisconnect: syncDisconnect,
+    onClearJournal: () => { setSyncJournal([]); writeSyncJournal([]); },
+    onRevokeDevice: (deviceId: string) => {
+      const next = revokeSyncDevice(data, deviceId);
+      setData(next);
+      if (deviceId === getOrCreateDeviceId()) {
+        syncDisconnect();
+        setSyncNotice(t("Ai revocat acest telefon. Sesiunea s-a închis."));
+      } else {
+        setSyncNotice(t("Dispozitivul a fost marcat ca revocat. Se propagă la următoarea sincronizare."));
+      }
+    },
+  };
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; setData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
   useEffect(() => { const openTheme = () => setThemePickerOpen(true); window.addEventListener("buget-familie:open-theme", openTheme); return () => window.removeEventListener("buget-familie:open-theme", openTheme); }, []);
   const saveTx = (item: Transaction) => update((current) => { const stamped = { ...item, updatedAt: new Date().toISOString() }; return { ...current, transactions: current.transactions.some((entry) => entry.id === item.id) ? current.transactions.map((entry) => entry.id === item.id ? stamped : entry) : [stamped, ...current.transactions] }; });
@@ -728,7 +754,7 @@ export default function Home() {
       next: { ...currentData, savings: currentData.savings.filter((item) => item.id !== id), deleted: [...currentData.deleted, { entity: "savings" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
       removed: { savings: currentData.savings.filter((item) => item.id === id) },
     }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} onPayRecurring={(id) => update((currentData) => confirmRecurringPayment(currentData, id) || currentData)} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={setData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={setMore} data={data} onChange={setData} onAddReceipt={() => setModal("receipt")} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenCalendar={() => go("calendar")} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onGo={go} onChange={setData} />; };
-  return <div className="bf-app">
+  return <div className="bf-app os-shell">
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
     <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void loadSecondary()} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label="Deschide instrumentele" onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} /></button><button className="os-tool" aria-label="Deschide ghidul" onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>

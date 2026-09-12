@@ -28,20 +28,34 @@ export function consumeQuickAction(): QuickAction | undefined {
 
 /**
  * Ascultă acțiunile venite din afara aplicației. Verifică la montare și la fiecare
- * revenire în prim-plan, pentru că o apăsare pe widget readuce o aplicație deja pornită
- * fără să reîncarce pagina.
+ * revenire în prim-plan. Dacă puntea nativă întârzie (WebView Capacitor), reîncearcă
+ * scurt — altfel o apăsare pe widget la pornire rece se pierdea.
  */
 export function observeQuickActions(handle: (action: QuickAction) => void): () => void {
-  if (typeof window === "undefined" || !bridge()) return () => undefined;
+  if (typeof window === "undefined") return () => undefined;
+  let stopped = false;
+  let retries = 0;
   const check = () => {
     const action = consumeQuickAction();
     if (action) handle(action);
   };
   const onVisibility = () => { if (document.visibilityState === "visible") check(); };
-  check();
+  const boot = () => {
+    if (stopped) return;
+    if (bridge()) {
+      check();
+      return;
+    }
+    if (retries < 20) {
+      retries += 1;
+      window.setTimeout(boot, 100);
+    }
+  };
+  boot();
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("focus", check);
   return () => {
+    stopped = true;
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("focus", check);
   };

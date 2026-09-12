@@ -53,7 +53,21 @@ export const sourceKindName: Record<"card" | "cash" | "meal" | "transfer", strin
 export const money = (value: number) => fmt.format(Number.isFinite(value) ? value : 0);
 export const dateText = (value: string, full = false) => formatDate(value, full ? { day: "2-digit", month: "long", year: "numeric" } : { day: "2-digit", month: "short" });
 
-export type SyncPanelProps = { connected: boolean; busy: boolean; password: string; setPassword: (value: string) => void; notice: string; lastSync: string; journal: SyncJournalEntry[]; onConnect: () => void; onDisconnect: () => void; onClearJournal: () => void };
+export type SyncPanelProps = {
+  connected: boolean;
+  busy: boolean;
+  password: string;
+  setPassword: (value: string) => void;
+  notice: string;
+  lastSync: string;
+  journal: SyncJournalEntry[];
+  devices: import("@/lib/finance-data").SyncDevice[];
+  thisDeviceId: string;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  onClearJournal: () => void;
+  onRevokeDevice: (deviceId: string) => void;
+};
 
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
