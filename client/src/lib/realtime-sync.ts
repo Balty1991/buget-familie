@@ -6,7 +6,7 @@
  * Firestore nu vede niciodată datele în clar — doar pachetul AES-GCM criptat local.
  */
 import { initializeApp, type FirebaseApp } from "firebase/app";
-import { initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
 import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
 import { appCheckDebug, firebaseConfig, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
@@ -32,7 +32,7 @@ function ensureAppCheck(firebaseApp: FirebaseApp) {
     }
   }
   appCheck = initializeAppCheck(firebaseApp, {
-    provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+    provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
     isTokenAutoRefreshEnabled: true,
   });
 }

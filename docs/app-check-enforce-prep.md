@@ -7,14 +7,14 @@ Enforce prematur blochează familiile care sincronizează fără token valid.
 
 - `client/src/lib/firebase-config.ts` — `VITE_RECAPTCHA_SITE_KEY` sau `RECAPTCHA_SITE_KEY_PLACEHOLDER`
 - Debug Capacitor: `VITE_APPCHECK_DEBUG=true` + debug token din Console
-- `client/src/lib/realtime-sync.ts` — inițializează App Check când există cheie / debug
+- `client/src/lib/realtime-sync.ts` — `ReCaptchaEnterpriseProvider` + `initializeAppCheck` când există site key / debug
 - `firestore.rules` — **nu** cere `request.appCheck`; comentariul din fișier spune explicit să nu activezi Enforce până confirmi tokenul
 
 ## Checklist mediu (env)
 
 | Variabilă | Unde | Valoare |
 |-----------|------|---------|
-| `VITE_RECAPTCHA_SITE_KEY` | CI / build release web & Android | Site key reCAPTCHA v3 din Firebase App Check |
+| `VITE_RECAPTCHA_SITE_KEY` | CI / build release web & Android | Site key reCAPTCHA **Enterprise** din Firebase App Check (nu secret classic) |
 | `VITE_APPCHECK_DEBUG` | Doar debug local Capacitor | `true` (nu în store) |
 | (opțional) `RECAPTCHA_SITE_KEY_PLACEHOLDER` | `firebase-config.ts` | Doar dacă nu setezi env la build |
 
@@ -23,8 +23,8 @@ Fișier de referință: `.env.example` (nu comite secrete reale).
 ## Pași în Firebase Console (ordine)
 
 1. **Build → App Check** → înregistrează app-ul web (și Android dacă e în proiect).
-2. Provider **reCAPTCHA v3** pe web; pe Android poți folosi Play Integrity când ești pe Play.
-3. Copiază site key → pune în `VITE_RECAPTCHA_SITE_KEY` pe pipeline-ul de release.
+2. Provider **reCAPTCHA Enterprise** pe web (classic / reCAPTCHA v3 e deprecated / blocked pe proiecte noi); pe Android poți folosi Play Integrity când ești pe Play.
+3. Copiază **site key**-ul Enterprise (public, nu secret) → pune în `VITE_RECAPTCHA_SITE_KEY` pe pipeline-ul de release. Clientul folosește `ReCaptchaEnterpriseProvider`.
 4. Construiește AAB/APK + Pages cu această cheie.
 5. Deschide aplicația pe un telefon real / build publicat; în App Check → Metrics verifică că apar requesturi cu token **valid**.
 6. Abia apoi, dacă metrics sunt verzi câteva zile: App Check → **Enforce** pe Firestore (și doar pe Firestore dacă e nevoie).

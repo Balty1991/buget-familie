@@ -9,9 +9,10 @@
  * 2. Project settings → Your apps → Web (</>) → Register app.
  * 3. Copiază obiectul `firebaseConfig` afișat de Firebase exact în locul valorilor de mai jos.
  *
- * App Check (reCAPTCHA v3 / Debug) — vezi README „App Check” și docs din acest fișier:
+ * App Check (reCAPTCHA Enterprise / Debug) — vezi README „App Check” și docs/app-check-enforce-prep.md:
  * - Pe web/prod: setează `VITE_RECAPTCHA_SITE_KEY` la build SAU completează
- *   `RECAPTCHA_SITE_KEY_PLACEHOLDER` mai jos cu cheia de site din Firebase App Check.
+ *   `RECAPTCHA_SITE_KEY_PLACEHOLDER` mai jos cu site key-ul reCAPTCHA Enterprise din Firebase App Check
+ *   (nu secretul classic — în client merge doar site key-ul public).
  * - Pe Capacitor debug: `VITE_APPCHECK_DEBUG=true` activează Debug provider (token de debug
  *   din Firebase Console → App Check → Manage debug tokens). NU activa Enforce pe Firestore
  *   până confirmi că build-ul publicat trimite token — altfel blochezi familiile existente.

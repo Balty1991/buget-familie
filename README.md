@@ -88,8 +88,8 @@ Checklist Enforce (fără a-l activa încă): [`docs/app-check-enforce-prep.md`]
 Protecție anti-abuz a cotei Firestore. Sync-ul funcționează și **fără** App Check; cheia goală nu mai e tăcută — consola afișează un mesaj de setup.
 
 1. Firebase Console → **Build → App Check** → aplicația web (și Android, dacă e înregistrată).
-2. Provider **reCAPTCHA v3** → creează cheia de site (site key).
-3. La build: `VITE_RECAPTCHA_SITE_KEY=... pnpm build` **sau** lipește cheia în `RECAPTCHA_SITE_KEY_PLACEHOLDER` din `client/src/lib/firebase-config.ts`.
+2. Provider **reCAPTCHA Enterprise** → creează / înregistrează site key-ul (classic / reCAPTCHA v3 e deprecated / blocked pe proiecte noi). În client: `ReCaptchaEnterpriseProvider` + același env `VITE_RECAPTCHA_SITE_KEY` (site key public, **nu** secret).
+3. La build: `VITE_RECAPTCHA_SITE_KEY=... pnpm build` **sau** lipește site key-ul în `RECAPTCHA_SITE_KEY_PLACEHOLDER` din `client/src/lib/firebase-config.ts`.
 4. Debug Capacitor: `VITE_APPCHECK_DEBUG=true` + debug token din App Check → Manage debug tokens (setează `self.FIREBASE_APPCHECK_DEBUG_TOKEN` înainte de init dacă e nevoie).
 5. **Enforce pe Firestore: doar după** ce build-ul din Play / Pages trimite token. Până atunci, lasă Monitor — altfel blochezi familiile existente.
 

@@ -26,7 +26,7 @@ Nu putem testa widgetul / dala pe un dispozitiv fizic în mediul de build. Înai
 Detalii: `docs/app-check-enforce-prep.md` · env: `.env.example`
 
 - [ ] `VITE_RECAPTCHA_SITE_KEY` setat pe build-ul de release **sau** cheia lipită în `firebase-config.ts`
-- [ ] App Check → provider reCAPTCHA v3 pe app-ul web/Android din Firebase
+- [ ] App Check → provider reCAPTCHA Enterprise pe app-ul web/Android din Firebase
 - [ ] Metrics arată tokenuri **valide** pe build-ul pe care îl testezi
 - [ ] **Nu** activa Enforce pe Firestore până confirmi tokenuri pe build-ul publicat
 - [ ] Pentru debug Capacitor: `VITE_APPCHECK_DEBUG=true` + debug token în Console
