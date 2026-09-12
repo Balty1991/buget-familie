@@ -102,7 +102,6 @@
 .os-shell .bf-link-button,
 .os-shell .bf-os-decide,
 .os-shell .bf-os-secondary,
-.os-shell .bf-movement-add,
 .os-shell .bf-obligation-ai > button,
 .os-shell .bf-obligation-actions > button,
 .os-shell .bf-obligation-entry-actions > button,
@@ -134,8 +133,7 @@
 
 .os-shell .bf-primary,
 .os-shell .bf-primary.full,
-.os-shell .bf-os-decide,
-.os-shell .bf-movement-add {
+.os-shell .bf-os-decide {
   border: 0 !important;
   color: var(--os-mint-fg, #fff) !important;
   background: linear-gradient(
@@ -146,6 +144,37 @@
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 30%, transparent) inset,
     0 10px 22px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+}
+
+/* Mișcări header: icon-only square — chrome padding/gap was crushing the Plus to 1px. */
+.os-shell .bf-movement-add {
+  display: inline-grid !important;
+  place-items: center !important;
+  gap: 0 !important;
+  width: 46px !important;
+  min-width: 46px !important;
+  max-width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--bf-chrome-radius, 14px) !important;
+  color: var(--cf-on-primary, var(--os-mint-fg, #fff)) !important;
+  background: var(--cf-primary-strong, var(--os-mint, #1f5240)) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 30%, transparent) inset,
+    0 10px 22px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+.os-shell .bf-movement-add svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex: none !important;
+  color: var(--cf-on-primary, #ffffff) !important;
+  stroke: currentColor !important;
 }
 
 .os-shell .bf-secondary,

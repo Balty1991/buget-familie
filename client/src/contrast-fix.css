@@ -736,14 +736,29 @@ html.theme-cyber .os-dock button.is-on svg {
     text-overflow: ellipsis;
   }
   .bf-movements-ledger .bf-movement-add {
+    display: inline-grid !important;
+    place-items: center !important;
+    gap: 0 !important;
+    width: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 !important;
     color: var(--cf-on-primary, #ffffff) !important;
     background: var(--cf-primary-strong, #1f5240) !important;
+    background-image: none !important;
     font-size: 0 !important;
+    line-height: 0 !important;
   }
   .bf-movements-ledger .bf-movement-add svg {
-    color: var(--cf-on-primary, #ffffff) !important;
     width: 20px !important;
     height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    flex: none !important;
+    color: var(--cf-on-primary, #ffffff) !important;
+    stroke: currentColor !important;
   }
 }
 
@@ -1109,4 +1124,43 @@ html.theme-cyber .bf-today-add.bf-os-secondary {
   color: var(--cf-ink, #f1f4f8) !important;
   background-color: var(--cf-surface, #18142f) !important;
   border-color: var(--cf-line, #49416c) !important;
+}
+
+/* ============================================================
+ * Mișcări header „Adaugă”: icon-only pe umplutură primary.
+ * ui-chrome aplicase padding 18px + gap 10px pe un pătrat de 46px,
+ * iar Plus se strângea la 1px (buton verde gol). Forțează padding 0,
+ * icon 20px și --cf-on-primary pe stroke.
+ * ============================================================ */
+html .bf-movement-add,
+.os-shell .bf-movement-add,
+.bf-movements-ledger .bf-movement-add {
+  display: inline-grid !important;
+  place-items: center !important;
+  gap: 0 !important;
+  box-sizing: border-box !important;
+  width: 46px !important;
+  min-width: 46px !important;
+  max-width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  color: var(--cf-on-primary, #ffffff) !important;
+  background-color: var(--cf-primary-strong, #1f5240) !important;
+  background-image: none !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+html .bf-movement-add svg,
+.os-shell .bf-movement-add svg,
+.bf-movements-ledger .bf-movement-add svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  color: var(--cf-on-primary, #ffffff) !important;
+  stroke: currentColor !important;
 }
