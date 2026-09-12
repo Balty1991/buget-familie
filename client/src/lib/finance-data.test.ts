@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
+import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -490,5 +490,25 @@ describe("registrul financiar Buget Familie", () => {
     const report = calendarPlanPdfSnapshot(calendarBudget(2400, "2026-09-01", "2026-09-28")!, "Familia mea");
     expect(report).toMatchObject({ familyName: "Familia mea", total: 2400, days: 28 });
     expect(report.weeks).toHaveLength(4);
+  });
+});
+
+describe("sugestia săptămânală din fluxul real", () => {
+  it("propune sume pe plicuri din ultimele 7 zile fără a modifica planul", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.allocations = [
+      { id: "a1", label: "Alimente", amount: 800, category: "Alimente" },
+      { id: "a2", label: "Transport", amount: 200, category: "Transport" },
+    ];
+    data.transactions = [
+      { id: "t1", title: "Lidl", amount: 120, kind: "expense", category: "Alimente", source: "Card", person: "Eu", date: "2026-09-10", sourceId: "source-debit", memberId: "member-me" },
+      { id: "t2", title: "Uber", amount: 45, kind: "expense", category: "Transport", source: "Card", person: "Eu", date: "2026-09-11", sourceId: "source-debit", memberId: "member-me" },
+      { id: "t3", title: "Lidl", amount: 80, kind: "expense", category: "Alimente", source: "Card", person: "Eu", date: "2026-09-12", sourceId: "source-debit", memberId: "member-me" },
+    ];
+    const before = structuredClone(data.settings.salaryPlan.allocations);
+    const hint = suggestWeeklyAllocationsFromCashflow(data, "2026-09-12");
+    expect(hint.suggestions.find((item) => item.allocationId === "a1")?.suggestedAmount).toBe(200);
+    expect(hint.suggestions.find((item) => item.allocationId === "a2")?.suggestedAmount).toBe(45);
+    expect(data.settings.salaryPlan.allocations).toEqual(before);
   });
 });

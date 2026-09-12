@@ -201,9 +201,9 @@
 
 ## Lizibilitate card principal pe mobil
 
-- [ ] Elimină suprapunerea etichetelor din banda de decizie la lățimi de 360–375 px.
-- [ ] Păstrează clar titlul, suma disponibilă și starea planului în tema luminoasă și întunecată.
-- [ ] Verifică ecranul principal pe mobil înainte de următoarea publicare.
+- [x] Elimină suprapunerea etichetelor din banda de decizie la lățimi de 360–375 px.
+- [x] Păstrează clar titlul, suma disponibilă și starea planului în tema luminoasă și întunecată.
+- [x] Verifică ecranul principal pe mobil înainte de următoarea publicare.
 
 ## Fereastră flexibilă pentru venit
 
@@ -490,7 +490,7 @@
 - [x] Check-in familial săptămânal: propunere concretă de reechilibrare, cu sumă, plic sursă și buton care o aplică.
 - [x] Alocația copilului: membru marcat drept copil, plic propriu și ecran simplificat de buzunar.
 - [x] Mai multe valute, cu curs introdus manual și data lui; leul rămâne moneda de bază a registrului.
-- [ ] Soldul unei surse valutare este exact doar pentru mișcările cu sumă originală; cele vechi, introduse în lei, sunt convertite înapoi la cursul curent și marcate drept aproximative.
+- [x] Soldul unei surse valutare este exact doar pentru mișcările cu sumă originală; cele vechi, introduse în lei, sunt convertite înapoi la cursul curent și marcate drept aproximative.
 
 ## Limba engleză
 

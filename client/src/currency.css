@@ -20,3 +20,6 @@
 .bf-source-edit-foot small{display:block!important;margin-top:2px!important;color:var(--cf-muted)!important;font:600 10px/1.4 "IBM Plex Sans",sans-serif!important;text-transform:none!important;letter-spacing:0!important}
 .bf-source-edit-foot button{display:grid!important;place-items:center!important;flex:0 0 auto!important;width:38px!important;height:38px!important;min-height:0!important;padding:0!important;border:1px solid var(--cf-line)!important;border-radius:10px!important;color:#a34a38!important;background:var(--cf-surface)!important}
 @media (max-width:520px){.bf-source-edit.rich{grid-template-columns:1fr!important}}
+
+.bf-fx-approx{display:inline-block!important;margin-left:6px!important;padding:2px 8px!important;border-radius:999px!important;color:#8a5a12!important;background:#f6e2b3!important;font:800 10px/1.2 "IBM Plex Sans",sans-serif!important;letter-spacing:.04em!important;text-transform:uppercase!important;vertical-align:middle!important}
+.dark .bf-fx-approx{color:#f6e2b3!important;background:#5a4318!important}

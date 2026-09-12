@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, CircleCheck, FileText, Lightbulb, Maximize2, Minimize2, Paperclip, Send, Trash2, WalletCards, X } from "lucide-react";
-import { expenseCategories, formatDate, isoToday, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
+import { newId, expenseCategories, formatDate, isoToday, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
 import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
@@ -354,7 +354,7 @@ const intentDay = (intent: AssistantIntent) => (intent.kind === "expense" || int
  * afara plicurilor”, altfel nu s-ar mai putea alege.
  */
 function spendChoices(data: AppData, intent: Extract<AssistantIntent, { kind: "expense" }>, plan: SpendPlan): ChatChoice[] {
-  const base = { kind: "expense" as const, amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
+  const base = { kind: "expense" as const, amount: intent.amount, title: intent.title, category: intent.category, date: intent.date, clientCaptureId: newId("capture-expense") };
   const choices: ChatChoice[] = [];
 
   plan.envelopes
@@ -540,7 +540,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     const stamp = `${choice.update.kind}|${"title" in choice.update ? choice.update.title : ""}|${"amount" in choice.update ? choice.update.amount : ""}|${day}|${choice.update.kind === "expense" ? choice.update.allocationId : ""}`;
     if (stamp === lastSaveRef.current.key && Date.now() - lastSaveRef.current.at < 900) return;
     lastSaveRef.current = { key: stamp, at: Date.now() };
-    const update = choice.update.kind === "expense" || choice.update.kind === "income" ? { ...choice.update, date: day } : choice.update;
+    const update = choice.update.kind === "expense" || choice.update.kind === "income"
+      ? { ...choice.update, date: day, clientCaptureId: choice.update.clientCaptureId || newId(`capture-${choice.update.kind}`) }
+      : choice.update;
     onFinancialUpdate(update);
     if (update.kind === "expense") {
       const proposed = [...messages].reverse().find((item) => item.role === "assistant" && item.updates?.length)?.updates?.[0];

@@ -33,8 +33,8 @@ import { extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } 
 import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
-  | { kind: "income"; amount: number; title: string; date?: string; memberId?: string }
-  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string }
+  | { kind: "income"; amount: number; title: string; date?: string; memberId?: string; clientCaptureId?: string }
+  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string }
   | { kind: "debt"; name: string; remaining: number; due?: string }
   | { kind: "debt-monthly"; amount: number; name?: string }
   | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string }

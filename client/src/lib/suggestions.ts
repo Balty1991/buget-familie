@@ -13,6 +13,7 @@
 import {
   allocationStatus,
   allocationWeekStatus,
+  isoDate,
   isoToday,
   sourceBalance,
   type AppData,
@@ -29,7 +30,7 @@ const daysBetween = (from: string, to: string) =>
 function frequentVendor(data: AppData, asOf: string): string | undefined {
   const since = new Date(`${asOf}T12:00:00`);
   since.setMonth(since.getMonth() - 2);
-  const from = since.toISOString().slice(0, 10);
+  const from = isoDate(since);
   const counts = new Map<string, number>();
   for (const item of data.transactions) {
     if (item.kind !== "expense" || item.date < from) continue;

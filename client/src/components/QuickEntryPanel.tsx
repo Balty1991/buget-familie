@@ -2,7 +2,7 @@
  * Atelier Financiar — captură rapidă locală care respectă plicul compatibil și tranșa activă.
  * Filosofie: sursa plății poate aparține unui alt membru; plicul se alege după categoria și sursa reală.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, BookmarkPlus, Check, Plus, Trash2, X } from "lucide-react";
 import { BASE_CURRENCY, allocationStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -25,6 +25,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const [templateLabel, setTemplateLabel] = useState("");
   const [showArchive, setShowArchive] = useState(false);
   const [error, setError] = useState("");
+  const captureIdRef = useRef(newId("tx"));
   const activeTemplate = data.settings.quickTemplates.find((item) => item.id === templateId);
   const candidates = kind === "expense" ? matchingAllocationsForExpense(data, { category, memberId, sourceId }) : [];
   const candidateIds = candidates.map((item) => item.id).join("|");
@@ -65,7 +66,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     const stored = foreign ? toBaseAmount(numeric, rate) : numeric;
     if (foreign && !stored) return setError(t("Adaugă în Setări cursul pentru {currency} înainte de a folosi această sursă.", { currency: foreign }));
     if (kind === "expense" && allocationId !== "outside" && !matchedAllocation) return setError(t("Plicul nu mai corespunde categoriei sau sursei. Alege din nou."));
-    onSave({ id: newId("tx"), title: activeTemplate?.label || (kind === "expense" ? t("Cheltuială rapidă · {category}", { category: t(category) }) : incomeLabel.trim() || t("Venit rapid")), amount: stored || numeric, originalAmount: foreign ? numeric : undefined, originalCurrency: foreign, exchangeRate: foreign ? rate : undefined, kind, category: kind === "expense" ? category : "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: isoToday(), allocationId: kind === "expense" ? allocationId : undefined, createdAt: new Date().toISOString() });
+    onSave({ id: captureIdRef.current, title: activeTemplate?.label || (kind === "expense" ? t("Cheltuială rapidă · {category}", { category: t(category) }) : incomeLabel.trim() || t("Venit rapid")), amount: stored || numeric, originalAmount: foreign ? numeric : undefined, originalCurrency: foreign, exchangeRate: foreign ? rate : undefined, kind, category: kind === "expense" ? category : "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: isoToday(), allocationId: kind === "expense" ? allocationId : undefined, createdAt: new Date().toISOString() });
     onClose();
   };
   const remember = () => {

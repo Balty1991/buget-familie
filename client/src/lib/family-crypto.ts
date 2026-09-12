@@ -85,9 +85,31 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
   const memberMap = new Map([...remote.settings.members, ...local.settings.members].map((item) => [item.id, item]));
   const sourceMap = new Map([...remote.settings.paymentSources, ...local.settings.paymentSources].map((item) => [item.id, item]));
   const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);
-  const salaryPlanBase = timestamp(local.settings.salaryPlan) >= timestamp(remote.settings.salaryPlan) ? local.settings.salaryPlan : remote.settings.salaryPlan;
-  const allocationHistory: AllocationHistoryEntry[] = [...(remote.settings.salaryPlan.allocationHistory || []), ...(local.settings.salaryPlan.allocationHistory || [])].reduce<AllocationHistoryEntry[]>((all, item) => all.some((entry) => entry.id === item.id) ? all : [...all, item], []).sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt)).slice(0, 400);
-  const salaryPlan = { ...salaryPlanBase, allocationHistory };
+  // Plan scalars follow LWW on the plan stamp, but plicuri / transferuri / reguli
+  // se unesc pe id — altfel o modificare pe un telefon șterge plicul creat pe celălalt.
+  const localPlan = local.settings.salaryPlan;
+  const remotePlan = remote.settings.salaryPlan;
+  const salaryPlanBase = timestamp(localPlan) >= timestamp(remotePlan) ? localPlan : remotePlan;
+  const itemTime = (item: { updatedAt?: string; createdAt?: string; appliedAt?: string }) =>
+    Date.parse(item.updatedAt || item.createdAt || item.appliedAt || "") || 0;
+  const mergeById = <T extends { id: string }>(left: T[], right: T[], time: (item: T) => number = (item) => itemTime(item as { updatedAt?: string; createdAt?: string; appliedAt?: string })) => {
+    const all = new Map<string, T>();
+    [...right, ...left].forEach((item) => {
+      const existing = all.get(item.id);
+      if (!existing || time(item) >= time(existing)) all.set(item.id, item);
+    });
+    return Array.from(all.values());
+  };
+  const allocationHistory: AllocationHistoryEntry[] = [...(remotePlan.allocationHistory || []), ...(localPlan.allocationHistory || [])].reduce<AllocationHistoryEntry[]>((all, item) => all.some((entry) => entry.id === item.id) ? all : [...all, item], []).sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt)).slice(0, 400);
+  const salaryPlan = {
+    ...salaryPlanBase,
+    allocations: mergeById(localPlan.allocations || [], remotePlan.allocations || []),
+    transfers: mergeById(localPlan.transfers || [], remotePlan.transfers || []),
+    weekTransfers: mergeById(localPlan.weekTransfers || [], remotePlan.weekTransfers || []),
+    salaryAllocationRules: mergeById(localPlan.salaryAllocationRules || [], remotePlan.salaryAllocationRules || []),
+    salaryAllocationApplications: mergeById(localPlan.salaryAllocationApplications || [], remotePlan.salaryAllocationApplications || []),
+    allocationHistory,
+  };
   return normalizeAppData({ version: 9, pendingReview: local.pendingReview, transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted), debts: mergeCollection("debts", local.debts, remote.debts, deleted), savings: mergeCollection("savings", local.savings, remote.savings, deleted), receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted), recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted), deleted, settings: { ...remote.settings, ...local.settings, familyName: local.settings.familyName || remote.settings.familyName, memberName: local.settings.memberName, familyCode: local.settings.familyCode || remote.settings.familyCode, members: Array.from(memberMap.values()), paymentSources: Array.from(sourceMap.values()), customCategories: Array.from(categorySet), quickTemplates: local.settings.quickTemplates, archivedQuickTemplates: local.settings.archivedQuickTemplates, savedJournalFilters: local.settings.savedJournalFilters, salaryCycleTemplates: local.settings.salaryCycleTemplates, exchangeRates: local.settings.exchangeRates, seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches, basketProducts: local.settings.basketProducts, salaryPlan } });
 }
 

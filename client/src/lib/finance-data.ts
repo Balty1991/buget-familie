@@ -87,7 +87,7 @@ export const supportedCurrencies = ["RON", "EUR", "USD", "GBP", "CHF", "MDL", "H
 /** `rate` este câți lei face o unitate din valuta respectivă. */
 export type ExchangeRate = { currency: string; rate: number; updatedAt: string };
 export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei, în valuta sursei. */ openingBalance: number; /** Implicit RON. */ currency?: string };
-export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string; /** Implicit adevărat: arată tranșa săptămânii active. Fals pentru plicuri fără ritm fix, unde contează doar totalul ciclului. */ weeklyPace?: boolean };
+export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string; /** Implicit adevărat: arată tranșa săptămânii active. Fals pentru plicuri fără ritm fix, unde contează doar totalul ciclului. */ weeklyPace?: boolean; updatedAt?: string };
 export type BudgetTransfer = { id: string; fromAllocationId: string; toAllocationId: string; amount: number; note?: string; createdAt: string };
 /** Mută bani între tranșele săptămânale ale aceluiași plic, de exemplu când săptămâna curentă s-a epuizat. */
 export type WeekTransfer = { id: string; allocationId: string; fromWeekIndex: number; toWeekIndex: number; amount: number; note?: string; createdAt: string };
@@ -610,6 +610,38 @@ export const matchingAllocationsForExpense = (data: AppData, input: { category: 
     const score = (item: BudgetAllocation) => (item.memberId ? 2 : 0) + (item.sourceId ? 2 : 0) + (allocationBudget(data, item) - allocationSpent(data, item) > 0 ? 1 : 0);
     return score(right) - score(left);
   });
+
+/**
+ * Propune sume pe plicuri pentru următoarele 7 zile, din cheltuielile reale ale
+ * ultimelor 7 zile. Nu modifică planul — e doar o sugestie editabilă.
+ */
+export const suggestWeeklyAllocationsFromCashflow = (data: AppData, asOf = isoToday()) => {
+  const start = addIsoDays(asOf, -6);
+  const spentByCategory = new Map<string, number>();
+  for (const item of data.transactions) {
+    if (item.kind !== "expense" || item.date < start || item.date > asOf) continue;
+    const key = item.category || "Altele";
+    spentByCategory.set(key, (spentByCategory.get(key) || 0) + item.amount);
+  }
+  const suggestions = data.settings.salaryPlan.allocations.map((allocation) => {
+    const category = allocation.category || allocation.label;
+    const actual = Math.round((spentByCategory.get(category) || 0) * 100) / 100;
+    return {
+      allocationId: allocation.id,
+      label: allocation.label,
+      category,
+      currentAmount: allocation.amount,
+      suggestedAmount: actual,
+      delta: Math.round((actual - allocation.amount) * 100) / 100,
+    };
+  }).filter((item) => item.suggestedAmount > 0 || item.currentAmount > 0);
+  const unallocated = Array.from(spentByCategory.entries())
+    .filter(([category]) => !data.settings.salaryPlan.allocations.some((item) => (item.category || item.label) === category))
+    .map(([category, amount]) => ({ category, amount: Math.round(amount * 100) / 100 }))
+    .filter((item) => item.amount > 0);
+  return { asOf, start, end: asOf, suggestions, unallocated, totalSuggested: suggestions.reduce((sum, item) => sum + item.suggestedAmount, 0) };
+};
+
 export const financialBalance = (data: AppData, start?: string, end?: string, memberId?: string) => { const entries = data.transactions.filter((item) => (!start || item.date >= start) && (!end || item.date <= end) && (!memberId || item.memberId === memberId)); const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const scopedDebts = data.debts.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const scopedSavings = data.savings.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const monthlyRates = scopedDebts.reduce((sum, item) => sum + item.monthly, 0); const debtRemaining = scopedDebts.reduce((sum, item) => sum + item.remaining, 0); const savingsCurrent = scopedSavings.reduce((sum, item) => sum + item.current, 0); const sources = data.settings.paymentSources.filter((source) => !memberId || !source.memberId || source.memberId === memberId); const liquidFunds = sources.reduce((sum, source) => sum + sourceBalance(data, source.id), 0); return { income, expense, cashflow: income - expense, monthlyRates, debtRemaining, savingsCurrent, liquidFunds, netLiquidPosition: liquidFunds - debtRemaining, memberId }; };
 
 /** Recapitulare locală luni–duminică. Perspectiva unui membru include numai mișcările lui. */

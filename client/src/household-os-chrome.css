@@ -1203,3 +1203,71 @@ body .bf-command-palette .bf-icon-button,
 .os-shell .bf-health-gauge-track { stroke: var(--os-line-strong) !important; }
 .os-shell .bf-health-gauge-tick { stroke: var(--os-muted) !important; }
 .os-shell .bf-os-gauge-wrap { background: var(--os-surface) !important; color: var(--os-fg) !important; box-shadow: 0 0 0 1px var(--os-line) !important; }
+
+
+
+/* Lizibilitate Astăzi / banda de decizie a hero-ului la 360–375 px */
+/* os-hero-narrow-360 */
+@media (max-width: 375px) {
+  .os-hero {
+    padding: 16px 14px 18px !important;
+    border-radius: 1.4rem !important;
+  }
+
+  .os-hero-top {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .os-date {
+    justify-items: start !important;
+  }
+
+  .os-chip {
+    max-width: 100% !important;
+    white-space: normal !important;
+    line-height: 1.35 !important;
+    letter-spacing: .1em !important;
+  }
+
+  .os-kicker-lg {
+    margin-top: 20px !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    letter-spacing: .14em !important;
+    line-height: 1.35 !important;
+  }
+
+  .os-amount {
+    font-size: clamp(36px, 12vw, 48px) !important;
+    gap: 8px !important;
+    line-height: 1 !important;
+  }
+
+  .os-amount small {
+    letter-spacing: .16em !important;
+    font-size: 14px !important;
+  }
+
+  .os-hint {
+    margin-top: 12px !important;
+    font-size: 13px !important;
+  }
+
+  .bf-decision-row,
+  .bf-decision-row.primary {
+    grid-template-columns: 22px minmax(0, 1fr) 16px !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+    align-items: start !important;
+  }
+
+  .bf-decision-row b,
+  .bf-decision-row em,
+  .bf-decision-row small {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+}
