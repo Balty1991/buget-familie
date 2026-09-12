@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   hasSeenEnvelopeGlossary,
+  isOfflineOnly,
   isSimpleMode,
   markEnvelopeGlossarySeen,
   markOpeningBalanceAsked,
+  setOfflineOnly,
   setSimpleMode,
   shouldAskOpeningBalance,
 } from "./ui-prefs";
@@ -37,6 +39,14 @@ describe("ui-prefs", () => {
     expect(isSimpleMode()).toBe(true);
     setSimpleMode(false);
     expect(isSimpleMode()).toBe(false);
+  });
+
+  it("offline-only toggles locally", () => {
+    expect(isOfflineOnly()).toBe(false);
+    setOfflineOnly(true);
+    expect(isOfflineOnly()).toBe(true);
+    setOfflineOnly(false);
+    expect(isOfflineOnly()).toBe(false);
   });
 
   it("glossary and balance prompts are one-shot", () => {

@@ -52,7 +52,7 @@ function sourceName(data: AppData, sourceId?: string) {
   return data.settings.paymentSources.find((source) => source.id === sourceId)?.name || t("Orice sursă");
 }
 
-export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data: AppData) => void }) {
+export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppData; onChange: (data: AppData) => void; simpleMode?: boolean }) {
   const plan = data.settings.salaryPlan;
   const planEnd = planEndDate(plan);
   const categories = [...expenseCategories, ...data.settings.customCategories.filter((category) => !expenseCategories.includes(category))];
@@ -238,12 +238,12 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{t("NEREPARTIZAȚI")}</small><b>{money(unrepartized)}</b></div>
     </header>
 
-    {showGlossary && (
-      <aside className="bf-envelope-glossary-tip" role="note">
+    {(simpleMode || showGlossary) && (
+      <aside className={simpleMode ? "bf-plan-simple-tip" : "bf-envelope-glossary-tip"} role="note">
         <p className="bf-kicker">{t("PE ROMÂNEȘTE")}</p>
         <b>{t("Plicul e o limită, nu un sold.")}</b>
         <p>{t("Banii stau în surse (card, cash). Plicul spune cât poți cheltui pe o categorie până la următorul venit — nu „mută” lei din cont.")}</p>
-        <button type="button" className="bf-link-button" onClick={() => { markEnvelopeGlossarySeen(); setShowGlossary(false); }}>{t("Am înțeles")}</button>
+        {!simpleMode && <button type="button" className="bf-link-button" onClick={() => { markEnvelopeGlossarySeen(); setShowGlossary(false); }}>{t("Am înțeles")}</button>}
       </aside>
     )}
     <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">{t("REPARTIZARE PE PERIOADĂ")}</p><h2 id="allocation-period-title">{t("Alege ritmul casei.")}</h2><p>{t("Vezi banii disponibili pentru intervalul în care iei decizia.")}</p></div><span>{money(Math.max(0, unrepartized))}<small>{t("rămași de repartizat")}</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label={t("Perioada repartizării")}>{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>{t("disponibil în surse")}</small></span><span><b>{money(reservedInEnvelopes)}</b><small>{t("în plicuri")}</small></span><span><b>{money(scheduled)}</b><small>{t("scadențe rezervate")}</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>{t("de repartizat")}</small></span></div></section>
@@ -284,7 +284,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       )}
     </section>
 
-    <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />
+    {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
     <section className="bf-plan-cashflow-suggest" aria-labelledby="bf-cashflow-suggest-title">
       <div>
         <p className="bf-kicker">{t("DIN FLUXUL REAL")}</p>
@@ -334,7 +334,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
     )}
     <section className="bf-plan-simulator" aria-labelledby="bf-plan-simulator-title"><div><p className="bf-kicker">{t("SCENARIU FĂRĂ RISC")}</p><h2 id="bf-plan-simulator-title">{t("Testează planul înainte să-l schimbi.")}</h2><p>{t("Modifică sumele într-o copie temporară. Registrul și planul real rămân intacte până când confirmi.")}</p></div><button type="button" className="bf-secondary" onClick={openSimulation} disabled={!plan.allocations.length}><Sparkles size={16} /> Deschide simularea</button></section>
     {simulationOpen && <section className="bf-plan-simulation" role="dialog" aria-modal="true" aria-labelledby="bf-plan-simulation-title"><div className="bf-plan-simulation-heading"><div><p className="bf-kicker">{t("SIMULARE LOCALĂ")}</p><h2 id="bf-plan-simulation-title">{t("Cum ar arăta o altă repartizare?")}</h2><p>{t("Aceste valori sunt temporare și nu sunt salvate automat.")}</p></div><button type="button" className="bf-link-button" onClick={() => setSimulationOpen(false)}>{t("Închide")}</button></div><div className="bf-plan-simulation-list">{plan.allocations.map((item) => <label key={item.id}><span><b>{item.label}</b><small>{item.category || "Categorie"} · acum {money(item.amount)}</small></span><input value={simulationAmounts[item.id] ?? String(item.amount)} onChange={(event) => setSimulationAmounts((current) => ({ ...current, [item.id]: event.target.value }))} inputMode="decimal" aria-label={`Suma simulată pentru ${item.label}`} /></label>)}</div><div className={`bf-plan-simulation-result ${simulationRemainder < 0 ? "negative" : "positive"}`}><span><small>{t("Total simulat")}</small><b>{money(simulationTotal)}</b></span><span><small>{t("Rămâne după scadențe")}</small><b>{money(simulationRemainder)}</b></span><span><small>{t("Interpretare")}</small><b>{simulationRemainder < 0 ? t("Peste disponibil") : simulationRemainder === 0 ? t("Echilibru") : t("Bani nealocați")}</b></span></div><p className="bf-plan-simulation-note">{simulationRemainder < 0 ? t("Scenariul depășește banii disponibili. Redu una dintre sume înainte de aplicare.") : simulationRemainder > 0 ? t("După repartizare rămân {amount} nealocați, disponibili pentru o nevoie viitoare.", { amount: money(simulationRemainder) }) : t("Scenariul acoperă disponibilul și scadențele fără surplus.")}</p><footer><button type="button" onClick={() => setSimulationOpen(false)}>{t("Renunță")}</button><button type="button" className="bf-primary" disabled={simulationRemainder < 0} onClick={applySimulation}><Check size={16} /> {t("Aplică scenariul")}</button></footer></section>}
-    <AllocationRecommendationsPanel data={data} allocations={plan.allocations} periodDays={periodValid ? daysBetween(cycleStart, cycleEnd) : 30} onApply={applyRecommendation} />
+    {!simpleMode && <AllocationRecommendationsPanel data={data} allocations={plan.allocations} periodDays={periodValid ? daysBetween(cycleStart, cycleEnd) : 30} onApply={applyRecommendation} />}
     <section className={`bf-plan-flow ${planFlowOpen ? "expanded" : "compact"}`} aria-label={t("Progresul planului în trei pași")}><button type="button" className="bf-plan-flow-toggle" aria-expanded={planFlowOpen} onClick={() => setPlanFlowOpen((value) => !value)}><span>{planFlowOpen ? "Ascunde ghidul" : t("Arată ghidul complet")}</span><ChevronDown size={16} /></button>
       <div className="bf-plan-flow-summary"><div><p className="bf-kicker">{t("PLAN ÎN TREI PAȘI")}</p><h2>{nextPlanStep}</h2><span>{t("Configurația rămâne locală și poate fi ajustată oricând.")}</span></div><strong>{completedPlanSteps}<small>{t("/ 3 pregătit")}</small></strong></div>
       <ol>
@@ -408,8 +408,8 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.")}</span></div>}
             </div>
       <EnvelopeTransferPanel data={data} onChange={onChange} />
-      <SalaryRitualPanel data={data} onChange={onChange} />
-      <AllocationHistoryPanel data={data} />
+      {!simpleMode && <SalaryRitualPanel data={data} onChange={onChange} />}
+      {!simpleMode && <AllocationHistoryPanel data={data} />}
     </section>
     <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> {t("Instrumente pentru perioade repetate")}</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>{t("Un șablon reține doar durata perioadei; începi mereu următorul ciclu cu data aleasă de tine.")}</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={periodValid ? `ex. Salariu ${daysBetween(cycleStart, cycleEnd)} zile` : t("Completează mai întâi perioada")} disabled={!periodValid} /><button disabled={!periodValid} onClick={saveCycleTemplate}>{t("Salvează șablonul")}</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>{t("Salvează")}</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>{t("Anulează")}</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>{t("Nu ai șabloane salvate încă.")}</span>}</div></div></details>
   </div>;

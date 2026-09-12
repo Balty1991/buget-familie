@@ -1271,3 +1271,69 @@ body .bf-command-palette .bf-icon-button,
     overflow-wrap: anywhere !important;
   }
 }
+
+/* ========== Mod simplu — diferență vizibilă față de UI-ul complet ========== */
+html[data-simple-mode="1"] .os-shell {
+  --bf-simple-accent: #1f6b4a;
+}
+.bf-simple-mode-top-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, #1f6b4a, #2a8f62);
+  color: #f7fff9 !important;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 0;
+  border-bottom: 2px solid #0f3d2a;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.bf-simple-mode-top-banner button {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  min-height: 36px;
+}
+.bf-simple-mode-top-banner button:hover { background: rgba(255, 255, 255, 0.28); }
+html[data-simple-mode="1"] .bf-today-workspace {
+  padding-bottom: 24px;
+}
+html[data-simple-mode="1"] .bf-today-workspace .os-hero {
+  border: 2px solid var(--bf-simple-accent, #1f6b4a);
+  box-shadow: 0 8px 28px rgba(31, 107, 74, 0.18);
+}
+html[data-simple-mode="1"] .os-dock {
+  gap: 4px;
+}
+html[data-simple-mode="1"] .os-dock button {
+  flex: 1 1 0;
+  font-weight: 600;
+}
+html[data-simple-mode="1"] .bf-utilities-workspace .bf-more-tabs button {
+  font-weight: 600;
+}
+.bf-simple-mode-card.is-on {
+  outline: 2px solid #1f6b4a;
+  background: color-mix(in srgb, #1f6b4a 8%, transparent);
+}
+.bf-plan-simple-tip {
+  display: block;
+  margin: 8px 0 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, #1f6b4a 12%, transparent);
+  border: 1px solid color-mix(in srgb, #1f6b4a 35%, transparent);
+  color: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
