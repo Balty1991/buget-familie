@@ -4,6 +4,7 @@
  * Nu arată planul salarial, plicurile familiei sau soldurile surselor — un copil are
  * nevoie să știe cât mai are și cât poate cheltui azi, nu cum e construit bugetul.
  */
+import "../pocket.css";
 import { useState } from "react";
 import { CalendarDays, PiggyBank, Wallet } from "lucide-react";
 import { type AppData } from "@/lib/finance-data";

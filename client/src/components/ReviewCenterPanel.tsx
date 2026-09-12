@@ -3,6 +3,7 @@
  * de import, bon sau asistent. Nimic de aici nu atinge soldurile, plicurile sau
  * prognozele până când utilizatorul apasă „Confirmă”.
  */
+import "../review-center.css";
 import { useMemo, useRef, useState } from "react";
 import { Check, FileUp, Inbox, Pencil, ShieldCheck, Trash2, X } from "lucide-react";
 import {

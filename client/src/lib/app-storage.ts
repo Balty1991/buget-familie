@@ -6,6 +6,8 @@ const STORE_NAME = "app";
 const DATA_KEY = "data";
 const BACKUP_VERSION = 1;
 export const SYNC_JOURNAL_KEY = "buget-familie:sync-journal-v1";
+export const APP_STORAGE_KEY = "buget-familie:app-data-v6";
+export const LEGACY_STORAGE_KEY = "buget-familie:app-data-v3";
 
 export type AppBackup = {
   kind: "buget-familie-backup";
@@ -42,8 +44,17 @@ export function writeSyncJournal(entries: SyncJournalEntry[]): void {
   }
 }
 
+export const APP_STORAGE_META_KEY = "buget-familie:app-data-meta-v1";
+
+export type AppStorageMeta = { savedAt: string; hash: string };
+
+type StoredEnvelope = { __bf: 1; savedAt: string; hash: string; data: AppData };
+
+let dbPromise: Promise<IDBDatabase> | null = null;
+
 function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") {
       reject(new Error("IndexedDB nu este disponibil pe acest dispozitiv."));
       return;
@@ -54,25 +65,123 @@ function openDatabase(): Promise<IDBDatabase> {
         request.result.createObjectStore(STORE_NAME);
       }
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error("Nu am putut deschide stocarea locală."));
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onclose = () => { dbPromise = null; };
+      db.onversionchange = () => { db.close(); dbPromise = null; };
+      resolve(db);
+    };
+    request.onerror = () => {
+      dbPromise = null;
+      reject(request.error || new Error("Nu am putut deschide stocarea locală."));
+    };
   });
+  return dbPromise;
+}
+
+/** Hash scurt, stabil, pentru a compara LS și IDB fără a ține tot JSON-ul. */
+export function hashAppPayload(serialized: string): string {
+  let hash = 2166136261;
+  for (let index = 0; index < serialized.length; index += 1) {
+    hash ^= serialized.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function isEnvelope(value: unknown): value is StoredEnvelope {
+  return Boolean(value && typeof value === "object" && (value as StoredEnvelope).__bf === 1 && (value as StoredEnvelope).data);
+}
+
+function unwrapStored(raw: unknown): { data: AppData | null; savedAt: string | null; hash: string | null } {
+  if (!raw) return { data: null, savedAt: null, hash: null };
+  if (isEnvelope(raw)) return { data: raw.data, savedAt: raw.savedAt || null, hash: raw.hash || null };
+  if (typeof raw === "object" && raw !== null && "version" in (raw as object)) {
+    return { data: raw as AppData, savedAt: null, hash: null };
+  }
+  return { data: null, savedAt: null, hash: null };
+}
+
+export function readLocalStorageSnapshot(): { data: AppData | null; savedAt: string | null; hash: string | null; raw: string | null } {
+  try {
+    const raw = window.localStorage.getItem(APP_STORAGE_KEY) || window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return { data: null, savedAt: null, hash: null, raw: null };
+    let meta: AppStorageMeta | null = null;
+    try {
+      meta = JSON.parse(window.localStorage.getItem(APP_STORAGE_META_KEY) || "null") as AppStorageMeta | null;
+    } catch {
+      meta = null;
+    }
+    const parsed = JSON.parse(raw) as unknown;
+    const data = parsed && typeof parsed === "object" ? (parsed as AppData) : null;
+    return {
+      data,
+      savedAt: meta?.savedAt || null,
+      hash: meta?.hash || (raw ? hashAppPayload(raw) : null),
+      raw,
+    };
+  } catch {
+    return { data: null, savedAt: null, hash: null, raw: null };
+  }
+}
+
+export function writeLocalStorageSnapshot(serialized: string, savedAt = new Date().toISOString()): AppStorageMeta {
+  const meta: AppStorageMeta = { savedAt, hash: hashAppPayload(serialized) };
+  window.localStorage.setItem(APP_STORAGE_KEY, serialized);
+  try {
+    window.localStorage.setItem(APP_STORAGE_META_KEY, JSON.stringify(meta));
+  } catch {
+    // Meta e diagnostic; quota plin nu trebuie să blocheze datele.
+  }
+  return meta;
+}
+
+/**
+ * Alege copia mai nouă. IDB e primar când stampile/hash-urile sunt egale;
+ * dacă diferă fără stampă, preferăm LS (scris sincron, înainte de debounce-ul IDB).
+ */
+export function chooseFresherAppData(
+  local: { data: AppData | null; savedAt: string | null; hash: string | null },
+  indexed: { data: AppData | null; savedAt: string | null; hash: string | null },
+): AppData | null {
+  if (!local.data && !indexed.data) return null;
+  if (!local.data) return indexed.data;
+  if (!indexed.data) return local.data;
+  if (local.hash && indexed.hash && local.hash === indexed.hash) return indexed.data;
+  if (local.savedAt && indexed.savedAt) {
+    return local.savedAt >= indexed.savedAt ? local.data : indexed.data;
+  }
+  if (local.savedAt && !indexed.savedAt) return local.data;
+  if (indexed.savedAt && !local.savedAt) return indexed.data;
+  // Migrare: fără meta, LS e mai aproape de ultimele taste (IDB e întârziat ~280ms).
+  return local.data;
 }
 
 export async function readAppData(): Promise<AppData | null> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
     const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(DATA_KEY);
-    request.onsuccess = () => resolve((request.result as AppData | undefined) || null);
+    request.onsuccess = () => resolve(unwrapStored(request.result).data);
     request.onerror = () => reject(request.error || new Error("Nu am putut citi datele locale."));
   });
 }
 
-export async function writeAppData(data: AppData): Promise<void> {
+export async function readAppDataRecord(): Promise<{ data: AppData | null; savedAt: string | null; hash: string | null }> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
-    const request = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(data, DATA_KEY);
-    request.onsuccess = () => resolve();
+    const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).get(DATA_KEY);
+    request.onsuccess = () => resolve(unwrapStored(request.result));
+    request.onerror = () => reject(request.error || new Error("Nu am putut citi datele locale."));
+  });
+}
+
+export async function writeAppData(data: AppData, savedAt = new Date().toISOString()): Promise<AppStorageMeta> {
+  const db = await openDatabase();
+  const hash = hashAppPayload(JSON.stringify(data));
+  const envelope: StoredEnvelope = { __bf: 1, savedAt, hash, data };
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(envelope, DATA_KEY);
+    request.onsuccess = () => resolve({ savedAt, hash });
     request.onerror = () => reject(request.error || new Error("Nu am putut salva datele locale."));
   });
 }
@@ -214,5 +323,4 @@ export async function clearAppStorage(): Promise<void> {
   });
 }
 
-export const APP_STORAGE_KEY = "buget-familie:app-data-v6";
-export const LEGACY_STORAGE_KEY = "buget-familie:app-data-v3";
+

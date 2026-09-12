@@ -8,7 +8,7 @@ type Go = (view: "plan" | "journal") => void;
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
-export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
+export function TodayLedger({ data, onGo, compact = false }: { data: AppData; onGo: Go; compact?: boolean }) {
   const pulse = lastDaysPulse(data);
   const maxExpense = Math.max(1, ...pulse.map((day) => day.expense));
   const track = paydayTrack(data);
@@ -26,24 +26,26 @@ export function TodayLedger({ data, onGo }: { data: AppData; onGo: Go }) {
         <button type="button" onClick={() => onGo("plan")}>Deschide plicurile</button>
       </header>
 
-      <div className="bf-desk-top">
-        <CashNote amount={money(safe.available)} caption="Disponibil prudent" />
-        <div className="bf-today-pulse">
-          <div className="bf-today-pulse-copy">
-            <p className="bf-kicker">{t("PULSUL SĂPTĂMÂNII")}</p>
-            <h2>{weekSpend > 0 ? money(weekSpend) : t("Fără ieșiri")}</h2>
-            <p>{t("Cerneală din registru — ultimele 7 zile, nu din bancă.")}</p>
-          </div>
-          <div className="bf-today-pulse-chart" role="img" aria-label={`Cheltuieli pe 7 zile, total ${money(weekSpend)}`}>
-            {pulse.map((day) => (
-              <span key={day.date} className={day.isToday ? "today" : ""}>
-                <i className={day.expense <= 0 ? "empty" : ""} style={{ height: `${Math.max(12, (day.expense / maxExpense) * 100)}%` }} />
-                <b>{day.weekday}</b>
-              </span>
-            ))}
+      {!compact && (
+        <div className="bf-desk-top">
+          <CashNote amount={money(safe.available)} caption="Disponibil prudent" />
+          <div className="bf-today-pulse">
+            <div className="bf-today-pulse-copy">
+              <p className="bf-kicker">{t("PULSUL SĂPTĂMÂNII")}</p>
+              <h2>{weekSpend > 0 ? money(weekSpend) : t("Fără ieșiri")}</h2>
+              <p>{t("Cerneală din registru — ultimele 7 zile, nu din bancă.")}</p>
+            </div>
+            <div className="bf-today-pulse-chart" role="img" aria-label={`Cheltuieli pe 7 zile, total ${money(weekSpend)}`}>
+              {pulse.map((day) => (
+                <span key={day.date} className={day.isToday ? "today" : ""}>
+                  <i className={day.expense <= 0 ? "empty" : ""} style={{ height: `${Math.max(12, (day.expense / maxExpense) * 100)}%` }} />
+                  <b>{day.weekday}</b>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {track && <PaydayStrip elapsed={track.elapsed} total={track.total} remaining={track.remaining} />}
 

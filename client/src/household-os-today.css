@@ -1027,3 +1027,80 @@ html:not(.dark) .bf-os-decide {
 }
 
 
+
+/* De verificat — inevitabil pe Astăzi + deasupra dock */
+.bf-review-today-banner,
+.bf-dock-review-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--cf-warning, #8b630e) 35%, var(--cf-line, #d5d2c8));
+  background: color-mix(in srgb, var(--cf-warning, #8b630e) 12%, var(--cf-surface, #fff));
+  color: var(--cf-ink, #1a2420);
+  text-align: left;
+}
+.bf-review-today-banner {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+}
+.bf-review-today-banner > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.bf-review-today-banner p { margin: 0; font: 800 0.62rem/1.2 "IBM Plex Sans", sans-serif; letter-spacing: 0.08em; color: var(--cf-warning, #8b630e); }
+.bf-review-today-banner strong { font-size: 0.95rem; }
+.bf-review-today-banner span { font-size: 0.78rem; color: var(--cf-muted, #5a675f); }
+.bf-review-today-banner > button {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cf-primary-strong, #1f5240);
+  color: var(--cf-on-primary, #fff);
+  font: 750 0.78rem/1 "IBM Plex Sans", sans-serif;
+}
+.bf-dock-review-badge {
+  position: sticky;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  z-index: 35;
+  margin: 0 auto 8px;
+  max-width: min(420px, calc(100% - 24px));
+  padding: 10px 14px;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  font: 750 0.82rem/1 "IBM Plex Sans", sans-serif;
+  justify-content: center;
+}
+.os-dock button { position: relative; }
+.os-dock .bf-dock-dot {
+  position: absolute;
+  top: 6px;
+  right: calc(50% - 18px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cf-warning, #d49a2a);
+  box-shadow: 0 0 0 2px var(--cf-surface, #fff);
+}
+.bf-journal-bank-import {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px dashed var(--cf-line, #d5d2c8);
+  border-radius: 14px;
+  background: var(--cf-surface-alt, #f4f2eb);
+  color: var(--cf-ink, #1a2420);
+  font: 750 0.9rem/1.2 "IBM Plex Sans", sans-serif;
+  text-align: left;
+}
+.bf-journal-bank-import small {
+  margin-left: auto;
+  color: var(--cf-muted, #5a675f);
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+.bf-today-read-more { display: grid; gap: 10px; }
+.bf-os-source-list.compact { margin: 8px 0 0; }

@@ -17,7 +17,7 @@ const dueLabel = (daysLeft: number) => {
  * Briefing de dimineață: cât poți cheltui azi, scadențe din 7 zile, abonamente detectate, ritual de salariu.
  * Scrie în registru doar la confirmare explicită — aceeași formă sincronizată.
  */
-export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData; onGo: Go; onChange: (next: AppData) => void; onOpenWeek?: () => void }) {
+export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = false }: { data: AppData; onGo: Go; onChange: (next: AppData) => void; onOpenWeek?: () => void; hideSpendStamp?: boolean }) {
   const brief = todayBrief(data);
   const week = weeklyCheckIn(data);
   const rules = data.settings.salaryPlan.salaryAllocationRules || [];
@@ -42,13 +42,15 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek }: { data: AppData
 
   return (
     <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
-      <button type="button" className={`bf-spend-stamp ${brief.hasPayday ? "" : "empty"} ${brief.spendable <= 0 && brief.hasPayday ? "tight" : ""}`} onClick={() => onGo("plan")}>
-        <span className="bf-spend-stamp-top">
-          <p className="bf-kicker">{t("REPER PENTRU AZI")}</p>
-          <strong>{brief.hasPayday ? money(brief.spendable) : t("Setează venitul")}</strong>
-        </span>
-        <p>{brief.hasPayday ? t("{reason} Este un reper din plan, nu un sold separat.", { reason: brief.reason }) : brief.reason}</p>
-      </button>
+      {!hideSpendStamp && (
+        <button type="button" className={`bf-spend-stamp ${brief.hasPayday ? "" : "empty"} ${brief.spendable <= 0 && brief.hasPayday ? "tight" : ""}`} onClick={() => onGo("plan")}>
+          <span className="bf-spend-stamp-top">
+            <p className="bf-kicker">{t("REPER PENTRU AZI")}</p>
+            <strong>{brief.hasPayday ? money(brief.spendable) : t("Setează venitul")}</strong>
+          </span>
+          <p>{brief.hasPayday ? t("{reason} Este un reper din plan, nu un sold separat.", { reason: brief.reason }) : brief.reason}</p>
+        </button>
+      )}
 
       {pendingIncome && (
         <button type="button" className="bf-brief-salary" onClick={fillEnvelopes}>

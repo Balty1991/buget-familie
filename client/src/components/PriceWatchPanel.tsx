@@ -3,6 +3,7 @@
  * fără nicio sursă externă de prețuri. Este o observație asupra propriilor cumpărături,
  * nu un adevăr de piață: gramajul, promoția sau lotul pot explica o diferență.
  */
+import "../price-watch.css";
 import { useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, Minus, ShoppingBasket, ShoppingCart, Store } from "lucide-react";
 import { type AppData } from "@/lib/finance-data";

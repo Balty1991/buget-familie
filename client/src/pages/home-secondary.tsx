@@ -221,8 +221,8 @@ export function CalmOnboarding({ onClose, onAdd, onGo }: { onClose: () => void; 
   ];
   const current = steps[step]; const Icon = current.icon;
   const skipTour = () => {
+    // Doar turul: FirstRunSetup (3 intenții) trebuie să rămână vizibil.
     window.localStorage.setItem("buget-familie:onboarding-complete", "true");
-    window.localStorage.setItem("buget-familie:setup-complete", "true");
     onClose();
   };
   const startSetup = () => {
@@ -1043,9 +1043,16 @@ function PasswordMeter({ value }: { value: string }) {
   );
 }
 
-export function SyncPanel({ connected, busy, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice }: SyncPanelProps) {
-  const [showGenerated, setShowGenerated] = useState(false);
-  const [generatedOnce, setGeneratedOnce] = useState("");
+export function SyncPanel({ connected, busy, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, passwordRevealOnce, clearPasswordReveal }: SyncPanelProps) {
+  const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
+  const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
+  useEffect(() => {
+    if (!passwordRevealOnce) return;
+    setPassword(passwordRevealOnce);
+    setGeneratedOnce(passwordRevealOnce);
+    setShowGenerated(true);
+    clearPasswordReveal?.();
+  }, [passwordRevealOnce, setPassword, clearPasswordReveal]);
   const latest = journal[0];
   const pendingMerge = connected && latest?.status === "detected";
   const failedMerge = connected && latest?.status === "failed";
@@ -1075,7 +1082,7 @@ export function SyncPanel({ connected, busy, password, setPassword, notice, last
   };
 
   return <div className="bf-sync">
-    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p></div>
+    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p><p className="bf-helper">{t("Nu se copiază: fotografiile bonurilor, coada De verificat, regulile de comerciant, cursurile și șabloanele rapide.")}</p></div>
     <div className={`bf-sync-state ${stateClass}`} role="status"><span aria-hidden="true">{connected && !busy && !pendingMerge && !failedMerge ? <Check size={15} /> : busy || pendingMerge ? <RotateCcw size={15} /> : <Cloud size={15} />}</span><div><b>{stateLabel}</b><small>{stateDetail}</small></div></div>
 
     <section className="bf-sync-session">

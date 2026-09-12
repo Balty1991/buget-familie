@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Check, ChevronRight, Home, PiggyBank, ReceiptText, Users, WalletCards } from "lucide-react";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { generateFamilyPassword } from "@/lib/family-password";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 
@@ -19,7 +20,7 @@ const PRESETS = [
   { category: "Casă & facturi", amount: 800, weekly: false },
 ] as const;
 
-export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void }) {
+export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpenSync }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void; onOpenSync?: (password: string) => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const [intent, setIntent] = useState<Intent | null>(null);
   const [familyName, setFamilyName] = useState(data.settings.familyName === "Familia mea" ? "" : data.settings.familyName);
@@ -95,8 +96,10 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
 
   const finishFamily = () => {
     applyBase({ withPartner: true, withEnvelopes: true, withPayday: true });
+    const password = generateFamilyPassword();
     complete();
-    onGoPlan();
+    if (onOpenSync) onOpenSync(password);
+    else onGoPlan();
   };
 
   return (
@@ -110,6 +113,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
             <p className="bf-kicker">{t("PRIMUL REZULTAT")}</p>
             <h2 id="bf-setup-title">{t("Ce vrei să faci")} <em>{t("acum?")}</em></h2>
             <p>{t("Alege o intenție. Poți schimba totul mai târziu — și poți apăsa Mai târziu fără nicio pierdere.")}</p>
+            <p className="bf-helper">{t("Datele stau pe telefon. Sync-ul e opțional și criptat — fără cont bancar.")}</p>
             <div className="bf-first-run-intents" role="group" aria-label={t("Intenții de start")}>
               <button type="button" onClick={() => setIntent("track")}>
                 <ReceiptText size={20} />
@@ -124,7 +128,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd }: { da
               <button type="button" onClick={() => setIntent("family")}>
                 <Users size={20} />
                 <b>{t("Vreau un buget pentru familie.")}</b>
-                <small>{t("Persoane, surse și primul plan comun.")}</small>
+                <small>{t("Persoane, surse, plan comun — apoi Sync cu o parolă arătată o dată.")}</small>
               </button>
             </div>
           </div>

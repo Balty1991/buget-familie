@@ -511,18 +511,39 @@ html .bf-quick-entry-grid > * { grid-column: auto !important; }
 
 html.theme-ink .bf-os-decide,
 html.theme-white .bf-os-decide,
+html.theme-aurora .bf-os-decide,
+html.theme-navy .bf-os-decide,
+html.theme-cyber .bf-os-decide,
 html.theme-ink .bf-movement-add,
 html.theme-white .bf-movement-add,
+html.theme-aurora .bf-movement-add,
+html.theme-navy .bf-movement-add,
+html.theme-cyber .bf-movement-add,
 html.theme-ink .bf-primary,
 html.theme-white .bf-primary,
+html.theme-aurora .bf-primary,
+html.theme-navy .bf-primary,
+html.theme-cyber .bf-primary,
 html.theme-ink .bf-movement-kind button.active,
 html.theme-white .bf-movement-kind button.active,
+html.theme-aurora .bf-movement-kind button.active,
+html.theme-navy .bf-movement-kind button.active,
+html.theme-cyber .bf-movement-kind button.active,
 html.theme-ink .bf-segment button.active,
 html.theme-white .bf-segment button.active,
+html.theme-aurora .bf-segment button.active,
+html.theme-navy .bf-segment button.active,
+html.theme-cyber .bf-segment button.active,
 html.theme-ink .bf-journal-quickbar .active,
 html.theme-white .bf-journal-quickbar .active,
+html.theme-aurora .bf-journal-quickbar .active,
+html.theme-navy .bf-journal-quickbar .active,
+html.theme-cyber .bf-journal-quickbar .active,
 html.theme-ink .bf-movement-scope button.active,
-html.theme-white .bf-movement-scope button.active {
+html.theme-white .bf-movement-scope button.active,
+html.theme-aurora .bf-movement-scope button.active,
+html.theme-navy .bf-movement-scope button.active,
+html.theme-cyber .bf-movement-scope button.active {
   background-color: var(--cf-primary-strong, #1f5240) !important;
   background-image: none !important;
   color: var(--cf-on-primary, #ffffff) !important;
@@ -530,23 +551,57 @@ html.theme-white .bf-movement-scope button.active {
 
 html.theme-ink .bf-os-decide svg,
 html.theme-white .bf-os-decide svg,
+html.theme-aurora .bf-os-decide svg,
+html.theme-navy .bf-os-decide svg,
+html.theme-cyber .bf-os-decide svg,
 html.theme-ink .bf-movement-add svg,
 html.theme-white .bf-movement-add svg,
+html.theme-aurora .bf-movement-add svg,
+html.theme-navy .bf-movement-add svg,
+html.theme-cyber .bf-movement-add svg,
 html.theme-ink .bf-primary svg,
-html.theme-white .bf-primary svg {
+html.theme-white .bf-primary svg,
+html.theme-aurora .bf-primary svg,
+html.theme-navy .bf-primary svg,
+html.theme-cyber .bf-primary svg {
   color: var(--cf-on-primary, #ffffff) !important;
   stroke: currentColor !important;
 }
 
 html.theme-ink .bf-os-secondary,
 html.theme-white .bf-os-secondary,
+html.theme-aurora .bf-os-secondary,
+html.theme-navy .bf-os-secondary,
+html.theme-cyber .bf-os-secondary,
 html.theme-ink .bf-today-add.bf-os-secondary,
 html.theme-white .bf-today-add.bf-os-secondary,
+html.theme-aurora .bf-today-add.bf-os-secondary,
+html.theme-navy .bf-today-add.bf-os-secondary,
+html.theme-cyber .bf-today-add.bf-os-secondary,
 html.theme-ink .bf-secondary,
-html.theme-white .bf-secondary {
+html.theme-white .bf-secondary,
+html.theme-aurora .bf-secondary,
+html.theme-navy .bf-secondary,
+html.theme-cyber .bf-secondary {
   color: var(--cf-ink, #1a2420) !important;
   background-color: var(--cf-surface, #fbfaf7) !important;
   border: 1px solid var(--cf-line, #d5d2c8) !important;
+}
+
+/* Dock is-on pe temele de noapte: etichetă pe umplutură via --cf-on-primary */
+html.theme-aurora .os-dock button.is-on,
+html.theme-navy .os-dock button.is-on,
+html.theme-cyber .os-dock button.is-on,
+html.theme-aurora .os-desktop-nav button.is-on,
+html.theme-navy .os-desktop-nav button.is-on,
+html.theme-cyber .os-desktop-nav button.is-on {
+  color: var(--cf-on-primary, #0d0b1c) !important;
+}
+html.theme-aurora .os-dock button.is-on svg,
+html.theme-navy .os-dock button.is-on svg,
+html.theme-cyber .os-dock button.is-on svg {
+  color: var(--cf-on-primary, #0d0b1c) !important;
+  stroke: currentColor !important;
 }
 
 /* Contor căutare: badge în buton, nu „2” gol sub bară */

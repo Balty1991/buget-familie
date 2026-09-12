@@ -3,7 +3,7 @@
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, Bell, RotateCcw, BellRing, CalendarClock, CreditCard, Goal, Info, LayoutDashboard, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BarChart3, Bell, RotateCcw, BellRing, CalendarClock, CreditCard, Goal, Inbox, Info, LayoutDashboard, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { buildUndo, type UndoAction } from "@/lib/undo-delete";
@@ -11,10 +11,10 @@ import { checkFamilyPassword } from "@/lib/family-password";
 import { touchSyncDevice, revokeSyncDevice, isThisDeviceRevoked, listActiveSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
-import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, readAppData, readSyncJournal, writeAppData, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
+import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, chooseFresherAppData, readAppDataRecord, readLocalStorageSnapshot, readSyncJournal, writeAppData, writeLocalStorageSnapshot, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { HealthScoreBadge } from "@/components/HealthScoreBadge";
-import { AICompanion, type FinancialUpdate, type GuidedRevert, type NaturalDraft } from "@/components/AICompanion";
+import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { BrandMark } from "@/components/BrandMark";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
@@ -22,7 +22,7 @@ import { MovementsJournal } from "@/components/MovementsJournal";
 import { notifyFamilyEnvelopeChanges, scheduleFinancialReminders } from "@/lib/local-notifications";
 import { observeQuickActions } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
+import { todayBrief, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import {
   DeferBelowFold,
   LIGHT_THEMES,
@@ -67,6 +67,7 @@ const LongTermGoalsView = lazy(() => loadSecondary().then((module) => ({ default
 const ObjectivesView = lazy(() => loadSecondary().then((module) => ({ default: module.ObjectivesView })));
 const InsightsView = lazy(() => loadSecondary().then((module) => ({ default: module.InsightsView })));
 const MoreViewScreen = lazy(() => loadSecondary().then((module) => ({ default: module.MoreView })));
+const AICompanion = lazy(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion })));
 const loadFamilySync = () => import("@/lib/realtime-sync");
 const loadFamilyCrypto = () => import("@/lib/family-crypto");
 
@@ -148,26 +149,11 @@ function NextStepCard({ signal, onOpen }: { signal?: AdvisorSignal; onOpen: () =
   const tone = signal.tone === "risk" ? "risk" : signal.tone === "watch" ? "watch" : "good";
   return <section className={"bf-next-step-card " + tone}><div className="bf-next-step-icon"><PlayCircle size={21} /></div><div className="bf-next-step-copy"><p className="bf-kicker">{t("RECOMANDAREA MEA PENTRU ACUM")}</p><h2>{signal.title}</h2><span>{signal.detail}</span></div><button type="button" onClick={onOpen}>{signal.actionLabel}<ChevronRight size={16} /></button></section>;
 }
-function TodayPulse({ data, onGo }: { data: AppData; onGo: (view: MainView) => void }) {
-  const today = new Date();
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (6 - index));
-    const iso = isoDate(date);
-    const amount = data.transactions.filter((item) => item.kind === "expense" && item.date === iso).reduce((sum, item) => sum + item.amount, 0);
-    return { iso, label: date.toLocaleDateString(getLocale(), { weekday: "short" }).replace(".", ""), amount, today: index === 6 };
-  });
-  const max = Math.max(...days.map((day) => day.amount), 1);
-  const weekTotal = days.reduce((sum, day) => sum + day.amount, 0);
-  const average = weekTotal / 7;
-  const categoryTotals = data.transactions.filter((item) => item.kind === "expense" && days.some((day) => day.iso === item.date)).reduce<Record<string, number>>((totals, item) => { totals[item.category] = (totals[item.category] || 0) + item.amount; return totals; }, {});
-  const topCategories = Object.entries(categoryTotals).sort(([, left], [, right]) => right - left).slice(0, 3);
-  return <section className="bf-modern-pulse"><div className="bf-modern-pulse-copy"><p className="bf-kicker">{t("PULSUL SĂPTĂMÂNII")}</p><h2>{t("Vezi ritmul banilor dintr-o privire.")}</h2><p>{weekTotal ? <>Ai cheltuit <b>{money(weekTotal)}</b> {t("în ultimele 7 zile, aproximativ")} <b>{money(average)}</b> pe zi.</> : t("Începe să înregistrezi mișcări pentru a vedea ritmul real al gospodăriei.")}</p><button type="button" onClick={() => onGo("journal")}>Deschide registrul <ChevronRight size={15} /></button>{topCategories.length > 0 && <div className="bf-modern-pulse-categories"><small>UNDE S-AU DUS BANII</small>{topCategories.map(([category, amount]) => <span key={category}><b>{category}</b><strong>{money(amount)}</strong><i><em style={{ width: Math.round((amount / weekTotal) * 100) + "%" }} /></i></span>)}</div>}</div><div className="bf-modern-pulse-chart" aria-label={t("Cheltuielile din ultimele 7 zile")}>{days.map((day) => <div key={day.iso} className={day.today ? "today" : ""}><span title={money(day.amount)}><i style={{ height: Math.max(8, Math.round((day.amount / max) * 100)) + "%" }} /></span><small>{day.label}</small></div>)}</div></section>;
-}
-function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void }) {
+function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppData; onAdd: () => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void }) {
   const math = useMemo(() => planMath(data), [data]);
   const forecast = useMemo(() => planForecast(data), [data]);
   const signals = useMemo(() => advisorSignals(data), [data]);
-  const balance = useMemo(() => financialBalance(data, math.plan.periodStart, math.planEnd), [data, math.plan.periodStart, math.planEnd]);
+  const brief = useMemo(() => todayBrief(data), [data]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [shownTrancheKey, setShownTrancheKey] = useState("");
   const [openHint, setOpenHint] = useState(false);
@@ -206,32 +192,68 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
     [data],
   );
 
-  /**
-   * Un registru încă gol nu are ce număra. Arăta totuși „0 RON” cu litere mari — cel
-   * mai vizibil lucru de pe primul ecran era un zero fără înțeles, iar omul nu avea
-   * de unde ști ce se așteaptă de la el. Îi arătăm în loc cei trei pași.
-   */
   const fresh = !data.transactions.length
     && !data.settings.salaryPlan.allocations.length
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
 
-  const heroLabel = overPlan ? t("Peste limita planului") : data.settings.salaryPlan.allocations.length ? t("Rămas în plicuri") : monthIncome > 0 ? t("Venit înregistrat luna asta") : t("Plicuri neconfigurate");
-  const heroValue = overPlan ? Math.abs(math.remaining) : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : monthIncome;
+  // Un singur număr de decizie: reperul zilnic (spendable), nu soldul plicurilor.
+  const heroLabel = overPlan ? t("Peste limita planului") : brief.hasPayday ? t("Poți folosi azi") : data.settings.salaryPlan.allocations.length ? t("Rămas în plicuri") : monthIncome > 0 ? t("Venit înregistrat luna asta") : t("Plicuri neconfigurate");
+  const heroValue = overPlan ? Math.abs(math.remaining) : brief.hasPayday ? brief.spendable : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : monthIncome;
   const heroHint = overPlan
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
-    : data.settings.salaryPlan.allocations.length
-      ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: money(Math.max(0, weeklyEnvelopesRemaining)), monthly: money(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · reper {daily}/zi", { daily: money(daily) }) : "" })
-      : monthIncome > 0
-        ? t("Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii.")
-        : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
+    : brief.hasPayday
+      ? brief.reason
+      : data.settings.salaryPlan.allocations.length
+        ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: money(Math.max(0, weeklyEnvelopesRemaining)), monthly: money(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · reper {daily}/zi", { daily: money(daily) }) : "" })
+        : monthIncome > 0
+          ? t("Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii.")
+          : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
   const explainer = overPlan
     ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
-    : data.settings.salaryPlan.allocations.length
-      ? `Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele ${forecast.remainingDays} zile până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.`
-      : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");
+    : brief.hasPayday
+      ? `Reperul zilei este minimul dintre ritmul sigur (${money(daily)}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt ${money(envelopeTotalRemaining)}; în surse ${money(math.availableSources)}.`
+      : data.settings.salaryPlan.allocations.length
+        ? `Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele ${forecast.remainingDays} zile până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.`
+        : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");
 
   return (
     <div className="bf-page bf-today-workspace">
+      {showTrancheNotice && activeTranche && (
+        <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
+          <CalendarClock size={19} />
+          <div>
+            <p>TRANȘA S{activeTranche.index} A ÎNCEPUT</p>
+            <strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong>
+            <span>Ritmul acestei tranșe este {money(activeTranche.amount)} pentru {activeTranche.days} {activeTranche.days === 1 ? "zi" : "zile"}.</span>
+          </div>
+          <button onClick={() => onGo("plan")}>Plan</button>
+          <button className="dismiss" aria-label={t("Ascunde alerta tranșei săptămânale")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
+        </aside>
+      )}
+      {activeEnvelopeAlert && (
+        <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite">
+          <BellRing size={19} />
+          <div>
+            <p>{activeEnvelopeAlert.state === "over" ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ")}</p>
+            <strong>{activeEnvelopeAlert.item.label}</strong>
+            <span>{activeEnvelopeAlert.state === "over" ? `${money(Math.abs(activeEnvelopeAlert.remaining))} peste limita alocată.` : `${Math.round(activeEnvelopeAlert.usage * 100)}% din limită este deja consumată.`}</span>
+          </div>
+          <button onClick={() => onGo("plan")}>Vezi</button>
+          <button className="dismiss" aria-label={`Ascunde alerta pentru ${activeEnvelopeAlert.item.label}`} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
+        </aside>
+      )}
+      {data.pendingReview.length > 0 && (
+        <aside className="bf-review-today-banner" role="status" aria-live="polite">
+          <Inbox size={19} />
+          <div>
+            <p>{t("DE VERIFICAT")}</p>
+            <strong>{t("{count} propuneri de confirmat", { count: data.pendingReview.length })}</strong>
+            <span>{t("Bonuri sau extras CSV așteaptă confirmarea înainte să intre în registru.")}</span>
+          </div>
+          <button type="button" onClick={onOpenReview}>{t("Deschide")}</button>
+        </aside>
+      )}
+
       <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
         <div className="os-hero-top">
           <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Ritm urmărit")}</span>
@@ -249,11 +271,8 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
               <li>
                 <button type="button" onClick={onAdd}>
                   <span className="os-start-step-text">
-
                     <b>{t("Treci prima mișcare")}</b>
-
                     <small>{t("Un salariu încasat sau o cumpărătură de azi")}</small>
-
                   </span>
                   <ChevronRight size={16} aria-hidden="true" />
                 </button>
@@ -261,11 +280,8 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
               <li>
                 <button type="button" onClick={() => onGo("plan")}>
                   <span className="os-start-step-text">
-
                     <b>{t("Fă primul plic")}</b>
-
                     <small>{t("Alimente, transport, facturi — cât aloci pentru fiecare")}</small>
-
                   </span>
                   <ChevronRight size={16} aria-hidden="true" />
                 </button>
@@ -273,11 +289,8 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
               <li>
                 <button type="button" onClick={() => onGo("plan")}>
                   <span className="os-start-step-text">
-
                     <b>{t("Spune când vine salariul")}</b>
-
                     <small>{t("De aici se calculează cât poți cheltui pe zi")}</small>
-
                   </span>
                   <ChevronRight size={16} aria-hidden="true" />
                 </button>
@@ -297,15 +310,43 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
         {!fresh && (
           <>
             <button type="button" className="os-explainer" onClick={() => setOpenHint((value) => !value)}>
-              <Info size={16} aria-hidden="true" /> {t("Cum se citește suma?")} <span>{openHint ? "−" : "+"}</span>
+              <Info size={16} aria-hidden="true" /> {t("Cum se citește?")} <span>{openHint ? "−" : "+"}</span>
             </button>
-            {openHint ? <p className="os-explainer-body">{explainer}</p> : null}
+            {openHint ? (
+              <div className="os-explainer-body bf-today-read-more">
+                <p>{explainer}</p>
+                {sourceRows.length > 0 && (
+                  <ul className="bf-os-source-list compact">
+                    {sourceRows.map((source) => (
+                      <li key={source.id}>
+                        <span className="bf-os-source-icon"><SourceGlyph kind={source.kind} /></span>
+                        <div>
+                          <b>{source.name}</b>
+                          <small>{sourceKindName[source.kind]}</small>
+                        </div>
+                        <strong>{money(source.balance)}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="bf-os-note">{t("{available} disponibili după plicuri · {scheduled} în scadențe încă neconfirmate", { available: money(Math.max(0, math.remaining)), scheduled: money(math.scheduled) })}</p>
+                {topEnvelope && <p className="bf-os-note">{t("Plic urmărit")}: {topEnvelope.item.label} · {Math.round(topEnvelope.usage * 100)}%</p>}
+              </div>
+            ) : null}
           </>
         )}
         <div className="os-gauge">
           <HealthScoreBadge data={data} />
         </div>
       </section>
+
+      <div className="bf-os-actions">
+        <button type="button" className="bf-today-add bf-os-decide" onClick={onAdd}><Plus size={18} /> {t("Înregistrează")}</button>
+      </div>
+
+      <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />
+
+      <TodayBrief data={data} onGo={onGo} onChange={onChange} hideSpendStamp onOpenWeek={() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
 
       <section className="bf-os-rhythm" aria-label={t("Ritm zilnic")}>
         <div className="bf-os-rhythm-head">
@@ -327,49 +368,7 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
         <p className="bf-os-note">{rhythmNote}</p>
       </section>
 
-      <div className="bf-os-actions">
-        <button type="button" className="bf-os-decide" onClick={openHouseholdGuide}>{t("Poți cheltui?")}</button>
-        <button type="button" className="bf-today-add bf-os-secondary" onClick={onAdd}><Plus size={18} /> {t("Înregistrează")}</button>
-      </div>
-
-      <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenWeek={() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
-
-      {sourceRows.length > 0 && (
-        <section className="bf-os-sources" aria-label="Surse">
-          <p className="bf-os-kicker">Surse</p>
-          <h2 className="bf-os-title">{t("De unde pleacă banii.")}</h2>
-          <ul className="bf-os-source-list">
-            {sourceRows.map((source) => (
-              <li key={source.id}>
-                <span className="bf-os-source-icon"><SourceGlyph kind={source.kind} /></span>
-                <div>
-                  <b>{source.name}</b>
-                  <small>{sourceKindName[source.kind]}</small>
-                </div>
-                <strong>{money(source.balance)}</strong>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section className="bf-os-income" aria-label={t("Următorul venit")}>
-        <div className="bf-os-income-head">
-          <div>
-            <p className="bf-os-kicker">{t("Următorul venit")}</p>
-            <h2 className="bf-os-title">{math.plan.nextPayday ? `${forecast.remainingDays} zile` : t("Setează data")}</h2>
-            <p className="bf-os-note">{math.plan.nextPayday ? dateText(math.plan.nextPayday, true) : t("Planul are nevoie de următorul salariu ca să calculeze ritmul.")}</p>
-          </div>
-          <div>
-            <strong>{money(math.availableSources)}</strong>
-            <small>{t("în surse acum")}</small>
-          </div>
-        </div>
-        <p className="bf-os-note">{t("{available} disponibili după plicuri · {scheduled} în scadențe încă neconfirmate", { available: money(Math.max(0, math.remaining)), scheduled: money(math.scheduled) })}</p>
-        <button type="button" className="bf-today-plan-link" style={{ marginTop: 12 }} onClick={() => onGo("plan")}>Deschide planul <ChevronRight size={16} /></button>
-      </section>
-
-      <TodayLedger data={data} onGo={(view) => onGo(view)} />
+      <TodayLedger data={data} onGo={(view) => onGo(view)} compact />
       {(data.transactions.length > 0 || data.settings.members.length > 1 || data.settings.salaryPlan.allocations.length > 0) && (
         <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim bilanțul săptămânii…")}</div>}>
           <WeeklySummaryPanel data={data} onChange={onChange} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
@@ -385,74 +384,6 @@ function TodayView({ data, onAdd, onGo, onChange }: { data: AppData; onAdd: () =
             })}
           </div>
         </section>
-        {showTrancheNotice && activeTranche && (
-          <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
-            <CalendarClock size={19} />
-            <div>
-              <p>TRANȘA S{activeTranche.index} A ÎNCEPUT</p>
-              <strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong>
-              <span>Ritmul acestei tranșe este {money(activeTranche.amount)} pentru {activeTranche.days} {activeTranche.days === 1 ? "zi" : "zile"}.</span>
-            </div>
-            <button onClick={() => onGo("plan")}>Plan</button>
-            <button className="dismiss" aria-label={t("Ascunde alerta tranșei săptămânale")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
-          </aside>
-        )}
-        {activeEnvelopeAlert && (
-          <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite">
-            <BellRing size={19} />
-            <div>
-              <p>{activeEnvelopeAlert.state === "over" ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ")}</p>
-              <strong>{activeEnvelopeAlert.item.label}</strong>
-              <span>{activeEnvelopeAlert.state === "over" ? `${money(Math.abs(activeEnvelopeAlert.remaining))} peste limita alocată.` : `${Math.round(activeEnvelopeAlert.usage * 100)}% din limită este deja consumată.`}</span>
-            </div>
-            <button onClick={() => onGo("plan")}>Vezi</button>
-            <button className="dismiss" aria-label={`Ascunde alerta pentru ${activeEnvelopeAlert.item.label}`} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
-          </aside>
-        )}
-        <section className="bf-today-decision">
-          <div className="bf-today-decision-heading">
-            <div>
-              <p className="bf-kicker">{t("DECIZIA URMĂTOARE")}</p>
-              <h1>{t("Ce are nevoie")} <em>{t("gospodăria acum.")}</em></h1>
-            </div>
-            <button onClick={() => onGo("insights")}><LayoutDashboard size={17} /> Vezi analiza</button>
-          </div>
-          <div className="bf-decision-stack">
-            {signals.map((signal, index) => (
-              <button className={`bf-decision-row ${signal.tone} ${index === 0 ? "primary" : ""}`} key={signal.id} onClick={() => openSignal(signal.action)}>
-                <span className="bf-decision-index">0{index + 1}</span>
-                <span><small>{signal.eyebrow}</small><b>{signal.title}</b><em>{signal.detail}</em></span>
-                <ChevronRight size={19} />
-              </button>
-            ))}
-            {!signals.length && (
-              <button className="bf-decision-row good primary" onClick={() => onGo("plan")}>
-                <span className="bf-decision-index">01</span>
-                <span><small>{t("PLANUL DE LUCRU")}</small><b>{t("Configurează următorul venit")}</b><em>{t("Gospodăria are nevoie de intervalul următor pentru a calcula ritmul.")}</em></span>
-                <ChevronRight size={19} />
-              </button>
-            )}
-          </div>
-        </section>
-        <section className="bf-today-measurements" aria-label={t("Măsurători financiare curente")}>
-          <article>
-            <span>SURSE UTILIZABILE</span>
-            <b>{money(balance.liquidFunds)}</b>
-            <small>{t("banii incluși în registru")}</small>
-          </article>
-          <article>
-            <span>{t("OBLIGAȚII CONFIRMATE")}</span>
-            <b className={balance.monthlyRates > 0 ? "attention" : ""}>{money(balance.monthlyRates)}</b>
-            <small>{data.debts.length} de revizuit lunar</small>
-          </article>
-          <article>
-            <span>{topEnvelope ? `LIMITĂ: ${topEnvelope.item.label}` : t("PLICURI / LIMITE")}</span>
-            <b className={topEnvelope?.state === "over" ? "negative" : ""}>{topEnvelope ? `${Math.round(topEnvelope.usage * 100)}%` : "—"}</b>
-            <small>{topEnvelope ? `${money(Math.max(0, topEnvelope.remaining))} rămași pentru perioadă` : t("creează prima limită")}</small>
-          </article>
-        </section>
-        <TodayPulse data={data} onGo={onGo} />
-        <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />
         <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
@@ -509,8 +440,40 @@ export default function Home() {
   const storageHydrated = useRef(false);
   useLanguage(); const [view, setView] = useState<MainView>(initialMainView); const [more, setMore] = useState<MoreView>("overview"); const [quickActionsOpen, setQuickActionsOpen] = useState(false); const [modal, setModal] = useState<"quick" | "transaction" | "receipt" | "debt" | "saving" | "debt-payment" | null>(null); const [editTx, setEditTx] = useState<Transaction>(); const [editGoal, setEditGoal] = useState<Debt | SavingsGoal>(); const [receiptStorageNotice, setReceiptStorageNotice] = useState(""); const legacyReceiptMigrationStarted = useRef(false); const [themePickerOpen, setThemePickerOpen] = useState(false); const [theme, setTheme] = useState<ThemeId>(() => resolveInitialTheme(window.localStorage)); const [whatsNewOpen, setWhatsNewOpen] = useState(false); const [themeSchedule, setThemeSchedule] = useState<ThemeSchedule>(() => window.localStorage.getItem("buget-familie:theme-schedule") === "auto" ? "auto" : "manual"); const [background, setBackground] = useState<BackgroundId>(() => { const saved = window.localStorage.getItem("buget-familie:background"); return backgroundOptions.some((item) => item.id === saved) ? saved as BackgroundId : "plain"; }); const previousBackgroundRef = useRef<BackgroundId>(background); const backgroundTransitionReady = useRef(false); const [highContrast, setHighContrast] = useState(() => window.localStorage.getItem("buget-familie:high-contrast") === "true"); const [scheduleTimes, setScheduleTimes] = useState<ThemeScheduleTimes>(() => { try { const saved = JSON.parse(window.localStorage.getItem("buget-familie:theme-schedule-times") || "null") as Partial<ThemeScheduleTimes> | null; return { dayStart: typeof saved?.dayStart === "string" ? saved.dayStart : defaultScheduleTimes.dayStart, eveningStart: typeof saved?.eveningStart === "string" ? saved.eveningStart : defaultScheduleTimes.eveningStart, nightStart: typeof saved?.nightStart === "string" ? saved.nightStart : defaultScheduleTimes.nightStart }; } catch { return defaultScheduleTimes; } }); const activeTheme = themeSchedule === "auto" ? automaticTheme(currentLocalMinutes(), scheduleTimes) : theme; const previousThemeRef = useRef<ThemeId>(activeTheme); const themeTransitionReady = useRef(false);
 
-  useEffect(() => { let active = true; void readAppData().then((stored) => { if (!active || !stored) return; setData(normalizeAppData(stored)); }).catch(() => setStorageNotice(t("Stocarea modernă nu este disponibilă; folosim fallback-ul local al browserului."))).finally(() => { storageHydrated.current = true; setStorageReady(true); }); return () => { active = false; }; }, []);
-  useEffect(() => { if (!storageHydrated.current) return; const serialized = syncPortable(data); try { window.localStorage.setItem(APP_STORAGE_KEY, serialized); } catch { setStorageNotice(t("Spațiul local este aproape plin. Fotografiile bonurilor rămân în stocarea dedicată; exportă un backup dacă problema continuă.")); } const timer = window.setTimeout(() => { void writeAppData(data).catch(() => setStorageNotice(t("Datele sunt păstrate în fallback-ul browserului; stocarea modernă nu a confirmat salvarea."))); }, 280); return () => window.clearTimeout(timer); }, [data]); useEffect(() => { setData((current) => autoPostDueRecurring(current)); }, []);
+  useEffect(() => {
+    let active = true;
+    const local = readLocalStorageSnapshot();
+    void readAppDataRecord()
+      .then((indexed) => {
+        if (!active) return;
+        const picked = chooseFresherAppData(
+          { data: local.data, savedAt: local.savedAt, hash: local.hash },
+          indexed,
+        );
+        if (picked) setData(normalizeAppData(picked));
+      })
+      .catch(() => setStorageNotice(t("Stocarea modernă nu este disponibilă; folosim fallback-ul local al browserului.")))
+      .finally(() => {
+        storageHydrated.current = true;
+        setStorageReady(true);
+      });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (!storageHydrated.current) return;
+    const serialized = syncPortable(data);
+    const savedAt = new Date().toISOString();
+    try {
+      writeLocalStorageSnapshot(serialized, savedAt);
+    } catch {
+      setStorageNotice(t("Spațiul local este aproape plin. Fotografiile bonurilor rămân în stocarea dedicată; exportă un backup dacă problema continuă."));
+    }
+    const timer = window.setTimeout(() => {
+      void writeAppData(data, savedAt).catch(() => setStorageNotice(t("Datele sunt păstrate în fallback-ul browserului; stocarea modernă nu a confirmat salvarea.")));
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [data]);
+  useEffect(() => { setData((current) => autoPostDueRecurring(current)); }, []);
   useEffect(() => {
     if (!storageReady) return;
     const win = window as Window & { requestIdleCallback?: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number; cancelIdleCallback?: (id: number) => void };
@@ -579,7 +542,7 @@ export default function Home() {
     if (skip instanceof HTMLElement && skip === document.activeElement) skip.blur();
   }, []);
 
-  const [syncPassword, setSyncPassword] = useState(""); const [syncNotice, setSyncNotice] = useState(""); const [syncBusy, setSyncBusy] = useState(false); const [syncConnected, setSyncConnected] = useState(false); const [syncLastSync, setSyncLastSync] = useState(""); const [syncJournal, setSyncJournal] = useState<SyncJournalEntry[]>(readSyncJournal);
+  const [syncPassword, setSyncPassword] = useState(""); const [syncPasswordReveal, setSyncPasswordReveal] = useState(""); const [syncNotice, setSyncNotice] = useState(""); const [syncBusy, setSyncBusy] = useState(false); const [syncConnected, setSyncConnected] = useState(false); const [syncLastSync, setSyncLastSync] = useState(""); const [syncJournal, setSyncJournal] = useState<SyncJournalEntry[]>(readSyncJournal);
   const syncDataRef = useRef(data); syncDataRef.current = data; const syncPasswordRef = useRef(syncPassword); syncPasswordRef.current = syncPassword; const syncRoomIdRef = useRef<string | undefined>(undefined); const syncUnsubscribeRef = useRef<(() => void) | undefined>(undefined); const syncLastPortableRef = useRef(""); const syncPushTimerRef = useRef<number | undefined>(undefined);
   const syncAppendJournal = (entry: Omit<SyncJournalEntry, "id">) => setSyncJournal((current) => { const next = [{ ...entry, id: newId("sync-log") }, ...current].slice(0, 40); writeSyncJournal(next); return next; });
   const syncPortable = (value: AppData) => JSON.stringify({ ...value, receipts: value.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...rest }) => rest) });
@@ -642,6 +605,8 @@ export default function Home() {
     busy: syncBusy,
     password: syncPassword,
     setPassword: setSyncPassword,
+    passwordRevealOnce: syncPasswordReveal || undefined,
+    clearPasswordReveal: () => setSyncPasswordReveal(""),
     notice: syncNotice,
     lastSync: syncLastSync,
     journal: syncJournal,
@@ -758,7 +723,7 @@ export default function Home() {
     go("today");
   }), []);
   const nav = [{ id: "today" as MainView, label: t("Astăzi"), icon: LayoutGrid }, { id: "journal" as MainView, label: t("Mișcări"), icon: ListFilter }, { id: "plan" as MainView, label: t("Plan"), icon: PlayCircle }, { id: "obligations" as MainView, label: t("Obligații"), icon: Bell }, { id: "insights" as MainView, label: t("Analiză"), icon: BarChart3 }];
-  const current = () => { if (view === "journal") return <MovementsJournal data={data} onAdd={() => openTx()} onEdit={openTx} onDelete={(id) => deleteWithUndo(t("Mișcarea a fost ștearsă."), (currentData) => ({
+  const current = () => { if (view === "journal") return <MovementsJournal data={data} onAdd={() => openTx()} onEdit={openTx} onOpenReview={() => { setMore("review"); go("utilities"); }} onDelete={(id) => deleteWithUndo(t("Mișcarea a fost ștearsă."), (currentData) => ({
       next: { ...currentData, transactions: currentData.transactions.filter((item) => item.id !== id), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId !== id), deleted: [...currentData.deleted, { entity: "transactions" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
       removed: { transactions: currentData.transactions.filter((item) => item.id === id), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId === id) },
     }))} />; if (view === "plan")
@@ -771,7 +736,7 @@ export default function Home() {
     }))} onDeleteSaving={(id) => deleteWithUndo(t("Obiectivul a fost șters."), (currentData) => ({
       next: { ...currentData, savings: currentData.savings.filter((item) => item.id !== id), deleted: [...currentData.deleted, { entity: "savings" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
       removed: { savings: currentData.savings.filter((item) => item.id === id) },
-    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} onPayRecurring={(id) => update((currentData) => confirmRecurringPayment(currentData, id) || currentData)} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={setData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={setMore} data={data} onChange={setData} onAddReceipt={() => setModal("receipt")} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenCalendar={() => go("calendar")} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onGo={go} onChange={setData} />; };
+    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} onPayRecurring={(id) => update((currentData) => confirmRecurringPayment(currentData, id) || currentData)} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={setData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={setMore} data={data} onChange={setData} onAddReceipt={() => setModal("receipt")} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenCalendar={() => go("calendar")} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onGo={go} onChange={setData} onOpenReview={() => { setMore("review"); go("utilities"); }} />; };
   return <div className="bf-app os-shell">
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
@@ -785,9 +750,10 @@ export default function Home() {
       </div>
     )}
 
-    <nav className="os-dock" aria-label={t("Navigație mobilă")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={16} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav>
-    <AICompanion data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} />
-    {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={theme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={null}><FirstRunSetup data={data} onChange={setData} onClose={() => setSetupOpen(false)} onGoPlan={() => go("plan")} onAdd={() => openTx()} /></Suspense>}
+    {data.pendingReview.length > 0 && <button type="button" className="bf-dock-review-badge" onClick={() => { setMore("review"); go("utilities"); }} aria-label={t("Deschide De verificat · {count}", { count: data.pendingReview.length })}><Inbox size={15} /> {t("De verificat")} · {data.pendingReview.length}</button>}
+    <nav className="os-dock" aria-label={t("Navigație mobilă")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={16} aria-hidden="true" /><span>{item.label}</span>{item.id === "journal" && data.pendingReview.length > 0 ? <i className="bf-dock-dot" aria-hidden="true" /> : null}</button>; })}</nav>
+    <Suspense fallback={null}><AICompanion data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>
+    {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={theme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={null}><FirstRunSetup data={data} onChange={setData} onClose={() => setSetupOpen(false)} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={(password) => { setSyncPassword(password); setSyncPasswordReveal(password); setMore("sync"); go("utilities"); }} /></Suspense>}
     {modal === "quick" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => setModal(null)} onMore={() => { setEditTx(undefined); setModal("transaction"); }} /></Suspense>}
     {modal === "transaction" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); }} /></Suspense>}
     {modal === "receipt" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim bonul…")}</div></div>}><ReceiptForm data={data} onSave={saveReceipt} onClose={() => setModal(null)} /></Suspense>}

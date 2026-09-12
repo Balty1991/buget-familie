@@ -140,3 +140,45 @@ describe("backup Buget Familie", () => {
     });
   });
 });
+
+import { chooseFresherAppData, hashAppPayload } from "./app-storage";
+
+describe("stocare LS ↔ IndexedDB", () => {
+  const sample = (familyName: string) => {
+    const value = createEmptyAppData();
+    value.settings.familyName = familyName;
+    return value;
+  };
+
+  it("păstrează IDB când hash-urile coincid", () => {
+    const local = sample("Local");
+    const indexed = sample("Indexed");
+    const hash = hashAppPayload("same");
+    expect(chooseFresherAppData(
+      { data: local, savedAt: "2026-09-12T10:00:00.000Z", hash },
+      { data: indexed, savedAt: "2026-09-12T10:00:00.000Z", hash },
+    )).toBe(indexed);
+  });
+
+  it("alege copia cu savedAt mai nou, nu „IDB dacă există”", () => {
+    const local = sample("Local-nou");
+    const indexed = sample("Indexed-vechi");
+    expect(chooseFresherAppData(
+      { data: local, savedAt: "2026-09-12T12:00:00.000Z", hash: "aaa" },
+      { data: indexed, savedAt: "2026-09-12T11:00:00.000Z", hash: "bbb" },
+    )).toBe(local);
+    expect(chooseFresherAppData(
+      { data: local, savedAt: "2026-09-12T10:00:00.000Z", hash: "aaa" },
+      { data: indexed, savedAt: "2026-09-12T11:00:00.000Z", hash: "bbb" },
+    )).toBe(indexed);
+  });
+
+  it("fără meta, preferă LS când hash-urile diferă (debounce IDB)", () => {
+    const local = sample("Taste-recente");
+    const indexed = sample("IDB-în-urmă");
+    expect(chooseFresherAppData(
+      { data: local, savedAt: null, hash: "1" },
+      { data: indexed, savedAt: null, hash: "2" },
+    )).toBe(local);
+  });
+});

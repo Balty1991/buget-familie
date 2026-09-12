@@ -59,7 +59,6 @@ import "./ledger-atelier.css";
 import "./atelier-atmosphere.css";
 import "./mobile-speed.css";
 import "./brand-mark.css";
-import "./weekly-checkin.css";
 import "./surface-texture.css";
 import "./receipt-form-fix.css";
 import "./redesign-2026.css";
@@ -74,9 +73,6 @@ import "./household-os-today.css";
 import "./household-os-chrome.css";
 import "./play-ready-polish.css";
 import "./household-os-themes.css";
-import "./review-center.css";
-import "./price-watch.css";
-import "./pocket.css";
 import "./currency.css";
 // Ultimul, ca să poată corecta contrastul peste toate foile de redesign de mai sus.
 import "./contrast-fix.css";

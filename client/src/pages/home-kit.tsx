@@ -59,6 +59,9 @@ export type SyncPanelProps = {
   onDisconnect: () => void;
   onClearJournal: () => void;
   onRevokeDevice: (deviceId: string) => void;
+  /** Parolă arătată o dată (ex. din FirstRun familie). */
+  passwordRevealOnce?: string;
+  clearPasswordReveal?: () => void;
 };
 
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
