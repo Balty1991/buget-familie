@@ -9,6 +9,7 @@ import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocati
 import { generateFamilyPassword } from "@/lib/family-password";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
+import { markSetupCompletedAt } from "@/lib/first-week-tour";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -32,6 +33,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
 
   const complete = () => {
     window.localStorage.setItem("buget-familie:setup-complete", "true");
+    markSetupCompletedAt(window.localStorage);
     window.localStorage.setItem("buget-familie:onboarding-complete", "true");
     onClose();
   };

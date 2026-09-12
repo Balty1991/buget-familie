@@ -202,8 +202,42 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
+
+function vitePluginPreloadCriticalFonts(): Plugin {
+  return {
+    name: "preload-critical-fonts",
+    transformIndexHtml: {
+      order: "post",
+      handler(html, ctx) {
+        const bundle = ctx.bundle;
+        if (!bundle) return html;
+        const base = process.env.GITHUB_PAGES === "true" ? "/buget-familie/" : "/";
+        const allWoff = Object.values(bundle).filter((item) => "fileName" in item && typeof item.fileName === "string" && /\.woff2$/.test(item.fileName)) as Array<{ fileName: string }>;
+        const pick = (re: RegExp) => allWoff.find((item) => re.test(item.fileName));
+        const fonts = [
+          pick(/outfit-\d+-latin(?!-ext)/i),
+          pick(/fraunces-\d+-latin(?!-ext)/i),
+          pick(/ibm-plex-sans-latin(?!-ext)/i),
+        ].filter(Boolean) as Array<{ fileName: string }>;
+        const tags = fonts.slice(0, 4).map((asset) => ({
+          tag: "link" as const,
+          attrs: {
+            rel: "preload",
+            href: `${base}${asset.fileName}`,
+            as: "font",
+            type: "font/woff2",
+            crossorigin: "anonymous",
+          },
+          injectTo: "head" as const,
+        }));
+        return tags.length ? { html, tags } : html;
+      },
+    },
+  };
+}
+
 export default defineConfig(({ command }) => {
-  const plugins = [react(), tailwindcss()];
+  const plugins = [react(), tailwindcss(), vitePluginPreloadCriticalFonts()];
   if (command === "serve") {
     plugins.push(jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy());
   }

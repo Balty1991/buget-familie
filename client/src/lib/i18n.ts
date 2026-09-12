@@ -1972,7 +1972,21 @@ const en: Record<string, string> = {
   "bonuri": "receipts",
   "membri": "members",
   "RESETARE": "RESET",
-  "Azi {amount} RON": "Today {amount} RON"
+  "Azi {amount} RON": "Today {amount} RON",
+  "PRIMA SĂPTĂMÂNĂ": "FIRST WEEK",
+  "Trei gesturi, fără grabă": "Three simple moves, no rush",
+  "1 · CAPTURĂ": "1 · CAPTURE",
+  "Notează o mișcare când se întâmplă.": "Log a movement when it happens.",
+  "Plusul de pe Astăzi sau un bon în De verificat. Nu trebuie să fie perfect — trebuie să fie pe telefon.": "The plus on Today or a receipt in Review. It does not need to be perfect — it needs to be on the phone.",
+  "2 · PLICURI": "2 · ENVELOPES",
+  "Dă fiecărui leu un plic.": "Give every leu an envelope.",
+  "În Plan, sumele pe categorii îți arată ritmul până la salariu. Ajustezi oricând.": "In Plan, category amounts show your pace until payday. You can adjust anytime.",
+  "3 · SYNC (OPȚIONAL)": "3 · SYNC (OPTIONAL)",
+  "Două telefoane, o parolă de familie.": "Two phones, one family password.",
+  "Sincronizarea e criptată și rămâne opțională. Poți folosi aplicația doar pe un telefon.": "Sync is encrypted and stays optional. You can use the app on a single phone.",
+  "Pasul {current} din {total}": "Step {current} of {total}",
+  "Deschide Sync": "Open Sync",
+  "Adaugă o mișcare": "Add a movement"
 };
 
 

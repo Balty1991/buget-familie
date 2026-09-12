@@ -74,6 +74,19 @@ Note captură: fără date reale ale utilizatorului; folosește demouri inventat
 Datele financiare stau pe telefon. Sincronizarea între telefoanele familiei este opțională și criptată (AES-GCM) cu o parolă pe care doar voi o cunoașteți — dezvoltatorul nu poate citi sumele. Fotografiile bonurilor nu se sincronizează. Fără publicitate, fără vânzare de date, fără login bancar. Backupul sistem Android este dezactivat (allowBackup=false). Poți șterge totul din aplicație sau de pe pagina publică de ștergere.
 ```
 
+
+## Asset-uri grafice (repo)
+
+Director: [`docs/play-store-assets/`](./play-store-assets/)
+
+| Fișier | Spec | Rol |
+|---|---|---|
+| `feature-graphic.png` (+ `.svg`) | 1024×500 | Feature graphic Play |
+| `icon-512.png` (+ `.svg`) | 512×512 | Icon high-res Play |
+| `SCREENSHOTS.md` | — | Ordine capturi + note brand |
+
+Brand: emerald/sage Premium (`#0F3D34` / `#143c36`, plic `#3AA87C`). Iconița și splash-ul Android din `android/app/src/main/res/` folosesc același limbaj vizual (adaptive + monochrome).
+
 ## Ce NU se face aici
 
 - Nu se încarcă AAB/APK în Play din acest document

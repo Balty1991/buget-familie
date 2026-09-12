@@ -380,3 +380,23 @@
   font-size: 0.84rem;
   line-height: 1.45;
 }
+
+/* Tur scurt — prima săptămână (nu înlocuiește FirstRunSetup) */
+.bf-first-week-tour {
+  max-width: 26rem;
+}
+.bf-first-week-visual {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0.25rem 0 0.75rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--accent, #e8f0e9) 80%, transparent);
+  color: var(--primary, #143c36);
+}
+.bf-first-week-tour h3 {
+  margin: 0.15rem 0 0.55rem;
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
