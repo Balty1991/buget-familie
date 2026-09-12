@@ -527,3 +527,33 @@ describe("perspectivă personală vs comună", () => {
     expect(normalized.transactions.find((item) => item.id === "t2")?.shareScope).toBeUndefined();
   });
 });
+
+describe("plan săptămânal din scadențe și obiective", () => {
+  it("adaugă scadențe și obiective peste cheltuielile din ultimele 7 zile", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan = {
+      ...data.settings.salaryPlan,
+      periodStart: "2026-09-01",
+      nextPayday: "2026-09-30",
+      allocations: [
+        { id: "a1", label: "Alimente", category: "Alimente", amount: 100 },
+        { id: "a2", label: "Economii", category: "Economii", amount: 50 },
+        { id: "a3", label: "Casă", category: "Casă & facturi", amount: 0 },
+      ],
+    };
+    data.transactions = [
+      { id: "t1", title: "Lidl", amount: 80, kind: "expense", category: "Alimente", source: "Card", person: "Eu", date: "2026-09-10", sourceId: "source-debit", memberId: "member-me" },
+    ];
+    data.recurring = [{
+      id: "r1", name: "Internet", amount: 60, category: "Casă & facturi", sourceId: "source-debit",
+      memberId: "member-me", dueDay: 14, active: true,
+    }];
+    data.savings = [{
+      id: "g1", name: "Vacanță", current: 0, target: 700, due: "octombrie", dueDate: "2026-09-26", tone: "honey",
+    }];
+    const hint = suggestWeeklyAllocationsFromCashflow(data, "2026-09-12");
+    expect(hint.suggestions.find((item) => item.allocationId === "a1")?.suggestedAmount).toBe(80);
+    expect(hint.suggestions.find((item) => item.allocationId === "a3")?.fromDues).toBeGreaterThan(0);
+    expect(hint.suggestions.find((item) => item.allocationId === "a2")?.fromGoals).toBeGreaterThan(0);
+  });
+});

@@ -255,7 +255,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
       <div>
         <p className="bf-kicker">{t("DIN FLUXUL REAL")}</p>
         <h2 id="bf-cashflow-suggest-title">{t("Propunere pentru următoarele 7 zile")}</h2>
-        <p>{t("Bazată pe cheltuielile din ultimele 7 zile. Nu rescrie plicurile singură — tu confirmi fiecare sumă.")}</p>
+        <p>{t("Combină ultimele 7 zile de cheltuieli cu scadențele și obiectivele din săptămâna următoare. Tu confirmi fiecare sumă.")}</p>
       </div>
       <button type="button" className="bf-secondary" disabled={!plan.allocations.length || !cashflowHint.suggestions.length} onClick={openCashflowSuggest}>
         <Sparkles size={16} /> {t("Vezi propunerea")}
@@ -266,7 +266,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
         <div className="bf-plan-simulation-heading">
           <div>
             <p className="bf-kicker">{t("SUGESTIE EDITABILĂ")}</p>
-            <h2 id="bf-cashflow-panel-title">{t("Ultimele 7 zile → următoarele 7")}</h2>
+            <h2 id="bf-cashflow-panel-title">{t("Cheltuieli, scadențe și obiective → 7 zile")}</h2>
             <p>{t("Ajustează sumele, apoi aplică doar ce confirmi. Nimic nu se schimbă automat.")}</p>
           </div>
           <button type="button" className="bf-link-button" onClick={() => setCashflowOpen(false)}>{t("Închide")}</button>
@@ -276,7 +276,7 @@ export function PlanStudio({ data, onChange }: { data: AppData; onChange: (data:
             <label key={item.allocationId}>
               <span>
                 <b>{item.label}</b>
-                <small>{t("acum {current} · real 7z {actual}", { current: money(item.currentAmount), actual: money(item.suggestedAmount) })}</small>
+                <small>{t("acum {current} · propus {actual}{dues}{goals}", { current: money(item.currentAmount), actual: money(item.suggestedAmount), dues: item.fromDues ? t(" · scadențe {amount}", { amount: money(item.fromDues) }) : "", goals: item.fromGoals ? t(" · obiective {amount}", { amount: money(item.fromGoals) }) : "" })}</small>
               </span>
               <input
                 value={cashflowDraft[item.allocationId] ?? String(item.suggestedAmount)}
