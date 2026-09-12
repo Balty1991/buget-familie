@@ -1674,6 +1674,9 @@ const en: Record<string, string> = {
   "schimbarea.": "the change.",
   "Istoric": "History",
   "{original} × {rate} lei. Suma originală și cursul rămân salvate lângă mișcare.": "{original} × {rate} lei. The original amount and rate stay saved with the movement.",
+  "Termen obiectiv azi": "Savings goal due today",
+  "Obiectiv aproape de termen": "Savings goal due soon",
+  "{name}: mai ai {remaining} până la {date}.": "{name}: {remaining} left until {date}.",
   "Azi": "Today"
 };
 

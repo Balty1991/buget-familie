@@ -250,7 +250,33 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     }
   }
 
-  return alerts.slice(0, 8);
+  // Obiective de economisire cu termen (dueDate ISO sau text due când e datat)
+  for (const goal of data.savings || []) {
+    const dueIso = goal.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(goal.dueDate) ? goal.dueDate : undefined;
+    if (!dueIso || dueIso < today) continue;
+    const due = new Date(`${dueIso}T12:00:00`);
+    const todayNoon = new Date(`${today}T12:00:00`);
+    const days = Math.round((due.valueOf() - todayNoon.valueOf()) / 86_400_000);
+    if (days < 0 || days > 7) continue;
+    const remaining = Math.max(0, goal.target - goal.current);
+    if (remaining <= 0) continue;
+    const when = days === 0 ? atLocalHour(0, 9, 45) : atLocalHour(Math.max(0, days - 1), 18, 15);
+    if (when.getTime() <= Date.now() - 60_000) continue;
+    alerts.push({
+      id: id++,
+      title: days === 0 ? t("Termen obiectiv azi") : t("Obiectiv aproape de termen"),
+      body: t("{name}: mai ai {remaining} până la {date}.", { name: goal.name, remaining: money(remaining), date: formatDate(dueIso) }),
+      at: when,
+      tag: `goal-due-${goal.id}-${dueIso}`,
+    });
+  }
+
+  return alerts.slice(0, 10);
+}
+
+/** Expus pentru teste: aceleași alerte ca programarea locală. */
+export function buildLocalAlerts(data: AppData) {
+  return buildAlerts(data).map((item) => ({ id: item.id, title: item.title, body: item.body, tag: item.tag, at: item.at.toISOString() }));
 }
 
 async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
