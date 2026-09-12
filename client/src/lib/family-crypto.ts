@@ -57,6 +57,7 @@ export async function encryptFamilyData(data: AppData, secret: string): Promise<
       exchangeRates: [],
       seenWeeklyPlanTranches: [],
       basketProducts: [],
+      merchantRules: [],
     },
   };
   const plain = encoder.encode(JSON.stringify(shareable));
@@ -228,6 +229,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       exchangeRates: local.settings.exchangeRates,
       seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches,
       basketProducts: local.settings.basketProducts,
+      merchantRules: local.settings.merchantRules || [],
       syncDevices,
       salaryPlan,
     },

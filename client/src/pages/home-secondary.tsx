@@ -596,14 +596,14 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
         setLines(suggestedLines);
         const detectedTotal = result.items.reduce((sum, item) => sum + item.amount, 0);
         const who = result.vendor ? `${result.vendor}, ` : "";
-        setOcrSummary(`Am citit ${who}${result.items.length} produs${result.items.length === 1 ? "" : "e"} după reduceri (${fmtExact.format(detectedTotal)}). Verifică categoriile înainte de salvare.`);
+        setOcrSummary(t("Am citit {who}{count} produs(e) după reduceri ({total}). Verifică categoriile înainte de salvare.", { who, count: result.items.length, total: fmtExact.format(detectedTotal) }));
       } else if (result.amount) {
-        setOcrSummary(`Am citit totalul ${fmtExact.format(result.amount)}${result.vendor ? ` la ${result.vendor}` : ""}, dar produsele nu sunt sigure. Completează magazinul dacă lipsește — fotografia rămâne atașată.`);
+        setOcrSummary(t("Am citit totalul {total}{vendor}, dar produsele nu sunt sigure. Completează magazinul dacă lipsește — fotografia rămâne atașată.", { total: fmtExact.format(result.amount), vendor: result.vendor ? ` la ${result.vendor}` : "" }));
       } else {
         setOcrSummary(t("Nu am citit clar textul de pe bon. Scrie magazinul și totalul; fotografia rămâne atașată și poți salva fără produse separate."));
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Textul de pe bon nu a putut fi citit.");
+      setError(reason instanceof Error ? reason.message : t("Textul de pe bon nu a putut fi citit."));
     } finally {
       setBusy(false);
       setProgress(0);
@@ -625,7 +625,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
       clearReceiptDraft();
       onClose();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Bonul nu a putut fi salvat pe telefon.");
+      setError(reason instanceof Error ? reason.message : t("Bonul nu a putut fi salvat pe telefon."));
     } finally {
       setBusy(false);
     }
@@ -650,17 +650,34 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
               <p className="bf-kicker">{t("PRODUSE ȘI CATEGORII")}</p>
               <h3>{fmtExact.format(lineTotal)} din {amount ? fmtExact.format(numericTotal) : "0,00 RON"}</h3>
             </div>
-            <button type="button" className="bf-secondary" onClick={() => setLines((current) => [...current, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }])}><Plus size={16} /> Produs</button>
+            <button type="button" className="bf-secondary" onClick={() => setLines((current) => [...current, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }])}><Plus size={16} /> {t("Produs")}</button>
           </div>
           {lines.map((line) => (
             <div className="bf-split-line" key={line.id}>
-              <select aria-label="Categorie bon" value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select>
+              <select aria-label={t("Categorie bon")} value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select>
               <input aria-label={t("Preț produs")} value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="lei" />
-              <input aria-label="Produs" value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder="ex. fructe" />
+              <input aria-label={t("Produs")} value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder="ex. fructe" />
               {lines.length > 1 && <button type="button" aria-label={t("Elimină produsul")} onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button>}
             </div>
           ))}
           <small>{t("Dacă lași un singur produs gol, totalul se pune automat pe el. Mai multe linii trebuie să însumeze exact totalul bonului.")}</small>
+          {resolvedPreview.length > 0 && (
+            <div className="bf-receipt-envelope-preview" aria-label={t("Plicuri propuse")}>
+              <p className="bf-kicker">{t("PLICURI PROPUSE")}</p>
+              <ul>
+                {resolvedPreview.map((line) => {
+                  const matched = matchingAllocationsForExpense(data, { category: line.category, memberId, sourceId })[0];
+                  return (
+                    <li key={line.id}>
+                      <b>{line.label || t(line.category)}</b>
+                      <span>{t(line.category)} → {matched ? matched.label : t("în afara plicurilor")}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              <small>{t("La salvare, liniile intră la De verificat. Confirmă înainte să atingă registrul.")}</small>
+            </div>
+          )}
         </section>
         <section className="bf-receipt-images">
           <div>
@@ -674,7 +691,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
               <input type="file" accept="image/*" multiple disabled={busy || photosFull} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} />
             </label>
             <label className="bf-upload-control camera">
-              <Camera size={18} /> Fotografiază
+              <Camera size={18} /> {t("Fotografiază")}
               <input type="file" accept="image/*" capture="environment" disabled={busy || photosFull} onChange={(event) => { void pick(event.target.files); event.currentTarget.value = ""; }} />
             </label>
           </div>

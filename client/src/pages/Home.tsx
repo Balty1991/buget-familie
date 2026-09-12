@@ -10,6 +10,7 @@ import { buildUndo, type UndoAction } from "@/lib/undo-delete";
 import { checkFamilyPassword } from "@/lib/family-password";
 import { touchSyncDevice, revokeSyncDevice, isThisDeviceRevoked, listActiveSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
+import { queueReceiptForReview } from "@/lib/receipt-review";
 import { APP_STORAGE_KEY, LEGACY_STORAGE_KEY, readAppData, readSyncJournal, writeAppData, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { HealthScoreBadge } from "@/components/HealthScoreBadge";
@@ -716,7 +717,7 @@ export default function Home() {
   const deleteArchivedQuickTemplate = (id: string) => update((current) => ({ ...current, settings: { ...current.settings, archivedQuickTemplates: current.settings.archivedQuickTemplates.filter((item) => item.id !== id) } }));
   const saveDebt = (item: Debt | SavingsGoal) => update((current) => { const stamped = { ...item, updatedAt: new Date().toISOString() } as Debt; return { ...current, debts: current.debts.some((entry) => entry.id === item.id) ? current.debts.map((entry) => entry.id === item.id ? stamped : entry) : [...current.debts, stamped] }; });
   const saveSaving = (item: Debt | SavingsGoal) => update((current) => { const stamped = { ...item, updatedAt: new Date().toISOString() } as SavingsGoal; return { ...current, savings: current.savings.some((entry) => entry.id === item.id) ? current.savings.map((entry) => entry.id === item.id ? stamped : entry) : [...current.savings, stamped] }; });
-  const saveReceipt = (item: Receipt) => update((current) => { const member = current.settings.members.find((entry) => entry.id === item.memberId) || current.settings.members[0]; const source = current.settings.paymentSources.find((entry) => entry.id === item.sourceId) || current.settings.paymentSources[0]; const lines = item.lines?.length ? item.lines : [{ id: "whole", category: item.category, amount: item.amount }]; const transactionIds = lines.map((line) => `receipt-tx-${item.id}-${line.id}`); const receipt = { ...item, linkedTransactionId: transactionIds[0], linkedTransactionIds: transactionIds }; const transactions: Transaction[] = lines.map((line, index) => ({ id: transactionIds[index], receiptId: item.id, title: `Bon — ${item.vendor}${line.label ? ` · ${line.label}` : ""}`, amount: line.amount, kind: "expense", category: line.category, sourceId: source?.id, source: source?.name || "Bon", memberId: member?.id, person: member?.name || current.settings.memberName, date: item.date, note: item.note, createdAt: new Date().toISOString() })); const formerIds = current.receipts.find((entry) => entry.id === item.id)?.linkedTransactionIds || [item.linkedTransactionId, `receipt-tx-${item.id}`].filter((value): value is string => Boolean(value)); return { ...current, receipts: [receipt, ...current.receipts.filter((entry) => entry.id !== item.id)], transactions: [...transactions, ...current.transactions.filter((entry) => !formerIds.includes(entry.id) && entry.receiptId !== item.id)] }; });
+  const saveReceipt = (item: Receipt) => update((current) => queueReceiptForReview(current, item));
   const deleteReceipt = (id: string) => {
     const receipt = data.receipts.find((item) => item.id === id);
     void removeReceiptImages(receipt?.imageKeys).catch(() => setReceiptStorageNotice(t("Bonul a fost șters din registru, dar telefonul nu a confirmat încă ștergerea fotografiei locale.")));
@@ -727,7 +728,7 @@ export default function Home() {
       const now = new Date().toISOString();
       const removedTransactions = current.transactions.filter((item) => linked.includes(item.id) || item.receiptId === id);
       return {
-        next: { ...current, receipts: current.receipts.filter((item) => item.id !== id), transactions: current.transactions.filter((item) => !linked.includes(item.id) && item.receiptId !== id), deleted: [...current.deleted, { entity: "receipts" as const, id, deletedAt: now }, ...linked.map((transactionId) => ({ entity: "transactions" as const, id: transactionId, deletedAt: now }))].slice(-500) },
+        next: { ...current, receipts: current.receipts.filter((item) => item.id !== id), transactions: current.transactions.filter((item) => !linked.includes(item.id) && item.receiptId !== id), pendingReview: current.pendingReview.filter((draft) => draft.transaction.receiptId !== id && !linked.includes(draft.transaction.id)), deleted: [...current.deleted, { entity: "receipts" as const, id, deletedAt: now }, ...linked.map((transactionId) => ({ entity: "transactions" as const, id: transactionId, deletedAt: now }))].slice(-500) },
         removed: { receipts: currentReceipt ? [{ ...currentReceipt, imageKeys: undefined }] : [], transactions: removedTransactions },
       };
     });

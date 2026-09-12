@@ -1600,6 +1600,18 @@ const en: Record<string, string> = {
   "Venit lunar mediu (lei)": "Average monthly income (lei)",
   "Ecran": "Full screen",
   "Ieri": "Yesterday",
+  "în afara plicurilor": "outside envelopes",
+  "Bon {vendor} · {category} → {envelope}": "Receipt {vendor} · {category} → {envelope}",
+  "Plicuri propuse": "Proposed envelopes",
+  "PLICURI PROPUSE": "PROPOSED ENVELOPES",
+  "La salvare, liniile intră la De verificat. Confirmă înainte să atingă registrul.": "On save, lines go to Review. Confirm before they touch the ledger.",
+  "Am citit {who}{count} produs(e) după reduceri ({total}). Verifică categoriile înainte de salvare.": "I read {who}{count} product(s) after discounts ({total}). Check the categories before saving.",
+  "Am citit totalul {total}{vendor}, dar produsele nu sunt sigure. Completează magazinul dacă lipsește — fotografia rămâne atașată.": "I read the total {total}{vendor}, but the products are uncertain. Fill in the store if missing — the photo stays attached.",
+  "Textul de pe bon nu a putut fi citit.": "The receipt text could not be read.",
+  "Bonul nu a putut fi salvat pe telefon.": "The receipt could not be saved on this phone.",
+  "Produs": "Product",
+  "Categorie bon": "Receipt category",
+  "Fotografiază": "Take photo",
   "Azi": "Today"
 };
 
