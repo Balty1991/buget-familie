@@ -8,6 +8,7 @@
 
 html.theme-ivory, html.theme-forest, html.theme-midnight, html.theme-copper,
 html.theme-slate, html.theme-plum, html.theme-lagoon, html.theme-rosewood,
+html.theme-ink, html.theme-white, html.theme-dark, html.theme-aurora, html.theme-cyber, html.theme-navy,
 html.dark {
   --background: var(--cf-bg);
   --foreground: var(--cf-ink);
@@ -34,6 +35,12 @@ html.dark {
 .theme-plum .bf-app,
 .theme-lagoon .bf-app,
 .theme-rosewood .bf-app,
+.theme-ink .bf-app,
+.theme-white .bf-app,
+.theme-dark .bf-app,
+.theme-aurora .bf-app,
+.theme-cyber .bf-app,
+.theme-navy .bf-app,
 .dark .bf-app {
   --bf-major-bg: var(--cf-bg);
   --bf-major-sheet: var(--cf-surface);
@@ -69,7 +76,13 @@ html.bf-high-contrast {
 .theme-rosewood .bf-modal,
 .theme-slate .bf-modal,
 .theme-lagoon .bf-modal,
-.theme-ivory .bf-modal {
+.theme-ivory .bf-modal,
+.theme-ink .bf-modal,
+.theme-white .bf-modal,
+.theme-dark .bf-modal,
+.theme-aurora .bf-modal,
+.theme-cyber .bf-modal,
+.theme-navy .bf-modal {
   color: var(--cf-ink) !important;
   background: var(--cf-surface) !important;
   border-color: var(--cf-line) !important;

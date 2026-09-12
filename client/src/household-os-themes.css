@@ -104,6 +104,65 @@ html.theme-graphite {
   --cf-glow: rgba(138, 180, 255, .12);
 }
 
+
+html.theme-dark {
+  --cf-bg: #111214;
+  --cf-surface: #1a1c1f;
+  --cf-surface-alt: #23262b;
+  --cf-ink: #eceff3;
+  --cf-muted: #9aa3ad;
+  --cf-line: #2c3138;
+  --cf-primary: #b0b6bf;
+  --cf-primary-strong: #d0d5dc;
+  --cf-info: #a8aeb8;
+  --cf-danger: #ff8a7a;
+  --cf-warning: #e8c38a;
+  --cf-on-forest: #111214;
+  --cf-on-primary: #111214;
+  --cf-on-danger: #111214;
+  --cf-nav: rgba(17, 18, 20, .92);
+  --cf-shadow: 0 18px 40px rgba(0, 0, 0, .5);
+  --cf-glow: rgba(176, 182, 191, .12);
+}
+html.theme-cyber {
+  --cf-bg: #07090c;
+  --cf-surface: #10151a;
+  --cf-surface-alt: #161d23;
+  --cf-ink: #e8eeea;
+  --cf-muted: #8a968f;
+  --cf-line: #22302a;
+  --cf-primary: #7cffc4;
+  --cf-primary-strong: #5ee0aa;
+  --cf-info: #7cffc4;
+  --cf-danger: #ff8a7a;
+  --cf-warning: #e8c38a;
+  --cf-on-forest: #04140e;
+  --cf-on-primary: #07090c;
+  --cf-on-danger: #07090c;
+  --cf-nav: rgba(7, 9, 12, .9);
+  --cf-shadow: 0 18px 40px rgba(0, 0, 0, .45);
+  --cf-glow: rgba(124, 255, 196, .12);
+}
+html.theme-aurora {
+  --cf-bg: #0d0b1c;
+  --cf-surface: #18142f;
+  --cf-surface-alt: #252044;
+  --cf-ink: #f6f3ff;
+  --cf-muted: #c1b9d5;
+  --cf-line: #49416c;
+  --cf-primary: #65d3a6;
+  --cf-primary-strong: #319e7b;
+  --cf-info: #74d0ff;
+  --cf-danger: #ff939e;
+  --cf-warning: #f4c665;
+  --cf-on-forest: #0d0b1c;
+  --cf-on-primary: #0d0b1c;
+  --cf-on-danger: #0d0b1c;
+  --cf-nav: rgba(14, 11, 29, .91);
+  --cf-shadow: 0 17px 45px rgba(0, 0, 0, .39);
+  --cf-glow: rgba(124, 91, 255, .19);
+}
+
 .theme-snow .bf-app,
 .theme-sand .bf-app,
 .theme-sage .bf-app {
@@ -120,6 +179,16 @@ html.theme-graphite {
 .bf-theme-option.sage .bf-theme-swatch { background: linear-gradient(135deg, #eef3ee 0 48%, #3f7a5c 49% 72%, #1b2a22 73%); }
 .bf-theme-option.forest .bf-theme-swatch { background: linear-gradient(135deg, #07090c 0 48%, #7cffc4 49% 72%, #10151a 73%); }
 .bf-theme-option.navy .bf-theme-swatch { background: linear-gradient(135deg, #0b1220 0 48%, #d4b06a 49% 72%, #141c2e 73%); }
+
+.bf-theme-option.white .bf-theme-swatch { background: linear-gradient(135deg, #e6e8ed 0 48%, #3a4150 49% 72%, #0b0d11 73%); }
+.bf-theme-option.dark .bf-theme-swatch { background: linear-gradient(135deg, #111214 0 48%, #b0b6bf 49% 72%, #1a1c1f 73%); }
+.bf-theme-option.aurora .bf-theme-swatch { background: radial-gradient(circle at 75% 25%, #a781ff 0 10%, transparent 28%), linear-gradient(145deg, #0d0b20 0 56%, #2d2777 57% 74%, #67d4ff 75%); }
+.bf-theme-option.cyber .bf-theme-swatch { background: linear-gradient(135deg, #07090c 0 48%, #7cffc4 49% 72%, #10151a 73%); }
+.bf-theme-preview.white { --preview-bg:#e6e8ed; --preview-surface:#ffffff; --preview-ink:#0b0d11; --preview-muted:#5c6570; --preview-line:#d5d9e0; --preview-primary:#0b0d11; --preview-info:#5a6572; --preview-glow:rgba(58,68,80,.14); }
+.bf-theme-preview.dark { --preview-bg:#111214; --preview-surface:#1a1c1f; --preview-ink:#eceff3; --preview-muted:#9aa3ad; --preview-line:#2c3138; --preview-primary:#b0b6bf; --preview-info:#a8aeb8; --preview-glow:rgba(176,182,191,.2); }
+.bf-theme-preview.aurora { --preview-bg:#0d0b1c; --preview-surface:#18142f; --preview-ink:#f6f3ff; --preview-muted:#c1b9d5; --preview-line:#49416c; --preview-primary:#65d3a6; --preview-info:#74d0ff; --preview-glow:rgba(124,91,255,.22); }
+.bf-theme-preview.cyber { --preview-bg:#07090c; --preview-surface:#10151a; --preview-ink:#e8eeea; --preview-muted:#8a968f; --preview-line:#22302a; --preview-primary:#7cffc4; --preview-info:#7cffc4; --preview-glow:rgba(124,255,196,.22); }
+
 .bf-theme-option.graphite .bf-theme-swatch { background: linear-gradient(135deg, #111214 0 48%, #8ab4ff 49% 72%, #1a1c1f 73%); }
 
 .bf-theme-preview.snow { --preview-bg:#ffffff; --preview-surface:#f4f6f5; --preview-ink:#121614; --preview-muted:#5c6964; --preview-line:#e2e7e4; --preview-primary:#0e7a5c; --preview-info:#2b6cb0; --preview-glow:rgba(14,122,92,.16); }
@@ -157,11 +226,11 @@ html.theme-graphite {
 }
 
 /* ============================================================
- * Ink Studio — look implicit, vizibil diferit de ivory/snow.
+ * Alb (White) — look implicit; alias theme-ink pentru migrare.
  * Monocrom, dens, ierarhie clară pe 360–430px. Fără mint/teal.
  * ============================================================ */
-html.theme-ink .os-shell.bf-app,
-html.theme-ink .bf-today-workspace {
+:is(html.theme-ink, html.theme-white) .os-shell.bf-app,
+:is(html.theme-ink, html.theme-white) .bf-today-workspace {
   --os-bg: #e6e8ed;
   --os-surface: #f6f7f9;
   --os-surface-2: #d8dce3;
@@ -178,47 +247,47 @@ html.theme-ink .bf-today-workspace {
   --os-out: #8f3a34;
 }
 
-html.theme-ink,
-html.theme-ink body {
+:is(html.theme-ink, html.theme-white),
+:is(html.theme-ink, html.theme-white) body {
   background: #e6e8ed;
 }
 
-html.theme-ink .os-shell.bf-app {
+:is(html.theme-ink, html.theme-white) .os-shell.bf-app {
   background:
     linear-gradient(180deg, #dfe2e8 0, #e6e8ed 120px),
     #e6e8ed !important;
   color: #0b0d11 !important;
 }
 
-html.theme-ink .os-appbar.bf-appbar {
+:is(html.theme-ink, html.theme-white) .os-appbar.bf-appbar {
   border-bottom-color: #b8bec8 !important;
   background: #eef0f4 !important;
 }
 
-html.theme-ink .os-brand-copy b {
+:is(html.theme-ink, html.theme-white) .os-brand-copy b {
   color: #0b0d11 !important;
   font-weight: 720 !important;
   letter-spacing: -0.03em !important;
 }
-html.theme-ink .os-brand-copy i {
+:is(html.theme-ink, html.theme-white) .os-brand-copy i {
   color: #4a5160 !important;
   font-style: normal !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
 }
 
-html.theme-ink .os-tool {
+:is(html.theme-ink, html.theme-white) .os-tool {
   color: #0b0d11 !important;
   background: #f6f7f9 !important;
   box-shadow: 0 0 0 1px #c2c7d0 !important;
   border-radius: 12px !important;
 }
-html.theme-ink .os-tool.is-on {
+:is(html.theme-ink, html.theme-white) .os-tool.is-on {
   background: #0b0d11 !important;
   color: #f4f5f7 !important;
 }
 
-html.theme-ink .os-shell .os-dock {
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock {
   left: 8px !important;
   right: 8px !important;
   padding: 5px !important;
@@ -227,42 +296,42 @@ html.theme-ink .os-shell .os-dock {
   box-shadow: 0 14px 32px rgba(11, 13, 17, .34) !important;
   backdrop-filter: none !important;
 }
-html.theme-ink .os-shell .os-dock button {
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock button {
   color: #8b93a0 !important;
   font-size: 10px !important;
   font-weight: 680 !important;
   letter-spacing: 0.01em !important;
   border-radius: 12px !important;
 }
-html.theme-ink .os-shell .os-dock button.is-on,
-html.theme-ink .os-shell .os-dock button.active {
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock button.is-on,
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
   color: #f4f5f7 !important;
   background: #2a303a !important;
   box-shadow: none !important;
 }
-html.theme-ink .os-shell .os-dock button svg {
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock button svg {
   width: 18px !important;
   height: 18px !important;
 }
 
-html.theme-ink .os-shell .bf-today-workspace {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
   gap: 14px !important;
   padding-left: max(14px, var(--os-inset-left)) !important;
   padding-right: max(14px, var(--os-inset-right)) !important;
 }
 
-html.theme-ink .os-shell .bf-kicker,
-html.theme-ink .bf-today-workspace .bf-kicker {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker,
+:is(html.theme-ink, html.theme-white) .bf-today-workspace .bf-kicker {
   color: #4a5160 !important;
   font-size: 10px !important;
   letter-spacing: 0.16em !important;
   font-weight: 750 !important;
 }
 
-html.theme-ink .os-shell .bf-page > header h1,
-html.theme-ink .os-shell .bf-today-workspace > header h1,
-html.theme-ink .os-shell .bf-plan-studio-header h1,
-html.theme-ink .os-shell .bf-movements-header h1 {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-page > header h1,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace > header h1,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-plan-studio-header h1,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-movements-header h1 {
   color: #0b0d11 !important;
   font-family: Fraunces, Georgia, serif !important;
   font-size: clamp(1.5rem, 6vw, 1.9rem) !important;
@@ -270,16 +339,16 @@ html.theme-ink .os-shell .bf-movements-header h1 {
   letter-spacing: -0.038em !important;
   line-height: 1.08 !important;
 }
-html.theme-ink .os-shell .bf-page > header h1 em,
-html.theme-ink .os-shell .bf-today-workspace > header h1 em,
-html.theme-ink .os-shell .bf-movements-header h1 em {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-page > header h1 em,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace > header h1 em,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-movements-header h1 em {
   font-style: italic !important;
   color: #2a303a !important;
 }
 
-html.theme-ink .bf-today-situation,
-html.theme-ink .os-shell .bf-today-situation,
-html.theme-ink .bf-today-workspace .bf-today-situation {
+:is(html.theme-ink, html.theme-white) .bf-today-situation,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-today-situation,
+:is(html.theme-ink, html.theme-white) .bf-today-workspace .bf-today-situation {
   border: 1px solid #c2c7d0 !important;
   border-radius: 14px !important;
   background: #f6f7f9 !important;
@@ -288,7 +357,7 @@ html.theme-ink .bf-today-workspace .bf-today-situation {
   gap: 12px !important;
   color: #0b0d11 !important;
 }
-html.theme-ink .bf-today-situation::before {
+:is(html.theme-ink, html.theme-white) .bf-today-situation::before {
   opacity: .1 !important;
   background-image:
     linear-gradient(rgba(11, 13, 17, .09) 1px, transparent 1px),
@@ -296,53 +365,52 @@ html.theme-ink .bf-today-situation::before {
   background-size: 14px 14px !important;
   mask-image: none !important;
 }
-html.theme-ink .bf-today-situation.risk,
-html.theme-ink html:not(.dark) .bf-today-situation.risk {
+:is(html.theme-ink, html.theme-white) .bf-today-situation.risk {
   background: #f3ece8 !important;
   border-color: #c9b4a8 !important;
 }
 
-html.theme-ink .os-shell .bf-sync,
-html.theme-ink .os-shell .bf-settings > section,
-html.theme-ink .os-shell .bf-more-grid,
-html.theme-ink .os-shell .bf-journal-day-pulse,
-html.theme-ink .os-shell .bf-movement-day,
-html.theme-ink .os-shell .bf-household-card,
-html.theme-ink .os-shell .bf-household-recap {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-sync,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-settings > section,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-more-grid,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-journal-day-pulse,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-movement-day,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-household-card,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-household-recap {
   border-radius: 14px !important;
   border-color: #c2c7d0 !important;
   box-shadow: none !important;
 }
 
-html.theme-ink .os-shell .bf-primary {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
   color: #f4f5f7 !important;
   background: #0b0d11 !important;
   box-shadow: none !important;
   border-radius: 12px !important;
 }
-html.theme-ink .os-shell .bf-secondary {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-secondary {
   color: #0b0d11 !important;
   background: #f6f7f9 !important;
   border: 1px solid #c2c7d0 !important;
 }
 
-html.theme-ink .os-desktop-nav button.is-on,
-html.theme-ink .os-desktop-nav button.active {
+:is(html.theme-ink, html.theme-white) .os-desktop-nav button.is-on,
+:is(html.theme-ink, html.theme-white) .os-desktop-nav button.active {
   color: #f4f5f7 !important;
   background: #0b0d11 !important;
   box-shadow: none !important;
 }
 
-html.theme-ink .bf-nav-count {
+:is(html.theme-ink, html.theme-white) .bf-nav-count {
   background: #0b0d11;
   color: #f4f5f7;
 }
-html.theme-ink .os-tool.is-on .bf-nav-count {
+:is(html.theme-ink, html.theme-white) .os-tool.is-on .bf-nav-count {
   background: #f4f5f7;
   color: #0b0d11;
 }
 
-html.theme-ink .bf-whats-new {
+:is(html.theme-ink, html.theme-white) .bf-whats-new {
   background: #f6f7f9 !important;
   color: #0b0d11 !important;
   border: 1px solid #c2c7d0 !important;
@@ -350,10 +418,10 @@ html.theme-ink .bf-whats-new {
 }
 
 @media (max-width: 430px) {
-  html.theme-ink .os-shell .os-dock button span {
+  :is(html.theme-ink, html.theme-white) .os-shell .os-dock button span {
     font-size: 10px !important;
   }
-  html.theme-ink .os-shell .bf-today-workspace {
+  :is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
     gap: 12px !important;
   }
 }

@@ -1,8 +1,10 @@
 /**
- * Temă monocromă mobil-first (Ink) + rafinare low-hue pentru Grafit.
- * Accentul rămâne gri-albastru discret — fără verde, fără auriu saturat.
+ * Temă Alb (fost Ink) + rafinare low-hue pentru Dark/Grafit.
+ * Accentul rămâne gri — fără verde, fără auriu saturat.
+ * --cf-on-primary este obligatoriu: umpluturile sunt aproape negre.
  */
-html.theme-ink {
+html.theme-ink,
+html.theme-white {
   --cf-bg: #e6e8ed;
   --cf-surface: #f6f7f9;
   --cf-surface-alt: #d8dce3;
@@ -15,42 +17,53 @@ html.theme-ink {
   --cf-danger: #8f3a34;
   --cf-warning: #6e5420;
   --cf-on-forest: #f4f5f7;
+  --cf-on-primary: #f4f5f7;
+  --cf-on-danger: #ffffff;
   --cf-nav: rgba(246, 247, 249, .96);
   --cf-shadow: 0 10px 22px rgba(11, 13, 17, .12);
   --cf-glow: rgba(11, 13, 17, .05);
 }
 
-.theme-ink .bf-app {
+.theme-ink .bf-app,
+.theme-white .bf-app {
   background:
     radial-gradient(720px 420px at 100% -10%, rgba(58, 68, 80, .07), transparent 58%),
     radial-gradient(520px 360px at -10% 80%, rgba(20, 23, 28, .04), transparent 55%),
     var(--cf-bg) !important;
 }
-.theme-ink .bf-app::before {
+.theme-ink .bf-app::before,
+.theme-white .bf-app::before {
   opacity: .12;
   background-image:
     linear-gradient(rgba(20, 23, 28, .045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(20, 23, 28, .045) 1px, transparent 1px);
   background-size: 22px 22px;
 }
-.theme-ink .bf-appbar::after {
+.theme-ink .bf-appbar::after,
+.theme-white .bf-appbar::after {
   width: 64px;
   background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong));
 }
-.theme-ink .bf-mobile-nav button.active {
+.theme-ink .bf-mobile-nav button.active,
+.theme-white .bf-mobile-nav button.active {
   background: linear-gradient(135deg, var(--cf-primary), var(--cf-primary-strong)) !important;
   color: #f7f8fa !important;
 }
-.theme-ink .bf-primary {
+.theme-ink .bf-primary,
+.theme-white .bf-primary {
   color: #f7f8fa !important;
   background: #1f2730 !important;
   box-shadow: 0 8px 18px rgba(20, 23, 28, .18) !important;
 }
-.theme-ink .bf-theme-picker { background: #f7f8fa; }
-.theme-ink .bf-theme-option { border-color: #d0d5dc; background: #fff; }
-.theme-ink .bf-theme-option.selected { border-color: #1f2730; box-shadow: 0 0 0 2px rgba(31, 39, 48, .16); }
+.theme-ink .bf-theme-picker,
+.theme-white .bf-theme-picker { background: #f7f8fa; }
+.theme-ink .bf-theme-option,
+.theme-white .bf-theme-option { border-color: #d0d5dc; background: #fff; }
+.theme-ink .bf-theme-option.selected,
+.theme-white .bf-theme-option.selected { border-color: #1f2730; box-shadow: 0 0 0 2px rgba(31, 39, 48, .16); }
 
-.bf-theme-preview.ink {
+.bf-theme-preview.ink,
+.bf-theme-preview.white {
   --preview-bg: #e6e8ed;
   --preview-surface: #ffffff;
   --preview-ink: #0b0d11;
@@ -60,31 +73,40 @@ html.theme-ink {
   --preview-info: #5a6572;
   --preview-glow: rgba(58, 68, 80, .14);
 }
-.bf-theme-option.ink .bf-theme-swatch {
+.bf-theme-option.ink .bf-theme-swatch,
+.bf-theme-option.white .bf-theme-swatch {
   background: linear-gradient(135deg, #e6e8ed 0 52%, #3a4150 53% 72%, #0b0d11 73%);
 }
-.bf-theme-option.ink .bf-theme-swatch span {
+.bf-theme-option.ink .bf-theme-swatch span,
+.bf-theme-option.white .bf-theme-swatch span {
   background-image: linear-gradient(rgba(20, 23, 28, .12) 1px, transparent 1px),
     linear-gradient(90deg, rgba(20, 23, 28, .12) 1px, transparent 1px);
   background-size: 8px 8px;
 }
 
-/* Grafit: mai puțin albastru, mai aproape de monocrom noapte */
-html.theme-graphite {
+/* Dark / Grafit */
+html.theme-graphite,
+html.theme-dark {
   --cf-primary: #b0b6bf;
   --cf-primary-strong: #8a919c;
-  
+  --cf-info: #a8aeb8;
+  --cf-on-primary: #111214;
+  --cf-on-danger: #111214;
+  --cf-on-forest: #111214;
   --cf-glow: rgba(176, 182, 191, .1);
 }
-html.theme-graphite { --cf-info: #a8aeb8; }
 
 @media (max-width: 480px) {
   .theme-ink .bf-appbar,
-  .theme-graphite .bf-appbar {
+  .theme-white .bf-appbar,
+  .theme-graphite .bf-appbar,
+  .theme-dark .bf-appbar {
     backdrop-filter: blur(12px);
   }
   .theme-ink .bf-mobile-nav button,
-  .theme-graphite .bf-mobile-nav button {
+  .theme-white .bf-mobile-nav button,
+  .theme-graphite .bf-mobile-nav button,
+  .theme-dark .bf-mobile-nav button {
     min-height: 48px;
   }
 }

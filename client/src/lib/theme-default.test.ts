@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_THEME,
+  LEGACY_THEME_MAP,
+  THEME_MIGRATED_CATALOG_KEY,
   THEME_MIGRATED_INK_KEY,
   THEME_STORAGE_KEY,
   WHATS_NEW_KEY,
@@ -20,42 +22,54 @@ const memory = (initial: Record<string, string> = {}) => {
   };
 };
 
-describe("tema implicită Ink Studio", () => {
-  it("fără preferință salvatǎ, pornește pe ink și marchează migrarea", () => {
+describe("catalog teme White/Dark/extras", () => {
+  it("fără preferință, pornește pe white și marchează migrarea catalogului", () => {
     const storage = memory();
-    expect(resolveInitialTheme(storage)).toBe("ink");
+    expect(resolveInitialTheme(storage)).toBe("white");
     expect(storage.getItem(THEME_STORAGE_KEY)).toBe(DEFAULT_THEME);
+    expect(storage.getItem(THEME_MIGRATED_CATALOG_KEY)).toBe("1");
     expect(storage.getItem(THEME_MIGRATED_INK_KEY)).toBe("1");
   });
 
-  it("migrarea o dată: ivory și snow devin ink", () => {
-    for (const legacy of ["ivory", "snow"]) {
+  it("mapează ID-urile vechi o dată la catalogul slim", () => {
+    const cases: Array<[string, string]> = [
+      ["ivory", "white"],
+      ["snow", "white"],
+      ["ink", "white"],
+      ["sand", "white"],
+      ["sage", "white"],
+      ["slate", "white"],
+      ["lagoon", "cyber"],
+      ["forest", "cyber"],
+      ["midnight", "aurora"],
+      ["plum", "aurora"],
+      ["graphite", "dark"],
+      ["copper", "dark"],
+      ["rosewood", "dark"],
+      ["navy", "navy"],
+      ["dark", "dark"],
+    ];
+    for (const [legacy, kept] of cases) {
       const storage = memory({ [THEME_STORAGE_KEY]: legacy });
-      expect(resolveInitialTheme(storage)).toBe("ink");
-      expect(storage.getItem(THEME_STORAGE_KEY)).toBe("ink");
-    }
-  });
-
-  it("păstrează forest, midnight și celelalte alegeri explicite", () => {
-    for (const kept of ["forest", "midnight", "navy", "sand", "graphite"]) {
-      const storage = memory({ [THEME_STORAGE_KEY]: kept });
       expect(resolveInitialTheme(storage)).toBe(kept);
       expect(storage.getItem(THEME_STORAGE_KEY)).toBe(kept);
-      expect(storage.getItem(THEME_MIGRATED_INK_KEY)).toBe("1");
     }
   });
 
-  it("după migrare, ivory ales explicit rămâne ivory", () => {
-    const storage = memory({
-      [THEME_STORAGE_KEY]: "ivory",
-      [THEME_MIGRATED_INK_KEY]: "1",
-    });
-    expect(resolveInitialTheme(storage)).toBe("ivory");
+  it("după migrare, păstrează temele din catalog", () => {
+    for (const kept of ["white", "dark", "aurora", "navy", "cyber"]) {
+      const storage = memory({
+        [THEME_STORAGE_KEY]: kept,
+        [THEME_MIGRATED_CATALOG_KEY]: "1",
+      });
+      expect(resolveInitialTheme(storage)).toBe(kept);
+    }
   });
 
-  it("dark vechi devine forest", () => {
-    const storage = memory({ [THEME_STORAGE_KEY]: "dark", [THEME_MIGRATED_INK_KEY]: "1" });
-    expect(resolveInitialTheme(storage)).toBe("forest");
+  it("LEGACY_THEME_MAP acoperă laundry-list-ul vechi", () => {
+    for (const id of ["snow", "ivory", "ink", "sand", "sage", "slate", "lagoon", "forest", "midnight", "graphite", "copper", "plum", "rosewood"]) {
+      expect(LEGACY_THEME_MAP[id]).toBeTruthy();
+    }
   });
 });
 
