@@ -300,14 +300,35 @@ html .bf-plan-period .active {
   color: var(--cf-on-primary) !important;
 }
 
-/* Aceeași regulă pentru comenzile care folosesc umplutura „danger”. */
+/* Filled danger — doar confirmări de plată, NU CTA-urile outline Adaugă/Creează. */
 html button.pay,
 html .bf-obligation-entry-actions .pay,
-html .bf-obligation-actions button,
 html .bf-debt-pay {
   background-color: var(--cf-danger) !important;
   background-image: none !important;
   color: var(--cf-on-danger) !important;
+}
+
+/* Obligații CTAs + secondary/outline: etichetă pe fundalul paginii via --cf-ink. */
+html .bf-obligation-actions button,
+html .bf-obligation-actions > button,
+html .os-shell .bf-obligation-actions > button,
+html .bf-obligation-empty > button,
+html .bf-goals-link,
+html .bf-secondary,
+html .bf-os-secondary,
+html .bf-ghost:not(.bf-primary) {
+  color: var(--cf-ink) !important;
+  background-color: color-mix(in srgb, var(--cf-surface) 90%, transparent) !important;
+  background-image: none !important;
+  border-color: color-mix(in srgb, var(--cf-line) 90%, transparent) !important;
+}
+
+html .bf-obligation-actions button:first-child,
+html .os-shell .bf-obligation-actions > button:first-child {
+  color: var(--cf-ink) !important;
+  border-color: color-mix(in srgb, var(--cf-danger) 55%, var(--cf-line)) !important;
+  background-color: color-mix(in srgb, var(--cf-surface) 90%, transparent) !important;
 }
 
 /**
@@ -1209,4 +1230,53 @@ html.theme-cyber .bf-allocation-period-tabs button.active,
 html.theme-dark .bf-allocation-period-tabs button.active {
   color: var(--cf-on-primary, #0d0b1c) !important;
   background-color: var(--cf-primary-strong, #7dcea0) !important;
+}
+
+
+/* P0 2026-09-12 Obligații outline CTAs — ink pe orice temă */
+html.theme-dark .bf-obligation-actions button,
+html.theme-aurora .bf-obligation-actions button,
+html.theme-navy .bf-obligation-actions button,
+html.theme-cyber .bf-obligation-actions button,
+html.theme-dark .bf-obligation-empty > button,
+html.theme-aurora .bf-obligation-empty > button,
+html.theme-navy .bf-obligation-empty > button,
+html.theme-cyber .bf-obligation-empty > button,
+html.theme-dark .bf-goals-link,
+html.theme-aurora .bf-goals-link,
+html.theme-navy .bf-goals-link,
+html.theme-cyber .bf-goals-link,
+html.theme-dark .bf-secondary,
+html.theme-aurora .bf-secondary,
+html.theme-navy .bf-secondary,
+html.theme-cyber .bf-secondary,
+html.theme-dark .bf-os-secondary,
+html.theme-aurora .bf-os-secondary,
+html.theme-navy .bf-os-secondary,
+html.theme-cyber .bf-os-secondary,
+.dark .bf-obligation-actions button,
+.dark .bf-obligation-empty > button,
+.dark .bf-secondary,
+.dark .bf-os-secondary,
+.dark .bf-goals-link {
+  color: var(--cf-ink) !important;
+  background-color: color-mix(in srgb, var(--cf-surface) 88%, transparent) !important;
+  border-color: color-mix(in srgb, var(--cf-line) 85%, transparent) !important;
+}
+
+/* Coral/danger outline (delete, danger section) — ink pe noapte, nu coral închis pe navy. */
+html.theme-dark .bf-danger > button,
+html.theme-aurora .bf-danger > button,
+html.theme-navy .bf-danger > button,
+html.theme-cyber .bf-danger > button,
+html.theme-dark .bf-obligation-entry-actions > button.delete,
+html.theme-aurora .bf-obligation-entry-actions > button.delete,
+html.theme-navy .bf-obligation-entry-actions > button.delete,
+html.theme-cyber .bf-obligation-entry-actions > button.delete,
+.dark .bf-danger > button,
+.dark .bf-obligation-entry-actions > button.delete,
+.dark .bf-row-actions button:last-child {
+  color: var(--cf-ink) !important;
+  border-color: color-mix(in srgb, var(--cf-danger) 45%, var(--cf-line)) !important;
+  background-color: color-mix(in srgb, var(--cf-danger) 12%, var(--cf-surface)) !important;
 }

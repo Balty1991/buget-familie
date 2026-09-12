@@ -1,5 +1,38 @@
-/** Butoanele secundare din Plan (Editează/Șterge/Renunță/PDF) foloseau text pal, sub pragul de contrast lizibil. */
-.bf-allocation-actions button,.bf-allocation-builder-actions button:not(.bf-primary),.bf-cycle-setup-actions button:not(.bf-primary){color:var(--cf-ink)!important;border-color:color-mix(in srgb,var(--cf-ink),transparent 55%)!important;font-weight:800!important}
+/** Butoanele secundare / outline: etichetă mereu pe --cf-ink (citește pe white și pe dark). */
+.bf-allocation-actions button,
+.bf-allocation-builder-actions button:not(.bf-primary),
+.bf-cycle-setup-actions button:not(.bf-primary),
+.bf-obligation-actions button,
+.bf-obligation-empty > button,
+.bf-goals-link,
+.bf-secondary,
+.bf-os-secondary,
+.bf-ghost:not(.bf-primary),
+.bf-file-button {
+  color: var(--cf-ink) !important;
+  border-color: color-mix(in srgb, var(--cf-ink), transparent 55%) !important;
+  font-weight: 800 !important;
+}
 /* Butoanele Editează/Șterge se comprimau sub lățimea textului lor (flex-shrink implicit), tăind cuvintele. */
-.bf-allocation-actions button{flex-shrink:0!important;white-space:nowrap!important;min-width:-webkit-max-content!important;min-width:max-content!important}
-.bf-allocation-actions button:last-child{color:color-mix(in srgb,var(--cf-coral),black 12%)!important;border-color:color-mix(in srgb,var(--cf-coral),transparent 40%)!important}
+.bf-allocation-actions button {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  min-width: -webkit-max-content !important;
+  min-width: max-content !important;
+}
+.bf-allocation-actions button:last-child {
+  color: color-mix(in srgb, var(--cf-coral, var(--cf-danger)), black 12%) !important;
+  border-color: color-mix(in srgb, var(--cf-coral, var(--cf-danger)), transparent 40%) !important;
+}
+
+/* Pe teme de noapte, „coral pe negru” pentru delete outline devine --cf-ink + tint, nu ink închis. */
+:is(html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber, .dark) .bf-allocation-actions button:last-child,
+:is(html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber, .dark) .bf-obligation-entry-actions > button.delete {
+  color: var(--cf-ink) !important;
+  border-color: color-mix(in srgb, var(--cf-danger) 50%, var(--cf-line)) !important;
+}
+
+.bf-obligation-actions button:first-child {
+  border-color: color-mix(in srgb, var(--cf-danger) 55%, var(--cf-line)) !important;
+  color: var(--cf-ink) !important;
+}

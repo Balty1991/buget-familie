@@ -1281,3 +1281,190 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
     height: min(42vh, 320px);
   }
 }
+
+
+/* ============================================================
+ * WOW+ 2026-09-12 — Obligații glass + CTA contrast (match Plan).
+ * ============================================================ */
+
+.bf-obligations-workspace > .bf-obligations-header {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 26px 20px 24px !important;
+  border-radius: 28px !important;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 75%, transparent) !important;
+  background:
+    radial-gradient(120% 100% at 108% -18%, color-mix(in srgb, var(--cf-danger) 28%, transparent), transparent 52%),
+    radial-gradient(90% 80% at -18% 120%, color-mix(in srgb, var(--cf-warning, #e8c38a) 18%, transparent), transparent 48%),
+    linear-gradient(
+      148deg,
+      color-mix(in srgb, var(--cf-surface) 96%, transparent),
+      color-mix(in srgb, var(--cf-surface-alt) 62%, transparent) 55%,
+      color-mix(in srgb, var(--cf-surface) 78%, transparent)
+    ) !important;
+  box-shadow:
+    0 28px 56px color-mix(in srgb, var(--cf-ink) 14%, transparent),
+    0 8px 18px color-mix(in srgb, var(--cf-ink) 7%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.18);
+}
+
+.bf-obligations-workspace > .bf-obligations-header::before {
+  content: "";
+  position: absolute;
+  inset: -30% 35% auto -20%;
+  height: 140%;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in srgb, #fff 12%, transparent) 48%,
+    transparent 62%
+  );
+  opacity: .5;
+  animation: bf-hero-shimmer 9s ease-in-out infinite;
+}
+
+.bf-obligations-workspace > .bf-obligations-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.bf-obligations-workspace > .bf-obligations-header h1 {
+  font-size: clamp(34px, 9vw, 50px) !important;
+  line-height: .98 !important;
+  letter-spacing: -.055em !important;
+  font-weight: 650 !important;
+  text-wrap: balance;
+  color: var(--cf-ink) !important;
+}
+
+.bf-obligations-workspace > .bf-obligations-header h1 em {
+  background: linear-gradient(
+    120deg,
+    var(--cf-danger),
+    color-mix(in srgb, var(--cf-warning, #e8c38a) 55%, var(--cf-danger))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  font-style: italic;
+}
+
+.bf-obligations-workspace > .bf-obligations-header p:not(.bf-kicker) {
+  color: var(--cf-muted) !important;
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+  max-width: 38ch !important;
+}
+
+.bf-obligations-workspace :is(
+  .bf-obligation-ledger,
+  .bf-obligation-lane,
+  .bf-obligation-timeline,
+  .bf-obligation-ai,
+  .bf-debt-plan,
+  .bf-debt-simulator,
+  .bf-snowball,
+  .bf-obligation-empty
+) {
+  border-radius: 20px !important;
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--cf-ink) 11%, transparent),
+    0 4px 12px color-mix(in srgb, var(--cf-ink) 5%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 11%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--cf-line) 55%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(1.1);
+}
+
+.bf-obligations-workspace .bf-obligation-ledger {
+  overflow: hidden;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--cf-surface) 92%, transparent),
+      color-mix(in srgb, var(--cf-surface-alt) 70%, transparent)
+    ) !important;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 70%, transparent) !important;
+}
+
+.bf-obligations-workspace .bf-obligation-lane {
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--cf-surface) 94%, transparent),
+      color-mix(in srgb, var(--cf-surface-alt) 55%, transparent)
+    ) !important;
+  border: 1px solid color-mix(in srgb, var(--cf-line) 70%, transparent) !important;
+}
+
+.bf-obligations-workspace .bf-obligation-actions {
+  gap: 10px !important;
+}
+
+.bf-obligations-workspace .bf-obligation-actions > button,
+.bf-obligations-workspace .bf-obligation-cta {
+  color: var(--cf-ink) !important;
+  background: color-mix(in srgb, var(--cf-surface) 86%, transparent) !important;
+  border: 1.5px solid color-mix(in srgb, var(--cf-line) 88%, transparent) !important;
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--cf-ink) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
+  font-weight: 720 !important;
+}
+
+.bf-obligations-workspace .bf-obligation-actions > button:first-child,
+.bf-obligations-workspace .bf-obligation-cta.debt {
+  border-color: color-mix(in srgb, var(--cf-danger) 55%, var(--cf-line)) !important;
+  color: var(--cf-ink) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--cf-danger) 10%, var(--cf-surface)),
+      color-mix(in srgb, var(--cf-surface) 92%, transparent)
+    ) !important;
+}
+
+.bf-obligations-workspace .bf-obligation-actions > button:last-child,
+.bf-obligations-workspace .bf-obligation-cta.savings {
+  border-color: color-mix(in srgb, var(--cf-primary) 40%, var(--cf-line)) !important;
+  color: var(--cf-ink) !important;
+}
+
+html.theme-white .bf-obligations-workspace > .bf-obligations-header,
+html.theme-ink .bf-obligations-workspace > .bf-obligations-header {
+  background:
+    radial-gradient(120% 100% at 108% -18%, rgba(182, 67, 56, .16), transparent 52%),
+    radial-gradient(90% 80% at -18% 120%, rgba(139, 99, 14, .1), transparent 48%),
+    linear-gradient(148deg, rgba(255, 255, 255, .96), rgba(248, 244, 238, .92) 55%, rgba(255, 255, 255, .95)) !important;
+  box-shadow:
+    0 24px 48px rgba(18, 32, 28, .09),
+    0 6px 14px rgba(18, 32, 28, .04),
+    inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+
+html.theme-white .bf-obligations-workspace > .bf-obligations-header h1 em,
+html.theme-ink .bf-obligations-workspace > .bf-obligations-header h1 em {
+  background: linear-gradient(120deg, #b64338, #8b630e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-obligations-workspace > .bf-obligations-header::before {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .bf-obligations-workspace > .bf-obligations-header {
+    padding: 20px 16px 18px !important;
+    border-radius: 22px !important;
+  }
+  .bf-obligations-workspace > .bf-obligations-header h1 {
+    font-size: clamp(30px, 9vw, 40px) !important;
+  }
+}

@@ -111,11 +111,17 @@
   border-color: var(--cf-line) !important;
 }
 
-.bf-obligation-actions button:first-child,
+/* Pay stays filled danger; debt/savings CTAs stay outline with ink (never dark-on-dark). */
 .bf-obligation-entry-actions button.pay {
-  color: #fff !important;
+  color: var(--cf-on-danger, #fff) !important;
   background: var(--cf-danger) !important;
   border-color: var(--cf-danger) !important;
+}
+
+.bf-obligation-actions button:first-child {
+  color: var(--cf-ink) !important;
+  background: color-mix(in srgb, var(--cf-surface) 88%, transparent) !important;
+  border-color: color-mix(in srgb, var(--cf-danger) 50%, var(--cf-line)) !important;
 }
 
 .bf-obligation-ledger > button {
@@ -277,11 +283,25 @@
   color: #10231f !important;
 }
 
-/* Aceeași problemă, familia de accent "pericol" (--cf-danger): în temele întunecate devine
- * un coral deschis, dar textul rămâne alb din regulile mai vechi. */
-.dark .bf-obligation-actions button:first-child,
-.dark .bf-obligation-entry-actions button.pay {
-  color: #2b0a06 !important;
+/* Filled danger pe noapte: etichetă via --cf-on-danger (nu ink forțat pe outline).
+ * CTA-urile Obligații rămân outline cu --cf-ink — #2b0a06 pe navy era invizibil. */
+.dark .bf-obligation-entry-actions button.pay,
+html.theme-dark .bf-obligation-entry-actions button.pay,
+html.theme-aurora .bf-obligation-entry-actions button.pay,
+html.theme-navy .bf-obligation-entry-actions button.pay,
+html.theme-cyber .bf-obligation-entry-actions button.pay {
+  color: var(--cf-on-danger, #111214) !important;
+  background: var(--cf-danger) !important;
+  border-color: var(--cf-danger) !important;
+}
+
+.dark .bf-obligation-actions button,
+html.theme-dark .bf-obligation-actions button,
+html.theme-aurora .bf-obligation-actions button,
+html.theme-navy .bf-obligation-actions button,
+html.theme-cyber .bf-obligation-actions button {
+  color: var(--cf-ink) !important;
+  background: color-mix(in srgb, var(--cf-surface) 88%, transparent) !important;
 }
 
 /* Cardul de plic (.bf-allocation-list.bf-envelope-desk > article) a acumulat definiții
