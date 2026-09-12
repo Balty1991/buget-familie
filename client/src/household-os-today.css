@@ -1200,3 +1200,46 @@ html:not(.dark) .bf-os-decide {
   margin-left: 6px;
   opacity: .85;
 }
+
+
+/* Feed familie + tip glosar plic — claritate multi-perspectivă 2026-09-12 */
+.bf-today-family-feed {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 14px 14px 12px;
+  border: 1px solid color-mix(in srgb, var(--cf-line, #e2dfd6) 90%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cf-surface, #fffefa) 92%, var(--cf-primary, #eec64d) 8%);
+}
+.bf-today-family-feed h3 {
+  margin: 0;
+  font: 800 16px/1.15 "IBM Plex Serif", Georgia, serif;
+  color: var(--cf-ink, #172d28);
+}
+.bf-envelope-glossary-tip {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--cf-primary, #d79c24);
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in srgb, var(--cf-surface, #fffefa) 88%, #f7ebca 12%);
+}
+.bf-envelope-glossary-tip b { font-size: 14px; color: var(--cf-ink, #173f36); }
+.bf-envelope-glossary-tip p { margin: 0; color: var(--cf-muted, #65746b); font-size: 12px; line-height: 1.5; }
+.bf-simple-mode-card {
+  display: grid;
+  gap: 8px;
+}
+.bf-simple-mode-banner {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--cf-surface-alt, #edf0ea) 80%, transparent);
+}
+.bf-simple-mode-exit {
+  width: 100%;
+  margin-top: 8px;
+}
+.bf-today-below-gauge { margin: 8px 0 16px; }

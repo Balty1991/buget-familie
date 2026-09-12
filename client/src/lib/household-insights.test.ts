@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -288,4 +288,22 @@ describe("fereastra de comparație Analiză", () => {
     expect(digest.detail.length).toBeGreaterThan(0);
   });
 
+});
+
+
+describe("householdActivityInCycle", () => {
+  it("folosește periodStart → nextPayday, nu luna calendar", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.periodStart = "2026-08-20";
+    data.settings.salaryPlan.nextPayday = "2026-09-20";
+    data.settings.members = [{ id: "me", name: "Eu", color: "#256B5B" }, { id: "partner", name: "Ea", color: "#966E4A" }];
+    data.transactions = [
+      { id: "t1", title: "Lidl", amount: 100, kind: "expense", category: "Alimente", source: "Card", sourceId: "s", person: "Eu", memberId: "me", date: "2026-08-25", createdAt: "2026-08-25T10:00:00.000Z" },
+      { id: "t2", title: "Taxi", amount: 50, kind: "expense", category: "Transport", source: "Card", sourceId: "s", person: "Ea", memberId: "partner", date: "2026-09-05", createdAt: "2026-09-05T10:00:00.000Z" },
+      { id: "t3", title: "Vechi", amount: 999, kind: "expense", category: "Altele", source: "Card", sourceId: "s", person: "Eu", memberId: "me", date: "2026-07-01", createdAt: "2026-07-01T10:00:00.000Z" },
+    ];
+    const cycle = householdActivityInCycle(data, "2026-09-10");
+    expect(cycle.familyExpense).toBe(150);
+    expect(cycle.members.find((m) => m.memberId === "me")?.expense).toBe(100);
+  });
 });
