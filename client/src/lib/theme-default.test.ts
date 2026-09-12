@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_THEME,
   LEGACY_THEME_MAP,
+  STALE_SKIN_KEYS,
   THEME_MIGRATED_ATELIER_KEY,
   THEME_MIGRATED_CATALOG_KEY,
   THEME_MIGRATED_INK_KEY,
+  THEME_MIGRATED_PREMIUM_KEY,
   THEME_STORAGE_KEY,
   WHATS_NEW_KEY,
   markWhatsNewSeen,
@@ -19,6 +21,9 @@ const memory = (initial: Record<string, string> = {}) => {
     setItem: (key: string, value: string) => {
       store[key] = value;
     },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
     dump: () => store,
   };
 };
@@ -31,6 +36,7 @@ describe("catalog teme White/Dark/extras", () => {
     expect(storage.getItem(THEME_MIGRATED_CATALOG_KEY)).toBe("1");
     expect(storage.getItem(THEME_MIGRATED_INK_KEY)).toBe("1");
     expect(storage.getItem(THEME_MIGRATED_ATELIER_KEY)).toBe("1");
+    expect(storage.getItem(THEME_MIGRATED_PREMIUM_KEY)).toBe("1");
   });
 
   it("mapează ID-urile vechi o dată la catalogul slim", () => {
@@ -56,6 +62,7 @@ describe("catalog teme White/Dark/extras", () => {
       expect(resolveInitialTheme(storage)).toBe(kept);
       expect(storage.getItem(THEME_STORAGE_KEY)).toBe(kept);
       expect(storage.getItem(THEME_MIGRATED_ATELIER_KEY)).toBe("1");
+      expect(storage.getItem(THEME_MIGRATED_PREMIUM_KEY)).toBe("1");
     }
   });
 
@@ -65,6 +72,7 @@ describe("catalog teme White/Dark/extras", () => {
         [THEME_STORAGE_KEY]: kept,
         [THEME_MIGRATED_CATALOG_KEY]: "1",
         [THEME_MIGRATED_ATELIER_KEY]: "1",
+        [THEME_MIGRATED_PREMIUM_KEY]: "1",
       });
       expect(resolveInitialTheme(storage)).toBe(kept);
     }
@@ -78,6 +86,7 @@ describe("catalog teme White/Dark/extras", () => {
       });
       expect(resolveInitialTheme(storage)).toBe(kept);
       expect(storage.getItem(THEME_MIGRATED_ATELIER_KEY)).toBe("1");
+      expect(storage.getItem(THEME_MIGRATED_PREMIUM_KEY)).toBe("1");
     }
   });
 
@@ -88,6 +97,37 @@ describe("catalog teme White/Dark/extras", () => {
     });
     expect(resolveInitialTheme(storage)).toBe("white");
     expect(storage.getItem(THEME_MIGRATED_ATELIER_KEY)).toBe("1");
+    expect(storage.getItem(THEME_MIGRATED_PREMIUM_KEY)).toBe("1");
+  });
+
+  it("migrarea Premium curăță skin-uri vechi și resetează fundalul pe Alb", () => {
+    const storage = memory({
+      [THEME_STORAGE_KEY]: "white",
+      [THEME_MIGRATED_CATALOG_KEY]: "1",
+      [THEME_MIGRATED_ATELIER_KEY]: "1",
+      "buget-familie:skin": "stale",
+      "buget-familie:skin-tokens": "{}",
+      "buget-familie:background": "grid",
+    });
+    expect(resolveInitialTheme(storage)).toBe("white");
+    expect(storage.getItem(THEME_MIGRATED_PREMIUM_KEY)).toBe("1");
+    for (const key of STALE_SKIN_KEYS) {
+      expect(storage.getItem(key)).toBeNull();
+    }
+    expect(storage.getItem("buget-familie:background")).toBe("plain");
+  });
+
+  it("migrarea Premium nu atinge aurora și nu resetează fundalul nocturn", () => {
+    const storage = memory({
+      [THEME_STORAGE_KEY]: "aurora",
+      [THEME_MIGRATED_CATALOG_KEY]: "1",
+      [THEME_MIGRATED_ATELIER_KEY]: "1",
+      "buget-familie:background": "aurora",
+      "buget-familie:skin": "stale",
+    });
+    expect(resolveInitialTheme(storage)).toBe("aurora");
+    expect(storage.getItem("buget-familie:background")).toBe("aurora");
+    expect(storage.getItem("buget-familie:skin")).toBeNull();
   });
 
   it("LEGACY_THEME_MAP acoperă laundry-list-ul vechi", () => {

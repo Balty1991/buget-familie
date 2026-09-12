@@ -1,0 +1,696 @@
+/**
+ * Atelier Premium — bold fintech redesign (mobile-first).
+ * Distinctive deeper surfaces, glass hero, floating pill dock, springy sheets.
+ * Loaded after platinum elevate; contrast-fix stays last for safety.
+ */
+
+:root {
+  --bf-premium-motion: 220ms cubic-bezier(.22, 1.15, .36, 1);
+  --bf-premium-press: 110ms ease-out;
+  --bf-premium-radius-xl: 28px;
+  --bf-premium-radius-lg: 22px;
+  --bf-premium-radius-md: 16px;
+}
+
+/* ---------- White default: Fintech Premium identity ---------- */
+:is(html.theme-ink, html.theme-white) {
+  --cf-bg: #e4e9e6;
+  --cf-surface: #f5f7f6;
+  --cf-surface-alt: #dce3df;
+  --cf-ink: #0c1612;
+  --cf-muted: #4a5852;
+  --cf-line: #c5cec8;
+  --cf-primary: #176b54;
+  --cf-primary-strong: #0e4f3e;
+  --cf-info: #2a6a8a;
+  --cf-danger: #b93d36;
+  --cf-warning: #9a6b10;
+  --cf-on-forest: #ffffff;
+  --cf-on-primary: #ffffff;
+  --cf-nav: rgba(245, 247, 246, .88);
+  --cf-shadow: 0 18px 44px rgba(12, 22, 18, .14);
+  --cf-glow: rgba(23, 107, 84, .16);
+}
+
+:is(html.theme-ink, html.theme-white) .os-shell.bf-app,
+:is(html.theme-ink, html.theme-white) .bf-today-workspace {
+  --os-bg: #e4e9e6;
+  --os-surface: #f5f7f6;
+  --os-surface-2: #d8e0db;
+  --os-fg: #0c1612;
+  --os-muted: #4a5852;
+  --os-subtle: #6a7872;
+  --os-mint: #176b54;
+  --os-mint-fg: #ffffff;
+  --os-mint-dim: #cfe6dc;
+  --os-line: #c5cec8;
+  --os-line-strong: #176b54;
+  --os-ink: #0c1612;
+  --os-warn: #9a6b10;
+  --os-out: #b93d36;
+}
+
+:is(html.theme-ink, html.theme-white),
+:is(html.theme-ink, html.theme-white) body {
+  background: #e4e9e6;
+}
+
+:is(html.theme-ink, html.theme-white) .os-shell.bf-app {
+  background:
+    radial-gradient(720px 420px at 108% -8%, rgba(23, 107, 84, .14), transparent 58%),
+    radial-gradient(480px 320px at -12% 18%, rgba(42, 106, 138, .08), transparent 55%),
+    linear-gradient(180deg, #d9e0dc 0, #e4e9e6 160px),
+    #e4e9e6 !important;
+  color: #0c1612 !important;
+}
+
+:is(html.theme-ink, html.theme-white) .os-appbar.bf-appbar {
+  border-bottom-color: color-mix(in srgb, #0c1612 10%, transparent) !important;
+  background: rgba(245, 247, 246, .82) !important;
+  backdrop-filter: blur(18px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+}
+
+:is(html.theme-ink, html.theme-white) .os-brand-copy b {
+  color: #0c1612 !important;
+  font-weight: 780 !important;
+}
+:is(html.theme-ink, html.theme-white) .os-brand-copy i {
+  color: #176b54 !important;
+  font-weight: 700 !important;
+}
+
+:is(html.theme-ink, html.theme-white) .os-tool {
+  color: #0c1612 !important;
+  background: #f5f7f6 !important;
+  box-shadow: 0 0 0 1px #c5cec8, 0 4px 12px rgba(12, 22, 18, .06) !important;
+}
+:is(html.theme-ink, html.theme-white) .os-tool.is-on {
+  background: #0e4f3e !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(14, 79, 62, .28) !important;
+}
+
+.bf-theme-option.white .bf-theme-swatch {
+  background: linear-gradient(135deg, #e4e9e6 0 46%, #176b54 47% 70%, #0c1612 71%) !important;
+}
+.bf-theme-preview.white {
+  --preview-bg: #e4e9e6;
+  --preview-surface: #f5f7f6;
+  --preview-ink: #0c1612;
+  --preview-muted: #4a5852;
+  --preview-line: #c5cec8;
+  --preview-primary: #176b54;
+  --preview-info: #2a6a8a;
+  --preview-glow: rgba(23, 107, 84, .18);
+}
+
+/* ---------- Astăzi hero: glass + soft elevation ---------- */
+.os-shell .bf-today-workspace {
+  gap: 18px !important;
+  padding-top: 10px !important;
+}
+
+.os-shell .bf-today-situation,
+.os-shell .bf-today-workspace .bf-today-situation {
+  position: relative !important;
+  overflow: hidden !important;
+  padding: 22px 20px 18px !important;
+  gap: 16px !important;
+  border-radius: var(--bf-premium-radius-xl) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, #fff),
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 72%, transparent)
+    ) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 12%, transparent),
+    0 18px 40px color-mix(in srgb, var(--os-ink, #0c1612) 10%, transparent),
+    0 4px 12px color-mix(in srgb, var(--os-ink, #0c1612) 06%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
+}
+
+.os-shell .bf-today-situation::before {
+  opacity: .14 !important;
+  background:
+    radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 35%, transparent), transparent 42%),
+    linear-gradient(color-mix(in srgb, var(--os-mint, var(--cf-primary)) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 12%, transparent) 1px, transparent 1px) !important;
+  background-size: auto, 20px 20px, 20px 20px !important;
+  mask-image: radial-gradient(120% 90% at 100% 0%, #000 8%, transparent 70%) !important;
+}
+
+:is(html.theme-ink, html.theme-white) .os-shell .bf-today-situation,
+:is(html.theme-ink, html.theme-white) .bf-today-workspace .bf-today-situation {
+  border-color: #b9c5be !important;
+  color: #0c1612 !important;
+  background:
+    radial-gradient(circle at 94% 6%, rgba(23, 107, 84, .16), transparent 38%),
+    linear-gradient(160deg, rgba(255, 255, 255, .92), rgba(245, 247, 246, .78)) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .75) inset,
+    0 22px 48px rgba(12, 22, 18, .12),
+    0 6px 16px rgba(12, 22, 18, .06) !important;
+}
+
+.os-shell .bf-today-situation-number > p,
+.os-shell .bf-today-situation-number p {
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  letter-spacing: .18em !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+}
+
+.os-shell .bf-today-situation-number > strong,
+.os-shell .bf-today-situation-number strong {
+  font-size: clamp(48px, 13vw, 76px) !important;
+  font-weight: 620 !important;
+  letter-spacing: -.055em !important;
+  line-height: .9 !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.os-shell .bf-today-situation-actions {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.4fr) auto !important;
+  gap: 12px !important;
+  padding-top: 6px !important;
+}
+
+/* Capture CTA that pops */
+.os-shell .bf-today-add,
+.os-shell .bf-today-add.bf-os-decide,
+.os-shell .bf-os-decide {
+  min-height: 56px !important;
+  border-radius: 999px !important;
+  font-size: 16px !important;
+  font-weight: 780 !important;
+  letter-spacing: -.01em !important;
+  color: #ffffff !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 88%, #fff), var(--os-mint, var(--cf-primary-strong, var(--cf-primary)))) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset,
+    0 12px 28px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 38%, transparent),
+    0 2px 0 color-mix(in srgb, var(--os-mint, var(--cf-primary)) 40%, transparent) !important;
+  transition: transform var(--bf-premium-press), filter var(--bf-premium-press), box-shadow var(--bf-premium-motion) !important;
+}
+
+.os-shell .bf-today-add:active,
+.os-shell .bf-os-decide:active {
+  transform: scale(.975) translateY(1px) !important;
+  filter: brightness(.97) !important;
+}
+
+:is(html.theme-ink, html.theme-white) .os-shell .bf-today-add,
+:is(html.theme-ink, html.theme-white) .os-shell .bf-os-decide {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .28) inset,
+    0 14px 30px rgba(14, 79, 62, .34) !important;
+}
+
+.os-shell .bf-today-plan-link,
+.os-shell .bf-os-secondary {
+  min-height: 56px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 70%, transparent) !important;
+  box-shadow: 0 0 0 1.5px var(--os-line, var(--cf-line)) !important;
+}
+
+/* ---------- Floating pill dock ---------- */
+.os-shell .os-dock {
+  left: 14px !important;
+  right: 14px !important;
+  bottom: max(10px, var(--os-inset-bottom)) !important;
+  padding: 6px !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 78%, transparent) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent),
+    0 16px 40px color-mix(in srgb, #000 28%, transparent),
+    0 2px 8px color-mix(in srgb, #000 10%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.25) !important;
+}
+
+.os-shell .os-dock button {
+  gap: 3px !important;
+  min-height: 58px !important;
+  height: 58px !important;
+  padding: 6px 4px !important;
+  border-radius: 999px !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 10px !important;
+  font-weight: 720 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.1 !important;
+  transition: background-color var(--bf-premium-motion), color var(--bf-premium-motion), transform var(--bf-premium-press), box-shadow var(--bf-premium-motion) !important;
+}
+
+.os-shell .os-dock button svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.os-shell .os-dock button span {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+  text-align: center !important;
+  max-width: none !important;
+}
+
+.os-shell .os-dock button.is-on,
+.os-shell .os-dock button.active {
+  color: var(--os-mint-fg, #fff) !important;
+  background: var(--os-mint, var(--cf-primary)) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 25%, transparent) inset,
+    0 10px 22px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 36%, transparent) !important;
+}
+
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock {
+  background: rgba(245, 247, 246, .86) !important;
+  box-shadow:
+    0 0 0 1px #b9c5be,
+    0 18px 40px rgba(12, 22, 18, .16) !important;
+}
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock button {
+  color: #4a5852 !important;
+}
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock button.is-on,
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
+  box-shadow: 0 10px 22px rgba(14, 79, 62, .32) !important;
+}
+
+@media (max-width: 430px) {
+  .os-shell .os-dock {
+    left: 10px !important;
+    right: 10px !important;
+  }
+  .os-shell .os-dock button span {
+    font-size: 9.5px !important;
+    font-weight: 750 !important;
+    line-height: 1.12 !important;
+  }
+  .os-shell .bf-today-situation {
+    border-radius: 24px !important;
+    padding: 18px 16px 16px !important;
+  }
+}
+
+/* ---------- Mai mult: section headers + card grid + list rows ---------- */
+.os-shell .bf-more-overview,
+.os-shell .bf-utilities-workspace .bf-more-overview {
+  display: grid !important;
+  gap: 22px !important;
+}
+
+.os-shell .bf-more-group {
+  display: grid !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 14px !important;
+  border-radius: var(--bf-premium-radius-lg) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent);
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, transparent);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--os-ink, #000) 05%, transparent);
+  overflow: hidden !important;
+}
+
+.os-shell .bf-more-group > .bf-kicker {
+  margin: 0 2px 2px !important;
+  color: var(--os-mint, var(--cf-primary)) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .16em !important;
+  opacity: 1 !important;
+}
+
+.os-shell .bf-more-grid,
+.os-shell .bf-utilities-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.os-shell .bf-more-grid > button,
+.os-shell .bf-utilities-grid > button {
+  min-width: 0 !important;
+  min-height: 96px !important;
+  align-content: start !important;
+  gap: 6px !important;
+  padding: 14px 12px !important;
+  border-radius: var(--bf-premium-radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
+  background: color-mix(in srgb, var(--os-bg, var(--cf-bg)) 55%, var(--os-surface, #fff)) !important;
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset !important;
+  overflow: hidden !important;
+  transition: transform var(--bf-premium-press), border-color var(--bf-premium-motion), box-shadow var(--bf-premium-motion) !important;
+}
+
+.os-shell .bf-more-grid > button svg,
+.os-shell .bf-utilities-grid > button svg {
+  width: 22px !important;
+  height: 22px !important;
+  padding: 7px !important;
+  box-sizing: content-box !important;
+  border-radius: 12px !important;
+  color: var(--os-mint, var(--cf-primary)) !important;
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
+}
+
+.os-shell .bf-more-grid > button b,
+.os-shell .bf-utilities-grid > button b {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-top: 2px !important;
+  font-size: 13px !important;
+  font-weight: 780 !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.os-shell .bf-more-grid > button span,
+.os-shell .bf-utilities-grid > button span {
+  color: var(--os-muted, var(--cf-muted)) !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.os-shell .bf-more-grid > button:active,
+.os-shell .bf-utilities-grid > button:active {
+  transform: translateY(1px) scale(.985) !important;
+}
+
+.os-shell .bf-more-tabs {
+  gap: 8px !important;
+  padding-bottom: 8px !important;
+}
+.os-shell .bf-more-tabs button {
+  border-radius: 999px !important;
+  min-height: 40px !important;
+  padding: 0 14px !important;
+  font-weight: 750 !important;
+  white-space: nowrap !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 90%, transparent) !important;
+  color: var(--os-muted, var(--cf-muted)) !important;
+}
+.os-shell .bf-more-tabs button.active {
+  color: var(--os-mint-fg, #fff) !important;
+  background: var(--os-mint, var(--cf-primary)) !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+}
+
+.os-shell .bf-more-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+.os-shell .bf-more-list > article,
+.os-shell .bf-receipt-list > article {
+  display: grid !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  padding: 14px 14px !important;
+  border-radius: var(--bf-premium-radius-md) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, transparent) !important;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--os-ink, #000) 04%, transparent) !important;
+  overflow: hidden !important;
+}
+.os-shell .bf-more-list > article b,
+.os-shell .bf-receipt-list > article b {
+  color: var(--os-ink, var(--cf-ink)) !important;
+  font-weight: 750 !important;
+}
+.os-shell .bf-more-list > article small,
+.os-shell .bf-more-list > article em,
+.os-shell .bf-receipt-list > article small,
+.os-shell .bf-receipt-list > article p {
+  color: var(--os-muted, var(--cf-muted)) !important;
+}
+
+:is(html.theme-ink, html.theme-white) .os-shell .bf-more-group {
+  border-color: #c5cec8;
+  background: rgba(245, 247, 246, .9);
+}
+:is(html.theme-ink, html.theme-white) .os-shell .bf-more-grid > button {
+  border-color: #c5cec8 !important;
+  background: linear-gradient(165deg, #ffffff, #eef2f0) !important;
+}
+:is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
+  box-shadow: 0 10px 22px rgba(14, 79, 62, .28) !important;
+}
+
+/* ---------- Sheets / modals ---------- */
+.bf-modal-backdrop,
+.bf-whats-new-backdrop,
+.bf-command-backdrop {
+  background: color-mix(in srgb, #06110d 52%, transparent) !important;
+  backdrop-filter: blur(10px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.1) !important;
+  animation: bf-premium-fade var(--bf-premium-motion) both !important;
+}
+
+.bf-modal,
+.bf-journal-filter-sheet,
+.ai-financial-setup,
+.bf-whats-new {
+  position: relative !important;
+  border-radius: var(--bf-premium-radius-xl) !important;
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 20%, transparent) inset,
+    0 28px 70px rgba(0, 0, 0, .38) !important;
+  animation: bf-premium-sheet var(--bf-premium-motion) both !important;
+}
+
+@media (max-width: 760px) {
+  .bf-modal-backdrop {
+    align-items: end !important;
+    padding: 0 !important;
+  }
+  .bf-modal,
+  .bf-whats-new,
+  .ai-financial-setup {
+    width: 100% !important;
+    max-height: min(90dvh, 860px) !important;
+    border-radius: 28px 28px 0 0 !important;
+    padding-top: 18px !important;
+  }
+  .bf-modal::before,
+  .bf-whats-new::before,
+  .ai-financial-setup::before,
+  .bf-journal-filter-sheet::before {
+    content: "" !important;
+    display: block !important;
+    width: 44px !important;
+    height: 5px !important;
+    margin: 0 auto 14px !important;
+    border-radius: 999px !important;
+    background: color-mix(in srgb, var(--os-muted, var(--cf-muted, #888)) 45%, transparent) !important;
+  }
+}
+
+@keyframes bf-premium-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes bf-premium-sheet {
+  from { opacity: 0; transform: translateY(18px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- Dark / aurora / navy / cyber — same quality bar ---------- */
+html.theme-dark {
+  --cf-bg: #0c0e11;
+  --cf-surface: #16191e;
+  --cf-surface-alt: #1f242b;
+  --cf-ink: #f1f4f8;
+  --cf-muted: #9aa3ad;
+  --cf-line: #2c323a;
+  --cf-primary: #c5cbd4;
+  --cf-primary-strong: #e2e6ec;
+  --cf-on-primary: #0c0e11;
+  --cf-nav: rgba(22, 25, 30, .88);
+  --cf-shadow: 0 20px 48px rgba(0, 0, 0, .55);
+}
+
+html.theme-dark .os-shell.bf-app {
+  background:
+    radial-gradient(680px 400px at 100% -10%, rgba(197, 203, 212, .1), transparent 55%),
+    linear-gradient(180deg, #101318 0, #0c0e11 150px),
+    #0c0e11 !important;
+}
+html.theme-dark .os-shell .os-dock {
+  background: rgba(22, 25, 30, .82) !important;
+  box-shadow: 0 0 0 1px #2c323a, 0 18px 40px rgba(0, 0, 0, .5) !important;
+}
+html.theme-dark .os-shell .os-dock button.is-on,
+html.theme-dark .os-shell .os-dock button.active {
+  color: #0c0e11 !important;
+  background: linear-gradient(180deg, #e2e6ec, #c5cbd4) !important;
+  box-shadow: 0 10px 22px rgba(197, 203, 212, .22) !important;
+}
+html.theme-dark .os-shell .bf-today-situation {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(197, 203, 212, .12), transparent 40%),
+    linear-gradient(160deg, rgba(31, 36, 43, .95), rgba(22, 25, 30, .88)) !important;
+  border-color: #2c323a !important;
+}
+html.theme-dark .os-shell .bf-today-add,
+html.theme-dark .os-shell .bf-os-decide {
+  color: #0c0e11 !important;
+  background: linear-gradient(180deg, #e8ecf2, #c5cbd4) !important;
+  box-shadow: 0 14px 30px rgba(197, 203, 212, .22) !important;
+}
+
+html.theme-aurora .os-shell.bf-app {
+  background:
+    radial-gradient(720px 420px at 100% -8%, rgba(124, 91, 255, .22), transparent 55%),
+    radial-gradient(480px 320px at 0% 30%, rgba(101, 211, 166, .12), transparent 50%),
+    linear-gradient(180deg, #14102a 0, #0d0b1c 160px),
+    #0d0b1c !important;
+}
+html.theme-aurora .os-shell .os-dock {
+  background: rgba(24, 20, 47, .82) !important;
+  box-shadow: 0 0 0 1px #49416c, 0 18px 40px rgba(0, 0, 0, .45) !important;
+}
+html.theme-aurora .os-shell .os-dock button.is-on,
+html.theme-aurora .os-shell .os-dock button.active {
+  color: #0d0b1c !important;
+  background: linear-gradient(180deg, #7ae0b4, #319e7b) !important;
+  box-shadow: 0 10px 24px rgba(101, 211, 166, .28) !important;
+}
+html.theme-aurora .os-shell .bf-today-situation {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(124, 91, 255, .22), transparent 40%),
+    linear-gradient(160deg, rgba(37, 32, 68, .95), rgba(24, 20, 47, .88)) !important;
+  border-color: #49416c !important;
+}
+html.theme-aurora .os-shell .bf-today-add,
+html.theme-aurora .os-shell .bf-os-decide {
+  color: #0d0b1c !important;
+  background: linear-gradient(180deg, #7ae0b4, #319e7b) !important;
+  box-shadow: 0 14px 30px rgba(101, 211, 166, .3) !important;
+}
+
+html.theme-navy .os-shell.bf-app {
+  background:
+    radial-gradient(720px 420px at 100% -8%, rgba(212, 176, 106, .16), transparent 55%),
+    radial-gradient(480px 320px at 0% 40%, rgba(139, 180, 232, .1), transparent 50%),
+    linear-gradient(180deg, #10182a 0, #0b1220 160px),
+    #0b1220 !important;
+}
+html.theme-navy .os-shell .os-dock {
+  background: rgba(20, 28, 46, .84) !important;
+  box-shadow: 0 0 0 1px #2a3854, 0 18px 40px rgba(0, 0, 0, .5) !important;
+}
+html.theme-navy .os-shell .os-dock button.is-on,
+html.theme-navy .os-shell .os-dock button.active {
+  color: #14100a !important;
+  background: linear-gradient(180deg, #e0c07a, #c49a4a) !important;
+  box-shadow: 0 10px 24px rgba(212, 176, 106, .28) !important;
+}
+html.theme-navy .os-shell .bf-today-situation {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(212, 176, 106, .16), transparent 40%),
+    linear-gradient(160deg, rgba(28, 39, 64, .95), rgba(20, 28, 46, .88)) !important;
+  border-color: #2a3854 !important;
+}
+html.theme-navy .os-shell .bf-today-add,
+html.theme-navy .os-shell .bf-os-decide {
+  color: #14100a !important;
+  background: linear-gradient(180deg, #e0c07a, #c49a4a) !important;
+  box-shadow: 0 14px 30px rgba(212, 176, 106, .28) !important;
+}
+
+html.theme-cyber .os-shell.bf-app {
+  background:
+    radial-gradient(720px 420px at 100% -8%, rgba(124, 255, 196, .14), transparent 55%),
+    radial-gradient(480px 320px at 0% 40%, rgba(124, 255, 196, .06), transparent 50%),
+    linear-gradient(180deg, #0c1216 0, #07090c 160px),
+    #07090c !important;
+}
+html.theme-cyber .os-shell .os-dock {
+  background: rgba(16, 21, 26, .84) !important;
+  box-shadow: 0 0 0 1px #22302a, 0 18px 40px rgba(0, 0, 0, .5) !important;
+}
+html.theme-cyber .os-shell .os-dock button.is-on,
+html.theme-cyber .os-shell .os-dock button.active {
+  color: #04140e !important;
+  background: linear-gradient(180deg, #9dffd4, #5ee0aa) !important;
+  box-shadow: 0 10px 24px rgba(124, 255, 196, .28) !important;
+}
+html.theme-cyber .os-shell .bf-today-situation {
+  background:
+    radial-gradient(circle at 92% 8%, rgba(124, 255, 196, .14), transparent 40%),
+    linear-gradient(160deg, rgba(22, 29, 35, .95), rgba(16, 21, 26, .88)) !important;
+  border-color: #22302a !important;
+}
+html.theme-cyber .os-shell .bf-today-add,
+html.theme-cyber .os-shell .bf-os-decide {
+  color: #04140e !important;
+  background: linear-gradient(180deg, #9dffd4, #5ee0aa) !important;
+  box-shadow: 0 14px 30px rgba(124, 255, 196, .28) !important;
+}
+
+html.theme-dark .bf-modal,
+html.theme-aurora .bf-modal,
+html.theme-navy .bf-modal,
+html.theme-cyber .bf-modal,
+html.theme-dark .bf-whats-new,
+html.theme-aurora .bf-whats-new,
+html.theme-navy .bf-whats-new,
+html.theme-cyber .bf-whats-new {
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .55) !important;
+}
+
+/* Romanian labels never clip on chrome */
+.os-shell .os-dock button span,
+.os-shell .bf-more-tabs button,
+.os-shell .bf-more-grid > button b,
+.os-shell .bf-more-grid > button span {
+  overflow: visible !important;
+  text-overflow: unset !important;
+  max-width: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-modal-backdrop,
+  .bf-whats-new-backdrop,
+  .bf-command-backdrop,
+  .bf-modal,
+  .bf-journal-filter-sheet,
+  .ai-financial-setup,
+  .bf-whats-new,
+  .os-shell .bf-today-add,
+  .os-shell .bf-os-decide,
+  .os-shell .os-dock button,
+  .os-shell .bf-more-grid > button {
+    animation: none !important;
+    transition: none !important;
+  }
+}

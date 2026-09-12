@@ -14,7 +14,22 @@ export const THEME_MIGRATED_CATALOG_KEY = "buget-familie:theme-migrated-catalog-
  * Alb implicit (CSS). Aurora / Navy / Cyber rămân neatins.
  */
 export const THEME_MIGRATED_ATELIER_KEY = "buget-familie:theme-migrated-atelier-2026-09";
-export const WHATS_NEW_KEY = "buget-familie:whats-new-atelier-2026-09";
+/**
+ * Migrare Atelier Premium (fintech bold): utilizatorii pe Alb implicit văd noul
+ * look; cheile vechi de „skin” local sunt curățate o dată.
+ */
+export const THEME_MIGRATED_PREMIUM_KEY = "buget-familie:theme-migrated-premium-2026-09";
+export const WHATS_NEW_KEY = "buget-familie:whats-new-premium-2026-09";
+
+/** Chei locale vechi care puteau bloca look-ul nou pe Alb. */
+export const STALE_SKIN_KEYS = [
+  "buget-familie:skin",
+  "buget-familie:skin-tokens",
+  "buget-familie:custom-theme",
+  "buget-familie:theme-tokens",
+  "buget-familie:visual-skin",
+  "buget-familie:atelier-skin",
+] as const;
 
 export const DEFAULT_THEME: ThemeId = "white";
 
@@ -56,6 +71,7 @@ export const LEGACY_THEME_MAP: Record<string, ThemeId> = {
 export type StorageLike = {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
+  removeItem?: (key: string) => void;
 };
 
 const write = (storage: StorageLike, key: string, value: string) => {
@@ -63,6 +79,14 @@ const write = (storage: StorageLike, key: string, value: string) => {
     storage.setItem(key, value);
   } catch {
     /* preferința de temă nu trebuie să blocheze aplicația */
+  }
+};
+
+const clear = (storage: StorageLike, key: string) => {
+  try {
+    storage.removeItem?.(key);
+  } catch {
+    /* ignore */
   }
 };
 
@@ -76,7 +100,7 @@ const canonicalize = (value: string | null): ThemeId => {
 
 /**
  * Citește tema salvată și, o dată, migrează ID-urile vechi la catalogul slim.
- * Default: White (Atelier Platinum). Nu forțează pe utilizatorii care au deja
+ * Default: White (Atelier Premium). Nu forțează pe utilizatorii care au deja
  * Aurora / Navy / Cyber.
  */
 export function resolveInitialTheme(storage: StorageLike): ThemeId {
@@ -105,6 +129,25 @@ export function resolveInitialTheme(storage: StorageLike): ThemeId {
     } else {
       next = "white";
       write(storage, THEME_STORAGE_KEY, next);
+    }
+  }
+
+  // O dată: Atelier Premium — curăță skin-uri locale vechi și asigură Alb pe default.
+  if (!storage.getItem(THEME_MIGRATED_PREMIUM_KEY)) {
+    write(storage, THEME_MIGRATED_PREMIUM_KEY, "1");
+    for (const key of STALE_SKIN_KEYS) {
+      clear(storage, key);
+    }
+    if (next === "aurora" || next === "navy" || next === "cyber" || next === "dark") {
+      // păstrează temele premium nocturne
+    } else {
+      next = "white";
+      write(storage, THEME_STORAGE_KEY, next);
+      // pe Alb, textura veche poate masca noul look — resetează la plain o dată
+      const bg = storage.getItem("buget-familie:background");
+      if (bg && bg !== "plain") {
+        write(storage, "buget-familie:background", "plain");
+      }
     }
   }
 

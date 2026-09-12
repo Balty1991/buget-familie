@@ -1383,7 +1383,7 @@ const en: Record<string, string> = {
   "Sticlă ultravioletă, cyan controlat — futurist, clar nocturn.": "Ultraviolet glass, controlled cyan — futuristic, clear at night.",
   "Bleumarin profund, auriu discret. Cabinet modern.": "Deep navy, discreet gold. Modern cabinet.",
   "OLED mint/teal neon, cifre clare. Futurist, distinct.": "OLED mint/teal neon, clear figures. Futuristic, distinct.",
-  "Temă Alb Atelier — suprafețe moi, pin cald (fără look-ul ink stark).": "Atelier White theme — soft surfaces, warm pine (no stark ink look).",
+  "Aspect Premium — suprafețe mai adânci, card erou sticlă, dock plutitor.": "Premium look — deeper surfaces, glass hero card, floating dock.",
   "Folosește Alb ziua, Cyber Teal seara și Întunecat noaptea.": "Use White by day, Cyber Teal in the evening and Dark at night.",
   "Perspectivă comună sau personală": "Shared or personal perspective",
   "Comun (familie)": "Shared (family)",

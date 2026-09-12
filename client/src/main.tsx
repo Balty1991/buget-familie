@@ -44,6 +44,7 @@ import "./household-os-chrome.css";
 import "./play-ready-polish.css";
 import "./household-os-themes.css";
 import "./atelier-platinum-elevate.css";
+import "./atelier-premium-redesign.css";
 // Ultimul, ca să poată corecta contrastul peste toate foile de redesign de mai sus.
 import "./contrast-fix.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";

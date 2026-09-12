@@ -110,7 +110,7 @@ export function WhatsNewSheet({ onClose, onOpenTheme, onOpenMore }: { onClose: (
           <li>{t("De verificat — confirmă bonuri și CSV înainte de registru.")}</li>
           <li>{t("Personale vs comune — separă ce e al tău de ce e al casei.")}</li>
           <li>{t("Reguli comerciant — categorie și plic propuse după magazin.")}</li>
-          <li>{t("Temă Alb Atelier — suprafețe moi, pin cald (fără look-ul ink stark).")}</li>
+          <li>{t("Aspect Premium — suprafețe mai adânci, card erou sticlă, dock plutitor.")}</li>
           <li>{t("Împarte o cheltuială pe categorii sau plicuri.")}</li>
           <li>{t("Plan săptămânal din scadențe și obiective, nu doar ultimele 7 zile.")}</li>
           <li>{t("Scor de sănătate pe cicluri salariale și ce l-a mișcat.")}</li>
