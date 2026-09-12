@@ -269,3 +269,88 @@
   margin: 6px 0 0;
   max-width: 36ch;
 }
+
+/* ---- Ce e nou + badge-uri de navigație ---- */
+.bf-whats-new {
+  max-width: 420px;
+  width: min(100% - 24px, 420px);
+}
+.bf-whats-new-list {
+  margin: 4px 0 16px;
+  padding: 0 0 0 18px;
+  display: grid;
+  gap: 8px;
+  color: var(--os-fg, var(--cf-ink));
+  font-size: 14px;
+  line-height: 1.4;
+}
+.bf-whats-new-actions {
+  display: grid;
+  gap: 8px;
+}
+.bf-whats-new-actions .bf-primary,
+.bf-whats-new-actions .bf-secondary {
+  width: 100%;
+}
+
+.os-tool {
+  position: relative;
+}
+.bf-nav-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--os-fg, var(--cf-ink));
+  color: var(--os-bg, var(--cf-bg));
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0;
+  line-height: 1;
+  vertical-align: middle;
+}
+.os-tool .bf-nav-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  margin: 0;
+}
+
+.bf-more-tabs button {
+  position: relative;
+}
+.bf-more-grid button.has-badge b,
+.bf-more-tabs button {
+  display: inline-flex;
+  align-items: center;
+}
+
+.bf-movement-scope {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0 4px;
+}
+.bf-movement-scope button {
+  flex: 1 1 0;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--os-line, var(--cf-line));
+  border-radius: 999px;
+  background: var(--os-surface, var(--cf-surface));
+  color: var(--os-muted, var(--cf-muted));
+  font-size: 12px;
+  font-weight: 650;
+}
+.bf-movement-scope button.active {
+  background: var(--os-fg, var(--cf-ink));
+  color: var(--os-bg, var(--cf-bg));
+  border-color: var(--os-fg, var(--cf-ink));
+}
+
+#bf-merchant-rules {
+  scroll-margin-top: 12px;
+}

@@ -1722,7 +1722,29 @@ const en: Record<string, string> = {
   "Fiecare linie creează o mișcare separată, cu plicul potrivit categoriei.": "Each line creates a separate movement, with the envelope matching the category.",
   "Repartizarea este {split}, dar totalul este {total}. Corectează liniile.": "The split is {split}, but the total is {total}. Fix the lines.",
   "Familia mea": "My family",
-  "Azi": "Today"
+  "Azi": "Today",
+  "ACTUALIZARE": "UPDATE",
+  "Ce e nou": "What's new",
+  "Funcții deja în aplicație, scoase la vedere. O singură dată.": "Features already in the app, now in plain sight. Shown once.",
+  "De verificat — confirmă bonuri și CSV înainte de registru.": "To review — confirm receipts and CSV before they hit the ledger.",
+  "Personale vs comune — separă ce e al tău de ce e al casei.": "Personal vs shared — keep yours separate from the household.",
+  "Reguli comerciant — categorie și plic propuse după magazin.": "Merchant rules — suggested category and envelope by shop.",
+  "Temă Ink Studio — aspect monocrom, pregătit pentru Play.": "Ink Studio theme — monochrome look, Play-ready.",
+  "Împarte o cheltuială pe categorii sau plicuri.": "Split an expense across categories or envelopes.",
+  "Plan săptămânal din scadențe și obiective, nu doar ultimele 7 zile.": "Weekly plan from dues and goals, not just the last 7 days.",
+  "Scor de sănătate pe cicluri salariale și ce l-a mișcat.": "Health score across salary cycles and what moved it.",
+  "Alege tema": "Choose theme",
+  "Deschide Mai mult": "Open More",
+  "Am înțeles": "Got it",
+  "Comune": "Shared",
+  "Personale": "Personal",
+  "Perspectivă: personale sau comune": "View: personal or shared",
+  "Reguli comerciant": "Merchant rules",
+  "categorie și plic după magazin": "category and envelope by shop",
+  "{count} propuneri de confirmat": "{count} proposals to confirm",
+  "Deschide instrumentele": "Open tools",
+  "Deschide instrumentele · {count} de verificat": "Open tools · {count} to review"
 };
+
 
 export default t;

@@ -42,7 +42,7 @@ export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mo
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };
 export const currentLocalMinutes = () => { const now = new Date(); return now.getHours() * 60 + now.getMinutes(); };
-export const automaticTheme = (minutes: number, times: ThemeScheduleTimes): ThemeId => { const dayStart = timeToMinutes(times.dayStart, 360); const eveningStart = timeToMinutes(times.eveningStart, 1020); const nightStart = timeToMinutes(times.nightStart, 1260); if (dayStart < eveningStart && eveningStart < nightStart) return minutes >= dayStart && minutes < eveningStart ? "ivory" : minutes >= eveningStart && minutes < nightStart ? "forest" : "midnight"; return minutes >= 6 * 60 && minutes < 17 * 60 ? "ivory" : minutes >= 17 * 60 && minutes < 21 * 60 ? "forest" : "midnight"; };
+export const automaticTheme = (minutes: number, times: ThemeScheduleTimes): ThemeId => { const dayStart = timeToMinutes(times.dayStart, 360); const eveningStart = timeToMinutes(times.eveningStart, 1020); const nightStart = timeToMinutes(times.nightStart, 1260); if (dayStart < eveningStart && eveningStart < nightStart) return minutes >= dayStart && minutes < eveningStart ? "ink" : minutes >= eveningStart && minutes < nightStart ? "forest" : "midnight"; return minutes >= 6 * 60 && minutes < 17 * 60 ? "ink" : minutes >= 17 * 60 && minutes < 21 * 60 ? "forest" : "midnight"; };
 /**
  * Formatarea se face la fiecare apel, nu o dată la încărcarea modulului: altfel
  * schimbarea limbii nu s-ar vedea până la reîncărcarea aplicației. `.format()` rămâne
@@ -92,6 +92,42 @@ export function DeferBelowFold({ children }: { children: ReactNode }) {
     return () => observer.disconnect();
   }, [ready]);
   return <div ref={ref}>{ready ? children : <div className="bf-below-fold-slot" aria-hidden="true" />}</div>;
+}
+
+
+export function WhatsNewSheet({ onClose, onOpenTheme, onOpenMore }: { onClose: () => void; onOpenTheme: () => void; onOpenMore: () => void }) {
+  const dialogRef = useFocusTrap<HTMLElement>(onClose);
+  const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget }) => {
+    if (event.target === event.currentTarget) onClose();
+  };
+  return (
+    <div className="bf-modal-backdrop bf-whats-new-backdrop" role="presentation" onPointerDown={closeIfBackdrop}>
+      <section ref={dialogRef} tabIndex={-1} className="bf-modal bf-whats-new" role="dialog" aria-modal="true" aria-labelledby="bf-whats-new-title" onPointerDown={(event) => event.stopPropagation()}>
+        <header>
+          <div>
+            <p className="bf-kicker">{t("ACTUALIZARE")}</p>
+            <h2 id="bf-whats-new-title">{t("Ce e nou")}</h2>
+          </div>
+          <button type="button" className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button>
+        </header>
+        <p>{t("Funcții deja în aplicație, scoase la vedere. O singură dată.")}</p>
+        <ul className="bf-whats-new-list">
+          <li>{t("De verificat — confirmă bonuri și CSV înainte de registru.")}</li>
+          <li>{t("Personale vs comune — separă ce e al tău de ce e al casei.")}</li>
+          <li>{t("Reguli comerciant — categorie și plic propuse după magazin.")}</li>
+          <li>{t("Temă Ink Studio — aspect monocrom, pregătit pentru Play.")}</li>
+          <li>{t("Împarte o cheltuială pe categorii sau plicuri.")}</li>
+          <li>{t("Plan săptămânal din scadențe și obiective, nu doar ultimele 7 zile.")}</li>
+          <li>{t("Scor de sănătate pe cicluri salariale și ce l-a mișcat.")}</li>
+        </ul>
+        <div className="bf-whats-new-actions">
+          <button type="button" className="bf-primary" onClick={onOpenTheme}>{t("Alege tema")}</button>
+          <button type="button" className="bf-secondary" onClick={onOpenMore}>{t("Deschide Mai mult")}</button>
+          <button type="button" className="bf-link-button" onClick={onClose}>{t("Am înțeles")}</button>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) { return <label className="bf-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>; }

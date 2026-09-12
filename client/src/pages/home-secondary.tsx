@@ -3,7 +3,7 @@
  */
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
 import { BASE_CURRENCY, activeCurrencies, currenciesMissingRate, supportedCurrencies, addIsoDays, allocationBudget, allocationSpent, allocationWeekStatus, createEmptyAppData, exchangeRateFor, sourceBalanceInCurrency, sourceCurrency, toBaseAmount, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoDate, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, guessCategoryFromText, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind, type ShareScope, transactionShareScope} from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
 import { checkFamilyPassword, generateFamilyPassword } from "@/lib/family-password";
@@ -765,7 +765,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
       <section className="bf-more-group" aria-labelledby="more-daily-title">
         <p className="bf-kicker" id="more-daily-title">{t("ZILNIC")}</p>
         <div className="bf-more-grid">
-          <button onClick={() => setTab("review")}><Inbox size={20} /><b>{t("De verificat")}</b><span>{data.pendingReview.length ? `${data.pendingReview.length} propuneri` : t("import și confirmări")}</span></button>
+          <button className={data.pendingReview.length ? "has-badge" : undefined} onClick={() => setTab("review")}><Inbox size={20} /><b>{t("De verificat")}{data.pendingReview.length > 0 && <span className="bf-nav-count">{data.pendingReview.length}</span>}</b><span>{data.pendingReview.length ? t("{count} propuneri de confirmat", { count: data.pendingReview.length }) : t("import și confirmări")}</span></button>
           <button onClick={() => setTab("receipts")}><ReceiptText size={20} /><b>{t("Bonuri")}</b><span>{data.receipts.length} {t("salvate")}</span></button>
           <button onClick={() => setTab("recurring")}><CalendarClock size={20} /><b>{t("Scadențe")}</b><span>{data.recurring.length} {t("programate")}</span></button>
           <button onClick={onOpenCalendar}><CalendarDays size={20} /><b>{t("Calendar")}</b><span>{t("scadențe și obiective")}</span></button>
@@ -784,6 +784,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
         <p className="bf-kicker" id="more-house-title">{t("CASĂ ȘI TELEFOANE")}</p>
         <div className="bf-more-grid">
           <button onClick={() => setTab("settings")}><Settings size={20} /><b>{isCollaborative ? t("Setări familie") : t("Setări profil")}</b><span>{isCollaborative ? t("membri și surse") : t("surse și categorii")}</span></button>
+          <button onClick={() => { setTab("settings"); window.setTimeout(() => document.getElementById("bf-merchant-rules")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }}><Store size={20} /><b>{t("Reguli comerciant")}</b><span>{t("categorie și plic după magazin")}</span></button>
           <button onClick={() => setTab("sync")}><Cloud size={20} /><b>{t("Sincronizare")}</b><span>{isCollaborative ? t("spațiu conectat") : t("opțională între telefoane")}</span></button>
           <button onClick={() => setTab("reports")}><LayoutDashboard size={20} /><b>{t("Statistici")}</b><span>{t("istoric și categorii")}</span></button>
           <button onClick={() => setTab("assistant")}><Bot size={20} /><b>{t("Asistent")}</b><span>{t("explică datele")}</span></button>
@@ -805,7 +806,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
     if (tab === "guide") return <FamilyGuide />;
     return <SyncPanel {...sync} />;
   };
-  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">{t("MAI MULT")}</p><h1>{t("Tot ce nu e zilnic,")} <em>{t("la un loc.")}</em></h1><p className="bf-helper">{t("Sync, setări, bonuri și scadențe — fără să înghesuim bara de jos.")}</p></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">{t("Glisează pentru mai multe")}</p><div className="bf-more-tabs" role="tablist" aria-label={t("Categorii de instrumente")}>{tabs.map((item) => { const Icon = item.icon; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}</button>; })}</div></div>{content()}</div>;
+  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">{t("MAI MULT")}</p><h1>{t("Tot ce nu e zilnic,")} <em>{t("la un loc.")}</em></h1><p className="bf-helper">{t("Sync, setări, bonuri și scadențe — fără să înghesuim bara de jos.")}</p></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">{t("Glisează pentru mai multe")}</p><div className="bf-more-tabs" role="tablist" aria-label={t("Categorii de instrumente")}>{tabs.map((item) => { const Icon = item.icon; const reviewCount = item.id === "review" ? data.pendingReview.length : 0; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}{reviewCount > 0 && <span className="bf-nav-count">{reviewCount}</span>}</button>; })}</div></div>{content()}</div>;
 }
 
 /**
@@ -980,7 +981,7 @@ function MerchantRulesSection({ data, onChange }: { data: AppData; onChange: (va
     settings: { ...data.settings, merchantRules: rules.filter((item) => item.id !== id) },
   });
   return (
-    <section className="bf-merchant-rules">
+    <section id="bf-merchant-rules" className="bf-merchant-rules">
       <p className="bf-kicker">{t("REGULI COMERCIANT")}</p>
       <h2>{t("Dacă titlul conține…")}</h2>
       <p>{t("Propune categorie sau plic la import, OCR și asistent. Nu salvează nimic fără confirmarea ta.")}</p>

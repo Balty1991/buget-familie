@@ -3,21 +3,21 @@
  * Accentul rămâne gri-albastru discret — fără verde, fără auriu saturat.
  */
 html.theme-ink {
-  --cf-bg: #f4f5f7;
-  --cf-surface: #ffffff;
-  --cf-surface-alt: #e8eaee;
-  --cf-ink: #14171c;
-  --cf-muted: #5c6570;
-  --cf-line: #d5d9e0;
-  --cf-primary: #3a4450;
-  --cf-primary-strong: #1f2730;
-  --cf-info: #5a6572;
-  --cf-danger: #a84f45;
-  --cf-warning: #8a6b2e;
-  --cf-on-forest: #f7f8fa;
-  --cf-nav: rgba(255, 255, 255, .94);
-  --cf-shadow: 0 12px 28px rgba(20, 23, 28, .1);
-  --cf-glow: rgba(58, 68, 80, .08);
+  --cf-bg: #e6e8ed;
+  --cf-surface: #f6f7f9;
+  --cf-surface-alt: #d8dce3;
+  --cf-ink: #0b0d11;
+  --cf-muted: #4a5160;
+  --cf-line: #c2c7d0;
+  --cf-primary: #1a1f28;
+  --cf-primary-strong: #0b0d11;
+  --cf-info: #3a4150;
+  --cf-danger: #8f3a34;
+  --cf-warning: #6e5420;
+  --cf-on-forest: #f4f5f7;
+  --cf-nav: rgba(246, 247, 249, .96);
+  --cf-shadow: 0 10px 22px rgba(11, 13, 17, .12);
+  --cf-glow: rgba(11, 13, 17, .05);
 }
 
 .theme-ink .bf-app {
@@ -51,17 +51,17 @@ html.theme-ink {
 .theme-ink .bf-theme-option.selected { border-color: #1f2730; box-shadow: 0 0 0 2px rgba(31, 39, 48, .16); }
 
 .bf-theme-preview.ink {
-  --preview-bg: #f4f5f7;
+  --preview-bg: #e6e8ed;
   --preview-surface: #ffffff;
-  --preview-ink: #14171c;
+  --preview-ink: #0b0d11;
   --preview-muted: #5c6570;
   --preview-line: #d5d9e0;
-  --preview-primary: #1f2730;
+  --preview-primary: #0b0d11;
   --preview-info: #5a6572;
   --preview-glow: rgba(58, 68, 80, .14);
 }
 .bf-theme-option.ink .bf-theme-swatch {
-  background: linear-gradient(135deg, #f4f5f7 0 52%, #3a4450 53% 72%, #1f2730 73%);
+  background: linear-gradient(135deg, #e6e8ed 0 52%, #3a4150 53% 72%, #0b0d11 73%);
 }
 .bf-theme-option.ink .bf-theme-swatch span {
   background-image: linear-gradient(rgba(20, 23, 28, .12) 1px, transparent 1px),

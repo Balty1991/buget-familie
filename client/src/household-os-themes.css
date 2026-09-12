@@ -155,3 +155,205 @@ html.theme-graphite {
   border: 0 !important;
   border-radius: 999px !important;
 }
+
+/* ============================================================
+ * Ink Studio — look implicit, vizibil diferit de ivory/snow.
+ * Monocrom, dens, ierarhie clară pe 360–430px. Fără mint/teal.
+ * ============================================================ */
+html.theme-ink .os-shell.bf-app,
+html.theme-ink .bf-today-workspace {
+  --os-bg: #e6e8ed;
+  --os-surface: #f6f7f9;
+  --os-surface-2: #d8dce3;
+  --os-fg: #0b0d11;
+  --os-muted: #4a5160;
+  --os-subtle: #6a7280;
+  --os-mint: #1a1f28;
+  --os-mint-fg: #f4f5f7;
+  --os-mint-dim: #d0d4dc;
+  --os-line: #c2c7d0;
+  --os-line-strong: #1a1f28;
+  --os-ink: #0b0d11;
+  --os-warn: #6e5420;
+  --os-out: #8f3a34;
+}
+
+html.theme-ink,
+html.theme-ink body {
+  background: #e6e8ed;
+}
+
+html.theme-ink .os-shell.bf-app {
+  background:
+    linear-gradient(180deg, #dfe2e8 0, #e6e8ed 120px),
+    #e6e8ed !important;
+  color: #0b0d11 !important;
+}
+
+html.theme-ink .os-appbar.bf-appbar {
+  border-bottom-color: #b8bec8 !important;
+  background: #eef0f4 !important;
+}
+
+html.theme-ink .os-brand-copy b {
+  color: #0b0d11 !important;
+  font-weight: 720 !important;
+  letter-spacing: -0.03em !important;
+}
+html.theme-ink .os-brand-copy i {
+  color: #4a5160 !important;
+  font-style: normal !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+}
+
+html.theme-ink .os-tool {
+  color: #0b0d11 !important;
+  background: #f6f7f9 !important;
+  box-shadow: 0 0 0 1px #c2c7d0 !important;
+  border-radius: 12px !important;
+}
+html.theme-ink .os-tool.is-on {
+  background: #0b0d11 !important;
+  color: #f4f5f7 !important;
+}
+
+html.theme-ink .os-shell .os-dock {
+  left: 8px !important;
+  right: 8px !important;
+  padding: 5px !important;
+  border-radius: 16px !important;
+  background: #0b0d11 !important;
+  box-shadow: 0 14px 32px rgba(11, 13, 17, .34) !important;
+  backdrop-filter: none !important;
+}
+html.theme-ink .os-shell .os-dock button {
+  color: #8b93a0 !important;
+  font-size: 10px !important;
+  font-weight: 680 !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 12px !important;
+}
+html.theme-ink .os-shell .os-dock button.is-on,
+html.theme-ink .os-shell .os-dock button.active {
+  color: #f4f5f7 !important;
+  background: #2a303a !important;
+  box-shadow: none !important;
+}
+html.theme-ink .os-shell .os-dock button svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+html.theme-ink .os-shell .bf-today-workspace {
+  gap: 14px !important;
+  padding-left: max(14px, var(--os-inset-left)) !important;
+  padding-right: max(14px, var(--os-inset-right)) !important;
+}
+
+html.theme-ink .os-shell .bf-kicker,
+html.theme-ink .bf-today-workspace .bf-kicker {
+  color: #4a5160 !important;
+  font-size: 10px !important;
+  letter-spacing: 0.16em !important;
+  font-weight: 750 !important;
+}
+
+html.theme-ink .os-shell .bf-page > header h1,
+html.theme-ink .os-shell .bf-today-workspace > header h1,
+html.theme-ink .os-shell .bf-plan-studio-header h1,
+html.theme-ink .os-shell .bf-movements-header h1 {
+  color: #0b0d11 !important;
+  font-family: Fraunces, Georgia, serif !important;
+  font-size: clamp(1.5rem, 6vw, 1.9rem) !important;
+  font-weight: 560 !important;
+  letter-spacing: -0.038em !important;
+  line-height: 1.08 !important;
+}
+html.theme-ink .os-shell .bf-page > header h1 em,
+html.theme-ink .os-shell .bf-today-workspace > header h1 em,
+html.theme-ink .os-shell .bf-movements-header h1 em {
+  font-style: italic !important;
+  color: #2a303a !important;
+}
+
+html.theme-ink .bf-today-situation,
+html.theme-ink .os-shell .bf-today-situation,
+html.theme-ink .bf-today-workspace .bf-today-situation {
+  border: 1px solid #c2c7d0 !important;
+  border-radius: 14px !important;
+  background: #f6f7f9 !important;
+  box-shadow: none !important;
+  padding: 16px 16px 14px !important;
+  gap: 12px !important;
+  color: #0b0d11 !important;
+}
+html.theme-ink .bf-today-situation::before {
+  opacity: .1 !important;
+  background-image:
+    linear-gradient(rgba(11, 13, 17, .09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 13, 17, .09) 1px, transparent 1px) !important;
+  background-size: 14px 14px !important;
+  mask-image: none !important;
+}
+html.theme-ink .bf-today-situation.risk,
+html.theme-ink html:not(.dark) .bf-today-situation.risk {
+  background: #f3ece8 !important;
+  border-color: #c9b4a8 !important;
+}
+
+html.theme-ink .os-shell .bf-sync,
+html.theme-ink .os-shell .bf-settings > section,
+html.theme-ink .os-shell .bf-more-grid,
+html.theme-ink .os-shell .bf-journal-day-pulse,
+html.theme-ink .os-shell .bf-movement-day,
+html.theme-ink .os-shell .bf-household-card,
+html.theme-ink .os-shell .bf-household-recap {
+  border-radius: 14px !important;
+  border-color: #c2c7d0 !important;
+  box-shadow: none !important;
+}
+
+html.theme-ink .os-shell .bf-primary {
+  color: #f4f5f7 !important;
+  background: #0b0d11 !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+}
+html.theme-ink .os-shell .bf-secondary {
+  color: #0b0d11 !important;
+  background: #f6f7f9 !important;
+  border: 1px solid #c2c7d0 !important;
+}
+
+html.theme-ink .os-desktop-nav button.is-on,
+html.theme-ink .os-desktop-nav button.active {
+  color: #f4f5f7 !important;
+  background: #0b0d11 !important;
+  box-shadow: none !important;
+}
+
+html.theme-ink .bf-nav-count {
+  background: #0b0d11;
+  color: #f4f5f7;
+}
+html.theme-ink .os-tool.is-on .bf-nav-count {
+  background: #f4f5f7;
+  color: #0b0d11;
+}
+
+html.theme-ink .bf-whats-new {
+  background: #f6f7f9 !important;
+  color: #0b0d11 !important;
+  border: 1px solid #c2c7d0 !important;
+  border-radius: 16px !important;
+}
+
+@media (max-width: 430px) {
+  html.theme-ink .os-shell .os-dock button span {
+    font-size: 10px !important;
+  }
+  html.theme-ink .os-shell .bf-today-workspace {
+    gap: 12px !important;
+  }
+}
