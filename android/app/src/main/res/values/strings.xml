@@ -10,4 +10,6 @@
     <string name="widget_receipt">Bon</string>
     <string name="widget_description">Adaugă o cheltuială sau fotografiază un bon fără a deschide aplicația.</string>
     <string name="tile_label">Cheltuială rapidă</string>
+    <string name="reminder_channel_name">Reamintiri plan</string>
+    <string name="reminder_channel_desc">Tranșe săptămânale, salariu și plicuri — doar pe acest telefon.</string>
 </resources>

@@ -26,6 +26,7 @@ public class MainActivity extends BridgeActivity {
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
+    webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     ViewCompat.setOnApplyWindowInsetsListener(webView, (view, insets) -> {
       final Insets bars = insets.getInsets(
         WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
@@ -82,4 +83,20 @@ public class MainActivity extends BridgeActivity {
         + "})()";
     webView.evaluateJavascript(js, null);
   }
+
+  /**
+   * Bridge minim: JS trimite doar titlu/text/ora; nativul nu citește registrul.
+   */
+  private final class ReminderBridge {
+    @JavascriptInterface
+    public void schedule(String payloadJson) {
+      ReminderScheduler.scheduleJson(MainActivity.this.getApplicationContext(), payloadJson);
+    }
+
+    @JavascriptInterface
+    public void cancelAll() {
+      ReminderScheduler.cancelAll(MainActivity.this.getApplicationContext());
+    }
+  }
+
 }

@@ -24,6 +24,13 @@ Nu putem testa widgetul / dala pe un dispozitiv fizic în mediul de build. Înai
 - [ ] **Nu** activa Enforce pe Firestore până confirmi tokenuri pe build-ul publicat
 - [ ] Pentru debug Capacitor: `VITE_APPCHECK_DEBUG=true` + debug token în Console
 
+
+## Reamintiri WorkManager (Android)
+
+- [ ] Cu alertele activate, închide aplicația: o tranșă care începe mâine / salariu aproape ar trebui să notifice (orizont scurt, fără spam)
+- [ ] Canalul „Reamintiri plan” apare în Setări sistem → Aplicații → Buget Familie → Notificări
+- [ ] Widgetul / dala rămân neschimbate (probe hardware pe telefon — vezi secțiunile de mai sus)
+
 ## Sync / dispozitive
 
 - [ ] Generează parola o dată pe telefonul A, introdu-o pe B

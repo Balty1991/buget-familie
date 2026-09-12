@@ -9,9 +9,11 @@ import {
   formatDate,
   isoToday,
   pendingRecurringInPlan,
+  planEndDate,
   planForecast,
   type AppData,
 } from "@/lib/finance-data";
+import { calendarBudget } from "@/lib/calendar-budget";
 import { getLocale, t } from "./i18n";
 
 const PREF_KEY = "buget-familie:notifications-enabled";
@@ -187,6 +189,67 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     });
   }
 
+  // Tranșă săptămânală: reamintire în dimineața zilei de start (WorkManager pe Android).
+  const planEnd = planEndDate(plan);
+  const weeklyPacedTotal = (plan.allocations || []).filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
+  if (plan.periodStart && planEnd && weeklyPacedTotal > 0) {
+    const weeks = calendarBudget(weeklyPacedTotal, plan.periodStart, planEnd)?.weeks || [];
+    for (const week of weeks) {
+      if (week.start < today) continue;
+      const start = new Date(`${week.start}T12:00:00`);
+      const todayNoon = new Date(`${today}T12:00:00`);
+      const days = Math.round((start.valueOf() - todayNoon.valueOf()) / 86_400_000);
+      if (days < 0 || days > 7) continue;
+      const when = atLocalHour(days, 9, 0);
+      if (when.getTime() <= Date.now() - 60_000) continue;
+      alerts.push({
+        id: id++,
+        title: days === 0 ? t("Tranșă nouă azi") : t("Tranșă săptămânală aproape"),
+        body: t("S{index}: {amount} pentru {days} zile ({start} – {end}).", {
+          index: week.index,
+          amount: money(week.amount),
+          days: week.days,
+          start: formatDate(week.start),
+          end: formatDate(week.end),
+        }),
+        at: when,
+        tag: `tranche-${week.start}-${week.index}`,
+      });
+      break; // o singură tranșă viitoare — nu spamăm tot ciclul
+    }
+  }
+
+  // Salariu / următorul venit: cu o zi înainte seara și în dimineața zilei tipice.
+  const payday = plan.nextPayday || plan.earliestPayday;
+  if (payday && payday >= today) {
+    const due = new Date(`${payday}T12:00:00`);
+    const todayNoon = new Date(`${today}T12:00:00`);
+    const days = Math.round((due.valueOf() - todayNoon.valueOf()) / 86_400_000);
+    if (days === 1) {
+      const when = atLocalHour(0, 18, 30);
+      if (when.getTime() > Date.now() - 60_000) {
+        alerts.push({
+          id: id++,
+          title: t("Venit mâine"),
+          body: t("Următorul venit este planificat pe {date}. Pregătește repartizarea în Plan.", { date: formatDate(payday) }),
+          at: when,
+          tag: `payday-eve-${payday}`,
+        });
+      }
+    } else if (days === 0) {
+      const when = atLocalHour(0, 9, 15);
+      if (when.getTime() > Date.now() - 60_000) {
+        alerts.push({
+          id: id++,
+          title: t("Ziua venitului"),
+          body: t("Astăzi e data tipică a venitului ({date}). Confirmă încasarea când ajung banii.", { date: formatDate(payday) }),
+          at: when,
+          tag: `payday-day-${payday}`,
+        });
+      }
+    }
+  }
+
   return alerts.slice(0, 8);
 }
 
@@ -337,6 +400,30 @@ export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppDa
 /**
  * Programează alertele din datele locale. Debounce natural prin cheia zilnică.
  */
+
+type NativeReminderBridge = { schedule?: (payload: string) => void; cancelAll?: () => void };
+
+function scheduleWorkManager(alerts: PlannedAlert[]): boolean {
+  if (!isNative()) return false;
+  try {
+    const bridge = (window as unknown as { BugetFamilieReminders?: NativeReminderBridge }).BugetFamilieReminders;
+    if (!bridge?.schedule) return false;
+    const payload = JSON.stringify(
+      alerts.slice(0, 6).map((alert) => ({
+        id: alert.id,
+        title: alert.title,
+        body: alert.body,
+        tag: alert.tag,
+        at: alert.at.getTime(),
+      })),
+    );
+    bridge.schedule(payload);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function scheduleFinancialReminders(data: AppData): Promise<void> {
   if (!isNotificationsEnabled()) return;
   const permission = await getNotificationPermission();
@@ -354,6 +441,8 @@ export async function scheduleFinancialReminders(data: AppData): Promise<void> {
   const alerts = buildAlerts(data);
   if (!alerts.length) return;
 
+  // WorkManager acoperă fundalul Android (tranșă/salariu) chiar dacă tab-ul e închis.
+  scheduleWorkManager(alerts);
   const usedNative = await tryCapacitorSchedule(alerts);
   if (!usedNative) {
     if (permission === "granted") await scheduleWeb(alerts);
