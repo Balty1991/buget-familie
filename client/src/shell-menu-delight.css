@@ -1,0 +1,739 @@
+/**
+ * Shell + menus + motion delight (2026-09-12).
+ * Atmospheric depth, premium Mai mult rows, tasteful transitions.
+ * Does NOT restyle primary/secondary action buttons.
+ * Respects prefers-reduced-motion and Mod simplu.
+ */
+
+:root {
+  --bf-delight-ms: 420ms;
+  --bf-delight-spring: cubic-bezier(.22, 1.15, .28, 1);
+  --bf-delight-sheet: cubic-bezier(.16, 1.12, .24, 1);
+  --bf-delight-stagger: 38ms;
+}
+
+/* ============================================================
+ * 1) Shell graphics — mesh / aurora / soft noise per theme
+ * ============================================================ */
+
+.os-shell.bf-app {
+  --bf-mesh-a: color-mix(in srgb, var(--cf-primary, var(--os-mint)) 26%, transparent);
+  --bf-mesh-b: color-mix(in srgb, var(--cf-info, #6aa8ff) 16%, transparent);
+  --bf-mesh-c: color-mix(in srgb, var(--cf-warning, #e8c38a) 10%, transparent);
+}
+
+.os-shell.bf-app::before {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: -28% -18% auto -18% !important;
+  height: min(58vh, 480px) !important;
+  width: auto !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(42% 58% at 86% 8%, var(--bf-mesh-a), transparent 68%),
+    radial-gradient(36% 48% at 8% 4%, var(--bf-mesh-b), transparent 62%),
+    radial-gradient(28% 36% at 62% 42%, var(--bf-mesh-c), transparent 70%),
+    conic-gradient(from 210deg at 70% 12%, transparent 0 55%, color-mix(in srgb, var(--cf-primary) 8%, transparent) 72%, transparent 100%) !important;
+  opacity: .92 !important;
+  filter: saturate(1.05);
+  transform: translateZ(0);
+}
+
+/* Soft film grain / mesh veil — cheap, no animation by default */
+.os-shell.bf-app::after {
+  content: "" !important;
+  display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  opacity: .035 !important;
+  background-image:
+    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--cf-ink) 55%, transparent) .6px, transparent .7px),
+    radial-gradient(circle at 80% 40%, color-mix(in srgb, var(--cf-ink) 45%, transparent) .5px, transparent .65px),
+    radial-gradient(circle at 40% 80%, color-mix(in srgb, var(--cf-ink) 40%, transparent) .45px, transparent .6px) !important;
+  background-size: 18px 18px, 22px 22px, 26px 26px !important;
+  mix-blend-mode: soft-light;
+}
+
+html.theme-white .os-shell.bf-app {
+  --bf-mesh-a: color-mix(in srgb, #0e7a5c 16%, transparent);
+  --bf-mesh-b: color-mix(in srgb, #2f6fed 10%, transparent);
+  --bf-mesh-c: color-mix(in srgb, #c9a227 8%, transparent);
+}
+html.theme-white .os-shell.bf-app::before { opacity: .62 !important; }
+html.theme-white .os-shell.bf-app::after {
+  opacity: .028 !important;
+  mix-blend-mode: multiply;
+}
+
+html.theme-aurora .os-shell.bf-app {
+  --bf-mesh-a: rgba(124, 91, 255, .32);
+  --bf-mesh-b: rgba(101, 211, 166, .18);
+  --bf-mesh-c: rgba(116, 208, 255, .14);
+}
+html.theme-navy .os-shell.bf-app {
+  --bf-mesh-a: rgba(212, 176, 106, .24);
+  --bf-mesh-b: rgba(139, 180, 232, .16);
+  --bf-mesh-c: rgba(90, 130, 200, .1);
+}
+html.theme-cyber .os-shell.bf-app {
+  --bf-mesh-a: rgba(124, 255, 196, .22);
+  --bf-mesh-b: rgba(80, 220, 200, .12);
+  --bf-mesh-c: rgba(124, 255, 196, .08);
+}
+html.theme-dark .os-shell.bf-app {
+  --bf-mesh-a: rgba(197, 203, 212, .14);
+  --bf-mesh-b: rgba(120, 140, 170, .1);
+  --bf-mesh-c: rgba(160, 170, 190, .06);
+}
+
+html.background-aurora .os-shell.bf-app::before,
+html.theme-aurora .os-shell.bf-app::before {
+  background:
+    radial-gradient(48% 62% at 88% 6%, var(--bf-mesh-a), transparent 66%),
+    radial-gradient(38% 50% at 6% 12%, var(--bf-mesh-b), transparent 60%),
+    radial-gradient(32% 40% at 55% 55%, var(--bf-mesh-c), transparent 68%),
+    linear-gradient(125deg, transparent 40%, color-mix(in srgb, var(--cf-info) 8%, transparent) 70%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+  .os-shell.bf-app::before {
+    height: min(46vh, 340px) !important;
+  }
+  .os-shell.bf-app::after { opacity: .022 !important; }
+}
+
+/* Plain background preference: quieter wash */
+html.background-plain .os-shell.bf-app::after { opacity: .012 !important; }
+html.background-plain .os-shell.bf-app::before { opacity: .55 !important; }
+
+/* ============================================================
+ * 2) Menus — Mai mult / app-bar tools / section headers
+ * ============================================================ */
+
+/* App-bar overflow cluster */
+.os-shell .os-tools {
+  gap: 4px !important;
+  padding: 5px !important;
+  border-radius: 999px !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, transparent),
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 72%, transparent)
+    ) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 75%, transparent),
+    0 8px 20px color-mix(in srgb, var(--os-ink, var(--cf-ink)) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.12);
+}
+
+.os-shell .os-tool {
+  border-radius: 999px !important;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 220ms var(--bf-delight-spring),
+    transform 180ms var(--bf-delight-spring) !important;
+}
+
+.os-shell .os-tool.is-on {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 35%, transparent),
+    0 0 18px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+}
+
+html.theme-white .os-shell .os-tools {
+  box-shadow:
+    0 0 0 1px rgba(18, 32, 28, .08),
+    0 8px 18px rgba(18, 32, 28, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+
+/* Section headers — clearer grouping */
+.os-shell .bf-section-heading {
+  position: relative;
+  gap: 12px !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 10px !important;
+}
+
+.os-shell .bf-section-heading::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--os-mint, var(--cf-primary)) 45%, transparent),
+    color-mix(in srgb, var(--os-line, var(--cf-line)) 55%, transparent) 42%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.os-shell .bf-section-heading h2 {
+  letter-spacing: -.03em !important;
+}
+
+.os-shell .bf-section-heading .bf-kicker {
+  color: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 70%, var(--os-muted, var(--cf-muted))) !important;
+}
+
+/* Mai mult workspace hero */
+.os-shell .bf-utilities-workspace > .bf-topline {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-bottom: 8px !important;
+  padding: 20px 18px 18px !important;
+  border-radius: 24px !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+  background:
+    radial-gradient(110% 90% at 108% -20%, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 26%, transparent), transparent 55%),
+    radial-gradient(80% 70% at -12% 110%, color-mix(in srgb, var(--cf-info, #6aa8ff) 14%, transparent), transparent 50%),
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 96%, transparent),
+      color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 70%, transparent)
+    ) !important;
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--os-ink, var(--cf-ink)) 10%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
+  backdrop-filter: blur(16px) saturate(1.1);
+}
+
+.os-shell .bf-utilities-workspace > .bf-topline h1 {
+  max-width: 16ch !important;
+}
+
+/* Tab strip — premium capsule rail */
+.os-shell .bf-more-tab-region {
+  margin: 14px 0 18px !important;
+  padding: 8px !important;
+  border-radius: 18px !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 78%, transparent) !important;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 90%, transparent),
+      color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 55%, transparent)
+    ) !important;
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--os-ink, var(--cf-ink)) 6%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent) !important;
+}
+
+.os-shell .bf-more-tabs {
+  gap: 6px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.os-shell .bf-more-tabs button {
+  position: relative !important;
+  min-height: 42px !important;
+  padding: 0 14px !important;
+  border-radius: 12px !important;
+  font-weight: 680 !important;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    box-shadow 240ms var(--bf-delight-spring),
+    transform 200ms var(--bf-delight-spring) !important;
+}
+
+.os-shell .bf-more-tabs button.active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 18px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent) !important;
+}
+
+/* Grouping panels */
+.os-shell .bf-more-overview {
+  gap: 26px !important;
+}
+
+.os-shell .bf-more-group {
+  gap: 10px !important;
+  padding: 0 !important;
+}
+
+.os-shell .bf-more-group > .bf-kicker,
+.os-shell .bf-more-section-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  margin: 0 2px 4px !important;
+  padding: 5px 10px !important;
+  border-radius: 999px !important;
+  color: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 75%, var(--os-muted)) !important;
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--os-mint, var(--cf-primary)) 18%, transparent) !important;
+  backdrop-filter: blur(8px);
+  letter-spacing: .14em !important;
+  font-size: 10px !important;
+  font-weight: 780 !important;
+}
+
+.os-shell .bf-more-grid,
+.os-shell .bf-settings-group {
+  position: relative !important;
+  gap: 0 !important;
+  grid-template-columns: 1fr !important;
+  overflow: hidden !important;
+  border-radius: 20px !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 82%, transparent) !important;
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 97%, transparent),
+      color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 55%, transparent)
+    ) !important;
+  box-shadow:
+    0 16px 36px color-mix(in srgb, var(--os-ink, var(--cf-ink)) 8%, transparent),
+    0 2px 0 color-mix(in srgb, #fff 6%, transparent) inset,
+    inset 0 0 0 1px color-mix(in srgb, #fff 4%, transparent) !important;
+}
+
+/* Premium list rows */
+.os-shell .bf-more-grid > button,
+.os-shell .bf-settings-row {
+  grid-template-columns: 44px minmax(0, 1fr) 18px !important;
+  gap: 14px !important;
+  min-height: 68px !important;
+  padding: 13px 15px !important;
+  border-bottom-color: color-mix(in srgb, var(--os-line, var(--cf-line)) 55%, transparent) !important;
+  transition:
+    background-color 160ms ease,
+    transform 160ms var(--bf-delight-spring) !important;
+}
+
+.os-shell .bf-more-grid > button:hover,
+.os-shell .bf-settings-row:hover {
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 6%, transparent) !important;
+}
+
+.os-shell .bf-more-grid > button:active,
+.os-shell .bf-settings-row:active {
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 11%, transparent) !important;
+}
+
+/* Icon wells with soft glow */
+.os-shell .bf-more-grid > button > svg:first-child,
+.os-shell .bf-settings-row > svg:first-child,
+.os-shell .bf-settings-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 13px !important;
+  color: var(--os-mint, var(--cf-primary)) !important;
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, #fff 22%, transparent), transparent 55%),
+    color-mix(in srgb, var(--os-mint, var(--cf-primary)) 16%, transparent) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent),
+    0 6px 14px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent) !important;
+}
+
+.os-shell .bf-more-grid > button:nth-child(3n+2) > svg:first-child,
+.os-shell .bf-settings-row:nth-child(3n+2) > svg:first-child {
+  color: var(--cf-info, #6aa8ff) !important;
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, #fff 18%, transparent), transparent 55%),
+    color-mix(in srgb, var(--cf-info, #6aa8ff) 16%, transparent) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--cf-info, #6aa8ff) 22%, transparent),
+    0 6px 14px color-mix(in srgb, var(--cf-info, #6aa8ff) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent) !important;
+}
+
+.os-shell .bf-more-grid > button:nth-child(3n) > svg:first-child,
+.os-shell .bf-settings-row:nth-child(3n) > svg:first-child {
+  color: var(--cf-warning, #e8c38a) !important;
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, #fff 16%, transparent), transparent 55%),
+    color-mix(in srgb, var(--cf-warning, #e8c38a) 16%, transparent) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--cf-warning, #e8c38a) 24%, transparent),
+    0 6px 14px color-mix(in srgb, var(--cf-warning, #e8c38a) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent) !important;
+}
+
+.os-shell .bf-settings-copy b {
+  font-size: 15.5px !important;
+  font-weight: 680 !important;
+  letter-spacing: -.015em !important;
+}
+
+.os-shell .bf-settings-copy small {
+  font-size: 12.5px !important;
+  opacity: .92;
+}
+
+.os-shell .bf-settings-chevron,
+.os-shell .bf-more-grid > button > svg:last-child {
+  opacity: .55;
+  transition: transform 180ms var(--bf-delight-spring), opacity 160ms ease;
+}
+
+.os-shell .bf-settings-row:hover .bf-settings-chevron,
+.os-shell .bf-more-grid > button:hover > svg:last-child {
+  opacity: .9;
+  transform: translateX(2px);
+}
+
+/* Theme-tuned panel depth */
+html.theme-white .os-shell .bf-more-grid,
+html.theme-white .os-shell .bf-settings-group,
+html.theme-white .os-shell .bf-utilities-workspace > .bf-topline,
+html.theme-white .os-shell .bf-more-tab-region {
+  box-shadow:
+    0 14px 32px rgba(18, 32, 28, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .92) !important;
+}
+
+html.theme-aurora .os-shell .bf-more-grid,
+html.theme-aurora .os-shell .bf-settings-group {
+  box-shadow:
+    0 16px 40px rgba(8, 4, 24, .35),
+    0 0 28px rgba(124, 91, 255, .1),
+    inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+
+html.theme-navy .os-shell .bf-more-grid,
+html.theme-navy .os-shell .bf-settings-group {
+  box-shadow:
+    0 16px 40px rgba(4, 10, 24, .4),
+    0 0 24px rgba(212, 176, 106, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html.theme-cyber .os-shell .bf-more-grid,
+html.theme-cyber .os-shell .bf-settings-group {
+  box-shadow:
+    0 16px 40px rgba(2, 12, 10, .42),
+    0 0 26px rgba(124, 255, 196, .1),
+    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+
+html.theme-dark .os-shell .bf-more-grid,
+html.theme-dark .os-shell .bf-settings-group {
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, .38),
+    inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+}
+
+/* Command palette / quick overflow list */
+body .bf-command-palette,
+.bf-command-palette {
+  border-radius: 22px !important;
+  box-shadow:
+    0 28px 64px color-mix(in srgb, #000 42%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 70%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent) !important;
+}
+
+.bf-command-list button,
+.bf-command-list [role="option"] {
+  border-radius: 14px !important;
+  transition: background-color 140ms ease, transform 160ms var(--bf-delight-spring) !important;
+}
+
+.bf-command-icon {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 20%, transparent),
+    0 4px 12px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 16%, transparent) !important;
+}
+
+.bf-command-section {
+  margin: 12px 4px 6px !important;
+  padding: 4px 8px !important;
+  width: max-content;
+  border-radius: 999px;
+  font-size: 10px !important;
+  font-weight: 780 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 70%, var(--os-muted, var(--cf-muted))) !important;
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 10%, transparent) !important;
+}
+
+/* ============================================================
+ * 3) Effects & animations — page / tab / card / dock / sheet
+ * ============================================================ */
+
+@keyframes bf-delight-page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bf-delight-row-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bf-delight-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bf-delight-sheet-spring {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0) scale(.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(0, -3px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bf-delight-dock-morph {
+  0% { transform: scale(.92); }
+  55% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .os-shell .bf-page,
+  .os-shell .bf-today-workspace,
+  .os-shell .bf-movements-workspace,
+  .os-shell .bf-obligations-workspace,
+  .os-shell .bf-plan-workspace,
+  .os-shell .bf-insights-workspace,
+  .os-shell .bf-utilities-workspace,
+  .os-shell .bf-goals-workspace,
+  .os-shell .bf-habits-workspace,
+  .os-shell .bf-calendar-workspace {
+    animation: bf-delight-page-in var(--bf-delight-ms) var(--bf-delight-spring) both;
+  }
+
+  .os-shell .bf-more-overview {
+    animation: bf-delight-panel-in 380ms var(--bf-delight-spring) both;
+  }
+
+  .os-shell .bf-more-group {
+    animation: bf-delight-panel-in 420ms var(--bf-delight-spring) both;
+  }
+  .os-shell .bf-more-group:nth-child(1) { animation-delay: 20ms; }
+  .os-shell .bf-more-group:nth-child(2) { animation-delay: 70ms; }
+  .os-shell .bf-more-group:nth-child(3) { animation-delay: 120ms; }
+  .os-shell .bf-more-group:nth-child(4) { animation-delay: 170ms; }
+  .os-shell .bf-more-group:nth-child(5) { animation-delay: 220ms; }
+
+  .os-shell .bf-more-grid > button,
+  .os-shell .bf-settings-row {
+    animation: bf-delight-row-in 360ms var(--bf-delight-spring) both;
+  }
+  .os-shell .bf-more-grid > button:nth-child(1),
+  .os-shell .bf-settings-row:nth-child(1) { animation-delay: calc(1 * var(--bf-delight-stagger)); }
+  .os-shell .bf-more-grid > button:nth-child(2),
+  .os-shell .bf-settings-row:nth-child(2) { animation-delay: calc(2 * var(--bf-delight-stagger)); }
+  .os-shell .bf-more-grid > button:nth-child(3),
+  .os-shell .bf-settings-row:nth-child(3) { animation-delay: calc(3 * var(--bf-delight-stagger)); }
+  .os-shell .bf-more-grid > button:nth-child(4),
+  .os-shell .bf-settings-row:nth-child(4) { animation-delay: calc(4 * var(--bf-delight-stagger)); }
+  .os-shell .bf-more-grid > button:nth-child(5),
+  .os-shell .bf-settings-row:nth-child(5) { animation-delay: calc(5 * var(--bf-delight-stagger)); }
+  .os-shell .bf-more-grid > button:nth-child(6),
+  .os-shell .bf-settings-row:nth-child(6) { animation-delay: calc(6 * var(--bf-delight-stagger)); }
+  .os-shell .bf-more-grid > button:nth-child(7),
+  .os-shell .bf-settings-row:nth-child(7) { animation-delay: calc(7 * var(--bf-delight-stagger)); }
+  .os-shell .bf-more-grid > button:nth-child(8),
+  .os-shell .bf-settings-row:nth-child(8) { animation-delay: calc(8 * var(--bf-delight-stagger)); }
+
+  /* Card reveal on common surfaces */
+  .os-shell .bf-pulse-grid article,
+  .os-shell .bf-ledger-mini,
+  .os-shell .bf-today-situation,
+  .os-shell .bf-movement-day,
+  .os-shell .bf-obligation-ledger article,
+  .os-shell .bf-goal-card,
+  .os-shell .bf-more-list article {
+    animation: bf-delight-row-in 400ms var(--bf-delight-spring) both;
+  }
+  .os-shell .bf-pulse-grid article:nth-child(2) { animation-delay: 50ms; }
+  .os-shell .bf-pulse-grid article:nth-child(3) { animation-delay: 90ms; }
+  .os-shell .bf-more-list article:nth-child(2) { animation-delay: 40ms; }
+  .os-shell .bf-more-list article:nth-child(3) { animation-delay: 80ms; }
+  .os-shell .bf-more-list article:nth-child(4) { animation-delay: 120ms; }
+
+  /* Sheet spring */
+  .bf-modal,
+  .bf-health-sheet,
+  .bf-theme-picker,
+  .bf-whats-new,
+  .bf-onboarding,
+  .bf-command-palette,
+  .bf-plan-sheet,
+  .bf-journal-filter-sheet {
+    animation: bf-delight-sheet-spring 480ms var(--bf-delight-sheet) both !important;
+  }
+
+  /* Dock morph on active */
+  .os-shell .os-dock button.is-on svg,
+  .os-shell .os-dock button.active svg {
+    animation: bf-delight-dock-morph 420ms var(--bf-delight-spring) both;
+  }
+
+  .os-shell .os-dock button {
+    transition:
+      transform 260ms var(--bf-delight-spring),
+      background-color 220ms ease,
+      color 220ms ease,
+      box-shadow 260ms var(--bf-delight-spring) !important;
+  }
+
+  .os-shell .os-dock button.is-on,
+  .os-shell .os-dock button.active {
+    transform: translateY(-2px) scale(1.02);
+  }
+}
+
+/* ============================================================
+ * Reduced motion + Simple mode (calmer)
+ * ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .os-shell.bf-app::before,
+  .os-shell.bf-app::after {
+    filter: none !important;
+  }
+
+  .os-shell .bf-page,
+  .os-shell .bf-today-workspace,
+  .os-shell .bf-movements-workspace,
+  .os-shell .bf-obligations-workspace,
+  .os-shell .bf-plan-workspace,
+  .os-shell .bf-insights-workspace,
+  .os-shell .bf-utilities-workspace,
+  .os-shell .bf-goals-workspace,
+  .os-shell .bf-habits-workspace,
+  .os-shell .bf-calendar-workspace,
+  .os-shell .bf-more-overview,
+  .os-shell .bf-more-group,
+  .os-shell .bf-more-grid > button,
+  .os-shell .bf-settings-row,
+  .os-shell .bf-pulse-grid article,
+  .os-shell .bf-ledger-mini,
+  .os-shell .bf-today-situation,
+  .os-shell .bf-movement-day,
+  .os-shell .bf-obligation-ledger article,
+  .os-shell .bf-goal-card,
+  .os-shell .bf-more-list article,
+  .bf-modal,
+  .bf-health-sheet,
+  .bf-theme-picker,
+  .bf-whats-new,
+  .bf-onboarding,
+  .bf-command-palette,
+  .bf-plan-sheet,
+  .bf-journal-filter-sheet,
+  .os-shell .os-dock button.is-on svg,
+  .os-shell .os-dock button.active svg {
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+
+  .os-shell .os-dock button.is-on,
+  .os-shell .os-dock button.active,
+  .os-shell .bf-more-tabs button.active,
+  .os-shell .os-tool {
+    transform: none !important;
+  }
+}
+
+html[data-simple-mode="1"] .os-shell.bf-app::before {
+  opacity: .4 !important;
+  filter: none !important;
+}
+html[data-simple-mode="1"] .os-shell.bf-app::after {
+  opacity: .012 !important;
+}
+
+html[data-simple-mode="1"] .os-shell .bf-utilities-workspace > .bf-topline,
+html[data-simple-mode="1"] .os-shell .bf-more-tab-region,
+html[data-simple-mode="1"] .os-shell .bf-more-grid,
+html[data-simple-mode="1"] .os-shell .bf-settings-group {
+  box-shadow:
+    0 6px 16px color-mix(in srgb, var(--os-ink, var(--cf-ink)) 5%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent) !important;
+  backdrop-filter: none !important;
+}
+
+html[data-simple-mode="1"] .os-shell .bf-more-grid > button > svg:first-child,
+html[data-simple-mode="1"] .os-shell .bf-settings-row > svg:first-child {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 16%, transparent) !important;
+}
+
+html[data-simple-mode="1"] .os-shell .bf-page,
+html[data-simple-mode="1"] .os-shell .bf-today-workspace,
+html[data-simple-mode="1"] .os-shell .bf-movements-workspace,
+html[data-simple-mode="1"] .os-shell .bf-obligations-workspace,
+html[data-simple-mode="1"] .os-shell .bf-plan-workspace,
+html[data-simple-mode="1"] .os-shell .bf-insights-workspace,
+html[data-simple-mode="1"] .os-shell .bf-utilities-workspace,
+html[data-simple-mode="1"] .os-shell .bf-more-overview,
+html[data-simple-mode="1"] .os-shell .bf-more-group,
+html[data-simple-mode="1"] .os-shell .bf-more-grid > button,
+html[data-simple-mode="1"] .os-shell .bf-settings-row,
+html[data-simple-mode="1"] .os-shell .bf-pulse-grid article,
+html[data-simple-mode="1"] .os-shell .bf-more-list article,
+html[data-simple-mode="1"] .os-shell .os-dock button.is-on svg,
+html[data-simple-mode="1"] .os-shell .os-dock button.active svg {
+  animation: none !important;
+}
+
+html[data-simple-mode="1"] .os-shell .os-dock button.is-on,
+html[data-simple-mode="1"] .os-shell .os-dock button.active,
+html[data-simple-mode="1"] .os-shell .bf-more-tabs button.active {
+  transform: none !important;
+}
+
+/* Readability: never let atmosphere wash text */
+.os-shell .bf-page,
+.os-shell .bf-today-workspace,
+.os-shell .bf-utilities-workspace,
+.os-shell .bf-movements-workspace,
+.os-shell .bf-plan-workspace,
+.os-shell .bf-insights-workspace,
+.os-shell .bf-obligations-workspace {
+  color: var(--os-fg, var(--cf-ink));
+}
