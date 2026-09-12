@@ -1,0 +1,90 @@
+/**
+ * Temă monocromă mobil-first (Ink) + rafinare low-hue pentru Grafit.
+ * Accentul rămâne gri-albastru discret — fără verde, fără auriu saturat.
+ */
+html.theme-ink {
+  --cf-bg: #f4f5f7;
+  --cf-surface: #ffffff;
+  --cf-surface-alt: #e8eaee;
+  --cf-ink: #14171c;
+  --cf-muted: #5c6570;
+  --cf-line: #d5d9e0;
+  --cf-primary: #3a4450;
+  --cf-primary-strong: #1f2730;
+  --cf-info: #5a6572;
+  --cf-danger: #a84f45;
+  --cf-warning: #8a6b2e;
+  --cf-on-forest: #f7f8fa;
+  --cf-nav: rgba(255, 255, 255, .94);
+  --cf-shadow: 0 12px 28px rgba(20, 23, 28, .1);
+  --cf-glow: rgba(58, 68, 80, .08);
+}
+
+.theme-ink .bf-app {
+  background:
+    radial-gradient(720px 420px at 100% -10%, rgba(58, 68, 80, .07), transparent 58%),
+    radial-gradient(520px 360px at -10% 80%, rgba(20, 23, 28, .04), transparent 55%),
+    var(--cf-bg) !important;
+}
+.theme-ink .bf-app::before {
+  opacity: .12;
+  background-image:
+    linear-gradient(rgba(20, 23, 28, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 23, 28, .045) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.theme-ink .bf-appbar::after {
+  width: 64px;
+  background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong));
+}
+.theme-ink .bf-mobile-nav button.active {
+  background: linear-gradient(135deg, var(--cf-primary), var(--cf-primary-strong)) !important;
+  color: #f7f8fa !important;
+}
+.theme-ink .bf-primary {
+  color: #f7f8fa !important;
+  background: #1f2730 !important;
+  box-shadow: 0 8px 18px rgba(20, 23, 28, .18) !important;
+}
+.theme-ink .bf-theme-picker { background: #f7f8fa; }
+.theme-ink .bf-theme-option { border-color: #d0d5dc; background: #fff; }
+.theme-ink .bf-theme-option.selected { border-color: #1f2730; box-shadow: 0 0 0 2px rgba(31, 39, 48, .16); }
+
+.bf-theme-preview.ink {
+  --preview-bg: #f4f5f7;
+  --preview-surface: #ffffff;
+  --preview-ink: #14171c;
+  --preview-muted: #5c6570;
+  --preview-line: #d5d9e0;
+  --preview-primary: #1f2730;
+  --preview-info: #5a6572;
+  --preview-glow: rgba(58, 68, 80, .14);
+}
+.bf-theme-option.ink .bf-theme-swatch {
+  background: linear-gradient(135deg, #f4f5f7 0 52%, #3a4450 53% 72%, #1f2730 73%);
+}
+.bf-theme-option.ink .bf-theme-swatch span {
+  background-image: linear-gradient(rgba(20, 23, 28, .12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 23, 28, .12) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+/* Grafit: mai puțin albastru, mai aproape de monocrom noapte */
+html.theme-graphite {
+  --cf-primary: #b0b6bf;
+  --cf-primary-strong: #8a919c;
+  
+  --cf-glow: rgba(176, 182, 191, .1);
+}
+html.theme-graphite { --cf-info: #a8aeb8; }
+
+@media (max-width: 480px) {
+  .theme-ink .bf-appbar,
+  .theme-graphite .bf-appbar {
+    backdrop-filter: blur(12px);
+  }
+  .theme-ink .bf-mobile-nav button,
+  .theme-graphite .bf-mobile-nav button {
+    min-height: 48px;
+  }
+}

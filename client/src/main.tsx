@@ -46,6 +46,7 @@ import "./envelope-weekly-toggle.css";
 import "./secondary-button-contrast.css";
 import "./week-transfer.css";
 import "./expanded-themes.css";
+import "./mono-theme.css";
 import "./plan-header-stat.css";
 import "./theme-picker-scroll.css";
 import "./modernization-pass.css";
