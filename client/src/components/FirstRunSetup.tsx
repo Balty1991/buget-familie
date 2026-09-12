@@ -11,6 +11,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
 import { safeSetItem } from "@/lib/safe-storage";
+import { setSimpleMode } from "@/lib/ui-prefs";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -87,6 +88,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
 
   const finishTrack = () => {
     applyBase({ withEnvelopes: false, withPayday: false });
+    setSimpleMode(true);
     complete();
     onAdd();
   };
@@ -141,8 +143,14 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
           <div className="bf-setup-copy">
             <p className="bf-kicker">{t("URMĂREȘTE CHELTUIELILE")}</p>
             <h2 id="bf-setup-title">{t("Cum te cheamă?")}</h2>
-            <p>{t("Opțional, dar ajută la jurnal. Apoi trecem direct la prima cheltuială.")}</p>
+            <p>{t("Opțional, dar ajută la jurnal. Poți spune și cât ai acum pe card — altfel cifra de pe Astăzi poate părea 0.")}</p>
             <label className="bf-field"><span>{t("Numele tău")}</span><input autoFocus value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
+            {data.settings.paymentSources.slice(0, 1).map((source) => (
+              <label className="bf-field" key={source.id}>
+                <span>{t("Cât ai acum pe {name}? (opțional)", { name: source.name })}</span>
+                <input inputMode="decimal" value={balances[source.id] || ""} onChange={(event) => setBalances((current) => ({ ...current, [source.id]: event.target.value }))} placeholder="0" />
+              </label>
+            ))}
             <div className="bf-onboarding-actions">
               <button className="bf-primary" onClick={finishTrack}>{t("Adaugă prima cheltuială")} <ChevronRight size={17} /></button>
             </div>
