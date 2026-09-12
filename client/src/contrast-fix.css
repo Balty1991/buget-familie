@@ -955,3 +955,158 @@ html.theme-cyber .bf-advisor-metrics small {
   }
 }
 
+
+/* ============================================================
+ * Aurora / Navy / Cyber — same readability bar as White:
+ * filled controls use --cf-on-primary; body copy on dark cards
+ * uses --cf-ink (light), never the light-theme #0c1612 fallback.
+ * ============================================================ */
+
+html.theme-aurora .bf-plan-resource-band,
+html.theme-navy .bf-plan-resource-band,
+html.theme-cyber .bf-plan-resource-band,
+html.theme-aurora .bf-reports-hero,
+html.theme-navy .bf-reports-hero,
+html.theme-cyber .bf-reports-hero,
+html.theme-aurora .bf-assistant-panel,
+html.theme-navy .bf-assistant-panel,
+html.theme-cyber .bf-assistant-panel,
+html.theme-aurora .bf-coach-card,
+html.theme-navy .bf-coach-card,
+html.theme-cyber .bf-coach-card,
+html.theme-aurora .bf-today-situation,
+html.theme-navy .bf-today-situation,
+html.theme-cyber .bf-today-situation,
+html.theme-aurora .bf-week-digest,
+html.theme-navy .bf-week-digest,
+html.theme-cyber .bf-week-digest,
+html.theme-aurora .bf-obligation-ai,
+html.theme-navy .bf-obligation-ai,
+html.theme-cyber .bf-obligation-ai,
+html.theme-aurora .bf-goal-card,
+html.theme-navy .bf-goal-card,
+html.theme-cyber .bf-goal-card,
+html.theme-aurora .bf-scenario-card,
+html.theme-navy .bf-scenario-card,
+html.theme-cyber .bf-scenario-card,
+html.theme-aurora .bf-debt-plan,
+html.theme-navy .bf-debt-plan,
+html.theme-cyber .bf-debt-plan,
+html.theme-aurora .bf-household article,
+html.theme-navy .bf-household article,
+html.theme-cyber .bf-household article,
+html.theme-aurora .bf-weekly-summary,
+html.theme-navy .bf-weekly-summary,
+html.theme-cyber .bf-weekly-summary {
+  color: var(--cf-ink, #f1f4f8) !important;
+}
+
+html.theme-aurora .bf-plan-resource-band h2,
+html.theme-navy .bf-plan-resource-band h2,
+html.theme-cyber .bf-plan-resource-band h2,
+html.theme-aurora .bf-reports-hero h2,
+html.theme-navy .bf-reports-hero h2,
+html.theme-cyber .bf-reports-hero h2,
+html.theme-aurora .bf-assistant-panel h2,
+html.theme-navy .bf-assistant-panel h2,
+html.theme-cyber .bf-assistant-panel h2,
+html.theme-aurora .bf-coach-card h2,
+html.theme-navy .bf-coach-card h2,
+html.theme-cyber .bf-coach-card h2,
+html.theme-aurora .bf-today-situation h2,
+html.theme-navy .bf-today-situation h2,
+html.theme-cyber .bf-today-situation h2,
+html.theme-aurora .bf-obligation-ai h2,
+html.theme-navy .bf-obligation-ai h2,
+html.theme-cyber .bf-obligation-ai h2,
+html.theme-aurora .bf-week-digest b,
+html.theme-navy .bf-week-digest b,
+html.theme-cyber .bf-week-digest b,
+html.theme-aurora .bf-goal-card b,
+html.theme-navy .bf-goal-card b,
+html.theme-cyber .bf-goal-card b,
+html.theme-aurora .bf-household article b,
+html.theme-navy .bf-household article b,
+html.theme-cyber .bf-household article b {
+  color: var(--cf-ink, #f1f4f8) !important;
+}
+
+html.theme-aurora .bf-plan-resource-band p:not(.bf-kicker),
+html.theme-navy .bf-plan-resource-band p:not(.bf-kicker),
+html.theme-cyber .bf-plan-resource-band p:not(.bf-kicker),
+html.theme-aurora .bf-reports-hero p:not(.bf-kicker),
+html.theme-navy .bf-reports-hero p:not(.bf-kicker),
+html.theme-cyber .bf-reports-hero p:not(.bf-kicker),
+html.theme-aurora .bf-assistant-panel p:not(.bf-kicker),
+html.theme-navy .bf-assistant-panel p:not(.bf-kicker),
+html.theme-cyber .bf-assistant-panel p:not(.bf-kicker),
+html.theme-aurora .bf-coach-card p:not(.bf-kicker),
+html.theme-navy .bf-coach-card p:not(.bf-kicker),
+html.theme-cyber .bf-coach-card p:not(.bf-kicker),
+html.theme-aurora .bf-today-situation p:not(.bf-kicker),
+html.theme-navy .bf-today-situation p:not(.bf-kicker),
+html.theme-cyber .bf-today-situation p:not(.bf-kicker),
+html.theme-aurora .bf-week-digest small,
+html.theme-navy .bf-week-digest small,
+html.theme-cyber .bf-week-digest small,
+html.theme-aurora .bf-household article em,
+html.theme-navy .bf-household article em,
+html.theme-cyber .bf-household article em,
+html.theme-aurora .bf-household article small,
+html.theme-navy .bf-household article small,
+html.theme-cyber .bf-household article small {
+  color: var(--cf-muted, #c5d0c8) !important;
+}
+
+/* Filled controls: force on-primary (dark ink on light mint/gold/teal fills) */
+html.theme-aurora .bf-os-decide,
+html.theme-navy .bf-os-decide,
+html.theme-cyber .bf-os-decide,
+html.theme-aurora .bf-today-add,
+html.theme-navy .bf-today-add,
+html.theme-cyber .bf-today-add,
+html.theme-aurora .bf-primary,
+html.theme-navy .bf-primary,
+html.theme-cyber .bf-primary,
+html.theme-aurora .bf-movement-add,
+html.theme-navy .bf-movement-add,
+html.theme-cyber .bf-movement-add,
+html.theme-aurora .bf-week-checkin-actions .bf-week-share,
+html.theme-navy .bf-week-checkin-actions .bf-week-share,
+html.theme-cyber .bf-week-checkin-actions .bf-week-share,
+html.theme-aurora .bf-analysis-balance button,
+html.theme-navy .bf-analysis-balance button,
+html.theme-cyber .bf-analysis-balance button {
+  color: var(--cf-on-primary, #0d0b1c) !important;
+}
+
+html.theme-aurora .bf-os-decide svg,
+html.theme-navy .bf-os-decide svg,
+html.theme-cyber .bf-os-decide svg,
+html.theme-aurora .bf-today-add svg,
+html.theme-navy .bf-today-add svg,
+html.theme-cyber .bf-today-add svg,
+html.theme-aurora .bf-primary svg,
+html.theme-navy .bf-primary svg,
+html.theme-cyber .bf-primary svg,
+html.theme-aurora .bf-movement-add svg,
+html.theme-navy .bf-movement-add svg,
+html.theme-cyber .bf-movement-add svg {
+  color: var(--cf-on-primary, #0d0b1c) !important;
+  stroke: currentColor !important;
+}
+
+/* Secondary / outline controls on night themes: light ink on dark surface */
+html.theme-aurora .bf-os-secondary,
+html.theme-navy .bf-os-secondary,
+html.theme-cyber .bf-os-secondary,
+html.theme-aurora .bf-secondary,
+html.theme-navy .bf-secondary,
+html.theme-cyber .bf-secondary,
+html.theme-aurora .bf-today-add.bf-os-secondary,
+html.theme-navy .bf-today-add.bf-os-secondary,
+html.theme-cyber .bf-today-add.bf-os-secondary {
+  color: var(--cf-ink, #f1f4f8) !important;
+  background-color: var(--cf-surface, #18142f) !important;
+  border-color: var(--cf-line, #49416c) !important;
+}
