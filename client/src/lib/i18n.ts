@@ -2031,7 +2031,21 @@ const en: Record<string, string> = {
   "Sincronizarea e criptată și rămâne opțională. Poți folosi aplicația doar pe un telefon.": "Sync is encrypted and stays optional. You can use the app on a single phone.",
   "Pasul {current} din {total}": "Step {current} of {total}",
   "Deschide Sync": "Open Sync",
-  "Adaugă o mișcare": "Add a movement"
+  "Adaugă o mișcare": "Add a movement",
+  "Venituri {income} · Cheltuieli {expense}": "Income {income} · Expenses {expense}",
+  "Ritmul apare după plicuri săptămânale": "Rhythm appears after weekly envelopes",
+  "Pune un plic cu ritm săptămânal în Plan — atunci zilele arată câți lei mai țin.": "Add a weekly envelope in Plan — then the days show how many lei remain.",
+  "Nu există mișcări în acest an.": "There are no movements this year.",
+  "Alege o lună după ce înregistrezi venituri sau cheltuieli — atunci apar barele.": "Pick a month after you log income or expenses — then the bars appear.",
+  "Fără cheltuieli": "No expenses",
+  "{label}: {amount}": "{label}: {amount}",
+  "Scor {score} · {label}": "Score {score} · {label}",
+  "Fără scor": "No score yet",
+  "Azi · {amount} rămași": "Today · {amount} left",
+  "Viitor · {amount} pe zi": "Ahead · {amount} a day",
+  "Trecut · {amount} rămași": "Past · {amount} left",
+  "Cheltuieli pe 7 zile, total {amount}": "Spending over 7 days, total {amount}",
+  "Evoluția lunară a repartizărilor pentru {list}": "Monthly allocation trend for {list}"
 };
 
 

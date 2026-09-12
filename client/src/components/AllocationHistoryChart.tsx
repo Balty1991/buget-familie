@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import { type AllocationHistoryEntry } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
+import { ChartTip } from "@/components/ChartFrame";
+import { leiLabel } from "@/lib/chart-ui";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const monthLabel = (key: string) => new Intl.DateTimeFormat(getLocale(), { month: "short" }).format(new Date(`${key}-01T12:00:00`)).replace(".", "");
 const monthKey = (value: string) => value.slice(0, 7);
 const monthSequence = (endKey: string, count: number) => {
@@ -44,12 +45,72 @@ export function AllocationHistoryChart({ entries, allocationFilter }: { entries:
     const maxAbs = Math.max(1, ...values.flat().map((value) => Math.abs(value)));
     return { months, visibleLabels, values, maxAbs, total: relevant.reduce((sum, entry) => sum + eventDelta(entry), 0), omitted: Math.max(0, labels.length - visibleLabels.length) };
   }, [allocationFilter, entries]);
+  const [tip, setTip] = useState<{ label: string; month: string; value: number } | null>(null);
   if (!chart) return <div className="bf-allocation-chart-empty"><TrendingUp size={20} /><strong>{t("Graficul va apărea după prima repartizare")}</strong><p>{t("Înregistrările noi vor fi grupate lunar și comparate pe plicuri.")}</p></div>;
-  const width = 720; const height = 250; const left = 48; const right = 18; const top = 24; const bottom = 38; const plotWidth = width - left - right; const plotHeight = height - top - bottom; const zeroY = top + plotHeight / 2;
+  const width = 720; const height = 250; const left = 62; const right = 18; const top = 24; const bottom = 38; const plotWidth = width - left - right; const plotHeight = height - top - bottom; const zeroY = top + plotHeight / 2;
   const x = (index: number) => left + (index / Math.max(1, chart.months.length - 1)) * plotWidth;
   const y = (value: number) => zeroY - (value / chart.maxAbs) * (plotHeight / 2 - 8);
   const colors = ["var(--cf-primary-strong)", "var(--cf-warning)", "var(--cf-danger)", "var(--cf-info)", "var(--cf-muted)"];
   const pointsFor = (values: number[]) => values.map((value, index) => `${x(index)},${y(value)}`).join(" ");
   const lastMonthTotal = chart.values.reduce((sum, values) => sum + (values[values.length - 1] || 0), 0);
-  return <div className="bf-allocation-chart"><div className="bf-allocation-chart-summary"><div><p className="bf-kicker">{t("EVOLUȚIE LUNARĂ")}</p><h3>{t("Repartizări pe plicuri")}</h3><p>{t("Modificarea netă a sumelor repartizate în fiecare lună. Valorile negative indică reduceri sau anulări.")}</p></div><strong>{money(lastMonthTotal)}<small>{t("luna afișată")}</small></strong></div><div className="bf-allocation-chart-canvas"><svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Evoluția lunară a repartizărilor pentru ${chart.visibleLabels.join(", ")}`}><line x1={left} x2={width - right} y1={zeroY} y2={zeroY} className="bf-chart-zero" />{[-1, -0.5, 0.5, 1].map((factor) => <line key={factor} x1={left} x2={width - right} y1={zeroY - factor * (plotHeight / 2 - 8)} y2={zeroY - factor * (plotHeight / 2 - 8)} className="bf-chart-grid" />)}<text x={left - 8} y={top + 6} textAnchor="end">{money(chart.maxAbs)}</text><text x={left - 8} y={zeroY + 4} textAnchor="end">0</text><text x={left - 8} y={height - bottom + 2} textAnchor="end">-{money(chart.maxAbs)}</text>{chart.visibleLabels.map((label, seriesIndex) => <g key={label}><polyline points={pointsFor(chart.values[seriesIndex])} fill="none" stroke={colors[seriesIndex]} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />{chart.values[seriesIndex].map((value, index) => <circle key={`${label}-${chart.months[index]}`} cx={x(index)} cy={y(value)} r="3.5" fill={colors[seriesIndex]}><title>{`${label}, ${monthLabel(chart.months[index])}: ${money(value)}`}</title></circle>)}</g>)}{chart.months.map((month, index) => <text key={month} x={x(index)} y={height - 11} textAnchor="middle">{monthLabel(month)}</text>)}</svg></div><div className="bf-allocation-chart-legend">{chart.visibleLabels.map((label, index) => <span key={label}><i style={{ backgroundColor: colors[index] }} />{label}</span>)}{chart.omitted > 0 && <small>+{chart.omitted} alte categorii în total</small>}</div><p className="bf-allocation-chart-footnote">{t("Total net pe cele 12 luni:")} <b>{money(chart.total)}</b>. Graficul folosește doar repartizările care au fost jurnalizate; nu reconstruiește modificări vechi care nu aveau istoric.</p></div>;
+  const pickTip = (label: string, month: string, value: number) => setTip({ label, month, value });
+  return (
+    <div className="bf-allocation-chart">
+      <div className="bf-allocation-chart-summary">
+        <div>
+          <p className="bf-kicker">{t("EVOLUȚIE LUNARĂ")}</p>
+          <h3>{t("Repartizări pe plicuri")}</h3>
+          <p>{t("Modificarea netă a sumelor repartizate în fiecare lună. Valorile negative indică reduceri sau anulări.")}</p>
+        </div>
+        <strong>{leiLabel(lastMonthTotal)}<small>{t("luna afișată")}</small></strong>
+      </div>
+      <div className="bf-allocation-chart-canvas">
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={t("Evoluția lunară a repartizărilor pentru {list}", { list: chart.visibleLabels.join(", ") })}>
+          <line x1={left} x2={width - right} y1={zeroY} y2={zeroY} className="bf-chart-zero" />
+          {[-1, -0.5, 0.5, 1].map((factor) => (
+            <line key={factor} x1={left} x2={width - right} y1={zeroY - factor * (plotHeight / 2 - 8)} y2={zeroY - factor * (plotHeight / 2 - 8)} className="bf-chart-grid" />
+          ))}
+          <text x={left - 8} y={top + 6} textAnchor="end">{leiLabel(chart.maxAbs, true)}</text>
+          <text x={left - 8} y={zeroY + 4} textAnchor="end">0 lei</text>
+          <text x={left - 8} y={height - bottom + 2} textAnchor="end">{`-${leiLabel(chart.maxAbs, true)}`}</text>
+          {chart.visibleLabels.map((label, seriesIndex) => (
+            <g key={label}>
+              <polyline points={pointsFor(chart.values[seriesIndex])} fill="none" stroke={colors[seriesIndex]} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              {chart.values[seriesIndex].map((value, index) => (
+                <circle
+                  key={`${label}-${chart.months[index]}`}
+                  cx={x(index)}
+                  cy={y(value)}
+                  r={tip && tip.label === label && tip.month === chart.months[index] ? 5.5 : 4}
+                  fill={colors[seriesIndex]}
+                  role="button"
+                  tabIndex={0}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => pickTip(label, chart.months[index], value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      pickTip(label, chart.months[index], value);
+                    }
+                  }}
+                >
+                  <title>{`${label}, ${monthLabel(chart.months[index])}: ${leiLabel(value)}`}</title>
+                </circle>
+              ))}
+            </g>
+          ))}
+          {chart.months.map((month, index) => (
+            <text key={month} x={x(index)} y={height - 11} textAnchor="middle">{monthLabel(month)}</text>
+          ))}
+        </svg>
+      </div>
+      {tip && <ChartTip><b>{tip.label}</b><span>{monthLabel(tip.month)}</span><span>{leiLabel(tip.value)}</span></ChartTip>}
+      <div className="bf-allocation-chart-legend">
+        {chart.visibleLabels.map((label, index) => <span key={label}><i style={{ backgroundColor: colors[index] }} />{label}</span>)}
+        {chart.omitted > 0 && <small>+{chart.omitted} alte categorii în total</small>}
+      </div>
+      <p className="bf-allocation-chart-footnote">{t("Total net pe cele 12 luni:")} <b>{leiLabel(chart.total)}</b>. Graficul folosește doar repartizările care au fost jurnalizate; nu reconstruiește modificări vechi care nu aveau istoric.</p>
+    </div>
+  );
+
 }

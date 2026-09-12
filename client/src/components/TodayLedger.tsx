@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { EnvelopeDeskScene, EnvelopeMark, EnvelopeStack } from "@/components/EnvelopeMark";
 import { CashNote, PaydayStrip } from "@/components/LedgerArt";
 import { envelopeBurnPace, envelopeLane, lastDaysPulse, liquidSafeToSpend, paydayTrack } from "@/lib/household-insights";
 import { type AppData } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
+import { ChartTip } from "@/components/ChartFrame";
+import { chartBarHeight, leiLabel } from "@/lib/chart-ui";
 
 type Go = (view: "plan" | "journal") => void;
 
@@ -24,6 +27,7 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
   const burnById = new Map(burns.map((item) => [item.allocationId, item]));
   const weekSpend = pulse.reduce((sum, day) => sum + day.expense, 0);
   const safe = liquidSafeToSpend(data);
+  const [pulseTip, setPulseTip] = useState<string | null>(null);
 
   return (
     <section className="bf-ledger-desk" aria-label="Registrul vizual al casei">
@@ -44,14 +48,26 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
               <h2>{weekSpend > 0 ? money(weekSpend) : t("Fără ieșiri")}</h2>
               <p>{t("Cerneală din registru — ultimele 7 zile, nu din bancă.")}</p>
             </div>
-            <div className="bf-today-pulse-chart" role="img" aria-label={`Cheltuieli pe 7 zile, total ${money(weekSpend)}`}>
+            <div className="bf-today-pulse-chart" role="group" aria-label={t("Cheltuieli pe 7 zile, total {amount}", { amount: leiLabel(weekSpend) })}>
               {pulse.map((day) => (
-                <span key={day.date} className={day.isToday ? "today" : ""}>
-                  <i className={day.expense <= 0 ? "empty" : ""} style={{ height: `${Math.max(12, (day.expense / maxExpense) * 100)}%` }} />
+                <button
+                  key={day.date}
+                  type="button"
+                  className={day.isToday ? "today" : ""}
+                  aria-pressed={pulseTip === day.date}
+                  aria-label={t("{label}: {amount}", { label: day.weekday, amount: leiLabel(day.expense) })}
+                  onClick={() => setPulseTip((current) => current === day.date ? null : day.date)}
+                >
+                  <i className={day.expense <= 0 ? "empty" : ""} style={{ height: `${chartBarHeight(day.expense, maxExpense, 12)}%` }} />
                   <b>{day.weekday}</b>
-                </span>
+                </button>
               ))}
             </div>
+            {(() => {
+              const day = pulse.find((item) => item.date === pulseTip) || pulse.find((item) => item.isToday);
+              if (!day) return null;
+              return <ChartTip><b>{day.weekday}</b><span>{day.expense <= 0 ? t("Fără cheltuieli") : t("Cheltuieli {amount}", { amount: leiLabel(day.expense) })}</span></ChartTip>;
+            })()}
           </div>
         </div>
       )}

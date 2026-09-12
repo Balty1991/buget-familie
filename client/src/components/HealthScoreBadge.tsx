@@ -6,6 +6,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { CalmGauge } from "@/components/CalmGauge";
 import { EnvelopeMark } from "@/components/EnvelopeMark";
 import { t } from "@/lib/i18n";
+import { ChartTip } from "@/components/ChartFrame";
 
 /**
  * Badge compact pentru ecranul Astăzi + sheet cu factorii explicabili și povestea pe cicluri.
@@ -39,6 +40,7 @@ function HealthScoreSheet({ story, onClose }: { story: HealthScoreStory; onClose
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const toneLabel = health.tone === "unknown" ? t("Încă nu se poate calcula") : health.tone === "good" ? t("Calm") : health.tone === "watch" ? t("Atenție") : t("Risc");
   const maxSeries = Math.max(1, ...story.series.map((item) => item.score ?? 0));
+  const [tip, setTip] = useState(story.series.find((item) => item.score !== null)?.end || "");
 
   return createPortal(
     <div className="bf-modal-backdrop bf-health-backdrop" role="presentation" onMouseDown={onClose}>
@@ -71,15 +73,27 @@ function HealthScoreSheet({ story, onClose }: { story: HealthScoreStory; onClose
           <section className="bf-health-story" aria-label={t("Scor pe cicluri salariale")}>
             <p className="bf-kicker">{t("PE CICLURI")}</p>
             <h3>{t("Cum s-a mișcat scorul")}</h3>
-            <div className="bf-health-story-bars" role="img" aria-label={t("Serie scor pe cicluri")}>
+            <div className="bf-health-story-bars" role="group" aria-label={t("Serie scor pe cicluri")}>
               {story.series.map((point) => (
-                <div key={point.end} className={`bf-health-story-bar ${point.tone}`}>
-                  <i style={{ height: point.score === null ? "8%" : `${Math.max(8, (point.score / maxSeries) * 100)}%` }} />
+                <button
+                  key={point.end}
+                  type="button"
+                  className={`bf-health-story-bar ${point.tone}${point.score === null ? " is-empty" : ""}`}
+                  aria-pressed={tip === point.end}
+                  aria-label={point.score === null ? t("Fără scor") : t("Scor {score} · {label}", { score: point.score, label: point.label })}
+                  onClick={() => setTip((current) => current === point.end ? "" : point.end)}
+                >
+                  <i style={{ height: point.score === null ? "0%" : `${Math.max(8, (point.score / maxSeries) * 100)}%` }} />
                   <b>{point.score === null ? "—" : point.score}</b>
                   <small>{point.label}</small>
-                </div>
+                </button>
               ))}
             </div>
+            {(() => {
+              const point = story.series.find((item) => item.end === tip);
+              if (!point) return null;
+              return <ChartTip><b>{point.label}</b><span>{point.score === null ? t("Fără scor") : t("Scor {score} · {label}", { score: point.score, label: point.label })}</span></ChartTip>;
+            })()}
             {story.moved.length > 0 ? (
               <ul className="bf-health-moved">
                 {story.moved.map((item) => (

@@ -11,6 +11,8 @@ import { queueReceiptForReview } from "@/lib/receipt-review";
 import { safeSetItem } from "@/lib/safe-storage";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { HealthScoreBadge } from "@/components/HealthScoreBadge";
+import { ChartEmpty, ChartTip } from "@/components/ChartFrame";
+import { leiLabel } from "@/lib/chart-ui";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { BrandMark } from "@/components/BrandMark";
 import { TodayLedger } from "@/components/TodayLedger";
@@ -152,6 +154,7 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
   const [shownTrancheKey, setShownTrancheKey] = useState("");
   const [openHint, setOpenHint] = useState(false);
   const [safeSheetOpen, setSafeSheetOpen] = useState(false);
+  const [rhythmTip, setRhythmTip] = useState<string | null>(null);
   const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) })), [data]);
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
@@ -361,15 +364,34 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
             </div>
             <p className="bf-os-note" style={{ margin: 0 }}>{t("azi")} <b>{money(rhythm.todayLeft)}</b></p>
           </div>
-          <div className="bf-os-rhythm-grid">
-            {rhythm.days.map((row) => (
-              <div key={row.day} className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}>
-                <span>{weekdayShort()[row.weekday]}</span>
-                <b aria-label={`${Math.round(row.left)} lei`}>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}<small> lei</small></b>
-                <span className="bf-os-bar" aria-hidden="true"><i style={{ height: `${row.fill}%` }} /></span>
+          {!rhythm.hasWeekly ? (
+            <ChartEmpty title={t("Ritmul apare după plicuri săptămânale")} detail={t("Pune un plic cu ritm săptămânal în Plan — atunci zilele arată câți lei mai țin.")} />
+          ) : (
+            <>
+              <div className="bf-os-rhythm-grid">
+                {rhythm.days.map((row) => (
+                  <button
+                    key={row.day}
+                    type="button"
+                    className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
+                    aria-pressed={rhythmTip === row.day}
+                    aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.left) })}
+                    onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
+                  >
+                    <span>{weekdayShort()[row.weekday]}</span>
+                    <b>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}<small> lei</small></b>
+                    <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+              {(() => {
+                const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
+                if (!row) return null;
+                const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(row.left) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} rămași", { amount: leiLabel(row.left) });
+                return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiLabel(row.out) })}</span></ChartTip>;
+              })()}
+            </>
+          )}
           <p className="bf-os-note">{rhythmNote}</p>
         </section>
 

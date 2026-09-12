@@ -190,6 +190,14 @@ describe("analize de gospodărie", () => {
     expect(wednesday.days[2]).toMatchObject({ day: "2026-09-09", left: 75, isToday: true, over: false });
   });
 
+  it("nu desenează bare false când nu există plic săptămânal", () => {
+    const { data } = base();
+    data.settings.salaryPlan.allocations = [];
+    const rhythm = weeklyEnvelopeDailyRhythm(data, "2026-09-09");
+    expect(rhythm.hasWeekly).toBe(false);
+    expect(rhythm.days.every((item) => item.fill === 0)).toBe(true);
+  });
+
   it("nu consumă ritmul zilnic din plicuri lunare sau din plăți în afara plicurilor", () => {
     const { data, source } = base();
     data.settings.salaryPlan = {

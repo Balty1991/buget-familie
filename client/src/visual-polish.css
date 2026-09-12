@@ -1,0 +1,407 @@
+/**
+ * Visual polish 2026-09 — grafice, butoane secundare, micro-mișcare, picker temă.
+ * Nu e un redesign: completează chrome-ul existent.
+ */
+
+:root {
+  --bf-sheet-ms: 200ms;
+  --bf-press-ms: 100ms;
+  --bf-dock-ms: 200ms;
+}
+
+/* ---------- Grafice: axe, tooltips, stări goale ---------- */
+.bf-chart-frame {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+}
+
+.bf-chart-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 3.4rem;
+  padding: 2px 0 22px;
+  color: var(--os-muted, var(--cf-muted));
+  font-size: 10px;
+  font-weight: 680;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  line-height: 1.1;
+}
+
+.bf-chart-tip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, transparent);
+  color: var(--os-ink, var(--cf-ink));
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.bf-chart-tip b {
+  font-weight: 720;
+}
+
+.bf-chart-tip span {
+  color: var(--os-muted, var(--cf-muted));
+  font-variant-numeric: tabular-nums;
+}
+
+.bf-chart-empty {
+  display: grid;
+  gap: 6px;
+  min-height: 120px;
+  place-content: center;
+  padding: 18px 14px;
+  border: 1px dashed color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.bf-chart-empty strong {
+  color: var(--os-ink, var(--cf-ink));
+  font-size: 15px;
+  font-weight: 680;
+}
+
+.bf-chart-empty p {
+  margin: 0;
+  max-width: 36ch;
+  justify-self: center;
+  color: var(--os-muted, var(--cf-muted));
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.bf-analysis-chart button.is-empty > span {
+  opacity: .42;
+}
+
+.bf-analysis-chart button.is-empty i {
+  min-height: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.bf-analysis-chart button.is-empty > span::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--os-line, var(--cf-line)) 70%, transparent);
+}
+
+.bf-analysis-chart button > span {
+  position: relative;
+}
+
+.bf-os-rhythm-grid > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 10px 2px 8px;
+  border: 0;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--os-bg) 80%, transparent);
+  color: inherit;
+  cursor: pointer;
+}
+
+.bf-os-rhythm-grid > button.is-today {
+  background: color-mix(in srgb, var(--os-mint) 14%, var(--os-bg));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-mint) 40%, transparent);
+}
+
+.bf-os-rhythm-grid > button.is-over b { color: var(--os-warn); }
+
+.bf-os-bar i.is-empty,
+.bf-today-pulse-chart i.empty,
+.bf-health-story-bar.is-empty i {
+  height: 0 !important;
+  min-height: 0 !important;
+  opacity: 0;
+}
+
+.bf-today-pulse-chart > button,
+.bf-today-pulse-chart > span {
+  position: relative;
+}
+.bf-today-pulse-chart > button {
+  display: grid;
+  grid-template-rows: 72px auto;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.bf-today-pulse-chart > button.today i {
+  background: var(--cf-warning);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cf-warning) 28%, transparent);
+}
+.bf-today-pulse-chart i.empty,
+.bf-today-pulse-chart i.is-empty {
+  min-height: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+
+.bf-allocation-chart-canvas { position: relative; }
+
+.bf-allocation-chart .bf-chart-tip { margin-top: 10px; }
+
+.bf-health-story-bar {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.bf-plan-allocation-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  color: var(--os-muted, var(--cf-muted));
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Butoane secundare: același limbaj chrome ---------- */
+.os-shell .bf-plan-workspace .bf-plan-envelope-builder > button,
+.os-shell .bf-plan-simulation footer > button,
+.os-shell .bf-plan-cashflow-panel footer > button,
+.os-shell .bf-analysis-balance > button,
+.os-shell .bf-analysis-empty-cta,
+.os-shell .bf-notification-actions > button,
+.os-shell .bf-backup-actions > button,
+.os-shell .bf-backup-preview-actions > button,
+.os-shell .bf-backup-paste-actions > button,
+.os-shell .bf-source-builder > button,
+.os-shell .bf-mini-form > button,
+.os-shell .bf-obligation-empty > button,
+.os-shell .bf-guide-replay,
+.os-shell .bf-theme-apply {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--bf-chrome-icon-gap, 10px) !important;
+  min-height: var(--bf-chrome-btn-h, 48px) !important;
+  padding: 0 18px !important;
+  border-radius: var(--bf-chrome-radius, 16px) !important;
+  font-family: var(--font-ui, Outfit, sans-serif) !important;
+  font-size: 14.5px !important;
+  font-weight: 680 !important;
+  letter-spacing: -.015em !important;
+}
+
+.os-shell .bf-plan-simulation footer > button:not(.bf-primary),
+.os-shell .bf-plan-cashflow-panel footer > button:not(.bf-primary),
+.os-shell .bf-notification-actions > button:not(.bf-primary),
+.os-shell .bf-backup-actions > button:not(.bf-primary),
+.os-shell .bf-backup-preview-actions > button:not(.bf-primary),
+.os-shell .bf-backup-paste-actions > button:not(.bf-primary),
+.os-shell .bf-source-builder > button,
+.os-shell .bf-mini-form > button,
+.os-shell .bf-obligation-empty > button,
+.os-shell .bf-guide-replay {
+  border: 1.5px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
+  color: var(--os-ink, var(--cf-ink)) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, transparent) !important;
+}
+
+.os-shell .bf-analysis-balance > button,
+.os-shell .bf-theme-apply {
+  border: 0 !important;
+  color: var(--os-mint-fg, var(--cf-on-primary, #fff)) !important;
+  background: var(--os-mint, var(--cf-primary)) !important;
+}
+
+/* ---------- Micro-animații ---------- */
+@keyframes bf-sheet-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes bf-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.bf-modal-backdrop {
+  animation: bf-backdrop-in 180ms ease-out;
+}
+
+.bf-modal,
+.bf-health-sheet,
+.bf-theme-picker,
+.bf-whats-new,
+.bf-onboarding {
+  animation: bf-sheet-in var(--bf-sheet-ms) cubic-bezier(.22, 1.1, .36, 1);
+}
+
+.os-shell .os-dock button {
+  transition:
+    transform var(--bf-dock-ms) cubic-bezier(.22, 1.1, .36, 1),
+    background-color var(--bf-dock-ms) cubic-bezier(.22, 1.1, .36, 1),
+    color var(--bf-dock-ms) cubic-bezier(.22, 1.1, .36, 1),
+    box-shadow var(--bf-dock-ms) cubic-bezier(.22, 1.1, .36, 1) !important;
+}
+
+.os-shell .os-dock button.active,
+.os-shell .os-dock button.is-on {
+  transform: translateY(-1px);
+}
+
+.os-shell .os-dock button.active svg,
+.os-shell .os-dock button.is-on svg {
+  transform: scale(1.06);
+}
+
+.os-shell .bf-primary:active,
+.os-shell .bf-secondary:active,
+.os-shell .bf-ghost:active,
+.os-shell .bf-os-decide:active,
+.os-shell .bf-theme-apply:active,
+.os-shell .bf-analysis-balance > button:active,
+.os-shell .os-dock button:active {
+  transform: scale(.975) translateY(1px) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-modal-backdrop,
+  .bf-modal,
+  .bf-health-sheet,
+  .bf-theme-picker,
+  .bf-whats-new,
+  .bf-onboarding {
+    animation: none !important;
+  }
+  .os-shell .os-dock button,
+  .os-shell .bf-primary,
+  .os-shell .bf-secondary,
+  .os-shell .bf-ghost,
+  .os-shell .bf-os-decide,
+  .os-shell .bf-theme-apply {
+    transition: none !important;
+  }
+  .os-shell .os-dock button.active,
+  .os-shell .os-dock button.is-on,
+  .os-shell .bf-primary:active,
+  .os-shell .bf-secondary:active,
+  .os-shell .bf-os-decide:active,
+  .os-shell .os-dock button:active {
+    transform: none !important;
+  }
+}
+
+/* ---------- Theme picker: preview mai mare + contrast umplut ---------- */
+.bf-theme-preview {
+  min-height: 268px !important;
+  margin: 0 14px 12px !important;
+  padding: 18px !important;
+  gap: 11px !important;
+}
+
+.bf-theme-preview-value strong {
+  font-size: 36px !important;
+}
+
+.bf-theme-preview-cta {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.bf-theme-preview-cta span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--preview-primary);
+  color: var(--preview-on, #111);
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.bf-theme-preview.white { --preview-on: #ffffff; }
+.bf-theme-preview.dark { --preview-on: #111214; --preview-primary: #c5cad3; }
+.bf-theme-preview.aurora { --preview-on: #0d0b1c; --preview-primary: #65d3a6; }
+.bf-theme-preview.navy { --preview-on: #14100a; --preview-primary: #d4b06a; }
+.bf-theme-preview.cyber { --preview-on: #04140e; --preview-primary: #7cffc4; }
+
+html.theme-dark .os-shell,
+html.theme-aurora .os-shell,
+html.theme-navy .os-shell,
+html.theme-cyber .os-shell {
+  --os-mint-fg: var(--cf-on-primary, #111214);
+}
+
+html.theme-dark .os-shell .bf-primary,
+html.theme-aurora .os-shell .bf-primary,
+html.theme-navy .os-shell .bf-primary,
+html.theme-cyber .os-shell .bf-primary,
+html.theme-dark .os-shell .bf-theme-apply,
+html.theme-aurora .os-shell .bf-theme-apply,
+html.theme-navy .os-shell .bf-theme-apply,
+html.theme-cyber .os-shell .bf-theme-apply,
+html.theme-dark .os-shell .bf-os-decide,
+html.theme-aurora .os-shell .bf-os-decide,
+html.theme-navy .os-shell .bf-os-decide,
+html.theme-cyber .os-shell .bf-os-decide,
+html.theme-dark .os-shell .bf-analysis-balance > button,
+html.theme-aurora .os-shell .bf-analysis-balance > button,
+html.theme-navy .os-shell .bf-analysis-balance > button,
+html.theme-cyber .os-shell .bf-analysis-balance > button,
+html.theme-dark .os-shell .bf-segment button.active,
+html.theme-aurora .os-shell .bf-segment button.active,
+html.theme-navy .os-shell .bf-segment button.active,
+html.theme-cyber .os-shell .bf-segment button.active,
+html.theme-dark .os-shell .bf-insights-switch button.active,
+html.theme-aurora .os-shell .bf-insights-switch button.active,
+html.theme-navy .os-shell .bf-insights-switch button.active,
+html.theme-cyber .os-shell .bf-insights-switch button.active,
+html.theme-dark .os-shell .bf-analysis-scope button.active,
+html.theme-aurora .os-shell .bf-analysis-scope button.active,
+html.theme-navy .os-shell .bf-analysis-scope button.active,
+html.theme-cyber .os-shell .bf-analysis-scope button.active,
+html.theme-dark .os-shell .os-dock button.active,
+html.theme-aurora .os-shell .os-dock button.active,
+html.theme-navy .os-shell .os-dock button.active,
+html.theme-cyber .os-shell .os-dock button.active,
+html.theme-dark .os-shell .os-dock button.is-on,
+html.theme-aurora .os-shell .os-dock button.is-on,
+html.theme-navy .os-shell .os-dock button.is-on,
+html.theme-cyber .os-shell .os-dock button.is-on {
+  color: var(--cf-on-primary, #111214) !important;
+  background: var(--cf-primary) !important;
+  background-image: none !important;
+}
+
+@media (max-width: 430px) {
+  .bf-theme-preview {
+    min-height: 248px !important;
+    margin-inline: 10px !important;
+    padding: 16px !important;
+  }
+  .bf-theme-preview-value strong { font-size: 32px !important; }
+  .bf-chart-y { min-width: 2.8rem; font-size: 9px; }
+}

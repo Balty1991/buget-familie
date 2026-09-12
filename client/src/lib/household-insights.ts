@@ -593,10 +593,10 @@ export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): Wee
     const leftRaw = isFuture ? futureShareRaw : isToday ? todayLeftRaw : Math.max(0, pastShareRaw - row.out);
     const over = !isFuture && shareRaw > 0 && row.out > shareRaw + 0.009;
     const fill = shareRaw <= 0
-      ? (row.out > 0 ? 100 : 8)
+      ? (row.out > 0 ? 100 : 0)
       : isFuture
-        ? 36
-        : Math.max(8, Math.min(100, (row.out / shareRaw) * 100));
+        ? (shareRaw > 0 ? 36 : 0)
+        : Math.max(0, Math.min(100, (row.out / shareRaw) * 100));
     return { day: row.day, weekday, out: roundMoney(row.out), left: roundMoney(leftRaw), share: roundMoney(shareRaw), isToday, isFuture, over, fill };
   });
   return {
