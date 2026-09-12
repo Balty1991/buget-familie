@@ -35,7 +35,7 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
 
 function HealthScoreSheet({ health, onClose }: { health: HealthScoreBreakdown; onClose: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
-  const toneLabel = health.tone === "unknown" ? t("Încă nu se poate calcula") : health.tone === "good" ? "Calm" : health.tone === "watch" ? t("Atenție") : "Risc";
+  const toneLabel = health.tone === "unknown" ? t("Încă nu se poate calcula") : health.tone === "good" ? t("Calm") : health.tone === "watch" ? t("Atenție") : t("Risc");
 
   return createPortal(
     <div className="bf-modal-backdrop bf-health-backdrop" role="presentation" onMouseDown={onClose}>
