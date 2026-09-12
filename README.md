@@ -83,6 +83,8 @@ După conectare, modificările apar automat pe toate telefoanele conectate în c
 
 ## App Check (Firebase)
 
+Checklist Enforce (fără a-l activa încă): [`docs/app-check-enforce-prep.md`](docs/app-check-enforce-prep.md) și `.env.example`.
+
 Protecție anti-abuz a cotei Firestore. Sync-ul funcționează și **fără** App Check; cheia goală nu mai e tăcută — consola afișează un mesaj de setup.
 
 1. Firebase Console → **Build → App Check** → aplicația web (și Android, dacă e înregistrată).
