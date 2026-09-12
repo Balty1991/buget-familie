@@ -152,7 +152,7 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
   const weeklyEnvelopesRemaining = useMemo(() => envelopes.filter((entry) => entry.item.weeklyPace !== false).reduce((sum, entry) => sum + (allocationWeekStatus(data, entry.item)?.remaining ?? entry.remaining), 0), [data, envelopes]);
   const monthlyEnvelopesRemaining = useMemo(() => envelopes.filter((entry) => entry.item.weeklyPace === false).reduce((sum, entry) => sum + entry.remaining, 0), [envelopes]);
   const envelopeTotalRemaining = Math.max(0, weeklyEnvelopesRemaining + monthlyEnvelopesRemaining);
-  const monthIncome = data.transactions.filter((item) => item.kind === "income" && item.date.startsWith(isoToday().slice(0, 7))).reduce((sum, item) => sum + item.amount, 0);
+  const periodIncome = data.transactions.filter((item) => item.kind === "income" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const activeTranche = math.planEnd ? currentCalendarBudgetWeek(math.weeklyPacedTotal, math.plan.periodStart, math.planEnd, isoToday()) : undefined;
   const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : "";
   const showTrancheNotice = Boolean(activeTranche && shownTrancheKey === activeTrancheKey);
@@ -183,15 +183,15 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
 
   // Un singur număr de decizie: reperul zilnic (spendable), nu soldul plicurilor.
-  const heroLabel = overPlan ? t("Peste limita planului") : brief.hasPayday ? t("Poți folosi azi") : data.settings.salaryPlan.allocations.length ? t("Rămas în plicuri") : monthIncome > 0 ? t("Venit înregistrat luna asta") : t("Plicuri neconfigurate");
-  const heroValue = overPlan ? Math.abs(math.remaining) : brief.hasPayday ? brief.spendable : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : monthIncome;
+  const heroLabel = overPlan ? t("Peste limita planului") : brief.hasPayday ? t("Poți folosi azi") : data.settings.salaryPlan.allocations.length ? t("Rămas în plicuri") : periodIncome > 0 ? t("Venit înregistrat în ciclu") : t("Plicuri neconfigurate");
+  const heroValue = overPlan ? Math.abs(math.remaining) : brief.hasPayday ? brief.spendable : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : periodIncome;
   const heroHint = overPlan
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : brief.hasPayday
       ? brief.reason
       : data.settings.salaryPlan.allocations.length
         ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: money(Math.max(0, weeklyEnvelopesRemaining)), monthly: money(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · reper {daily}/zi", { daily: money(daily) }) : "" })
-        : monthIncome > 0
+        : periodIncome > 0
           ? t("Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii.")
           : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
   const explainer = overPlan
@@ -287,7 +287,7 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
           <>
             <p className="os-kicker-lg">{heroLabel}</p>
             <h1 className="os-amount">
-              <span>{Math.round(heroValue).toLocaleString("ro-RO")}</span>
+              <span>{(Number.isFinite(heroValue) ? heroValue : 0).toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
