@@ -9,7 +9,12 @@ export const THEME_STORAGE_KEY = "buget-familie:theme";
 export const THEME_MIGRATED_INK_KEY = "buget-familie:theme-migrated-ink-2026-09";
 /** Migrare catalog slim 2026-09 (laundry list → white/dark/extras). */
 export const THEME_MIGRATED_CATALOG_KEY = "buget-familie:theme-migrated-catalog-2026-09";
-export const WHATS_NEW_KEY = "buget-familie:whats-new-2026-09";
+/**
+ * Migrare Atelier Platinum: utilizatorii pe look-ul stark ink/white văd noul
+ * Alb implicit (CSS). Aurora / Navy / Cyber rămân neatins.
+ */
+export const THEME_MIGRATED_ATELIER_KEY = "buget-familie:theme-migrated-atelier-2026-09";
+export const WHATS_NEW_KEY = "buget-familie:whats-new-atelier-2026-09";
 
 export const DEFAULT_THEME: ThemeId = "white";
 
@@ -71,24 +76,39 @@ const canonicalize = (value: string | null): ThemeId => {
 
 /**
  * Citește tema salvată și, o dată, migrează ID-urile vechi la catalogul slim.
- * Default: White. Nu forțează pe utilizatorii care au deja o temă din catalog.
+ * Default: White (Atelier Platinum). Nu forțează pe utilizatorii care au deja
+ * Aurora / Navy / Cyber.
  */
 export function resolveInitialTheme(storage: StorageLike): ThemeId {
   const saved = storage.getItem(THEME_STORAGE_KEY);
   const catalogMigrated = Boolean(storage.getItem(THEME_MIGRATED_CATALOG_KEY));
 
+  let next: ThemeId;
   if (!catalogMigrated) {
     write(storage, THEME_MIGRATED_CATALOG_KEY, "1");
     // Păstrează semnalul vechii migrări ink, ca fișele „Ce e nou” să nu se reseteze ciudat.
     if (!storage.getItem(THEME_MIGRATED_INK_KEY)) {
       write(storage, THEME_MIGRATED_INK_KEY, "1");
     }
-    const next = canonicalize(saved);
+    next = canonicalize(saved);
     write(storage, THEME_STORAGE_KEY, next);
-    return next;
+  } else {
+    next = canonicalize(saved);
   }
 
-  return canonicalize(saved);
+  // O dată: marchează trecerea la Atelier Platinum. Look-ul nou vine din CSS pe white.
+  // Aurora / Navy / Cyber rămân; dark rămâne dark; ink/ivory/snow → white.
+  if (!storage.getItem(THEME_MIGRATED_ATELIER_KEY)) {
+    write(storage, THEME_MIGRATED_ATELIER_KEY, "1");
+    if (next === "aurora" || next === "navy" || next === "cyber" || next === "dark") {
+      // păstrează alegerea explicită / nocturnă
+    } else {
+      next = "white";
+      write(storage, THEME_STORAGE_KEY, next);
+    }
+  }
+
+  return next;
 }
 
 export function shouldShowWhatsNew(storage: StorageLike, blocked = false): boolean {

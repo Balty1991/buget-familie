@@ -24,27 +24,27 @@
  * nu le-ar fi ajuns din urmă.
  */
 
-/* Alb / Ink Studio — umplutură aproape neagră ⇒ etichetă deschisă (lipsea --cf-on-primary). */
+/* Alb / Atelier Platinum — pin pe hârtie ⇒ etichetă albă pe umplutură. */
 html.theme-ink,
 html.theme-white {
-  --cf-muted: #4a5160;          /* 4.7+ pe #e6e8ed */
-  --cf-primary: #1a1f28;
-  --cf-primary-strong: #0b0d11;
+  --cf-muted: #5a675f;          /* 4.7+ pe #f1f0ec */
+  --cf-primary: #2f6b55;
+  --cf-primary-strong: #1f5240;
   --cf-danger: #b64338;
-  --cf-info: #3a4150;
-  --cf-warning: #6e5420;
-  --cf-on-primary: #f4f5f7;     /* pe #0b0d11 */
+  --cf-info: #3d6f8c;
+  --cf-warning: #8b630e;
+  --cf-on-primary: #ffffff;     /* pe #1f5240 / #2f6b55 */
   --cf-on-danger: #ffffff;
-  --cf-on-forest: #f4f5f7;
+  --cf-on-forest: #ffffff;
 }
 
-/* Întunecat — grafit profesional */
+/* Întunecat — grafit argintiu, lizibil pe OLED */
 html.theme-dark {
   --cf-muted: #9aa3ad;
-  --cf-primary: #b0b6bf;
-  --cf-primary-strong: #d0d5dc;
+  --cf-primary: #b8bec8;
+  --cf-primary-strong: #d4d8e0;
   --cf-danger: #ff8a7a;
-  --cf-info: #a8aeb8;
+  --cf-info: #aeb6c2;
   --cf-warning: #e8c38a;
   --cf-on-primary: #111214;
   --cf-on-danger: #111214;
@@ -523,9 +523,9 @@ html.theme-ink .bf-journal-quickbar .active,
 html.theme-white .bf-journal-quickbar .active,
 html.theme-ink .bf-movement-scope button.active,
 html.theme-white .bf-movement-scope button.active {
-  background-color: var(--cf-primary-strong, #0b0d11) !important;
+  background-color: var(--cf-primary-strong, #1f5240) !important;
   background-image: none !important;
-  color: var(--cf-on-primary, #f4f5f7) !important;
+  color: var(--cf-on-primary, #ffffff) !important;
 }
 
 html.theme-ink .bf-os-decide svg,
@@ -534,7 +534,7 @@ html.theme-ink .bf-movement-add svg,
 html.theme-white .bf-movement-add svg,
 html.theme-ink .bf-primary svg,
 html.theme-white .bf-primary svg {
-  color: var(--cf-on-primary, #f4f5f7) !important;
+  color: var(--cf-on-primary, #ffffff) !important;
   stroke: currentColor !important;
 }
 
@@ -544,9 +544,9 @@ html.theme-ink .bf-today-add.bf-os-secondary,
 html.theme-white .bf-today-add.bf-os-secondary,
 html.theme-ink .bf-secondary,
 html.theme-white .bf-secondary {
-  color: var(--cf-ink, #0b0d11) !important;
-  background-color: var(--cf-surface, #f6f7f9) !important;
-  border: 1px solid var(--cf-line, #c2c7d0) !important;
+  color: var(--cf-ink, #1a2420) !important;
+  background-color: var(--cf-surface, #fbfaf7) !important;
+  border: 1px solid var(--cf-line, #d5d2c8) !important;
 }
 
 /* Contor căutare: badge în buton, nu „2” gol sub bară */
@@ -564,8 +564,8 @@ html.theme-white .bf-secondary {
   padding: 0 6px !important;
   border-radius: 999px !important;
   border: 0 !important;
-  background: var(--cf-surface-alt, #d8dce3) !important;
-  color: var(--cf-ink, #0b0d11) !important;
+  background: var(--cf-surface-alt, #e7e4dc) !important;
+  color: var(--cf-ink, #1a2420) !important;
   font-size: 11px !important;
   font-weight: 800 !important;
   line-height: 1 !important;
@@ -681,12 +681,12 @@ html.theme-white .bf-secondary {
     text-overflow: ellipsis;
   }
   .bf-movements-ledger .bf-movement-add {
-    color: var(--cf-on-primary, #f4f5f7) !important;
-    background: var(--cf-primary-strong, #0b0d11) !important;
+    color: var(--cf-on-primary, #ffffff) !important;
+    background: var(--cf-primary-strong, #1f5240) !important;
     font-size: 0 !important;
   }
   .bf-movements-ledger .bf-movement-add svg {
-    color: var(--cf-on-primary, #f4f5f7) !important;
+    color: var(--cf-on-primary, #ffffff) !important;
     width: 20px !important;
     height: 20px !important;
   }

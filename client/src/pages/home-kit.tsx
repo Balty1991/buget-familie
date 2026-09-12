@@ -24,7 +24,7 @@ export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: 
   { id: "dots", name: t("Ceață fină"), detail: t("Puncte moi, adâncime") },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
-  { id: "white", name: t("Alb"), detail: t("Alb curat profesional, cerneală cărbune, citire de zi. Implicit."), mood: "ZI · ALB" },
+  { id: "white", name: t("Alb"), detail: t("Atelier Platinum — suprafețe moi, pin cald, citire de zi. Implicit."), mood: "ZI · ATELIER" },
   { id: "dark", name: t("Întunecat"), detail: t("Negru profesional, accent argintiu. Pentru noapte, fără mint."), mood: "NOAPTE · GRAFIT" },
   { id: "aurora", name: t("Aurora Glass"), detail: t("Sticlă ultravioletă, cyan controlat — futurist, clar nocturn."), mood: "NOAPTE · DIGITAL" },
   { id: "navy", name: t("Navy OLED"), detail: t("Bleumarin profund, auriu discret. Cabinet modern."), mood: "NOAPTE · OLED" },
@@ -106,7 +106,7 @@ export function WhatsNewSheet({ onClose, onOpenTheme, onOpenMore }: { onClose: (
           <li>{t("De verificat — confirmă bonuri și CSV înainte de registru.")}</li>
           <li>{t("Personale vs comune — separă ce e al tău de ce e al casei.")}</li>
           <li>{t("Reguli comerciant — categorie și plic propuse după magazin.")}</li>
-          <li>{t("Temă Alb — aspect curat profesional (înlocuiește lista lungă de teme).")}</li>
+          <li>{t("Temă Alb Atelier — suprafețe moi, pin cald (fără look-ul ink stark).")}</li>
           <li>{t("Împarte o cheltuială pe categorii sau plicuri.")}</li>
           <li>{t("Plan săptămânal din scadențe și obiective, nu doar ultimele 7 zile.")}</li>
           <li>{t("Scor de sănătate pe cicluri salariale și ce l-a mișcat.")}</li>

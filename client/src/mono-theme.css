@@ -1,43 +1,43 @@
 /**
- * Temă Alb (fost Ink) + rafinare low-hue pentru Dark/Grafit.
- * Accentul rămâne gri — fără verde, fără auriu saturat.
- * --cf-on-primary este obligatoriu: umpluturile sunt aproape negre.
+ * Temă Alb — Atelier Platinum (default).
+ * Suprafețe moi, pin cald, ierarhie clară. Fără blocuri ink stark, fără neon.
+ * --cf-on-primary este obligatoriu pe umplutura de accent.
  */
 html.theme-ink,
 html.theme-white {
-  --cf-bg: #e6e8ed;
-  --cf-surface: #f6f7f9;
-  --cf-surface-alt: #d8dce3;
-  --cf-ink: #0b0d11;
-  --cf-muted: #4a5160;
-  --cf-line: #c2c7d0;
-  --cf-primary: #1a1f28;
-  --cf-primary-strong: #0b0d11;
-  --cf-info: #3a4150;
-  --cf-danger: #8f3a34;
-  --cf-warning: #6e5420;
-  --cf-on-forest: #f4f5f7;
-  --cf-on-primary: #f4f5f7;
+  --cf-bg: #f1f0ec;
+  --cf-surface: #fbfaf7;
+  --cf-surface-alt: #e7e4dc;
+  --cf-ink: #1a2420;
+  --cf-muted: #5a675f;
+  --cf-line: #d5d2c8;
+  --cf-primary: #2f6b55;
+  --cf-primary-strong: #1f5240;
+  --cf-info: #3d6f8c;
+  --cf-danger: #b64338;
+  --cf-warning: #8b630e;
+  --cf-on-forest: #ffffff;
+  --cf-on-primary: #ffffff;
   --cf-on-danger: #ffffff;
-  --cf-nav: rgba(246, 247, 249, .96);
-  --cf-shadow: 0 10px 22px rgba(11, 13, 17, .12);
-  --cf-glow: rgba(11, 13, 17, .05);
+  --cf-nav: rgba(251, 250, 247, .94);
+  --cf-shadow: 0 14px 34px rgba(26, 36, 32, .08);
+  --cf-glow: rgba(47, 107, 85, .1);
 }
 
 .theme-ink .bf-app,
 .theme-white .bf-app {
   background:
-    radial-gradient(720px 420px at 100% -10%, rgba(58, 68, 80, .07), transparent 58%),
-    radial-gradient(520px 360px at -10% 80%, rgba(20, 23, 28, .04), transparent 55%),
+    radial-gradient(720px 420px at 100% -8%, rgba(47, 107, 85, .08), transparent 58%),
+    radial-gradient(520px 360px at -8% 88%, rgba(212, 176, 106, .06), transparent 55%),
     var(--cf-bg) !important;
 }
 .theme-ink .bf-app::before,
 .theme-white .bf-app::before {
-  opacity: .12;
+  opacity: .09;
   background-image:
-    linear-gradient(rgba(20, 23, 28, .045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 23, 28, .045) 1px, transparent 1px);
-  background-size: 22px 22px;
+    linear-gradient(rgba(26, 36, 32, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 36, 32, .035) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 .theme-ink .bf-appbar::after,
 .theme-white .bf-appbar::after {
@@ -47,53 +47,53 @@ html.theme-white {
 .theme-ink .bf-mobile-nav button.active,
 .theme-white .bf-mobile-nav button.active {
   background: linear-gradient(135deg, var(--cf-primary), var(--cf-primary-strong)) !important;
-  color: #f7f8fa !important;
+  color: #ffffff !important;
 }
 .theme-ink .bf-primary,
 .theme-white .bf-primary {
-  color: #f7f8fa !important;
-  background: #1f2730 !important;
-  box-shadow: 0 8px 18px rgba(20, 23, 28, .18) !important;
+  color: #ffffff !important;
+  background: var(--cf-primary-strong) !important;
+  box-shadow: 0 8px 18px rgba(31, 82, 64, .22) !important;
 }
 .theme-ink .bf-theme-picker,
-.theme-white .bf-theme-picker { background: #f7f8fa; }
+.theme-white .bf-theme-picker { background: #fbfaf7; }
 .theme-ink .bf-theme-option,
-.theme-white .bf-theme-option { border-color: #d0d5dc; background: #fff; }
+.theme-white .bf-theme-option { border-color: #d5d2c8; background: #fff; }
 .theme-ink .bf-theme-option.selected,
-.theme-white .bf-theme-option.selected { border-color: #1f2730; box-shadow: 0 0 0 2px rgba(31, 39, 48, .16); }
+.theme-white .bf-theme-option.selected { border-color: #2f6b55; box-shadow: 0 0 0 2px rgba(47, 107, 85, .16); }
 
 .bf-theme-preview.ink,
 .bf-theme-preview.white {
-  --preview-bg: #e6e8ed;
-  --preview-surface: #ffffff;
-  --preview-ink: #0b0d11;
-  --preview-muted: #5c6570;
-  --preview-line: #d5d9e0;
-  --preview-primary: #0b0d11;
-  --preview-info: #5a6572;
-  --preview-glow: rgba(58, 68, 80, .14);
+  --preview-bg: #f1f0ec;
+  --preview-surface: #fbfaf7;
+  --preview-ink: #1a2420;
+  --preview-muted: #5a675f;
+  --preview-line: #d5d2c8;
+  --preview-primary: #2f6b55;
+  --preview-info: #3d6f8c;
+  --preview-glow: rgba(47, 107, 85, .14);
 }
 .bf-theme-option.ink .bf-theme-swatch,
 .bf-theme-option.white .bf-theme-swatch {
-  background: linear-gradient(135deg, #e6e8ed 0 52%, #3a4150 53% 72%, #0b0d11 73%);
+  background: linear-gradient(135deg, #f1f0ec 0 48%, #2f6b55 49% 72%, #1a2420 73%);
 }
 .bf-theme-option.ink .bf-theme-swatch span,
 .bf-theme-option.white .bf-theme-swatch span {
-  background-image: linear-gradient(rgba(20, 23, 28, .12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 23, 28, .12) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(47, 107, 85, .12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 107, 85, .12) 1px, transparent 1px);
   background-size: 8px 8px;
 }
 
-/* Dark / Grafit */
+/* Dark / Grafit — argintiu cald, lizibil pe OLED */
 html.theme-graphite,
 html.theme-dark {
-  --cf-primary: #b0b6bf;
-  --cf-primary-strong: #8a919c;
-  --cf-info: #a8aeb8;
+  --cf-primary: #b8bec8;
+  --cf-primary-strong: #d4d8e0;
+  --cf-info: #aeb6c2;
   --cf-on-primary: #111214;
   --cf-on-danger: #111214;
   --cf-on-forest: #111214;
-  --cf-glow: rgba(176, 182, 191, .1);
+  --cf-glow: rgba(184, 190, 200, .12);
 }
 
 @media (max-width: 480px) {
