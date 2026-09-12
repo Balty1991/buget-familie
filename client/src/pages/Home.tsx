@@ -93,12 +93,12 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
   if (!math.plan.nextPayday) {
     signals.push({ id: "plan-needed", tone: "watch", eyebrow: t("URMĂTORUL PAS"), title: t("Alege următorul venit"), detail: t("Planul are nevoie de o dată de salariu pentru a calcula ritmul sigur de cheltuire."), action: "plan", actionLabel: t("Configurează planul") });
   } else if (math.remaining < 0) {
-    signals.push({ id: "over-plan", tone: "risk", eyebrow: t("ATENȚIE"), title: t("Planul este peste limită cu {amount}", { amount: money(Math.abs(math.remaining)) }), detail: `Sunt incluse ${money(math.periodExpenses)} cheltuieli și ${money(math.scheduled)} rezervate până la ${dateText(math.planEnd || math.plan.nextPayday)}.`, action: "plan", actionLabel: t("Revizuiește planul") });
+    signals.push({ id: "over-plan", tone: "risk", eyebrow: t("ATENȚIE"), title: t("Planul este peste limită cu {amount}", { amount: money(Math.abs(math.remaining)) }), detail: t("Sunt incluse {expenses} cheltuieli și {scheduled} rezervate până la {until}.", { expenses: money(math.periodExpenses), scheduled: money(math.scheduled), until: dateText(math.planEnd || math.plan.nextPayday) }), action: "plan", actionLabel: t("Revizuiește planul") });
   } else if (forecast.spentToDate > 0 && forecast.projectedRemaining < 0) {
-    signals.push({ id: "pace-risk", tone: "risk", eyebrow: "RITM DE REVIZUIT", title: `La ritmul actual lipsesc ${money(Math.abs(forecast.projectedRemaining))}`, detail: `Cheltuielile sunt în medie ${money(forecast.paceDaily)} pe zi; ritmul sigur este ${money(forecast.safeDaily)} pe zi până la venit.`, action: "plan", actionLabel: t("Ajustează planul") });
+    signals.push({ id: "pace-risk", tone: "risk", eyebrow: t("RITM DE REVIZUIT"), title: t("La ritmul actual lipsesc {amount}", { amount: money(Math.abs(forecast.projectedRemaining)) }), detail: t("Cheltuielile sunt în medie {pace} pe zi; ritmul sigur este {safe} pe zi până la venit.", { pace: money(forecast.paceDaily), safe: money(forecast.safeDaily) }), action: "plan", actionLabel: t("Ajustează planul") });
   } else {
     const daily = math.remaining / Math.max(1, math.days);
-    signals.push({ id: "daily-pace", tone: "good", eyebrow: "RITM SIGUR", title: `${money(daily)} pe zi până la venit`, detail: `${money(math.remaining)} rămân după cheltuielile înregistrate și rezervele deja planificate.`, action: "plan", actionLabel: t("Vezi calculele") });
+    signals.push({ id: "daily-pace", tone: "good", eyebrow: t("RITM SIGUR"), title: t("{amount} pe zi până la venit", { amount: money(daily) }), detail: t("{amount} rămân după cheltuielile înregistrate și rezervele deja planificate.", { amount: money(math.remaining) }), action: "plan", actionLabel: t("Vezi calculele") });
   }
   if (pending[0]) {
     signals.push({ id: "next-recurring", tone: "watch", eyebrow: t("SCADENȚĂ REZERVATĂ"), title: `${pending[0].name} · ${money(pending[0].amount)}`, detail: `Este programată pentru ${dateText(pending[0].dueDate, true)} și este deja exclusă din suma disponibilă.`, action: "recurring", actionLabel: t("Deschide scadențele") });
@@ -109,7 +109,7 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
     signals.push({ id: `allocation-${allocation.item.id}`, tone: over ? "risk" : "watch", eyebrow: over ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ"), title: `${allocation.item.label}: ${money(Math.max(0, allocation.remaining))} rămași`, detail: `${money(allocation.spent)} cheltuiți din limita ajustată de ${money(allocation.budget)} în perioada activă.`, action: "plan", actionLabel: t("Vezi plicul") });
   }
   const goal = data.savings.filter((item) => item.target > item.current).sort((a, b) => (b.target - b.current) - (a.target - a.current))[0];
-  if (goal && signals.length < 3) signals.push({ id: `goal-${goal.id}`, tone: "good", eyebrow: "OBIECTIV COMUN", title: `${money(goal.target - goal.current)} până la ${goal.name}`, detail: `Progres actual: ${money(goal.current)} din ${money(goal.target)}.`, action: "objectives", actionLabel: t("Vezi obiectivul") });
+  if (goal && signals.length < 3) signals.push({ id: `goal-${goal.id}`, tone: "good", eyebrow: t("OBIECTIV COMUN"), title: `${money(goal.target - goal.current)} până la ${goal.name}`, detail: `Progres actual: ${money(goal.current)} din ${money(goal.target)}.`, action: "objectives", actionLabel: t("Vezi obiectivul") });
   return signals.slice(0, 3);
 }
 
@@ -197,9 +197,9 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
   const explainer = overPlan
     ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
     : brief.hasPayday
-      ? `Reperul zilei este minimul dintre ritmul sigur (${money(daily)}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt ${money(envelopeTotalRemaining)}; în surse ${money(math.availableSources)}.`
+      ? t("Reperul zilei este minimul dintre ritmul sigur ({daily}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt {envelopes}; în surse {sources}.", { daily: money(daily), envelopes: money(envelopeTotalRemaining), sources: money(math.availableSources) })
       : data.settings.salaryPlan.allocations.length
-        ? `Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele ${forecast.remainingDays} zile până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.`
+        ? t("Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} zile până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.", { days: forecast.remainingDays })
         : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");
 
   return (
@@ -208,11 +208,11 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
         <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
           <CalendarClock size={19} />
           <div>
-            <p>TRANȘA S{activeTranche.index} A ÎNCEPUT</p>
+            <p>{t("TRANȘA S{index} A ÎNCEPUT", { index: activeTranche.index })}</p>
             <strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong>
-            <span>Ritmul acestei tranșe este {money(activeTranche.amount)} pentru {activeTranche.days} {activeTranche.days === 1 ? "zi" : "zile"}.</span>
+            <span>{t("Ritmul acestei tranșe este {amount} pentru {days} {dayLabel}.", { amount: money(activeTranche.amount), days: activeTranche.days, dayLabel: activeTranche.days === 1 ? t("zi") : t("zile") })}</span>
           </div>
-          <button onClick={() => onGo("plan")}>Plan</button>
+          <button onClick={() => onGo("plan")}>{t("Plan")}</button>
           <button className="dismiss" aria-label={t("Ascunde alerta tranșei săptămânale")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
         </aside>
       )}
@@ -222,10 +222,10 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
           <div>
             <p>{activeEnvelopeAlert.state === "over" ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ")}</p>
             <strong>{activeEnvelopeAlert.item.label}</strong>
-            <span>{activeEnvelopeAlert.state === "over" ? `${money(Math.abs(activeEnvelopeAlert.remaining))} peste limita alocată.` : `${Math.round(activeEnvelopeAlert.usage * 100)}% din limită este deja consumată.`}</span>
+            <span>{activeEnvelopeAlert.state === "over" ? t("{amount} peste limita alocată.", { amount: money(Math.abs(activeEnvelopeAlert.remaining)) }) : t("{pct}% din limită este deja consumată.", { pct: Math.round(activeEnvelopeAlert.usage * 100) })}</span>
           </div>
-          <button onClick={() => onGo("plan")}>Vezi</button>
-          <button className="dismiss" aria-label={`Ascunde alerta pentru ${activeEnvelopeAlert.item.label}`} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
+          <button onClick={() => onGo("plan")}>{t("Vezi")}</button>
+          <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: activeEnvelopeAlert.item.label })} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
         </aside>
       )}
       {data.pendingReview.length > 0 && (
@@ -361,10 +361,10 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
         </Suspense>
       )}
       <DeferBelowFold>
-        <section className="bf-today-hub-links" aria-label="Acces rapid">
-          <p className="bf-kicker">ACCES RAPID</p>
+        <section className="bf-today-hub-links" aria-label={t("Acces rapid")}>
+          <p className="bf-kicker">{t("ACCES RAPID")}</p>
           <div>
-            {[{ label: "Plicuri", detail: t("Repartizează"), icon: Goal, view: "plan" as MainView }, { label: t("Mișcări"), detail: t("Vezi registrul"), icon: WalletCards, view: "journal" as MainView }, { label: t("Obligații"), detail: t("Urmărește scadențele"), icon: BellRing, view: "obligations" as MainView }, { label: t("Analiză"), detail: t("Înțelege ritmul"), icon: LayoutDashboard, view: "insights" as MainView }].map((item) => {
+            {[{ label: t("Plicuri"), detail: t("Repartizează"), icon: Goal, view: "plan" as MainView }, { label: t("Mișcări"), detail: t("Vezi registrul"), icon: WalletCards, view: "journal" as MainView }, { label: t("Obligații"), detail: t("Urmărește scadențele"), icon: BellRing, view: "obligations" as MainView }, { label: t("Analiză"), detail: t("Înțelege ritmul"), icon: LayoutDashboard, view: "insights" as MainView }].map((item) => {
               const Icon = item.icon;
               return <button key={item.label} onClick={() => onGo(item.view)}><span><Icon size={16} /></span><b>{item.label}</b><small>{item.detail}</small><ChevronRight size={14} /></button>;
             })}
@@ -405,10 +405,10 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview }: { data: AppDat
           <section className="bf-today-envelope-evolution" aria-labelledby="today-envelope-evolution-title">
             <div className="bf-section-heading">
               <div>
-                <p className="bf-kicker">RITMUL PLICURILOR</p>
+                <p className="bf-kicker">{t("RITMUL PLICURILOR")}</p>
                 <h2 id="today-envelope-evolution-title">{t("Evoluția în timp")}</h2>
               </div>
-              <button onClick={() => onGo("plan")}>Vezi istoricul <ChevronRight size={15} /></button>
+              <button onClick={() => onGo("plan")}>{t("Vezi istoricul")} <ChevronRight size={15} /></button>
             </div>
             <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim ritmul plicurilor…")}</div>}>
               <AllocationHistoryChart entries={allocationHistorySnapshot(data)} />
@@ -641,7 +641,7 @@ export default function Home() {
   return <div className="bf-app os-shell">
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
-    <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void loadSecondary()} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label={data.pendingReview.length ? t("Deschide instrumentele · {count} de verificat", { count: data.pendingReview.length }) : t("Deschide instrumentele")} onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} />{data.pendingReview.length > 0 && <span className="bf-nav-count" aria-hidden="true">{data.pendingReview.length}</span>}</button><button className="os-tool" aria-label="Deschide ghidul" onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>
+    <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void loadSecondary()} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label={data.pendingReview.length ? t("Deschide instrumentele · {count} de verificat", { count: data.pendingReview.length }) : t("Deschide instrumentele")} onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} />{data.pendingReview.length > 0 && <span className="bf-nav-count" aria-hidden="true">{data.pendingReview.length}</span>}</button><button className="os-tool" aria-label={t("Deschide ghidul")} onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>
     <main id="main-content" key={view} className="bf-screen-transition">{current()}</main>
     {undo && (
       <div className="bf-undo-bar" role="status" aria-live="polite">
