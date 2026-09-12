@@ -9,7 +9,7 @@ const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "cu
 
 const dueLabel = (daysLeft: number) => {
   if (daysLeft < 0) return t("Întârziată");
-  if (daysLeft === 0) return "Azi";
+  if (daysLeft === 0) return t("Azi");
   if (daysLeft === 1) return t("Mâine");
   return t("în {days} zile", { days: daysLeft });
 };
@@ -56,7 +56,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
 
       {pendingIncome && (
         <button type="button" className="bf-brief-salary" onClick={fillEnvelopes}>
-          <b>A venit {pendingIncome.title}</b>
+          <b>{t("A venit {title}", { title: pendingIncome.title })}</b>
           <small>{money(pendingIncome.amount)} — umple plicurile după regulile tale.</small>
         </button>
       )}
@@ -79,7 +79,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
               {due.confirmable ? (
                 <button type="button" onClick={() => pay(due.id)}>{t("Confirmă")}</button>
               ) : (
-                <button type="button" onClick={() => onGo("obligations")}>Vezi</button>
+                <button type="button" onClick={() => onGo("obligations")}>{t("Vezi")}</button>
               )}
             </li>
           ))}
@@ -88,7 +88,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
 
       {brief.hunts.map((hunt) => (
         <button key={hunt.key} type="button" className="bf-brief-hunt" onClick={() => setPendingHunt(hunt)}>
-          <b>Pare abonament · {hunt.name}</b>
+          <b>{t("Pare abonament · {name}", { name: hunt.name })}</b>
           <small>{money(hunt.amount)} · {hunt.reason} {t("Confirmă înainte de a adăuga la scadențe.")}</small>
         </button>
       ))}
@@ -116,7 +116,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
 
       {brief.closeSoon && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("insights")}>
-          Ciclu aproape gata — închide luna din Analiză → Gospodărie
+          {t("Ciclu aproape gata — închide luna din Analiză → Gospodărie")}
         </button>
       )}
     </section>

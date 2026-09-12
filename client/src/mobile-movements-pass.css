@@ -15,7 +15,7 @@
 
 .bf-movements-ledger .bf-movement-add {
   flex: 0 0 auto;
-  min-height: 44px;
+  min-height: 48px;
   border-radius: 12px;
   box-shadow: 0 8px 18px color-mix(in srgb, var(--movement-accent), transparent 78%);
 }
@@ -51,8 +51,8 @@
 }
 
 .bf-movements-ledger .bf-movement-kind button {
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 48px;
+  min-width: 48px;
   padding: 0 12px;
   border: 0;
   border-radius: 8px;
@@ -77,8 +77,8 @@
 }
 
 .bf-movements-ledger .bf-journal-filter-toggle {
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 48px;
+  min-width: 48px;
   white-space: nowrap;
 }
 
@@ -179,15 +179,15 @@
 
   .bf-movements-ledger .bf-movement-kind button {
     flex: 1;
-    min-height: 44px;
+    min-height: 48px;
   }
 
   .bf-movements-ledger .bf-journal-search {
-    min-height: 44px;
+    min-height: 48px;
   }
 
   .bf-movements-ledger .bf-journal-filter-toggle {
-    min-height: 44px;
+    min-height: 48px;
     padding-inline: 10px;
     font-size: 11px;
   }
@@ -204,7 +204,7 @@
   .bf-movements-ledger .bf-journal-date-range input,
   .bf-movements-ledger .bf-journal-export-actions button,
   .bf-movements-ledger .bf-journal-save-filter button {
-    min-height: 44px;
+    min-height: 48px;
   }
 
   .bf-movements-ledger .bf-movement-day > header {
