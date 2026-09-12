@@ -43,14 +43,14 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
     <div className="bf-household">
       <section className={`bf-household-recap bf-statement ${recap.tone}`}>
         <div>
-          <p className="bf-kicker">RITUALUL LUNII</p>
+          <p className="bf-kicker">{t("RITUALUL LUNII")}</p>
           <h2>{recap.title}</h2>
           <p>{recap.nextStep}</p>
         </div>
         {closedThis && <span className="bf-statement-stamp">{t("Închis")}</span>}
         <div className="bf-household-flow">
-          <article><small>Venituri</small><b>{money(recap.income)}</b><em>{recap.priorIncome ? `${recap.income - recap.priorIncome >= 0 ? "+" : ""}${money(recap.income - recap.priorIncome)} vs luna trecută` : t("prima lună cu date")}</em></article>
-          <article><small>Cheltuieli</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : t("fără categorie dominantă")}</em></article>
+          <article><small>{t("Venituri")}</small><b>{money(recap.income)}</b><em>{recap.priorIncome ? t("{delta} vs luna trecută", { delta: `${recap.income - recap.priorIncome >= 0 ? "+" : ""}${money(recap.income - recap.priorIncome)}` }) : t("prima lună cu date")}</em></article>
+          <article><small>{t("Cheltuieli")}</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : t("fără categorie dominantă")}</em></article>
           <article><small>{t("Bilanț")}</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? `${recap.envelopesOver} plicuri depășite` : recap.envelopesWatch ? `${recap.envelopesWatch} plicuri de urmărit` : t("plicuri în ritm")}</em></article>
         </div>
         <div className="bf-household-actions">
@@ -73,9 +73,9 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           </div>
         ) : <div className="bf-empty-soft"><EmptyMark /><p>{t("După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.")}</p></div>}
         <div className="bf-household-safe">
-          <span><small>Lichid acum</small><b>{money(safe.liquidFunds)}</b></span>
+          <span><small>{t("Lichid acum")}</small><b>{money(safe.liquidFunds)}</b></span>
           <span><small>{t("Rezervat scadențe")}</small><b>{money(safe.reservedRecurring)}</b></span>
-          <span><small>Disponibil prudent</small><b>{money(safe.available)}</b></span>
+          <span><small>{t("Disponibil prudent")}</small><b>{money(safe.available)}</b></span>
         </div>
       </section>
 
@@ -89,7 +89,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
             {activity.members.map((member) => (
               <article key={member.memberId}>
                 <header><b>{member.name}</b><small>{member.count} mișcări</small></header>
-                <div><span>Cheltuit</span><strong>{money(member.expense)}</strong></div>
+                <div><span>{t("Cheltuit")}</span><strong>{money(member.expense)}</strong></div>
                 <div><span>{t("Încasat")}</span><strong>{money(member.income)}</strong></div>
                 <i><em style={{ width: `${Math.round(member.share * 100)}%` }} /></i>
                 <small>{Math.round(member.share * 100)}% din cheltuielile casei</small>
@@ -147,7 +147,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
       </section>
 
       <button className="bf-household-pdf" type="button" disabled={exporting} onClick={() => void downloadMonthlyBalancePdf(data, month)}>
-        <Download size={16} /> Descarcă bilanțul lunii, fără a o închide
+        <Download size={16} /> {t("Descarcă bilanțul lunii, fără a o închide")}
       </button>
     </div>
   );

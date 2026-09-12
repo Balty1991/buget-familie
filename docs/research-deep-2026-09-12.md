@@ -78,7 +78,9 @@
 6. Digest headline săptămânal  
 7. Trust line onboarding + lei pe ritm  
 
-Backlog rămâne: QA nativ PLAY_CHECKLIST, merge IDB/LS la hydrate (dacă nu e deja pe main), contrast Aurora/Navy/Cyber, EN pe ecrane adânci, PDF digest.
+Backlog rămâne: QA nativ PLAY_CHECKLIST (fără a revendica phone QA done), Play Billing, bank scraping, App Check Enforce.
+
+Închis pe main (12.09.2026): PDF digest + cycle export îmbunătățit; contrast Aurora/Navy/Cyber (filled + body pe carduri dark); EN pe ecrane adânci (t() + coverage); harden IDB↔LS hydrate (`resolveHydrateMerge` + teste de cursă).
 
 ## 4. Referințe
 
