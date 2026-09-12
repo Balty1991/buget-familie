@@ -2046,7 +2046,22 @@ const en: Record<string, string> = {
   "Viitor · {amount} pe zi": "Ahead · {amount} a day",
   "Trecut · {amount} rămași": "Past · {amount} left",
   "Cheltuieli pe 7 zile, total {amount}": "Spending over 7 days, total {amount}",
-  "Evoluția lunară a repartizărilor pentru {list}": "Monthly allocation trend for {list}"
+  "Evoluția lunară a repartizărilor pentru {list}": "Monthly allocation trend for {list}",
+  "Atelier Platinum — hârtie caldă, pin, citire de zi. Implicit.": "Atelier Platinum — warm paper, pine, daytime reading. Default.",
+  "Forest Night — grafit pe OLED, fără mint strident.": "Forest Night — graphite on OLED, no loud mint.",
+  "Sticlă ultravioletă, cyan controlat — clar nocturn.": "Ultraviolet glass, controlled cyan — clear at night.",
+  "Mint neon pe negru — cifre clare, distinct.": "Neon mint on black — clear figures, distinct.",
+  "Patru lucruri, la vedere. O singură dată.": "Four things, in plain sight. Once.",
+  "Cele 5 teme — Alb, Întunecat, Aurora, Navy, Cyber — au materiale distincte, aceeași semantică.": "The 5 themes — Light, Dark, Aurora, Navy, Cyber — have distinct materials and the same meaning.",
+  "Astăzi pornește de la o fișă de decizie: cât poți folosi și ce urmează.": "Today starts from a decision card: what you can use and what comes next.",
+  "La prima deschidere alegi o intenție: urmărești, organizezi luna sau buget de familie. Mai târziu e permis.": "On first open you pick an intent: track spending, organise the month, or a family budget. Later is allowed.",
+  "Obligații începe cu „Ce urmează”: rate, facturi și obiective pe o singură listă.": "Obligations starts with “What's next”: instalments, bills and goals on one list.",
+  "Următoarea acțiune: înregistrează o mișcare.": "Next action: log a movement.",
+  "CE URMEAZĂ": "WHAT'S NEXT",
+  "plătit, rezervat sau amânat.": "paid, reserved or postponed.",
+  "Rate, facturi și obiective pe o singură listă. Confirmarea creează mișcarea — nu trimite bani din bancă.": "Instalments, bills and goals on one list. Confirming creates the movement — it does not send money from the bank.",
+  "Factură / abonament": "Bill / subscription",
+  "Adaugă o rată, o factură recurentă sau un obiectiv — apar aici, în ordine.": "Add an instalment, a recurring bill or a goal — they appear here, in order."
 };
 
 

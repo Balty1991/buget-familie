@@ -3,7 +3,7 @@
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, Bell, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Goal, Inbox, Info, LayoutDashboard, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BarChart3, Bell, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationStatus, allocationWeekStatus, confirmRecurringPayment, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
@@ -311,6 +311,7 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
+            {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
           </>
         )}
         {!fresh && (
@@ -404,15 +405,6 @@ function TodayView({ data, onAdd, onGo, onChange, onOpenReview, onOpenSettings }
         <div className="os-gauge bf-today-below-gauge">
           <HealthScoreBadge data={data} />
         </div>
-        <section className="bf-today-hub-links" aria-label={t("Acces rapid")}>
-          <p className="bf-kicker">{t("ACCES RAPID")}</p>
-          <div>
-            {[{ label: t("Plicuri"), detail: t("Repartizează"), icon: Goal, view: "plan" as MainView }, { label: t("Mișcări"), detail: t("Vezi registrul"), icon: WalletCards, view: "journal" as MainView }, { label: t("Obligații"), detail: t("Urmărește scadențele"), icon: BellRing, view: "obligations" as MainView }, { label: t("Analiză"), detail: t("Înțelege ritmul"), icon: LayoutDashboard, view: "insights" as MainView }].map((item) => {
-              const Icon = item.icon;
-              return <button key={item.label} onClick={() => onGo(item.view)}><span><Icon size={16} /></span><b>{item.label}</b><small>{item.detail}</small><ChevronRight size={14} /></button>;
-            })}
-          </div>
-        </section>
         <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
@@ -542,7 +534,7 @@ export default function Home() {
     const id = window.setTimeout(warm, 250);
     return () => window.clearTimeout(id);
   }, [storageReady]); useEffect(() => { if (legacyReceiptMigrationStarted.current || !data.receipts.some((receipt) => (receipt.imageData || receipt.imageData2) && !receipt.imageKeys?.length)) return; legacyReceiptMigrationStarted.current = true; void migrateLegacyReceiptImages(data.receipts).then((migrated) => { if (!migrated.size) return; setData((current) => ({ ...current, receipts: current.receipts.map((receipt) => { const imageKeys = migrated.get(receipt.id); return imageKeys ? { ...receipt, imageKeys, imageData: undefined, imageData2: undefined } : receipt; }) })); setReceiptStorageNotice(`${migrated.size} bon${migrated.size === 1 ? " a fost mutat" : "uri au fost mutate"} în stocarea locală a telefonului.`); }).catch((reason) => setReceiptStorageNotice(reason instanceof Error ? reason.message : t("Nu am putut muta fotografiile vechi ale bonurilor; acestea nu au fost șterse."))); }, [data.receipts]);
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) safeSetItem(window.localStorage, "buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:onboarding-complete") && !hasStarted) setOnboardingOpen(true); if (storageReady && window.localStorage.getItem("buget-familie:onboarding-complete") && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) safeSetItem(window.localStorage, "buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) { safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true"); setSetupOpen(true); } return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
   useEffect(() => {
     if (!storageReady || onboardingOpen || setupOpen) return;
     if (shouldShowFirstWeekTour(window.localStorage)) {

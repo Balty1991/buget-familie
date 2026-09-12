@@ -540,14 +540,170 @@ function DebtPayoffSimulator({ data }: { data: AppData }) {
   return <section className="bf-debt-simulator"><div className="bf-debt-simulator-head"><div><p className="bf-kicker">{t("SIMULATOR DE DECIZIE")}</p><h2>{t("Dacă plătești")} <em>{t("în plus")}</em>?</h2><span>{t("Testează un efort lunar suplimentar. Nu schimbă datele tale, doar îți arată scenariul.")}</span></div><div className="bf-debt-simulator-result"><strong>{savedMonths ? "−" + savedMonths : "0"}</strong><small>{t("luni câștigate")}</small></div></div><div className="bf-debt-slider"><div><span>{t("Sumă extra / lună")}</span><b>{money(extra)}</b></div><input type="range" min="0" max={maxExtra} step="50" value={extra} onChange={(event) => setExtra(Number(event.target.value))} aria-label={t("Sumă suplimentară lunară")} /><div className="bf-debt-slider-labels"><small>0 RON</small><small>{money(maxExtra)}</small></div></div><div className="bf-debt-simulator-summary"><span><b>{baseMonths}</b><small>{t("luni acum")}</small></span><span><b>{simulatedMonths}</b><small>{t("luni cu extra")}</small></span><span><b>{money(minimum + extra)}</b><small>{t("efort lunar")}</small></span></div></section>;
 }
 export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onOpenGoals, onOpenCalendar, onOpenAssistant }: { data: AppData; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenAssistant: () => void }) {
-  const totalDebt = data.debts.reduce((sum, item) => sum + item.remaining, 0); const totalSavings = data.savings.reduce((sum, item) => sum + item.current, 0); const monthlyRates = data.debts.reduce((sum, item) => sum + item.monthly, 0); const snowball = debtSnowball(data); const rankedDebts = snowball.order.length ? [...snowball.order.map((item) => item.debt), ...data.debts.filter((item) => item.remaining <= 0)] : data.debts;
+  const [laterIds, setLaterIds] = useState<string[]>([]);
+  const totalDebt = data.debts.reduce((sum, item) => sum + item.remaining, 0);
+  const totalSavings = data.savings.reduce((sum, item) => sum + item.current, 0);
+  const monthlyRates = data.debts.reduce((sum, item) => sum + item.monthly, 0);
+  const snowball = debtSnowball(data);
+  const rankedDebts = snowball.order.length ? [...snowball.order.map((item) => item.debt), ...data.debts.filter((item) => item.remaining <= 0)] : data.debts;
+  const today = isoToday();
   const upcoming = [
-    ...data.debts.filter((item) => item.dueDate).map((item) => ({ id: `debt-${item.id}`, date: item.dueDate!, label: item.name, detail: t("Rată {amount}/lună", { amount: money(item.monthly) }), amount: item.remaining, onConfirm: () => onPayDebt(item) })),
-    ...data.savings.filter((item) => item.dueDate).map((item) => ({ id: `saving-${item.id}`, date: item.dueDate!, label: item.name, detail: "Obiectiv", amount: item.target, onConfirm: onOpenGoals })),
-    ...pendingRecurringInPlan(data).map((item) => ({ id: `recurring-${item.id}`, date: item.dueDate, label: item.name, detail: item.category, amount: item.amount, onConfirm: () => onPayRecurring(item.id) })),
-  ].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
-  return <div className="bf-page bf-obligations-workspace"><header className="bf-obligations-header"><div><p className="bf-kicker">{t("OBLIGAȚII ȘI REZERVE")}</p><h1>{t("Ce trebuie")} <em>{t("protejat.")}</em></h1><p>{t("Ratele devin mișcări doar după confirmare. Economiile rămân distincte de soldurile surselor.")}</p></div><div className="bf-obligations-links"><button className="bf-goals-link" onClick={onOpenGoals}><PiggyBank size={16} /> {t("Obiective pe termen lung")}</button><button className="bf-goals-link" onClick={onOpenCalendar}><CalendarDays size={16} /> {t("Calendar de scadențe")}</button></div></header><DebtSnowballCard data={data} onPay={onPayDebt} /><DebtPayoffPlan data={data} /><DebtPayoffSimulator data={data} /><section className="bf-obligation-ai"><div className="bf-obligation-ai-icon"><Bot size={22} /></div><div><p className="bf-kicker">{t("GHIDUL TĂU PENTRU OBLIGAȚII")}</p><h2>{t("Îți urmăresc ratele, pas cu pas.")}</h2><p>{t("Spune-mi ce datorie ai, ce rată ai plătit și îți arăt imediat ce urmează și cât mai rămâne.")}</p></div><button type="button" onClick={onOpenAssistant} className="bf-primary">{t("Deschide ghidul")} <ChevronRight size={16} /></button></section><section className="bf-obligation-timeline"><div className="bf-section-heading"><div><p className="bf-kicker">{t("URMEAZĂ")}</p><h2>{t("Următoarele scadențe")}</h2></div></div>{upcoming.length ? <div className="bf-obligation-timeline-list">{upcoming.map((entry) => <article className="bf-obligation-entry" key={entry.id}><div className="bf-obligation-entry-main"><span><BellRing size={17} /></span><div><b>{entry.label}</b><small>{dateText(entry.date, true)} · {entry.detail}</small></div><strong>{money(entry.amount)}</strong></div><div className="bf-obligation-entry-actions"><button className="pay" onClick={entry.onConfirm}><Check size={16} /> {t("Confirmă plata")}</button></div></article>)}</div> : <div className="bf-obligation-empty"><span><b>{t("Nu ai scadențe apropiate.")}</b><small>{t("Adaugă o dată la datorii sau o scadență recurentă pentru a le vedea aici.")}</small></span></div>}</section><section className="bf-obligation-ledger"><article className="debt"><span>{t("Sold datorii")}</span><b>{money(totalDebt)}</b><small>{t("{amount} rate declarate / lună", { amount: money(monthlyRates) })}</small></article><article className="savings"><span>{t("Economii urmărite")}</span><b>{money(totalSavings)}</b><small>{t("{count} obiective înregistrate", { count: data.savings.length })}</small></article><button onClick={onOpenRecurring}><CalendarClock size={18} /><span>{t("Scadențe programate")}</span><b>{data.recurring.length}</b><ChevronRight size={16} /></button></section><section className="bf-obligation-actions"><button type="button" className="bf-secondary bf-obligation-cta debt" onClick={openDebt}><Plus size={17} /> {t("Adaugă datorie")}</button><button type="button" className="bf-secondary bf-obligation-cta savings" onClick={openSaving}><Plus size={17} /> {t("Creează economisire")}</button></section><div className="bf-obligation-lanes"><section className="bf-obligation-lane debt"><header><div><p className="bf-kicker">{t("DE PLĂTIT")}</p><h2>{t("Rate și împrumuturi")}</h2></div><span>{data.debts.length}</span></header>{rankedDebts.map((debt) => <article className={`bf-obligation-entry${snowball.next?.debt.id === debt.id ? " next" : ""}`} key={debt.id}><div className="bf-obligation-entry-main"><span><BellRing size={17} /></span><div><b>{debt.name}</b>{snowball.next?.debt.id === debt.id ? <em className="bf-snowball-tag">{t("01 · următoarea")}</em> : null}<small>{debt.due} · {t("rată {amount}/lună", { amount: money(debt.monthly) })}</small></div><strong>{money(debt.remaining)}</strong></div><DebtPaymentHistory data={data} debt={debt} /><DebtSchedule data={data} debt={debt} onPay={() => onPayDebt(debt)} /><div className="bf-obligation-entry-actions"><button className="pay" onClick={() => onPayDebt(debt)}><Check size={16} /> {t("Confirmă plata")}</button><button onClick={() => onEditDebt(debt)}><Pencil size={15} /> {t("Editează")}</button><button className="delete" aria-label={`Șterge ${debt.name}`} onClick={() => onDeleteDebt(debt.id)}><Trash2 size={16} /></button></div></article>)}{!data.debts.length && <div className="bf-obligation-empty"><BellRing size={21} /><span><b>{t("Nu ai datorii înregistrate.")}</b><small>{t("Adaugă doar obligațiile pe care vrei să le rezervi în plan.")}</small></span><button type="button" className="bf-secondary" onClick={openDebt}>{t("Adaugă")}</button></div>}</section><section className="bf-obligation-lane savings"><header><div><p className="bf-kicker">{t("DE CONSTRUIT")}</p><h2>{t("Economii și obiective")}</h2></div><span>{data.savings.length}</span></header>{data.savings.map((saving) => <article className="bf-obligation-entry" key={saving.id}><div className="bf-obligation-entry-main"><span><PiggyBank size={17} /></span><div><b>{saving.name}</b><small>{saving.due}</small></div><strong>{money(saving.current)}</strong></div><div className="bf-obligation-progress"><BudgetBar used={saving.current} total={saving.target} tone="gold" /><small>{t("{left} rămași până la {target}", { left: money(Math.max(0, saving.target - saving.current)), target: money(saving.target) })}</small></div><div className="bf-obligation-entry-actions"><button onClick={() => onEditSaving(saving)}><Pencil size={15} /> {t("Editează")}</button><button className="delete" aria-label={`Șterge ${saving.name}`} onClick={() => onDeleteSaving(saving.id)}><Trash2 size={16} /></button></div></article>)}{!data.savings.length && <div className="bf-obligation-empty"><PiggyBank size={21} /><span><b>{t("Nu ai obiective de economisire.")}</b><small>{t("Începe cu fondul de siguranță sau un obiectiv concret.")}</small></span><button type="button" className="bf-secondary" onClick={openSaving}>{t("Creează")}</button></div>}</section></div></div>;
+    ...data.debts.filter((item) => item.dueDate).map((item) => ({
+      id: `debt-${item.id}`,
+      kind: "debt" as const,
+      date: item.dueDate!,
+      label: item.name,
+      detail: t("Rată {amount}/lună", { amount: money(item.monthly) }),
+      amount: item.remaining,
+      onConfirm: () => onPayDebt(item),
+    })),
+    ...data.savings.filter((item) => item.dueDate).map((item) => ({
+      id: `saving-${item.id}`,
+      kind: "saving" as const,
+      date: item.dueDate!,
+      label: item.name,
+      detail: t("Obiectiv"),
+      amount: Math.max(0, item.target - item.current),
+      onConfirm: onOpenGoals,
+    })),
+    ...pendingRecurringInPlan(data).map((item) => ({
+      id: `recurring-${item.id}`,
+      kind: "recurring" as const,
+      date: item.dueDate,
+      label: item.name,
+      detail: item.category,
+      amount: item.amount,
+      onConfirm: () => onPayRecurring(item.id),
+    })),
+  ].filter((entry) => !laterIds.includes(entry.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+  const kindLabel = (kind: "debt" | "saving" | "recurring") => kind === "debt" ? t("Rată") : kind === "saving" ? t("Obiectiv") : t("Factură / abonament");
+  const whenLabel = (date: string) => {
+    if (date < today) return t("Întârziată");
+    if (date === today) return t("Azi");
+    return dateText(date, true);
+  };
+  return (
+    <div className="bf-page bf-obligations-workspace">
+      <section className="bf-upcoming-hero" aria-labelledby="bf-upcoming-title">
+        <div>
+          <p className="bf-kicker">{t("CE URMEAZĂ")}</p>
+          <h1 id="bf-upcoming-title">{t("Ce trebuie")} <em>{t("plătit, rezervat sau amânat.")}</em></h1>
+          <p>{t("Rate, facturi și obiective pe o singură listă. Confirmarea creează mișcarea — nu trimite bani din bancă.")}</p>
+        </div>
+        <div className="bf-obligations-links">
+          <button className="bf-goals-link" onClick={onOpenGoals}><PiggyBank size={16} /> {t("Obiective pe termen lung")}</button>
+          <button className="bf-goals-link" onClick={onOpenCalendar}><CalendarDays size={16} /> {t("Calendar de scadențe")}</button>
+        </div>
+        {upcoming.length ? (
+          <div className="bf-upcoming-list">
+            {upcoming.map((entry, index) => (
+              <article key={entry.id} className={`bf-upcoming-item kind-${entry.kind}${index === 0 ? " is-next" : ""}${entry.date < today ? " is-overdue" : ""}`}>
+                <div className="bf-upcoming-item-main">
+                  <span>{entry.kind === "saving" ? <PiggyBank size={17} /> : entry.kind === "recurring" ? <CalendarClock size={17} /> : <BellRing size={17} />}</span>
+                  <div>
+                    <b>{entry.label}</b>
+                    <small>{kindLabel(entry.kind)} · {whenLabel(entry.date)} · {entry.detail}</small>
+                  </div>
+                  <strong>{money(entry.amount)}</strong>
+                </div>
+                <div className="bf-upcoming-actions">
+                  <button type="button" className="pay" onClick={entry.onConfirm}><Check size={16} /> {entry.kind === "saving" ? t("Deschide") : t("Confirmă plata")}</button>
+                  <button type="button" onClick={() => setLaterIds((current) => [...current, entry.id])}>{t("Mai târziu")}</button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="bf-upcoming-empty">
+            <b>{t("Nu ai scadențe apropiate.")}</b>
+            <p>{t("Adaugă o rată, o factură recurentă sau un obiectiv — apar aici, în ordine.")}</p>
+          </div>
+        )}
+      </section>
+      <DebtSnowballCard data={data} onPay={onPayDebt} />
+      <DebtPayoffPlan data={data} />
+      <DebtPayoffSimulator data={data} />
+      <section className="bf-obligation-ai">
+        <div className="bf-obligation-ai-icon"><Bot size={22} /></div>
+        <div>
+          <p className="bf-kicker">{t("GHIDUL TĂU PENTRU OBLIGAȚII")}</p>
+          <h2>{t("Îți urmăresc ratele, pas cu pas.")}</h2>
+          <p>{t("Spune-mi ce datorie ai, ce rată ai plătit și îți arăt imediat ce urmează și cât mai rămâne.")}</p>
+        </div>
+        <button type="button" onClick={onOpenAssistant} className="bf-primary">{t("Deschide ghidul")} <ChevronRight size={16} /></button>
+      </section>
+      <section className="bf-obligation-ledger">
+        <article className="debt"><span>{t("Sold datorii")}</span><b>{money(totalDebt)}</b><small>{t("{amount} rate declarate / lună", { amount: money(monthlyRates) })}</small></article>
+        <article className="savings"><span>{t("Economii urmărite")}</span><b>{money(totalSavings)}</b><small>{t("{count} obiective înregistrate", { count: data.savings.length })}</small></article>
+        <button onClick={onOpenRecurring}><CalendarClock size={18} /><span>{t("Scadențe programate")}</span><b>{data.recurring.length}</b><ChevronRight size={16} /></button>
+      </section>
+      <section className="bf-obligation-actions">
+        <button type="button" className="bf-secondary bf-obligation-cta debt" onClick={openDebt}><Plus size={17} /> {t("Adaugă datorie")}</button>
+        <button type="button" className="bf-secondary bf-obligation-cta savings" onClick={openSaving}><Plus size={17} /> {t("Creează economisire")}</button>
+      </section>
+      <div className="bf-obligation-lanes">
+        <section className="bf-obligation-lane debt">
+          <header><div><p className="bf-kicker">{t("DE PLĂTIT")}</p><h2>{t("Rate și împrumuturi")}</h2></div><span>{data.debts.length}</span></header>
+          {rankedDebts.map((debt) => (
+            <article className={`bf-obligation-entry${snowball.next?.debt.id === debt.id ? " next" : ""}`} key={debt.id}>
+              <div className="bf-obligation-entry-main">
+                <span><BellRing size={17} /></span>
+                <div>
+                  <b>{debt.name}</b>
+                  {snowball.next?.debt.id === debt.id ? <em className="bf-snowball-tag">{t("01 · următoarea")}</em> : null}
+                  <small>{debt.due} · {t("rată {amount}/lună", { amount: money(debt.monthly) })}</small>
+                </div>
+                <strong>{money(debt.remaining)}</strong>
+              </div>
+              <DebtPaymentHistory data={data} debt={debt} />
+              <DebtSchedule data={data} debt={debt} onPay={() => onPayDebt(debt)} />
+              <div className="bf-obligation-entry-actions">
+                <button className="pay" onClick={() => onPayDebt(debt)}><Check size={16} /> {t("Confirmă plata")}</button>
+                <button onClick={() => onEditDebt(debt)}><Pencil size={15} /> {t("Editează")}</button>
+                <button className="delete" aria-label={`Șterge ${debt.name}`} onClick={() => onDeleteDebt(debt.id)}><Trash2 size={16} /></button>
+              </div>
+            </article>
+          ))}
+          {!data.debts.length && (
+            <div className="bf-obligation-empty">
+              <BellRing size={21} />
+              <span><b>{t("Nu ai datorii înregistrate.")}</b><small>{t("Adaugă doar obligațiile pe care vrei să le rezervi în plan.")}</small></span>
+              <button type="button" className="bf-secondary" onClick={openDebt}>{t("Adaugă")}</button>
+            </div>
+          )}
+        </section>
+        <section className="bf-obligation-lane savings">
+          <header><div><p className="bf-kicker">{t("DE CONSTRUIT")}</p><h2>{t("Economii și obiective")}</h2></div><span>{data.savings.length}</span></header>
+          {data.savings.map((saving) => (
+            <article className="bf-obligation-entry" key={saving.id}>
+              <div className="bf-obligation-entry-main">
+                <span><PiggyBank size={17} /></span>
+                <div><b>{saving.name}</b><small>{saving.due}</small></div>
+                <strong>{money(saving.current)}</strong>
+              </div>
+              <div className="bf-obligation-progress">
+                <BudgetBar used={saving.current} total={saving.target} tone="gold" />
+                <small>{t("{left} rămași până la {target}", { left: money(Math.max(0, saving.target - saving.current)), target: money(saving.target) })}</small>
+              </div>
+              <div className="bf-obligation-entry-actions">
+                <button onClick={() => onEditSaving(saving)}><Pencil size={15} /> {t("Editează")}</button>
+                <button className="delete" aria-label={`Șterge ${saving.name}`} onClick={() => onDeleteSaving(saving.id)}><Trash2 size={16} /></button>
+              </div>
+            </article>
+          ))}
+          {!data.savings.length && (
+            <div className="bf-obligation-empty">
+              <PiggyBank size={21} />
+              <span><b>{t("Nu ai obiective de economisire.")}</b><small>{t("Începe cu fondul de siguranță sau un obiectiv concret.")}</small></span>
+              <button type="button" className="bf-secondary" onClick={openSaving}>{t("Creează")}</button>
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
 }
+
 
 
 const RECEIPT_DRAFT_KEY = "buget-familie:receipt-draft";

@@ -22,7 +22,7 @@ export const THEME_MIGRATED_ATELIER_KEY = "buget-familie:theme-migrated-atelier-
 export const THEME_MIGRATED_PREMIUM_KEY = "buget-familie:theme-migrated-premium-2026-09";
 /** Migrare UI chrome 2026-09: fonts/buttons/menus + secondary tabs. */
 export const THEME_MIGRATED_UI_CHROME_KEY = "buget-familie:theme-migrated-ui-chrome-2026-09";
-export const WHATS_NEW_KEY = "buget-familie:whats-new-premium-2026-09";
+export const WHATS_NEW_KEY = "buget-familie:whats-new-ledger-unify-2026-09";
 
 /** Chei locale vechi care puteau bloca look-ul nou pe Alb. */
 export const STALE_SKIN_KEYS = [
