@@ -20,6 +20,13 @@ Enforce prematur blochează familiile care sincronizează fără token valid.
 
 Fișier de referință: `.env.example` (nu comite secrete reale).
 
+
+## Site key publicat în client (placeholder)
+
+`RECAPTCHA_SITE_KEY_PLACEHOLDER` din `client/src/lib/firebase-config.ts` este completat cu site key-ul **Enterprise** (`6Lc9zrctAAAAAAz27Nr8XWx9D3cRnBnHkChyyeCq`). Build-urile Pages/APK îl iau din bundle fără `.env` local. `VITE_RECAPTCHA_SITE_KEY` rămâne override la build (CI nu e obligatoriu).
+
+**Firebase Console:** înregistrarea App Check pe web trebuie să folosească **același** site key Enterprise. Rămâne **Monitor**, nu Enforce.
+
 ## Pași în Firebase Console (ordine)
 
 1. **Build → App Check** → înregistrează app-ul web (și Android dacă e în proiect).

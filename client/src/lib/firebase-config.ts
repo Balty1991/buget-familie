@@ -26,8 +26,8 @@ export const firebaseConfig = {
   appId: "1:119097201129:web:d46d0e3889dd6e50b53b78",
 };
 
-/** Înlocuiește doar dacă nu folosești VITE_RECAPTCHA_SITE_KEY la build. Lasă gol până ai cheia. */
-const RECAPTCHA_SITE_KEY_PLACEHOLDER = "";
+/** Site key public reCAPTCHA Enterprise. VITE_RECAPTCHA_SITE_KEY la build overridează. */
+const RECAPTCHA_SITE_KEY_PLACEHOLDER = "6Lc9zrctAAAAAAz27Nr8XWx9D3cRnBnHkChyyeCq";
 
 const envSiteKey =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_RECAPTCHA_SITE_KEY
