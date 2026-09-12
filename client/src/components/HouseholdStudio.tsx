@@ -7,7 +7,7 @@ import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, PiggyBank, Repea
 import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-data";
 import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
-import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection } from "@/lib/household-insights";
+import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection, type SubscriptionDetection } from "@/lib/household-insights";
 import { getLocale, t } from "@/lib/i18n";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
@@ -21,14 +21,14 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   const safe = useMemo(() => liquidSafeToSpend(data), [data]);
   const [closed, setClosed] = useState(() => readClosedMonths());
   const [exporting, setExporting] = useState(false);
+  const [pendingHunt, setPendingHunt] = useState<SubscriptionDetection | null>(null);
   const closedThis = closed[month];
   const collaborative = data.settings.members.length > 1;
-  const addRecurring = (key: string) => {
-    const hit = hunts.find((item) => item.key === key);
-    if (!hit) return;
+  const addRecurring = (hit: SubscriptionDetection) => {
     const draft = recurringFromDetection(data, hit);
     if (!draft) return;
     onChange(autoPostDueRecurring({ ...data, recurring: [...data.recurring, draft] }));
+    setPendingHunt(null);
   };
   const close = async () => {
     setExporting(true);
@@ -111,11 +111,22 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
               <small>{item.reason} · ultima dată {formatDate(item.lastDate)}</small>
             </div>
             <strong>{money(item.amount)}</strong>
-            <button type="button" onClick={() => addRecurring(item.key)}>{t("Adaugă la scadențe")}</button>
+            <button type="button" onClick={() => setPendingHunt(item)}>{t("Propune scadență")}</button>
           </article>
         )) : <div className="bf-empty-soft"><EmptyMark /><p>{t("Nu am găsit comercianți cu sumă stabilă. După 2–3 luni de registru, Netflix, chiria sau factura de telefon apar aici.")}</p></div>}
       </section>
 
+
+      {pendingHunt && (
+        <div className="bf-brief-hunt-confirm" role="dialog" aria-labelledby="bf-house-hunt-title">
+          <b id="bf-house-hunt-title">{t("Adaugi „{name}” la scadențe?", { name: pendingHunt.name })}</b>
+          <p>{money(pendingHunt.amount)} · {pendingHunt.reason} {t("Se creează o scadență locală pe confirmare manuală — nu se plătește automat.")}</p>
+          <footer>
+            <button type="button" onClick={() => setPendingHunt(null)}>{t("Nu acum")}</button>
+            <button type="button" className="bf-primary" onClick={() => addRecurring(pendingHunt)}>{t("Adaugă la scadențe")}</button>
+          </footer>
+        </div>
+      )}
       <section className="bf-household-card">
         <div className="bf-household-heading">
           <div><p className="bf-kicker">{t("ACTIVITATE RECENTĂ")}</p><h2>{t("Ultimele mișcări ale casei")}</h2></div>

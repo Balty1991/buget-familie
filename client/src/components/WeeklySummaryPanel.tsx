@@ -7,7 +7,7 @@ import "../weekly-checkin.css";
 import { useState } from "react";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, CalendarDays, Check, ChevronRight, Share2 } from "lucide-react";
 import { formatDate, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";
-import { checkInRebalance, formatWeeklyCheckInShare, weeklyCheckIn } from "@/lib/household-insights";
+import { checkInRebalance, formatWeeklyCheckInShare, weeklyCheckIn, weeklyDigestHeadline } from "@/lib/household-insights";
 import { getLocale, t } from "@/lib/i18n";
 
 const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
@@ -21,6 +21,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
   const [movedNote, setMovedNote] = useState("");
   const member = data.settings.members.find((item) => item.id === scope);
   const check = weeklyCheckIn(data, undefined, member?.id);
+  const digest = weeklyDigestHeadline(data);
   // Propunerea se calculează pe familie: limitele plicurilor sunt comune, nu personale.
   const rebalance = checkInRebalance(data);
   const label = member ? member.name : collaborative ? "Familie" : "Personal";
@@ -62,6 +63,11 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
           ))}
         </div>
       )}
+      <article className={`bf-week-digest ${digest.tone}`} aria-label={t("Digestul săptămânii")}>
+        <p className="bf-kicker">{t("DIGEST LOCAL")}</p>
+        <b>{digest.title}</b>
+        <small>{digest.detail}</small>
+      </article>
       <p className="bf-week-checkin-step">{check.nextStep}</p>
       {!rebalance && movedNote && (
         <p className="bf-week-rebalance-done" role="status"><Check size={14} /> {movedNote}</p>

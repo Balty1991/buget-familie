@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
-import { recurringFromDetection, todayBrief, weeklyCheckIn } from "@/lib/household-insights";
+import { recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
 import { getLocale, t } from "@/lib/i18n";
 
 type Go = (view: "plan" | "obligations" | "insights") => void;
@@ -23,16 +24,17 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
   const rules = data.settings.salaryPlan.salaryAllocationRules || [];
   const pendingIncome = unappliedSalaryIncomes(data).find((item) => eligibleSalaryAllocationRules(data, item).length > 0);
   const needsRitual = !rules.length && unappliedSalaryIncomes(data).length > 0 && data.settings.salaryPlan.allocations.length > 0;
+  const [pendingHunt, setPendingHunt] = useState<SubscriptionDetection | null>(null);
   const pay = (id: string) => {
     const next = confirmRecurringPayment(data, id);
     if (next) onChange(next);
   };
-  const addHunt = (key: string) => {
-    const hit = brief.hunts.find((item) => item.key === key);
-    if (!hit) return;
-    const draft = recurringFromDetection(data, hit);
+  const confirmHunt = () => {
+    if (!pendingHunt) return;
+    const draft = recurringFromDetection(data, pendingHunt);
     if (!draft) return;
     onChange(autoPostDueRecurring({ ...data, recurring: [...data.recurring, draft] }));
+    setPendingHunt(null);
   };
   const fillEnvelopes = () => {
     if (!pendingIncome) return;
@@ -85,11 +87,25 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
       )}
 
       {brief.hunts.map((hunt) => (
-        <button key={hunt.key} type="button" className="bf-brief-hunt" onClick={() => addHunt(hunt.key)}>
+        <button key={hunt.key} type="button" className="bf-brief-hunt" onClick={() => setPendingHunt(hunt)}>
           <b>Pare abonament · {hunt.name}</b>
-          <small>{money(hunt.amount)} · {hunt.reason} Adaugă la scadențe.</small>
+          <small>{money(hunt.amount)} · {hunt.reason} {t("Confirmă înainte de a adăuga la scadențe.")}</small>
         </button>
       ))}
+
+      {pendingHunt && (
+        <div className="bf-brief-hunt-confirm" role="dialog" aria-labelledby="bf-hunt-confirm-title">
+          <b id="bf-hunt-confirm-title">{t("Adaugi „{name}” la scadențe?", { name: pendingHunt.name })}</b>
+          <p>
+            {money(pendingHunt.amount)} · {pendingHunt.reason}{" "}
+            {t("Se creează o scadență locală pe confirmare manuală — nu se plătește automat.")}
+          </p>
+          <footer>
+            <button type="button" onClick={() => setPendingHunt(null)}>{t("Nu acum")}</button>
+            <button type="button" className="bf-primary" onClick={confirmHunt}>{t("Adaugă la scadențe")}</button>
+          </footer>
+        </div>
+      )}
 
       {week.shouldPrompt && (
         <button type="button" className="bf-brief-week" onClick={() => onOpenWeek?.()}>
