@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, todayBrief, weeklyCheckIn, weeklyEnvelopeDailyRhythm } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -247,4 +247,45 @@ describe("fereastra de comparație Analiză", () => {
     expect(window.mode).toBe("calendar");
     expect(window.start).toBe("2026-09-01");
   });
+
+  it("compară burn-ul plicului cu zilele scurse din ciclu", () => {
+    const { data, source } = base();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "2026-09-30";
+    data.settings.salaryPlan.allocations = [
+      { id: "alloc-food", label: "Alimente", amount: 1000, category: "Alimente", sourceId: source.id, memberId: "member-me" },
+    ];
+    data.transactions = [
+      { id: "e1", title: "Lidl", amount: 200, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-05", allocationId: "alloc-food" },
+    ];
+    const paces = envelopeBurnPace(data, "2026-09-15");
+    expect(paces[0]).toMatchObject({ label: "Alimente", usage: 0.2, pace: "ahead" });
+    expect(paces[0].expectedUsage).toBeCloseTo(15 / 30, 5);
+  });
+
+  it("explică formula Poți folosi azi pe pași", () => {
+    const { data, source } = base();
+    source.openingBalance = 3000;
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "2026-09-30";
+    data.settings.salaryPlan.allocations = [
+      { id: "alloc-food", label: "Alimente", amount: 900, category: "Alimente", sourceId: source.id, memberId: "member-me" },
+    ];
+    const sheet = safeSpendBreakdown(data, "2026-09-10");
+    expect(sheet.hasPayday).toBe(true);
+    expect(sheet.steps.length).toBeGreaterThanOrEqual(4);
+    expect(sheet.spendable).toBeGreaterThanOrEqual(0);
+    expect(sheet.summary).toMatch(/Reperul|minim/i);
+  });
+
+  it("compune un headline pentru digestul săptămânii", () => {
+    const { data, source } = base();
+    data.transactions = [
+      { id: "e1", title: "Taxi", amount: 80, kind: "expense", category: "Transport", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-10" },
+    ];
+    const digest = weeklyDigestHeadline(data, "2026-09-10");
+    expect(digest.title).toMatch(/Transport|ritm|goală|Cheltuielile|depășesc/i);
+    expect(digest.detail.length).toBeGreaterThan(0);
+  });
+
 });

@@ -1104,3 +1104,99 @@ html:not(.dark) .bf-os-decide {
 }
 .bf-today-read-more { display: grid; gap: 10px; }
 .bf-os-source-list.compact { margin: 8px 0 0; }
+
+/* Burn pace plic vs calendar */
+.bf-plic-pace {
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font: 800 10px/1.2 "IBM Plex Sans", sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.bf-plic-pace.pace-ahead { color: #1b6a51; background: #ddf0e5; }
+.bf-plic-pace.pace-on_track { color: #3d5a4e; background: #e8eee9; }
+.bf-plic-pace.pace-behind { color: #9c6a11; background: #f9edcc; }
+.bf-plic-pace.pace-over { color: #a44e3e; background: #f8e5dd; }
+.bf-plic-bar { position: relative; }
+.bf-plic-expected {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--cf-ink, #173f36);
+  opacity: .55;
+  border-radius: 2px;
+}
+
+/* Confirmare detecție abonament */
+.bf-brief-hunt-confirm {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--cf-line, #e2dfd6);
+  border-left: 3px solid var(--cf-primary, #185849);
+  border-radius: 12px;
+  background: var(--cf-surface, #fffefa);
+}
+.bf-brief-hunt-confirm p { margin: 0; color: var(--cf-muted, #6c7f77); font-size: 12px; line-height: 1.45; }
+.bf-brief-hunt-confirm footer { display: flex; gap: 8px; }
+.bf-brief-hunt-confirm footer button { flex: 1; min-height: 42px; }
+
+/* Digest săptămânal */
+.bf-week-digest {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--cf-line, #e2dfd6);
+  background: color-mix(in srgb, var(--cf-surface-alt, #edf3ec), var(--cf-surface, #fff) 50%);
+}
+.bf-week-digest.good { border-left: 3px solid #28705a; }
+.bf-week-digest.watch { border-left: 3px solid #dba72b; }
+.bf-week-digest.risk { border-left: 3px solid #cc664f; }
+.bf-week-digest b { font: 700 15px/1.2 "IBM Plex Serif", Georgia, serif; }
+.bf-week-digest small { color: var(--cf-muted, #6c7f77); font-size: 12px; line-height: 1.4; }
+
+/* Feed familie pe Astăzi */
+.bf-today-family-share {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.bf-today-family-share li {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.bf-today-family-share i {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--cf-line, #e2dfd6), transparent 20%);
+}
+.bf-today-family-share em {
+  display: block;
+  height: 100%;
+  background: var(--cf-primary, #185849);
+  border-radius: inherit;
+}
+.bf-os-day b small {
+  margin-left: 2px;
+  font: 700 9px/1 "IBM Plex Sans", sans-serif;
+  letter-spacing: 0;
+  opacity: .7;
+}
+.os-explainer.secondary {
+  margin-left: 6px;
+  opacity: .85;
+}

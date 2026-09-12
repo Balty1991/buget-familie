@@ -1,6 +1,6 @@
 import { EnvelopeDeskScene, EnvelopeMark, EnvelopeStack } from "@/components/EnvelopeMark";
 import { CashNote, PaydayStrip } from "@/components/LedgerArt";
-import { envelopeLane, lastDaysPulse, liquidSafeToSpend, paydayTrack } from "@/lib/household-insights";
+import { envelopeBurnPace, envelopeLane, lastDaysPulse, liquidSafeToSpend, paydayTrack } from "@/lib/household-insights";
 import { type AppData } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 
@@ -8,11 +8,20 @@ type Go = (view: "plan" | "journal") => void;
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
+const paceLabel = (pace: "ahead" | "on_track" | "behind" | "over") => {
+  if (pace === "ahead") return t("în avans");
+  if (pace === "behind") return t("în urmă");
+  if (pace === "over") return t("depășit");
+  return t("în ritm");
+};
+
 export function TodayLedger({ data, onGo, compact = false }: { data: AppData; onGo: Go; compact?: boolean }) {
   const pulse = lastDaysPulse(data);
   const maxExpense = Math.max(1, ...pulse.map((day) => day.expense));
   const track = paydayTrack(data);
   const envelopes = envelopeLane(data);
+  const burns = envelopeBurnPace(data);
+  const burnById = new Map(burns.map((item) => [item.allocationId, item]));
   const weekSpend = pulse.reduce((sum, day) => sum + day.expense, 0);
   const safe = liquidSafeToSpend(data);
 
@@ -58,23 +67,35 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
         </div>
         {envelopes.length ? (
           <ul className="bf-envelope-fan">
-            {envelopes.map((entry) => (
-              <li key={entry.item.id} className={entry.state}>
-                <button type="button" className="bf-plic-card" onClick={() => onGo("plan")}>
-                  <span className="bf-plic-flap" aria-hidden="true" />
-                  <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={108} />
-                  <b>{entry.item.label}</b>
-                  <strong>{money(Math.max(0, entry.remaining))}</strong>
-                  <span className="bf-plic-bar" aria-hidden="true">
-                    <i style={{ width: `${Math.min(100, Math.max(4, entry.usage * 100))}%` }} />
-                  </span>
-                  <small>
-                    <span>{Math.round(entry.usage * 100)}%</span>
-                    <span>din {money(entry.budget)}</span>
-                  </small>
-                </button>
-              </li>
-            ))}
+            {envelopes.map((entry) => {
+              const burn = burnById.get(entry.item.id);
+              return (
+                <li key={entry.item.id} className={`${entry.state}${burn ? ` pace-${burn.pace}` : ""}`}>
+                  <button type="button" className="bf-plic-card" onClick={() => onGo("plan")}>
+                    <span className="bf-plic-flap" aria-hidden="true" />
+                    <EnvelopeMark remaining={Math.max(0, 1 - entry.usage)} state={entry.state} size={108} />
+                    <b>{entry.item.label}</b>
+                    <strong>{money(Math.max(0, entry.remaining))}</strong>
+                    <span className="bf-plic-bar" aria-hidden="true">
+                      <i style={{ width: `${Math.min(100, Math.max(4, entry.usage * 100))}%` }} />
+                      {burn && track ? (
+                        <em className="bf-plic-expected" style={{ left: `${Math.min(96, Math.max(4, burn.expectedUsage * 100))}%` }} title={t("Ritm așteptat")} />
+                      ) : null}
+                    </span>
+                    <small>
+                      <span>{Math.round(entry.usage * 100)}%</span>
+                      <span>din {money(entry.budget)}</span>
+                    </small>
+                    {burn && (
+                      <span className={`bf-plic-pace pace-${burn.pace}`} title={burn.reason}>
+                        {paceLabel(burn.pace)}
+                        {track ? ` · ${Math.round(burn.expectedUsage * 100)}% așteptat` : ""}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <button type="button" className="bf-today-envelopes-empty" onClick={() => onGo("plan")}>

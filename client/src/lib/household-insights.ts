@@ -315,6 +315,70 @@ export const envelopeLane = (data: AppData) => data.settings.salaryPlan.allocati
   .sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.usage - left.usage)
   .slice(0, 8);
 
+export type EnvelopeBurnPace = {
+  allocationId: string;
+  label: string;
+  budget: number;
+  spent: number;
+  remaining: number;
+  usage: number;
+  expectedUsage: number;
+  delta: number;
+  pace: "ahead" | "on_track" | "behind" | "over";
+  reason: string;
+  elapsedDays: number;
+  totalDays: number;
+};
+
+/**
+ * Compară consumul plicului cu ritmul calendaristic al ciclului.
+ * „în avans” = ai cheltuit mai puțin decât proporția zilelor scurse; „în urmă” = mai mult.
+ * Toleranță ±8pp ca să nu alarmeze pe zgomot zilnic.
+ */
+export const envelopeBurnPace = (data: AppData, asOf = isoToday()): EnvelopeBurnPace[] => {
+  const track = paydayTrack(data, asOf);
+  const expectedUsage = track ? Math.min(1, track.elapsed / track.total) : 0;
+  const totalDays = track?.total ?? 0;
+  const elapsedDays = track?.elapsed ?? 0;
+  return data.settings.salaryPlan.allocations.map((item) => {
+    const status = allocationStatus(data, item);
+    const usage = status.usage;
+    let pace: EnvelopeBurnPace["pace"] = "on_track";
+    if (status.remaining < 0 || usage >= 1) pace = "over";
+    else if (!track) pace = usage >= (item.alertThreshold ?? 80) / 100 ? "behind" : "on_track";
+    else if (usage > expectedUsage + 0.08) pace = "behind";
+    else if (usage < expectedUsage - 0.08) pace = "ahead";
+    const delta = Math.round((expectedUsage - usage) * 100);
+    const reason = !track
+      ? t("Setează perioada până la venit ca să comparăm ritmul cu calendarul.")
+      : pace === "over"
+        ? t("Plicul e depășit — mută lei din alt plic sau reduce cheltuielile.")
+        : pace === "behind"
+          ? t("Ai consumat {usage}% din plic, dar ciclul e doar la {expected}%.", { usage: Math.round(usage * 100), expected: Math.round(expectedUsage * 100) })
+          : pace === "ahead"
+            ? t("Ești cu ~{delta}pp sub ritmul zilelor scurse — poți folosi cu calm.", { delta: Math.abs(delta) })
+            : t("Consumul ({usage}%) e aliniat cu zilele scurse ({expected}%).", { usage: Math.round(usage * 100), expected: Math.round(expectedUsage * 100) });
+    return {
+      allocationId: item.id,
+      label: item.label,
+      budget: status.budget,
+      spent: status.spent,
+      remaining: status.remaining,
+      usage,
+      expectedUsage,
+      delta,
+      pace,
+      reason,
+      elapsedDays,
+      totalDays,
+    };
+  }).sort((a, b) => {
+    const rank = (p: EnvelopeBurnPace["pace"]) => (p === "over" ? 3 : p === "behind" ? 2 : p === "on_track" ? 1 : 0);
+    return rank(b.pace) - rank(a.pace) || b.usage - a.usage;
+  });
+};
+
+
 export type TodayDue = {
   id: string;
   kind: "recurring" | "debt";
@@ -392,6 +456,56 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
     closeSoon: hasPayday && remainingDays <= 2,
   };
 };
+
+export type SafeSpendBreakdown = {
+  spendable: number;
+  hasPayday: boolean;
+  remainingDays: number;
+  paydayDate: string;
+  liquidFunds: number;
+  reservedRecurring: number;
+  availableAfterReserved: number;
+  envelopeLeft: number;
+  safeDaily: number;
+  fromLiquidDaily: number;
+  steps: Array<{ label: string; amount: number; note?: string }>;
+  summary: string;
+};
+
+/** Formula explicabilă pentru „Poți folosi azi” — fără a scrie în AppData. */
+export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendBreakdown => {
+  const brief = todayBrief(data, asOf);
+  const safe = liquidSafeToSpend(data, asOf);
+  const forecast = planForecast(data, asOf);
+  const paydayDate = data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday || "";
+  const remainingDays = Math.max(1, forecast.remainingDays);
+  const fromLiquidDaily = Math.max(0, safe.available / remainingDays);
+  const steps = [
+    { label: t("Lichid în surse"), amount: safe.liquidFunds, note: t("Card, cash, bonuri — sold calculat local") },
+    { label: t("Minus scadențe active"), amount: -safe.reservedRecurring, note: t("Chirie, abonamente rezervate, încă neconfirmate") },
+    { label: t("Disponibil prudent"), amount: safe.available },
+    { label: t("Ritm sigur din plan"), amount: forecast.safeDaily, note: t("Ce rămâne după plicuri și cheltuieli, pe zi") },
+    { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} zile până la venit", { days: remainingDays }) },
+  ];
+  const summary = !brief.hasPayday
+    ? t("Fără dată de venit nu putem calcula un reper zilnic. Setează salariul în Plan.")
+    : t("Reperul zilei ({amount}) e minimul dintre ritmul sigur și lichidul împărțit pe zile. Nu e un sold bancar.", { amount: Math.round(brief.spendable) });
+  return {
+    spendable: brief.spendable,
+    hasPayday: brief.hasPayday,
+    remainingDays,
+    paydayDate,
+    liquidFunds: safe.liquidFunds,
+    reservedRecurring: safe.reservedRecurring,
+    availableAfterReserved: safe.available,
+    envelopeLeft: safe.envelopeLeft,
+    safeDaily: forecast.safeDaily,
+    fromLiquidDaily,
+    steps,
+    summary,
+  };
+};
+
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -668,6 +782,34 @@ export function analysisCompareWindow(
     title: monthTitle(focusMonth),
   };
 }
+
+export const weeklyDigestHeadline = (data: AppData, asOf = isoToday()) => {
+  const check = weeklyCheckIn(data, asOf);
+  const over = check.envelopes.filter((item) => item.state === "over");
+  if (!check.transactionCount) {
+    return { tone: "watch" as const, title: t("Săptămâna e încă goală în registru"), detail: check.nextStep };
+  }
+  if (over.length) {
+    return {
+      tone: "risk" as const,
+      title: t("{count} plicuri peste plan săptămâna asta", { count: over.length }),
+      detail: t("{label} cere atenție · {step}", { label: over[0].label, step: check.nextStep }),
+    };
+  }
+  if (check.cashflow < 0) {
+    return {
+      tone: "watch" as const,
+      title: t("Cheltuielile depășesc veniturile cu {amount}", { amount: Math.round(Math.abs(check.cashflow)) }),
+      detail: check.nextStep,
+    };
+  }
+  const top = check.categories[0];
+  return {
+    tone: "good" as const,
+    title: top ? t("Cel mai mult: {category} ({amount})", { category: top[0], amount: Math.round(Number(top[1])) }) : t("Săptămâna e în ritm"),
+    detail: check.nextStep,
+  };
+};
 
 export const formatWeeklyCheckInShare = (check: WeeklyCheckIn, rebalance?: CheckInRebalance) => {
   const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;
