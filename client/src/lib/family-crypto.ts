@@ -3,13 +3,17 @@
  * Parola nu se persistă; doar un pachet AES-GCM deja criptat părăsește telefonul.
  */
 import {
+  buildPendingReviewMeta,
   normalizeAppData,
   type AllocationAmountConflict,
   type AllocationHistoryEntry,
   type AppData,
   type BudgetAllocation,
   type DeletedRecord,
+  type PendingReviewMeta,
   type SyncDevice,
+  type Transaction,
+  type TransactionConflict,
 } from "@/lib/finance-data";
 
 export type EncryptedEnvelope = {
@@ -44,9 +48,12 @@ export async function encryptFamilyData(data: AppData, secret: string): Promise<
   // Preferințele de viteză și de lectură rămân pe telefon; registrul financiar rămâne partea sincronizată.
   // Propunerile de verificat rămân pe telefonul care le-a creat: fără ele, o propunere
   // ignorată pe un telefon ar fi readusă de celălalt la următoarea unire.
+  // Ciornele complete rămân pe telefon; partajăm doar un rezumat fără imagini.
+  // Conflictele de mișcare/plic se trimit ca meta, ca partenerul să le vadă.
   const shareable = {
     ...data,
     pendingReview: [],
+    pendingReviewMeta: buildPendingReviewMeta(data),
     receipts: data.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...receipt }) => receipt),
     settings: {
       ...data.settings,
@@ -160,6 +167,97 @@ function mergeAllocationsWithConflicts(
   return { allocations, conflicts: Array.from(byAllocation.values()).slice(0, 40) };
 }
 
+
+/** Câmpuri care, dacă diferă pe același id, ar corupe ledgerul la LWW tăcut. */
+function transactionMateriallyDiffers(localItem: Transaction, remoteItem: Transaction): boolean {
+  return (
+    localItem.amount !== remoteItem.amount
+    || localItem.kind !== remoteItem.kind
+    || localItem.date !== remoteItem.date
+    || (localItem.allocationId || "") !== (remoteItem.allocationId || "")
+    || (localItem.sourceId || "") !== (remoteItem.sourceId || "")
+    || (localItem.memberId || "") !== (remoteItem.memberId || "")
+  );
+}
+
+/**
+ * Unește mișcările pe id. La același id cu editări materiale diferite păstrăm local
+ * și înregistrăm conflict — niciodată LWW tăcut pe sumă/dată/plic/sursă.
+ */
+function mergeTransactionsWithConflicts(
+  localTx: Transaction[],
+  remoteTx: Transaction[],
+  deleted: DeletedRecord[],
+  previousConflicts: TransactionConflict[],
+): { transactions: Transaction[]; conflicts: TransactionConflict[] } {
+  const tombstones = new Map(deleted.filter((item) => item.entity === "transactions").map((item) => [item.id, item]));
+  const remoteById = new Map(remoteTx.map((item) => [item.id, item]));
+  const localById = new Map(localTx.map((item) => [item.id, item]));
+  const ids = new Set([...Array.from(localById.keys()), ...Array.from(remoteById.keys())]);
+  const transactions: Transaction[] = [];
+  const freshConflicts: TransactionConflict[] = [];
+  const now = new Date().toISOString();
+
+  ids.forEach((id) => {
+    const localItem = localById.get(id);
+    const remoteItem = remoteById.get(id);
+    const tombstone = tombstones.get(id);
+    const alive = (item: Transaction) => {
+      if (!tombstone) return true;
+      return (Date.parse(tombstone.deletedAt) || 0) < timestamp(item);
+    };
+    if (localItem && remoteItem) {
+      if (!alive(localItem) && !alive(remoteItem)) return;
+      if (transactionMateriallyDiffers(localItem, remoteItem) && alive(localItem)) {
+        transactions.push(localItem);
+        freshConflicts.push({
+          id: `tx-conflict-${id}`,
+          transactionId: id,
+          label: localItem.title || remoteItem.title || "Mișcare",
+          localAmount: localItem.amount,
+          remoteAmount: remoteItem.amount,
+          localKind: localItem.kind,
+          remoteKind: remoteItem.kind,
+          localDate: localItem.date,
+          remoteDate: remoteItem.date,
+          localTitle: localItem.title,
+          remoteTitle: remoteItem.title,
+          localUpdatedAt: localItem.updatedAt || localItem.createdAt,
+          remoteUpdatedAt: remoteItem.updatedAt || remoteItem.createdAt,
+          remoteSnapshot: remoteItem,
+          detectedAt: now,
+        });
+        return;
+      }
+      const winner = timestamp(localItem) >= timestamp(remoteItem) ? localItem : remoteItem;
+      if (alive(winner)) transactions.push(winner);
+      return;
+    }
+    const only = (localItem || remoteItem)!;
+    if (alive(only)) transactions.push(only);
+  });
+
+  const openPrevious = previousConflicts.filter(
+    (item) => !item.resolvedChoice && transactions.some((tx) => tx.id === item.transactionId),
+  );
+  const byTx = new Map<string, TransactionConflict>();
+  [...openPrevious, ...freshConflicts].forEach((item) => byTx.set(item.transactionId, item));
+  return { transactions, conflicts: Array.from(byTx.values()).slice(0, 40) };
+}
+
+function mergePendingReviewMeta(localMeta: PendingReviewMeta[], remoteMeta: PendingReviewMeta[], _localDraftIds: Set<string>): PendingReviewMeta[] {
+  const all = new Map<string, PendingReviewMeta>();
+  [...remoteMeta, ...localMeta].forEach((item) => {
+    const existing = all.get(item.id);
+    if (!existing || Date.parse(item.createdAt) >= Date.parse(existing.createdAt)) all.set(item.id, item);
+  });
+  // Meta pentru ciorne confirmate/respinse local dispara la următorul push; aici păstrăm
+  // și meta remote ca partenerul să vadă coada celuilalt telefon.
+  return Array.from(all.values())
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 120);
+}
+
 /** Unește două copii de familie fără a expedia imagini de bon și fără a reintroduce elemente șterse. */
 export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData {
   const local = normalizeAppData(localRaw); const remote = normalizeAppData(remoteRaw);
@@ -203,11 +301,25 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
     allocationHistory,
   };
   const syncDevices = mergeSyncDevices(local.settings.syncDevices || [], remote.settings.syncDevices || []);
+  const { transactions, conflicts: txConflicts } = mergeTransactionsWithConflicts(
+    local.transactions,
+    remote.transactions,
+    deleted,
+    [...(local.transactionConflicts || []), ...(remote.transactionConflicts || [])],
+  );
+  const localDraftIds = new Set(local.pendingReview.map((item) => item.id));
+  const pendingReviewMeta = mergePendingReviewMeta(
+    buildPendingReviewMeta(local),
+    [...(local.pendingReviewMeta || []), ...(remote.pendingReviewMeta || [])],
+    localDraftIds,
+  );
   return normalizeAppData({
     version: 9,
     pendingReview: local.pendingReview,
+    pendingReviewMeta,
     allocationConflicts: conflicts,
-    transactions: mergeCollection("transactions", local.transactions, remote.transactions, deleted),
+    transactionConflicts: txConflicts,
+    transactions,
     debts: mergeCollection("debts", local.debts, remote.debts, deleted),
     savings: mergeCollection("savings", local.savings, remote.savings, deleted),
     receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted),
@@ -311,4 +423,59 @@ export function undoAllocationConflictChoice(data: AppData, conflictId: string):
 
 export function activeAllocationConflicts(data: AppData): AllocationAmountConflict[] {
   return (data.allocationConflicts || []).filter((item) => !item.resolvedChoice);
+}
+
+
+export function applyTransactionConflictChoice(data: AppData, conflictId: string, choice: "local" | "remote"): AppData {
+  const conflict = data.transactionConflicts.find((item) => item.id === conflictId && !item.resolvedChoice);
+  if (!conflict) return data;
+  const current = data.transactions.find((item) => item.id === conflict.transactionId);
+  if (!current) {
+    return {
+      ...data,
+      transactionConflicts: data.transactionConflicts.filter((item) => item.id !== conflictId),
+    };
+  }
+  const previousSnapshot = { ...current };
+  const nextTx = choice === "local"
+    ? { ...current, updatedAt: new Date().toISOString() }
+    : { ...conflict.remoteSnapshot, id: conflict.transactionId, updatedAt: new Date().toISOString() };
+  const resolved: TransactionConflict = {
+    ...conflict,
+    previousSnapshot,
+    resolvedChoice: choice,
+  };
+  return {
+    ...data,
+    transactions: data.transactions.map((item) => (item.id === conflict.transactionId ? nextTx : item)),
+    transactionConflicts: [resolved, ...data.transactionConflicts.filter((item) => item.id !== conflictId)].slice(0, 40),
+  };
+}
+
+export function undoTransactionConflictChoice(data: AppData, conflictId: string): AppData {
+  const conflict = data.transactionConflicts.find((item) => item.id === conflictId && item.resolvedChoice && item.previousSnapshot);
+  if (!conflict || !conflict.previousSnapshot) return data;
+  const reopened: TransactionConflict = {
+    ...conflict,
+    previousSnapshot: undefined,
+    resolvedChoice: undefined,
+    detectedAt: new Date().toISOString(),
+  };
+  return {
+    ...data,
+    transactions: data.transactions.map((item) =>
+      item.id === conflict.transactionId ? { ...conflict.previousSnapshot!, updatedAt: new Date().toISOString() } : item,
+    ),
+    transactionConflicts: [reopened, ...data.transactionConflicts.filter((item) => item.id !== conflictId)].slice(0, 40),
+  };
+}
+
+export function activeTransactionConflicts(data: AppData): TransactionConflict[] {
+  return (data.transactionConflicts || []).filter((item) => !item.resolvedChoice);
+}
+
+/** Meta remote pe care acest telefon nu le are ca ciornă locală (coada partenerului). */
+export function partnerPendingReviewMeta(data: AppData): PendingReviewMeta[] {
+  const localIds = new Set(data.pendingReview.map((item) => item.id));
+  return (data.pendingReviewMeta || []).filter((item) => !localIds.has(item.id));
 }

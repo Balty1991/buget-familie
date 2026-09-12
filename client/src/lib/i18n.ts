@@ -1821,6 +1821,20 @@ const en: Record<string, string> = {
   "categorie și plic după magazin": "category and envelope by shop",
   "{count} propuneri de confirmat": "{count} proposals to confirm",
   "Deschide instrumentele": "Open tools",
+
+  "Fără conexiune — modificările rămân pe telefon și se trimit la reconectare.": "Offline — changes stay on this phone and will sync when you reconnect.",
+  "Fără conexiune — lucrezi local pe acest telefon.": "Offline — you are working locally on this phone.",
+  "Fără conexiune": "Offline",
+  "Offline — sesiune activă, fără rețea": "Offline — session active, no network",
+  "Rețeaua lipsește. Registrul local rămâne intact; sync-ul se reia automat la reconectare.": "Network is down. The local ledger stays intact; sync resumes automatically when you reconnect.",
+  "CONFLICT DE MIȘCARE": "MOVEMENT CONFLICT",
+  "Aceeași mișcare a fost editată pe două telefoane": "The same movement was edited on two phones",
+  "Alege ce rămâne în registru. Nu unificăm sumele în tăcere.": "Choose what stays in the ledger. We never merge amounts silently.",
+  "Confirmarea din De verificat (doar pe telefonul care a creat propunerea)": "Confirming To review items (only on the phone that created them)",
+  "Partenerul vede un rezumat al cozii De verificat (titlu, sumă, dată), fără poze.": "Your partner sees a To review queue summary (title, amount, date), without photos.",
+  "LA PARTENER": "ON PARTNER PHONE",
+  "{count} propuneri pe celălalt telefon": "{count} proposals on the other phone",
+  "Rezumat sincronizat, fără poze. Confirmarea se face pe telefonul care a creat propunerea. Poți anunța partenerul pe canalul vostru (mesaj, apel).": "Synced summary, no photos. Confirmation happens on the phone that created the proposal. You can notify your partner on your usual channel (message, call).",
   "Deschide instrumentele · {count} de verificat": "Open tools · {count} to review"
 };
 

@@ -48,6 +48,7 @@ export const dateText = (value: string, full = false) => formatDate(value, full 
 export type SyncPanelProps = {
   connected: boolean;
   busy: boolean;
+  online: boolean;
   password: string;
   setPassword: (value: string) => void;
   notice: string;

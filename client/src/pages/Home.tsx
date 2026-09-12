@@ -3,7 +3,7 @@
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, Bell, RotateCcw, BellRing, CalendarClock, CreditCard, Goal, Inbox, Info, LayoutDashboard, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BarChart3, Bell, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Goal, Inbox, Info, LayoutDashboard, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, WalletCards, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationStatus, allocationWeekStatus, autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
@@ -518,6 +518,19 @@ export default function Home() {
   }, []);
 
   const { syncPanelProps, setSyncPassword, setSyncPasswordReveal } = useFamilySync(data, setData);
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    setOnline(navigator.onLine);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; setData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
   const saveTx = (item: Transaction | Transaction[]) => update((current) => {
     const list = Array.isArray(item) ? item : [item];
@@ -624,7 +637,7 @@ export default function Home() {
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));
   }, [data.settings.quickTemplates]);
   const nav = [{ id: "today" as MainView, label: t("Astăzi"), icon: LayoutGrid }, { id: "journal" as MainView, label: t("Mișcări"), icon: ListFilter }, { id: "plan" as MainView, label: t("Plan"), icon: PlayCircle }, { id: "obligations" as MainView, label: t("Obligații"), icon: Bell }, { id: "insights" as MainView, label: t("Analiză"), icon: BarChart3 }];
-  const current = () => { if (view === "journal") return <MovementsJournal data={data} onAdd={() => openTx()} onEdit={openTx} onOpenReview={() => { setMore("review"); go("utilities"); }} onDelete={(id) => deleteWithUndo(t("Mișcarea a fost ștearsă."), (currentData) => ({
+  const current = () => { if (view === "journal") return <MovementsJournal data={data} onChange={setData} onAdd={() => openTx()} onEdit={openTx} onOpenReview={() => { setMore("review"); go("utilities"); }} onDelete={(id) => deleteWithUndo(t("Mișcarea a fost ștearsă."), (currentData) => ({
       next: { ...currentData, transactions: currentData.transactions.filter((item) => item.id !== id), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId !== id), deleted: [...currentData.deleted, { entity: "transactions" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
       removed: { transactions: currentData.transactions.filter((item) => item.id === id), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId === id) },
     }))} />; if (view === "plan")
@@ -641,6 +654,7 @@ export default function Home() {
   return <div className="bf-app os-shell">
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
+    {!online && <div className="bf-offline-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{syncPanelProps.connected ? t("Fără conexiune — modificările rămân pe telefon și se trimit la reconectare.") : t("Fără conexiune — lucrezi local pe acest telefon.")}</span></div>}
     <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void loadSecondary()} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label={data.pendingReview.length ? t("Deschide instrumentele · {count} de verificat", { count: data.pendingReview.length }) : t("Deschide instrumentele")} onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} />{data.pendingReview.length > 0 && <span className="bf-nav-count" aria-hidden="true">{data.pendingReview.length}</span>}</button><button className="os-tool" aria-label={t("Deschide ghidul")} onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>
     <main id="main-content" key={view} className="bf-screen-transition">{current()}</main>
     {undo && (

@@ -746,3 +746,108 @@ html.theme-cyber .os-dock button.is-on svg {
     height: 20px !important;
   }
 }
+
+
+/* --- a11y 2026-09: theme-dark filled + 44px nav/filters + offline honesty --- */
+html.theme-dark .bf-os-decide,
+html.theme-dark .bf-movement-add,
+html.theme-dark .bf-primary,
+html.theme-dark .bf-movement-kind button.active,
+html.theme-dark .bf-segment button.active,
+html.theme-dark .bf-journal-quickbar .active,
+html.theme-dark .bf-movement-scope button.active {
+  background-color: var(--cf-primary-strong, #1f5240) !important;
+  background-image: none !important;
+  color: var(--cf-on-primary, #ffffff) !important;
+}
+html.theme-dark .bf-os-decide svg,
+html.theme-dark .bf-movement-add svg,
+html.theme-dark .bf-primary svg {
+  color: var(--cf-on-primary, #ffffff) !important;
+  stroke: currentColor !important;
+}
+html.theme-dark .bf-os-secondary,
+html.theme-dark .bf-today-add.bf-os-secondary,
+html.theme-dark .bf-secondary {
+  color: var(--cf-ink, #e8f0ea) !important;
+  background-color: var(--cf-surface, #132820) !important;
+  border: 1px solid var(--cf-line, #2f4a3d) !important;
+}
+html.theme-dark .os-dock button.is-on,
+html.theme-dark .os-desktop-nav button.is-on {
+  color: var(--cf-on-primary, #ffffff) !important;
+}
+html.theme-dark .os-dock button.is-on svg {
+  color: var(--cf-on-primary, #ffffff) !important;
+  stroke: currentColor !important;
+}
+
+.os-dock button,
+.os-desktop-nav button,
+.bf-movement-kind button,
+.bf-movement-scope button,
+.bf-journal-filter-toggle,
+.bf-more-tabs button,
+.bf-segment button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.os-dock button:focus-visible,
+.os-desktop-nav button:focus-visible,
+.bf-primary:focus-visible,
+.bf-secondary:focus-visible,
+.bf-movement-kind button:focus-visible,
+.bf-movement-scope button:focus-visible,
+.bf-more-tabs button:focus-visible,
+.bf-journal-filter-toggle:focus-visible,
+.bf-link-button:focus-visible {
+  outline: 2px solid var(--cf-primary-strong, #1f5240) !important;
+  outline-offset: 2px !important;
+}
+
+.bf-offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--cf-warning, #c49a2a) 45%, transparent);
+  background: color-mix(in srgb, var(--cf-warning, #c49a2a) 16%, var(--cf-surface, #fffdf7));
+  color: var(--cf-ink, #1a2420);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.bf-offline-banner svg { flex: 0 0 auto; color: var(--cf-warning, #8d6515); }
+.bf-sync-state.offline {
+  border-color: color-mix(in srgb, var(--cf-warning, #c49a2a) 50%, transparent);
+  background: color-mix(in srgb, var(--cf-warning, #c49a2a) 12%, transparent);
+}
+.bf-review-partner {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 16px;
+  border: 1px dashed var(--cf-line, #d5d2c8);
+  border-radius: 16px;
+  background: var(--cf-surface-alt, #f4f1e8);
+}
+.bf-review-partner-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bf-review-partner-list li {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--cf-surface, #fffdf8);
+  border: 1px solid var(--cf-line, #e4e0d4);
+}
+.bf-review-partner-list b { font-size: 13px; color: var(--cf-ink, #1a2420); }
+.bf-review-partner-list span,
+.bf-review-partner-list small { color: var(--cf-muted, #66756c); font-size: 11px; }

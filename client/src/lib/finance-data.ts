@@ -138,6 +138,45 @@ export type AllocationAmountConflict = {
   /** Dacă utilizatorul a rezolvat recent și poate anula. */
   resolvedChoice?: "local" | "remote";
 };
+/**
+ * Conflict pe aceeași mișcare (același id) editată pe două telefoane.
+ * Păstrăm varianta locală în registru până la alegere explicită — nu corupe ledgerul.
+ */
+export type TransactionConflict = {
+  id: string;
+  transactionId: string;
+  label: string;
+  localAmount: number;
+  remoteAmount: number;
+  localKind: TransactionKind;
+  remoteKind: TransactionKind;
+  localDate: string;
+  remoteDate: string;
+  localTitle: string;
+  remoteTitle: string;
+  localUpdatedAt?: string;
+  remoteUpdatedAt?: string;
+  /** Snapshot remote pentru aplicarea „Păstrează remote”. */
+  remoteSnapshot: Transaction;
+  detectedAt: string;
+  previousSnapshot?: Transaction;
+  resolvedChoice?: "local" | "remote";
+};
+/**
+ * Rezumat partajabil al cozii „De verificat” — fără imagini de bon.
+ * Ciornele complete rămân pe telefonul care le-a creat; partenerul vede doar meta.
+ */
+export type PendingReviewMeta = {
+  id: string;
+  origin: ReviewOrigin;
+  reason: string;
+  createdAt: string;
+  amount: number;
+  title: string;
+  date: string;
+  kind: TransactionKind;
+  deviceLabel?: string;
+};
 /** Telefon conectat la camera de familie (în pachetul criptat). */
 export type SyncDevice = {
   id: string;
@@ -145,7 +184,7 @@ export type SyncDevice = {
   lastSeenAt: string;
   revokedAt?: string;
 };
-export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; allocationConflicts: AllocationAmountConflict[]; settings: FamilySettings };
+export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
 export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Timp liber", "Rate produse", "Altele"];
 export const categoryColors: Record<string, string> = { Alimente: "#256B5B", "Consumabile copil": "#55877D", Abonamente: "#5D7283", "Casă & facturi": "#5D7283", Transport: "#D49A2A", "Timp liber": "#D56852", Sănătate: "#4987AA", "Rate produse": "#966E4A", Altele: "#7D8581" };
@@ -241,7 +280,7 @@ const safeDate = (value?: string) => {
 
 export const createEmptyAppData = (): AppData => ({
   version: 9,
-  transactions: [], debts: [], savings: [], receipts: [], recurring: [], deleted: [], pendingReview: [], allocationConflicts: [],
+  transactions: [], debts: [], savings: [], receipts: [], recurring: [], deleted: [], pendingReview: [], pendingReviewMeta: [], allocationConflicts: [], transactionConflicts: [],
   settings: {
     familyName: "Familia mea", memberName: "Eu", familyCode: createFamilyCode(),
     members: [{ id: "member-me", name: "Eu", color: "#256B5B" }],
@@ -351,8 +390,58 @@ export const normalizeAppData = (input: unknown): AppData => {
       resolvedChoice: item?.resolvedChoice === "local" || item?.resolvedChoice === "remote" ? item.resolvedChoice : undefined,
     })).filter((item) => item.allocationId && item.localAmount !== item.remoteAmount).slice(0, 40)
     : [];
+  const pendingReviewMeta: PendingReviewMeta[] = Array.isArray((old as Partial<AppData>).pendingReviewMeta)
+    ? (old as Partial<AppData>).pendingReviewMeta!.map((item, index) => {
+        const origin = reviewOrigins.includes(item?.origin as ReviewOrigin) ? (item!.origin as ReviewOrigin) : "import";
+        return {
+          id: String(item?.id || `review-meta-${index}`),
+          origin,
+          reason: String(item?.reason || "Propunere").slice(0, 160),
+          createdAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item?.createdAt || "")) ? String(item!.createdAt) : new Date().toISOString(),
+          amount: Math.max(0, parseRomanianAmount(item?.amount)),
+          title: String(item?.title || "Propunere").slice(0, 120),
+          date: safeDate(item?.date),
+          kind: item?.kind === "income" ? "income" as const : "expense" as const,
+          deviceLabel: item?.deviceLabel ? String(item.deviceLabel).slice(0, 48) : undefined,
+        };
+      }).filter((item) => item.amount > 0).slice(0, 120)
+    : [];
+  const transactionConflicts: TransactionConflict[] = Array.isArray((old as Partial<AppData>).transactionConflicts)
+    ? (old as Partial<AppData>).transactionConflicts!.map((item, index) => {
+        const remoteSnapshot = normalizeTransaction(item?.remoteSnapshot || {
+          id: item?.transactionId,
+          title: item?.remoteTitle,
+          amount: item?.remoteAmount,
+          kind: item?.remoteKind,
+          date: item?.remoteDate,
+          category: "Altele",
+          source: "",
+          person: "",
+        }, index, "conflict-remote");
+        const previousSnapshot = item?.previousSnapshot ? normalizeTransaction(item.previousSnapshot, index, "conflict-prev") : undefined;
+        return {
+          id: String(item?.id || `tx-conflict-${index}`),
+          transactionId: String(item?.transactionId || remoteSnapshot.id),
+          label: String(item?.label || remoteSnapshot.title || "Mișcare"),
+          localAmount: Math.max(0, parseRomanianAmount(item?.localAmount)),
+          remoteAmount: Math.max(0, parseRomanianAmount(item?.remoteAmount ?? remoteSnapshot.amount)),
+          localKind: item?.localKind === "income" ? "income" as const : "expense" as const,
+          remoteKind: item?.remoteKind === "income" ? "income" as const : remoteSnapshot.kind,
+          localDate: safeDate(item?.localDate),
+          remoteDate: safeDate(item?.remoteDate || remoteSnapshot.date),
+          localTitle: String(item?.localTitle || "Mișcare").slice(0, 120),
+          remoteTitle: String(item?.remoteTitle || remoteSnapshot.title).slice(0, 120),
+          localUpdatedAt: item?.localUpdatedAt,
+          remoteUpdatedAt: item?.remoteUpdatedAt,
+          remoteSnapshot,
+          detectedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item?.detectedAt || "")) ? String(item!.detectedAt) : new Date().toISOString(),
+          previousSnapshot,
+          resolvedChoice: item?.resolvedChoice === "local" || item?.resolvedChoice === "remote" ? item.resolvedChoice : undefined,
+        };
+      }).filter((item) => item.transactionId).slice(0, 40)
+    : [];
   return {
-    version: 9, transactions, receipts, pendingReview, allocationConflicts,
+    version: 9, transactions, receipts, pendingReview, pendingReviewMeta, allocationConflicts, transactionConflicts,
     debts: realRows<Debt>(old.debts).map((item) => ({ ...item, remaining: Math.max(0, parseRomanianAmount(item.remaining)), monthly: Math.max(0, parseRomanianAmount(item.monthly)) })),
     savings: realRows<SavingsGoal>(old.savings).map((item) => ({ ...item, current: Math.max(0, parseRomanianAmount(item.current)), target: Math.max(0, parseRomanianAmount(item.target)) })),
     recurring: realRows<RecurringPayment>(old.recurring).map((item, index) => ({ id: item.id || `recurring-${index}`, name: item.name || `Plată recurentă ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), category: item.category || "Casă & facturi", sourceId: sources.some((source) => source.id === item.sourceId) ? String(item.sourceId) : sources[0]?.id || "", memberId: members.some((member) => member.id === item.memberId) ? String(item.memberId) : members[0]?.id || "", dueDay: Math.min(31, Math.max(1, Math.round(parseRomanianAmount(item.dueDay || 1)))), active: item.active !== false, autoPost: item.autoPost === true, note: item.note || undefined, updatedAt: item.updatedAt || undefined })),
@@ -366,6 +455,21 @@ export const normalizeAppData = (input: unknown): AppData => {
  * plicurile sau prognozele până când utilizatorul le confirmă. Ignorarea unei propuneri
  * nu lasă urmă în registru, pentru că mișcarea nu a existat niciodată acolo.
  */
+
+/** Rezumat ușor de sincronizat: fără imagini, fără ciorna completă. */
+export const buildPendingReviewMeta = (data: AppData, deviceLabel?: string): PendingReviewMeta[] =>
+  data.pendingReview.map((draft) => ({
+    id: draft.id,
+    origin: draft.origin,
+    reason: draft.reason,
+    createdAt: draft.createdAt,
+    amount: draft.transaction.amount,
+    title: draft.transaction.title,
+    date: draft.transaction.date,
+    kind: draft.transaction.kind,
+    deviceLabel,
+  })).slice(0, 120);
+
 export const addReviewDrafts = (data: AppData, drafts: ReviewDraft[]): AppData => {
   if (!drafts.length) return data;
   const known = new Set([...data.pendingReview.map((item) => item.transaction.id), ...data.transactions.map((item) => item.id)]);

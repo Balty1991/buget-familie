@@ -1,5 +1,12 @@
 import { AlertTriangle, RotateCcw } from "lucide-react";
-import { applyAllocationConflictChoice, undoAllocationConflictChoice, activeAllocationConflicts } from "@/lib/family-crypto";
+import {
+  applyAllocationConflictChoice,
+  undoAllocationConflictChoice,
+  activeAllocationConflicts,
+  applyTransactionConflictChoice,
+  undoTransactionConflictChoice,
+  activeTransactionConflicts,
+} from "@/lib/family-crypto";
 import type { AppData } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 
@@ -64,4 +71,60 @@ export function EnvelopeConflictBadge({ allocationId, data }: { allocationId: st
   const hit = activeAllocationConflicts(data).find((item) => item.allocationId === allocationId);
   if (!hit) return null;
   return <span className="bf-conflict-badge" title={t("Conflict de sumă după sync")}>{t("Conflict")}</span>;
+}
+
+export function MovementConflictBanner({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
+  const open = activeTransactionConflicts(data);
+  const recent = (data.transactionConflicts || []).filter((item) => item.resolvedChoice && item.previousSnapshot).slice(0, 3);
+  if (!open.length && !recent.length) return null;
+
+  return (
+    <section className="bf-envelope-conflicts bf-movement-conflicts" aria-live="polite" aria-labelledby="bf-tx-conflict-title">
+      {open.length > 0 && (
+        <>
+          <div className="bf-envelope-conflicts-heading">
+            <AlertTriangle size={18} aria-hidden="true" />
+            <div>
+              <p className="bf-kicker">{t("CONFLICT DE MIȘCARE")}</p>
+              <h2 id="bf-tx-conflict-title">{t("Aceeași mișcare a fost editată pe două telefoane")}</h2>
+              <p>{t("Alege ce rămâne în registru. Nu unificăm sumele în tăcere.")}</p>
+            </div>
+          </div>
+          <ul className="bf-envelope-conflicts-list">
+            {open.map((conflict) => (
+              <li key={conflict.id}>
+                <div>
+                  <b>{conflict.label}</b>
+                  <span className="bf-conflict-badge" aria-label={t("Conflict")}>{t("Conflict")}</span>
+                  <small>
+                    {t("Pe acest telefon")}: {money(conflict.localAmount)} · {conflict.localDate}
+                    {" · "}
+                    {t("Pe celălalt")}: {money(conflict.remoteAmount)} · {conflict.remoteDate}
+                  </small>
+                </div>
+                <div className="bf-envelope-conflicts-actions">
+                  <button type="button" className="bf-primary" onClick={() => onChange(applyTransactionConflictChoice(data, conflict.id, "local"))}>
+                    {t("Păstrează local")} ({money(conflict.localAmount)})
+                  </button>
+                  <button type="button" className="bf-secondary" onClick={() => onChange(applyTransactionConflictChoice(data, conflict.id, "remote"))}>
+                    {t("Păstrează remote")} ({money(conflict.remoteAmount)})
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {recent.map((conflict) => (
+        <div key={`undo-tx-${conflict.id}`} className="bf-envelope-conflict-undo">
+          <span>
+            {t("Rezolvat")}: {conflict.label} → {money(conflict.resolvedChoice === "remote" ? conflict.remoteAmount : conflict.localAmount)}
+          </span>
+          <button type="button" className="bf-link-button" onClick={() => onChange(undoTransactionConflictChoice(data, conflict.id))}>
+            <RotateCcw size={14} /> {t("Anulează")}
+          </button>
+        </div>
+      ))}
+    </section>
+  );
 }

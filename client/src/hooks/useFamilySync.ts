@@ -32,6 +32,17 @@ export function useFamilySync(
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncConnected, setSyncConnected] = useState(false);
   const [syncLastSync, setSyncLastSync] = useState("");
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  useEffect(() => {
+    const goOnline = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
   const [syncJournal, setSyncJournal] = useState<SyncJournalEntry[]>(readSyncJournal);
 
   const syncDataRef = useRef(data);
@@ -149,6 +160,10 @@ export function useFamilySync(
 
   useEffect(() => {
     if (!syncConnected || !syncRoomIdRef.current) return;
+    if (!online) {
+      setSyncNotice(t("Fără conexiune — modificările rămân pe telefon și se trimit la reconectare."));
+      return;
+    }
     const currentPortable = syncPortable(data);
     if (currentPortable === syncLastPortableRef.current) return;
     window.clearTimeout(syncPushTimerRef.current);
@@ -161,19 +176,21 @@ export function useFamilySync(
           await pushFamilyEnvelope(syncRoomIdRef.current!, envelope);
           syncLastPortableRef.current = currentPortable;
           setSyncLastSync(new Date().toISOString());
+          setSyncNotice(t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
         } catch (error) {
           setSyncNotice(error instanceof Error ? error.message : t("Actualizarea nu a putut fi trimisă."));
         }
       })();
     }, 800);
     return () => window.clearTimeout(syncPushTimerRef.current);
-  }, [data, syncConnected]);
+  }, [data, syncConnected, online]);
 
   useEffect(() => () => syncUnsubscribeRef.current?.(), []);
 
   const syncPanelProps: SyncPanelProps = {
     connected: syncConnected,
     busy: syncBusy,
+    online,
     password: syncPassword,
     setPassword: setSyncPassword,
     passwordRevealOnce: syncPasswordReveal || undefined,

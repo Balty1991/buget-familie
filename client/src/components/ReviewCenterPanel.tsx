@@ -23,6 +23,7 @@ import {
 import { parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
+import { partnerPendingReviewMeta } from "@/lib/family-crypto";
 
 const originLabel: Record<ReviewOrigin, string> = {
   import: "Extras de cont",
@@ -45,6 +46,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
   const categories = useMemo(() => [...expenseCategories, ...data.settings.customCategories], [data.settings.customCategories]);
   const drafts = data.pendingReview;
   const total = drafts.reduce((sum, item) => sum + (item.transaction.kind === "expense" ? item.transaction.amount : 0), 0);
+  const partnerQueue = partnerPendingReviewMeta(data);
 
   const readFile = async (file: File) => {
     setBusy(true);
@@ -121,6 +123,27 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
         )}
       </section>
 
+      {partnerQueue.length > 0 && (
+        <section className="bf-review-partner" aria-labelledby="review-partner-title">
+          <div className="bf-section-heading">
+            <div>
+              <p className="bf-kicker">{t("LA PARTENER")}</p>
+              <h2 id="review-partner-title">{t("{count} propuneri pe celălalt telefon", { count: partnerQueue.length })}</h2>
+            </div>
+            <Inbox size={19} aria-hidden="true" />
+          </div>
+          <p className="bf-review-intro">{t("Rezumat sincronizat, fără poze. Confirmarea se face pe telefonul care a creat propunerea. Poți anunța partenerul pe canalul vostru (mesaj, apel).")}</p>
+          <ul className="bf-review-partner-list">
+            {partnerQueue.slice(0, 12).map((item) => (
+              <li key={item.id}>
+                <b>{item.title}</b>
+                <span>{fmtExact.format(item.amount)} · {dateText(item.date)}{item.deviceLabel ? ` · ${item.deviceLabel}` : ""}</span>
+                <small>{item.reason}</small>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section className="bf-review-queue" aria-labelledby="review-queue-title">
         <div className="bf-section-heading">
           <div>

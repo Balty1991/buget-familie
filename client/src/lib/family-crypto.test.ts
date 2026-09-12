@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { createEmptyAppData } from "./finance-data";
-import { encryptFamilyData, decryptFamilyData, deriveFamilyRoomId, mergeFamilyData, applyAllocationConflictChoice, undoAllocationConflictChoice } from "./family-crypto";
+import { encryptFamilyData, decryptFamilyData, deriveFamilyRoomId, mergeFamilyData, applyAllocationConflictChoice, undoAllocationConflictChoice, applyTransactionConflictChoice, undoTransactionConflictChoice } from "./family-crypto";
 
 const rules = readFileSync(new URL("../../../firestore.rules", import.meta.url), "utf8");
 const ruleNumber = (field: string) => {
@@ -133,5 +133,132 @@ describe("rezolvarea conflictelor de plic", () => {
     const undone = undoAllocationConflictChoice(kept, "conflict-alloc-1");
     expect(undone.settings.salaryPlan.allocations[0].amount).toBe(1500);
     expect(undone.allocationConflicts[0].resolvedChoice).toBeUndefined();
+  });
+});
+
+describe("conflicte pe aceeași mișcare", () => {
+  it("la același id cu sumă diferită păstrează local și înregistrează conflict", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    const base = {
+      title: "Lidl",
+      kind: "expense" as const,
+      category: "Alimente",
+      source: "Card",
+      person: "Eu",
+      date: "2026-09-10",
+      sourceId: "source-debit",
+      memberId: "member-me",
+    };
+    local.transactions = [{ id: "tx-1", ...base, amount: 120, updatedAt: "2026-09-12T12:00:00.000Z" }];
+    remote.transactions = [{ id: "tx-1", ...base, amount: 80, updatedAt: "2026-09-12T11:00:00.000Z" }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.transactions).toHaveLength(1);
+    expect(merged.transactions[0].amount).toBe(120);
+    expect(merged.transactionConflicts).toHaveLength(1);
+    expect(merged.transactionConflicts[0].remoteAmount).toBe(80);
+  });
+
+  it("Keep remote aplică snapshot-ul remote și Undo readuce localul", () => {
+    const base = createEmptyAppData();
+    const localTx = {
+      id: "tx-1",
+      title: "Lidl",
+      amount: 120,
+      kind: "expense" as const,
+      category: "Alimente",
+      source: "Card",
+      person: "Eu",
+      date: "2026-09-10",
+      sourceId: "source-debit",
+      memberId: "member-me",
+      updatedAt: "2026-09-12T12:00:00.000Z",
+    };
+    const remoteTx = { ...localTx, amount: 80, updatedAt: "2026-09-12T11:00:00.000Z" };
+    base.transactions = [localTx];
+    base.transactionConflicts = [{
+      id: "tx-conflict-tx-1",
+      transactionId: "tx-1",
+      label: "Lidl",
+      localAmount: 120,
+      remoteAmount: 80,
+      localKind: "expense",
+      remoteKind: "expense",
+      localDate: "2026-09-10",
+      remoteDate: "2026-09-10",
+      localTitle: "Lidl",
+      remoteTitle: "Lidl",
+      remoteSnapshot: remoteTx,
+      detectedAt: "2026-09-12T12:00:00.000Z",
+    }];
+    const kept = applyTransactionConflictChoice(base, "tx-conflict-tx-1", "remote");
+    expect(kept.transactions[0].amount).toBe(80);
+    expect(kept.transactionConflicts[0].resolvedChoice).toBe("remote");
+    const undone = undoTransactionConflictChoice(kept, "tx-conflict-tx-1");
+    expect(undone.transactions[0].amount).toBe(120);
+  });
+});
+
+describe("pendingReviewMeta partajabil", () => {
+  it("criptarea exclude ciornele complete dar include meta fără imagini", async () => {
+    const data = createEmptyAppData();
+    data.pendingReview = [{
+      id: "review-1",
+      origin: "bon",
+      reason: "Bon Lidl",
+      createdAt: "2026-09-12T10:00:00.000Z",
+      transaction: {
+        id: "review-tx-1",
+        title: "Bon — Lidl",
+        amount: 45,
+        kind: "expense",
+        category: "Alimente",
+        source: "Card",
+        person: "Eu",
+        date: "2026-09-12",
+      },
+    }];
+    const envelope = await encryptFamilyData(data, SECRET);
+    const opened = await decryptFamilyData(envelope, SECRET);
+    expect(opened.pendingReview).toEqual([]);
+    expect(opened.pendingReviewMeta).toHaveLength(1);
+    expect(opened.pendingReviewMeta[0].amount).toBe(45);
+    expect(opened.pendingReviewMeta[0].title).toBe("Bon — Lidl");
+  });
+
+  it("unirea păstrează ciornele locale și meta de pe ambele telefoane", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    local.pendingReview = [{
+      id: "review-local",
+      origin: "import",
+      reason: "CSV",
+      createdAt: "2026-09-12T10:00:00.000Z",
+      transaction: {
+        id: "tx-local-draft",
+        title: "CSV local",
+        amount: 10,
+        kind: "expense",
+        category: "Altele",
+        source: "Card",
+        person: "Eu",
+        date: "2026-09-11",
+      },
+    }];
+    remote.pendingReviewMeta = [{
+      id: "review-remote",
+      origin: "bon",
+      reason: "Bon partener",
+      createdAt: "2026-09-12T09:00:00.000Z",
+      amount: 22,
+      title: "Bon partener",
+      date: "2026-09-11",
+      kind: "expense",
+      deviceLabel: "Telefon 2",
+    }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.pendingReview.map((item) => item.id)).toEqual(["review-local"]);
+    expect(merged.pendingReviewMeta.some((item) => item.id === "review-remote")).toBe(true);
+    expect(merged.pendingReviewMeta.some((item) => item.id === "review-local")).toBe(true);
   });
 });
