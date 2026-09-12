@@ -1,4 +1,5 @@
 /** Atelierul Financiar 2.0 — plăți recurente rezervate în planul până la salariu. */
+import "../recurring.css";
 import { useState } from "react";
 import { CalendarClock, Check, Plus, Trash2 } from "lucide-react";
 import { autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringPayment } from "@/lib/finance-data";

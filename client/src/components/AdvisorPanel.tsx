@@ -1,4 +1,8 @@
 /** Atelierul Financiar — asistent local încărcat numai când utilizatorul îl deschide. */
+import "../advisor-studio.css";
+import "../advisor-dark-fix.css";
+import "../smart-scenario.css";
+import "../advisor-personalized.css";
 import { useState } from "react";
 import { Bot, CheckCircle2, ChevronRight, RotateCcw, Send, Sparkles } from "lucide-react";
 import { allocationStatus, answerBudgetQuestion, appendAllocationHistory, createEmptyAppData, expenseCategories, financialBalance, formatDate, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planEndDate, planForecast, savingSuggestions, sourceBalance, type AppData } from "@/lib/finance-data";

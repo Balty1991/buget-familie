@@ -1,6 +1,8 @@
 /**
  * Ecrane și formulare încărcate după Astăzi — nu intra în first paint.
  */
+import "../analysis-studio.css";
+import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";

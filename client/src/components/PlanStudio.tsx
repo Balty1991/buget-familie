@@ -3,6 +3,10 @@
  * Filosofie: o familie adaugă bani direct pe categorii, unele cu ritm săptămânal, altele doar cu un total.
  * Perioada e opțională și comună — servește doar categoriilor cu ritm săptămânal; nu există o sumă „generală” separată.
  */
+import "../plan-studio.css";
+import "../envelope-source.css";
+import "../envelope-transfer.css";
+import "../envelope-insights.css";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";

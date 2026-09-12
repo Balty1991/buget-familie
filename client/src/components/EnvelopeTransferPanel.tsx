@@ -1,3 +1,4 @@
+import "../envelope-transfer.css";
 import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { allocationStatus, appendAllocationHistory, parseRomanianAmount, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";

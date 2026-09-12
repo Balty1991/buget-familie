@@ -2,6 +2,7 @@
  * Atelierul Financiar — Analiză istorică calculată exclusiv din registrul local real.
  * Graficul de distribuție este o hartă de decizie: categorie, valoare și pondere rămân accesibile și verificabile.
  */
+import "../reports.css";
 import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowDownRight, ArrowUpRight, CalendarDays, Download, Landmark, PiggyBank, TrendingDown, TrendingUp, WalletCards } from "lucide-react";
 import { allocationStatus, categoryColors, financialBalance, formatDate, isoDate, transactionShareScope, type AppData, type ShareScope } from "@/lib/finance-data";
