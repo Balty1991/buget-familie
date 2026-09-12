@@ -64,13 +64,14 @@ import "./currency.css";
 // Ultimul, ca să poată corecta contrastul peste toate foile de redesign de mai sus.
 import "./contrast-fix.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
+import { APP_VERSION } from "./lib/app-version";
 if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
 createRoot(document.getElementById("root")!).render(<App />);
 startPerformanceMonitoring();
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=47`).then((registration) => {
+    void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=${APP_VERSION}`).then((registration) => {
       void registration.update();
       if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
     }).catch(() => undefined);
