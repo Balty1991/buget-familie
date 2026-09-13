@@ -680,6 +680,34 @@ export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => 
 export const allocationBudget = (data: AppData, allocation: BudgetAllocation) => allocation.amount + data.settings.salaryPlan.transfers.reduce((sum, transfer) => sum + (transfer.toAllocationId === allocation.id ? transfer.amount : 0) - (transfer.fromAllocationId === allocation.id ? transfer.amount : 0), 0);
 export const allocationStatus = (data: AppData, allocation: BudgetAllocation) => { const budget = allocationBudget(data, allocation); const spent = allocationSpent(data, allocation); const remaining = budget - spent; const usage = budget > 0 ? spent / budget : 0; const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80)); return { budget, spent, remaining, usage, alertThreshold, state: remaining < 0 ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const }; };
 
+/**
+ * Cifrele de repartizare, aceleași pe Plan, Astăzi și în teste.
+ * `allocated` e suma limitelor; `reservedInEnvelopes` e ce a mai rămas de cheltuit
+ * din plicuri; `unrepartized` e soldul minus rezervă minus scadențe.
+ */
+export const planAllocationMath = (data: AppData) => {
+  const plan = data.settings.salaryPlan;
+  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
+  const availableSources = data.settings.paymentSources
+    .filter((source) => sourceIds.includes(source.id))
+    .reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
+  const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
+  const allocated = plan.allocations.reduce((sum, item) => sum + allocationBudget(data, item), 0);
+  const reservedInEnvelopes = plan.allocations.reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
+  const unrepartized = availableSources - reservedInEnvelopes - scheduled;
+  return { sourceIds, availableSources, scheduled, allocated, reservedInEnvelopes, unrepartized };
+};
+
+/** Ce rămâne rezervat în plicuri după o modificare de limite, ținând cont de ce s-a cheltuit deja. */
+export const plannedEnvelopeReserved = (allocations: BudgetAllocation[], remainingById: Record<string, number>, draft: Record<string, number>) =>
+  allocations.reduce((sum, item) => {
+    const original = item.amount;
+    const next = draft[item.id] ?? original;
+    const remaining = remainingById[item.id] ?? original;
+    const spent = Math.max(0, original - remaining);
+    return sum + Math.max(0, next - spent);
+  }, 0);
+
 const roundSigned = money2;
 
 /** Situația fiecărei tranșe calendaristice a unui plic, cu ajustările din transferurile între săptămâni. */

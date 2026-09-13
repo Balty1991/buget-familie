@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { allocationStatus, allocationWeekStatus, adoptOutsideExpenses, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationWeekStatus, adoptOutsideExpenses, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
@@ -79,19 +79,14 @@ const preloadView = (id: MainView) => {
 function planMath(data: AppData) {
   const plan = data.settings.salaryPlan;
   const planEnd = planEndDate(plan);
-  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
-  const selected = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id));
-  const availableSources = selected.reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
+  const alloc = planAllocationMath(data);
+  const selected = data.settings.paymentSources.filter((source) => alloc.sourceIds.includes(source.id));
   const periodExpenses = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
   const days = planEnd ? Math.max(1, Math.floor((new Date(`${planEnd}T12:00:00`).valueOf() - new Date(`${plan.periodStart}T12:00:00`).valueOf()) / 86400000) + 1) : 7;
   const weeks = Math.max(1, Math.ceil(days / 7));
   const weeklyPacedTotal = plan.allocations.filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
   const weekly = plan.weeklyLimit || weeklyPacedTotal / weeks;
-  const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
-  /** Banii deja puși deoparte în plicuri nu se scad a doua oară de aici: o cheltuială dintr-un plic mișcă doar plicul, nu și marja generală. */
-  const reservedInEnvelopes = plan.allocations.reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
-  const remaining = availableSources - reservedInEnvelopes - scheduled;
-  return { plan, planEnd, sourceIds, selected, availableSources, periodExpenses, scheduled, reservedInEnvelopes, remaining, days, weeks, weekly, weeklyPacedTotal };
+  return { plan, planEnd, selected, periodExpenses, days, weeks, weekly, weeklyPacedTotal, remaining: alloc.unrepartized, ...alloc };
 }
 
 function advisorSignals(data: AppData): AdvisorSignal[] {

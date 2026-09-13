@@ -1971,6 +1971,7 @@ const en: Record<string, string> = {
   "Trimite mesajul": "Send message",
   "Nu sunt sigur. Alege ce-ai vrut:": "I'm not sure. Choose what you meant:",
   "Mutare între plicuri": "Move between envelopes",
+  "Mutare din ghidul AI ca să acoperi cheltuiala": "Move from the AI guide to cover the expense",
   "Plată scadență": "Due payment",
   "Corectare": "Correction",
   "Răspuns din registru": "Answer from the ledger",
