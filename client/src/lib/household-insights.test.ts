@@ -371,4 +371,19 @@ describe("householdActivityInCycle", () => {
     expect(cycle.familyExpense).toBe(80);
     expect(cycle.recent.map((item) => item.id)).toEqual(["shared"]);
   });
+
+  it("include cheltuiala din zilele de flex după data obișnuită a venitului", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "2026-09-20";
+    data.settings.salaryPlan.paydayFlexDays = 3;
+    data.settings.members = [{ id: "me", name: "Eu" }, { id: "partner", name: "Partener" }];
+    data.transactions = [
+      { id: "before", title: "Lidl", amount: 80, kind: "expense", category: "Alimente", source: "Card", sourceId: "s", person: "Eu", memberId: "me", date: "2026-09-10" },
+      { id: "flex", title: "Taxi după salariu", amount: 40, kind: "expense", category: "Transport", source: "Card", sourceId: "s", person: "Partener", memberId: "partner", date: "2026-09-22" },
+    ];
+    const cycle = householdActivityInCycle(data, "2026-09-22");
+    expect(cycle.familyExpense).toBe(120);
+    expect(cycle.recent.map((item) => item.id)).toContain("flex");
+  });
 });

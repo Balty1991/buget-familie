@@ -113,6 +113,16 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.fromWeekIndex).toBe(1);
   });
 
+  it("la o cheltuială din S2, Confirmă pe toate ia S2, nu prima săptămână cu bani", () => {
+    const data = house();
+    addIncome(data);
+    addEnvelope(data);
+    const offer = buildExpenseOffer(data, { amount: 20, title: "Taxi", category: "Transport", date: "2026-09-20" }, emptyGuideMemory());
+    expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.fromWeekIndex).toBe(2);
+    expect(offer.choices.some((item) => item.update.kind === "expense" && item.update.fromWeekIndex === 1)).toBe(true);
+    expect(offer.choices[0].label).toMatch(/S2/);
+  });
+
   it("taxi 20 din S1: card 480, plic 480, nerepartizați 0 — nu „peste disponibil”", () => {
     const data = house();
     addIncome(data);

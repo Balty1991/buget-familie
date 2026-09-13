@@ -243,6 +243,7 @@ export function buildExpenseOffer(
       if (week.remaining >= amount) funded.push({ envelope, weekIndex: week.index, left: week.remaining });
     }
   }
+  const spendWeekByEnvelope = new Map<string, number | undefined>();
   funded.sort((left, right) => {
     const score = (item: (typeof funded)[number]) => {
       if (habit?.allocationId && item.envelope.id === habit.allocationId) return 6;
@@ -252,7 +253,14 @@ export function buildExpenseOffer(
       if ((item.envelope.category || item.envelope.label) === "Alimente") return 2;
       return 1;
     };
-    return score(right) - score(left) || (left.weekIndex || 99) - (right.weekIndex || 99) || right.left - left.left;
+    const weekOfSpend = (item: (typeof funded)[number]) => {
+      if (item.envelope.weeklyPace === false || !item.weekIndex) return 1;
+      if (!spendWeekByEnvelope.has(item.envelope.id)) {
+        spendWeekByEnvelope.set(item.envelope.id, allocationWeekStatus(data, item.envelope, date)?.index);
+      }
+      return spendWeekByEnvelope.get(item.envelope.id) === item.weekIndex ? 0 : 1;
+    };
+    return score(right) - score(left) || weekOfSpend(left) - weekOfSpend(right) || (left.weekIndex || 99) - (right.weekIndex || 99) || right.left - left.left;
   });
   const choices: ChatChoice[] = funded.map(({ envelope, weekIndex, left }) => ({
     label: `Din ${envelope.label}${weekIndex ? ` · S${weekIndex}` : ""} · ${money(left)}`,

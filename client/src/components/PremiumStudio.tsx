@@ -35,7 +35,7 @@ export function PremiumStudio() {
             <li><Check size={14} /> {t("Sincronizare criptată între telefoane")}</li>
             <li><Check size={14} /> {t("Ghid online încăpător, OCR bonuri, PDF")}</li>
             <li><Check size={14} /> {t("Feed familie: cine a scos, din ce plic")}</li>
-            <li><Check size={14} /> {t("14 zile de probă, anulare din Google Play")}</li>
+            {BILLING_LIVE && <li><Check size={14} /> {t("14 zile de probă, anulare din Google Play")}</li>}
           </ul>
         </article>
       </div>

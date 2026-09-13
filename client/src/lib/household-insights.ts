@@ -16,6 +16,7 @@ import {
   newId,
   pendingRecurringInPlan,
   planEndDate,
+  planCoverEndDate,
   planForecast,
   weeklySummary,
   transactionShareScope,
@@ -173,11 +174,12 @@ export const householdActivity = (data: AppData, month = currentMonthKey()): Hou
   return { month, members, familyExpense, recent };
 };
 
-/** Activitate pe ciclul salarial (periodStart → nextPayday), nu pe luna calendar. */
+/** Activitate pe ciclul salarial (periodStart → ultima zi acoperită, inclusiv flexul venitului), nu pe luna calendar. */
 export const householdActivityInCycle = (data: AppData, asOf = isoToday()): HouseholdActivity => {
   const plan = data.settings.salaryPlan;
   const start = plan.periodStart || `${asOf.slice(0, 7)}-01`;
-  const end = plan.nextPayday && plan.nextPayday >= start ? plan.nextPayday : asOf;
+  const cover = planCoverEndDate(plan);
+  const end = cover && cover >= start ? cover : asOf;
   const cycleTx = data.transactions.filter((item) => item.date >= start && item.date <= end && transactionShareScope(item) !== "personal");
   const familyExpense = cycleTx.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
   const members = data.settings.members.map((member) => {
