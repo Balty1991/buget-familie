@@ -8,11 +8,12 @@ type ChatLike = {
 
 const isOpenSituation = (item: ChatLike | undefined) => Boolean(item && item.role === "assistant" && (item.choices?.length || item.picks?.length || item.action?.type === "apply"));
 
-/** Implicit vedem doar turul curent; istoricul se deschide la cerere. După o salvare rămâne confirmarea. */
+/** Implicit vedem doar turul deschis. După salvare totul intra în Istoric. */
 export const shownChatMessages = <T extends ChatLike>(messages: T[], historyOpen: boolean): T[] => {
-  if (historyOpen || messages.length <= 1) return messages;
+  if (historyOpen) return messages;
+  if (messages.length <= 1) return messages;
   const last = messages[messages.length - 1];
-  if (last.role === "assistant" && !isOpenSituation(last)) return messages.slice(-1);
+  if (last.role === "assistant" && !isOpenSituation(last)) return [];
   let from = 0;
   for (let i = messages.length - 1; i >= 0; i -= 1) {
     if (messages[i].role === "user") { from = i; break; }

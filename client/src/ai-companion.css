@@ -206,6 +206,7 @@
 
 .ai-history-toggle{display:flex;flex:none;align-items:center;justify-content:center;gap:6px;width:100%;margin:0 0 4px;padding:6px 8px;border:0;border-radius:999px;background:transparent;color:#6e8077;font:700 11px Manrope,sans-serif;cursor:pointer}
 .ai-chat-panel.is-history-collapsed .ai-chat-history{flex:0 1 auto!important;min-height:0!important;max-height:min(34vh,220px)!important}
+.ai-chat-history.is-empty{display:none!important;min-height:0!important;max-height:0!important;padding:0!important;flex:none!important;overflow:hidden!important}
 @media(max-width:600px){
   .ai-chat-panel.is-history-collapsed .ai-chat-history{flex:0 1 auto!important;max-height:min(32vh,200px)!important}
 }
