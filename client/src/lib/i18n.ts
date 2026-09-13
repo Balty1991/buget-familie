@@ -1127,7 +1127,7 @@ const en: Record<string, string> = {
   "Nu am putut salva fișierul. Încearcă din nou sau folosește sincronizarea de familie.": "We could not save the file. Try again, or use family sync instead.",
   "Alege backup": "Choose a backup",
 
-  "Scrie firesc: „am dat 50 lei pe benzină”, „fă-mi plic Alimente 2400 cu limită săptămânală 600”, „următorul salariu pe 07.10.2026”, „datorie card 1800, rata 150”. Îți arăt ce am înțeles și salvez doar după confirmarea ta.": "Write naturally: “spent 50 lei on fuel”, “make me a Groceries envelope, 2400, weekly limit 600”, “next payday on 07.10.2026”, “card debt 1800, instalment 150”. I show you what I understood and save only after you confirm.",
+  "Exemple: «am dat 50 lei pe benzină», «plic Alimente 2400». Salvez doar după confirmarea ta.": "Examples: “spent 50 lei on fuel”, “Groceries envelope 2400”. I save only after you confirm.",
   "Opțional: spune-mi ceva despre bon": "Optional: tell me something about the receipt",
   "ex. am dat 50 lei pe benzină": "e.g. spent 50 lei on fuel",
 
@@ -1973,7 +1973,7 @@ const en: Record<string, string> = {
   "Ce am citit din mesaj": "What I read from the message",
   "Confirmare": "Confirmation",
   "Bon": "Receipt",
-  "Conversația și obiceiurile rămân pe acest telefon. Mișcările nu pleacă la Gemini: doar un rezumat (plicuri, scadențe), și numai dacă ghidul local n-a înțeles.": "The conversation and habits stay on this phone. Ledger rows do not go to Gemini: only a summary (envelopes, dues), and only if the local guide did not understand.",
+  "Conversația rămâne pe telefon. La Gemini pleacă doar un rezumat, dacă ghidul local n-a înțeles.": "The conversation stays on this phone. Only a summary goes to Gemini, and only if the local guide did not understand.",
   "Alege ritmul casei.": "Choose the household pace.",
   "După repartizare rămân {amount} nealocați, disponibili pentru o nevoie viitoare.": "After allocating, {amount} remain unassigned for a future need.",
   "ritm total": "total pace",

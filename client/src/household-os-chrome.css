@@ -710,12 +710,14 @@ html body .bf-command-search input::placeholder {
 
 @media (max-width: 760px) {
   .os-shell .ai-companion-panel.ai-chat-panel {
-    left: 12px !important;
-    right: 12px !important;
+    left: 10px !important;
+    right: 10px !important;
     width: auto !important;
-    bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
-    height: min(68dvh, calc(100dvh - 160px)) !important;
-    max-height: calc(100dvh - 160px) !important;
+    top: calc(72px + var(--os-inset-top, 0px)) !important;
+    bottom: calc(92px + var(--os-inset-bottom, 0px)) !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
   }
 }
 
@@ -848,8 +850,19 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
 }
 .os-shell .ai-chat-input p,
 .os-shell .ai-privacy {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
   color: var(--os-muted) !important;
   font-size: 11px !important;
+  line-height: 1.4 !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+}
+.os-shell .ai-chat-input p svg,
+.os-shell .ai-privacy svg {
+  flex: none !important;
+  margin-top: 2px !important;
 }
 .os-shell .ai-date-chip {
   border-radius: 999px !important;
