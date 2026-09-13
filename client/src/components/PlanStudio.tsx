@@ -268,7 +268,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         <i aria-hidden="true" style={{ width: `${Math.round(allocatedRatio * 100)}%` }} className={allocationHealth} />
       </div>
       <div className="bf-allocation-progress-meta">
-        <span><b>{money(Math.max(0, availableSources - Math.max(0, unrepartized)))}</b> {t("repartizați")}</span>
+        <span><b>{money(allocated)}</b> {t("repartizați")}</span>
         <span><b>{money(Math.max(0, unrepartized))}</b> {t("rămași")}</span>
       </div>
       <div className="bf-plan-allocation-axis" aria-hidden="true">

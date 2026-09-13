@@ -19,6 +19,7 @@
 import {
   allocationStatus,
   allocationWeekStatus,
+  allocationWeeksStatus,
   envelopeDecisionStatus,
   expenseCategories,
   inPlanPeriod,
@@ -37,7 +38,7 @@ import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
   | { kind: "income"; amount: number; title: string; date?: string; memberId?: string; clientCaptureId?: string }
-  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string; recurringId?: string }
+  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string; recurringId?: string; fromWeekIndex?: number }
   | { kind: "debt"; name: string; remaining: number; due?: string }
   | { kind: "debt-monthly"; amount: number; name?: string }
   | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string }
@@ -239,30 +240,48 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   const member = data.settings.members[0];
   const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
   const related = relatedCategories(category);
-  const funded = [...data.settings.salaryPlan.allocations]
-    .map((envelope) => {
-      const week = envelope.weeklyPace !== false ? allocationWeekStatus(data, envelope) : undefined;
-      const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
-      return { envelope, week, left };
-    })
-    .filter((item) => item.left >= amount)
-    .sort((left, right) => {
-      const score = (item: typeof left) => {
-        if (habit?.allocationId && item.envelope.id === habit.allocationId) return 6;
-        if (habit?.category && item.envelope.category === habit.category) return 5;
-        if (item.envelope.category === category) return 4;
-        if (related.includes(item.envelope.category || "")) return 3;
-        if ((item.envelope.category || item.envelope.label) === "Alimente") return 2;
-        return 1;
-      };
-      return score(right) - score(left) || right.left - left.left;
-    });
-  const choices: ChatChoice[] = funded.map(({ envelope, week, left }) => ({
-    label: `Din ${envelope.label}${week ? ` · S${week.index}` : ""} · ${money(left)}`,
-    update: { kind: "expense" as const, amount, title, category, date, allocationId: envelope.id, sourceId: envelope.sourceId || fallbackSource?.id, memberId: envelope.memberId || member?.id },
+  const funded: Array<{ envelope: (typeof data.settings.salaryPlan.allocations)[number]; weekIndex?: number; left: number }> = [];
+  for (const envelope of data.settings.salaryPlan.allocations) {
+    if (envelope.weeklyPace === false) {
+      const left = allocationStatus(data, envelope).remaining;
+      if (left >= amount) funded.push({ envelope, left });
+      continue;
+    }
+    for (const week of allocationWeeksStatus(data, envelope)) {
+      if (week.remaining >= amount) funded.push({ envelope, weekIndex: week.index, left: week.remaining });
+    }
+  }
+  funded.sort((left, right) => {
+    const score = (item: (typeof funded)[number]) => {
+      if (habit?.allocationId && item.envelope.id === habit.allocationId) return 6;
+      if (habit?.category && item.envelope.category === habit.category) return 5;
+      if (item.envelope.category === category) return 4;
+      if (related.includes(item.envelope.category || "")) return 3;
+      if ((item.envelope.category || item.envelope.label) === "Alimente") return 2;
+      return 1;
+    };
+    return score(right) - score(left) || (left.weekIndex || 99) - (right.weekIndex || 99) || right.left - left.left;
+  });
+  const choices: ChatChoice[] = funded.map(({ envelope, weekIndex, left }) => ({
+    label: `Din ${envelope.label}${weekIndex ? ` · S${weekIndex}` : ""} · ${money(left)}`,
+    update: {
+      kind: "expense" as const,
+      amount,
+      title,
+      category,
+      date,
+      allocationId: envelope.id,
+      sourceId: envelope.sourceId || fallbackSource?.id,
+      memberId: envelope.memberId || member?.id,
+      fromWeekIndex: weekIndex,
+    },
   }));
   data.settings.paymentSources.forEach((source) => {
-    const left = sourceBalance(data, source.id);
+    const reserved = data.settings.salaryPlan.allocations
+      .filter((item) => !item.sourceId || item.sourceId === source.id)
+      .reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
+    const scheduled = pendingRecurringInPlan(data).filter((item) => item.sourceId === source.id).reduce((sum, item) => sum + item.amount, 0);
+    const left = Math.round((sourceBalance(data, source.id) - reserved - scheduled) * 100) / 100;
     if (left < amount) return;
     choices.push({
       label: `Din nealocat · ${source.name} · ${money(left)}`,
@@ -276,9 +295,10 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
     || funded.find((item) => item.envelope.category === category)
     || funded.find((item) => related.includes(item.envelope.category || ""));
   const usual = habit && habit.count >= 2;
+  const weekHint = funded.some((item) => item.weekIndex) ? " Alege din ce săptămână scoatem banii." : " Alege de unde scoatem banii.";
   const text = preferred
-    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`} Alege de unde scoatem banii.`
-    : `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} Nu am un plic exact pentru ${category}. Alege din locurile unde sunt bani disponibili.`;
+    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`}${weekHint}`
+    : `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} Nu am un plic exact pentru ${category}. Banii sunt în plicuri — alege din ce săptămână scoatem suma.`;
   return { text: noDoubleStop(text), choices };
 }
 

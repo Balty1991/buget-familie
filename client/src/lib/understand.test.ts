@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData } from "./finance-data";
-import { decide, understand, compactGuideContext, shouldAskWhichReading, readingLabel, type Reading } from "./understand";
+import { decide, understand, compactGuideContext, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, type Reading } from "./understand";
 import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
 /** O gospodărie obișnuită: două persoane, patru locuri cu bani, trei plicuri. */
@@ -123,5 +123,36 @@ describe("ce pleacă către model", () => {
     const question: Reading = { kind: "question", score: 80, why: "q", answer: { kind: "next", headline: "x" } };
     const insight: Reading = { kind: "insight", score: 72, why: "i", text: "y" };
     expect(shouldAskWhichReading(question, insight)).toBe(false);
+  });
+});
+
+describe("cheltuiala din ghid iese din plic, nu din nealocat", () => {
+  const tight = (): AppData => {
+    const data = createEmptyAppData();
+    const me = data.settings.members[0];
+    data.settings.paymentSources = [{ id: "card", name: "Card debit", kind: "card", memberId: me.id, openingBalance: 0 }];
+    data.settings.salaryPlan.periodStart = "2026-09-12";
+    data.settings.salaryPlan.nextPayday = "2026-09-25";
+    data.settings.salaryPlan.allocations = [
+      { id: "env-food", label: "Alimente", category: "Alimente", amount: 500, sourceId: "card", memberId: me.id, weeklyPace: true },
+    ];
+    data.transactions = [
+      { id: "tx-in", title: "Venit rapid", amount: 500, kind: "income", category: "Venit", source: "Card debit", sourceId: "card", person: me.name, memberId: me.id, date: "2026-09-13" },
+    ];
+    return data;
+  };
+
+  it("nu oferă „nealocat” când cei 500 sunt deja în plic", () => {
+    const out = expenseProposal("cheltuieli taxi 20 lei", undefined, tight(), emptyGuideMemory(), true);
+    expect(out).toBeTruthy();
+    expect(out!.choices.map((item) => item.label).join(" | ")).not.toMatch(/nealocat/i);
+    expect(out!.choices.every((item) => item.update.kind === "expense" && item.update.allocationId === "env-food")).toBe(true);
+  });
+
+  it("oferă ambele săptămâni ale plicului", () => {
+    const out = expenseProposal("cheltuieli taxi 20 lei", undefined, tight(), emptyGuideMemory(), true);
+    const labels = out?.choices.map((item) => item.label) || [];
+    expect(labels.some((label) => /Alimente · S1/.test(label))).toBe(true);
+    expect(labels.some((label) => /Alimente · S2/.test(label))).toBe(true);
   });
 });
