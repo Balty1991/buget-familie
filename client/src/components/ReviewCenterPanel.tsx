@@ -12,7 +12,7 @@ import {
   confirmReviewDraft,
   dismissReviewDraft,
   expenseCategories,
-  matchingAllocationsForExpense,
+  pickerAllocationsForExpense,
   updateReviewDraft,
   type AppData,
   type ReviewDraft,
@@ -164,7 +164,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
               const transaction = draft.transaction;
               const open = editing === draft.id;
               const envelopes = transaction.kind === "expense"
-                ? matchingAllocationsForExpense(data, { category: transaction.category, memberId: transaction.memberId, sourceId: transaction.sourceId })
+                ? pickerAllocationsForExpense(data, { category: transaction.category, memberId: transaction.memberId, sourceId: transaction.sourceId })
                 : [];
               return (
                 <article key={draft.id} className={transaction.kind === "income" ? "income" : ""}>

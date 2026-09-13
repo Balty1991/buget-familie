@@ -832,18 +832,76 @@ export const debtSnowball = (data: AppData) => {
 };
 
 /** Plicuri compatibile pentru o cheltuială reală, cu prioritate pentru potrivirea exactă membru + sursă. */
-export const matchingAllocationsForExpense = (data: AppData, input: { category: string; memberId?: string; sourceId?: string }) => data.settings.salaryPlan.allocations
-  .filter((allocation) => allocation.category === input.category && (!allocation.sourceId || allocation.sourceId === input.sourceId))
-  .filter((allocation, _index, all) => {
-    if (!allocation.memberId || allocation.memberId === input.memberId) return true;
-    const exactMemberMatchExists = all.some((item) => item.memberId === input.memberId);
-    const sourceOwnerId = data.settings.paymentSources.find((source) => source.id === input.sourceId)?.memberId;
-    return !exactMemberMatchExists && allocation.memberId === sourceOwnerId;
-  })
-  .sort((left, right) => {
-    const score = (item: BudgetAllocation) => (item.memberId ? 2 : 0) + (item.sourceId ? 2 : 0) + (allocationBudget(data, item) - allocationSpent(data, item) > 0 ? 1 : 0);
-    return score(right) - score(left);
-  });
+const RELATED_ENVELOPE_CATEGORIES: Record<string, string[]> = {
+  Dulciuri: ["Alimente"],
+  Băuturi: ["Alimente"],
+  Apă: ["Alimente", "Casă & facturi"],
+  Alimente: ["Dulciuri", "Băuturi"],
+  "Casă & facturi": ["Apă"],
+};
+
+const envelopeFitsSourceAndMember = (data: AppData, allocation: BudgetAllocation, input: { memberId?: string; sourceId?: string }, sourceFit: BudgetAllocation[]) => {
+  if (allocation.sourceId && input.sourceId && allocation.sourceId !== input.sourceId) return false;
+  if (!allocation.memberId || allocation.memberId === input.memberId) return true;
+  const exactMemberMatchExists = sourceFit.some((item) => item.memberId === input.memberId);
+  const sourceOwnerId = data.settings.paymentSources.find((source) => source.id === input.sourceId)?.memberId;
+  return !exactMemberMatchExists && allocation.memberId === sourceOwnerId;
+};
+
+const rankEnvelope = (data: AppData, item: BudgetAllocation) => (item.memberId ? 2 : 0) + (item.sourceId ? 2 : 0) + (allocationBudget(data, item) - allocationSpent(data, item) > 0 ? 1 : 0);
+
+const sourceCompatibleAllocations = (data: AppData, input: { sourceId?: string }) =>
+  data.settings.salaryPlan.allocations.filter((allocation) => !allocation.sourceId || !input.sourceId || allocation.sourceId === input.sourceId);
+
+export const matchingAllocationsForExpense = (data: AppData, input: { category: string; memberId?: string; sourceId?: string }) => {
+  const pool = data.settings.salaryPlan.allocations;
+  const sourceFit = sourceCompatibleAllocations(data, input);
+  const fits = (allocation: BudgetAllocation) => envelopeFitsSourceAndMember(data, allocation, input, sourceFit);
+  const sort = (list: BudgetAllocation[]) => [...list].sort((left, right) => rankEnvelope(data, right) - rankEnvelope(data, left));
+  const exact = sort(sourceFit.filter((allocation) => allocation.category === input.category && fits(allocation)));
+  if (exact.length) return exact;
+  const related = RELATED_ENVELOPE_CATEGORIES[input.category] || [];
+  const kin = sort(sourceFit.filter((allocation) => related.includes(allocation.category || "") && fits(allocation)));
+  if (kin.length) return kin;
+  if (pool.length === 1 && fits(pool[0])) return pool;
+  return [];
+};
+
+/** Plicurile din care poți alege la captură, nu doar cel pe categorie. */
+export const pickerAllocationsForExpense = (data: AppData, input: { category: string; memberId?: string; sourceId?: string }) => {
+  const matched = matchingAllocationsForExpense(data, input);
+  const sourceFit = sourceCompatibleAllocations(data, input);
+  const extras = sourceFit.filter((allocation) =>
+    envelopeFitsSourceAndMember(data, allocation, input, sourceFit)
+    && !matched.some((item) => item.id === allocation.id));
+  return [...matched, ...extras];
+};
+
+/**
+ * Scrie o mișcare în registru. Dacă e cheltuială dintr-o altă săptămână a plicului,
+ * mută întâi tranșa — același drum ca ghidul.
+ */
+export const commitLedgerEntry = (data: AppData, entry: Transaction, fromWeekIndex?: number): AppData => {
+  let ledger = data;
+  if (entry.kind === "expense" && entry.allocationId && entry.allocationId !== "outside" && fromWeekIndex) {
+    const allocation = data.settings.salaryPlan.allocations.find((item) => item.id === entry.allocationId);
+    const currentWeek = allocation && allocation.weeklyPace !== false ? allocationWeekStatus(data, allocation, entry.date) : undefined;
+    if (allocation && currentWeek && fromWeekIndex !== currentWeek.index) {
+      ledger = transferBetweenWeeks(data, {
+        allocationId: allocation.id,
+        fromWeekIndex,
+        toWeekIndex: currentWeek.index,
+        amount: entry.amount,
+        note: t("Mutare la înregistrare ca să acoperi cheltuiala"),
+      }) || data;
+    }
+  }
+  const stamped = { ...entry, updatedAt: new Date().toISOString() };
+  const transactions = ledger.transactions.some((row) => row.id === stamped.id)
+    ? ledger.transactions.map((row) => row.id === stamped.id ? stamped : row)
+    : [stamped, ...ledger.transactions];
+  return { ...ledger, transactions };
+};
 
 /**
  * Cheltuielile rămase „în afara plicurilor” când tot banul e deja așezat.

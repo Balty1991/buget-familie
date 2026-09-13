@@ -49,9 +49,16 @@ Datele financiare rămân locale în experiența de bază. Pentru orice sincroni
 
 ## Monetizare fără a distruge încrederea
 
-Recomand **freemium fără reclame în ecranele financiare**. Funcțiile de bază — înregistrări, categorii, un plan, solduri și export simplu — rămân gratuite. Premium poate include sincronizare de familie, planuri multiple, rapoarte avansate, OCR de bonuri, backup automat și teme suplimentare. Nu blocăm niciodată accesul la datele deja introduse pentru că utilizatorul a anulat abonamentul.
+Recomand **freemium fără reclame în ecranele financiare**. Un abonament pentru toată gospodăria, nu per persoană. Datele nu sunt ostatici: la anulare, registrul rămâne pe telefon.
 
-Oferta inițială ar trebui să aibă un plan lunar și unul anual, cu o perioadă de probă clară, fără ecrane agresive și cu anulare simplă din Google Play. Play Billing suportă produse unice, abonamente, planuri de bază și oferte; implementarea reală necesită o aplicație Android, un identificator de pachet, produse configurate în Play Console și verificarea entitlements pe server sau într-o arhitectură securizată [6]. În repository-ul actual, pregătim mai întâi limitele și interfața premium; nu simulăm plăți reale în versiunea GitHub Pages.
+| Plan | Preț | Ce include |
+| --- | --- | --- |
+| **Casa** | 0 lei | Până la 4 plicuri, 1 membru, 1 telefon, Astăzi / Mișcări / Plan / scadențe, ghid local + 20 mesaje online/zi, export CSV și backup. |
+| **Familia** | 19,99 lei/lună sau **149 lei/an** (14 zile de probă) | Plicuri nelimitate, până la 6 persoane, sync criptat AES-GCM, ghid online încăpător, OCR bonuri, PDF, feed familie. |
+
+Funcțiile de bază rămân gratuite. Nu blocăm niciodată accesul la datele deja introduse pentru că utilizatorul a anulat abonamentul.
+
+Play Billing se lipește **după** listare și closed testing. În repository, `BILLING_LIVE = false`: totul e deblocat, ca familia care testează să nu rămână blocată. Nu simulăm plăți reale pe GitHub Pages. Implementarea reală cere aplicație Android, produse în Play Console și verificarea entitlements pe o arhitectură securizată [6].
 
 ## Roadmap recomandat
 
@@ -66,7 +73,7 @@ Oferta inițială ar trebui să aibă un plan lunar și unul anual, cu o perioad
 
 ## Ce implementăm acum
 
-Prima iterație concretă adaugă limbaj mai simplu în turul de orientare, explicații la cerere pe ecranul Astăzi, etichete mai clare pentru taburi și un glosar reutilizabil în viitoarele ecrane. După această bază, următoarea iterație va putea introduce fluxul „Adaugă prima cheltuială” și configurarea de familie fără să mai explice aceiași termeni în fiecare componentă.
+Pachetul Play-ready: un singur drum pentru bani (captură, formular, ghid, De verificat), feed familie pe Astăzi, catalog Casa/Familia fără plăți simulate, listing + politică actualizate. Play Billing rămâne oprit până după closed testing.
 
 ## Referințe
 

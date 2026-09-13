@@ -17,10 +17,10 @@ Text gata de lipit în Play Console. **Fără upload fals în store.** Plățile
 ## Descriere scurtă (≤80 caractere)
 
 ```
-Plicuri de familie în lei, până la salariu. Fără bancă, sync criptat.
+Cât poți cheltui azi, până la salariu. Plicuri de familie, fără bancă.
 ```
 
-(73 caractere cu spații)
+(70 caractere cu spații)
 
 ## Descriere completă
 

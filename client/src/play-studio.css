@@ -61,6 +61,15 @@
 .bf-trust p, .bf-premium-catalog p, .bf-trust li, .bf-premium-catalog li { color: var(--cf-ink); font-size: 13px; line-height: 1.5; }
 .bf-trust ul, .bf-premium-catalog ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .bf-premium-catalog li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; }
+.bf-premium-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0; }
+.bf-premium-plans article { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--cf-line, #dce3dc); border-radius: 16px; background: var(--cf-surface, #fffefa); }
+.bf-premium-plans article.is-featured { border-color: var(--cf-primary, #7cffc4); box-shadow: 0 0 0 1px var(--cf-primary, #7cffc4); }
+.bf-premium-plans h3 { margin: 0; font: 800 22px/1.1 "IBM Plex Serif", Georgia, serif; }
+.bf-premium-plans h3 small { display: block; margin-top: 4px; font: 700 12px/1.2 Manrope, sans-serif; opacity: .7; }
+.bf-premium-promise { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0; }
+@media (max-width: 760px) {
+  .bf-premium-plans { grid-template-columns: 1fr; }
+}
 .bf-premium-catalog li svg { margin-top: 2px; color: var(--cf-primary-strong); }
 .bf-trust-links { display: grid; gap: 8px; }
 .bf-trust-links a { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 12px; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-ink); background: var(--cf-surface); text-decoration: none; font-size: 13px; font-weight: 700; }

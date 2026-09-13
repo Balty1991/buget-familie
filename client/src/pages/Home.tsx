@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { allocationWeekStatus, adoptOutsideExpenses, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
@@ -191,7 +191,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) })), [data]);
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
-  const lastMoves = data.transactions.slice(0, 3);
+  const lastMoves = data.transactions.slice(0, 5);
   const overPlan = math.remaining < 0;
   const daily = math.plan.nextPayday ? forecast.safeDaily : 0;
   const weeklyEnvelopesRemaining = envelopes.filter((entry) => entry.scope === "week").reduce((sum, entry) => sum + entry.remaining, 0);
@@ -448,20 +448,17 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
         <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
-              <p className="bf-kicker">{t("ACTIVITATE RECENTĂ")}</p>
-              <h2>{t("Ce s-a înregistrat")}</h2>
+              <p className="bf-kicker">{data.settings.members.length > 1 ? t("FEED FAMILIE") : t("ACTIVITATE RECENTĂ")}</p>
+              <h2>{data.settings.members.length > 1 ? t("Cine a mișcat banii") : t("Ce s-a înregistrat")}</h2>
             </div>
             <button onClick={() => onGo("journal")}>{t("Toate mișcările")} <ChevronRight size={15} /></button>
           </div>
 
-        {data.settings.members.length > 1 && (() => {
+            {data.settings.members.length > 1 && (() => {
           const activity = householdActivityInCycle(data);
           const sharers = activity.members.filter((item) => item.expense > 0 || item.income > 0);
           if (!sharers.length) return null;
           return (
-            <div className="bf-today-family-feed">
-              <p className="bf-kicker">{t("FEED FAMILIE")}</p>
-              <h3>{t("Cine a mișcat banii în ciclu")}</h3>
               <ul className="bf-today-family-share" aria-label={t("Cine a mișcat banii în ciclu")}>
                 {sharers.map((member) => (
                   <li key={member.memberId}>
@@ -471,7 +468,6 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                   </li>
                 ))}
               </ul>
-            </div>
           );
         })()}
           {lastMoves.length ? (
@@ -487,7 +483,18 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                   <span className={`bf-tx-icon ${item.kind}`}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}</span>
                   <div>
                     <b>{item.title}</b>
-                    <small>{dateText(item.date)} · {item.person} · {t(item.category)}{envelope ? ` · ${envelope}` : ""}</small>
+                    <small>{(() => {
+                      const stamp = item.updatedAt || item.createdAt;
+                      const ms = stamp ? Date.now() - Date.parse(stamp) : NaN;
+                      const when = Number.isFinite(ms) && ms >= 0 && ms < 60_000
+                        ? t("acum")
+                        : Number.isFinite(ms) && ms < 3_600_000
+                          ? t("acum {n} min", { n: String(Math.max(1, Math.round(ms / 60_000))) })
+                          : Number.isFinite(ms) && ms < 86_400_000 && item.date === isoToday()
+                            ? t("astăzi")
+                            : dateText(item.date);
+                      return `${when} · ${item.person} · ${t(item.category)}${envelope ? ` · ${envelope}` : ""}`;
+                    })()}</small>
                   </div>
                   <strong className={item.kind}>{item.kind === "income" ? "+" : "−"}{fmtExact.format(item.amount)}</strong>
                 </article>
@@ -621,17 +628,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; applyData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
-  const saveTx = (item: Transaction | Transaction[]) => {
+  const saveTx = (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => {
     update((current) => {
       const list = Array.isArray(item) ? item : [item];
-      let transactions = current.transactions;
-      for (const entry of list) {
-        const stamped = { ...entry, updatedAt: new Date().toISOString() };
-        transactions = transactions.some((row) => row.id === stamped.id)
-          ? transactions.map((row) => row.id === stamped.id ? stamped : row)
-          : [stamped, ...transactions];
-      }
-      return { ...current, transactions };
+      return list.reduce((ledger, entry) => commitLedgerEntry(ledger, entry, meta?.fromWeekIndex), current);
     });
   };
   const applyFinancialUpdate = (change: FinancialUpdate) => update((current) => { const member = current.settings.members.find((item) => "memberId" in change && change.memberId && item.id === change.memberId) || current.settings.members[0]; const source = current.settings.paymentSources.find((item) => item.memberId && member && item.memberId === member.id) || current.settings.paymentSources[0]; const now = new Date().toISOString(); if (change.kind === "income" && member && source) { const incomeCaptureId = ("clientCaptureId" in change && change.clientCaptureId) || newId("guided-income"); if (current.transactions.some((item) => item.id === incomeCaptureId || (item.kind === "income" && item.amount === change.amount && item.title === change.title && item.date === (change.date || isoToday())))) return current; const transaction: Transaction = { id: incomeCaptureId, title: change.title, amount: change.amount, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: change.date || isoToday(), note: t("Venit adăugat împreună cu ghidul AI"), createdAt: now }; return { ...current, transactions: [transaction, ...current.transactions], settings: { ...current.settings, salaryPlan: { ...current.settings.salaryPlan, totalLimit: Math.max(0, (current.settings.salaryPlan.totalLimit || 0) + change.amount), updatedAt: now } } }; } if (change.kind === "debt") { const key = change.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const existingIndex = current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key); const nextDebt: Debt = { id: existingIndex >= 0 ? current.debts[existingIndex].id : newId("guided-debt"), name: change.name, remaining: change.remaining, monthly: existingIndex >= 0 ? current.debts[existingIndex].monthly : 0, due: change.due || (existingIndex >= 0 ? current.debts[existingIndex].due : "Nespecificat"), memberId: member?.id, tone: existingIndex >= 0 ? current.debts[existingIndex].tone : "coral", updatedAt: now }; const debts = existingIndex >= 0 ? current.debts.map((item, index) => index === existingIndex ? nextDebt : item) : [nextDebt, ...current.debts]; return { ...current, debts }; } if (change.kind === "debt-monthly") { const key = change.name?.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const index = key ? current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key) : 0; if (index < 0) return current; return { ...current, debts: current.debts.map((item, itemIndex) => itemIndex === index ? { ...item, monthly: change.amount, updatedAt: now } : item) }; } if (change.kind === "expense" && member && source) { const day = change.date || isoToday(); const usedSource = current.settings.paymentSources.find((item) => item.id === change.sourceId) || source; const usedMember = current.settings.members.find((item) => item.id === change.memberId) || member; const expenseCaptureId = change.clientCaptureId || newId("guided-expense"); if (current.transactions.some((item) => item.id === expenseCaptureId)) return current; if (change.recurringId && current.transactions.some((item) => item.recurringId === change.recurringId && inPlanPeriod(item.date, current.settings.salaryPlan))) return current; let ledger = current; if (change.allocationId && change.allocationId !== "outside" && change.fromWeekIndex) { const allocation = current.settings.salaryPlan.allocations.find((item) => item.id === change.allocationId); const currentWeek = allocation && allocation.weeklyPace !== false ? allocationWeekStatus(current, allocation, day) : undefined; if (allocation && currentWeek && change.fromWeekIndex !== currentWeek.index) { ledger = transferBetweenWeeks(current, { allocationId: allocation.id, fromWeekIndex: change.fromWeekIndex, toWeekIndex: currentWeek.index, amount: change.amount, note: t("Mutare din ghidul AI ca să acoperi cheltuiala") }) || current; } } const transaction: Transaction = { id: expenseCaptureId, title: change.title, amount: change.amount, kind: "expense", category: change.category, sourceId: usedSource.id, source: usedSource.name, memberId: usedMember.id, person: usedMember.name, date: day, allocationId: change.allocationId || "outside", recurringId: change.recurringId, note: change.recurringId ? t("Plată recurentă confirmată") : t("Cheltuială adăugată împreună cu ghidul AI"), createdAt: now }; return { ...ledger, transactions: [transaction, ...ledger.transactions] }; } if (change.kind === "transfer") return transferBetweenEnvelopes(current, { fromAllocationId: change.fromId, toAllocationId: change.toId, amount: change.amount, note: t("Realocare din ghidul AI") }) || current; if (change.kind === "recurring") {

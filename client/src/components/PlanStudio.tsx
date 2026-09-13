@@ -27,6 +27,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
 import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-prefs";
 import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/EnvelopeConflictBanner";
+import { canAddEnvelope, PLANS } from "@/lib/entitlements";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -159,6 +160,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     const member = data.settings.members.find((item) => item.id === allocationMemberId);
     if (amount <= 0) return setAllocationError(t("Introdu suma pentru această categorie."));
     if (!source) return setAllocationError(t("Alege sursa din care vei plăti această categorie."));
+    if (!editingAllocationId && !canAddEnvelope(plan.allocations.length)) {
+      return setAllocationError(t("Casa include până la {n} plicuri. Planul Familia deblochează plicuri nelimitate.", { n: String(PLANS.casa.envelopes) }));
+    }
     const label = allocationLabel.trim() || `${allocationCategory}${member ? ` · ${member.name}` : ""}`;
     const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold, weeklyPace: allocationWeeklyPace ? undefined : false };
     const previous = editingAllocationId ? plan.allocations.find((item) => item.id === editingAllocationId) : undefined;

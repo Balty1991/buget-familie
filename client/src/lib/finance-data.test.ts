@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, adoptOutsideExpenses, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary, transactionShareScope } from "./finance-data";
+import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, adoptOutsideExpenses, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, commitLedgerEntry, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary, transactionShareScope } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -173,6 +173,52 @@ describe("registrul financiar Buget Familie", () => {
     ], transfers: [] };
     data.transactions = [{ id: "taxi", title: "Taxi", amount: 20, kind: "expense", category: "Transport", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-09-13", allocationId: "outside" }];
     expect(adoptOutsideExpenses(data).transactions[0].allocationId).toBe("outside");
+  });
+
+  it("oferă singurul plic pentru un taxi când tot planul e Alimente, nu nealocat", () => {
+    const data = createEmptyAppData();
+    const [card] = data.settings.paymentSources;
+    const food = { id: "food", label: "Alimente", amount: 500, category: "Alimente", sourceId: card.id, memberId: "member-me", weeklyPace: true as const };
+    data.settings.salaryPlan = { periodStart: "2026-09-12", nextPayday: "2026-09-25", sourceIds: [card.id], totalLimit: 500, weeklyLimit: 250, allocations: [food], transfers: [] };
+    expect(matchingAllocationsForExpense(data, { category: "Transport", memberId: "member-me", sourceId: card.id }).map((item) => item.id)).toEqual(["food"]);
+    expect(pickerAllocationsForExpense(data, { category: "Transport", memberId: "member-me", sourceId: card.id }).map((item) => item.id)).toEqual(["food"]);
+  });
+
+  it("la captură listează și plicurile înrudite, nu doar categoria exactă", () => {
+    const data = createEmptyAppData();
+    const [card] = data.settings.paymentSources;
+    const food = { id: "food", label: "Alimente", amount: 500, category: "Alimente", sourceId: card.id, memberId: "member-me" };
+    const house = { id: "house", label: "Casă", amount: 300, category: "Casă & facturi", sourceId: card.id, memberId: "member-me" };
+    data.settings.salaryPlan = { periodStart: "2026-09-12", nextPayday: "2026-09-25", sourceIds: [card.id], totalLimit: 800, weeklyLimit: 0, allocations: [food, house], transfers: [] };
+    expect(matchingAllocationsForExpense(data, { category: "Transport", memberId: "member-me", sourceId: card.id })).toEqual([]);
+    expect(pickerAllocationsForExpense(data, { category: "Transport", memberId: "member-me", sourceId: card.id }).map((item) => item.id)).toEqual(["food", "house"]);
+  });
+
+  it("la înregistrare mută întâi din săptămâna aleasă, apoi scrie cheltuiala", () => {
+    const data = createEmptyAppData();
+    const [card] = data.settings.paymentSources;
+    const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente", sourceId: card.id, weeklyPace: true as const };
+    data.settings.salaryPlan = { periodStart: "2026-09-01", nextPayday: "2026-09-28", sourceIds: [card.id], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
+    const before = allocationWeeksStatus(data, food);
+    expect(before[0]).toMatchObject({ index: 1, remaining: 300 });
+    expect(before[1]).toMatchObject({ index: 2, remaining: 300 });
+    const next = commitLedgerEntry(data, {
+      id: "taxi",
+      title: "Taxi",
+      amount: 20,
+      kind: "expense",
+      category: "Transport",
+      sourceId: card.id,
+      source: card.name,
+      memberId: "member-me",
+      person: "Eu",
+      date: "2026-09-13",
+      allocationId: food.id,
+    }, 1);
+    expect(next.transactions[0]).toMatchObject({ id: "taxi", amount: 20, allocationId: food.id });
+    const weeks = allocationWeeksStatus(next, food);
+    expect(weeks[0]).toMatchObject({ index: 1, budget: 280, remaining: 280 });
+    expect(weeks[1]).toMatchObject({ index: 2, budget: 320, spent: 20, remaining: 300 });
   });
 
   it("mută bani dintr-o tranșă săptămânală în alta a aceluiași plic, fără să depășească ce a mai rămas", () => {

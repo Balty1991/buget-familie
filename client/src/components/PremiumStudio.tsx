@@ -1,27 +1,52 @@
-import { Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
+import { BILLING_LIVE, PLANS } from "@/lib/entitlements";
 import { t } from "@/lib/i18n";
 
-const included = [
-  t("Plicuri până la următorul venit, pe membru și pe sursă (card, cash, bonuri)"),
-  t("Sincronizare de familie criptată AES-GCM, fără cont"),
-  t("Bilanțul săptămânii: planificat vs realizat pe plic, de trimis familiei"),
-  t("Recapitulare lunară, vârstă a banilor, vânător de abonamente"),
-  t("PDF de bilanț, CSV, OCR local pe bonuri, asistent explicabil"),
-];
-
-const later = [
-  t("Abonament Play Billing — îl activăm separat, după listare"),
-  t("Funcții de familie avansate plătite vor rămâne cele pe care le folosești deja; nu le blocăm acum"),
-];
+const lei = (value: number) =>
+  Number.isInteger(value)
+    ? `${value} lei`
+    : `${value.toLocaleString("ro-RO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} lei`;
 
 export function PremiumStudio() {
   return (
     <section className="bf-premium-catalog">
-      <p className="bf-kicker">{t("VALOARE PREMIUM · DEJA INCLUSĂ")}</p>
-      <h2>{t("Ce merită plătit, când va exista abonament")}</h2>
-      <p>{t("Nu cerem bani acum. Tot ce construim pentru abonați este deblocat, ca să-l poți testa pe bune înainte de Play Billing.")}</p>
-      <ul>{included.map((item) => <li key={item}><Sparkles size={14} /> {item}</li>)}</ul>
-      <small className="bf-helper">{later[0]}. {later[1]}.</small>
+      <p className="bf-kicker">{t("ABONAMENT · DUPĂ LISTARE")}</p>
+      <h2>{t("Casa e gratuită. Familia e un singur plan pentru toată gospodăria.")}</h2>
+      <p>{t("Nu cerem bani acum. Pe Google Play, Casa rămâne registrul de bază. Familia deblochează sync, plicuri nelimitate și ghidul mai încăpător — fără reclame pe ecranele cu bani.")}</p>
+      <div className="bf-premium-plans">
+        <article>
+          <p className="bf-kicker">{t("CASA")}</p>
+          <h3>{t("Gratuit")}</h3>
+          <p>{t("Pentru un om care vrea să vadă pe ce se duc banii.")}</p>
+          <ul>
+            <li><Check size={14} /> {t("Până la {n} plicuri", { n: String(PLANS.casa.envelopes) })}</li>
+            <li><Check size={14} /> {t("Un membru, un telefon")}</li>
+            <li><Check size={14} /> {t("Astăzi, Mișcări, Plan, scadențe")}</li>
+            <li><Check size={14} /> {t("Ghid local + {n} mesaje online pe zi", { n: String(PLANS.casa.aiOnlinePerDay) })}</li>
+            <li><Check size={14} /> {t("Export CSV și backup pe telefon")}</li>
+          </ul>
+        </article>
+        <article className="is-featured">
+          <p className="bf-kicker">{t("FAMILIA")}</p>
+          <h3>{lei(PLANS.familie.priceYear)}{t("/an")} <small>{lei(PLANS.familie.priceMonth)}{t("/lună")}</small></h3>
+          <p>{t("Un abonament pentru până la 6 persoane. Nu per cap.")}</p>
+          <ul>
+            <li><Check size={14} /> {t("Plicuri nelimitate, pe membru și pe sursă")}</li>
+            <li><Check size={14} /> {t("Sincronizare criptată între telefoane")}</li>
+            <li><Check size={14} /> {t("Ghid online încăpător, OCR bonuri, PDF")}</li>
+            <li><Check size={14} /> {t("Feed familie: cine a scos, din ce plic")}</li>
+            <li><Check size={14} /> {t("14 zile de probă, anulare din Google Play")}</li>
+          </ul>
+        </article>
+      </div>
+      <p className="bf-premium-promise"><Sparkles size={14} /> {t("Dacă anulezi, registrul rămâne pe telefon. Nu luăm ostatic datele.")}</p>
+      <small className="bf-helper">
+        {BILLING_LIVE
+          ? t("Plata trece prin Google Play. Poți anula oricând din abonamentele contului Google.")
+          : t("Abonament Play Billing — îl activăm separat, după listare")}
+        {" · "}
+        {t("Buget Familie nu e sfat financiar, credit sau investiție. Este un registru de familie.")}
+      </small>
     </section>
   );
 }

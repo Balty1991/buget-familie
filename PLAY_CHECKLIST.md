@@ -50,4 +50,19 @@ Detalii: `docs/app-check-enforce-prep.md` · env: `.env.example`
 
 ## Listing Play (notă)
 
-În descrierea magazinului: menționează widgetul și dala din Setări rapide pentru adăugare rapidă fără sume pe ecranul de start. Abonamentele Premium se adaugă **după** o versiune stabilă pe Play — nu în acest build.
+În descrierea magazinului: menționează widgetul și dala din Setări rapide pentru adăugare rapidă fără sume pe ecranul de start. Text gata de lipit: `docs/play-store-listing-ro.md`.
+
+Abonamentele Casa (gratuit) / Familia (19,99 lei/lună sau 149 lei/an) se adaugă **după** o versiune stabilă pe Play — `BILLING_LIVE` rămâne `false` în acest build. Nu simula plăți.
+
+## Closed testing (obligatoriu înainte de producție)
+
+Play cere testers reali, nu doar CI.
+
+- [ ] AAB semnat, `versionCode` 2 / `versionName` 1.1, pachet `ro.balty1991.bugetfamilie`
+- [ ] Privacy, terms, delete-data publicate pe GitHub Pages
+- [ ] Data safety completat (financiare pe dispozitiv, sync opțional AES-GCM, fără ads)
+- [ ] Financial features: evidență, nu sfat de investiții / credit / plăți
+- [ ] 12+ testers pe lista closed, 14 zile consecutive
+- [ ] Pe un telefon real: widget, dală, reminder, sync două telefoane, captură taxi din plic (nu „nealocat”)
+- [ ] Nicio pierdere de date la Resetare / reinstalare / anulare viitoare de abonament
+
