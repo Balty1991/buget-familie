@@ -21,7 +21,6 @@ import {
   isCorrection,
   isQuestion,
   localInsight,
-  findHabit,
   memberIdFor,
   rememberExpense,
   parsePayday,
@@ -34,6 +33,7 @@ import {
   spendDate,
   transferProposal,
   understand,
+  buildExpenseOffer,
   type ChatChoice,
   type ExtractedGuide,
   type FinancialUpdate,
@@ -41,7 +41,7 @@ import {
   type PhraseHabit,
   type Reading,
 } from "@/lib/understand";
-import { planSpend, planIncome, relatedCategories, type SpendPlan } from "@/lib/suggest-source";
+import { planIncome } from "@/lib/suggest-source";
 import { shownChatMessages, hiddenChatCount } from "@/lib/shown-chat";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
@@ -290,17 +290,15 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
   return [];
 }
 
-/** Trece o intenție citită din text într-o acțiune pe care registrul o știe aplica. */
-/** Plicul din care scoți de obicei pentru asta, dacă asistentul a învățat deja. */
-const habitEnvelope = (intent: AssistantIntent, memory: GuideMemory) =>
-  intent.kind === "expense" ? findHabit(memory, intent.title, intent.title)?.allocationId : undefined;
-
 function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): FinancialUpdate {
   switch (intent.kind) {
     case "expense": {
-      // Salvăm chiar sursa și plicul arătate în propunere, ca ce vede omul să fie ce se scrie.
-      const plan = data ? planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date, preferAllocationId: memory && habitEnvelope(intent, memory) }) : undefined;
-      return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date, sourceId: plan?.source?.source.id, allocationId: plan?.envelope?.allocation.id };
+      if (data) {
+        const offer = buildExpenseOffer(data, intent, memory);
+        const picked = offer.choices[0]?.update;
+        if (picked && picked.kind === "expense") return picked;
+      }
+      return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
     }
     case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date };
     case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit };
@@ -315,16 +313,17 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
 /**
  * Ce a înțeles asistentul, scris pentru cineva care stă în magazin cu telefonul în
  * mână. La o cheltuială, „40 RON · Alimente” nu e destul ca să apeși pe salvează:
- * lipsește tocmai lucrul pe care îl decizi acolo — din ce sursă ies banii și din
- * ce plic se scad. `planSpend` alege propunerea; alternativele le poate atinge.
+ * lipsește tocmai lucrul pe care îl decizi acolo — din ce plic se scad banii.
+ * `buildExpenseOffer` alege locurile cu bani; omul atinge săptămâna.
  */
 function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): string {
   switch (intent.kind) {
     case "expense": {
       const head = `cheltuială ${money(intent.amount)} · ${intent.category} · ${formatDate(intent.date)}`;
       if (!data) return head;
-      const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date, preferAllocationId: memory && habitEnvelope(intent, memory) });
-      return [head, plan.summary && `  ↳ ${plan.summary}`, ...plan.warnings.map((item) => `  ⚠ ${item}`)].filter(Boolean).join("\n");
+      const offer = buildExpenseOffer(data, intent, memory);
+      const first = offer.choices[0];
+      return first ? `${head}\n  ↳ ${first.label}` : `${head}\n  ↳ ${offer.text}`;
     }
     case "income": {
       const head = `venit ${money(intent.amount)} · ${intent.title} · ${formatDate(intent.date)}`;
@@ -353,58 +352,12 @@ const intentDay = (intent: AssistantIntent) => (intent.kind === "expense" || int
  * Alternativele la propunere: celelalte surse, fiecare cu soldul ei, gata de
  * atins. Fără ele, „schimbă sursa” ar însemna să anulezi și să reiei în formular.
  */
-/**
- * Alternativele la propunere. Regula, învățată dintr-o captură de pe telefon: se
- * arată numai locurile unde chiar sunt bani. Trei rânduri de „0 RON (nu acoperă)”
- * nu ajută pe nimeni să aleagă — ocupă ecranul și lasă impresia că altceva nu e.
- *
- * Se oferă întâi plicurile cu bani rămași, inclusiv tranșa săptămânii, fiindcă
- * acolo stă bugetul repartizat; apoi sursele cu sold, pentru o cheltuială care nu
- * ține de niciun plic. Când propunerea e un plic, adăugăm și ieșirea explicită „în
- * afara plicurilor”, altfel nu s-ar mai putea alege.
- */
-function spendChoices(data: AppData, intent: Extract<AssistantIntent, { kind: "expense" }>, plan: SpendPlan): ChatChoice[] {
-  const base = { kind: "expense" as const, amount: intent.amount, title: intent.title, category: intent.category, date: intent.date, clientCaptureId: newId("capture-expense") };
-  const choices: ChatChoice[] = [];
-
-  plan.envelopes
-    .filter((option) => option.remaining > 0 && option.allocation.id !== plan.envelope?.allocation.id)
-    .slice(0, 3)
-    .forEach((option) => {
-      choices.push({
-        label: `Din ${option.allocation.label}${option.weekLabel ? ` · ${option.weekLabel}` : ""} · ${money(option.remaining)}`,
-        update: { ...base, allocationId: option.allocation.id, sourceId: option.allocation.sourceId || plan.source?.source.id },
-      });
-    });
-
-  if (plan.envelope && plan.source && plan.source.balance > 0) {
-    choices.push({
-      label: `În afara plicurilor · ${plan.source.source.name} · ${money(plan.source.balance)}`,
-      update: { ...base, allocationId: "outside", sourceId: plan.source.source.id },
-    });
-  }
-
-  plan.sources
-    .filter((option) => option.balance > 0 && option.source.id !== plan.source?.source.id)
-    .sort((left, right) => right.balance - left.balance)
-    .slice(0, 2)
-    .forEach((option) => {
-      choices.push({
-        label: `Din nealocat · ${option.source.name} · ${money(option.balance)}`,
-        update: { ...base, allocationId: "outside", sourceId: option.source.id },
-      });
-    });
-
-  return choices.slice(0, 5);
-}
-
 /** Alternativele se arată doar când mesajul conține exact o cheltuială; altfel ar fi ambiguu ce schimbă atingerea. */
 function spendAlternatives(data: AppData, parsed: ParsedIntent[], memory?: GuideMemory): ChatChoice[] | undefined {
   if (parsed.length !== 1) return undefined;
   const intent = parsed[0].intent;
   if (intent.kind !== "expense") return undefined;
-  const plan = planSpend(data, { amount: intent.amount, category: intent.category, date: intent.date, preferAllocationId: memory && habitEnvelope(intent, memory) });
-  const choices = spendChoices(data, intent, plan);
+  const choices = buildExpenseOffer(data, intent, memory).choices;
   return choices.length ? choices : undefined;
 }
 
@@ -538,7 +491,6 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       const day = dated && (dated.kind === "expense" || dated.kind === "income") ? dated.date : "";
       addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
-      setOpen(false);
       return;
     }
     if (!item.action || item.action.type === "apply") return;
@@ -562,19 +514,16 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     if (update.kind === "delete-transaction") {
       addMessage({ role: "assistant", text: `Am șters **${update.title}**, ${money(update.amount)}.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
-      setOpen(false);
       return;
     }
     if (update.kind === "amend-transaction") {
       addMessage({ role: "assistant", text: `Am schimbat **${update.title}** din ${money(update.was)} în **${money(update.amount)}**.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
-      setOpen(false);
       return;
     }
     if (update.kind === "transfer") {
       addMessage({ role: "assistant", text: `Am mutat ${money(update.amount)} din **${update.fromLabel}** în **${update.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
       setHistoryOpen(false);
-      setOpen(false);
       return;
     }
     const spent = update.kind === "expense" || update.kind === "income" ? `${update.title} ${money(update.amount)}` : money("amount" in update ? update.amount : 0);
@@ -585,7 +534,6 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       undo: (update.kind === "expense" || update.kind === "income") ? { kind: update.kind, title: update.title, amount: update.amount, date: day } : undefined,
     });
     setHistoryOpen(false);
-    setOpen(false);
   };
   const offerSpend = (proposal: { text: string; choices: ChatChoice[] }) => {
     const dated = proposal.choices.find((item) => (item.update.kind === "expense" || item.update.kind === "income") && item.update.date);
@@ -660,6 +608,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
    */
   const act = (reading: Reading): boolean => {
     if (reading.kind === "intents") {
+      const only = reading.intents.length === 1 ? reading.intents[0].intent : undefined;
+      if (only?.kind === "expense") {
+        offerSpend(buildExpenseOffer(data, only, liveMemory));
+        return true;
+      }
       const intents = reading.intents.map((item) => item.intent);
       addMessage({
         role: "assistant",

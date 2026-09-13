@@ -219,27 +219,18 @@ function matchEnvelope(data: AppData, token: string) {
   });
 }
 
-export function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData, memory: GuideMemory, forced = false): { text: string; choices: ChatChoice[] } | undefined {
-  if (isDebtOrInstallmentMessage(raw)) return undefined;
-  if (!forced && isQuestion(raw)) return undefined;
-  const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
-  const amount = spendAmount(raw, extracted, parsed.amount) * (extracted?.amount ? 1 : repeatFactor(raw));
-  if (!amount || amount <= 0) return undefined;
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const draftTitle = spendTitle(folded, extracted, parsed.category || "Altele");
-  const habit = findHabit(memory, raw, draftTitle);
-  const looksSpend = forced
-    || Boolean(habit)
-    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|uitat|\bpe |\bpentru /.test(folded)
-    || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
-  if (!looksSpend || /venit|salariu|intrare/.test(folded)) return undefined;
-  const category = (parsed.category && parsed.category !== "Altele") ? parsed.category : (habit?.category || extracted?.category || "Altele");
-  const title = draftTitle === "Altele" && habit ? habit.title : draftTitle;
-  const date = extracted?.date && /^20\d{2}-\d{2}-\d{2}$/.test(extracted.date) ? extracted.date : spendDate(raw);
+/** Locurile din care se poate scoate suma: plicuri (cu săptămâna) și, doar dacă a rămas liber, nealocat. */
+export function buildExpenseOffer(
+  data: AppData,
+  spend: { amount: number; title: string; category: string; date: string },
+  memory: GuideMemory = emptyGuideMemory(),
+): { text: string; choices: ChatChoice[] } {
+  const { amount, title, category, date } = spend;
   const when = dateCopy(date);
   const member = data.settings.members[0];
   const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
   const related = relatedCategories(category);
+  const habit = findHabit(memory, title, title);
   const funded: Array<{ envelope: (typeof data.settings.salaryPlan.allocations)[number]; weekIndex?: number; left: number }> = [];
   for (const envelope of data.settings.salaryPlan.allocations) {
     if (envelope.weeklyPace === false) {
@@ -297,9 +288,32 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   const usual = habit && habit.count >= 2;
   const weekHint = funded.some((item) => item.weekIndex) ? " Alege din ce săptămână scoatem banii." : " Alege de unde scoatem banii.";
   const text = preferred
-    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`}${weekHint}`
-    : `Am înțeles **${title}**, ${money(amount)}, **${when}**.${receiptDetails(extracted)} Nu am un plic exact pentru ${category}. Banii sunt în plicuri — alege din ce săptămână scoatem suma.`;
+    ? `Am înțeles **${title}**, ${money(amount)}, **${when}**. ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`}${weekHint}`
+    : `Am înțeles **${title}**, ${money(amount)}, **${when}**. Nu am un plic exact pentru ${category}. Banii sunt în plicuri — alege din ce săptămână scoatem suma.`;
   return { text: noDoubleStop(text), choices };
+}
+
+export function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData, memory: GuideMemory, forced = false): { text: string; choices: ChatChoice[] } | undefined {
+  if (isDebtOrInstallmentMessage(raw)) return undefined;
+  if (!forced && isQuestion(raw)) return undefined;
+  const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]);
+  const amount = spendAmount(raw, extracted, parsed.amount) * (extracted?.amount ? 1 : repeatFactor(raw));
+  if (!amount || amount <= 0) return undefined;
+  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const draftTitle = spendTitle(folded, extracted, parsed.category || "Altele");
+  const habit = findHabit(memory, raw, draftTitle);
+  const looksSpend = forced
+    || Boolean(habit)
+    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|uitat|\bpe |\bpentru /.test(folded)
+    || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
+  if (!looksSpend || /venit|salariu|intrare/.test(folded)) return undefined;
+  const category = (parsed.category && parsed.category !== "Altele") ? parsed.category : (habit?.category || extracted?.category || "Altele");
+  const title = draftTitle === "Altele" && habit ? habit.title : draftTitle;
+  const date = extracted?.date && /^20\d{2}-\d{2}-\d{2}$/.test(extracted.date) ? extracted.date : spendDate(raw);
+  const offer = buildExpenseOffer(data, { amount, title, category, date }, memory);
+  const extra = receiptDetails(extracted);
+  if (!extra) return offer;
+  return { ...offer, text: noDoubleStop(offer.text.replace(/\.\s/, `.${extra} `)) };
 }
 
 export function incomeProposal(raw: string, data: AppData): { text: string; choices: ChatChoice[] } | undefined {

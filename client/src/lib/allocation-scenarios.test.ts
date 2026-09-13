@@ -20,7 +20,7 @@ import {
 } from "./finance-data";
 import { calendarBudget } from "./calendar-budget";
 import { parseAssistantMessage } from "./assistant-intents";
-import { emptyGuideMemory, expenseProposal } from "./understand";
+import { emptyGuideMemory, expenseProposal, understand, decide, buildExpenseOffer } from "./understand";
 
 const me = "member-me";
 
@@ -93,6 +93,24 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     expect(labels.some((label) => /S1/.test(label))).toBe(true);
     expect(labels.some((label) => /S2/.test(label))).toBe(true);
     expect(out!.choices.every((item) => item.update.kind === "expense" && item.update.allocationId === "env-food")).toBe(true);
+  });
+
+  it("drumul real din ghid (intents de la model sau expense local) tot nu oferă nealocat", () => {
+    const data = house();
+    addIncome(data);
+    addEnvelope(data);
+    const { winner } = decide(understand("cheltuieli taxi 20 lei", data, { asOf: "2026-09-13" }));
+    expect(["expense", "intents"]).toContain(winner?.kind);
+    const fromIntent = winner?.kind === "intents" && winner.intents[0].intent.kind === "expense"
+      ? winner.intents[0].intent
+      : { amount: 20, title: "Taxi", category: "Transport", date: "2026-09-13" };
+    const offer = winner?.kind === "expense" ? winner.proposal : buildExpenseOffer(data, fromIntent, emptyGuideMemory());
+    const labels = offer.choices.map((item) => item.label).join(" | ");
+    expect(labels).not.toMatch(/nealocat|afara/i);
+    expect(labels).toMatch(/Alimente · S1/);
+    expect(labels).toMatch(/Alimente · S2/);
+    expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.allocationId).toBe("env-food");
+    expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.fromWeekIndex).toBe(1);
   });
 
   it("taxi 20 din S1: card 480, plic 480, nerepartizați 0 — nu „peste disponibil”", () => {
