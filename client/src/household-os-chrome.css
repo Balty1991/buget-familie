@@ -335,6 +335,17 @@ html.capacitor-android {
 
 .os-explainer span { color: var(--os-muted); }
 
+.bf-today-explainers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.bf-today-explainers .os-explainer {
+  margin: 0 !important;
+}
+
 .os-explainer-body {
   position: relative;
   z-index: 1;

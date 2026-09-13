@@ -14,7 +14,7 @@ export function FirstWeekTour({
   onClose,
   onCapture: _onCapture,
   onPlan: _onPlan,
-  onSync,
+  onSync: _onSync,
 }: {
   onClose: () => void;
   onCapture: () => void;
@@ -76,11 +76,15 @@ export function FirstWeekTour({
             type="button"
             className="bf-link-button"
             onClick={() => {
-              if (last) { onSync(); onClose(); return; }
+              if (last) {
+                window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"));
+                onClose();
+                return;
+              }
               onClose();
             }}
           >
-            {last ? t("Deschide Sync (opțional)") : t("Am înțeles")}
+            {last ? t("Tutorial de folosire") : t("Am înțeles")}
           </button>
         </div>
       </section>
