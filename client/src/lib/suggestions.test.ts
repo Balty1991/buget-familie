@@ -38,6 +38,10 @@ describe("sugestiile vin din situația reală", () => {
     expect(buildSuggestions(data, AZI)[0].text).toContain("Alimente");
   });
 
+  it("propune briefingul zilei când registrul are date", () => {
+    expect(buildSuggestions(base(), AZI).map((item) => item.text)).toContain("Ce fac azi?");
+  });
+
   it("salariul aproape schimbă întrebarea despre ritm", () => {
     const data = base();
     data.settings.salaryPlan.nextPayday = "2026-09-14";

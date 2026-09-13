@@ -9,13 +9,15 @@
  * pentru un răspuns cinstit, spune asta în loc să aproximeze.
  */
 import {
-  allocationStatus,
+  addIsoDays,
+  envelopeDecisionStatus,
   expenseCategories,
   foldRomanian,
   formatDate,
   guessCategoryFromText,
   isoDate,
   isoToday,
+  pendingRecurringInPlan,
   planForecast,
   sourceBalance,
   type AppData,
@@ -361,14 +363,17 @@ function answerAfford(data: AppData, folded: string, asOf: string): AnalystAnswe
     : undefined;
 
   if (envelope) {
-    const status = allocationStatus(data, envelope);
+    const status = envelopeDecisionStatus(data, envelope, asOf);
     const after = round(status.remaining - amount);
+    const scopeNote = status.scope === "week" && status.weekIndex
+      ? `Tranșa S${status.weekIndex} a plicului`
+      : "Plicul";
     return {
       kind: "afford",
       headline: after >= 0
         ? `Da. În plicul „${envelope.label}” rămân ${money(after)} după.`
         : `Nu din plic: „${envelope.label}” are ${money(Math.max(0, status.remaining))} și ar ieși ${money(Math.abs(after))} peste.`,
-      detail: `Plicul are ${money(status.budget)}, s-au consumat ${money(status.spent)}. Nerepartizat în plan: ${money(free)}.`,
+      detail: `${scopeNote} are ${money(status.budget)}, s-au consumat ${money(status.spent)}. Nerepartizat în plan: ${money(free)}.`,
       rows: [
         { label: "În plic acum", value: money(Math.max(0, status.remaining)) },
         { label: "După cheltuială", value: money(after) },
@@ -427,12 +432,19 @@ function answerPace(data: AppData, asOf: string): AnalystAnswer {
 
 function answerRemaining(data: AppData, asOf: string): AnalystAnswer {
   const payday = nextPaydayOf(data);
-  const envelopes = data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) }));
+  const envelopes = data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item, asOf) }));
   const sources = data.settings.paymentSources.map((item) => ({ item, balance: round(sourceBalance(data, item.id)) }));
   const inSources = round(sources.reduce((sum, entry) => sum + entry.balance, 0));
 
   const rows: AnalystRow[] = [
-    ...envelopes.map((entry) => ({ label: entry.item.label, value: money(Math.max(0, entry.remaining)), hint: entry.state === "over" ? "depășit" : entry.state === "watch" ? "aproape de limită" : undefined })),
+    ...envelopes.map((entry) => ({
+      label: entry.item.label,
+      value: money(Math.max(0, entry.remaining)),
+      hint: [
+        entry.scope === "week" && entry.weekIndex ? `S${entry.weekIndex}` : undefined,
+        entry.state === "over" ? "depășit" : entry.state === "watch" ? "aproape de limită" : undefined,
+      ].filter(Boolean).join(" · ") || undefined,
+    })),
     ...sources.map((entry) => ({ label: `Sold · ${entry.item.name}`, value: money(entry.balance) })),
   ];
 
@@ -443,7 +455,7 @@ function answerRemaining(data: AppData, asOf: string): AnalystAnswer {
       : `${money(inSources)} în surse. Nu ai încă plicuri.`,
     detail: payday ? sentences(`Următorul venit: ${formatDate(payday)}`) : "Nu ai stabilit data următorului venit.",
     rows,
-    followUps: ["Cât pot cheltui pe zi?", "Unde se duc banii?"],
+    followUps: ["Ce fac azi?", "Cât pot cheltui pe zi?", "Unde se duc banii?"],
   };
 }
 
@@ -521,7 +533,196 @@ function answerCompare(data: AppData, folded: string, asOf: string): AnalystAnsw
     headline: sentences(changeLine(now, before) ? `${money(now)} în ${period.label}, ${changeLine(now, before)}` : `${money(now)} în ${period.label}`),
     detail: sentences(`Venituri înregistrate în perioadă: ${money(nowIncome)}`, `Comparația se face cu intervalul de aceeași lungime dinainte (${formatDate(prior.start)} – ${formatDate(prior.end)})`),
     rows: moves.slice(0, 6).map((entry) => ({ label: entry.name, value: `${entry.delta > 0 ? "+" : "−"}${money(Math.abs(entry.delta))}`, hint: entry.delta > 0 ? "mai mult" : "mai puțin" })),
-    followUps: ["Unde se duc banii?"],
+    followUps: ["Unde se duc banii?", "Am cheltuit prea mult?", "Ce fac azi?"],
+  };
+}
+
+/**
+ * Briefingul zilei: o acțiune, nu un raport. Ordinea e cea a casei — plic depășit,
+ * scadență aproape, ritm peste sigur — nu a unei liste fixe de întrebări.
+ */
+function answerNext(data: AppData, asOf: string): AnalystAnswer {
+  const empty = !data.transactions.length && !data.settings.salaryPlan.allocations.length && !data.recurring.length;
+  if (empty) {
+    return {
+      kind: "next",
+      headline: "Hai să punem prima cifră în registru: un venit sau o cheltuială.",
+      detail: "Fără mișcări nu am din ce să-ți spun ce merită azi. Scrie, de exemplu, «salariul meu e 5000» sau «am dat 50 pe benzină».",
+      followUps: ["Cât mai am?", "Cât pot cheltui pe zi?"],
+    };
+  }
+
+  const forecast = planForecast(data, asOf);
+  const payday = nextPaydayOf(data);
+  const envelopes = data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item, asOf) }));
+  const over = envelopes.filter((entry) => entry.state === "over");
+  const watch = envelopes.filter((entry) => entry.state === "watch");
+  const horizon = addIsoDays(asOf, 7);
+  const dues = pendingRecurringInPlan(data).filter((item) => item.dueDate <= horizon).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const pace = round(forecast.paceDaily);
+  const safe = round(forecast.safeDaily);
+  const free = round(forecast.projectedRemaining);
+
+  const rows: AnalystRow[] = [];
+  const actions: string[] = [];
+
+  if (over.length) {
+    const first = over[0];
+    actions.push(`oprește «${first.item.label}»: e depășit cu ${money(Math.abs(first.remaining))}`);
+    rows.push({ label: first.item.label, value: money(first.remaining), hint: first.scope === "week" && first.weekIndex ? `S${first.weekIndex} · depășit` : "depășit" });
+  }
+  if (dues.length) {
+    const first = dues[0];
+    const days = Math.round((Date.parse(`${first.dueDate}T12:00:00`) - Date.parse(`${asOf}T12:00:00`)) / 86400000);
+    const when = days <= 0 ? "azi" : days === 1 ? "mâine" : `în ${plural(days, "zi", "zile")}`;
+    actions.push(`scadența «${first.name}» ${when}, ${money(first.amount)}`);
+    rows.push({ label: first.name, value: money(first.amount), hint: formatDate(first.dueDate) });
+  }
+  if (payday && pace > safe * 1.05 && safe >= 0 && pace > 0) {
+    actions.push(`ritmul e ${money(pace)}/zi, peste ${money(Math.max(0, safe))} sigur`);
+    rows.push({ label: "Ritm", value: `${money(pace)}/zi`, hint: "peste ritmul sigur" });
+  }
+  if (watch.length && !over.length) {
+    const first = watch[0];
+    actions.push(`atenție la «${first.item.label}»: ${money(Math.max(0, first.remaining))} rămași`);
+    rows.push({
+      label: first.item.label,
+      value: money(Math.max(0, first.remaining)),
+      hint: first.scope === "week" && first.weekIndex ? `S${first.weekIndex}` : "aproape de limită",
+    });
+  }
+
+  if (!actions.length) {
+    return {
+      kind: "next",
+      headline: payday
+        ? sentences(`Poți cheltui ${money(Math.max(0, safe))} pe zi până pe ${formatDate(payday)}`, free > 0 ? `nerepartizat ${money(free)}` : "nu mai e marjă în plan")
+        : "Setează data următorului venit ca să-ți spun ce merită azi.",
+      detail: sentences(
+        envelopes.length ? `${plural(envelopes.filter((entry) => entry.state === "healthy").length, "plic în ritm", "plicuri în ritm")}` : "Nu ai încă plicuri",
+        dues.length ? undefined : "Nicio scadență în 7 zile",
+      ),
+      rows: envelopes.slice(0, 5).map((entry) => ({
+        label: entry.item.label,
+        value: money(Math.max(0, entry.remaining)),
+        hint: entry.scope === "week" && entry.weekIndex ? `S${entry.weekIndex}` : undefined,
+      })),
+      followUps: ["Cât pot cheltui pe zi?", "Unde se duc banii?", "Îmi permit 200 de lei?"],
+    };
+  }
+
+  return {
+    kind: "next",
+    headline: sentences(`Azi: ${actions[0]}`),
+    detail: sentences(actions.slice(1).join("; ") || (payday ? `Până pe ${formatDate(payday)}, ritm sigur ${money(Math.max(0, safe))}/zi` : undefined)),
+    rows: rows.slice(0, 6),
+    followUps: ["Cât pot cheltui pe zi?", "Unde se duc banii?", "Cât mai am?"],
+  };
+}
+
+/** «Am cheltuit prea mult?» — compară perioada cerută cu intervalul de aceeași lungime dinainte. */
+function answerUnusual(data: AppData, folded: string, asOf: string): AnalystAnswer {
+  const period = readPeriod(folded, asOf);
+  const prior = previousPeriod(period);
+  const category = readCategory(folded, data);
+  let items = expensesIn(data, period);
+  let priorItems = expensesIn(data, prior);
+  if (category) {
+    items = items.filter((item) => item.category === category);
+    priorItems = priorItems.filter((item) => item.category === category);
+  }
+  const now = totalOf(items);
+  const before = totalOf(priorItems);
+  const subject = category ? ` pe ${category}` : "";
+
+  if (!now && !before) {
+    return { kind: "unusual", headline: `Nu am cheltuieli${subject} de comparat în ${period.label}.`, followUps: ["Cât am cheltuit luna asta?"] };
+  }
+  if (before <= 0) {
+    return {
+      kind: "unusual",
+      headline: sentences(`${money(now)}${subject} în ${period.label}`, "nu am perioada dinainte ca să zic dacă e neobișnuit"),
+      followUps: ["Unde se duc banii?"],
+    };
+  }
+
+  const percent = Math.abs(Math.round(((now - before) / before) * 100));
+  const high = now >= before * 1.25;
+  const normal = now <= before * 1.08;
+
+  const headline = category
+    ? high
+      ? `Da: ${category} e cu ${percent}% peste perioada dinainte (${money(now)} vs ${money(before)}).`
+      : normal
+        ? `Nu: ${category} e în ritm, ${money(now)} față de ${money(before)}.`
+        : `${category} e cu ${percent}% peste perioada dinainte, dar nu e o săritură mare.`
+    : high
+      ? `Da, ai cheltuit cu ${percent}% mai mult decât în perioada dinainte: ${money(now)} față de ${money(before)}.`
+      : normal
+        ? `Nu, e în ritm: ${money(now)} față de ${money(before)} în perioada dinainte.`
+        : `Un pic peste: ${money(now)}, cu ${percent}% mai mult decât ${money(before)}.`;
+
+  const jumps = (() => {
+    const beforeCats = new Map(byCategory(expensesIn(data, prior)));
+    return byCategory(expensesIn(data, period))
+      .map(([name, value]) => ({ name, value, prev: beforeCats.get(name) || 0, delta: round(value - (beforeCats.get(name) || 0)) }))
+      .filter((entry) => entry.prev > 0 && entry.value > entry.prev * 1.25)
+      .sort((a, b) => b.delta - a.delta);
+  })();
+
+  const jumpNote = !category && jumps[0] ? `${jumps[0].name} a crescut cel mai tare (+${money(jumps[0].delta)})` : undefined;
+  const rows: AnalystRow[] = category
+    ? [...items].sort((a, b) => b.amount - a.amount).slice(0, 5).map((item) => ({ label: item.title, value: money(item.amount), hint: formatDate(item.date) }))
+    : (jumps.length ? jumps : byCategory(items).map(([name, value]) => ({ name, value, delta: 0 }))).slice(0, 5).map((entry) => ({
+      label: entry.name,
+      value: money(entry.value),
+      hint: entry.delta ? `+${money(entry.delta)}` : undefined,
+    }));
+
+  return {
+    kind: "unusual",
+    headline: sentences(headline),
+    detail: sentences(changeLine(now, before), jumpNote, `Comparația e cu intervalul ${formatDate(prior.start)} – ${formatDate(prior.end)}`),
+    rows,
+    followUps: ["Unde se duc banii?", "Compară cu luna trecută", "Ce fac azi?"],
+  };
+}
+
+/** «Cine a cheltuit mai mult?» — compară membrii familiei pe perioada cerută. */
+function answerWho(data: AppData, folded: string, asOf: string): AnalystAnswer {
+  const period = readPeriod(folded, asOf);
+  const members = data.settings.members;
+  if (members.length < 2) {
+    return {
+      kind: "who",
+      headline: `Deocamdată ești singur în familie, ca ${members[0]?.name || "membru"}.`,
+      detail: "Adaugă membri din Setări ca să compar cheltuielile între voi.",
+      followUps: ["Cât am cheltuit luna asta?"],
+    };
+  }
+  const ranked = members.map((member) => {
+    const items = expensesIn(data, period).filter((item) => item.memberId === member.id);
+    return { member, items, total: totalOf(items) };
+  }).sort((a, b) => b.total - a.total);
+  const familyTotal = round(ranked.reduce((sum, entry) => sum + entry.total, 0));
+  const top = ranked[0];
+  const second = ranked[1];
+  if (top.total <= 0) {
+    return { kind: "who", headline: `Nimeni n-a cheltuit în ${period.label}.`, followUps: ["Cât am cheltuit luna trecută?"] };
+  }
+  const tied = second && Math.abs(top.total - second.total) < 0.5;
+  return {
+    kind: "who",
+    headline: tied
+      ? sentences(`${top.member.name} și ${second.member.name} au cheltuit la fel în ${period.label}: ${money(top.total)}`)
+      : sentences(`${top.member.name} a cheltuit mai mult în ${period.label}: ${money(top.total)}, față de ${second.member.name} cu ${money(second.total)}`),
+    detail: sentences(`${plural(top.items.length, "mișcare", "mișcări")} pe numele lui ${top.member.name}`, familyTotal > 0 ? `${Math.round((top.total / familyTotal) * 100)}% din cheltuielile familiei` : undefined),
+    rows: ranked.map((entry) => ({
+      label: entry.member.name,
+      value: money(entry.total),
+      share: familyTotal > 0 ? entry.total / familyTotal : 0,
+    })),
+    followUps: [`Cât a cheltuit ${top.member.name} luna asta?`, "Unde se duc banii?"],
   };
 }
 
@@ -532,8 +733,13 @@ type Matcher = { kind: string; test: RegExp; run: (data: AppData, folded: string
 /**
  * Ordinea contează: tiparele mai precise trebuie încercate înaintea celor largi.
  * „cât pot cheltui pe zi” nu trebuie să cadă pe „cât am cheltuit”.
+ * Briefingul, „e normal?” și „cine a cheltuit” stau înaintea restului, ca să nu
+ * fie înghițite de «cât mai am» sau «cel mai mult».
  */
 const MATCHERS: Matcher[] = [
+  { kind: "next", test: /\b(ce fac( azi| acum)?|ce sa fac|ce[- ]?mi recoman|ce imi recoman|recomand[- ]?mi|ce urmeaza\b|sfat(ul)?\b|briefing|cum stau azi|ce merita (azi|acum)|ce parere|parere ai)/, run: (d, _f, a) => answerNext(d, a) },
+  { kind: "unusual", test: /\b(prea mult|e normal|neobisnuit|iesit din ritm|am depasit|cheltuieli (mari|neobisnuite)|sunt peste buget)/, run: (d, f, a) => answerUnusual(d, f, a) },
+  { kind: "who", test: /\b(cine (a )?(cheltuit|dat|platit)|cine cheltuie|care dintre (noi|voi)|intre noi)/, run: (d, f, a) => answerWho(d, f, a) },
   { kind: "afford", test: /\b(imi permit|mi permit|pot sa (dau|cheltui)|as putea sa (dau|cheltui)|am bani de|ajung banii|mai am \d|cat ar ramane|ce mi ar ramane)/, run: (d, f, a) => answerAfford(d, f, a) },
   { kind: "pace", test: /\b(cat pot cheltui|cat am voie|ritm|pe zi|zilnic)/, run: (d, _f, a) => answerPace(d, a) },
   { kind: "payday", test: /\b(cand (vine|intra) (salariul|venitul)|cate zile pana|pana la salariu)/, run: (d, _f, a) => answerPayday(d, a) },
@@ -559,7 +765,7 @@ export function analyze(raw: string, data: AppData, asOf = isoToday()): AnalystA
    * „cât am dat la Lidl” conține și el „am dat”. Deosebirea o face începutul:
    * o întrebare se deschide cu un cuvânt de întrebare.
    */
-  const asksQuestion = /^(cat|cate|cati|unde|cand|care|cum|ce |imi permit|mi permit|pot sa|as putea|ajung |compar|arata|spune mi|listeaza|vreau sa vad)/.test(folded)
+  const asksQuestion = /^(cat|cate|cati|unde|cand|care|cum|ce |ce-|cine |sfat|recomand|e normal|prea mult|imi permit|mi permit|pot sa|as putea|ajung |compar|arata|spune mi|listeaza|vreau sa vad)/.test(folded)
     || /\?$/.test(raw.trim());
   const asksToRecord = /\b(adauga|adaug|treci|noteaza|trece|creeaza|fa mi|fa un|sterge)\b/.test(folded)
     || (!asksQuestion && /\b(am dat|am platit|am cumparat|am primit|am incasat)\b/.test(folded));

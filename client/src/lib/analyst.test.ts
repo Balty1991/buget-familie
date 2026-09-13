@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { analyze, answerToText, readPeriod } from "./analyst";
-import { createEmptyAppData, newId, type AppData } from "./finance-data";
+import { createEmptyAppData, envelopeDecisionStatus, newId, type AppData } from "./finance-data";
 
 const ASOF = "2026-09-11"; // vineri
 
@@ -241,5 +241,83 @@ describe("punctuația răspunsurilor", () => {
     for (const part of answer.detail!.split(/(?<=\.)\s+/)) {
       expect(part.charAt(0)).toBe(part.charAt(0).toLocaleUpperCase("ro-RO"));
     }
+  });
+});
+
+describe("briefingul zilei", () => {
+  it("răspunde la «ce fac azi» cu o acțiune, nu cu un raport generic", () => {
+    const answer = ask("ce fac azi?")!;
+    expect(answer.kind).toBe("next");
+    expect(answer.headline).toMatch(/Azi:|Poți cheltui|Setează/);
+  });
+
+  it("înțelege și «ce-mi recomanzi» și «ce părere ai»", () => {
+    expect(ask("ce-mi recomanzi?")!.kind).toBe("next");
+    expect(ask("ce părere ai?")!.kind).toBe("next");
+  });
+
+  it("un registru gol spune că nu are din ce să recomande", () => {
+    const answer = analyze("ce fac azi?", createEmptyAppData(), ASOF)!;
+    expect(answer.headline).toMatch(/prima cifră/i);
+    expect(answer.headline).not.toMatch(/NaN|Infinity|undefined/);
+  });
+});
+
+describe("am cheltuit prea mult", () => {
+  it("compară luna asta cu cea dinainte", () => {
+    const answer = ask("am cheltuit prea mult?")!;
+    expect(answer.kind).toBe("unusual");
+    expect(answer.headline).toMatch(/mai mult|în ritm|peste/);
+  });
+
+  it("poate vorbi despre o categorie", () => {
+    const answer = ask("e normal cât am dat pe alimente?")!;
+    expect(answer.kind).toBe("unusual");
+    expect(answer.headline).toMatch(/Alimente/);
+  });
+});
+
+describe("cine a cheltuit", () => {
+  it("compară membrii familiei", () => {
+    const data = house();
+    data.settings.members.push({ id: "m2", name: "Ioana" });
+    data.transactions.push({
+      id: newId("tx"), title: "Taxi", amount: 80, kind: "expense", category: "Transport",
+      source: data.settings.paymentSources[0].name, sourceId: data.settings.paymentSources[0].id,
+      person: "Ioana", memberId: "m2", date: "2026-09-08",
+    } as AppData["transactions"][number]);
+    const answer = analyze("cine a cheltuit mai mult?", data, ASOF)!;
+    expect(answer.kind).toBe("who");
+    expect(answer.headline).toMatch(/Eu|Ioana/);
+    expect(answer.rows!.map((row) => row.label)).toEqual(expect.arrayContaining(["Eu", "Ioana"]));
+  });
+
+  it("spune pe față când e un singur membru", () => {
+    const answer = ask("cine a cheltuit mai mult?")!;
+    expect(answer.headline).toMatch(/singur/i);
+  });
+});
+
+describe("aceeași cifră ca pe Acasă", () => {
+  it("«cât mai am» folosește cifra de decizie a plicului, nu tot ciclul", () => {
+    const data = house();
+    data.settings.salaryPlan.allocations[0].weeklyPace = true;
+    const status = envelopeDecisionStatus(data, data.settings.salaryPlan.allocations[0], ASOF);
+    const row = analyze("cât mai am", data, ASOF)!.rows!.find((item) => item.label === "Alimente")!;
+    expect(row.hint).toMatch(/S\d/);
+    expect(row.value.replace(/\s/g, "")).toContain(
+      Math.max(0, status.remaining).toLocaleString("ro-RO", { maximumFractionDigits: 2 }).replace(/\s/g, ""),
+    );
+  });
+
+  it("«îmi permit» citește tranșa săptămânii, nu tot plicul", () => {
+    const data = house();
+    data.settings.salaryPlan.allocations[0].weeklyPace = true;
+    const status = envelopeDecisionStatus(data, data.settings.salaryPlan.allocations[0], ASOF);
+    const answer = analyze("îmi permit 10 de lei pe alimente", data, ASOF)!;
+    const after = Math.round((status.remaining - 10) * 100) / 100;
+    if (after >= 0) expect(answer.headline).toMatch(/^Da\./);
+    else expect(answer.headline).toMatch(/^Nu din plic/);
+    expect(answer.detail).toMatch(/Tranșa S/);
   });
 });

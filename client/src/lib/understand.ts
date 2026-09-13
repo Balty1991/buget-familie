@@ -22,6 +22,7 @@ import {
   expenseCategories,
   inPlanPeriod,
   isoToday,
+  matchingAllocationsForExpense,
   parseNaturalSpendScenario,
   sourceBalance,
   type AppData,
@@ -34,7 +35,7 @@ import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
   | { kind: "income"; amount: number; title: string; date?: string; memberId?: string; clientCaptureId?: string }
-  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string }
+  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string; recurringId?: string }
   | { kind: "debt"; name: string; remaining: number; due?: string }
   | { kind: "debt-monthly"; amount: number; name?: string }
   | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string }
@@ -83,7 +84,7 @@ export type ExtractedGuide = {
 export function isQuestion(raw: string) {
   const folded = foldRo(raw).replace(/\s+/g, " ").trim();
   return /\?\s*$/.test(raw.trim())
-    || /^(cat|cate|cati|unde|cand|care|cum|ce |imi permit|mi permit|pot sa|as putea|ajung |mai am |merita |arata|listeaza|vreau sa vad|spune mi)/.test(folded);
+    || /^(cat|cate|cati|unde|cand|care|cum|ce |ce-|cine |sfat|recomand|e normal|prea mult|imi permit|mi permit|pot sa|as putea|ajung |mai am |merita |arata|listeaza|vreau sa vad|spune mi)/.test(folded);
 }
 
 export function isConfirm(raw: string) {
@@ -414,11 +415,13 @@ export function paidRecurringProposal(raw: string, data: AppData): Proposal | un
     return { text: `**${due.name}** este deja trecută în perioada asta. Nu o trec a doua oară.`, choices: [] };
   }
   const source = data.settings.paymentSources.find((item) => item.id === due.sourceId) || data.settings.paymentSources[0];
+  const matched = matchingAllocationsForExpense(data, { category: due.category, memberId: due.memberId, sourceId: due.sourceId })[0];
+  const from = matched ? `din plicul «${matched.label}»` : source ? `din ${source.name}` : "";
   return {
-    text: `Am înțeles: **${due.name}**, ${money(due.amount)}${source ? `, din ${source.name}` : ""}. O trec în registru?`,
+    text: `Am înțeles: **${due.name}**, ${money(due.amount)}${from ? `, ${from}` : ""}. O trec în registru?`,
     choices: [{
       label: `Plătește ${due.name} · ${money(due.amount)}`,
-      update: { kind: "expense", amount: due.amount, title: due.name, category: due.category, date: today(), sourceId: source?.id, allocationId: "outside", memberId: due.memberId },
+      update: { kind: "expense", amount: due.amount, title: due.name, category: due.category, date: today(), sourceId: source?.id, allocationId: matched?.id || "outside", memberId: due.memberId, recurringId: due.id },
     }],
   };
 }
@@ -484,7 +487,7 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
     });
   }
 
-  const answer = analyze(raw, data);
+  const answer = analyze(raw, data, ctx.asOf);
   if (answer) readings.push({ kind: "question", score: BASE.question, why: "are formă de întrebare despre bani", answer });
 
   const spend = expenseProposal(raw, ctx.extracted, data, memory, ctx.forcedExpense);

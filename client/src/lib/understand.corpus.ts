@@ -108,6 +108,11 @@ export const CORPUS: Case[] = [
   { text: "cât am cheltuit pe alimente săptămâna asta?", want: "answer" },
   { text: "ce mai am disponibil?", want: "answer" },
   { text: "cum stau cu banii?", want: "answer" },
+  { text: "ce fac azi?", want: "answer" },
+  { text: "ce-mi recomanzi?", want: "answer" },
+  { text: "am cheltuit prea mult?", want: "answer" },
+  { text: "e normal cât am dat?", want: "answer" },
+  { text: "cine a cheltuit mai mult?", want: "answer" },
 
   // --- capcane: întrebări care arată ca niște cheltuieli --------------------
   { text: "îmi permit 500 de lei pe alimente?", want: "answer", note: "are formă de cheltuială, dar e întrebare" },
@@ -127,7 +132,7 @@ export const CORPUS: Case[] = [
   { text: "bună ziua", want: "none" },
   { text: "cum funcționează plicurile?", want: "none", note: "întrebare despre aplicație, nu despre bani" },
   { text: "nu am datorii", want: "none" },
-  { text: "ce părere ai?", want: "none" },
+  { text: "ce părere ai?", want: "answer", note: "cere briefingul zilei, nu o părere generică" },
 ];
 
 /** Fraze adăugate după ce am probat ce chiar spun oamenii, nu doar ce e ușor de citit. */

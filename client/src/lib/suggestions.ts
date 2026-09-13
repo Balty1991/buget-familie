@@ -72,6 +72,9 @@ export function buildSuggestions(data: AppData, asOf = isoToday()): Suggestion[]
     else if (days > 7) out.push({ text: "Cât pot cheltui pe zi?", why: "are un plan cu dată de salariu", urgency: 45 });
   }
 
+  // Întrebarea de decizie — merită mereu, dar sub alertele de plic gol sau salariu aproape.
+  out.push({ text: "Ce fac azi?", why: "briefing de decizie", urgency: 72 });
+
   if (data.debts.some((item) => item.remaining > 0)) {
     out.push({ text: "Cât mai am la datorii?", why: "are datorii deschise", urgency: 60 });
   }
@@ -89,6 +92,15 @@ export function buildSuggestions(data: AppData, asOf = isoToday()): Suggestion[]
 
   const vendor = frequentVendor(data, asOf);
   if (vendor) out.push({ text: `Cât am dat la ${vendor}?`, why: "magazin frecvent", urgency: 40 });
+
+  const month = asOf.slice(0, 7);
+  const [year, monthNum] = month.split("-").map(Number);
+  const previousMonth = monthNum === 1 ? `${year - 1}-12` : `${year}-${String(monthNum - 1).padStart(2, "0")}`;
+  const spendNow = data.transactions.filter((item) => item.kind === "expense" && item.date.startsWith(month) && item.date <= asOf).reduce((sum, item) => sum + item.amount, 0);
+  const spendBefore = data.transactions.filter((item) => item.kind === "expense" && item.date.startsWith(previousMonth)).reduce((sum, item) => sum + item.amount, 0);
+  if (spendBefore >= 50 && spendNow > spendBefore * 1.25) {
+    out.push({ text: "Am cheltuit prea mult?", why: "peste luna trecută", urgency: 68 });
+  }
 
   if (data.savings.length) out.push({ text: "Cât am strâns?", why: "are obiective", urgency: 35 });
   if (data.settings.members.length > 1) {

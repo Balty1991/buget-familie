@@ -78,7 +78,16 @@ describe("o scadență plătită, fără să repeți suma", () => {
     expect(paidRecurringProposal("am plătit chiria 1400", house())).toBeUndefined();
   });
 
-  it("nu inventează o scadență care nu există", () => {
-    expect(paidRecurringProposal("am plătit abonamentul la sală", house())).toBeUndefined();
+  it("leagă plata de scadență și de plicul categoriei", () => {
+    const data = house();
+    data.settings.salaryPlan.allocations = [{ id: "env-house", label: "Casă & facturi", category: "Casă & facturi", amount: 2000, sourceId: "card", weeklyPace: false }];
+    const out = paidRecurringProposal("am plătit chiria", data);
+    expect(out?.choices[0]?.update).toMatchObject({
+      kind: "expense",
+      amount: 1500,
+      title: "Chirie",
+      recurringId: "rec-chirie",
+      allocationId: "env-house",
+    });
   });
 });
