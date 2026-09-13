@@ -321,4 +321,54 @@ describe("householdActivityInCycle", () => {
     expect(cycle.familyExpense).toBe(150);
     expect(cycle.members.find((m) => m.memberId === "me")?.expense).toBe(100);
   });
+
+  it("pune mișcarea partenerului de la capătul registrului în feed, nu cele 5 locale vechi", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "2026-09-28";
+    data.settings.members = [{ id: "me", name: "Eu" }, { id: "partner", name: "Partener" }];
+    data.transactions = [1, 2, 3, 4, 5, 6].map((n) => ({
+      id: `local-${n}`,
+      title: `Local ${n}`,
+      amount: 10,
+      kind: "expense" as const,
+      category: "Alimente",
+      source: "Card",
+      sourceId: "s",
+      person: "Eu",
+      memberId: "me",
+      date: "2026-09-10",
+      createdAt: `2026-09-10T0${n}:00:00.000Z`,
+    }));
+    data.transactions.push({
+      id: "partner-taxi",
+      title: "Taxi partener",
+      amount: 20,
+      kind: "expense",
+      category: "Transport",
+      source: "Card",
+      sourceId: "s",
+      person: "Partener",
+      memberId: "partner",
+      date: "2026-09-13",
+      createdAt: "2026-09-13T18:00:00.000Z",
+    });
+    const cycle = householdActivityInCycle(data, "2026-09-13");
+    expect(cycle.recent[0].id).toBe("partner-taxi");
+    expect(cycle.members.find((item) => item.memberId === "partner")?.expense).toBe(20);
+  });
+
+  it("nu pune cheltuielile personale în cota familiei", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "2026-09-28";
+    data.settings.members = [{ id: "me", name: "Eu" }, { id: "partner", name: "Partener" }];
+    data.transactions = [
+      { id: "shared", title: "Lidl", amount: 80, kind: "expense", category: "Alimente", source: "Card", sourceId: "s", person: "Eu", memberId: "me", date: "2026-09-10", shareScope: "shared" },
+      { id: "mine", title: "Cafea", amount: 20, kind: "expense", category: "Timp liber", source: "Card", sourceId: "s", person: "Eu", memberId: "me", date: "2026-09-10", shareScope: "personal" },
+    ];
+    const cycle = householdActivityInCycle(data, "2026-09-10");
+    expect(cycle.familyExpense).toBe(80);
+    expect(cycle.recent.map((item) => item.id)).toEqual(["shared"]);
+  });
 });

@@ -95,7 +95,7 @@ export type ReceiptDetectedItem = { label: string; amount: number; category: str
 export type LocalReceiptOcr = { text: string; vendor?: string; amount?: number; date?: string; items: ReceiptDetectedItem[] };
 
 const parseAmount = (raw: string) => {
-  const normalized = raw.replace(/[\s\u00A0]/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".");
+  const normalized = raw.replace(/[\s\u00A0]/g, "").replace(/lei|ron|eur|usd/gi, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".").replace(/[^0-9.-]/g, "");
   const amount = Number(normalized);
   return Number.isFinite(amount) && amount > 0 ? amount : undefined;
 };

@@ -2179,6 +2179,22 @@ const en: Record<string, string> = {
   "Casa include până la {n} plicuri. Planul Familia deblochează plicuri nelimitate.": "Casa includes up to {n} envelopes. The Familia plan unlocks unlimited envelopes.",
   "Casa e pentru un membru. Planul Familia acoperă până la {n} persoane.": "Casa is for one member. The Familia plan covers up to {n} people.",
   "Ghidul e local, cu rezervă online doar când e nevoie.": "The guide is local, with an online fallback only when needed.",
+  "Săptămâna aleasă nu are destui bani rămași în plic. Alege altă tranșă sau o sumă mai mică.": "The chosen week does not have enough left in the envelope. Pick another tranche or a smaller amount.",
+  "Nu am putut salva mișcarea.": "Could not save the movement.",
+  "Extras de cont": "Bank statement",
+  "Bon fotografiat": "Photographed receipt",
+  "Ghid AI": "AI guide",
+  "{n} propuneri": "{n} proposals",
+  "Nimic de verificat": "Nothing to review",
+  "CONECTAT": "CONNECTED",
+  "minimum 12 caractere": "minimum 12 characters",
+  "fotografiile bonurilor, șabloanele rapide, filtrele, tema, cursul valutar, regulile de comerciant și istoricul de sincronizare al acestui dispozitiv. Confirmarea din De verificat rămâne pe telefonul care a creat-o.": "receipt photos, quick templates, filters, theme, exchange rates, merchant rules and this device’s sync history. Confirmation in To review stays on the phone that created it.",
+  "nu există cont Play/Google al aplicației. Resetarea din Setări golește doar acest telefon. O copie din cameră rămâne până schimbați parola de familie.": "there is no Play/Google account for the app. Reset in Settings only clears this phone. A room copy remains until you change the family password.",
+  "Suport": "Support",
+  "Versiune {version} · pachet ro.balty1991.bugetfamilie.": "Version {version} · package ro.balty1991.bugetfamilie.",
+  "Deschide formularul": "Open the form",
+  "Categorii folosite recent": "Recently used categories",
+  "Folosite recent": "Used recently",
 };
 
 

@@ -12,6 +12,7 @@ import {
   confirmReviewDraft,
   dismissReviewDraft,
   expenseCategories,
+  matchingAllocationsForExpense,
   pickerAllocationsForExpense,
   planAllocationMath,
   updateReviewDraft,
@@ -26,11 +27,11 @@ import { Field, dateText, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 import { partnerPendingReviewMeta } from "@/lib/family-crypto";
 
-const originLabel: Record<ReviewOrigin, string> = {
-  import: "Extras de cont",
-  bon: "Bon fotografiat",
-  asistent: "Ghid AI",
-  notificare: t("Notificare bancară"),
+const originCopy = (origin: ReviewOrigin) => {
+  if (origin === "import") return t("Extras de cont");
+  if (origin === "bon") return t("Bon fotografiat");
+  if (origin === "asistent") return t("Ghid AI");
+  return t("Notificare bancară");
 };
 
 type ImportSummary = { added: number; duplicates: number; skipped: StatementSkip[]; fileName: string; bank: StatementBank; rowCount: number };
@@ -149,7 +150,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
         <div className="bf-section-heading">
           <div>
             <p className="bf-kicker">{t("DE VERIFICAT")}</p>
-            <h2 id="review-queue-title">{drafts.length ? `${drafts.length} propuneri` : "Nimic de verificat"}</h2>
+            <h2 id="review-queue-title">{drafts.length ? t("{n} propuneri", { n: drafts.length }) : t("Nimic de verificat")}</h2>
           </div>
           <Inbox size={19} />
         </div>
@@ -167,33 +168,38 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
               const envelopes = transaction.kind === "expense"
                 ? pickerAllocationsForExpense(data, { category: transaction.category, memberId: transaction.memberId, sourceId: transaction.sourceId })
                 : [];
+              const matched = transaction.kind === "expense"
+                ? matchingAllocationsForExpense(data, { category: transaction.category, memberId: transaction.memberId, sourceId: transaction.sourceId })
+                : [];
               const unrepartized = planAllocationMath(data).unrepartized;
-              const hideUnallocated = transaction.kind === "expense" && envelopes.length > 0 && unrepartized < Math.max(0.005, transaction.amount);
-              const selectedAllocation = hideUnallocated && (!transaction.allocationId || transaction.allocationId === "outside") && envelopes[0]
-                ? envelopes[0].id
-                : (transaction.allocationId || "outside");
+              const hideUnallocated = transaction.kind === "expense" && matched.length > 0 && unrepartized < Math.max(0.005, transaction.amount);
+              const selectedAllocation = transaction.allocationId && transaction.allocationId !== "outside"
+                ? transaction.allocationId
+                : hideUnallocated && matched[0]
+                  ? matched[0].id
+                  : (transaction.allocationId || "outside");
               return (
                 <article key={draft.id} className={transaction.kind === "income" ? "income" : ""}>
                   <header>
                     <div>
                       <b>{transaction.title}</b>
-                      <small>{dateText(transaction.date)} · {originLabel[draft.origin]}</small>
+                      <small>{dateText(transaction.date)} · {originCopy(draft.origin)}</small>
                     </div>
                     <strong>{transaction.kind === "income" ? "+" : "−"}{fmtExact.format(transaction.amount)}</strong>
                   </header>
                   <p className="bf-review-reason">{draft.reason}</p>
                   {open && (
                     <div className="bf-form-grid">
-                      <Field label="Denumire">
+                      <Field label={t("Denumire")}>
                         <input value={transaction.title} onChange={(event) => patch(draft, { title: event.target.value })} />
                       </Field>
-                      <Field label="Data">
+                      <Field label={t("Data")}>
                         <input type="date" value={transaction.date} onChange={(event) => patch(draft, { date: event.target.value })} />
                       </Field>
                       {transaction.kind === "expense" && (
-                        <Field label="Categorie">
+                        <Field label={t("Categorie")}>
                           <select value={transaction.category} onChange={(event) => patch(draft, { category: event.target.value, allocationId: undefined })}>
-                            {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+                            {categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}
                           </select>
                         </Field>
                       )}
@@ -204,9 +210,9 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                         </select>
                       </Field>
                       {transaction.kind === "expense" && (
-                        <Field label="Plic" hint={t("„În afara plicurilor” lasă cheltuiala fără să consume o limită.")}>
+                        <Field label={t("Plic")} hint={t("„În afara plicurilor” lasă cheltuiala fără să consume o limită.")}>
                           <select value={selectedAllocation} onChange={(event) => patch(draft, { allocationId: event.target.value })}>
-                            {!hideUnallocated && <option value="outside">{t("În afara plicurilor")}</option>}
+                            {(!hideUnallocated || selectedAllocation === "outside") && <option value="outside">{t("În afara plicurilor")}</option>}
                             {envelopes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
                           </select>
                         </Field>
@@ -215,13 +221,13 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                   )}
                   <footer>
                     <button onClick={() => setEditing(open ? "" : draft.id)} aria-expanded={open}>
-                      <Pencil size={14} /> {open ? "Gata" : t("Editează")}
+                      <Pencil size={14} /> {open ? t("Gata") : t("Editează")}
                     </button>
                     <button onClick={() => onChange(dismissReviewDraft(data, draft.id))}>
-                      <Trash2 size={14} /> Ignoră
+                      <Trash2 size={14} /> {t("Ignoră")}
                     </button>
                     <button className="bf-primary" onClick={() => onChange(confirmReviewDraft(data, draft.id) || data)}>
-                      <Check size={14} /> Confirmă
+                      <Check size={14} /> {t("Confirmă")}
                     </button>
                   </footer>
                 </article>

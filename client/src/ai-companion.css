@@ -167,8 +167,7 @@
 }
 
 @media (max-width: 600px) {
-  .ai-companion-panel.ai-chat-panel:has(#ai-natural-message:focus),
-  .ai-companion-panel.ai-chat-panel:has(#ai-natural-message:not(:placeholder-shown)) {
+  .ai-companion-panel.ai-chat-panel:has(#ai-natural-message:focus) {
     top: 8px !important;
     bottom: 8px !important;
     height: auto !important;

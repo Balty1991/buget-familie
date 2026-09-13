@@ -891,7 +891,8 @@ export const resolveExpenseAllocationId = (
 
 /**
  * Scrie o mișcare în registru. Dacă e cheltuială dintr-o altă săptămână a plicului,
- * mută întâi tranșa — același drum ca ghidul.
+ * mută întâi tranșa — același drum ca ghidul. Dacă tranșa aleasă nu acoperă suma,
+ * nu scriem cheltuiala pe săptămâna curentă: utilizatorul a ales explicit sursa.
  */
 export const commitLedgerEntry = (data: AppData, entry: Transaction, fromWeekIndex?: number): AppData => {
   let ledger = data;
@@ -899,13 +900,26 @@ export const commitLedgerEntry = (data: AppData, entry: Transaction, fromWeekInd
     const allocation = data.settings.salaryPlan.allocations.find((item) => item.id === entry.allocationId);
     const currentWeek = allocation && allocation.weeklyPace !== false ? allocationWeekStatus(data, allocation, entry.date) : undefined;
     if (allocation && currentWeek && fromWeekIndex !== currentWeek.index) {
-      ledger = transferBetweenWeeks(data, {
+      const transferred = transferBetweenWeeks(data, {
         allocationId: allocation.id,
         fromWeekIndex,
         toWeekIndex: currentWeek.index,
         amount: entry.amount,
         note: t("Mutare la înregistrare ca să acoperi cheltuiala"),
-      }) || data;
+      });
+      if (!transferred) {
+        throw new Error(t("Săptămâna aleasă nu are destui bani rămași în plic. Alege altă tranșă sau o sumă mai mică."));
+      }
+      ledger = appendAllocationHistory(transferred, {
+        kind: "week-transfer",
+        referenceId: transferred.settings.salaryPlan.weekTransfers?.[0]?.id,
+        allocationId: allocation.id,
+        allocationLabel: allocation.label,
+        amount: entry.amount,
+        fromWeekIndex,
+        toWeekIndex: currentWeek.index,
+        note: t("Mutare la înregistrare ca să acoperi cheltuiala"),
+      });
     }
   }
   const stamped = { ...entry, updatedAt: new Date().toISOString() };

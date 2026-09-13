@@ -261,6 +261,63 @@ describe("registrul financiar Buget Familie", () => {
     const weeks = allocationWeeksStatus(next, food);
     expect(weeks[0]).toMatchObject({ index: 1, budget: 280, remaining: 280 });
     expect(weeks[1]).toMatchObject({ index: 2, budget: 320, spent: 20, remaining: 300 });
+    expect(next.settings.salaryPlan.allocationHistory?.[0]).toMatchObject({ kind: "week-transfer", fromWeekIndex: 1, toWeekIndex: 2, amount: 20 });
+  });
+
+  it("nu scrie cheltuiala dacă săptămâna aleasă nu acoperă suma", () => {
+    const data = createEmptyAppData();
+    const [card] = data.settings.paymentSources;
+    const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente", sourceId: card.id, weeklyPace: true as const };
+    data.settings.salaryPlan = { periodStart: "2026-09-01", nextPayday: "2026-09-28", sourceIds: [card.id], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
+    const spend = {
+      id: "taxi-over",
+      title: "Taxi",
+      amount: 400,
+      kind: "expense" as const,
+      category: "Transport",
+      sourceId: card.id,
+      source: card.name,
+      memberId: "member-me",
+      person: "Eu",
+      date: "2026-09-13",
+      allocationId: food.id,
+    };
+    expect(() => commitLedgerEntry(data, spend, 1)).toThrow(/destui bani rămași/i);
+    expect(data.transactions).toHaveLength(0);
+    expect(allocationWeeksStatus(data, food)[0]).toMatchObject({ index: 1, remaining: 300 });
+    expect(allocationWeeksStatus(data, food)[1]).toMatchObject({ index: 2, remaining: 300 });
+  });
+
+  it("confirmarea unui taxi fără plic de Transport rămâne în afara, dacă există și alte plicuri", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    data.settings.salaryPlan.allocations = [
+      { id: "env-food", label: "Alimente", category: "Alimente", amount: 500, sourceId: source.id, memberId: "member-me" },
+      { id: "env-house", label: "Casă", category: "Casă & facturi", amount: 300, sourceId: source.id, memberId: "member-me" },
+    ];
+    data.pendingReview = [{
+      id: "rev-taxi",
+      origin: "bon",
+      reason: "test",
+      createdAt: "2026-09-13T10:00:00.000Z",
+      transaction: {
+        id: "tx-taxi",
+        title: "Taxi",
+        amount: 20,
+        kind: "expense",
+        category: "Transport",
+        sourceId: source.id,
+        source: source.name,
+        memberId: "member-me",
+        person: "Eu",
+        date: "2026-09-13",
+        allocationId: "outside",
+      },
+    }];
+    const confirmed = confirmReviewDraft(data, "rev-taxi");
+    expect(confirmed?.transactions[0].allocationId).toBe("outside");
+    expect(allocationSpent(confirmed!, confirmed!.settings.salaryPlan.allocations[0])).toBe(0);
+    expect(allocationSpent(confirmed!, confirmed!.settings.salaryPlan.allocations[1])).toBe(0);
   });
 
   it("mută bani dintr-o tranșă săptămânală în alta a aceluiași plic, fără să depășească ce a mai rămas", () => {

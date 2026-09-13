@@ -12,7 +12,7 @@ describe("planuri Casa / Familia", () => {
 
   it("Casa e gratuită și mărginită; Familia e un abonament de familie, nu per persoană", () => {
     expect(PLANS.casa.priceMonth).toBe(0);
-    expect(PLANS.casa.envelopes).toBe(4);
+    expect(PLANS.casa.envelopes).toBe(10);
     expect(PLANS.familie.priceYear).toBe(149);
     expect(PLANS.familie.priceMonth).toBe(19.99);
     expect(PLANS.familie.members).toBe(6);

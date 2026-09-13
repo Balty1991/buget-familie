@@ -15,7 +15,7 @@ export const PLANS: Record<PlanId, {
   priceMonth: number;
   priceYear: number;
 }> = {
-  casa: { id: "casa", envelopes: 4, members: 1, devices: 1, aiOnlinePerDay: 20, priceMonth: 0, priceYear: 0 },
+  casa: { id: "casa", envelopes: 10, members: 1, devices: 1, aiOnlinePerDay: 20, priceMonth: 0, priceYear: 0 },
   familie: { id: "familie", envelopes: Number.POSITIVE_INFINITY, members: 6, devices: 6, aiOnlinePerDay: 100, priceMonth: 19.99, priceYear: 149 },
 };
 

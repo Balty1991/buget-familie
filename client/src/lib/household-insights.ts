@@ -18,6 +18,7 @@ import {
   planEndDate,
   planForecast,
   weeklySummary,
+  transactionShareScope,
   type AppData,
   type BudgetAllocation,
   type RecurringPayment,
@@ -177,7 +178,7 @@ export const householdActivityInCycle = (data: AppData, asOf = isoToday()): Hous
   const plan = data.settings.salaryPlan;
   const start = plan.periodStart || `${asOf.slice(0, 7)}-01`;
   const end = plan.nextPayday && plan.nextPayday >= start ? plan.nextPayday : asOf;
-  const cycleTx = data.transactions.filter((item) => item.date >= start && item.date <= end);
+  const cycleTx = data.transactions.filter((item) => item.date >= start && item.date <= end && transactionShareScope(item) !== "personal");
   const familyExpense = cycleTx.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
   const members = data.settings.members.map((member) => {
     const entries = cycleTx.filter((item) => item.memberId === member.id);
@@ -185,7 +186,11 @@ export const householdActivityInCycle = (data: AppData, asOf = isoToday()): Hous
     const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
     return { memberId: member.id, name: member.name, income, expense, count: entries.length, share: familyExpense > 0 ? expense / familyExpense : 0 };
   }).sort((a, b) => b.expense - a.expense);
-  const recent = [...cycleTx].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || "")).slice(0, 8).map((item) => ({ id: item.id, date: item.date, title: item.title, amount: item.amount, kind: item.kind, person: item.person, category: item.category }));
+  const recent = [...cycleTx].sort((a, b) => {
+    const right = b.updatedAt || b.createdAt || `${b.date}T00:00:00.000Z`;
+    const left = a.updatedAt || a.createdAt || `${a.date}T00:00:00.000Z`;
+    return right.localeCompare(left) || b.date.localeCompare(a.date);
+  }).slice(0, 8).map((item) => ({ id: item.id, date: item.date, title: item.title, amount: item.amount, kind: item.kind, person: item.person, category: item.category }));
   return { month: `${start}…${end}`, members, familyExpense, recent };
 };
 

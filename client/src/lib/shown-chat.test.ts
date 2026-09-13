@@ -41,4 +41,20 @@ describe("istoricul ghidului se restrânge", () => {
     expect(hiddenChatCount(messages)).toBeGreaterThan(0);
     expect(shownChatMessages(messages, true)).toHaveLength(messages.length);
   });
+
+  it("un răspuns fără salvare rămâne pe ecran, inclusiv butonul de formular", () => {
+    const answer = [
+      assistant("w", "Bun venit"),
+      user("u1", "Cât mai am în Alimente?"),
+      assistant("a1", "În Alimente mai sunt 180 lei."),
+    ];
+    expect(shownChatMessages(answer, false).map((item) => item.id)).toEqual(["u1", "a1"]);
+
+    const cta = [
+      assistant("w", "Bun venit"),
+      user("u2", "Adaugă o mișcare"),
+      assistant("a2", "Deschid formularul.", { action: { type: "add", label: "Deschide formularul" } }),
+    ];
+    expect(shownChatMessages(cta, false).map((item) => item.id)).toEqual(["u2", "a2"]);
+  });
 });
