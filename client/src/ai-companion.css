@@ -104,6 +104,12 @@
     flex: 0 0 auto;
     margin-top: 6px;
   }
+
+  .ai-chat-panel.is-history-collapsed {
+    top: auto !important;
+    height: auto !important;
+    max-height: calc(100dvh - 72px - 92px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
 @media (max-width: 600px) and (max-height: 620px) {
@@ -112,6 +118,11 @@
     bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
     height: auto !important;
     max-height: none !important;
+  }
+
+  .ai-chat-panel.is-history-collapsed {
+    top: auto !important;
+    max-height: calc(100dvh - 64px - 88px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .ai-chat-panel:has(input:focus) {
@@ -221,6 +232,12 @@
     overflow: hidden !important;
     z-index: 80 !important;
   }
+  .os-shell .ai-companion-panel.ai-chat-panel.is-history-collapsed,
+  .ai-chat-panel.is-history-collapsed {
+    top: auto !important;
+    height: auto !important;
+    max-height: calc(100dvh - 72px - 92px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-companion-head {
     gap: 8px !important;
     margin-bottom: 6px !important;
@@ -296,5 +313,10 @@
   .os-shell .ai-companion-panel.ai-chat-panel:has(#ai-natural-message:focus) {
     top: 8px !important;
     bottom: 8px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel.is-history-collapsed:not(:has(#ai-natural-message:focus)) {
+    top: auto !important;
+    height: auto !important;
+    max-height: calc(100dvh - 72px - 92px - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px)) !important;
   }
 }
