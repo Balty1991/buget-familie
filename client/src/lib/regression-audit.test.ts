@@ -11,6 +11,7 @@ import {
   autoPostDueRecurring,
   confirmRecurringPayment,
   createEmptyAppData,
+  envelopeDecisionStatus,
   inPlanPeriod,
   isoDate,
   paydayFlexDays,
@@ -164,6 +165,29 @@ describe("fereastra de flexibilitate a salariului", () => {
   it("nu schimbă sumele tranșelor când se prelungește ultima", () => {
     const weeks = allocationWeeksStatus(planWithFlex(), planWithFlex().settings.salaryPlan.allocations[0]);
     expect(Math.round(weeks.reduce((sum, week) => sum + week.budget, 0))).toBe(1400);
+  });
+});
+
+describe("aceeași cifră pe plic", () => {
+  it("plicul cu ritm săptămânal arată restul tranșei, nu tot ciclul", () => {
+    const data = createEmptyAppData();
+    const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente" };
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-09-28", allocations: [food] };
+    data.transactions = [{ id: "t1", title: "Lidl", amount: 350, kind: "expense", category: "Alimente", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: "2026-09-02", allocationId: "food" }];
+    const shown = envelopeDecisionStatus(data, food, "2026-09-02");
+    expect(shown.scope).toBe("week");
+    expect(shown.remaining).toBe(-50);
+    expect(allocationStatus(data, food).remaining).toBe(850);
+  });
+
+  it("plicul lunar rămâne pe totalul ciclului", () => {
+    const data = createEmptyAppData();
+    const rent = { id: "rent", label: "Chirie", amount: 1800, category: "Casă & facturi", weeklyPace: false as const };
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-09-28", allocations: [rent] };
+    data.transactions = [{ id: "t1", title: "Chirie", amount: 1800, kind: "expense", category: "Casă & facturi", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: "2026-09-02", allocationId: "rent" }];
+    const shown = envelopeDecisionStatus(data, rent, "2026-09-10");
+    expect(shown.scope).toBe("cycle");
+    expect(shown.remaining).toBe(0);
   });
 });
 

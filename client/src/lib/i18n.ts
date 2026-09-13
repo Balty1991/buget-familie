@@ -2105,7 +2105,14 @@ const en: Record<string, string> = {
   "ex. Credit bancar": "e.g. Bank loan",
   "Personalizat": "Custom",
   "Treci pe manual": "Switch to manual",
-  "Treci pe automat": "Switch to automatic"
+  "Treci pe automat": "Switch to automatic",
+  "MODIFICĂ SCADENȚA": "EDIT DUE DATE",
+  "Actualizează scadența": "Update due date",
+  "Anulează modificarea": "Cancel edit",
+  "Modifică {name}": "Edit {name}",
+  "Plătește": "Pay",
+  "tranșa S{index}": "tranche S{index}",
+  "{pct}% așteptat": "{pct}% expected"
 };
 
 

@@ -428,6 +428,44 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   outline: 2px solid var(--lu-accent, #143c36);
   outline-offset: 2px;
 }
+
+.bf-more-list > article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+.bf-more-list-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bf-more-list-main span { display: grid; gap: 2px; min-width: 0; }
+.bf-more-list-main em { grid-column: 1; font-style: normal; font-size: 11px; }
+.bf-more-list-main strong { grid-column: 2; grid-row: 1 / span 2; color: #205a47; font-variant-numeric: tabular-nums; }
+.dark .bf-more-list-main strong { color: #edf6ef; }
+.bf-more-list-pay {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--lu-line, #c9d2cc);
+  background: var(--lu-accent, #143c36);
+  color: var(--lu-accent-fg, #fff);
+  font: 650 12px Outfit, system-ui, sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .bf-journal-saved-list input {
   min-height: 40px;
   width: 100%;

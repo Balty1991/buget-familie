@@ -718,6 +718,28 @@ export const allocationWeekStatus = (data: AppData, allocation: BudgetAllocation
   return allocationWeeksStatus(data, allocation).find((week) => date >= week.start && date <= week.end);
 };
 
+/**
+ * Cifra de decizie a plicului: tranșa săptămânii active, sau tot ciclul dacă plicul e lunar/fix.
+ * Astăzi, masa de lucru și alertele trebuie să citească aceeași valoare — altfel același plic arată 200 și 800.
+ */
+export const envelopeDecisionStatus = (data: AppData, allocation: BudgetAllocation, date = isoToday()) => {
+  const cycle = allocationStatus(data, allocation);
+  const week = allocation.weeklyPace === false ? undefined : allocationWeekStatus(data, allocation, date);
+  if (!week) return { ...cycle, scope: "cycle" as const, weekIndex: undefined as number | undefined };
+  const usage = week.budget > 0 ? week.spent / week.budget : 0;
+  const remaining = week.remaining;
+  return {
+    budget: week.budget,
+    spent: week.spent,
+    remaining,
+    usage,
+    alertThreshold: cycle.alertThreshold,
+    state: remaining < 0 ? "over" as const : usage >= cycle.alertThreshold / 100 ? "watch" as const : "healthy" as const,
+    scope: "week" as const,
+    weekIndex: week.index as number | undefined,
+  };
+};
+
 /** Mută bani dintr-o tranșă săptămânală în alta, în interiorul aceluiași plic; nu poate lua mai mult decât e disponibil în tranșa sursă. */
 export const transferBetweenWeeks = (data: AppData, input: { allocationId: string; fromWeekIndex: number; toWeekIndex: number; amount: number; note?: string }): AppData | undefined => {
   const plan = data.settings.salaryPlan;

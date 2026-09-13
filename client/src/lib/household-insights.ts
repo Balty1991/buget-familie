@@ -9,6 +9,7 @@ import {
   exchangeRateFor,
   toBaseAmount,
   allocationWeekStatus,
+  envelopeDecisionStatus,
   financialBalance,
   formatDate,
   isoToday,
@@ -328,8 +329,8 @@ export const paydayTrack = (data: AppData, asOf = isoToday()) => {
   return { start: plan.periodStart, end, total, elapsed, remaining: Math.max(0, total - elapsed), ratio: elapsed / total };
 };
 
-export const envelopeLane = (data: AppData) => data.settings.salaryPlan.allocations
-  .map((item) => ({ item, ...allocationStatus(data, item) }))
+export const envelopeLane = (data: AppData, asOf = isoToday()) => data.settings.salaryPlan.allocations
+  .map((item) => ({ item, ...envelopeDecisionStatus(data, item, asOf) }))
   .sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.usage - left.usage)
   .slice(0, 8);
 
