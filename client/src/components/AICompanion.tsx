@@ -34,6 +34,8 @@ import {
   transferProposal,
   understand,
   buildExpenseOffer,
+  canCommitGuideSpend,
+  isDatedSpendChoice,
   type ChatChoice,
   type ExtractedGuide,
   type FinancialUpdate,
@@ -378,6 +380,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     return liveMemory;
   });
   const [spendDay, setSpendDay] = useState(today);
+  const [pickedChoice, setPickedChoice] = useState<ChatChoice | null>(null);
+  const [dateTapped, setDateTapped] = useState(false);
   const lastSaveRef = useRef({ key: "", at: 0 });
   const monthSummary = useMemo(() => { const month = today().slice(0, 7); const current = data.transactions.filter((item) => item.date.startsWith(month)); return { income: current.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0), expense: current.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0) }; }, [data]);
   const todayPace = useMemo(() => Math.round(todayBrief(data).spendable), [data]);
@@ -440,66 +444,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
    * („venit 5.000 RON · Salariu · 11 sept.”), deci o rescriem odată cu ea. Altfel
    * omul ar apăsa „Confirmă” cu două date diferite pe ecran.
    */
-  const applySpendDay = (day: string) => {
-    setSpendDay(day);
-    setMessages((current) => {
-      const index = current.map((item) => item.role).lastIndexOf("assistant");
-      const target = current[index];
-      if (!target) return current;
-      const pendingUpdates = target.action?.type === "apply" ? target.updates : undefined;
-      if (!pendingUpdates?.length && !target.choices?.length) return current;
-      const dateOf = (item: FinancialUpdate) => (item.kind === "expense" || item.kind === "income" ? item.date : undefined);
-      const before = pendingUpdates?.map(dateOf).find(Boolean) || target.choices?.map((item) => dateOf(item.update)).find(Boolean);
-      const intents = target.intents?.map((item) => (item.kind === "expense" || item.kind === "income" ? { ...item, date: day } : item));
-      const next = [...current];
-      next[index] = {
-        ...target,
-        updates: pendingUpdates?.map((item) => (item.kind === "expense" || item.kind === "income" ? { ...item, date: day } : item)) || target.updates,
-        intents,
-        choices: target.choices?.map((item) => (item.update.kind === "expense" || item.update.kind === "income" ? { ...item, update: { ...item.update, date: day } } : item)),
-        // Propunerea scrisă de `describeIntent` se reface întreagă; cea cu alternative
-        // poartă ziua într-un singur loc, îngroșat, deci schimbăm exact acel cuvânt.
-        text: intents
-          ? proposalText(intents, data, liveMemory)
-          : before
-            ? retimeText(target.text, before, day)
-            : target.text,
-      };
-      return next;
-    });
+  const resetSpendDraft = () => {
+    setPickedChoice(null);
+    setDateTapped(false);
   };
-  const clearChat = () => {
-    const hasPlan = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0;
-    const stage: GuideStage = hasPlan ? "ready" : "income";
-    const fresh: ChatMessage[] = [{ id: `welcome-${Date.now()}`, role: "assistant", text: t("Am golit conversația. Mișcările și plicurile rămân în registru. Spune-mi cu ce vrei să începem.") }];
-    setMessages(fresh);
-    setHistoryOpen(false);
-    setGuideStage(stage);
-    setPendingDebtName("");
-    try {
-      window.localStorage.setItem(CHAT_KEY, JSON.stringify(fresh));
-      window.localStorage.setItem("buget-familie:ai-guide-stage-v1", stage);
-    } catch { /* ignore */ }
-  };
-  const runAction = (type: "add" | "plan" | "journal" | "insights", label: string) => { addMessage({ role: "user", text: label }); setTyping(true); window.setTimeout(() => { setTyping(false); addMessage({ role: "assistant", text: type === "add" ? t("Deschid formularul. Completează ce mai lipsește și verifică înainte să salvezi.") : type === "plan" ? t("Deschid planul. Acolo așezăm veniturile pe destinații și ritmuri.") : type === "journal" ? t("Deschid jurnalul și ne uităm la mișcările care contează.") : t("Deschid analiza ca să vedem tiparele lunii."), action: { type, label: type === "add" ? t("Deschide formularul") : type === "plan" ? t("Vezi planul") : type === "journal" ? t("Vezi jurnalul") : t("Vezi analiza") } }); if (type === "add") onAdd(); else onGo(type); setOpen(false); }, 260); };
-  const handleAction = (item: ChatMessage) => {
-    if (item.action?.type === "apply" && item.updates?.length) {
-      item.updates.forEach((update) => onFinancialUpdate(update));
-      item.updates.forEach((update) => { if (update.kind === "expense") setMemory(learn(update)); });
-      if (item.updates.some((update) => update.kind === "income")) setGuideStage("debts");
-      const dated = item.updates.find((update) => update.kind === "expense" || update.kind === "income");
-      const day = dated && (dated.kind === "expense" || dated.kind === "income") ? dated.date : "";
-      addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
-      setHistoryOpen(false);
-      return;
-    }
-    if (!item.action || item.action.type === "apply") return;
-    if (item.action.type === "add") onAdd();
-    else onGo(item.action.type);
-    setOpen(false);
-  };
-  const applyChoice = (choice: ChatChoice) => {
-    const day = spendDay || ((choice.update.kind === "expense" || choice.update.kind === "income") ? choice.update.date : undefined) || today();
+  const commitChoice = (choice: ChatChoice, day: string) => {
     const stamp = `${choice.update.kind}|${"title" in choice.update ? choice.update.title : ""}|${"amount" in choice.update ? choice.update.amount : ""}|${day}|${choice.update.kind === "expense" ? choice.update.allocationId : ""}`;
     if (stamp === lastSaveRef.current.key && Date.now() - lastSaveRef.current.at < 900) return;
     lastSaveRef.current = { key: stamp, at: Date.now() };
@@ -511,6 +460,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       const proposed = [...messages].reverse().find((item) => item.role === "assistant" && item.updates?.length)?.updates?.[0];
       setMemory(learn(update, isCorrection(proposed, update) ? 2 : 1));
     }
+    resetSpendDraft();
     if (update.kind === "delete-transaction") {
       addMessage({ role: "assistant", text: `Am șters **${update.title}**, ${money(update.amount)}.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
@@ -535,7 +485,76 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     });
     setHistoryOpen(false);
   };
+  const applySpendDay = (day: string) => {
+    setSpendDay(day);
+    setDateTapped(true);
+    setMessages((current) => {
+      const index = current.map((item) => item.role).lastIndexOf("assistant");
+      const target = current[index];
+      if (!target) return current;
+      const pendingUpdates = target.action?.type === "apply" ? target.updates : undefined;
+      if (!pendingUpdates?.length && !target.choices?.length) return current;
+      const dateOf = (item: FinancialUpdate) => (item.kind === "expense" || item.kind === "income" ? item.date : undefined);
+      const before = pendingUpdates?.map(dateOf).find(Boolean) || target.choices?.map((item) => dateOf(item.update)).find(Boolean);
+      const intents = target.intents?.map((item) => (item.kind === "expense" || item.kind === "income" ? { ...item, date: day } : item));
+      const next = [...current];
+      next[index] = {
+        ...target,
+        updates: pendingUpdates?.map((item) => (item.kind === "expense" || item.kind === "income" ? { ...item, date: day } : item)) || target.updates,
+        intents,
+        choices: target.choices?.map((item) => (item.update.kind === "expense" || item.update.kind === "income" ? { ...item, update: { ...item.update, date: day } } : item)),
+        text: intents
+          ? proposalText(intents, data, liveMemory)
+          : before
+            ? retimeText(target.text, before, day)
+            : target.text,
+      };
+      return next;
+    });
+    if (pickedChoice && isDatedSpendChoice(pickedChoice)) commitChoice(pickedChoice, day);
+  };
+  const applyChoice = (choice: ChatChoice) => {
+    if (isDatedSpendChoice(choice) && !canCommitGuideSpend(true, dateTapped)) {
+      setPickedChoice(choice);
+      return;
+    }
+    const day = spendDay || ((choice.update.kind === "expense" || choice.update.kind === "income") ? choice.update.date : undefined) || today();
+    commitChoice(choice, day);
+  };
+  const clearChat = () => {
+    const hasPlan = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0;
+    const stage: GuideStage = hasPlan ? "ready" : "income";
+    const fresh: ChatMessage[] = [{ id: `welcome-${Date.now()}`, role: "assistant", text: t("Am golit conversația. Mișcările și plicurile rămân în registru. Spune-mi cu ce vrei să începem.") }];
+    setMessages(fresh);
+    setHistoryOpen(false);
+    setGuideStage(stage);
+    setPendingDebtName("");
+    resetSpendDraft();
+    try {
+      window.localStorage.setItem(CHAT_KEY, JSON.stringify(fresh));
+      window.localStorage.setItem("buget-familie:ai-guide-stage-v1", stage);
+    } catch { /* ignore */ }
+  };
+  const runAction = (type: "add" | "plan" | "journal" | "insights", label: string) => { addMessage({ role: "user", text: label }); setTyping(true); window.setTimeout(() => { setTyping(false); addMessage({ role: "assistant", text: type === "add" ? t("Deschid formularul. Completează ce mai lipsește și verifică înainte să salvezi.") : type === "plan" ? t("Deschid planul. Acolo așezăm veniturile pe destinații și ritmuri.") : type === "journal" ? t("Deschid jurnalul și ne uităm la mișcările care contează.") : t("Deschid analiza ca să vedem tiparele lunii."), action: { type, label: type === "add" ? t("Deschide formularul") : type === "plan" ? t("Vezi planul") : type === "journal" ? t("Vezi jurnalul") : t("Vezi analiza") } }); if (type === "add") onAdd(); else onGo(type); setOpen(false); }, 260); };
+  const handleAction = (item: ChatMessage) => {
+    if (item.action?.type === "apply" && item.updates?.length) {
+      item.updates.forEach((update) => onFinancialUpdate(update));
+      item.updates.forEach((update) => { if (update.kind === "expense") setMemory(learn(update)); });
+      if (item.updates.some((update) => update.kind === "income")) setGuideStage("debts");
+      const dated = item.updates.find((update) => update.kind === "expense" || update.kind === "income");
+      const day = dated && (dated.kind === "expense" || dated.kind === "income") ? dated.date : "";
+      addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
+      setHistoryOpen(false);
+      resetSpendDraft();
+      return;
+    }
+    if (!item.action || item.action.type === "apply") return;
+    if (item.action.type === "add") onAdd();
+    else onGo(item.action.type);
+    setOpen(false);
+  };
   const offerSpend = (proposal: { text: string; choices: ChatChoice[] }) => {
+    resetSpendDraft();
     const dated = proposal.choices.find((item) => (item.update.kind === "expense" || item.update.kind === "income") && item.update.date);
     if ((dated?.update.kind === "expense" || dated?.update.kind === "income") && dated.update.date) setSpendDay(dated.update.date);
     addMessage({ role: "assistant", text: proposal.text, choices: proposal.choices });
@@ -614,6 +633,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         return true;
       }
       const intents = reading.intents.map((item) => item.intent);
+      resetSpendDraft();
       addMessage({
         role: "assistant",
         text: proposalText(intents, data, liveMemory),
@@ -837,7 +857,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const pendingSpend = Boolean(pendingKind);
   const shown = shownChatMessages(messages, historyOpen);
   const hiddenCount = hiddenChatCount(messages);
-  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel${historyOpen ? "" : " is-history-collapsed"}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? t("Ghid local până {when}", { when: formatReset(quota.resetAt) }) : t("Îți răspund din contextul bugetului tău")}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} />{hiddenCount > 0 ? <button type="button" className="ai-history-toggle" onClick={() => setHistoryOpen((current) => !current)}>{historyOpen ? <><ChevronUp size={13} /> {t("Restrânge istoricul")}</> : <><ChevronDown size={13} /> {t("Istoric ({count})", { count: String(hiddenCount) })}</>}</button> : null}<div className={`ai-chat-history${shown.length ? "" : " is-empty"}`} ref={historyRef} aria-live="polite">{shown.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: t("Am anulat {title} {amount}.", { title: undone.title, amount: money(undone.amount) }) } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className="ai-chat-action" key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.picks && item.picks.length > 0 && <div className="ai-chat-choices">{item.picks.map((pick) => <button type="button" className="ai-chat-action" key={pick.label} onClick={() => { setMemory(markLocalSave()); act(pick.reading); }}>{pick.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{!shown.length && !typing ? <p className="ai-chat-empty">{t("Conversația începe aici. Scrie-mi orice despre banii tăi.")}</p> : null}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingSpend ? <div className="ai-date-bar"><p>Pe ce zi treci {pendingKind === "income" ? "venitul" : t("mișcarea")}? · {dateCopy(spendDay)}</p><div className="ai-date-row"><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-1))}>{t("Ieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(0))}>{t("Azi")}</button><label className="ai-date-field">{t("Calendar")}<input type="date" value={spendDay} onChange={(event) => event.target.value && applySpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", t("Vreau să adaug o mișcare"))}>{t("+ Adaugă o mișcare")}</button>{suggestions.map((item) => <button type="button" key={item.text} title={item.why} onClick={() => send(item.text)}>{item.text}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachment && <div className="ai-attachment-chip"><FileText size={14} /><span>{attachment.name}</span><button type="button" onClick={() => setAttachment(null)} aria-label={t("Elimină atașamentul")}>×</button></div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachment ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" aria-label={t("Atașează bon sau fișier")}><Paperclip size={16} /><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing} /></label><button type="submit" aria-label={t("Trimite mesajul")} disabled={attachmentBusy || typing || (!message.trim() && !attachment)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Exemple: «am dat 50 lei pe benzină», «plic Alimente 2400». Salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> {t("Conversația rămâne pe telefon. La Gemini pleacă doar un rezumat, dacă ghidul local n-a înțeles.")}</p></aside>}</>;
+  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel${historyOpen ? "" : " is-history-collapsed"}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? t("Ghid local până {when}", { when: formatReset(quota.resetAt) }) : t("Îți răspund din contextul bugetului tău")}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} />{hiddenCount > 0 ? <button type="button" className="ai-history-toggle" onClick={() => setHistoryOpen((current) => !current)}>{historyOpen ? <><ChevronUp size={13} /> {t("Restrânge istoricul")}</> : <><ChevronDown size={13} /> {t("Istoric ({count})", { count: String(hiddenCount) })}</>}</button> : null}<div className={`ai-chat-history${shown.length ? "" : " is-empty"}`} ref={historyRef} aria-live="polite">{shown.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: t("Am anulat {title} {amount}.", { title: undone.title, amount: money(undone.amount) }) } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className={pickedChoice?.label === choice.label ? "ai-chat-action is-on" : "ai-chat-action"} key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.picks && item.picks.length > 0 && <div className="ai-chat-choices">{item.picks.map((pick) => <button type="button" className="ai-chat-action" key={pick.label} onClick={() => { setMemory(markLocalSave()); act(pick.reading); }}>{pick.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{!shown.length && !typing ? <p className="ai-chat-empty">{t("Conversația începe aici. Scrie-mi orice despre banii tăi.")}</p> : null}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingSpend ? <div className="ai-date-bar"><p>Pe ce zi treci {pendingKind === "income" ? "venitul" : t("mișcarea")}? · {dateCopy(spendDay)}</p><small>{pickedChoice && !dateTapped ? t("Am ținut {label}. Alege și ziua, apoi salvez.", { label: pickedChoice.label }) : dateTapped && !pickedChoice ? t("Ziua e aleasă. Alege de unde scoatem banii.") : t("Alege plicul și ziua — salvez după ambele.")}</small><div className="ai-date-row"><button type="button" className={`ai-date-chip ${dateTapped && spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${dateTapped && spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-1))}>{t("Ieri")}</button><button type="button" className={`ai-date-chip ${dateTapped && spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(0))}>{t("Azi")}</button><label className="ai-date-field">{t("Calendar")}<input type="date" value={spendDay} onChange={(event) => event.target.value && applySpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", t("Vreau să adaug o mișcare"))}>{t("+ Adaugă o mișcare")}</button>{suggestions.map((item) => <button type="button" key={item.text} title={item.why} onClick={() => send(item.text)}>{item.text}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachment && <div className="ai-attachment-chip"><FileText size={14} /><span>{attachment.name}</span><button type="button" onClick={() => setAttachment(null)} aria-label={t("Elimină atașamentul")}>×</button></div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachment ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" aria-label={t("Atașează bon sau fișier")}><Paperclip size={16} /><input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf" onChange={(event) => { void handleAttachment(event.target.files?.[0]); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing} /></label><button type="submit" aria-label={t("Trimite mesajul")} disabled={attachmentBusy || typing || (!message.trim() && !attachment)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Exemple: «am dat 50 lei pe benzină», «plic Alimente 2400». Salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> {t("Conversația rămâne pe telefon. La Gemini pleacă doar un rezumat, dacă ghidul local n-a înțeles.")}</p></aside>}</>;
 }
 
 export default AICompanion;

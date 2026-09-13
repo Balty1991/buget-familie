@@ -821,6 +821,11 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   font-size: 12px !important;
   font-weight: 600 !important;
 }
+.os-shell .ai-chat-action.is-on {
+  color: var(--os-mint-fg) !important;
+  background: var(--os-mint) !important;
+  box-shadow: none !important;
+}
 .os-shell .ai-chat-choices { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .os-shell .ai-chat-suggestions button {
@@ -891,6 +896,13 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   border: 0 !important;
   background: var(--os-surface-2) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
+}
+.os-shell .ai-date-bar small {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--os-muted);
+  font-size: 11px;
+  line-height: 1.4;
 }
 .os-shell .ai-date-bar p {
   color: var(--os-fg) !important;

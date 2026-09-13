@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData } from "./finance-data";
-import { decide, understand, compactGuideContext, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, type Reading } from "./understand";
+import { decide, understand, compactGuideContext, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, canCommitGuideSpend, isDatedSpendChoice, type Reading } from "./understand";
 import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
 /** O gospodărie obișnuită: două persoane, patru locuri cu bani, trei plicuri. */
@@ -154,5 +154,19 @@ describe("cheltuiala din ghid iese din plic, nu din nealocat", () => {
     const labels = out?.choices.map((item) => item.label) || [];
     expect(labels.some((label) => /Alimente · S1/.test(label))).toBe(true);
     expect(labels.some((label) => /Alimente · S2/.test(label))).toBe(true);
+  });
+});
+
+describe("ghidul salvează cheltuiala doar după plic și zi", () => {
+  it("nu scrie dacă ai atins doar plicul sau doar ziua", () => {
+    expect(canCommitGuideSpend(true, false)).toBe(false);
+    expect(canCommitGuideSpend(false, true)).toBe(false);
+    expect(canCommitGuideSpend(false, false)).toBe(false);
+    expect(canCommitGuideSpend(true, true)).toBe(true);
+  });
+
+  it("plicul și venitul cer ziua; un transfer nu", () => {
+    expect(isDatedSpendChoice({ label: "Din Alimente", update: { kind: "expense", amount: 10, title: "Taxi", category: "Transport" } })).toBe(true);
+    expect(isDatedSpendChoice({ label: "Mută", update: { kind: "transfer", amount: 10, fromId: "a", toId: "b", fromLabel: "A", toLabel: "B" } })).toBe(false);
   });
 });

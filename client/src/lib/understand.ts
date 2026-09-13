@@ -55,6 +55,15 @@ export type PhraseHabit = { key: string; title: string; category: string; alloca
 export type GuideMemory = { phrases: PhraseHabit[]; skippedOnline: number };
 export const emptyGuideMemory = (): GuideMemory => ({ phrases: [], skippedOnline: 0 });
 
+/** Cheltuiala/venitul din ghid cer plic (sau sursă) și o zi atinsă explicit — nu salvăm pe data ghicită. */
+export function isDatedSpendChoice(choice: ChatChoice): boolean {
+  return choice.update.kind === "expense" || choice.update.kind === "income";
+}
+
+export function canCommitGuideSpend(sourcePicked: boolean, dateTapped: boolean): boolean {
+  return sourcePicked && dateTapped;
+}
+
 const money = (value: number) => `${Number(value.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
 
 export function foldRo(raw: string) {
