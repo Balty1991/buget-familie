@@ -538,6 +538,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       const day = dated && (dated.kind === "expense" || dated.kind === "income") ? dated.date : "";
       addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
+      setOpen(false);
       return;
     }
     if (!item.action || item.action.type === "apply") return;
@@ -561,16 +562,19 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     if (update.kind === "delete-transaction") {
       addMessage({ role: "assistant", text: `Am șters **${update.title}**, ${money(update.amount)}.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
+      setOpen(false);
       return;
     }
     if (update.kind === "amend-transaction") {
       addMessage({ role: "assistant", text: `Am schimbat **${update.title}** din ${money(update.was)} în **${money(update.amount)}**.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
+      setOpen(false);
       return;
     }
     if (update.kind === "transfer") {
       addMessage({ role: "assistant", text: `Am mutat ${money(update.amount)} din **${update.fromLabel}** în **${update.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
       setHistoryOpen(false);
+      setOpen(false);
       return;
     }
     const spent = update.kind === "expense" || update.kind === "income" ? `${update.title} ${money(update.amount)}` : money("amount" in update ? update.amount : 0);
@@ -581,6 +585,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       undo: (update.kind === "expense" || update.kind === "income") ? { kind: update.kind, title: update.title, amount: update.amount, date: day } : undefined,
     });
     setHistoryOpen(false);
+    setOpen(false);
   };
   const offerSpend = (proposal: { text: string; choices: ChatChoice[] }) => {
     const dated = proposal.choices.find((item) => (item.update.kind === "expense" || item.update.kind === "income") && item.update.date);
