@@ -111,10 +111,11 @@ function mergeSyncDevices(local: SyncDevice[], remote: SyncDevice[]): SyncDevice
       all.set(item.id, item);
       return;
     }
+    // Ultima scriere pe lastSeenAt câștigă tot rândul, inclusiv revokedAt.
+    // Revocarea și reactivarea ridică amândouă lastSeenAt, deci un telefon
+    // revocat nu-și poate șterge semnul printr-un heartbeat mai vechi.
     const newer = Date.parse(item.lastSeenAt) >= Date.parse(existing.lastSeenAt) ? item : existing;
-    const revokedCandidates = [item.revokedAt, existing.revokedAt].filter(Boolean).sort() as string[];
-    const revokedAt = revokedCandidates.length ? revokedCandidates[revokedCandidates.length - 1] : undefined;
-    all.set(item.id, { ...newer, revokedAt });
+    all.set(item.id, newer);
   });
   return Array.from(all.values()).sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt)).slice(0, 20);
 }

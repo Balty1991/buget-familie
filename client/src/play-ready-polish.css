@@ -165,6 +165,10 @@
   border: 1px solid var(--os-line);
 }
 
+.os-shell .bf-sync-device-list li.is-revoked {
+  opacity: 0.72;
+}
+
 .os-shell .bf-sync-device-list b {
   display: block;
   font-size: 14px;

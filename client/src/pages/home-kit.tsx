@@ -60,6 +60,7 @@ export type SyncPanelProps = {
   onDisconnect: () => void;
   onClearJournal: () => void;
   onRevokeDevice: (deviceId: string) => void;
+  onRestoreDevice: (deviceId: string) => void;
   /** Parolă arătată o dată (ex. din FirstRun familie). */
   passwordRevealOnce?: string;
   clearPasswordReveal?: () => void;

@@ -262,3 +262,33 @@ describe("pendingReviewMeta partajabil", () => {
     expect(merged.pendingReviewMeta.some((item) => item.id === "review-local")).toBe(true);
   });
 });
+
+describe("unirea dispozitivelor de sync", () => {
+  it("reactivarea mai nouă câștigă în fața revocării mai vechi", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    local.settings.syncDevices = [{ id: "dev-b", label: "Android", lastSeenAt: "2026-09-13T12:00:00.000Z" }];
+    remote.settings.syncDevices = [{
+      id: "dev-b",
+      label: "Android",
+      lastSeenAt: "2026-09-13T11:00:00.000Z",
+      revokedAt: "2026-09-13T11:00:00.000Z",
+    }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.settings.syncDevices.find((item) => item.id === "dev-b")?.revokedAt).toBeUndefined();
+  });
+
+  it("revocarea mai nouă rămâne după un heartbeat mai vechi", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    local.settings.syncDevices = [{
+      id: "dev-b",
+      label: "Android",
+      lastSeenAt: "2026-09-13T12:00:00.000Z",
+      revokedAt: "2026-09-13T12:00:00.000Z",
+    }];
+    remote.settings.syncDevices = [{ id: "dev-b", label: "Android", lastSeenAt: "2026-09-13T11:00:00.000Z" }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.settings.syncDevices.find((item) => item.id === "dev-b")?.revokedAt).toBe("2026-09-13T12:00:00.000Z");
+  });
+});

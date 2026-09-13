@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { newId, normalizeAppData, type AppData } from "@/lib/finance-data";
 import { checkFamilyPassword } from "@/lib/family-password";
-import { touchSyncDevice, revokeSyncDevice, isThisDeviceRevoked, listActiveSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
+import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { notifyFamilyEnvelopeChanges } from "@/lib/local-notifications";
@@ -94,7 +94,7 @@ export function useFamilySync(
       if (isThisDeviceRevoked(merged)) {
         setData(merged);
         syncDisconnect();
-        setSyncNotice(t("Acest telefon a fost revocat din cameră. Schimbă parola pe celelalte telefoane dacă e nevoie."));
+        setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
         return;
       }
       syncLastPortableRef.current = mergedPortable;
@@ -138,6 +138,11 @@ export function useFamilySync(
       if (remoteEnvelope) {
         const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncPassword));
         merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
+      }
+      if (isThisDeviceRevoked(merged)) {
+        setData(merged);
+        setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
+        return;
       }
       merged = touchSyncDevice(merged);
       const mergedPortable = syncPortable(merged);
@@ -216,7 +221,7 @@ export function useFamilySync(
     notice: syncNotice,
     lastSync: syncLastSync,
     journal: syncJournal,
-    devices: listActiveSyncDevices(data),
+    devices: listSyncDevices(data),
     thisDeviceId: getOrCreateDeviceId(),
     onConnect: () => void syncConnect(),
     onDisconnect: syncDisconnect,
@@ -225,6 +230,12 @@ export function useFamilySync(
       writeSyncJournal([]);
     },
     onRevokeDevice: (deviceId: string) => {
+      if (deviceId === getOrCreateDeviceId()) {
+        const confirmed = typeof window === "undefined" || window.confirm(
+          t("Ieși din cameră pe acest telefon. Ca să revii, un alt telefon trebuie să te reactiveze — sau schimbați parola familiei."),
+        );
+        if (!confirmed) return;
+      }
       const next = revokeSyncDevice(data, deviceId);
       setData(next);
       if (deviceId === getOrCreateDeviceId()) {
@@ -233,6 +244,11 @@ export function useFamilySync(
       } else {
         setSyncNotice(t("Dispozitivul a fost marcat ca revocat. Se propagă la următoarea sincronizare."));
       }
+    },
+    onRestoreDevice: (deviceId: string) => {
+      const next = restoreSyncDevice(data, deviceId);
+      setData(next);
+      setSyncNotice(t("Dispozitivul poate intra din nou. Se propagă la următoarea sincronizare."));
     },
   };
 

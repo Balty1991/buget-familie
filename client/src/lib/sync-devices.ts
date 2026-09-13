@@ -1,5 +1,9 @@
 /**
  * Telefoanele din camera de familie — listă în pachetul criptat (nu pe server în clar).
+ *
+ * Revocarea e un semnal între clienți onești: oprește sesiunea și refuză reconectarea
+ * în aplicația oficială. Cine încă știe parola poate, cu un client modificat, să
+ * rescrie pachetul — încuietoarea reală rămâne schimbarea parolei (cameră nouă).
  */
 import { newId, type AppData, type SyncDevice } from "@/lib/finance-data";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -28,9 +32,16 @@ export function touchSyncDevice(data: AppData, label = defaultDeviceLabel()): Ap
   const now = new Date().toISOString();
   const devices = [...(data.settings.syncDevices || [])];
   const index = devices.findIndex((item) => item.id === id);
-  const next: SyncDevice = { id, label: label.slice(0, 48), lastSeenAt: now, revokedAt: undefined };
-  if (index >= 0) devices[index] = { ...devices[index], ...next, revokedAt: undefined };
-  else devices.unshift(next);
+  const existing = index >= 0 ? devices[index] : undefined;
+  // Un telefon revocat nu-și șterge singur semnul: altfel „Revocă” nu ar ține
+  // decât până la următoarea conectare cu aceeași parolă.
+  if (existing?.revokedAt) {
+    devices[index] = { ...existing, label: label.slice(0, 48) };
+  } else {
+    const next: SyncDevice = { id, label: label.slice(0, 48), lastSeenAt: now, revokedAt: undefined };
+    if (index >= 0) devices[index] = { ...existing, ...next };
+    else devices.unshift(next);
+  }
   return {
     ...data,
     settings: { ...data.settings, syncDevices: devices.slice(0, 20) },
@@ -44,7 +55,20 @@ export function revokeSyncDevice(data: AppData, deviceId: string): AppData {
     settings: {
       ...data.settings,
       syncDevices: (data.settings.syncDevices || []).map((item) =>
-        item.id === deviceId ? { ...item, revokedAt: now } : item,
+        item.id === deviceId ? { ...item, revokedAt: now, lastSeenAt: now } : item,
+      ),
+    },
+  };
+}
+
+export function restoreSyncDevice(data: AppData, deviceId: string): AppData {
+  const now = new Date().toISOString();
+  return {
+    ...data,
+    settings: {
+      ...data.settings,
+      syncDevices: (data.settings.syncDevices || []).map((item) =>
+        item.id === deviceId ? { ...item, revokedAt: undefined, lastSeenAt: now } : item,
       ),
     },
   };
@@ -58,7 +82,14 @@ export function isThisDeviceRevoked(data: AppData): boolean {
 }
 
 export function listActiveSyncDevices(data: AppData): SyncDevice[] {
-  return (data.settings.syncDevices || [])
-    .filter((item) => !item.revokedAt)
-    .sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt));
+  return listSyncDevices(data).filter((item) => !item.revokedAt);
+}
+
+/** Toate telefoanele, activele primele, apoi cele revocate. */
+export function listSyncDevices(data: AppData): SyncDevice[] {
+  return [...(data.settings.syncDevices || [])].sort((a, b) => {
+    const revoked = Number(Boolean(a.revokedAt)) - Number(Boolean(b.revokedAt));
+    if (revoked !== 0) return revoked;
+    return b.lastSeenAt.localeCompare(a.lastSeenAt);
+  });
 }

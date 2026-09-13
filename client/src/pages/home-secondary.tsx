@@ -1348,7 +1348,7 @@ function PasswordMeter({ value }: { value: string }) {
   );
 }
 
-export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, passwordRevealOnce, clearPasswordReveal }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
   useEffect(() => {
@@ -1447,18 +1447,25 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <h3 id="sync-devices-title">{t("Telefoane în cameră")}</h3>
           </div>
         </div>
+        <p className="bf-helper">{t("Revocarea scoate sesiunea de pe acel telefon. Dacă telefonul e pierdut și cineva știe parola, schimbați parola familiei — e singura încuietoare reală.")}</p>
         {devices.length ? (
           <ul className="bf-sync-device-list">
             {devices.map((device) => (
-              <li key={device.id}>
+              <li key={device.id} className={device.revokedAt ? "is-revoked" : undefined}>
                 <Smartphone size={16} aria-hidden="true" />
                 <div>
-                  <b>{device.label}{device.id === thisDeviceId ? ` · ${t("acest telefon")}` : ""}</b>
+                  <b>{device.label}{device.id === thisDeviceId ? ` · ${t("acest telefon")}` : ""}{device.revokedAt ? ` · ${t("revocat")}` : ""}</b>
                   <small>{t("Ultima dată văzut")}: {new Intl.DateTimeFormat(getLocale(), { dateStyle: "short", timeStyle: "short" }).format(new Date(device.lastSeenAt))}</small>
                 </div>
-                <button type="button" className="bf-link-button" onClick={() => onRevokeDevice(device.id)}>
-                  {device.id === thisDeviceId ? t("Revocă acest telefon") : t("Revocă")}
-                </button>
+                {device.revokedAt ? (
+                  <button type="button" className="bf-link-button" onClick={() => onRestoreDevice(device.id)}>
+                    {t("Reactivează")}
+                  </button>
+                ) : (
+                  <button type="button" className="bf-link-button" onClick={() => onRevokeDevice(device.id)}>
+                    {device.id === thisDeviceId ? t("Revocă acest telefon") : t("Revocă")}
+                  </button>
+                )}
               </li>
             ))}
           </ul>
