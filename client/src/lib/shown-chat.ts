@@ -19,3 +19,5 @@ export const shownChatMessages = <T extends ChatLike>(messages: T[], historyOpen
   }
   return messages.slice(from);
 };
+
+export const hiddenChatCount = <T extends ChatLike>(messages: T[]) => Math.max(0, messages.length - shownChatMessages(messages, false).length);
