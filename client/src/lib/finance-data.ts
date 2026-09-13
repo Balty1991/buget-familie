@@ -1010,7 +1010,7 @@ export const foldRomanian = (value: string) => value.toLocaleLowerCase("ro-RO").
 /** O singură listă de indicii, folosită și de simulatorul de scenarii, și de importul de extras. */
 const categoryAliases: Array<[RegExp, string]> = [
   [/\b(taxi|uber|bolt|transport|metrou|stb|ratb|cfr|benzina|motorina|combustibil|omv|mol|petrom|rompetrol|parcare|bilet|blueair|wizz|tarom)\b/, "Transport"],
-  [/\b(mancare|restaurant|lunch|pranz|cina|cumparaturi|supermarket|lidl|kaufland|carrefour|profi|auchan|penny|mega image|selgros|glovo|tazz|bolt food|patiserie|paine|covrig)\b/, "Alimente"],
+  [/\b(mancare|restaurant|lunch|pranz|cina|aliment\w*|cumparaturi|supermarket|lidl|kaufland|carrefour|profi|auchan|penny|mega image|selgros|glovo|tazz|bolt food|patiserie|paine|covrig)\b/, "Alimente"],
   [/\b(apa|suc|cafea|ceai|bere|starbucks|5 to go)\b/, "Băuturi"],
   [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
   [/\b(factura|internet|curent|gaz|chirie|detergent|casa|enel|electrica|engie|digi|rcs|orange|vodafone|telekom|apa nova|salubr)\b/, "Casă & facturi"],

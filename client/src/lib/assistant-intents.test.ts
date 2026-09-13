@@ -92,6 +92,16 @@ describe("plicuri", () => {
   it("propune categoria din denumire", () => {
     expect(at("fă-mi un plic pentru benzină 500")[0].intent).toMatchObject({ kind: "envelope", category: "Transport" });
   });
+
+  it("împarte disponibilul pe săptămâni, cu numele plicului Alimente", () => {
+    expect(at("Împarte cei 500 disponibili în plicuri de alimente pe 2 săptămâni")[0].intent)
+      .toMatchObject({ kind: "envelope", label: "Alimente", amount: 500, weeklyLimit: 250, weeklyPace: true, category: "Alimente" });
+  });
+
+  it("corectează o denumire scrisă greșit, tot spre Alimente", () => {
+    expect(at("Împarte cei 500 disponibili in plicuri de alimentae pe 2 săptămâni")[0].intent)
+      .toMatchObject({ kind: "envelope", label: "Alimente", amount: 500, weeklyLimit: 250, weeklyPace: true });
+  });
 });
 
 describe("mesaje pe care nu le înțelege", () => {

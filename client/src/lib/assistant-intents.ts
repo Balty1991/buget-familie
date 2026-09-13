@@ -228,6 +228,8 @@ const STOPWORDS = new Set([
   "lei", "ron", "de", "cu", "si", "in", "pe", "la", "un", "o", "pentru", "limita", "limite",
   "saptamanala", "saptamanal", "saptamana", "saptamani", "saptamanile", "ori", "lunar", "lunara", "luna", "total", "totalul",
   "suma", "sume", "mi", "imi", "vreau", "sa", "am", "e", "este", "banca", "estimativ", "intre", "data",
+  "cei", "cel", "cele", "doar", "disponibil", "disponibili", "disponibile", "disponibilul",
+  "plic", "plicul", "plicuri", "imparte", "impart", "repartizeaza", "repartizez", "aloca", "pune",
 ]);
 const cleanLabel = (raw: string) => raw
   .replace(/\b\d[\d.,\s]*\b/g, " ")
@@ -275,8 +277,12 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
   if (!total) return undefined;
   // Spus ca durată, ritmul săptămânal se calculează: 1600 pe 4 săptămâni = 400.
   const perWeek = weekly && weekly !== total ? weekly.value : weeks >= 2 && weeks <= 12 ? Math.round((total.value / weeks) * 100) / 100 : undefined;
-  const label = titleCase(cleanLabel(segment.slice(markerLength)));
-  const category = guessCategoryFromText(label || segment, expenseCategories, rules);
+  const fromPlic = segment.match(/\bplic(?:ul|uri)?(?:\s+(?:de|pentru|din))?\s+([A-Za-zăâîșțĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ\- ]{0,40})/i);
+  const named = fromPlic ? cleanLabel(fromPlic[1]) : "";
+  const leftover = cleanLabel(segment.slice(markerLength));
+  const category = guessCategoryFromText(named || leftover || segment, expenseCategories, rules);
+  const rawName = titleCase(named || leftover);
+  const label = category && named && named.split(/\s+/).length === 1 ? category : (rawName || category || "Plic nou");
   return {
     kind: "envelope",
     label: label || category || "Plic nou",

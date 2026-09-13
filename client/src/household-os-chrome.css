@@ -875,6 +875,24 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   background: var(--os-mint) !important;
   box-shadow: none !important;
 }
+.os-shell .ai-date-bar {
+  margin: 0 0 8px !important;
+  border: 0 !important;
+  background: var(--os-surface-2) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+}
+.os-shell .ai-date-bar p {
+  color: var(--os-fg) !important;
+}
+.os-shell .ai-date-field {
+  border: 0 !important;
+  background: var(--os-bg) !important;
+  color: var(--os-fg) !important;
+  box-shadow: 0 0 0 1px var(--os-line) !important;
+}
+.os-shell .ai-date-field input {
+  color: var(--os-fg) !important;
+}
 
 /* Paleta rapidă + modale: Household OS, fără chenar analog auriu. */
 .bf-command-palette,
