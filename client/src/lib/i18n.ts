@@ -2238,6 +2238,18 @@ const en: Record<string, string> = {
   "cum notezi, cum citești cifra": "how you note, how you read the number",
   "Tutorial de folosire": "How-to tutorial",
   "Cum notezi, cum citești plicul și cifra de azi": "How you note, how you read the envelope and today’s number",
+  "Șase gesturi. Unul pe ecran, apoi următorul. Îl găsești oricând în Mai mult → Tutorial.": "Six gestures. One on screen, then the next. You can find it any time in More → Tutorial.",
+  "Pe Astăzi, cifra de sus e cât poți folosi azi. „Cum se citește?” deschide formula.": "On Today, the number at the top is how much you can use today. “How do I read this?” opens the formula.",
+  "Plusul de jos. Sumă, magazin, categorie. Salvează. Atât.": "The plus at the bottom. Amount, shop, category. Save. That’s it.",
+  "În Plan așezi sumele. S1 și S2 sunt săptămânile până la salariu, nu lunile din calendar.": "In Plan you place the amounts. S1 and S2 are the weeks until payday, not calendar months.",
+  "Bon sau extras CSV (BCR, BT, ING, Revolut) ajung aici. Confirmi, abia apoi se scrie.": "A receipt or a CSV statement (BCR, BT, ING, Revolut) lands here. You confirm, and only then is it written.",
+  "Sync e opțional. O parolă de familie, minimum 12 caractere, identică pe fiecare telefon.": "Sync is optional. A family password, at least 12 characters, identical on each phone.",
+  "Deschide ghidul și scrie o frază scurtă. Alege plicul, apoi salvează.": "Open the guide and write a short sentence. Pick the envelope, then save.",
+  "Gata, pe Astăzi": "Done — go to Today",
+  "Deschide tutorialul de folosire": "Open the how-to tutorial",
+  "Mai mult → Tutorial": "More → Tutorial",
+  "Captură": "Capture",
+  "Plicul e o limită pe categorie, nu un cont. Reperul e ritmul zilei din plan, nu soldul din bancă.": "The envelope is a category limit, not an account. The cue is the day’s pace from the plan, not the bank balance.",
 };
 
 

@@ -27,8 +27,8 @@
   padding: 0 2px;
 }
 .bf-usage-toc button {
-  min-height: 36px;
-  padding: 6px 11px;
+  min-height: 44px;
+  padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--bf-forest, #123e35) 16%, transparent);
   border-radius: 999px;
   background: color-mix(in srgb, var(--bf-paper, #fffdf8) 88%, #fff);
@@ -41,7 +41,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 40px;
+  min-height: 44px;
   margin-top: .7rem;
   padding: 0 12px 0 14px;
   border: 0;
@@ -51,6 +51,71 @@
   font: 800 12px/1 Manrope, sans-serif;
   cursor: pointer;
 }
+.bf-usage-toc button.is-on {
+  background: var(--bf-forest, #123e35);
+  border-color: var(--bf-forest, #123e35);
+  color: #fffdf8;
+}
+.bf-usage-toc button.is-done {
+  background: color-mix(in srgb, var(--bf-honey, #efc94d) 28%, var(--bf-paper, #fffdf8));
+}
+.bf-usage-toc button span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-right: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font: 800 10px/1 Manrope, sans-serif;
+}
+.bf-usage-step {
+  display: grid;
+  gap: .45rem;
+}
+.bf-usage-step-visual {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .2rem;
+  color: var(--bf-forest, #123e35);
+}
+.bf-usage-step-visual b {
+  font: 800 1.35rem/1 Fraunces, Georgia, serif;
+  color: color-mix(in srgb, var(--bf-forest, #123e35) 55%, transparent);
+}
+.bf-usage-how {
+  padding: .65rem .8rem;
+  border-radius: .7rem;
+  background: color-mix(in srgb, var(--bf-honey, #efc94d) 22%, var(--bf-paper, #fffdf8));
+  color: var(--bf-forest, #123e35) !important;
+  font-weight: 700;
+}
+.bf-usage-nav {
+  display: flex;
+  gap: .5rem;
+  margin-top: .85rem;
+}
+.bf-usage-nav button {
+  flex: 1;
+  min-height: 44px;
+}
+.bf-usage-replay {
+  margin-top: .25rem;
+}
+.dark .bf-usage-step-visual { color: #e8f5ec; }
+.dark .bf-usage-step-visual b { color: rgba(232, 245, 236, .45); }
+.dark .bf-usage-how {
+  background: rgba(239, 201, 77, .16);
+  color: #f6f1df !important;
+}
+.dark .bf-usage-toc button.is-on {
+  background: #e8f5ec;
+  border-color: #e8f5ec;
+  color: #123e35;
+}
+
 .dark .bf-usage-toc button,
 .dark .bf-usage-jump {
   background: rgba(232, 245, 236, .08);

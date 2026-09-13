@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import { USAGE_GLOSSARY, USAGE_LESSONS, USAGE_TUTORIAL_EVENT } from "./usage-tutorial";
 
 describe("tutorial de folosire", () => {
-  it("are șase lecții cu id-uri unice și un salt către ecran", () => {
+  it("are șase lecții cu id-uri unice, un gest concret și un salt către ecran", () => {
     expect(USAGE_LESSONS.map((item) => item.id)).toEqual(["today", "capture", "envelopes", "review", "family", "guide"]);
     expect(new Set(USAGE_LESSONS.map((item) => item.id)).size).toBe(USAGE_LESSONS.length);
-    expect(USAGE_LESSONS.every((item) => item.title && item.paragraphs.length >= 1)).toBe(true);
-    expect(USAGE_LESSONS.filter((item) => item.action).length).toBeGreaterThanOrEqual(4);
+    expect(USAGE_LESSONS.every((item) => item.title && item.how && item.nav && item.paragraphs.length >= 1)).toBe(true);
+    expect(USAGE_LESSONS.every((item) => item.action)).toBe(true);
+    expect(USAGE_LESSONS.at(-1)?.action?.go).toBe("ghid");
   });
 
   it("glosarul acoperă plicul, reperul și „în afara plicurilor”", () => {
