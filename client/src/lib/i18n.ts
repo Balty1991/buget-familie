@@ -1749,6 +1749,7 @@ const en: Record<string, string> = {
   "schimbarea.": "the change.",
   "Istoric": "History",
   "Istoric ({count})": "History ({count})",
+  "Conversația începe aici. Scrie-mi orice despre banii tăi.": "The conversation starts here. Tell me anything about your money.",
   "Restrânge istoricul": "Collapse history",
   "{original} × {rate} lei. Suma originală și cursul rămân salvate lângă mișcare.": "{original} × {rate} lei. The original amount and rate stay saved with the movement.",
   "Termen obiectiv azi": "Savings goal due today",

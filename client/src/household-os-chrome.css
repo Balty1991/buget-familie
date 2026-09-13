@@ -708,11 +708,6 @@ html body .bf-command-search input::placeholder {
   font-family: Outfit, sans-serif !important;
 }
 
-.os-shell .ai-companion-panel.ai-chat-panel.is-history-collapsed {
-  height: auto !important;
-  max-height: min(72dvh, calc(100dvh - 120px)) !important;
-}
-
 @media (max-width: 760px) {
   .os-shell .ai-companion-panel.ai-chat-panel {
     left: 10px !important;
@@ -723,11 +718,6 @@ html body .bf-command-search input::placeholder {
     height: auto !important;
     max-height: none !important;
     min-height: 0 !important;
-  }
-  .os-shell .ai-companion-panel.ai-chat-panel.is-history-collapsed {
-    top: auto !important;
-    height: auto !important;
-    max-height: calc(100dvh - 72px - 92px - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px)) !important;
   }
 }
 
