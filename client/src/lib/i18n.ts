@@ -1748,6 +1748,8 @@ const en: Record<string, string> = {
   "și alegeți împreună o parolă de familie de minimum 12 caractere. Introduceți exact aceeași parolă pe fiecare telefon, apoi apăsați „Conectează acest telefon”. De acolo, mișcările apar automat, în timp real, pe toate telefoanele conectate.": "and choose a family password of at least 12 characters together. Enter the exact same password on each phone, then tap “Connect this phone”. From there, movements appear automatically, in real time, on all connected phones.",
   "schimbarea.": "the change.",
   "Istoric": "History",
+  "Istoric ({count})": "History ({count})",
+  "Restrânge istoricul": "Collapse history",
   "{original} × {rate} lei. Suma originală și cursul rămân salvate lângă mișcare.": "{original} × {rate} lei. The original amount and rate stay saved with the movement.",
   "Termen obiectiv azi": "Savings goal due today",
   "Obiectiv aproape de termen": "Savings goal due soon",
