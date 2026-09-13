@@ -28,7 +28,7 @@ export function PremiumStudio() {
         </article>
         <article className="is-featured">
           <p className="bf-kicker">{t("FAMILIA")}</p>
-          <h3>{lei(PLANS.familie.priceYear)}{t("/an")} <small>{lei(PLANS.familie.priceMonth)}{t("/lună")}</small></h3>
+          <h3>{BILLING_LIVE ? <>{lei(PLANS.familie.priceYear)}{t("/an")} <small>{lei(PLANS.familie.priceMonth)}{t("/lună")}</small></> : t("Preț pe Play, după listare")}</h3>
           <p>{t("Un abonament pentru până la 6 persoane. Nu per cap.")}</p>
           <ul>
             <li><Check size={14} /> {t("Plicuri nelimitate, pe membru și pe sursă")}</li>

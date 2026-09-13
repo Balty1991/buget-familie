@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -107,6 +107,13 @@ describe("analize de gospodărie", () => {
     expect(brief.spendable).toBeGreaterThan(100);
     expect(brief.spendable).toBeLessThanOrEqual(3100 / 16);
     expect(brief.dues).toEqual([]);
+  });
+
+  it("pe drumul fără payday, hero-ul arată lichidul sau cheltuiala de azi, nu 0", () => {
+    expect(trackModeHero({ periodIncome: 0, liquidNow: 1155, spentToday: 45 })).toEqual({ kind: "liquid", value: 1155 });
+    expect(trackModeHero({ periodIncome: 0, liquidNow: 0, spentToday: 45 })).toEqual({ kind: "spent", value: 45 });
+    expect(trackModeHero({ periodIncome: 0, liquidNow: 0, spentToday: 0 })).toEqual({ kind: "empty", value: 0 });
+    expect(trackModeHero({ periodIncome: 3000, liquidNow: 1200, spentToday: 45 })).toEqual({ kind: "income", value: 3000 });
   });
 
   it("pune scadențele din următoarele 7 zile în briefingul de azi", () => {

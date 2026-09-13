@@ -1,6 +1,8 @@
 /**
  * Tur scurt „prima săptămână” după configurare.
  * Nu înlocuiește FirstRunSetup / CalmOnboarding — doar tipuri ușoare o dată.
+ * Nu apare peste o captură deschisă, peste Sync, sau dacă încă n-ai nicio mișcare / plic
+ * (skip „Mai târziu” nu trebuie să predea un discurs).
  */
 import { safeSetItem, type StorageLike } from "./safe-storage";
 
@@ -28,6 +30,18 @@ export function shouldShowFirstWeekTour(storage: StorageLike, blocked = false): 
   const ts = Date.parse(started);
   if (!Number.isFinite(ts)) return true;
   return Date.now() - ts <= WEEK_MS;
+}
+
+/** Gata de afișat: setup făcut, e ceva de arătat, și nicio altă foaie nu stă deasupra. */
+export function shouldOfferFirstWeekTour(opts: {
+  storage: StorageLike;
+  blocked?: boolean;
+  hasModal?: boolean;
+  onSyncScreen?: boolean;
+  hasStarted?: boolean;
+}): boolean {
+  if (opts.blocked || opts.hasModal || opts.onSyncScreen || !opts.hasStarted) return false;
+  return shouldShowFirstWeekTour(opts.storage, false);
 }
 
 export function markFirstWeekTourSeen(storage: StorageLike) {

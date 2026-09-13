@@ -27,6 +27,7 @@ import {
   matchingAllocationsForExpense,
   parseNaturalSpendScenario,
   pendingRecurringInPlan,
+  planAllocationMath,
   sourceBalance,
   type AppData,
 } from "./finance-data";
@@ -268,11 +269,9 @@ export function buildExpenseOffer(
     },
   }));
   data.settings.paymentSources.forEach((source) => {
-    const reserved = data.settings.salaryPlan.allocations
-      .filter((item) => !item.sourceId || item.sourceId === source.id)
-      .reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
-    const scheduled = pendingRecurringInPlan(data).filter((item) => item.sourceId === source.id).reduce((sum, item) => sum + item.amount, 0);
-    const left = Math.round((sourceBalance(data, source.id) - reserved - scheduled) * 100) / 100;
+    const unrepartized = planAllocationMath(data).unrepartized;
+    if (unrepartized < amount) return;
+    const left = Math.round(Math.min(unrepartized, sourceBalance(data, source.id)) * 100) / 100;
     if (left < amount) return;
     choices.push({
       label: `Din nealocat · ${source.name} · ${money(left)}`,
@@ -365,10 +364,12 @@ export function localInsight(raw: string, data: AppData, memory: GuideMemory): s
     const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
     return `• ${envelope.label}${week ? ` · S${week.index}` : ""}: ${money(left)}`;
   });
-  const sources = data.settings.paymentSources.map((source) => `• Nealocat · ${source.name}: ${money(sourceBalance(data, source.id))}`);
+  const sources = data.settings.paymentSources.map((source) => `• ${source.name}: ${money(sourceBalance(data, source.id))}`);
+  const unrepartized = planAllocationMath(data).unrepartized;
+  const free = unrepartized > 0.005 ? `\n• ${t("Liber, fără plic")}: ${money(unrepartized)}` : "";
   const known = memory.phrases.filter((item) => item.count >= 2).slice(-6).map((item) => item.title);
   const learned = known.length ? `\nȚin minte de la tine: ${known.join(", ")}.` : "";
-  return `Uite ce e disponibil, din registrul de pe telefon:${envelopes.length ? `\n${envelopes.join("\n")}` : ""}\n${sources.join("\n")}${learned}`;
+  return `Uite ce e disponibil, din registrul de pe telefon:${envelopes.length ? `\n${envelopes.join("\n")}` : ""}\n${sources.join("\n")}${free}${learned}`;
 }
 
 /* ------------------------------------------------- corectarea unei greșeli */

@@ -60,7 +60,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             label: preset.category,
             amount: preset.amount,
             category: preset.category,
-            weeklyPace: preset.weekly,
+            weeklyPace: preset.weekly ? undefined : false,
             memberId: "member-me",
             sourceId: paymentSources[0]?.id,
           })),
@@ -167,7 +167,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(preset.amount)}{preset.weekly ? t(" · în fiecare săptămână") : t(" · pentru perioada aleasă")}</small>
+                    <small>{money(preset.amount)}{preset.weekly ? t(" · ritm săptămânal până la venit") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );
@@ -201,7 +201,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(preset.amount)}</small>
+                    <small>{money(preset.amount)}{preset.weekly ? t(" · ritm săptămânal până la venit") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );

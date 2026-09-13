@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, adoptOutsideExpenses, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, commitLedgerEntry, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary, transactionShareScope } from "./finance-data";
+import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, adoptOutsideExpenses, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, commitLedgerEntry, confirmReviewDraft, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary, transactionShareScope } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -53,6 +53,48 @@ describe("registrul financiar Buget Familie", () => {
     expect(debtPaymentHistory(finalPayment!, "credit")).toHaveLength(2);
     expect(debtPaymentHistory(finalPayment!, "credit")[0].debtId).toBe("credit");
     expect(debtPaymentHistory(finalPayment!, "credit")[0].debtRemainingAfter).toBe(0);
+  });
+
+  it("plata ratei consumă plicul Rate produse când există, nu inventează nealocat", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    source.openingBalance = 1200;
+    data.settings.salaryPlan.allocations = [
+      { id: "env-rate", label: "Rate produse", category: "Rate produse", amount: 400, sourceId: source.id, memberId: "member-me" },
+    ];
+    data.debts = [{ id: "credit", name: "Credit auto", remaining: 1000, monthly: 400, due: "28 august", tone: "coral" }];
+    const paid = recordDebtPayment(data, { debtId: "credit", amount: 400, sourceId: source.id, memberId: "member-me", date: "2026-08-27" });
+    expect(paid?.transactions[0].allocationId).toBe("env-rate");
+  });
+
+  it("confirmarea din De verificat mută o cheltuială outside pe plicul potrivit", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    data.settings.salaryPlan.allocations = [
+      { id: "env-food", label: "Alimente", category: "Alimente", amount: 800, sourceId: source.id, memberId: "member-me" },
+    ];
+    data.pendingReview = [{
+      id: "rev-1",
+      origin: "bon",
+      reason: "test",
+      createdAt: "2026-09-13T10:00:00.000Z",
+      transaction: {
+        id: "tx-outside",
+        title: "Lidl",
+        amount: 45,
+        kind: "expense",
+        category: "Alimente",
+        sourceId: source.id,
+        source: source.name,
+        memberId: "member-me",
+        person: "Eu",
+        date: "2026-09-13",
+        allocationId: "outside",
+      },
+    }];
+    const confirmed = confirmReviewDraft(data, "rev-1");
+    expect(confirmed?.transactions[0].allocationId).toBe("env-food");
+    expect(confirmed?.pendingReview).toHaveLength(0);
   });
 
   it("filtrează bilanțul pe membru, incluzând doar sursele și obligațiile personale sau comune", () => {

@@ -12,8 +12,8 @@ const ICONS: Record<FirstWeekTipId, typeof ReceiptText> = {
 
 export function FirstWeekTour({
   onClose,
-  onCapture,
-  onPlan,
+  onCapture: _onCapture,
+  onPlan: _onPlan,
   onSync,
 }: {
   onClose: () => void;
@@ -29,13 +29,6 @@ export function FirstWeekTour({
 
   const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget }) => {
     if (event.target === event.currentTarget) onClose();
-  };
-
-  const primary = () => {
-    if (tip.id === "capture") onCapture();
-    else if (tip.id === "envelopes") onPlan();
-    else onSync();
-    onClose();
   };
 
   return (
@@ -75,12 +68,19 @@ export function FirstWeekTour({
               {t("Continuă")} <ChevronRight size={17} />
             </button>
           ) : (
-            <button type="button" className="bf-primary" onClick={primary}>
-              {tip.id === "sync" ? t("Deschide Sync") : tip.id === "envelopes" ? t("Deschide Planul") : t("Adaugă o mișcare")}
+            <button type="button" className="bf-primary" onClick={onClose}>
+              {t("Am înțeles")}
             </button>
           )}
-          <button type="button" className="bf-link-button" onClick={onClose}>
-            {t("Am înțeles")}
+          <button
+            type="button"
+            className="bf-link-button"
+            onClick={() => {
+              if (last) { onSync(); onClose(); return; }
+              onClose();
+            }}
+          >
+            {last ? t("Deschide Sync (opțional)") : t("Am înțeles")}
           </button>
         </div>
       </section>

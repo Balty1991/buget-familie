@@ -45,7 +45,7 @@ De ce e altfel
 
 Planuri (după listare, fără reclame pe ecranele cu bani)
 • Casa — gratuit: registrul de bază, până la 4 plicuri, un membru.
-• Familia — 19,99 lei/lună sau 149 lei/an: un abonament pentru până la 6 persoane, sync criptat, plicuri nelimitate. 14 zile de probă. Dacă anulezi, registrul rămâne pe telefon.
+• Familia — un abonament pentru toată casa: sync criptat, plicuri nelimitate, până la 6 persoane. Prețul apare pe Google Play când Billing e activ. Dacă anulezi, registrul rămâne pe telefon.
 
 Aplicația nu plătește facturi, nu investește și nu înlocuiește un consultant. Este un registru de familie, în română, în lei.
 ```

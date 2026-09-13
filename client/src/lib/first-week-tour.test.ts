@@ -3,6 +3,7 @@ import {
   FIRST_WEEK_TIPS,
   markFirstWeekTourSeen,
   markSetupCompletedAt,
+  shouldOfferFirstWeekTour,
   shouldShowFirstWeekTour,
 } from "./first-week-tour";
 
@@ -45,6 +46,17 @@ describe("turul primei săptămâni", () => {
     storage.setItem("buget-familie:setup-complete", "true");
     markSetupCompletedAt(storage, new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString());
     expect(shouldShowFirstWeekTour(storage)).toBe(false);
+  });
+
+  it("nu acoperă captura, Sync, sau skip-ul fără registru", () => {
+    const storage = memory();
+    storage.setItem("buget-familie:setup-complete", "true");
+    markSetupCompletedAt(storage);
+    expect(shouldOfferFirstWeekTour({ storage, hasStarted: false })).toBe(false);
+    expect(shouldOfferFirstWeekTour({ storage, hasStarted: true, hasModal: true })).toBe(false);
+    expect(shouldOfferFirstWeekTour({ storage, hasStarted: true, onSyncScreen: true })).toBe(false);
+    expect(shouldOfferFirstWeekTour({ storage, hasStarted: true, blocked: true })).toBe(false);
+    expect(shouldOfferFirstWeekTour({ storage, hasStarted: true })).toBe(true);
   });
 
   it("are cele trei tipuri: captură, plicuri, sync", () => {

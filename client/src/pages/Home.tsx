@@ -21,7 +21,7 @@ import { MovementsJournal } from "@/components/MovementsJournal";
 import { scheduleFinancialReminders } from "@/lib/local-notifications";
 import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { householdActivityInCycle, todayBrief, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
+import { householdActivityInCycle, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import {
   DeferBelowFold,
   WhatsNewSheet,
@@ -33,7 +33,7 @@ import {
   type MoreView,
 } from "@/pages/home-kit";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/theme-default";
-import { markFirstWeekTourSeen, shouldShowFirstWeekTour } from "@/lib/first-week-tour";
+import { markFirstWeekTourSeen, shouldOfferFirstWeekTour } from "@/lib/first-week-tour";
 import { getLocale, t } from "@/lib/i18n";
 import { useLanguage } from "@/hooks/use-language";
 import { useUndo } from "@/hooks/useUndo";
@@ -232,25 +232,54 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
     && !data.settings.salaryPlan.allocations.length
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
 
+  const liquidNow = sourceRows.reduce((sum, row) => sum + Math.max(0, row.balance), 0);
+  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === todayIso).reduce((sum, item) => sum + item.amount, 0);
+  const trackHero = trackModeHero({ periodIncome, liquidNow, spentToday });
+
   // Un singur număr de decizie: reperul zilnic (spendable), nu soldul plicurilor.
-  const heroLabel = overPlan ? t("Peste limita planului") : brief.hasPayday ? t("Poți folosi azi") : data.settings.salaryPlan.allocations.length ? t("Rămas în plicuri") : periodIncome > 0 ? t("Venit înregistrat în ciclu") : t("Plicuri neconfigurate");
-  const heroValue = overPlan ? Math.abs(math.remaining) : brief.hasPayday ? brief.spendable : data.settings.salaryPlan.allocations.length ? envelopeTotalRemaining : periodIncome;
+  // Fără payday, Ana cu 1.200 pe card nu trebuie să vadă „Plicuri neconfigurate · 0,00”.
+  const heroLabel = overPlan
+    ? t("Peste limita planului")
+    : brief.hasPayday
+      ? t("Poți folosi azi")
+      : data.settings.salaryPlan.allocations.length
+        ? t("Rămas în plicuri")
+        : trackHero.kind === "income"
+          ? t("Venit înregistrat în ciclu")
+          : trackHero.kind === "liquid"
+            ? t("Ai acum")
+            : trackHero.kind === "spent"
+              ? t("Cheltuit astăzi")
+              : t("Plicuri neconfigurate");
+  const heroValue = overPlan
+    ? Math.abs(math.remaining)
+    : brief.hasPayday
+      ? brief.spendable
+      : data.settings.salaryPlan.allocations.length
+        ? envelopeTotalRemaining
+        : trackHero.value;
   const heroHint = overPlan
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : brief.hasPayday
       ? brief.reason
       : data.settings.salaryPlan.allocations.length
         ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: money(Math.max(0, weeklyEnvelopesRemaining)), monthly: money(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · reper {daily}/zi", { daily: money(daily) }) : "" })
-        : periodIncome > 0
+        : trackHero.kind === "income"
           ? t("Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii.")
-          : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
+          : trackHero.kind === "liquid"
+            ? t("Soldul surselor, după mișcările de azi. Pune data venitului în Plan ca să vezi cât poți folosi pe zi.")
+            : trackHero.kind === "spent"
+              ? t("Nu e un sold. E suma ieșită azi, până pui un venit sau un plic.")
+              : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
   const explainer = overPlan
     ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
     : brief.hasPayday
       ? t("Reperul zilei este minimul dintre ritmul sigur ({daily}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt {envelopes}; în surse {sources}.", { daily: money(daily), envelopes: money(envelopeTotalRemaining), sources: money(math.availableSources) })
       : data.settings.salaryPlan.allocations.length
         ? t("Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} zile până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.", { days: forecast.remainingDays })
-        : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");
+        : trackHero.kind === "liquid"
+          ? t("Este soldul de pe card, cash sau bonuri, după ce ai înregistrat. Fără data venitului nu calculăm un ritm zilnic.")
+          : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");
 
   return (
     <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "")}>
@@ -591,12 +620,19 @@ export default function Home() {
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) safeSetItem(window.localStorage, "buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) { safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true"); setSetupOpen(true); } return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
   useEffect(() => {
     if (!storageReady || onboardingOpen || setupOpen) return;
-    if (shouldShowFirstWeekTour(window.localStorage)) {
+    const started = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0;
+    if (shouldOfferFirstWeekTour({
+      storage: window.localStorage,
+      blocked: Boolean(modal) || more === "sync",
+      hasModal: Boolean(modal),
+      onSyncScreen: more === "sync",
+      hasStarted: started,
+    })) {
       setFirstWeekTourOpen(true);
       return;
     }
-    if (shouldShowWhatsNew(window.localStorage)) setWhatsNewOpen(true);
-  }, [storageReady, onboardingOpen, setupOpen]);
+    if (shouldShowWhatsNew(window.localStorage) && !modal && more !== "sync" && started) setWhatsNewOpen(true);
+  }, [storageReady, onboardingOpen, setupOpen, modal, more, data.transactions.length, data.settings.salaryPlan.allocations.length]);
   const dismissWhatsNew = () => { markWhatsNewSeen(window.localStorage); setWhatsNewOpen(false); };
   const dismissFirstWeekTour = () => { markFirstWeekTourSeen(window.localStorage); setFirstWeekTourOpen(false); };
 
@@ -634,7 +670,7 @@ export default function Home() {
       return list.reduce((ledger, entry) => commitLedgerEntry(ledger, entry, meta?.fromWeekIndex), current);
     });
   };
-  const applyFinancialUpdate = (change: FinancialUpdate) => update((current) => { const member = current.settings.members.find((item) => "memberId" in change && change.memberId && item.id === change.memberId) || current.settings.members[0]; const source = current.settings.paymentSources.find((item) => item.memberId && member && item.memberId === member.id) || current.settings.paymentSources[0]; const now = new Date().toISOString(); if (change.kind === "income" && member && source) { const incomeCaptureId = ("clientCaptureId" in change && change.clientCaptureId) || newId("guided-income"); if (current.transactions.some((item) => item.id === incomeCaptureId || (item.kind === "income" && item.amount === change.amount && item.title === change.title && item.date === (change.date || isoToday())))) return current; const transaction: Transaction = { id: incomeCaptureId, title: change.title, amount: change.amount, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: change.date || isoToday(), note: t("Venit adăugat împreună cu ghidul AI"), createdAt: now }; return { ...current, transactions: [transaction, ...current.transactions], settings: { ...current.settings, salaryPlan: { ...current.settings.salaryPlan, totalLimit: Math.max(0, (current.settings.salaryPlan.totalLimit || 0) + change.amount), updatedAt: now } } }; } if (change.kind === "debt") { const key = change.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const existingIndex = current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key); const nextDebt: Debt = { id: existingIndex >= 0 ? current.debts[existingIndex].id : newId("guided-debt"), name: change.name, remaining: change.remaining, monthly: existingIndex >= 0 ? current.debts[existingIndex].monthly : 0, due: change.due || (existingIndex >= 0 ? current.debts[existingIndex].due : "Nespecificat"), memberId: member?.id, tone: existingIndex >= 0 ? current.debts[existingIndex].tone : "coral", updatedAt: now }; const debts = existingIndex >= 0 ? current.debts.map((item, index) => index === existingIndex ? nextDebt : item) : [nextDebt, ...current.debts]; return { ...current, debts }; } if (change.kind === "debt-monthly") { const key = change.name?.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const index = key ? current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key) : 0; if (index < 0) return current; return { ...current, debts: current.debts.map((item, itemIndex) => itemIndex === index ? { ...item, monthly: change.amount, updatedAt: now } : item) }; } if (change.kind === "expense" && member && source) { const day = change.date || isoToday(); const usedSource = current.settings.paymentSources.find((item) => item.id === change.sourceId) || source; const usedMember = current.settings.members.find((item) => item.id === change.memberId) || member; const expenseCaptureId = change.clientCaptureId || newId("guided-expense"); if (current.transactions.some((item) => item.id === expenseCaptureId)) return current; if (change.recurringId && current.transactions.some((item) => item.recurringId === change.recurringId && inPlanPeriod(item.date, current.settings.salaryPlan))) return current; let ledger = current; if (change.allocationId && change.allocationId !== "outside" && change.fromWeekIndex) { const allocation = current.settings.salaryPlan.allocations.find((item) => item.id === change.allocationId); const currentWeek = allocation && allocation.weeklyPace !== false ? allocationWeekStatus(current, allocation, day) : undefined; if (allocation && currentWeek && change.fromWeekIndex !== currentWeek.index) { ledger = transferBetweenWeeks(current, { allocationId: allocation.id, fromWeekIndex: change.fromWeekIndex, toWeekIndex: currentWeek.index, amount: change.amount, note: t("Mutare din ghidul AI ca să acoperi cheltuiala") }) || current; } } const transaction: Transaction = { id: expenseCaptureId, title: change.title, amount: change.amount, kind: "expense", category: change.category, sourceId: usedSource.id, source: usedSource.name, memberId: usedMember.id, person: usedMember.name, date: day, allocationId: change.allocationId || "outside", recurringId: change.recurringId, note: change.recurringId ? t("Plată recurentă confirmată") : t("Cheltuială adăugată împreună cu ghidul AI"), createdAt: now }; return { ...ledger, transactions: [transaction, ...ledger.transactions] }; } if (change.kind === "transfer") return transferBetweenEnvelopes(current, { fromAllocationId: change.fromId, toAllocationId: change.toId, amount: change.amount, note: t("Realocare din ghidul AI") }) || current; if (change.kind === "recurring") {
+  const applyFinancialUpdate = (change: FinancialUpdate) => update((current) => { const member = current.settings.members.find((item) => "memberId" in change && change.memberId && item.id === change.memberId) || current.settings.members[0]; const source = current.settings.paymentSources.find((item) => item.memberId && member && item.memberId === member.id) || current.settings.paymentSources[0]; const now = new Date().toISOString(); if (change.kind === "income" && member && source) { const incomeCaptureId = ("clientCaptureId" in change && change.clientCaptureId) || newId("guided-income"); if (current.transactions.some((item) => item.id === incomeCaptureId || (item.kind === "income" && item.amount === change.amount && item.title === change.title && item.date === (change.date || isoToday())))) return current; const transaction: Transaction = { id: incomeCaptureId, title: change.title, amount: change.amount, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: change.date || isoToday(), note: t("Venit adăugat împreună cu ghidul AI"), createdAt: now }; return { ...current, transactions: [transaction, ...current.transactions], settings: { ...current.settings, salaryPlan: { ...current.settings.salaryPlan, totalLimit: Math.max(0, (current.settings.salaryPlan.totalLimit || 0) + change.amount), updatedAt: now } } }; } if (change.kind === "debt") { const key = change.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const existingIndex = current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key); const nextDebt: Debt = { id: existingIndex >= 0 ? current.debts[existingIndex].id : newId("guided-debt"), name: change.name, remaining: change.remaining, monthly: existingIndex >= 0 ? current.debts[existingIndex].monthly : 0, due: change.due || (existingIndex >= 0 ? current.debts[existingIndex].due : "Nespecificat"), memberId: member?.id, tone: existingIndex >= 0 ? current.debts[existingIndex].tone : "coral", updatedAt: now }; const debts = existingIndex >= 0 ? current.debts.map((item, index) => index === existingIndex ? nextDebt : item) : [nextDebt, ...current.debts]; return { ...current, debts }; } if (change.kind === "debt-monthly") { const key = change.name?.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const index = key ? current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key) : 0; if (index < 0) return current; return { ...current, debts: current.debts.map((item, itemIndex) => itemIndex === index ? { ...item, monthly: change.amount, updatedAt: now } : item) }; } if (change.kind === "expense" && member && source) { const day = change.date || isoToday(); const usedSource = current.settings.paymentSources.find((item) => item.id === change.sourceId) || source; const usedMember = current.settings.members.find((item) => item.id === change.memberId) || member; const expenseCaptureId = change.clientCaptureId || newId("guided-expense"); if (current.transactions.some((item) => item.id === expenseCaptureId)) return current; if (change.recurringId && current.transactions.some((item) => item.recurringId === change.recurringId && inPlanPeriod(item.date, current.settings.salaryPlan))) return current; const transaction: Transaction = { id: expenseCaptureId, title: change.title, amount: change.amount, kind: "expense", category: change.category, sourceId: usedSource.id, source: usedSource.name, memberId: usedMember.id, person: usedMember.name, date: day, allocationId: change.allocationId || "outside", recurringId: change.recurringId, note: change.recurringId ? t("Plată recurentă confirmată") : t("Cheltuială adăugată împreună cu ghidul AI"), createdAt: now }; return commitLedgerEntry(current, transaction, change.fromWeekIndex); } if (change.kind === "transfer") return transferBetweenEnvelopes(current, { fromAllocationId: change.fromId, toAllocationId: change.toId, amount: change.amount, note: t("Realocare din ghidul AI") }) || current; if (change.kind === "recurring") {
       const source = current.settings.paymentSources.find((item) => item.memberId === member?.id) || current.settings.paymentSources[0];
       if (!source || !member) return current;
       const item = { id: newId("recurring"), name: change.name, amount: change.amount, category: change.category, sourceId: source.id, memberId: member.id, dueDay: Math.min(31, Math.max(1, change.dueDay)), active: true, autoPost: false, updatedAt: now };
@@ -772,7 +808,7 @@ export default function Home() {
     {modal === "debt" && <Suspense fallback={null}><GoalForm data={data} type="debt" item={editGoal} onSave={saveDebt} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "saving" && <Suspense fallback={null}><GoalForm data={data} type="saving" item={editGoal} onSave={saveSaving} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
-    {firstWeekTourOpen && !onboardingOpen && !setupOpen && <Suspense fallback={null}><FirstWeekTour onClose={dismissFirstWeekTour} onCapture={() => { dismissFirstWeekTour(); openTx(); }} onPlan={() => { dismissFirstWeekTour(); go("plan"); }} onSync={() => { dismissFirstWeekTour(); setMore("sync"); go("utilities"); }} /></Suspense>}
-    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTheme={() => { dismissWhatsNew(); setThemePickerOpen(true); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
+    {firstWeekTourOpen && !onboardingOpen && !setupOpen && !modal && more !== "sync" && <Suspense fallback={null}><FirstWeekTour onClose={dismissFirstWeekTour} onCapture={() => { dismissFirstWeekTour(); openTx(); }} onPlan={() => { dismissFirstWeekTour(); go("plan"); }} onSync={() => { dismissFirstWeekTour(); setMore("sync"); go("utilities"); }} /></Suspense>}
+    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTheme={() => { dismissWhatsNew(); setThemePickerOpen(true); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;
 }

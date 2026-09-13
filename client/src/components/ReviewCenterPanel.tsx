@@ -13,6 +13,7 @@ import {
   dismissReviewDraft,
   expenseCategories,
   pickerAllocationsForExpense,
+  planAllocationMath,
   updateReviewDraft,
   type AppData,
   type ReviewDraft,
@@ -166,6 +167,11 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
               const envelopes = transaction.kind === "expense"
                 ? pickerAllocationsForExpense(data, { category: transaction.category, memberId: transaction.memberId, sourceId: transaction.sourceId })
                 : [];
+              const unrepartized = planAllocationMath(data).unrepartized;
+              const hideUnallocated = transaction.kind === "expense" && envelopes.length > 0 && unrepartized < Math.max(0.005, transaction.amount);
+              const selectedAllocation = hideUnallocated && (!transaction.allocationId || transaction.allocationId === "outside") && envelopes[0]
+                ? envelopes[0].id
+                : (transaction.allocationId || "outside");
               return (
                 <article key={draft.id} className={transaction.kind === "income" ? "income" : ""}>
                   <header>
@@ -199,8 +205,8 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                       </Field>
                       {transaction.kind === "expense" && (
                         <Field label="Plic" hint={t("„În afara plicurilor” lasă cheltuiala fără să consume o limită.")}>
-                          <select value={transaction.allocationId || "outside"} onChange={(event) => patch(draft, { allocationId: event.target.value })}>
-                            <option value="outside">{t("În afara plicurilor")}</option>
+                          <select value={selectedAllocation} onChange={(event) => patch(draft, { allocationId: event.target.value })}>
+                            {!hideUnallocated && <option value="outside">{t("În afara plicurilor")}</option>}
                             {envelopes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
                           </select>
                         </Field>

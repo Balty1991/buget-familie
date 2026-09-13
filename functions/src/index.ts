@@ -173,20 +173,12 @@ function buildContents(messages: ChatMessage[], context: Record<string, unknown>
   const contents: GeminiContent[] = [];
   for (const message of messages) {
     const text = (message.text || "").trim();
-    const attachments = Array.isArray(message.attachments) ? message.attachments.slice(0, 2) : [];
-    if (!text && !attachments.length) continue;
+    // Pozele de bon rămân pe telefon (Play Data safety). Ignorăm orice attachments din clienți vechi.
+    if (!text) continue;
     const role = message.role === "assistant" ? "model" : "user";
-    const parts: GeminiPart[] = [];
-    if (text) parts.push({ text });
-    for (const attachment of attachments) {
-      if (!attachment?.data || !/^data:|^[A-Za-z0-9+/=]+$/.test(attachment.data)) continue;
-      const data = attachment.data.replace(/^data:[^;]+;base64,/, "");
-      if (data.length > 8_000_000 || !/^image\/(jpeg|png|webp|heic|heif)$|^application\/pdf$/i.test(attachment.mimeType)) continue;
-      parts.push({ inline_data: { mime_type: attachment.mimeType, data } });
-    }
-    if (!parts.length) continue;
+    const parts: GeminiPart[] = [{ text }];
     const last = contents[contents.length - 1];
-    if (last && last.role === role && !attachments.length) {
+    if (last && last.role === role) {
       const firstText = last.parts.find((part) => part.text);
       if (firstText?.text) firstText.text += `\n${text}`;
       else last.parts.push({ text });
@@ -433,8 +425,8 @@ export const aiGuide = onRequest(
 
       const body = (request.body || {}) as RequestBody;
       const messages = Array.isArray(body.messages) ? body.messages.slice(-20).map((message) => ({
-        ...message,
-        attachments: Array.isArray(message.attachments) ? message.attachments.slice(0, 2) : undefined,
+        role: message.role,
+        text: message.text,
       })) : [];
       const context = body.context || {};
       if (!messages.length) {

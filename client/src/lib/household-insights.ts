@@ -476,6 +476,17 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   };
 };
 
+/** Hero pe drumul „doar urmăresc”: fără payday, fără plicuri. */
+export function trackModeHero(input: { periodIncome: number; liquidNow: number; spentToday: number }): {
+  kind: "income" | "liquid" | "spent" | "empty";
+  value: number;
+} {
+  if (input.periodIncome > 0) return { kind: "income", value: input.periodIncome };
+  if (input.liquidNow > 0) return { kind: "liquid", value: input.liquidNow };
+  if (input.spentToday > 0) return { kind: "spent", value: input.spentToday };
+  return { kind: "empty", value: 0 };
+}
+
 export type SafeSpendBreakdown = {
   spendable: number;
   hasPayday: boolean;

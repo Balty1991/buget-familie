@@ -673,7 +673,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
      * citită ca cheltuială. Acum toți citesc, iar `decide` compară.
      *
      * Bonul fotografiat nu trece pe înțelegerea din cuvinte: suma e în imagine.
-     * Întâi încercăm OCR-ul local; Gemini vede poza doar dacă suma nu e lizibilă.
+     * OCR-ul rămâne pe telefon. La Gemini pleacă doar textul citit local, niciodată poza.
      */
     const readings = sentAttachment ? [] : understand(requestText, data, { memory: liveMemory, asOf: isoToday() });
     const { winner, runnerUp, ambiguous } = decide(readings);
@@ -754,7 +754,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         }
         const response = await fetch("https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/aiGuide", {
           method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ messages: [...messages, { role: "user", text: onlineRequestText, attachments: sentAttachment ? [sentAttachment] : undefined }].slice(-20), context: compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }) }),
+          body: JSON.stringify({ messages: [...messages, { role: "user", text: onlineRequestText }].slice(-20), context: compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }) }),
         });
         const payload = await response.json() as {
           reply?: string;

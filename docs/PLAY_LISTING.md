@@ -1,6 +1,8 @@
 # Play listing helpers — Buget Familie (RO)
 
-Text gata de lipit în Play Console. **Fără upload fals în store.** Plățile (Play Billing) și App Check Enforce rămân afară.
+**Sursa de lipit în Play Console este [`play-store-listing-ro.md`](./play-store-listing-ro.md).** Acest fișier păstrează shot list-ul și blurb-ul Data safety.
+
+Text gata de lipit în Play Console. **Fără upload fals în store.** Plățile (Play Billing) și App Check Enforce rămân afară. **Nu lipi prețuri IAP cât timp `BILLING_LIVE = false`.**
 
 ## Identitate
 

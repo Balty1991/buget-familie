@@ -482,7 +482,9 @@ export const confirmReviewDraft = (data: AppData, draftId: string): AppData | un
   const draft = data.pendingReview.find((item) => item.id === draftId);
   if (!draft || data.transactions.some((item) => item.id === draft.transaction.id)) return undefined;
   const now = new Date().toISOString();
-  const transaction = { ...draft.transaction, updatedAt: now };
+  const transaction = draft.transaction.kind === "expense"
+    ? { ...draft.transaction, allocationId: resolveExpenseAllocationId(data, draft.transaction), updatedAt: now }
+    : { ...draft.transaction, updatedAt: now };
   let receipts = data.receipts;
   const receiptId = transaction.receiptId;
   if (receiptId) {
@@ -492,12 +494,11 @@ export const confirmReviewDraft = (data: AppData, draftId: string): AppData | un
       return { ...receipt, linkedTransactionId: linked[0], linkedTransactionIds: linked, updatedAt: now };
     });
   }
-  return {
+  return commitLedgerEntry({
     ...data,
-    transactions: [transaction, ...data.transactions],
     receipts,
     pendingReview: data.pendingReview.filter((item) => item.id !== draftId),
-  };
+  }, transaction);
 };
 
 export const confirmAllReviewDrafts = (data: AppData): AppData => data.pendingReview.reduce<AppData>((all, draft) => confirmReviewDraft(all, draft.id) || all, data);
@@ -877,6 +878,17 @@ export const pickerAllocationsForExpense = (data: AppData, input: { category: st
   return [...matched, ...extras];
 };
 
+/** Plicul real al unei cheltuieli: cel ales, dacă încă există, altfel primul potrivit. */
+export const resolveExpenseAllocationId = (
+  data: AppData,
+  input: { category: string; memberId?: string; sourceId?: string; allocationId?: string },
+) => {
+  if (input.allocationId && input.allocationId !== "outside") {
+    if (data.settings.salaryPlan.allocations.some((item) => item.id === input.allocationId)) return input.allocationId;
+  }
+  return matchingAllocationsForExpense(data, input)[0]?.id || "outside";
+};
+
 /**
  * Scrie o mișcare în registru. Dacă e cheltuială dintr-o altă săptămână a plicului,
  * mută întâi tranșa — același drum ca ghidul.
@@ -1017,8 +1029,9 @@ export const debtPaymentHistory = (data: AppData, debtId: string) => data.transa
 export const recordDebtPayment = (data: AppData, input: { debtId: string; amount: number; sourceId: string; memberId: string; date?: string; note?: string }) => {
   const debt = data.debts.find((item) => item.id === input.debtId); const source = data.settings.paymentSources.find((item) => item.id === input.sourceId); const member = data.settings.members.find((item) => item.id === input.memberId); const amount = roundedMoney(input.amount);
   if (!debt || !source || !member || (source.memberId && source.memberId !== member.id) || amount <= 0 || amount > debt.remaining) return undefined;
-  const now = new Date().toISOString(); const remainingAfter = roundedMoney(debt.remaining - amount); const paymentState = remainingAfter === 0 ? t("achitată integral") : t("plată parțială"); const transaction: Transaction = { id: newId("debt-payment"), debtId: debt.id, debtRemainingAfter: remainingAfter, title: t("Rată {state} — {name}", { state: paymentState, name: debt.name }), amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || t("Rată {state}; sold rămas {amount} RON", { state: paymentState, amount: remainingAfter.toFixed(2) }), allocationId: "outside", createdAt: now, updatedAt: now };
-  return { ...data, transactions: [transaction, ...data.transactions], debts: data.debts.map((item) => item.id === debt.id ? { ...item, remaining: remainingAfter, updatedAt: now } : item) };
+  const now = new Date().toISOString(); const remainingAfter = roundedMoney(debt.remaining - amount); const paymentState = remainingAfter === 0 ? t("achitată integral") : t("plată parțială"); const transaction: Transaction = { id: newId("debt-payment"), debtId: debt.id, debtRemainingAfter: remainingAfter, title: t("Rată {state} — {name}", { state: paymentState, name: debt.name }), amount, kind: "expense", category: "Rate produse", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: input.date || isoToday(), note: input.note?.trim() || t("Rată {state}; sold rămas {amount} RON", { state: paymentState, amount: remainingAfter.toFixed(2) }), allocationId: resolveExpenseAllocationId(data, { category: "Rate produse", memberId: member.id, sourceId: source.id }), createdAt: now, updatedAt: now };
+  const next = commitLedgerEntry(data, transaction);
+  return { ...next, debts: next.debts.map((item) => item.id === debt.id ? { ...item, remaining: remainingAfter, updatedAt: now } : item) };
 };
 
 /** Prima scadență lunară care intră în perioada curentă de plan, dacă există. */
@@ -1051,7 +1064,7 @@ export const confirmRecurringPayment = (data: AppData, recurringId: string): App
   const now = new Date().toISOString();
   const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
   const transaction: Transaction = { id: newId("recurring-tx"), recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: pending.dueDate, note: t("Plată recurentă confirmată"), allocationId: matched?.id || "outside", createdAt: now, updatedAt: now };
-  return { ...data, transactions: [transaction, ...data.transactions] };
+  return commitLedgerEntry(data, transaction);
 };
 
 /** Ziua reală a scadenței într-o lună; ziua 31 devine ultima zi din februarie sau dintr-o lună scurtă. */
@@ -1082,7 +1095,7 @@ export const autoPostDueRecurring = (data: AppData, asOf = isoToday()): AppData 
     const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
     additions.push({ id, recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: dueDate, note: t("Adăugată automat din scadență recurentă"), allocationId: matched?.id || "outside", createdAt: `${asOf}T12:00:00.000Z` });
   });
-  return additions.length ? { ...data, transactions: [...additions, ...data.transactions] } : data;
+  return additions.length ? additions.reduce((ledger, entry) => commitLedgerEntry(ledger, entry), data) : data;
 };
 
 /**
