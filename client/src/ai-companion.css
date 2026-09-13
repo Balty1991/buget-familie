@@ -130,6 +130,7 @@
 
 .ai-quota{flex:none;margin:0 0 10px;padding:8px 9px 7px;border-radius:12px;background:#eff4ed}
 .ai-quota p{margin:5px 0 0;color:#5d7168;font:700 9px/1.35 Manrope,sans-serif}
+.ai-quota-short{display:none}
 .ai-quota-track{height:6px;overflow:hidden;border-radius:999px;background:#d5e3d6}
 .ai-quota-track i{display:block;height:100%;border-radius:inherit;background:#3f8f6c;transition:width .35s ease}
 .ai-quota.is-low{background:#fbf4df}
@@ -198,7 +199,7 @@
 
 .ai-attachment-chip{display:flex;align-items:center;gap:7px;margin:0 0 7px;padding:7px 10px;border:1px solid #c9ddd0;border-radius:10px;background:#f1f7f2;color:#245c49;font:700 11px Manrope,sans-serif}.ai-attachment-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.ai-attachment-chip button{border:0;background:transparent;color:#587467;font-size:18px;line-height:1;cursor:pointer}.ai-attach-button{display:inline-flex;align-items:center;justify-content:center;width:38px;color:#2d6754;cursor:pointer}.ai-attach-button input{display:none}.ai-chat-input>div{display:flex;align-items:center}.ai-chat-input>div>input{flex:1;min-width:0}.ai-chat-input button:disabled{opacity:.45;cursor:not-allowed}
 
-/* Ghid pe telefon: între antet și dock, fără ecran plin. Textul de jos se citește tot. */
+/* Ghid pe telefon: între antet și dock, chrome scurt, conversația are loc. */
 @media (max-width: 760px) {
   .os-shell .ai-companion-panel.ai-chat-panel {
     position: fixed !important;
@@ -210,24 +211,74 @@
     height: auto !important;
     max-height: none !important;
     min-height: 0 !important;
+    padding: 10px 10px 8px !important;
     overflow: hidden !important;
     z-index: 80 !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-companion-head {
+    gap: 8px !important;
+    margin-bottom: 6px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 9px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-eyebrow {
+    margin: 0 0 1px !important;
+    font-size: 8px !important;
+    letter-spacing: .12em !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-companion-head h2 {
+    font-size: 16px !important;
+    line-height: 1.1 !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-status {
+    display: none !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-tool,
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-tool-close {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-quota {
+    margin: 0 0 6px !important;
+    padding: 5px 8px 4px !important;
+    border-radius: 10px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-quota-track {
+    height: 3px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-quota-long {
+    display: none !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-quota-short {
+    display: block !important;
+    margin: 4px 0 0 !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-chat-history {
     flex: 1 1 auto !important;
     min-height: 0 !important;
     max-height: none !important;
   }
-  .os-shell .ai-companion-panel.ai-chat-panel .ai-privacy,
-  .os-shell .ai-companion-panel.ai-chat-panel .ai-status {
-    display: flex !important;
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-chat-suggestions {
+    padding: 4px 0 6px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-chat-input {
+    padding-top: 6px !important;
+  }
+  .os-shell .ai-companion-panel.ai-chat-panel .ai-chat-input label {
+    margin-bottom: 4px !important;
+    font-size: 9px !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-chat-input p,
   .os-shell .ai-companion-panel.ai-chat-panel .ai-privacy {
-    align-items: flex-start !important;
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-    line-height: 1.4 !important;
+    display: none !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel:has(#ai-natural-message:focus) {
     top: 8px !important;

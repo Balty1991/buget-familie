@@ -185,14 +185,19 @@ function quotaPercent(quota: QuotaInfo) {
 
 function GuideQuotaBar({ quota, habits }: { quota: QuotaInfo; habits: number }) {
   const low = quota.mode === "online" && quota.remaining <= 8;
-  const learned = habits > 0 ? ` · ${habits} obiceiuri învățate local` : "";
-  const label = quota.mode === "local" || quota.remaining <= 0
-    ? `Ghid local · ${quota.remaining} / ${quota.limit} mesaje online azi · se reia ${formatReset(quota.resetAt)}${learned}`
-    : `Ghid online · ${quota.remaining} / ${quota.limit} mesaje rămase azi · se reia ${formatReset(quota.resetAt)}${learned}`;
+  const local = quota.mode === "local" || quota.remaining <= 0;
+  const learned = habits > 0 ? ` · ${habits} obiceiuri` : "";
+  const longLabel = local
+    ? `Ghid local · ${quota.remaining} / ${quota.limit} mesaje online azi · se reia ${formatReset(quota.resetAt)}${habits > 0 ? ` · ${habits} obiceiuri învățate local` : ""}`
+    : `Ghid online · ${quota.remaining} / ${quota.limit} mesaje rămase azi · se reia ${formatReset(quota.resetAt)}${habits > 0 ? ` · ${habits} obiceiuri învățate local` : ""}`;
+  const shortLabel = local
+    ? `Local · se reia ${formatReset(quota.resetAt)}${learned}`
+    : `${quota.remaining}/${quota.limit} azi${learned}`;
   return (
-    <div className={`ai-quota ${quota.mode === "local" || quota.remaining <= 0 ? "is-local" : low ? "is-low" : "is-ok"}`} aria-live="polite">
+    <div className={`ai-quota ${local ? "is-local" : low ? "is-low" : "is-ok"}`} aria-live="polite">
       <div className="ai-quota-track" aria-hidden="true"><i style={{ width: `${quotaPercent(quota)}%` }} /></div>
-      <p>{label}</p>
+      <p className="ai-quota-long">{longLabel}</p>
+      <p className="ai-quota-short">{shortLabel}</p>
     </div>
   );
 }
