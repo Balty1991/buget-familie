@@ -13,7 +13,7 @@ import "../mobile-settings-pass.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Copy, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
 import { BASE_CURRENCY, activeCurrencies, currenciesMissingRate, supportedCurrencies, addIsoDays, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, createEmptyAppData, exchangeRateFor, sourceBalanceInCurrency, sourceCurrency, toBaseAmount, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoDate, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, guessCategoryFromText, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind, type ShareScope, transactionShareScope} from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
 import { checkFamilyPassword, generateFamilyPassword } from "@/lib/family-password";
@@ -1355,6 +1355,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
   const [recoveryInput, setRecoveryInput] = useState("");
   const [recoveryShown, setRecoveryShown] = useState(recoveryRevealOnce || "");
   const [showSessionPassword, setShowSessionPassword] = useState(false);
+  const [copiedSecret, setCopiedSecret] = useState("");
   useEffect(() => {
     if (!passwordRevealOnce) return;
     setPassword(passwordRevealOnce);
@@ -1399,6 +1400,31 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
     setShowGenerated(true);
   };
 
+  const copySecret = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedSecret(value);
+      window.setTimeout(() => setCopiedSecret((current) => current === value ? "" : current), 2500);
+      return;
+    } catch { /* fallback below */ }
+    try {
+      const field = document.createElement("textarea");
+      field.value = value;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.left = "-9999px";
+      document.body.appendChild(field);
+      field.select();
+      const ok = document.execCommand("copy");
+      field.remove();
+      if (!ok) throw new Error("copy");
+      setCopiedSecret(value);
+      window.setTimeout(() => setCopiedSecret((current) => current === value ? "" : current), 2500);
+    } catch {
+      window.alert(t("Nu am putut copia. Selectează codul și copiază-l tu."));
+    }
+  };
+
   return <div className="bf-sync">
     <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p></div>
     <aside className="bf-sync-local-only" role="note">
@@ -1426,9 +1452,13 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       {connected ? <>
         <p><b>{t("Actualizare live, fără reîmprospătare manuală")}</b><br />{t("Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.")}</p>
         {recoveryShown && (
-          <p className="bf-notice" role="status">
-            <KeyRound size={14} /> {t("Notează acest cod o dată, pe hârtie, nu în telefon. Cu el poți scoate parola dacă o uiți.")} <code className="bf-sync-password-once">{recoveryShown}</code>
-          </p>
+          <div className="bf-notice bf-sync-secret" role="status">
+            <p><KeyRound size={14} /> {t("Notează acest cod o dată, pe hârtie, nu în telefon. Cu el poți scoate parola dacă o uiți.")}</p>
+            <code className="bf-sync-password-once">{recoveryShown}</code>
+            <button type="button" className="bf-secondary" onClick={() => void copySecret(recoveryShown)}>
+              <Copy size={16} /> {copiedSecret === recoveryShown ? t("Copiat în clipboard") : t("Copiază codul")}
+            </button>
+          </div>
         )}
         <div className="bf-sync-recovery-actions">
           <button type="button" className="bf-link-button" onClick={() => setShowSessionPassword((value) => !value)}>
@@ -1439,7 +1469,13 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
           </button>
         </div>
         {showSessionPassword && password && (
-          <p className="bf-notice" role="status">{t("Parola acestei sesiuni (doar cât ești conectat):")} <code className="bf-sync-password-once">{password}</code></p>
+          <div className="bf-notice bf-sync-secret" role="status">
+            <p>{t("Parola acestei sesiuni (doar cât ești conectat):")}</p>
+            <code className="bf-sync-password-once">{password}</code>
+            <button type="button" className="bf-secondary" onClick={() => void copySecret(password)}>
+              <Copy size={16} /> {copiedSecret === password ? t("Copiat în clipboard") : t("Copiază parola")}
+            </button>
+          </div>
         )}
         {recoveryIssued && !recoveryShown && (
           <p className="bf-helper">{t("Un cod de recuperare există deja. E cel notat la prima conectare. Poți emite altul — cel vechi rămâne valabil până schimbați parola.")}</p>
@@ -1457,9 +1493,13 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         <div className="bf-sync-generate">
           <button type="button" className="bf-secondary" onClick={generateOnce}><KeyRound size={16} /> {t("Generează o parolă")}</button>
           {showGenerated && generatedOnce && (
-            <p className="bf-notice" role="status">
-              <KeyRound size={14} /> {t("Arată-o o singură dată partenerului, apoi noteaz-o în afara telefonului:")} <code className="bf-sync-password-once">{generatedOnce}</code>
-            </p>
+            <div className="bf-notice bf-sync-secret" role="status">
+              <p><KeyRound size={14} /> {t("Arată-o o singură dată partenerului, apoi noteaz-o în afara telefonului:")}</p>
+              <code className="bf-sync-password-once">{generatedOnce}</code>
+              <button type="button" className="bf-secondary" onClick={() => void copySecret(generatedOnce)}>
+                <Copy size={16} /> {copiedSecret === generatedOnce ? t("Copiat în clipboard") : t("Copiază parola")}
+              </button>
+            </div>
           )}
         </div>
         <p className="bf-helper">{t("Dacă ai registrul pe acest telefon, poți pune o parolă nouă — camera veche rămâne. Recuperarea e pentru când telefonul e gol și ai notat codul.")}</p>

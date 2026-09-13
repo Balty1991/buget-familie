@@ -142,8 +142,26 @@
   border-radius: 8px;
   background: var(--os-surface-2);
   font-size: 13px;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
   word-break: break-all;
+  user-select: all;
+}
+
+.os-shell .bf-sync-secret {
+  display: grid;
+  gap: 10px;
+}
+
+.os-shell .bf-sync-secret p {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.os-shell .bf-sync-secret .bf-secondary {
+  min-height: 44px;
+  justify-self: start;
 }
 
 .os-shell .bf-sync-recovery-actions {
