@@ -19,11 +19,13 @@
 import {
   allocationStatus,
   allocationWeekStatus,
+  envelopeDecisionStatus,
   expenseCategories,
   inPlanPeriod,
   isoToday,
   matchingAllocationsForExpense,
   parseNaturalSpendScenario,
+  pendingRecurringInPlan,
   sourceBalance,
   type AppData,
 } from "./finance-data";
@@ -517,6 +519,52 @@ export function decide(readings: Reading[], margin = 10): { winner?: Reading; ru
   const [winner, runnerUp] = readings;
   if (!winner) return { ambiguous: false };
   return { winner, runnerUp, ambiguous: Boolean(runnerUp && winner.score - runnerUp.score < margin) };
+}
+
+const isAnswerReading = (item: Reading) => item.kind === "question" || item.kind === "insight";
+
+/**
+ * Când `decide` e nesigur, întrebăm — dar nu pentru două citiri care spun același
+ * lucru omului (întrebare vs. situație) și nu pentru o confirmare.
+ */
+export function shouldAskWhichReading(winner: Reading, runnerUp: Reading): boolean {
+  if (winner.kind === "confirm") return false;
+  if (isAnswerReading(winner) && isAnswerReading(runnerUp)) return false;
+  return true;
+}
+
+export function readingLabel(reading: Reading): string {
+  switch (reading.kind) {
+    case "expense": return t("Cheltuială");
+    case "income": return t("Venit");
+    case "transfer": return t("Mutare între plicuri");
+    case "due": return t("Plată scadență");
+    case "revise": return t("Corectare");
+    case "question": return t("Răspuns din registru");
+    case "insight": return t("Situația din registru");
+    case "intents": return t("Ce am citit din mesaj");
+    case "confirm": return t("Confirmare");
+  }
+}
+
+/**
+ * Ce poate vedea modelul online: plicuri, scadențe, datorii, totalul lunii.
+ * Nu jurnalul. Lidl-ul de ieri rămâne pe telefon.
+ */
+export function compactGuideContext(data: AppData, extras: { view?: string; income?: number; expense?: number } = {}) {
+  const round = (value: number) => Math.round(value * 100) / 100;
+  return {
+    view: extras.view,
+    month: { income: round(extras.income || 0), expense: round(extras.expense || 0) },
+    members: data.settings.members.map((item) => item.name).slice(0, 6),
+    payday: data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday || null,
+    envelopes: data.settings.salaryPlan.allocations.slice(0, 12).map((item) => {
+      const status = envelopeDecisionStatus(data, item);
+      return { label: item.label, remaining: round(status.remaining), state: status.state };
+    }),
+    dues: pendingRecurringInPlan(data).slice(0, 6).map((item) => ({ name: item.name, amount: round(item.amount), due: item.dueDate })),
+    debts: data.debts.filter((item) => item.remaining > 0).slice(0, 6).map((item) => ({ name: item.name, remaining: round(item.remaining) })),
+  };
 }
 
 /**

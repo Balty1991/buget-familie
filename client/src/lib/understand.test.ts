@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData } from "./finance-data";
-import { decide, understand, type Reading } from "./understand";
+import { decide, understand, compactGuideContext, shouldAskWhichReading, readingLabel, type Reading } from "./understand";
 import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
 /** O gospodărie obișnuită: două persoane, patru locuri cu bani, trei plicuri. */
@@ -100,5 +100,28 @@ describe("o citire nu se ia pe tăcute", () => {
 
   it("un mesaj gol nu produce nicio citire", () => {
     expect(understand("   ", house())).toEqual([]);
+  });
+});
+
+describe("ce pleacă către model", () => {
+  it("nu conține mișcările din jurnal", () => {
+    const ctx = compactGuideContext(house(), { view: "today", income: 0, expense: 290 });
+    const dumped = JSON.stringify(ctx);
+    expect(dumped).not.toMatch(/Lidl|Taxi/);
+    expect(ctx.envelopes.some((item) => item.label === "Alimente")).toBe(true);
+    expect(ctx.members).toContain("Soția");
+  });
+
+  it("când e nesigur, trebuie întrebat — nu scris tăcut", () => {
+    const expense: Reading = { kind: "expense", score: 70, why: "x", proposal: { text: "", choices: [] } };
+    const income: Reading = { kind: "income", score: 68, why: "y", proposal: { text: "", choices: [] } };
+    expect(shouldAskWhichReading(expense, income)).toBe(true);
+    expect(readingLabel(expense)).toBe("Cheltuială");
+  });
+
+  it("două citiri de răspuns nu cer o alegere", () => {
+    const question: Reading = { kind: "question", score: 80, why: "q", answer: { kind: "next", headline: "x" } };
+    const insight: Reading = { kind: "insight", score: 72, why: "i", text: "y" };
+    expect(shouldAskWhichReading(question, insight)).toBe(false);
   });
 });
