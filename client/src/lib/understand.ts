@@ -205,7 +205,7 @@ export function findHabit(memory: GuideMemory, raw: string, title: string) {
 
 export function receiptDetails(extracted?: ExtractedGuide) {
   if (!extracted?.receiptLines?.length && !extracted?.confidence) return "";
-  const lines = (extracted.receiptLines || []).slice(0, 8).filter((line) => line.name);
+  const lines = (extracted.receiptLines || []).slice(0, 16).filter((line) => line.name);
   const products = lines.length ? ` Produse citite: ${lines.map((line) => `${line.quantity && line.quantity !== 1 ? `${line.quantity}× ` : ""}${line.name}${line.amount ? ` ${money(line.amount)}` : ""}`).join(", ")}.` : " Produsele nu au fost suficient de lizibile.";
   const lineTotal = lines.reduce((sum, line) => sum + (line.amount || 0), 0);
   const difference = extracted.amount && lineTotal > 0 ? Math.round((extracted.amount - lineTotal) * 100) / 100 : 0;

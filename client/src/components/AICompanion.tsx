@@ -751,7 +751,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
                 vendor: local.vendor,
                 date: local.date,
                 category: local.items[0]?.category,
-                receiptLines: local.items.slice(0, 8).map((item) => ({ name: item.label, amount: item.amount })),
+                receiptLines: local.items.slice(0, 40).map((item) => ({ name: item.label, amount: item.amount })),
                 confidence: "medium",
               };
               const localProposal = expenseProposal(requestText, extracted, data, liveMemory, true);
