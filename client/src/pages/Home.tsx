@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { allocationStatus, allocationWeekStatus, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, adoptOutsideExpenses, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
@@ -599,6 +599,10 @@ export default function Home() {
   const dismissFirstWeekTour = () => { markFirstWeekTourSeen(window.localStorage); setFirstWeekTourOpen(false); };
 
   const update = (fn: (current: AppData) => AppData) => applyData((current) => fn(current));
+  useEffect(() => {
+    if (!storageReady) return;
+    applyData((current) => adoptOutsideExpenses(current));
+  }, [storageReady, applyData]);
 
   const { undo, setUndo, runUndo, deleteWithUndo } = useUndo(data, setData);
   const go = (next: MainView) => { preloadView(next); startTransition(() => setView(next)); };

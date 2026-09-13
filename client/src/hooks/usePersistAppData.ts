@@ -2,7 +2,7 @@
  * Hydrate LS↔IDB + persist debounce — extras din Home ca să rămână orchestrator.
  */
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { autoPostDueRecurring, createEmptyAppData, normalizeAppData, type AppData } from "@/lib/finance-data";
+import { autoPostDueRecurring, adoptOutsideExpenses, createEmptyAppData, normalizeAppData, type AppData } from "@/lib/finance-data";
 import {
   APP_STORAGE_KEY,
   LEGACY_STORAGE_KEY,
@@ -18,7 +18,7 @@ import { syncPortable } from "@/hooks/useFamilySync";
 export function readInitialAppData(): AppData {
   try {
     const raw = window.localStorage.getItem(APP_STORAGE_KEY) || window.localStorage.getItem(LEGACY_STORAGE_KEY);
-    return raw ? normalizeAppData(JSON.parse(raw)) : createEmptyAppData();
+    return raw ? adoptOutsideExpenses(normalizeAppData(JSON.parse(raw))) : createEmptyAppData();
   } catch {
     return createEmptyAppData();
   }
@@ -52,7 +52,7 @@ export function usePersistAppData(
             memory: current,
             editedBeforeHydrate: editedBeforeHydrate.current,
           });
-          return picked ? normalizeAppData(picked) : current;
+          return picked ? adoptOutsideExpenses(normalizeAppData(picked)) : current;
         });
       })
       .catch(() => setStorageNotice(t("Stocarea modernă nu este disponibilă; folosim fallback-ul local al browserului.")))

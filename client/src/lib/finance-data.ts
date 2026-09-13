@@ -818,6 +818,28 @@ export const matchingAllocationsForExpense = (data: AppData, input: { category: 
   });
 
 /**
+ * Cheltuielile rămase „în afara plicurilor” când tot banul e deja așezat.
+ * Dacă există un plic pe categorie, îl folosim; dacă e un singur plic în plan,
+ * scoatem din el — nu lăsăm o gaură de 20 lei care arată ca depășire.
+ */
+export const adoptOutsideExpenses = (data: AppData): AppData => {
+  const allocations = data.settings.salaryPlan.allocations;
+  if (!allocations.length) return data;
+  let changed = false;
+  const transactions = data.transactions.map((item) => {
+    if (item.kind !== "expense") return item;
+    if (item.allocationId && item.allocationId !== "outside") return item;
+    if (!inPlanPeriod(item.date, data.settings.salaryPlan)) return item;
+    const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
+    const target = matched || (allocations.length === 1 ? allocations[0] : undefined);
+    if (!target) return item;
+    changed = true;
+    return { ...item, allocationId: target.id };
+  });
+  return changed ? { ...data, transactions } : data;
+};
+
+/**
  * Propune sume pe plicuri pentru următoarele 7 zile, din cheltuielile reale ale
  * ultimelor 7 zile. Nu modifică planul — e doar o sugestie editabilă.
  */

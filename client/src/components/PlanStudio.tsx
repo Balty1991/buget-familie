@@ -289,7 +289,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       )}
     </section>
 
-    {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
+    {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} remainingById={Object.fromEntries(envelopes.map((envelope) => [envelope.item.id, Math.max(0, envelope.remaining)]))} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
     <section className="bf-plan-cashflow-suggest" aria-labelledby="bf-cashflow-suggest-title">
       <div>
         <p className="bf-kicker">{t("DIN FLUXUL REAL")}</p>
