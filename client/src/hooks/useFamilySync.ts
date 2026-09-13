@@ -15,6 +15,7 @@ import type { SyncPanelProps } from "@/pages/home-kit";
 
 const loadFamilySync = () => import("@/lib/realtime-sync");
 const loadFamilyCrypto = () => import("@/lib/family-crypto");
+const loadFamilyRecovery = () => import("@/lib/family-recovery");
 
 /** Serializare fără poze — același format pentru localStorage și push familie. */
 export const syncPortable = (value: AppData) =>
@@ -29,6 +30,7 @@ export function useFamilySync(
 ) {
   const [syncPassword, setSyncPassword] = useState("");
   const [syncPasswordReveal, setSyncPasswordReveal] = useState("");
+  const [syncRecoveryReveal, setSyncRecoveryReveal] = useState("");
   const [syncNotice, setSyncNotice] = useState("");
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncConnected, setSyncConnected] = useState(false);
@@ -69,6 +71,55 @@ export function useFamilySync(
       return { ...receipt, imageData: local?.imageData, imageData2: local?.imageData2, imageKeys: local?.imageKeys };
     }),
   });
+
+  const markRecoveryIssued = (value: AppData): AppData => ({
+    ...value,
+    settings: { ...value.settings, syncRecoveryIssuedAt: value.settings.syncRecoveryIssuedAt || new Date().toISOString() },
+  });
+
+  const issueRecoveryIfNeeded = async (current: AppData, password: string, force: boolean) => {
+    if (!force && current.settings.syncRecoveryIssuedAt) return { data: current };
+    const recovery = await loadFamilyRecovery();
+    const code = recovery.generateRecoveryCode();
+    const wrap = await recovery.wrapFamilyPassword(password, code);
+    const lookupId = await recovery.deriveRecoveryLookupId(code);
+    try {
+      const syncApi = await loadFamilySync();
+      await syncApi.pushRecoveryWrap(lookupId, wrap);
+    } catch {
+      return {
+        data: current,
+        warning: t("Codul de recuperare nu a putut fi salvat. Lipește regulile noi în Firebase Console (familyRecovery), apoi apasă din nou „Creează cod de recuperare”."),
+      };
+    }
+    return { code, data: markRecoveryIssued(current) };
+  };
+
+  const recoverWithCode = async (code: string) => {
+    if (isOfflineOnly()) {
+      setSyncNotice(t("Modul „doar offline” este activ. Dezactivează-l din Setări ca să folosești Sync."));
+      return;
+    }
+    setSyncBusy(true);
+    try {
+      const recovery = await loadFamilyRecovery();
+      const lookupId = await recovery.deriveRecoveryLookupId(code);
+      const syncApi = await loadFamilySync();
+      const wrap = await syncApi.fetchRecoveryWrap(lookupId);
+      if (!wrap) {
+        setSyncNotice(t("Nu am găsit acest cod de recuperare. Verifică-l sau folosește un backup din Setări."));
+        return;
+      }
+      const password = await recovery.unwrapFamilyPassword(wrap, code);
+      setSyncPassword(password);
+      setSyncPasswordReveal(password);
+      setSyncNotice(t("Am găsit parola. Noteaz-o, apoi conectează acest telefon."));
+    } catch (error) {
+      setSyncNotice(error instanceof Error ? error.message : t("Codul de recuperare e greșit sau pachetul nu poate fi decriptat."));
+    } finally {
+      setSyncBusy(false);
+    }
+  };
 
   const syncDisconnect = () => {
     syncUnsubscribeRef.current?.();
@@ -145,6 +196,8 @@ export function useFamilySync(
         return;
       }
       merged = touchSyncDevice(merged);
+      const recovery = await issueRecoveryIfNeeded(merged, syncPassword, false);
+      merged = recovery.data;
       const mergedPortable = syncPortable(merged);
       syncLastPortableRef.current = mergedPortable;
       setData(merged);
@@ -158,8 +211,12 @@ export function useFamilySync(
       );
       setSyncConnected(true);
       setSyncLastSync(new Date().toISOString());
+      if (recovery.code) setSyncRecoveryReveal(recovery.code);
       setSyncNotice(
-        t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."),
+        recovery.warning
+          || (recovery.code
+            ? t("Sesiunea e activă. Notează codul de recuperare pe hârtie — nu îl mai arătăm.")
+            : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală.")),
       );
     } catch (error) {
       setSyncNotice(error instanceof Error ? error.message : t("Familia nu a putut fi conectată."));
@@ -218,6 +275,37 @@ export function useFamilySync(
     setPassword: setSyncPassword,
     passwordRevealOnce: syncPasswordReveal || undefined,
     clearPasswordReveal: () => setSyncPasswordReveal(""),
+    recoveryRevealOnce: syncRecoveryReveal || undefined,
+    clearRecoveryReveal: () => setSyncRecoveryReveal(""),
+    recoveryIssued: Boolean(data.settings.syncRecoveryIssuedAt),
+    onRecoverPassword: (code: string) => void recoverWithCode(code),
+    onIssueRecovery: () => {
+      void (async () => {
+        if (!syncConnected || !syncPasswordRef.current) {
+          setSyncNotice(t("Conectează mai întâi acest telefon, apoi creează codul de recuperare."));
+          return;
+        }
+        if (data.settings.syncRecoveryIssuedAt) {
+          const confirmed = typeof window === "undefined" || window.confirm(
+            t("Codul vechi rămâne valabil. Notează-l pe cel nou imediat — nu îl mai arătăm."),
+          );
+          if (!confirmed) return;
+        }
+        setSyncBusy(true);
+        try {
+          const result = await issueRecoveryIfNeeded(syncDataRef.current, syncPasswordRef.current, true);
+          setData(result.data);
+          if (result.code) {
+            setSyncRecoveryReveal(result.code);
+            setSyncNotice(t("Sesiunea e activă. Notează codul de recuperare pe hârtie — nu îl mai arătăm."));
+          } else if (result.warning) {
+            setSyncNotice(result.warning);
+          }
+        } finally {
+          setSyncBusy(false);
+        }
+      })();
+    },
     notice: syncNotice,
     lastSync: syncLastSync,
     journal: syncJournal,

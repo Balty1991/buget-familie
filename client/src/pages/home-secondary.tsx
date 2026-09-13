@@ -1348,9 +1348,13 @@ function PasswordMeter({ value }: { value: string }) {
   );
 }
 
-export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [recoveryInput, setRecoveryInput] = useState("");
+  const [recoveryShown, setRecoveryShown] = useState(recoveryRevealOnce || "");
+  const [showSessionPassword, setShowSessionPassword] = useState(false);
   useEffect(() => {
     if (!passwordRevealOnce) return;
     setPassword(passwordRevealOnce);
@@ -1358,6 +1362,11 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
     setShowGenerated(true);
     clearPasswordReveal?.();
   }, [passwordRevealOnce, setPassword, clearPasswordReveal]);
+  useEffect(() => {
+    if (!recoveryRevealOnce) return;
+    setRecoveryShown(recoveryRevealOnce);
+    clearRecoveryReveal?.();
+  }, [recoveryRevealOnce, clearRecoveryReveal]);
   const latest = journal[0];
   const pendingMerge = connected && latest?.status === "detected";
   const failedMerge = connected && latest?.status === "failed";
@@ -1416,6 +1425,25 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       <p className="bf-kicker">{connected ? t("CONECTAT") : t("CONECTEAZĂ FAMILIA")}</p>
       {connected ? <>
         <p><b>{t("Actualizare live, fără reîmprospătare manuală")}</b><br />{t("Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.")}</p>
+        {recoveryShown && (
+          <p className="bf-notice" role="status">
+            <KeyRound size={14} /> {t("Notează acest cod o dată, pe hârtie, nu în telefon. Cu el poți scoate parola dacă o uiți.")} <code className="bf-sync-password-once">{recoveryShown}</code>
+          </p>
+        )}
+        <div className="bf-sync-recovery-actions">
+          <button type="button" className="bf-link-button" onClick={() => setShowSessionPassword((value) => !value)}>
+            {showSessionPassword ? t("Ascunde parola acestei sesiuni") : t("Arată parola acestei sesiuni")}
+          </button>
+          <button type="button" className="bf-link-button" onClick={onIssueRecovery} disabled={busy}>
+            {recoveryIssued ? t("Cod nou de recuperare") : t("Creează cod de recuperare")}
+          </button>
+        </div>
+        {showSessionPassword && password && (
+          <p className="bf-notice" role="status">{t("Parola acestei sesiuni (doar cât ești conectat):")} <code className="bf-sync-password-once">{password}</code></p>
+        )}
+        {recoveryIssued && !recoveryShown && (
+          <p className="bf-helper">{t("Un cod de recuperare există deja. E cel notat la prima conectare. Poți emite altul — cel vechi rămâne valabil până schimbați parola.")}</p>
+        )}
         <button className="bf-link-button" onClick={onDisconnect}>{t("Închide sesiunea acestui telefon")}</button>
       </> : <>
         <div className="bf-sync-backup-reminder" role="note">
@@ -1434,8 +1462,21 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             </p>
           )}
         </div>
+        <p className="bf-helper">{t("Dacă ai registrul pe acest telefon, poți pune o parolă nouă — camera veche rămâne. Recuperarea e pentru când telefonul e gol și ai notat codul.")}</p>
         <p className="bf-helper">{t("Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată.")}</p>
         <button className="bf-primary full" disabled={busy || !online} onClick={onConnect}><Users size={17} /> {t("Conectează acest telefon")}</button>
+        <button type="button" className="bf-link-button" onClick={() => setForgotOpen((value) => !value)}>{t("Am uitat parola")}</button>
+        {forgotOpen && (
+          <div className="bf-sync-forgot">
+            <p className="bf-kicker">{t("AM UITAT PAROLA")}</p>
+            <Field label={t("Cod de recuperare")} hint={t("Introdu codul notat la prima conectare. Nu e parola familiei.")}>
+              <input value={recoveryInput} onChange={(event) => setRecoveryInput(event.target.value.toUpperCase())} placeholder="XXXX-XXXX-XXXX-XXXX" autoComplete="off" spellCheck={false} />
+            </Field>
+            <button type="button" className="bf-secondary" disabled={busy || !online || recoveryInput.replace(/[^A-Z0-9]/gi, "").length < 16} onClick={() => onRecoverPassword(recoveryInput)}>
+              {t("Recuperează parola")}
+            </button>
+          </div>
+        )}
       </>}
     </section>
 

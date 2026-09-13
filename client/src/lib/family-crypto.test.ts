@@ -42,6 +42,11 @@ describe("pachetul de sincronizare respectă regulile serverului", () => {
     expect(rules).toContain("roomId.size() == 64");
   });
 
+  it("regulile permit și pachetul de recuperare, tot fără list sau delete", () => {
+    expect(rules).toContain("familyRecovery");
+    expect(rules).toContain("recoveryId.size() == 64");
+  });
+
   it("regulile nu mai permit ștergerea documentului", () => {
     expect(rules).toMatch(/allow create, update:/);
     expect(rules).not.toMatch(/allow write:/);

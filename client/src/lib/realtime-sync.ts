@@ -54,6 +54,7 @@ function db(): Firestore {
 }
 
 const roomRef = (roomId: string) => doc(db(), "familySync", roomId);
+const recoveryRef = (recoveryId: string) => doc(db(), "familyRecovery", recoveryId);
 
 export async function fetchFamilyEnvelope(roomId: string): Promise<EncryptedEnvelope | null> {
   try {
@@ -71,6 +72,25 @@ export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnve
   } catch (error) {
     if (error instanceof RealtimeSyncError) throw error;
     throw new RealtimeSyncError("unavailable", "Actualizarea nu a putut fi trimisă către serviciul de sincronizare.");
+  }
+}
+
+export async function fetchRecoveryWrap(recoveryId: string): Promise<EncryptedEnvelope | null> {
+  try {
+    const snapshot = await getDoc(recoveryRef(recoveryId));
+    return snapshot.exists() ? (snapshot.data().envelope as EncryptedEnvelope) : null;
+  } catch (error) {
+    if (error instanceof RealtimeSyncError) throw error;
+    throw new RealtimeSyncError("unavailable", "Serviciul de recuperare este temporar indisponibil.");
+  }
+}
+
+export async function pushRecoveryWrap(recoveryId: string, envelope: EncryptedEnvelope): Promise<void> {
+  try {
+    await setDoc(recoveryRef(recoveryId), { envelope, updatedAt: serverTimestamp() });
+  } catch (error) {
+    if (error instanceof RealtimeSyncError) throw error;
+    throw new RealtimeSyncError("unavailable", "Codul de recuperare nu a putut fi salvat.");
   }
 }
 

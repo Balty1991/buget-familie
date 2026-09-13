@@ -64,6 +64,11 @@ export type SyncPanelProps = {
   /** Parolă arătată o dată (ex. din FirstRun familie). */
   passwordRevealOnce?: string;
   clearPasswordReveal?: () => void;
+  recoveryRevealOnce?: string;
+  clearRecoveryReveal?: () => void;
+  recoveryIssued?: boolean;
+  onRecoverPassword: (code: string) => void;
+  onIssueRecovery: () => void;
 };
 
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {

@@ -13,6 +13,18 @@ rules_version = '2';
 // Regulile de mai jos rămân pe get/create/update — fără list/delete.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function envelopeWriteOk() {
+      return request.resource.data.keys().hasOnly(['envelope', 'updatedAt'])
+        && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
+        && request.resource.data.envelope.version == 1
+        && request.resource.data.envelope.ciphertext is string
+        && request.resource.data.envelope.ciphertext.size() < 2000000
+        && request.resource.data.envelope.salt is string
+        && request.resource.data.envelope.salt.size() == 24
+        && request.resource.data.envelope.iv is string
+        && request.resource.data.envelope.iv.size() == 16;
+    }
+
     match /familySync/{roomId} {
       // `get`, nu `read`: `read` acoperă și interogarea colecției, așa că oricine
       // putea descărca pachetele criptate ale tuturor familiilor și le putea ataca
@@ -23,22 +35,14 @@ service cloud.firestore {
       // cerere. Nu există niciun motiv legitim ca aplicația să șteargă documentul —
       // o familie care vrea să se retragă schimbă parola, iar camera veche rămâne
       // orfană. Ce poate face cineva rămâne astfel „strică”, nu „distruge”.
-      allow create, update: if roomId.size() == 64
-        && request.resource.data.keys().hasOnly(['envelope', 'updatedAt'])
-        && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
-        && request.resource.data.envelope.version == 1
-        && request.resource.data.envelope.ciphertext is string
-        && request.resource.data.envelope.ciphertext.size() < 2000000
-        // Sarea și vectorul de inițializare trebuie să existe și să aibă exact
-        // lungimea pe care o scrie aplicația: 16 octeți de sare și 12 de IV,
-        // adică 24 și 16 caractere base64. Fără ele, un pachet „valid” dar gol
-        // ar putea fi scris de oricine ajunge la ID-ul camerei.
-        // `client/src/lib/family-crypto.test.ts` verifică potrivirea, ca o
-        // schimbare de format să se vadă la teste, nu în sincronizarea oprită.
-        && request.resource.data.envelope.salt is string
-        && request.resource.data.envelope.salt.size() == 24
-        && request.resource.data.envelope.iv is string
-        && request.resource.data.envelope.iv.size() == 16;
+      allow create, update: if roomId.size() == 64 && envelopeWriteOk();
+    }
+
+    // Cod de recuperare: același format de pachet, ID derivat din cod (nu din parolă).
+    // Serverul vede doar parola de familie deja criptată cu codul. Fără list/delete.
+    match /familyRecovery/{recoveryId} {
+      allow get: if recoveryId.size() == 64;
+      allow create, update: if recoveryId.size() == 64 && envelopeWriteOk();
     }
   }
 }

@@ -27,6 +27,7 @@ describe("firestore.rules ↔ family-crypto shape", () => {
     expect(rules).toMatch(/allow create, update:/);
     expect(rules).not.toMatch(/allow list:/);
     expect(rules).not.toMatch(/allow delete:/);
+    expect(rules).toContain("familyRecovery");
   });
 
   it("encryptFamilyData produces salt/iv lengths that match rules", async () => {

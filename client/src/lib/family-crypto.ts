@@ -83,6 +83,26 @@ export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: str
   }
 }
 
+/** Text scurt (parolă de familie) încuiat cu un alt secret — folosit de codul de recuperare. */
+export async function encryptText(plain: string, secret: string): Promise<EncryptedEnvelope> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(secret, salt);
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoder.encode(plain));
+  return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(ciphertext)) };
+}
+
+export async function decryptText(envelope: EncryptedEnvelope, secret: string): Promise<string> {
+  if (envelope.version !== 1) throw new Error("Format de pachet necunoscut.");
+  try {
+    const key = await deriveKey(secret, fromBase64(envelope.salt));
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromBase64(envelope.iv) }, key, fromBase64(envelope.ciphertext));
+    return decoder.decode(plain);
+  } catch {
+    throw new Error("Codul de recuperare e greșit sau pachetul nu poate fi decriptat.");
+  }
+}
+
 const timestamp = (item: { updatedAt?: string; createdAt?: string }) => Date.parse(item.updatedAt || item.createdAt || "") || 0;
 const deletionKey = (item: DeletedRecord) => `${item.entity}:${item.id}`;
 
@@ -345,6 +365,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       merchantRules: local.settings.merchantRules || [],
       syncDevices,
       salaryPlan,
+      syncRecoveryIssuedAt: local.settings.syncRecoveryIssuedAt || remote.settings.syncRecoveryIssuedAt,
     },
   });
 }

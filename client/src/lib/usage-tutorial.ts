@@ -75,6 +75,7 @@ export const USAGE_LESSONS: UsageLesson[] = [
     paragraphs: [
       "Poți ține registrul doar pentru tine. Membrii în plus sunt opționali: cine a plătit, din ce sursă, personal sau comun.",
       "Sincronizarea e o parolă de familie de minimum 12 caractere, identică pe fiecare telefon — nu un cont Google. Cine știe parola poate intra în cameră. Pe Astăzi, „Cine a mișcat banii” arată ciclul, nu ultimele rânduri locale.",
+      "La prima conectare primești un cod de recuperare. Notează-l pe hârtie. Dacă uiți parola și ai registrul pe telefon, pune una nouă.",
     ],
     action: { label: "Deschide Sync", go: "sync" },
   },
