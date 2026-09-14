@@ -186,7 +186,7 @@ const knownVendors: Array<[RegExp, string]> = [
   [/\bjysk\b/i, "JYSK"],
   [/\bpepco\b/i, "Pepco"],
   [/\bsinsay\b/i, "Sinsay"],
-  [/\bfamiliaro\b|\bfamilia\s*ro\b/i, "Familiiaro"],
+  [/\bfamiliaro\b|\bfamilia\s*ro\b|\bfamiliar0\b/i, "Familiaro"],
   [/\bdm\s+drogerie|\bdrogerie\s*markt\b/i, "dm drogerie markt"],
   [/\brossmann\b/i, "Rossmann"],
   [/\baltex\b/i, "Altex"],
@@ -203,11 +203,79 @@ const knownVendors: Array<[RegExp, string]> = [
   [/\brompetrol\b/i, "Rompetrol"],
 ];
 
+const compactVendor = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/0/g, "o").replace(/1/g, "l").replace(/5/g, "s").replace(/[^a-z]/g, "");
+
+function editDistance(left: string, right: string, max = 2) {
+  if (Math.abs(left.length - right.length) > max) return max + 1;
+  const row = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let diagonal = row[0];
+    row[0] = i;
+    let rowMin = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const nextDiagonal = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, diagonal + (left[i - 1] === right[j - 1] ? 0 : 1));
+      diagonal = nextDiagonal;
+      if (row[j] < rowMin) rowMin = row[j];
+    }
+    if (rowMin > max) return max + 1;
+  }
+  return row[right.length];
+}
+
+function fuzzyKnownVendor(blob: string) {
+  const compact = compactVendor(blob);
+  const words = blob.split(/\s+/).map(compactVendor).filter((token) => token.length >= 4);
+  for (const [, name] of knownVendors) {
+    const needle = compactVendor(name);
+    if (needle.length < 5) continue;
+    if (compact.includes(needle)) return name;
+    const allowed = needle.length >= 7 ? 2 : 1;
+    for (const token of words) {
+      if (editDistance(token, needle, allowed) <= allowed) return name;
+      if ((token.includes(needle) || needle.includes(token)) && Math.abs(token.length - needle.length) <= 2) return name;
+    }
+  }
+  return undefined;
+}
+
+/** Tesseract pe hârtie mototolită rupe TOTAL, LEI și sumele. Reparația e idempotentă pe text curat. */
+export function repairOcrLines(input: string[]): string[] {
+  const cleaned = input.map((line) => {
+    let value = line.replace(/\s+/g, " ").trim();
+    if (!value) return "";
+    value = value.replace(/\bT[O0][T7]AL\b/gi, "TOTAL");
+    value = value.replace(/\bLE[I1l]\b/gi, "LEI");
+    value = value.replace(/\bREDUC[E3]R[E3]\b/gi, "REDUCERE");
+    value = value.replace(/\bNUM[E3]RAR\b/gi, "NUMERAR");
+    value = value.replace(/\bGARANT[I1][E3]\b/gi, "GARANTIE");
+    value = value.replace(/\b[S5]GR\b/g, "SGR");
+    value = value.replace(/\bECON[O0]MIS[I1]T\b/gi, "ECONOMISIT");
+    value = value.replace(/\bR[E3][S5]T(?:\s*LEI)?\b/gi, "REST");
+    value = value.replace(/\bBU[CĆc]\b/g, "BUC");
+    value = value.replace(/(\d{1,4})[.,]\s+(\d{2})(?=\s*(?:[A-Ea-e]|lei|=|$))/gi, "$1.$2");
+    value = value.replace(/(\d{1,4})\s+(\d{2})(?=\s*(?:[A-Ea-e]|=))/gi, "$1.$2");
+    return value.replace(/\s+/g, " ").trim();
+  }).filter(Boolean);
+  const out: string[] = [];
+  for (const line of cleaned) {
+    const prev = out[out.length - 1];
+    if (prev && /[=x×*@]\s*$/i.test(prev) && /^[-−]?\d+[.,]\d{2}/.test(line)) {
+      out[out.length - 1] = `${prev} ${line}`;
+      continue;
+    }
+    out.push(line);
+  }
+  return out;
+}
+
 function inferVendor(lines: string[]) {
   const blob = lines.join(" ");
   for (const [pattern, name] of knownVendors) {
     if (pattern.test(blob)) return name;
   }
+  const fuzzy = fuzzyKnownVendor(blob);
+  if (fuzzy) return fuzzy;
   const head = lines.slice(0, 12).map((line) => line.replace(/\s+/g, " ").trim()).filter((line) => line.length >= 3);
   for (const line of head) {
     const magazin = line.match(/\bmagazin\s+([A-ZĂÂÎȘȚa-zăâîșț]{3,})\b/i);
@@ -272,6 +340,20 @@ function inferDate(text: string) {
     }
   }
   return undefined;
+}
+
+function inferPaidTender(lines: string[]) {
+  const hasRest = lines.some((line) => /\brest(?:\s*lei)?\b/i.test(line) && lastMoney(line)?.amount);
+  const ranked: number[] = [];
+  for (const raw of lines) {
+    const line = raw.replace(/\s+/g, " ").trim();
+    if (/\b(numerar|cash|card|visa|mastercard|pos)\b/i.test(line) && !/\brest\b/i.test(line) && !/\beconomisit\b/i.test(line)) {
+      if (hasRest && /\bnumerar\b/i.test(line)) continue;
+      const amount = lastMoney(line)?.amount;
+      if (amount && amount < 20000) ranked.push(amount);
+    }
+  }
+  return ranked[0];
 }
 
 function inferTotal(lines: string[]) {
@@ -342,7 +424,7 @@ function isWrapContinuation(line: string) {
   if (isHeaderLine(line) || footerLinePattern.test(line) || totalLinePattern.test(line) || discountLinePattern.test(line)) return false;
   if (/^sgr\b/i.test(line)) return true;
   if (/^\d+(?:[.,]\d+)?\s*(?:l|ml|cl|g|kg)\b/i.test(line)) return true;
-  return /^(?:naturala|necarbogaz|min\.|plata pet|carbogazoasa)/i.test(line);
+  return /^(?:naturala|necarbogaz|min\.|plata pet|carbogazoasa|feliat)/i.test(line);
 }
 
 function looksLikeNameLine(line: string) {
@@ -375,6 +457,10 @@ function mergeReceiptLines(lines: string[]) {
     if (!line || isIgnorableMergeLine(line)) continue;
     const prev = out[out.length - 1];
     if (prev && !lastMoney(prev) && !isHeaderLine(prev) && (parseQtyUnit(line) || qtyOnlyPattern.test(line) || isWrapContinuation(line))) {
+      out[out.length - 1] = `${prev} ${line}`;
+      continue;
+    }
+    if (prev && /=\s*$/.test(prev) && /^[-−]?\d+[.,]\d{2}/.test(line)) {
       out[out.length - 1] = `${prev} ${line}`;
       continue;
     }
@@ -469,14 +555,20 @@ function reconcileItems(items: ReceiptDetectedItem[], total?: number) {
 
 export function interpretReceiptText(input: string | string[]): LocalReceiptOcr {
   const rawLines = (Array.isArray(input) ? input : input.split(/\r?\n/)).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
-  const lines = mergeReceiptLines(rawLines);
-  const text = rawLines.join("\n");
-  const vendor = inferVendor(rawLines);
-  const date = inferDate(text);
-  const total = inferTotal(rawLines) ?? inferTotal(lines);
+  const repaired = repairOcrLines(rawLines);
+  const lines = mergeReceiptLines(repaired);
+  const text = repaired.join("\n");
+  const vendor = inferVendor(repaired);
+  const date = inferDate(text) || inferDate(rawLines.join("\n"));
+  const printedTotal = inferTotal(repaired) ?? inferTotal(lines);
   const parsed = parseProductLines(lines);
+  const paid = inferPaidTender(repaired);
+  const total = printedTotal ?? (paid && parsed.length && Math.abs(round2(parsed.reduce((sum, item) => sum + item.amount, 0)) - paid) <= 0.08 ? paid : undefined);
   const reconciled = reconcileItems(parsed, total);
-  return { text, vendor, date, amount: reconciled.amount, items: reconciled.items };
+  if (!reconciled.amount && paid && (!reconciled.items.length || Math.abs(round2(reconciled.items.reduce((sum, item) => sum + item.amount, 0)) - paid) <= 0.08)) {
+    return { text: rawLines.join("\n"), vendor, date, amount: paid, items: reconciled.items };
+  }
+  return { text: rawLines.join("\n"), vendor, date, amount: reconciled.amount, items: reconciled.items };
 }
 
 export function parseReceiptItems(lines: string[]): ReceiptDetectedItem[] {
@@ -578,7 +670,55 @@ function stretchContrast(data: Uint8ClampedArray) {
   }
 }
 
-export async function prepareReceiptImageForOcr(dataUrl: string) {
+function isLikelyScreenshot(data: Uint8ClampedArray) {
+  let white = 0;
+  let black = 0;
+  const count = data.length / 4;
+  for (let i = 0; i < data.length; i += 4) {
+    const luma = lumaOf(data, i);
+    if (luma > 242) white += 1;
+    else if (luma < 36) black += 1;
+  }
+  return white / count > 0.42 && black / count > 0.03 && (white + black) / count > 0.6;
+}
+
+function localBinarize(data: Uint8ClampedArray, width: number, height: number) {
+  const luma = new Uint8Array(width * height);
+  for (let i = 0, p = 0; i < data.length; i += 4, p += 1) luma[p] = Math.round(lumaOf(data, i));
+  const integral = new Uint32Array((width + 1) * (height + 1));
+  const stride = width + 1;
+  for (let y = 1; y <= height; y += 1) {
+    let row = 0;
+    for (let x = 1; x <= width; x += 1) {
+      row += luma[(y - 1) * width + (x - 1)];
+      integral[y * stride + x] = integral[(y - 1) * stride + x] + row;
+    }
+  }
+  const radius = 10;
+  const box = (x0: number, y0: number, x1: number, y1: number) => {
+    const a = integral[y0 * stride + x0];
+    const b = integral[y0 * stride + x1];
+    const c = integral[y1 * stride + x0];
+    const d = integral[y1 * stride + x1];
+    return d - b - c + a;
+  };
+  for (let y = 0; y < height; y += 1) {
+    const y0 = Math.max(0, y - radius);
+    const y1 = Math.min(height, y + radius + 1);
+    for (let x = 0; x < width; x += 1) {
+      const x0 = Math.max(0, x - radius);
+      const x1 = Math.min(width, x + radius + 1);
+      const count = Math.max(1, (x1 - x0) * (y1 - y0));
+      const mean = box(x0, y0, x1, y1) / count;
+      const value = luma[y * width + x] < mean * 0.92 ? 0 : 255;
+      const i = (y * width + x) * 4;
+      data[i] = data[i + 1] = data[i + 2] = value;
+      data[i + 3] = 255;
+    }
+  }
+}
+
+export async function prepareReceiptImageForOcr(dataUrl: string, options?: { binarize?: boolean }) {
   const image = await loadDataUrlImage(dataUrl);
   const width = image.naturalWidth || image.width;
   const height = image.naturalHeight || image.height;
@@ -590,11 +730,14 @@ export async function prepareReceiptImageForOcr(dataUrl: string) {
   if (!sourceCtx) return dataUrl;
   sourceCtx.drawImage(image, 0, 0);
   const pixels = sourceCtx.getImageData(0, 0, width, height);
-  const box = findPaperBox(pixels.data, width, height);
+  const screenshot = isLikelyScreenshot(pixels.data);
+  const box = screenshot
+    ? { x0: Math.round(width * 0.02), y0: Math.round(height * 0.02), x1: Math.round(width * 0.98), y1: Math.round(height * 0.98) }
+    : findPaperBox(pixels.data, width, height);
   const cropW = Math.max(1, box.x1 - box.x0);
   const cropH = Math.max(1, box.y1 - box.y0);
   const maxEdge = Math.max(cropW, cropH);
-  const scale = maxEdge < 1500 ? Math.min(2.8, 1800 / maxEdge) : maxEdge > 2400 ? 2200 / maxEdge : 1;
+  const scale = maxEdge < 1700 ? Math.min(3.2, 2200 / maxEdge) : maxEdge > 2600 ? 2400 / maxEdge : 1;
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(cropW * scale));
   canvas.height = Math.max(1, Math.round(cropH * scale));
@@ -606,9 +749,45 @@ export async function prepareReceiptImageForOcr(dataUrl: string) {
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(source, box.x0, box.y0, cropW, cropH, 0, 0, canvas.width, canvas.height);
   const prepared = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  stretchContrast(prepared.data);
+  if (!screenshot) {
+    stretchContrast(prepared.data);
+    if (options?.binarize) localBinarize(prepared.data, canvas.width, canvas.height);
+  }
   ctx.putImageData(prepared, 0, 0);
-  return canvas.toDataURL("image/jpeg", 0.94);
+  return canvas.toDataURL("image/jpeg", 0.95);
+}
+
+async function receiptViewsForOcr(dataUrl: string, tiled: boolean) {
+  const views: string[] = [];
+  try { views.push(await prepareReceiptImageForOcr(dataUrl)); } catch { views.push(dataUrl); }
+  if (!tiled) return views;
+  try {
+    const binary = await prepareReceiptImageForOcr(dataUrl, { binarize: true });
+    if (binary !== views[0]) views.push(binary);
+  } catch { /* rămânem pe contrast */ }
+  const primary = views[0];
+  try {
+    const image = await loadDataUrlImage(primary);
+    const width = image.naturalWidth || image.width;
+    const height = image.naturalHeight || image.height;
+    if (height > width * 1.65 && height > 900) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        const slice = Math.round(height * 0.58);
+        const starts = [0, Math.max(0, height - slice)];
+        for (const y of starts) {
+          canvas.width = width;
+          canvas.height = Math.min(slice, height - y);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(image, 0, y, width, canvas.height, 0, 0, width, canvas.height);
+          views.push(canvas.toDataURL("image/jpeg", 0.94));
+        }
+      }
+    }
+  } catch { /* fără tăiere */ }
+  return views;
 }
 
 function dateFromJpegExif(dataUrl: string) {
@@ -625,7 +804,19 @@ function dateFromJpegExif(dataUrl: string) {
 }
 
 function scoreOcr(result: LocalReceiptOcr) {
-  return (result.amount ? 8 : 0) + Math.min(result.items.length, 20) + (result.vendor ? 2 : 0) + (result.date ? 1 : 0);
+  const sum = round2(result.items.reduce((value, item) => value + item.amount, 0));
+  const reconciled = Boolean(result.amount && result.items.length && Math.abs(sum - result.amount) <= 0.08);
+  return (result.amount ? 8 : 0)
+    + Math.min(result.items.length, 16)
+    + (result.vendor ? 3 : 0)
+    + (result.date ? 1 : 0)
+    + (reconciled ? 28 : 0)
+    + (result.items.length >= 2 && result.amount ? 2 : 0);
+}
+
+export function receiptReadIsReconciled(result: LocalReceiptOcr): result is LocalReceiptOcr & { amount: number } {
+  if (!result.amount || !result.items.length) return false;
+  return Math.abs(round2(result.items.reduce((sum, item) => sum + item.amount, 0)) - result.amount) <= 0.08;
 }
 
 type TesseractLine = { text: string; confidence: number; bbox?: { y0: number; x0: number } };
@@ -638,12 +829,24 @@ type TesseractPage = {
 function collectOcrLines(page: TesseractPage) {
   const boxed = page.blocks?.flatMap((block) => block.paragraphs.flatMap((paragraph) => paragraph.lines)) || [];
   boxed.sort((a, b) => (a.bbox?.y0 ?? 0) - (b.bbox?.y0 ?? 0) || (a.bbox?.x0 ?? 0) - (b.bbox?.x0 ?? 0));
+  const keep = (text: string, confidence: number) => {
+    if (!text.trim()) return false;
+    if (confidence >= 18) return true;
+    return totalLinePattern.test(text) || discountLinePattern.test(text) || moneyPattern.test(text) || /\b(cash|card|numerar|total|reducere|sgr|garantie)\b/i.test(text);
+  };
   const confident = boxed
-    .filter((line) => line.confidence >= 22 || totalLinePattern.test(line.text) || discountLinePattern.test(line.text))
+    .filter((line) => keep(line.text, line.confidence))
     .map((line) => line.text.replace(/\s+/g, " ").trim())
     .filter(Boolean);
-  if (confident.length >= 4) return confident;
-  return page.text.split(/\r?\n/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const fallback = page.text.split(/\r?\n/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
+  if (confident.length >= 4) {
+    const extras = fallback.filter((line) => totalLinePattern.test(line) || /\b(cash|card|numerar|rest|economisit)\b/i.test(line));
+    for (const line of extras) {
+      if (!confident.some((item) => item.includes(line) || line.includes(item))) confident.push(line);
+    }
+    return confident;
+  }
+  return fallback;
 }
 
 export async function readReceiptLocally(images: string[], onProgress?: (percent: number) => void): Promise<LocalReceiptOcr> {
@@ -654,18 +857,18 @@ export async function readReceiptLocally(images: string[], onProgress?: (percent
   try {
     worker = await createWorker("ron+eng", 1, {
       logger: (message) => {
-        if (message.status === "recognizing text" && typeof message.progress === "number") onProgress?.(10 + Math.round(message.progress * 70));
+        if (message.status === "recognizing text" && typeof message.progress === "number") onProgress?.(8 + Math.round(message.progress * 55));
       },
     });
   } catch {
     worker = await createWorker("eng", 1, {
       logger: (message) => {
-        if (message.status === "recognizing text" && typeof message.progress === "number") onProgress?.(10 + Math.round(message.progress * 70));
+        if (message.status === "recognizing text" && typeof message.progress === "number") onProgress?.(8 + Math.round(message.progress * 55));
       },
     });
   }
   try {
-    const runPass = async (mode: number) => {
+    const runPass = async (mode: number, tiled: boolean) => {
       await worker.setParameters({
         tessedit_pageseg_mode: mode,
         preserve_interword_spaces: "1",
@@ -674,21 +877,27 @@ export async function readReceiptLocally(images: string[], onProgress?: (percent
       const parts: string[] = [];
       const lineTexts: string[] = [];
       for (let index = 0; index < images.length; index += 1) {
-        let prepared = images[index];
-        try { prepared = await prepareReceiptImageForOcr(images[index]); } catch { prepared = images[index]; }
-        const result = await worker.recognize(prepared, { rotateAuto: true }, { text: true, blocks: true });
-        const page = result.data as TesseractPage;
-        parts.push(page.text);
-        lineTexts.push(...collectOcrLines(page));
+        const views = await receiptViewsForOcr(images[index], tiled);
+        for (const view of views) {
+          const result = await worker.recognize(view, { rotateAuto: true }, { text: true, blocks: true });
+          const page = result.data as TesseractPage;
+          parts.push(page.text);
+          lineTexts.push(...collectOcrLines(page));
+        }
       }
       const interpreted = interpretReceiptText(lineTexts.length ? lineTexts : parts);
       return { ...interpreted, text: parts.join("\n").trim() || interpreted.text };
     };
-    let interpreted = await runPass(PSM.SINGLE_COLUMN);
-    if (scoreOcr(interpreted) < 10) {
-      onProgress?.(84);
-      const retry = await runPass(PSM.AUTO);
+    let interpreted = await runPass(PSM.SINGLE_COLUMN, false);
+    if (!receiptReadIsReconciled(interpreted) || scoreOcr(interpreted) < 18) {
+      onProgress?.(68);
+      const retry = await runPass(PSM.AUTO, true);
       if (scoreOcr(retry) > scoreOcr(interpreted)) interpreted = retry;
+    }
+    if (!receiptReadIsReconciled(interpreted) && scoreOcr(interpreted) < 22) {
+      onProgress?.(88);
+      const last = await runPass(PSM.SINGLE_BLOCK, false);
+      if (scoreOcr(last) > scoreOcr(interpreted)) interpreted = last;
     }
     if (!interpreted.date) {
       const fromPhoto = images.map(dateFromJpegExif).find(Boolean);

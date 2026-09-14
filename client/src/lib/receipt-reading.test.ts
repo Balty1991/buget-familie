@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { interpretReceiptText } from "./receipt-utils";
+import { interpretReceiptText, repairOcrLines, receiptReadIsReconciled } from "./receipt-utils";
 
 const labels = (text: string[]) => interpretReceiptText(text).items.map((item) => `${item.label} ${item.amount}`);
 
@@ -54,7 +54,7 @@ describe("bon Profi de pe ecran", () => {
   });
 });
 
-describe("bon Familiiaro cu SGR și reducere procentuală", () => {
+describe("bon Familiaro cu SGR și reducere procentuală", () => {
   const lines = [
     "FAMILIARO",
     "S.C. SALES CONSULTING S.R.L.",
@@ -108,7 +108,7 @@ describe("bon Familiiaro cu SGR și reducere procentuală", () => {
 
   it("citește magazinul, totalul plătit și garanțiile SGR", () => {
     const result = interpretReceiptText(lines);
-    expect(result.vendor).toBe("Familiiaro");
+    expect(result.vendor).toBe("Familiaro");
     expect(result.amount).toBe(57.3);
     expect(result.items.filter((item) => /garantie|garanție/i.test(item.label)).map((item) => item.amount).sort()).toEqual([0.5, 3, 3]);
   });
@@ -190,5 +190,109 @@ describe("bon Pepco cu numele după preț", () => {
       "Chiloti de dama L Me 3.5",
       "Tricou barbati cu ri 12",
     ]);
+  });
+});
+
+describe("OCR mototolit — aceleași 4 bonuri, text stricat", () => {
+  it("reparează T0TAL LEI, sumele despărțite și s:nsay", () => {
+    expect(repairOcrLines(["T0TAL LE1 50. 97", "1 BUC X 11.99=", "11.99 E"])).toEqual([
+      "TOTAL LEI 50.97",
+      "1 BUC X 11.99= 11.99 E",
+    ]);
+    const result = interpretReceiptText([
+      "s:nsay",
+      "LPP ROMANIA FASHION S.R.L.",
+      "0810B-98X-39H CIORAPI 1 BUC X 11.99=",
+      "11.99 E",
+      "REDUCERE 3.42 E",
+      "841JJ-99X-25 TENISI FE 1 BUC X 45.99= 45.99 E",
+      "REDUCERE -13.15 E",
+      "809EZ-MLC-ONE JUCARIE 1 BUC X 11.99= 11.99 E",
+      "REDUCERE -3.43 E",
+      "H6111-XXX-ONE PUNGA DE 1 BUC X 1.00= 1.00 E",
+      "T0TAL LE1 50.97",
+      "NUMERAR LEI 51.00",
+      "REST LEI 0.03",
+    ]);
+    expect(result.vendor).toBe("Sinsay");
+    expect(result.amount).toBe(50.97);
+    expect(receiptReadIsReconciled(result)).toBe(true);
+    expect(result.items.find((item) => /ciorapi/i.test(item.label))?.amount).toBe(8.57);
+  });
+
+  it("nu ia numerarul 100 lei de pe Familiaro, ci 57,30", () => {
+    const result = interpretReceiptText([
+      "FAMILIA RO",
+      "AQUA CARPATICA KIDS PLATA PET 0.25L 1 PET X 2.58= 2.58 B",
+      "GARANTIE PET SGR 1 BUC X 0.50= 0.50 E",
+      "PRIMOLA PAPI LAPTE 26.8G 1 BUC X 2.98= 2.98 A",
+      "PRIMOLA PAPI LAPTE 26.8G 1 BUC X 2.98= 2.98 A",
+      "FAMILIARO SACOSA MAIEU BIO 1 BUC X 1.00= 1.00 A",
+      "VEL PITAR PAINE ALBA 1 BUC X 2.98= 2.98 B",
+      "PERLA HARGHITEI APA 6 PET X 3.48= 20.88 B",
+      "REDUCERE 8.33%",
+      "-1.74 B",
+      "GARANTIE PET SGR 6 BUC X 0.50= 3.00 E",
+      "BUCOVINA APA 6 PET X 3.48= 20.88 B",
+      "REDUCERE 8.33%",
+      "-1.74 B",
+      "GARANTIE PET SGR 6 BUC X 0.50= 3.00 E",
+      "T0TAL LEI",
+      "57.30",
+      "NUMERAR LEI 100.00",
+      "REST LEI 42.70",
+    ]);
+    expect(result.vendor).toBe("Familiaro");
+    expect(result.amount).toBe(57.3);
+    expect(result.items.some((item) => item.amount === 100)).toBe(false);
+    expect(receiptReadIsReconciled(result)).toBe(true);
+  });
+
+  it("la Pepco, dacă lipsește TOTAL, CASH e totalul plătit", () => {
+    const result = interpretReceiptText([
+      "PEPCO RETAIL SRL",
+      "1.000 buc x 3.50 3.50 A",
+      "62621203 Chiloti de dama L Me",
+      "PLU: 62821203",
+      "1.000 buc x 12.00 12.00 A",
+      "63197402 Tricou barbati cu ri",
+      "CASH 15.50",
+    ]);
+    expect(result.vendor).toBe("Pepco");
+    expect(result.amount).toBe(15.5);
+    expect(result.items).toHaveLength(2);
+    expect(receiptReadIsReconciled(result)).toBe(true);
+  });
+
+  it("unește două ecrane Profi ale aceluiași bon, fără să dubleze LA MINUT", () => {
+    const top = [
+      "PROFI ROSIORII DE VEDE",
+      "Sep. 13, 2026 01:25PM",
+      "LIPICI FIX STRONG 8,98",
+      "3 buc @ 5,99",
+      "Reducere 17,97 -8,99",
+      "PASTE SPAGHETE BANEA 5,25",
+      "LBP PISICI SNACK PER 5,89",
+      "DOBROGEA MALAI GRISA 3,29",
+      "LA MINUT LUX CLASIC 7,49",
+    ];
+    const bottom = [
+      "LA MINUT LUX CLASIC 7,49",
+      "1 buc @ 7,49",
+      "SANT KID PIE MARO.2L 3,75",
+      "DR.OETKER ZAHAR VANI 0,99",
+      "KINDER SURPRISE 4,85",
+      "CEREALE COOKIE CRISP 9,99",
+      "Reducere 8,99",
+      "Total Economisit 8,99",
+      "Total 50,48",
+      "Card **3286 50,48 lei",
+    ];
+    const result = interpretReceiptText([...top, ...bottom]);
+    expect(result.vendor).toBe("Profi");
+    expect(result.date).toBe("2026-09-13");
+    expect(result.amount).toBe(50.48);
+    expect(result.items.filter((item) => /la minut/i.test(item.label))).toHaveLength(1);
+    expect(receiptReadIsReconciled(result)).toBe(true);
   });
 });

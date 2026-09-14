@@ -732,7 +732,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         let localReceiptAmount: number | undefined;
         if (sentAttachment?.mimeType.startsWith("image/")) {
           try {
-            const { readReceiptLocally } = await import("@/lib/receipt-utils");
+            const { readReceiptLocally, receiptReadIsReconciled } = await import("@/lib/receipt-utils");
             const local = await readReceiptLocally([sentAttachment.data]);
             localReceiptAmount = local.amount;
             const ocrItems = local.items.slice(0, 40).map((item) => `${item.label}=${item.amount}`).join("; ");
@@ -744,7 +744,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
               ocrItems ? `produse: ${ocrItems}` : "",
               local.text ? `text brut: ${local.text.slice(0, 5000)}` : "",
             ].filter(Boolean).join("\n");
-            if (local.amount && local.amount > 0) {
+            if (receiptReadIsReconciled(local)) {
               const extracted: ExtractedGuide = {
                 amount: local.amount,
                 title: local.vendor || t("Bon"),
