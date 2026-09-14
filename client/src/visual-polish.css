@@ -1468,3 +1468,22 @@ html.theme-ink .bf-obligations-workspace > .bf-obligations-header h1 em {
     font-size: clamp(30px, 9vw, 40px) !important;
   }
 }
+
+/* Bun venit: nu intra sub bara Android; cardul se derulează. */
+.os-shell .bf-onboarding-backdrop.bf-modal-backdrop,
+.bf-onboarding-backdrop {
+  align-items: center !important;
+  place-items: center !important;
+  padding:
+    max(12px, var(--os-inset-top, env(safe-area-inset-top, 0px)))
+    max(16px, var(--os-inset-right, env(safe-area-inset-right, 0px)))
+    max(20px, var(--os-inset-bottom, env(safe-area-inset-bottom, 16px)))
+    max(16px, var(--os-inset-left, env(safe-area-inset-left, 0px))) !important;
+}
+
+.bf-onboarding,
+.bf-onboarding.bf-first-run {
+  overflow: auto !important;
+  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 24px) !important;
+}
+

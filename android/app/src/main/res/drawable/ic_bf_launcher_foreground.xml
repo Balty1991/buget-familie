@@ -4,17 +4,17 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Cub-plic 3D: față dreaptă, față stângă, capac. -->
+    <!-- Casă-plic, zona sigură adaptive. -->
     <path
-        android:fillColor="#3AA87C"
-        android:pathData="M54,59 L78,45.5 L78,68.5 L54,82Z"/>
+        android:fillColor="#FFFAF3"
+        android:pathData="M36,47.7h36c2.8,0 5,2.2 5,5v22.7c0,2.8 -2.2,5 -5,5H36c-2.8,0 -5,-2.2 -5,-5V52.7c0,-2.8 2.2,-5 5,-5z"/>
     <path
-        android:fillColor="#7CFFC4"
-        android:pathData="M30,45.5 L54,59 L54,82 L30,68.5Z"/>
+        android:fillColor="#C4E4D4"
+        android:pathData="M33.4,48.9 L54,69.5 74.6,48.9Z"/>
     <path
-        android:fillColor="#D8FFF0"
-        android:pathData="M54,32 L78,45.5 L54,59 L30,45.5Z"/>
+        android:fillColor="#1B4F42"
+        android:pathData="M28.6,50.1 L54,28.3 79.4,50.1Z"/>
     <path
-        android:fillColor="#F7FFFB"
-        android:pathData="M54,40 L67,47 L54,54 L41,47Z"/>
+        android:fillColor="#FFFAF3"
+        android:pathData="M37.1,48.9 L54,34.4 70.9,48.9Z"/>
 </vector>

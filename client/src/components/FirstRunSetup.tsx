@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { Check, ChevronRight, Home, PiggyBank, ReceiptText, Users, WalletCards } from "lucide-react";
-import { EnvelopeStack } from "@/components/EnvelopeMark";
+import { BrandMark } from "@/components/BrandMark";
 import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { generateFamilyPassword } from "@/lib/family-password";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -109,7 +109,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     <div className="bf-modal-backdrop bf-onboarding-backdrop" role="presentation">
       <section ref={dialogRef} tabIndex={-1} className="bf-onboarding bf-setup bf-first-run" role="dialog" aria-modal="true" aria-labelledby="bf-setup-title">
         <button className="bf-onboarding-skip" onClick={complete}>{t("Mai târziu")}</button>
-        <div className="bf-setup-visual" aria-hidden="true"><EnvelopeStack fill={intent ? 0.7 : 0.35} size={96} /></div>
+        <div className="bf-setup-visual" aria-hidden="true"><BrandMark size={72} /></div>
 
         {!intent && (
           <div className="bf-setup-copy">

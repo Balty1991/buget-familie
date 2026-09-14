@@ -6,13 +6,13 @@ const config: CapacitorConfig = {
   appName: "Buget Familie",
   webDir: "dist/public",
   android: {
-    backgroundColor: "#07090c",
+    backgroundColor: "#F4EFE4",
     adjustMarginsForEdgeToEdge: "disable",
   },
   plugins: {
     SystemBars: {
       insetsHandling: "css",
-      style: "LIGHT",
+      style: "DARK",
     },
   },
 };

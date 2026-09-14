@@ -31,7 +31,7 @@
 }
 
 html, body {
-  background: var(--cf-bg, #07090c);
+  background: var(--cf-bg, #F4EFE4);
 }
 
 html {
@@ -87,9 +87,9 @@ html.capacitor-android {
   padding: 0 !important;
   border: 0 !important;
   border-radius: 16px !important;
-  color: var(--os-mint) !important;
-  background: #07090c !important;
-  box-shadow: 0 0 0 1px var(--os-line) !important;
+  color: #1B4F42 !important;
+  background: #E8F3EC !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, #d5ddd8) 70%, transparent) !important;
 }
 
 .os-mark::before,
@@ -102,17 +102,25 @@ html.capacitor-android {
 }
 
 .os-mark svg {
-  display: none !important;
-}
-
-.os-mark img {
   display: block !important;
   width: 44px !important;
   height: 44px !important;
-  object-fit: cover !important;
-  border: 0 !important;
-  border-radius: 16px !important;
-  background: #07090c !important;
+}
+
+.os-mark img {
+  display: none !important;
+}
+
+@media (max-width: 760px) {
+  .os-mark,
+  .os-mark svg {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .os-mark {
+    flex-basis: 40px !important;
+    border-radius: 14px !important;
+  }
 }
 
 .os-brand-copy {
@@ -1219,7 +1227,41 @@ body .bf-command-palette .bf-icon-button,
 }
 
 .bf-onboarding {
-  overflow: hidden !important;
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.os-shell .bf-onboarding-backdrop.bf-modal-backdrop,
+.bf-onboarding-backdrop {
+  align-items: center !important;
+  place-items: center !important;
+  padding:
+    max(12px, var(--os-inset-top, env(safe-area-inset-top, 0px)))
+    max(16px, var(--os-inset-right, env(safe-area-inset-right, 0px)))
+    max(20px, var(--os-inset-bottom, env(safe-area-inset-bottom, 16px)))
+    max(16px, var(--os-inset-left, env(safe-area-inset-left, 0px))) !important;
+}
+
+.bf-onboarding.bf-first-run {
+  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 24px) !important;
+  padding-bottom: 22px !important;
+}
+
+@media (max-height: 780px) {
+  .bf-first-run .bf-setup-visual {
+    margin: 4px 0 8px !important;
+  }
+  .bf-first-run .os-mark,
+  .bf-first-run .os-mark svg {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+@media (max-height: 680px) {
+  .bf-first-run .bf-setup-visual {
+    display: none !important;
+  }
 }
 
 .bf-onboarding-skip {
