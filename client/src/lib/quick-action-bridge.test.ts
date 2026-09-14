@@ -96,5 +96,18 @@ describe("puntea către widget", () => {
     stop();
     expect(native.listeners.visibilitychange).toEqual([]);
     expect(native.listeners.focus).toEqual([]);
+    expect(native.listeners["buget-familie:quick-action"]).toEqual([]);
+  });
+
+  it("consumă imediat când nativul semnalează quick-action cu aplicația deja vizibilă", () => {
+    const native = stubNative([]);
+    const handle = vi.fn();
+    const stop = observeQuickActions(handle);
+    expect(handle).not.toHaveBeenCalled();
+
+    (globalThis as unknown as { window: { BugetFamilieQuickAction: { consume: () => string } } }).window.BugetFamilieQuickAction.consume = () => "expense";
+    native.fire("buget-familie:quick-action");
+    expect(handle).toHaveBeenCalledWith("expense");
+    stop();
   });
 });

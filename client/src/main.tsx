@@ -13,7 +13,6 @@ import "./visibility-safety.css";
 import "./mobile-speed.css";
 // Contrast pe critical path ca filled-urile din first paint să fie lizibile.
 import "./contrast-fix.css";
-import "./visual-polish.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
 
@@ -21,7 +20,7 @@ if (Capacitor.getPlatform() === "android") document.documentElement.classList.ad
 createRoot(document.getElementById("root")!).render(<App />);
 startPerformanceMonitoring();
 
-/** Foi atelier / ledger / redesign — după first paint; contrast-fix din nou la final. */
+/** Foi atelier / ledger / redesign / visual-polish — după first paint; contrast-fix din nou, apoi polish. */
 void import("./deferred-atelier.css").then(() => {
   void import("./contrast-fix.css").then(() => {
     void import("./visual-polish.css");

@@ -14,6 +14,8 @@ Nu putem testa widgetul / dala pe un dispozitiv fizic în mediul de build. Înai
 - [ ] Fără șabloane, rândul de șabloane pe widget rămâne ascuns
 
 > **Hardware necesar:** widgetul, șabloanele pe widget și dala nu pot fi validate în CI — bifează pe un telefon Android real după `cap:sync` / APK debug.
+>
+> **Cod (2026-09):** `onNewIntent` păstrează acțiunea *și* semnalează JS (`buget-familie:quick-action`) când aplicația e deja vizibilă. Tot trebuie bifat pe telefon — nu din CI.
 
 ## Dala Setări rapide
 

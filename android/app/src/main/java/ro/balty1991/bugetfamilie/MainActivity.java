@@ -13,8 +13,8 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
   /**
    * Acțiunea cerută din widget sau din dală, până când stratul web o cere.
-   * Nativul nu împinge nimic către pagină: la o pornire rece pagina încă nu
-   * există, așa că JS-ul o ridică singur când e gata.
+   * La pornire rece pagina încă nu există, deci JS o ridică singur (consume).
+   * Dacă aplicația e deja vizibilă, onNewIntent semnalează JS să consume imediat.
    */
   private String pendingQuickAction;
 
@@ -45,7 +45,23 @@ public class MainActivity extends BridgeActivity {
     super.onNewIntent(intent);
     setIntent(intent);
     final String action = readQuickAction(intent);
-    if (action != null) pendingQuickAction = action;
+    if (action != null) {
+      pendingQuickAction = action;
+      notifyWebQuickAction();
+    }
+  }
+
+  /**
+   * Dacă WebView-ul e deja în prim-plan, JS nu primește visibilitychange/focus.
+   * Îl trezim să consume() — fără a pune acțiunea în string (doar un semnal).
+   */
+  private void notifyWebQuickAction() {
+    final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView == null) return;
+    webView.post(() -> webView.evaluateJavascript(
+      "try{window.dispatchEvent(new CustomEvent('buget-familie:quick-action'))}catch(e){}",
+      null
+    ));
   }
 
   private String readQuickAction(Intent intent) {
