@@ -588,6 +588,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   };
   const firstAmount = (raw: string) => { const match = raw.match(/\d[\d\s.]*(?:,\d{1,2})?/); if (!match) return 0; const token = match[0].replace(/\s/g, ""); const normalized = token.includes(",") ? token.replace(/\./g, "").replace(",", ".") : /^\d{1,3}(?:\.\d{3})+$/.test(token) ? token.replace(/\./g, "") : token; return parseFloat(normalized) || 0; };
   const localSend = (alreadyAdded = false, draft = message) => { const raw = draft.trim(); if (!raw) return; setMessage(""); if (!alreadyAdded) addMessage({ role: "user", text: raw }); const amount = firstAmount(raw); const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); setTyping(true); window.setTimeout(() => { setTyping(false);
+    if (!amount && looksLikeProductSearch(raw)) { offerCatalog(raw); return; }
     /**
      * Intențiile explicite au prioritate față de ghidul pas cu pas. Aici era eroarea:
      * cât timp ghidul aștepta un venit, orice mesaj cu cifre era citit ca venit, deci o
@@ -744,6 +745,10 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
      * OCR-ul rămâne pe telefon. La Gemini pleacă doar textul citit local, niciodată poza.
      */
     const sentPhotos = sentAttachments.length > 0;
+    if (!sentPhotos && looksLikeProductSearch(requestText)) {
+      offerCatalog(requestText);
+      return;
+    }
     const readings = sentPhotos ? [] : understand(requestText, data, { memory: liveMemory, asOf: isoToday() });
     const { winner, runnerUp, ambiguous } = decide(readings);
     if (!sentPhotos && ambiguous && winner && runnerUp && shouldAskWhichReading(winner, runnerUp)) {
@@ -767,10 +772,6 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         addMessage({ role: "assistant", text: answerToText(answer), followUps: answer.followUps });
         return;
       }
-    }
-    if (!sentPhotos && looksLikeProductSearch(requestText)) {
-      offerCatalog(requestText);
-      return;
     }
     const blocked = quota.mode === "local" || quota.remaining <= 0;
     if (blocked && !sentPhotos) {
