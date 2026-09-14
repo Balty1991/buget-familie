@@ -1,9 +1,15 @@
 package ro.balty1991.bugetfamilie;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -11,6 +17,8 @@ import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+  private static final int REQ_POST_NOTIFICATIONS = 4101;
+
   /**
    * Acțiunea cerută din widget sau din dală, până când stratul web o cere.
    * La pornire rece pagina încă nu există, deci JS o ridică singur (consume).
@@ -112,6 +120,31 @@ public class MainActivity extends BridgeActivity {
     webView.evaluateJavascript(js, null);
   }
 
+  boolean hasNotifyPermission() {
+    if (Build.VERSION.SDK_INT < 33) return true;
+    return ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+      == PackageManager.PERMISSION_GRANTED;
+  }
+
+  private void notifyWebNotifyPermission(boolean granted) {
+    final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView == null) return;
+    webView.post(() -> webView.evaluateJavascript(
+      "try{window.dispatchEvent(new CustomEvent('buget-familie:notify-permission',{detail:{granted:"
+        + (granted ? "true" : "false")
+        + "}}))}catch(e){}",
+      null
+    ));
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (requestCode != REQ_POST_NOTIFICATIONS) return;
+    final boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+    notifyWebNotifyPermission(granted);
+  }
+
   private final class ReminderBridge {
     @JavascriptInterface
     public void schedule(String payloadJson) {
@@ -121,6 +154,37 @@ public class MainActivity extends BridgeActivity {
     @JavascriptInterface
     public void cancelAll() {
       ReminderScheduler.cancelAll(MainActivity.this.getApplicationContext());
+    }
+
+    @JavascriptInterface
+    public boolean hasPermission() {
+      return MainActivity.this.hasNotifyPermission();
+    }
+
+    @JavascriptInterface
+    public void requestPermission() {
+      MainActivity.this.runOnUiThread(() -> {
+        if (MainActivity.this.hasNotifyPermission()) {
+          notifyWebNotifyPermission(true);
+          return;
+        }
+        ActivityCompat.requestPermissions(
+          MainActivity.this,
+          new String[]{Manifest.permission.POST_NOTIFICATIONS},
+          REQ_POST_NOTIFICATIONS
+        );
+      });
+    }
+
+    @JavascriptInterface
+    public void notifyNow(String title, String body) {
+      if (title == null || title.trim().isEmpty()) return;
+      ReminderWorker.notifyNow(
+        MainActivity.this.getApplicationContext(),
+        title,
+        body == null ? "" : body,
+        4090
+      );
     }
   }
 
