@@ -124,7 +124,7 @@ Testele de regresie (`client/src/lib/*.test.ts`) verifică parserul românesc pe
 
 ## Android APK
 
-Aplicația păstrează GitHub Pages pentru acces web și este pregătită separat pentru Android cu **Capacitor**. Pentru testare privată: în GitHub, deschide **Actions → Build Android APK → Run workflow**. După rularea verde, descarcă artefactul `buget-familie-debug-apk` și instalează fișierul `app-debug.apk` pe un telefon Android. Pachetul debug e semnat cu o cheie efemeră generată la fiecare rulare — un build nou poate cere dezinstalarea celui vechi înainte de reinstalare, ceea ce șterge datele locale; exportă un backup înainte, din precauție.
+Aplicația păstrează GitHub Pages pentru acces web și este pregătită separat pentru Android cu **Capacitor**. Pentru testare privată: în GitHub, deschide **Actions → Build Android APK → Run workflow**. După rularea verde, descarcă artefactul `Buget-Familie` și instalează fișierul `Buget-Familie.apk` pe un telefon Android. Pachetul debug e semnat cu o cheie efemeră generată la fiecare rulare — un build nou poate cere dezinstalarea celui vechi înainte de reinstalare, ceea ce șterge datele locale; exportă un backup înainte, din precauție.
 
 | Comandă | Utilizare |
 |---|---|

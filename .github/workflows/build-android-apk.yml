@@ -31,10 +31,12 @@ jobs:
           java-version: "21"
       - name: Construiește APK-ul debug
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk "app/build/outputs/apk/debug/Buget-Familie.apk"
       - name: Publică APK-ul ca artefact GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: buget-familie-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: Buget-Familie
+          path: android/app/build/outputs/apk/debug/Buget-Familie.apk
           retention-days: 14
