@@ -786,6 +786,11 @@ html.theme-dark .bf-plan-workspace > .bf-plan-studio-header {
   z-index: 1;
 }
 
+.os-shell.bf-app > .bf-modal-backdrop,
+.os-shell.bf-app > .bf-onboarding-backdrop {
+  z-index: 200 !important;
+}
+
 html.theme-white .os-shell.bf-app::before {
   background:
     radial-gradient(55% 70% at 82% 12%, color-mix(in srgb, #0e7a5c 14%, transparent), transparent 70%),
