@@ -1,14 +1,17 @@
 package ro.balty1991.bugetfamilie;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -37,16 +40,31 @@ public class ReminderWorker extends Worker {
     if (title == null || title.isEmpty() || body == null || body.isEmpty()) {
       return Result.success();
     }
-    ensureChannel(getApplicationContext());
-    final Intent open = new Intent(getApplicationContext(), MainActivity.class);
+    notifyNow(getApplicationContext(), title, body, notifyId, tag);
+    return Result.success();
+  }
+
+  static void notifyNow(Context context, String title, String body, int notifyId) {
+    notifyNow(context, title, body, notifyId, "alerts-on");
+  }
+
+  static void notifyNow(Context context, String title, String body, int notifyId, String tag) {
+    if (Build.VERSION.SDK_INT >= 33) {
+      if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        != PackageManager.PERMISSION_GRANTED) {
+        return;
+      }
+    }
+    ensureChannel(context);
+    final Intent open = new Intent(context, MainActivity.class);
     open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
     final PendingIntent content = PendingIntent.getActivity(
-      getApplicationContext(),
+      context,
       notifyId,
       open,
       PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
     );
-    final NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+    final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(R.mipmap.ic_launcher)
       .setContentTitle(title)
       .setContentText(body)
@@ -59,11 +77,10 @@ public class ReminderWorker extends Worker {
       builder.setGroup(tag);
     }
     try {
-      NotificationManagerCompat.from(getApplicationContext()).notify(tag != null ? tag : "bf", notifyId, builder.build());
+      NotificationManagerCompat.from(context).notify(tag != null ? tag : "bf", notifyId, builder.build());
     } catch (SecurityException ignored) {
       // Fără POST_NOTIFICATIONS pe Android 13+ — utilizatorul poate activa din Setări.
     }
-    return Result.success();
   }
 
   static void ensureChannel(Context context) {

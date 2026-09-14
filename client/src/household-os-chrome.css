@@ -1433,6 +1433,10 @@ html[data-simple-mode="1"] .bf-utilities-workspace .bf-more-tabs button {
   outline: 2px solid #1f6b4a;
   background: color-mix(in srgb, #1f6b4a 8%, transparent);
 }
+.bf-settings-notifications.is-on {
+  outline: 2px solid #1f6b4a;
+  background: color-mix(in srgb, #1f6b4a 8%, transparent);
+}
 .bf-plan-simple-tip {
   display: block;
   margin: 8px 0 14px;

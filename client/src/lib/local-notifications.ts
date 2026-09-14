@@ -1,7 +1,7 @@
 /**
  * Alerte locale pentru plicuri, scadențe și ritm.
- * Folosește Notification API pe web/PWA; pe Android nativ încearcă Capacitor LocalNotifications dacă e instalat.
- * Nu trimite date pe server.
+ * Pe Android: permisiunea sistemului + WorkManager (și Capacitor, dacă plugin-ul răspunde).
+ * Pe web/PWA: Notification API. Nu trimite date pe server.
  */
 
 import {
@@ -21,6 +21,37 @@ const LAST_SCHEDULE_KEY = "buget-familie:notifications-last-schedule";
 
 export type NotificationPref = "unknown" | "granted" | "denied" | "unsupported";
 
+type NativeReminderBridge = {
+  schedule?: (payload: string) => void;
+  cancelAll?: () => void;
+  hasPermission?: () => boolean;
+  requestPermission?: () => void;
+  notifyNow?: (title: string, body: string) => void;
+};
+
+function nativeReminders(): NativeReminderBridge | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (window as unknown as { BugetFamilieReminders?: NativeReminderBridge }).BugetFamilieReminders;
+}
+
+/**
+ * WebView-ul Android nu expune Notification API. Semnalul adevărat pe telefon:
+ * puntea Java (`BugetFamilieReminders`), clasa `capacitor-android`, sau Capacitor.
+ */
+export function isNativeNotifications(): boolean {
+  if (typeof window === "undefined") return false;
+  if (nativeReminders()) return true;
+  try {
+    if (document.documentElement?.classList?.contains("capacitor-android")) return true;
+  } catch {
+    /* ignore */
+  }
+  const cap = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string } }).Capacitor;
+  return Boolean(cap?.isNativePlatform?.() || cap?.getPlatform?.() === "android");
+}
+
+const isNative = isNativeNotifications;
+
 export function isNotificationsEnabled(): boolean {
   try {
     return window.localStorage.getItem(PREF_KEY) !== "false";
@@ -37,19 +68,14 @@ export function setNotificationsEnabled(enabled: boolean) {
   }
 }
 
-/**
- * WebView-ul Android nu expune Notification API, așa că pe telefon verificarea
- * „există Notification în window?” răspundea mereu „nu se poate” și butonul de
- * activare nu avea ce face. Pe nativ întrebăm plugin-ul Capacitor, care cere
- * permisiunea reală a sistemului.
- */
-const isNative = () => {
-  if (typeof window === "undefined") return false;
-  const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
-  return Boolean(cap?.isNativePlatform?.());
-};
-
 const loadNativeNotifications = () => import("@capacitor/local-notifications").then((module) => module.LocalNotifications);
+
+const nativePermissionFromBridge = (): NotificationPref | undefined => {
+  const bridge = nativeReminders();
+  if (!bridge) return undefined;
+  if (typeof bridge.hasPermission === "function") return bridge.hasPermission() ? "granted" : "unknown";
+  return "unknown";
+};
 
 export async function getNotificationPermission(): Promise<NotificationPref> {
   if (isNative()) {
@@ -57,16 +83,49 @@ export async function getNotificationPermission(): Promise<NotificationPref> {
       const plugin = await loadNativeNotifications();
       const status = await plugin.checkPermissions();
       if (status.display === "granted") return "granted";
-      if (status.display === "denied") return "denied";
-      return "unknown";
+      if (status.display === "denied") {
+        const viaBridge = nativePermissionFromBridge();
+        return viaBridge === "granted" ? "granted" : "denied";
+      }
     } catch {
-      return "unsupported";
+      /* pluginul Capacitor lipsește sau nu e înregistrat — puntea nativă */
     }
+    const viaBridge = nativePermissionFromBridge();
+    if (viaBridge === "granted") return "granted";
+    return viaBridge ?? "unknown";
   }
   if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
   if (Notification.permission === "granted") return "granted";
   if (Notification.permission === "denied") return "denied";
   return "unknown";
+}
+
+function waitForNativePermission(bridge: NativeReminderBridge): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (bridge.hasPermission?.()) {
+      resolve(true);
+      return;
+    }
+    let settled = false;
+    const finish = (granted: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.removeEventListener("buget-familie:notify-permission", onEvent);
+      resolve(granted);
+    };
+    const onEvent = (event: Event) => {
+      const granted = Boolean((event as CustomEvent<{ granted?: boolean }>).detail?.granted);
+      finish(granted);
+    };
+    window.addEventListener("buget-familie:notify-permission", onEvent);
+    try {
+      bridge.requestPermission?.();
+    } catch {
+      finish(false);
+      return;
+    }
+    window.setTimeout(() => finish(Boolean(bridge.hasPermission?.())), 20_000);
+  });
 }
 
 export async function requestNotificationPermission(): Promise<NotificationPref> {
@@ -75,28 +134,28 @@ export async function requestNotificationPermission(): Promise<NotificationPref>
       const plugin = await loadNativeNotifications();
       const current = await plugin.checkPermissions();
       const status = current.display === "granted" ? current : await plugin.requestPermissions();
-      if (status.display === "granted") {
-        setNotificationsEnabled(true);
-        return "granted";
+      if (status.display === "granted") return "granted";
+      if (status.display === "denied") {
+        if (nativeReminders()?.hasPermission?.()) return "granted";
+        return "denied";
       }
-      // „prompt-with-rationale” înseamnă că sistemul mai poate întreba o dată; nu e refuz definitiv.
-      return status.display === "denied" ? "denied" : "unknown";
     } catch {
-      return "unsupported";
+      /* cădem pe puntea din MainActivity */
     }
+    const bridge = nativeReminders();
+    if (bridge?.hasPermission?.()) return "granted";
+    if (bridge?.requestPermission) {
+      const granted = await waitForNativePermission(bridge);
+      return granted ? "granted" : "denied";
+    }
+    return "unknown";
   }
   if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
-  if (Notification.permission === "granted") {
-    setNotificationsEnabled(true);
-    return "granted";
-  }
+  if (Notification.permission === "granted") return "granted";
   if (Notification.permission === "denied") return "denied";
   try {
     const result = await Notification.requestPermission();
-    if (result === "granted") {
-      setNotificationsEnabled(true);
-      return "granted";
-    }
+    if (result === "granted") return "granted";
     return result === "denied" ? "denied" : "unknown";
   } catch {
     return "unsupported";
@@ -280,9 +339,9 @@ export function buildLocalAlerts(data: AppData) {
 }
 
 async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
+  if (!alerts.length) return false;
   try {
     if (!isNative()) return false;
-    // Încărcat doar pe nativ, ca să nu intre în bundle-ul web/PWA.
     const LocalNotifications = await loadNativeNotifications();
     const perm = await LocalNotifications.checkPermissions();
     if (perm.display !== "granted") return false;
@@ -292,7 +351,7 @@ async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
         id: alert.id,
         title: alert.title,
         body: alert.body,
-        schedule: { at: alert.at },
+        schedule: { at: alert.at, allowWhileIdle: true },
         extra: { tag: alert.tag },
       })),
     });
@@ -304,14 +363,11 @@ async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
 
 async function scheduleWeb(alerts: PlannedAlert[]) {
   if (!("Notification" in window) || Notification.permission !== "granted") return;
-  // Web Notification API nu programează nativ; arătăm doar alertele „azi” imediat dacă e dimineața relevantă
-  // și păstrăm tag-uri ca să nu spamăm.
   const now = Date.now();
   for (const alert of alerts) {
     const delta = alert.at.getTime() - now;
     if (delta < -5 * 60_000 || delta > 14 * 60 * 60_000) continue;
     try {
-      // Programare soft prin setTimeout cât timp tab-ul trăiește (PWA)
       window.setTimeout(() => {
         try {
           new Notification(alert.title, { body: alert.body, tag: alert.tag });
@@ -347,6 +403,15 @@ const writeFamilyAlertLog = (log: Record<string, string>) => {
 };
 
 async function showNow(title: string, body: string, tag: string) {
+  const bridge = nativeReminders();
+  if (bridge?.notifyNow) {
+    try {
+      bridge.notifyNow(title, body);
+      return;
+    } catch {
+      /* cădem pe Capacitor / Notification API */
+    }
+  }
   if (isNative()) {
     try {
       const LocalNotifications = await loadNativeNotifications();
@@ -422,17 +487,10 @@ export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppDa
   if (changed) writeFamilyAlertLog(log);
 }
 
-
-/**
- * Programează alertele din datele locale. Debounce natural prin cheia zilnică.
- */
-
-type NativeReminderBridge = { schedule?: (payload: string) => void; cancelAll?: () => void };
-
 function scheduleWorkManager(alerts: PlannedAlert[]): boolean {
   if (!isNative()) return false;
   try {
-    const bridge = (window as unknown as { BugetFamilieReminders?: NativeReminderBridge }).BugetFamilieReminders;
+    const bridge = nativeReminders();
     if (!bridge?.schedule) return false;
     const payload = JSON.stringify(
       alerts.slice(0, 6).map((alert) => ({
@@ -453,30 +511,55 @@ function scheduleWorkManager(alerts: PlannedAlert[]): boolean {
 export async function scheduleFinancialReminders(data: AppData): Promise<void> {
   if (!isNotificationsEnabled()) return;
   const permission = await getNotificationPermission();
-  if (permission === "denied" || permission === "unsupported") return;
-
-  const dayKey = isoToday();
-  try {
-    if (window.localStorage.getItem(LAST_SCHEDULE_KEY) === dayKey && permission !== "granted") {
-      // așteptăm permisiunea
-    }
-  } catch {
-    /* ignore */
-  }
+  if (permission === "denied") return;
 
   const alerts = buildAlerts(data);
-  if (!alerts.length) return;
 
-  // WorkManager acoperă fundalul Android (tranșă/salariu) chiar dacă tab-ul e închis.
-  scheduleWorkManager(alerts);
-  const usedNative = await tryCapacitorSchedule(alerts);
-  if (!usedNative) {
-    if (permission === "granted") await scheduleWeb(alerts);
+  if (isNative()) {
+    if (alerts.length) scheduleWorkManager(alerts);
+    if (permission === "granted") await tryCapacitorSchedule(alerts);
+  } else if (permission === "granted" && alerts.length) {
+    await scheduleWeb(alerts);
   }
 
   try {
-    window.localStorage.setItem(LAST_SCHEDULE_KEY, dayKey);
+    window.localStorage.setItem(LAST_SCHEDULE_KEY, isoToday());
   } catch {
     /* ignore */
   }
+}
+
+async function pingAlertsOn() {
+  await showNow(
+    t("Reamintiri active"),
+    t("Îți spun pe telefon când e o scadență sau un plic aproape de limită."),
+    "alerts-on",
+  );
+}
+
+/** Activează: cere permisiunea sistemului, programează, trimite o notificare de confirmare. */
+export async function enableLocalAlerts(data: AppData): Promise<NotificationPref> {
+  const status = await requestNotificationPermission();
+  if (status === "granted") {
+    setNotificationsEnabled(true);
+    await scheduleFinancialReminders(data);
+    await pingAlertsOn();
+  } else if (status === "denied") {
+    setNotificationsEnabled(false);
+  }
+  return status;
+}
+
+/** Oprește preferința locală și anulează job-urile WorkManager / Capacitor. */
+export function disableLocalAlerts(): void {
+  setNotificationsEnabled(false);
+  try {
+    nativeReminders()?.cancelAll?.();
+  } catch {
+    /* ignore */
+  }
+  if (!isNative()) return;
+  void loadNativeNotifications()
+    .then((plugin) => plugin.cancel({ notifications: [{ id: 4090 }] }))
+    .catch(() => undefined);
 }

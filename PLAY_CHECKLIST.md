@@ -40,6 +40,7 @@ Detalii: `docs/app-check-enforce-prep.md` · env: `.env.example`
 
 
 - [ ] Cu alertele activate, închide aplicația: o tranșă care începe mâine / salariu aproape ar trebui să notifice (orizont scurt, fără spam)
+- [ ] **Activează alertele** cere permisiunea sistemului (Android 13+) și trimite imediat o notificare „Reamintiri active”. Fără text `pnpm` / `cap sync` pe ecran.
 - [ ] Canalul „Reamintiri plan” apare în Setări sistem → Aplicații → Buget Familie → Notificări
 - [ ] Widgetul / dala rămân neschimbate (probe hardware pe telefon — vezi secțiunile de mai sus)
 
