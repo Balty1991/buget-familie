@@ -1937,6 +1937,8 @@ const en: Record<string, string> = {
   "CSV → De verificat": "CSV → To review",
   "Poți folosi azi": "You can use today",
   "Bonuri sau extras CSV așteaptă confirmarea înainte să intre în registru.": "Receipts or CSV rows await confirmation before they enter the ledger.",
+  "De verificat: {title}": "To review: {title}",
+  "{amount} · nu e încă în registru.": "{amount} · not in the ledger yet.",
   "Deschide": "Open",
   "Cum se citește?": "How to read it?",
   "Date pe telefon.": "Data stays on your phone.",

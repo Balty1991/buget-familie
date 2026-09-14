@@ -330,8 +330,16 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           <Inbox size={19} />
           <div>
             <p>{t("DE VERIFICAT")}</p>
-            <strong>{t("{count} propuneri de confirmat", { count: data.pendingReview.length })}</strong>
-            <span>{t("Bonuri sau extras CSV așteaptă confirmarea înainte să intre în registru.")}</span>
+            <strong>
+              {data.pendingReview.length === 1
+                ? t("De verificat: {title}", { title: data.pendingReview[0].transaction.title })
+                : t("{count} propuneri de confirmat", { count: data.pendingReview.length })}
+            </strong>
+            <span>
+              {data.pendingReview.length === 1
+                ? t("{amount} · nu e încă în registru.", { amount: money(data.pendingReview[0].transaction.amount) })
+                : t("Bonuri sau extras CSV așteaptă confirmarea înainte să intre în registru.")}
+            </span>
           </div>
           <button type="button" onClick={onOpenReview}>{t("Deschide")}</button>
         </aside>
@@ -438,7 +446,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
 
       <OpeningBalanceCard data={data} onChange={onChange} />
 
-      {!simpleMode && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
+      {!simpleMode && data.pendingReview.length === 0 && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
 
       {/* Acțiuni scurte (scadențe / abonamente) — fără al doilea număr de decizie */}
       <TodayBrief data={data} onGo={onGo} onChange={onChange} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
@@ -450,7 +458,9 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
               <p className="bf-os-kicker">{t("Ritm zilnic")}</p>
               <h2 className="bf-os-title">{t("Cât mai ține ziua.")}</h2>
             </div>
-            <p className="bf-os-note" style={{ margin: 0 }}>{t("azi")} <b>{money(rhythm.todayLeft)}</b></p>
+            {!brief.hasPayday && (
+              <p className="bf-os-note" style={{ margin: 0 }}>{t("azi")} <b>{money(rhythm.todayLeft)}</b></p>
+            )}
           </div>
           {!rhythm.hasWeekly ? (
             <ChartEmpty title={t("Ritmul apare după plicuri săptămânale")} detail={t("Pune un plic cu ritm săptămânal în Plan — atunci zilele arată câți lei mai țin.")} />
