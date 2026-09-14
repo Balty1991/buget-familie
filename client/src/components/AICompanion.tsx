@@ -50,7 +50,7 @@ import { shownChatMessages, hiddenChatCount } from "@/lib/shown-chat";
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
 export type { FinancialUpdate } from "@/lib/understand";
-type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void };
+type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void; initiallyOpen?: boolean };
 type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" | "catalog"; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
 type ChatAttachment = { name: string; mimeType: string; data: string };
 type PendingReceiptDraft = { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> };
@@ -365,8 +365,8 @@ function spendAlternatives(data: AppData, parsed: ParsedIntent[], memory?: Guide
   return choices.length ? choices : undefined;
 }
 
-export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinancialUpdate, onRevert }: Props) {
-  const [open, setOpen] = useState(false);
+export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinancialUpdate, onRevert, initiallyOpen = false }: Props) {
+  const [open, setOpen] = useState(initiallyOpen);
   const historyRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);

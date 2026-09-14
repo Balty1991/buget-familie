@@ -64,9 +64,11 @@ export function publishWidgetTemplates(templates: Array<{ id: string; label: str
 }
 
 /**
- * Ascultă acțiunile venite din afara aplicației. Verifică la montare și la fiecare
- * revenire în prim-plan. Dacă puntea nativă întârzie (WebView Capacitor), reîncearcă
- * scurt — altfel o apăsare pe widget la pornire rece se pierdea.
+ * Ascultă acțiunile venite din afara aplicației. Verifică la montare, la fiecare
+ * revenire în prim-plan și când nativul semnalează `buget-familie:quick-action`
+ * (widget/dală cu aplicația deja vizibilă — altfel onNewIntent se pierde).
+ * Dacă puntea nativă întârzie (WebView Capacitor), reîncearcă scurt — altfel o
+ * apăsare pe widget la pornire rece se pierdea.
  */
 export function observeQuickActions(handle: (action: QuickAction) => void): () => void {
   if (typeof window === "undefined") return () => undefined;
@@ -93,9 +95,11 @@ export function observeQuickActions(handle: (action: QuickAction) => void): () =
   boot();
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("focus", check);
+  window.addEventListener("buget-familie:quick-action", check);
   return () => {
     stopped = true;
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("focus", check);
+    window.removeEventListener("buget-familie:quick-action", check);
   };
 }
