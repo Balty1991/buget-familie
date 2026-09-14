@@ -49,6 +49,7 @@ import { getLocale, languages, t } from "@/lib/i18n";
 import { canAddMember, PLANS } from "@/lib/entitlements";
 import { UsageTutorial } from "@/components/UsageTutorial";
 import { ReceiptsStudio } from "@/components/ReceiptsStudio";
+import { ProductCatalogPanel } from "@/components/ProductCatalogPanel";
 import { useLanguage } from "@/hooks/use-language";
 import { matchCommandQuery, searchLedgerHits, writeJournalQuery } from "@/lib/command-search";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -1004,7 +1005,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
   }, []);
   useEffect(() => {
     if (!simpleMode) return;
-    const allowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring"]);
+    const allowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring", "catalog"]);
     if (!allowed.has(tab)) setTab("overview");
   }, [simpleMode, tab, setTab]);
   const isCollaborative = data.settings.members.length > 1;
@@ -1013,6 +1014,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
     { id: "review", label: t("De verificat"), icon: Inbox },
     { id: "sync", label: "Sync", icon: Cloud },
     { id: "receipts", label: t("Bonuri"), icon: ReceiptText },
+    { id: "catalog", label: t("Catalog"), icon: Search },
     { id: "recurring", label: t("Scadențe"), icon: CalendarDays },
     { id: "settings", label: t("Setări"), icon: Settings },
     { id: "guide", label: t("Tutorial"), icon: BookOpen },
@@ -1023,7 +1025,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
     { id: "reports", label: t("Statistici"), icon: LayoutDashboard, advanced: true },
     { id: "assistant", label: t("Asistent"), icon: Bot, advanced: true },
   ];
-  const simpleAllowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring"]);
+  const simpleAllowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring", "catalog"]);
   const tabs = simpleMode
     ? allTabs.filter((item) => simpleAllowed.has(item.id) || item.id === tab)
     : allTabs;
@@ -1044,6 +1046,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
             <div className="bf-more-grid bf-settings-group">
               <button type="button" className="bf-settings-row" onClick={() => setTab("settings")}><Settings size={20} /><span className="bf-settings-copy"><b>{t("Setări")}</b><small>{t("profil, surse, backup și export")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
               <button type="button" className={data.pendingReview.length ? "bf-settings-row has-badge" : "bf-settings-row"} onClick={() => setTab("review")}><Inbox size={20} /><span className="bf-settings-copy"><b>{t("De verificat")}{data.pendingReview.length > 0 && <span className="bf-nav-count">{data.pendingReview.length}</span>}</b><small>{data.pendingReview.length ? t("{count} propuneri de confirmat", { count: data.pendingReview.length }) : t("import și confirmări")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+              <button type="button" className="bf-settings-row" onClick={() => setTab("catalog")}><Search size={20} /><span className="bf-settings-copy"><b>{t("Catalog")}</b><small>{t("caută un articol din listele online")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
               <button type="button" className="bf-settings-row" onClick={() => setTab("recurring")}><CalendarClock size={20} /><span className="bf-settings-copy"><b>{t("Scadențe")}</b><small>{t("facturi și abonamente")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
               <button type="button" className="bf-settings-row" onClick={() => setTab("sync")}><Cloud size={20} /><span className="bf-settings-copy"><b>{t("Sync")}</b><small>{t("opțională între telefoane")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
               <button type="button" className="bf-settings-row" onClick={() => setTab("settings")}><Download size={20} /><span className="bf-settings-copy"><b>{t("Backup / Export")}</b><small>{t("în Setări, pe acest telefon")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
@@ -1058,6 +1061,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
         <p className="bf-kicker bf-more-section-label" id="more-daily-title">{t("ZILNIC")}</p>
         <div className="bf-more-grid bf-settings-group">
           <button type="button" className={data.pendingReview.length ? "bf-settings-row has-badge" : "bf-settings-row"} onClick={() => setTab("review")}><Inbox size={20} /><span className="bf-settings-copy"><b>{t("De verificat")}{data.pendingReview.length > 0 && <span className="bf-nav-count">{data.pendingReview.length}</span>}</b><small>{data.pendingReview.length ? t("{count} propuneri de confirmat", { count: data.pendingReview.length }) : t("import și confirmări")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("catalog")}><Search size={20} /><span className="bf-settings-copy"><b>{t("Catalog")}</b><small>{t("caută Napolact, Ariel, lapte — liste online")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("receipts")}><ReceiptText size={20} /><span className="bf-settings-copy"><b>{t("Bonuri")}</b><small>{t("produse, catalog și alimente vs nealimentare")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("recurring")}><CalendarClock size={20} /><span className="bf-settings-copy"><b>{t("Scadențe")}</b><small>{data.recurring.length} {t("programate")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={onOpenCalendar}><CalendarDays size={20} /><span className="bf-settings-copy"><b>{t("Calendar")}</b><small>{t("scadențe și obiective")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
@@ -1089,7 +1093,8 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onDeleteRe
     </div>;
     if (tab === "debts") return <div className="bf-more-list"><button className="bf-primary bf-inline-add" onClick={onOpenDebt}><Plus size={16} /> {t("Adaugă datorie")}</button>{data.debts.map((debt) => <article key={debt.id}><button type="button" className="bf-more-list-main" onClick={() => onEditDebt?.(debt)}><span><b>{debt.name}</b><small>{debt.due}</small></span><strong>{money(debt.remaining)}</strong><em>{t("Rată {amount}/lună", { amount: money(debt.monthly) })}</em></button>{debt.remaining > 0 && onPayDebt ? <button type="button" className="bf-more-list-pay" onClick={() => onPayDebt(debt)}><Check size={16} /> {t("Plătește")}</button> : null}</article>)}{!data.debts.length && <div className="bf-empty-state slim"><BellRing size={23} /><h2>{t("Nicio datorie")}</h2></div>}</div>;
     if (tab === "savings") return <div className="bf-more-list"><button className="bf-primary bf-inline-add" onClick={onOpenSaving}><Plus size={16} /> {t("Creează obiectiv")}</button>{data.savings.map((saving) => <article key={saving.id} role="button" tabIndex={0} onClick={() => onEditSaving?.(saving)} onKeyDown={(event) => { if (event.key === "Enter") onEditSaving?.(saving); }}><span><b>{saving.name}</b><small>{saving.due}</small></span><strong>{money(saving.current)}</strong><BudgetBar used={saving.current} total={saving.target} tone="gold" /></article>)}{!data.savings.length && <div className="bf-empty-state slim"><PiggyBank size={23} /><h2>{t("Niciun obiectiv")}</h2></div>}</div>;
-    if (tab === "receipts") return <div>{receiptStorageNotice && <p className="bf-notice" role="status"><ShieldCheck size={15} /> {receiptStorageNotice}</p>}<ReceiptsStudio data={data} onChange={onChange} onAddReceipt={onAddReceipt} /><div className="bf-receipt-list">{data.receipts.map((receipt) => <article key={receipt.id}><ReceiptThumbnail receipt={receipt} /><div><b>{receipt.vendor}</b><small>{dateText(receipt.date)} · {receipt.lines?.length || 1} {t("produse")}</small><p>{receipt.lines?.map((line) => `${line.label || line.category}: ${money(line.amount)}`).join(" · ") || receipt.note || t("Fără detalii")}</p>{(receipt.imageKeys?.length || (receipt.imageData2 ? 2 : receipt.imageData ? 1 : 0)) > 1 && <small>{t("Bon în două fotografii")}</small>}</div><strong>{money(receipt.amount)}</strong><button aria-label={`Șterge bonul ${receipt.vendor}`} onClick={() => onDeleteReceipt(receipt.id)}><Trash2 size={16} /></button></article>)}{!data.receipts.length && <div className="bf-empty-state slim"><ReceiptText size={23} /><h2>{t("Niciun bon")}</h2><p>{t("Fotografiază un bon din ghid sau de aici, ori caută un produs în catalog.")}</p></div>}</div></div>;
+    if (tab === "receipts") return <div>{receiptStorageNotice && <p className="bf-notice" role="status"><ShieldCheck size={15} /> {receiptStorageNotice}</p>}<ReceiptsStudio data={data} onAddReceipt={onAddReceipt} /><div className="bf-receipt-list">{data.receipts.map((receipt) => <article key={receipt.id}><ReceiptThumbnail receipt={receipt} /><div><b>{receipt.vendor}</b><small>{dateText(receipt.date)} · {receipt.lines?.length || 1} {t("produse")}</small><p>{receipt.lines?.map((line) => `${line.label || line.category}: ${money(line.amount)}`).join(" · ") || receipt.note || t("Fără detalii")}</p>{(receipt.imageKeys?.length || (receipt.imageData2 ? 2 : receipt.imageData ? 1 : 0)) > 1 && <small>{t("Bon în două fotografii")}</small>}</div><strong>{money(receipt.amount)}</strong><button aria-label={`Șterge bonul ${receipt.vendor}`} onClick={() => onDeleteReceipt(receipt.id)}><Trash2 size={16} /></button></article>)}{!data.receipts.length && <div className="bf-empty-state slim"><ReceiptText size={23} /><h2>{t("Niciun bon")}</h2><p>{t("Fotografiază un bon din ghid sau de aici, ori caută un produs în catalog.")}</p></div>}</div></div>;
+    if (tab === "catalog") return <ProductCatalogPanel data={data} onChange={onChange} />;
     if (tab === "review") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim revizuirea…")}</div>}><ReviewCenterPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "prices") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim prețurile…")}</div>}><PriceWatchPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "pocket") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim buzunarul…")}</div>}><PocketPanel data={data} /></Suspense>;

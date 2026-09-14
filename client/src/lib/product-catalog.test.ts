@@ -5,6 +5,7 @@ import {
   categoryFromOnlineTags,
   classifyProductLabel,
   dominantReceiptCategory,
+  looksLikeProductSearch,
   productSpendBreakdown,
   searchOnlineProducts,
   searchProductCatalog,
@@ -88,5 +89,13 @@ describe("catalogul de produse", () => {
     const hits = await searchOnlineProducts("lapte", { fetchImpl });
     expect(hits.some((item) => /lapte/i.test(item.name) && item.source === "online")).toBe(true);
     expect(hits.some((item) => /ariel/i.test(item.name) && item.category === "Casă & facturi")).toBe(true);
+  });
+
+  it("recunoaște un nume de produs fără sumă, nu o conversație cu ghidul", () => {
+    expect(looksLikeProductSearch("Napolact")).toBe(true);
+    expect(looksLikeProductSearch("detergent Ariel")).toBe(true);
+    expect(looksLikeProductSearch("ok")).toBe(false);
+    expect(looksLikeProductSearch("am dat 50 lei pe benzină")).toBe(false);
+    expect(looksLikeProductSearch("ce fac azi")).toBe(false);
   });
 });

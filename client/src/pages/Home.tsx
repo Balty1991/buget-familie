@@ -663,6 +663,19 @@ export default function Home() {
   const { undo, setUndo, runUndo, deleteWithUndo } = useUndo(data, setData);
   const go = (next: MainView) => { preloadView(next); startTransition(() => setView(next)); };
   useEffect(() => {
+    const openCatalog = (event: Event) => {
+      const query = (event as CustomEvent<{ query?: string }>).detail?.query || "";
+      try {
+        if (query) sessionStorage.setItem("buget-familie:catalog-query", query);
+        else sessionStorage.removeItem("buget-familie:catalog-query");
+      } catch { /* ignore */ }
+      setMore("catalog");
+      go("utilities");
+    };
+    window.addEventListener("buget-familie:open-catalog", openCatalog);
+    return () => window.removeEventListener("buget-familie:open-catalog", openCatalog);
+  }, []);
+  useEffect(() => {
     const skip = document.querySelector(".bf-skip-link");
     if (skip instanceof HTMLElement && skip === document.activeElement) skip.blur();
   }, []);

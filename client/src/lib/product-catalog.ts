@@ -1,7 +1,7 @@
 /**
- * Catalog local de produse + clasificare. Fără cloud: căutarea e pe telefon,
- * categoria e o propunere din denumire, iar repartizarea se calculează din
- * liniile bonurilor deja salvate.
+ * Catalog local de produse + clasificare + căutare în cataloage deschise
+ * (Open Food Facts / Open Products Facts). Căutarea online trimite doar
+ * denumirea tastată — fără poze și fără registru.
  */
 import { foldRomanian, type Receipt } from "./finance-data";
 
@@ -370,3 +370,23 @@ export async function searchOnlineProducts(
   }
   return merged.slice(0, 10);
 }
+
+const CHAT_SKIP = new Set([
+  "ok", "da", "nu", "bine", "merci", "multumesc", "salut", "hey", "hi", "alo", "gata", "stop",
+  "hello", "yes", "no", "thanks", "ajutor", "help", "ce", "cum",
+]);
+
+/** Un cuvânt-două fără sumă: omul caută un articol, nu vorbește cu ghidul. */
+export function looksLikeProductSearch(raw: string): boolean {
+  const text = raw.trim();
+  if (text.length < 3 || text.length > 48) return false;
+  const folded = foldRomanian(text);
+  if (!folded || CHAT_SKIP.has(folded)) return false;
+  if (/[?]/.test(text)) return false;
+  if (/\b(lei|ron|eur|cheltui|platit|am dat|adaug|muta|transfer|venit|salariu|factura|plic|bon)\b/.test(folded)) return false;
+  if (/^(ce |cum |cat |cati |cate |unde |de ce |cand )/.test(folded)) return false;
+  const words = folded.split(/\s+/).filter(Boolean);
+  return words.length > 0 && words.length <= 5;
+}
+
+export const CATALOG_STARTERS = ["Lapte", "Napolact", "Pâine", "Ariel", "Detergent", "Ciorapi", "Ouă", "Ulei"];

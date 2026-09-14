@@ -49,3 +49,10 @@
 .bf-receipts-products small { display: block; color: var(--os-muted, var(--cf-muted)); font: 600 10px Manrope, sans-serif; }
 .bf-receipts-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .bf-receipts-actions .bf-primary, .bf-receipts-actions .bf-ghost { width: auto; }
+.bf-catalog-starters { display: flex; flex-wrap: wrap; gap: 8px; }
+.bf-catalog-starters button {
+  appearance: none; border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer;
+  background: var(--os-surface-2, var(--cf-surface-alt)); color: var(--os-fg, var(--cf-ink));
+  box-shadow: 0 0 0 1px var(--os-line, var(--cf-line)); font: 700 12px Manrope, sans-serif;
+}
+.bf-catalog-panel .bf-receipts-search input { min-height: 52px; font-size: 16px; }
