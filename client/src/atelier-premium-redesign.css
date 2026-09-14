@@ -229,7 +229,7 @@
 .os-shell .os-dock {
   left: 14px !important;
   right: 14px !important;
-  bottom: max(10px, var(--os-inset-bottom)) !important;
+  bottom: max(8px, var(--os-inset-bottom)) !important;
   padding: 6px !important;
   border-radius: 999px !important;
   border: 0 !important;
