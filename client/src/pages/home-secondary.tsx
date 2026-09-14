@@ -13,7 +13,7 @@ import "../mobile-settings-pass.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Copy, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, MoreHorizontal, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, SlidersHorizontal, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Copy, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
 import { BASE_CURRENCY, activeCurrencies, currenciesMissingRate, supportedCurrencies, addIsoDays, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, createEmptyAppData, exchangeRateFor, sourceBalanceInCurrency, sourceCurrency, toBaseAmount, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoDate, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, guessCategoryFromText, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind, type ShareScope, transactionShareScope} from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
 import { checkFamilyPassword, generateFamilyPassword } from "@/lib/family-password";
@@ -1014,30 +1014,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
     if (!allowed.has(tab)) setTab("overview");
   }, [simpleMode, tab, setTab]);
   const isCollaborative = data.settings.members.length > 1;
-  const allTabs: { id: MoreView; label: string; icon: typeof SlidersHorizontal; advanced?: boolean }[] = [
-    { id: "overview", label: t("Instrumente"), icon: MoreHorizontal },
-    { id: "review", label: t("De verificat"), icon: Inbox },
-    { id: "sync", label: "Sync", icon: Cloud },
-    { id: "receipts", label: t("Bonuri"), icon: ReceiptText },
-    { id: "catalog", label: t("Catalog"), icon: Search },
-    { id: "recurring", label: t("Scadențe"), icon: CalendarDays },
-    { id: "settings", label: t("Setări"), icon: Settings },
-    { id: "guide", label: t("Tutorial"), icon: BookOpen },
-    { id: "prices", label: t("Prețuri"), icon: ShoppingBasket, advanced: true },
-    ...(data.settings.members.some((item) => item.kind === "child") ? [{ id: "pocket" as const, label: t("Buzunar"), icon: PiggyBankIcon, advanced: true }] : []),
-    { id: "debts", label: t("Datorii"), icon: BellRing, advanced: true },
-    { id: "savings", label: t("Economii"), icon: PiggyBank, advanced: true },
-    { id: "reports", label: t("Statistici"), icon: LayoutDashboard, advanced: true },
-    { id: "assistant", label: t("Asistent"), icon: Bot, advanced: true },
-  ];
   const simpleAllowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring", "catalog"]);
-  const tabs = simpleMode
-    ? allTabs.filter((item) => simpleAllowed.has(item.id) || item.id === tab)
-    : allTabs;
-  // Dacă ești pe un tab avansat când activezi modul simplu, revino la Instrumente.
-  if (simpleMode && !simpleAllowed.has(tab) && tab !== "settings" && tab !== "sync" && tab !== "guide") {
-    /* keep current tab visible once via filter above; redirect on next paint handled below */
-  }
   const setSettings = (patch: Partial<AppData["settings"]>) => onChange({ ...data, settings: { ...data.settings, ...patch } });
   const content = () => {
     if (tab === "overview") return <div className="bf-more-overview">
@@ -1110,7 +1087,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
     if (tab === "guide") return <FamilyGuide onGo={onGo} onOpenReview={() => setTab("review")} onOpenSync={() => setTab("sync")} />;
     return <SyncPanel {...sync} />;
   };
-  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">{t("MAI MULT")}</p><h1>{t("Tot ce nu e zilnic,")} <em>{t("la un loc.")}</em></h1><p className="bf-helper">{t("Sync, setări, bonuri și scadențe — fără să înghesuim bara de jos.")}</p></div></header><div className="bf-more-tab-region"><p className="bf-more-swipe-hint" aria-hidden="true">{t("Glisează pentru mai multe")}</p><div className="bf-more-tabs" role="tablist" aria-label={t("Categorii de instrumente")}>{tabs.map((item) => { const Icon = item.icon; const reviewCount = item.id === "review" ? data.pendingReview.length : 0; return <button role="tab" aria-selected={tab === item.id} key={item.id} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}><Icon size={16} /> {item.label}{reviewCount > 0 && <span className="bf-nav-count">{reviewCount}</span>}</button>; })}</div></div>{content()}</div>;
+  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><p className="bf-kicker">{t("MAI MULT")}</p><h1>{t("Tot ce nu e zilnic,")} <em>{t("la un loc.")}</em></h1><p className="bf-helper">{t("Sync, setări, bonuri și scadențe — fără să înghesuim bara de jos.")}</p></div></header>{tab !== "overview" && <div className="bf-more-back-row"><button type="button" className="bf-more-back" onClick={() => setTab("overview")}><ChevronLeft size={18} aria-hidden="true" /> {t("Înapoi la instrumente")}</button></div>}{content()}</div>;
 }
 
 /**

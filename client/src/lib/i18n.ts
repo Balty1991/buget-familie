@@ -265,6 +265,7 @@ const en: Record<string, string> = {
   "Șterge": "Delete",
   "Continuă": "Continue",
   "Înapoi": "Back",
+  "Înapoi la instrumente": "Back to tools",
   "Resetează": "Reset",
   "Mută acum": "Move now",
   "Plătită": "Paid",
