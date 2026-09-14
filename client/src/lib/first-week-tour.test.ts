@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   FIRST_WEEK_TIPS,
+  completeOnboardingTourOnly,
   markFirstWeekTourSeen,
   markSetupCompletedAt,
   shouldOfferFirstWeekTour,
@@ -61,6 +62,14 @@ describe("turul primei săptămâni", () => {
 
   it("are cele trei tipuri: captură, plicuri, sync", () => {
     expect(FIRST_WEEK_TIPS.map((tip) => tip.id)).toEqual(["capture", "envelopes", "sync"]);
+  });
+
+  it("skip tur nu marchează setup-complete — FirstRun rămâne", () => {
+    const storage = memory();
+    completeOnboardingTourOnly(storage);
+    expect(storage.getItem("buget-familie:onboarding-complete")).toBe("true");
+    expect(storage.getItem("buget-familie:setup-complete")).toBeNull();
+    expect(shouldShowFirstWeekTour(storage)).toBe(false);
   });
 
   it("markSetupCompletedAt nu aruncă la QuotaExceededError", () => {
