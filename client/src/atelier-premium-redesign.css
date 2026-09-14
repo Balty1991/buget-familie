@@ -225,20 +225,20 @@
   box-shadow: 0 0 0 1.5px var(--os-line, var(--cf-line)) !important;
 }
 
-/* ---------- Dock full-width, lipit de jos ---------- */
+/* ---------- Dock pastilă, lipit de jos ---------- */
 .os-shell .os-dock {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 6px 8px !important;
-  border-radius: 16px 16px 0 0 !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: max(8px, var(--os-inset-bottom)) !important;
+  padding: 5px !important;
+  border-radius: 999px !important;
   border: 0 !important;
-  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, transparent) !important;
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 82%, transparent) !important;
   box-shadow:
-    0 -1px 0 color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent),
-    0 -10px 28px color-mix(in srgb, #000 18%, transparent) !important;
-  backdrop-filter: blur(18px) saturate(1.15) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+    0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent),
+    0 12px 32px color-mix(in srgb, #000 28%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.25) !important;
 }
 
 .os-shell .os-dock button {
@@ -246,7 +246,7 @@
   min-height: 48px !important;
   height: 48px !important;
   padding: 4px 2px !important;
-  border-radius: 12px !important;
+  border-radius: 999px !important;
   color: var(--os-muted, var(--cf-muted)) !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -297,8 +297,8 @@
 
 @media (max-width: 430px) {
   .os-shell .os-dock {
-    left: 0 !important;
-    right: 0 !important;
+    left: 10px !important;
+    right: 10px !important;
   }
   .os-shell .os-dock button span {
     font-size: 9.5px !important;

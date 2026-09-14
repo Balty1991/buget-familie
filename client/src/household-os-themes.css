@@ -304,11 +304,11 @@ html.theme-aurora {
 
 /* Dock: frosted warm platinum, active = pin — distinct de look-ul stark negru */
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 6px 8px !important;
-  border-radius: 16px 16px 0 0 !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: max(8px, var(--os-inset-bottom)) !important;
+  padding: 5px !important;
+  border-radius: 999px !important;
   background: rgba(251, 250, 247, .94) !important;
   box-shadow:
     0 0 0 1px #d5d2c8,
@@ -320,7 +320,7 @@ html.theme-aurora {
   font-size: 10px !important;
   font-weight: 680 !important;
   letter-spacing: 0.01em !important;
-  border-radius: 16px !important;
+  border-radius: 999px !important;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.is-on,
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
@@ -479,7 +479,7 @@ html.theme-aurora {
     border-radius: 14px !important;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
-    left: 0 !important;
-    right: 0 !important;
+    left: 10px !important;
+    right: 10px !important;
   }
 }

@@ -1134,57 +1134,45 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
   opacity: .45;
 }
 
-/* ---- Dock edge-to-edge, lipit de bara de sistem ---- */
+/* ---- Dock pastilă rotundă ---- */
 .os-shell .os-dock {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 6px 8px !important;
-  border-radius: 16px 16px 0 0 !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: max(8px, var(--os-inset-bottom)) !important;
+  padding: 5px !important;
+  border-radius: 999px !important;
   border: 0 !important;
-  border-top: 1px solid color-mix(in srgb, var(--os-line) 80%, transparent) !important;
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--os-surface) 96%, transparent),
-      color-mix(in srgb, var(--os-surface) 92%, transparent)
+      color-mix(in srgb, var(--os-surface) 92%, transparent),
+      color-mix(in srgb, var(--os-surface) 82%, transparent)
     ) !important;
   box-shadow:
-    0 -10px 24px color-mix(in srgb, var(--os-fg, var(--cf-ink)) 12%, transparent) !important;
-  backdrop-filter: blur(18px) saturate(1.15) !important;
+    0 0 0 1px color-mix(in srgb, var(--os-line) 80%, transparent),
+    0 12px 28px color-mix(in srgb, var(--os-fg, var(--cf-ink)) 18%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(1.2) !important;
 }
 
 .os-shell .os-dock button.active,
 .os-shell .os-dock button.is-on {
-  color: var(--os-mint) !important;
-  background:
-    radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--os-mint) 28%, transparent), transparent 70%),
-    var(--os-mint-dim) !important;
+  color: var(--os-mint-fg, #fff) !important;
+  background: var(--os-mint) !important;
   box-shadow:
-    inset 0 -2px 0 var(--os-mint),
-    0 0 18px color-mix(in srgb, var(--os-mint) 35%, transparent),
-    0 6px 14px color-mix(in srgb, var(--os-mint) 18%, transparent) !important;
+    0 1px 0 color-mix(in srgb, #fff 22%, transparent) inset,
+    0 8px 16px color-mix(in srgb, var(--os-mint) 32%, transparent) !important;
 }
 
 .os-shell .os-dock button.active::after,
 .os-shell .os-dock button.is-on::after {
-  content: "";
-  position: absolute;
-  left: 22%;
-  right: 22%;
-  bottom: 3px;
-  height: 2px;
-  border-radius: 99px;
-  background: var(--os-mint);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--os-mint) 80%, transparent);
-  animation: bf-dock-pulse 2.4s ease-in-out infinite;
-  pointer-events: none;
+  display: none !important;
 }
 
 .os-shell .os-dock button {
   position: relative;
   min-height: 48px !important;
   height: 48px !important;
+  border-radius: 999px !important;
 }
 
 html.theme-white .os-shell .os-dock {
