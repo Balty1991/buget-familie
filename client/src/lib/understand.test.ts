@@ -157,6 +157,23 @@ describe("cheltuiala din ghid iese din plic, nu din nealocat", () => {
   });
 });
 
+describe("ghidul pe bon spune doar totalul", () => {
+  it("la bon, ghidul spune doar totalul și categoria, nu lista de produse", () => {
+    const out = expenseProposal("Analizează bonul atașat.", {
+      amount: 15.5,
+      vendor: "PEPCO",
+      title: "PEPCO",
+      category: "Timp liber",
+      receiptLines: [{ name: "CIORAPI", amount: 6 }, { name: "HANORAC", amount: 9.5 }],
+    }, createEmptyAppData(), emptyGuideMemory(), true);
+    expect(out?.text).toMatch(/15[,.]50/);
+    expect(out?.text).toMatch(/Timp liber/);
+    expect(out?.text).toMatch(/Bonuri/);
+    expect(out?.text).not.toMatch(/CIORAPI/);
+    expect(out?.text).not.toMatch(/HANORAC/);
+  });
+});
+
 describe("ghidul salvează cheltuiala doar după plic și zi", () => {
   it("nu scrie dacă ai atins doar plicul sau doar ziua", () => {
     expect(canCommitGuideSpend(true, false)).toBe(false);

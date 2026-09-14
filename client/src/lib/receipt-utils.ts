@@ -2,6 +2,7 @@
  * Bonuri mobile: procesare și interpretare locală înainte de persistență.
  * Fotografiile și textul OCR nu sunt trimise către un serviciu financiar extern.
  */
+import { classifyProductLabel } from "./product-catalog";
 const MAX_ORIGINAL_BYTES = 25_000_000;
 const TARGET_COMPRESSED_BYTES = 600_000;
 const MAX_EDGE = 1600;
@@ -111,19 +112,7 @@ const parseSignedAmount = (raw: string) => {
   return negative ? -amount : amount;
 };
 
-const suggestedCategory = (label: string) => {
-  const value = label.toLocaleLowerCase("ro-RO");
-  if (/(garantie|garanție|sgr|pet sgr)/.test(value)) return "Alimente";
-  if (/(jucarie|jucării|scutec|bibero)/.test(value)) return "Consumabile copil";
-  if (/(ciorap|tenis|hain|pantal|chilot|rochie|bluza|geaca|tricou|incalt|punga|hanorac)/.test(value)) return "Timp liber";
-  if (/(apa|suc|cola|bere|vin|cafea|ceai|bautur)/.test(value)) return "Băuturi";
-  if (/(ciocol|kinder|biscuit|bombo|dulce|napolitan|prajitur|cookie|pie)/.test(value)) return "Dulciuri";
-  if (/(deterg|sapun|igien|servetel|hartie|burete|solutie|sac menaj|sacosa|lipici)/.test(value)) return "Casă & facturi";
-  if (/(taxi|uber|bolt|benz|motorin|parcar|transport)/.test(value)) return "Transport";
-  if (/(farmac|medic|vitamin|pastil)/.test(value)) return "Sănătate";
-  if (/(paine|lapte|iaurt|branza|oua|carne|mezel|fruct|legum|orez|paste|faina|malai|ulei|zahar|aliment|cereale)/.test(value)) return "Alimente";
-  return "Alimente";
-};
+const suggestedCategory = (label: string) => classifyProductLabel(label);
 
 const lastMoney = (line: string) => {
   const cleaned = line.replace(taxLetter, "");

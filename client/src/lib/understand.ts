@@ -34,12 +34,13 @@ import {
 import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
+import { spendGroupOf } from "./product-catalog";
 import { extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
   | { kind: "income"; amount: number; title: string; date?: string; memberId?: string; clientCaptureId?: string }
-  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string; recurringId?: string; fromWeekIndex?: number }
+  | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string; recurringId?: string; fromWeekIndex?: number; receiptDraft?: { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> } }
   | { kind: "debt"; name: string; remaining: number; due?: string }
   | { kind: "debt-monthly"; amount: number; name?: string }
   | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string }
@@ -204,20 +205,15 @@ export function findHabit(memory: GuideMemory, raw: string, title: string) {
 }
 
 export function receiptDetails(extracted?: ExtractedGuide) {
-  if (!extracted?.receiptLines?.length && !extracted?.confidence) return "";
-  const lines = (extracted.receiptLines || []).slice(0, 16).filter((line) => line.name);
-  const products = lines.length ? ` Produse citite: ${lines.map((line) => `${line.quantity && line.quantity !== 1 ? `${line.quantity}× ` : ""}${line.name}${line.amount ? ` ${money(line.amount)}` : ""}`).join(", ")}.` : " Produsele nu au fost suficient de lizibile.";
-  const lineTotal = lines.reduce((sum, line) => sum + (line.amount || 0), 0);
-  const difference = extracted.amount && lineTotal > 0 ? Math.round((extracted.amount - lineTotal) * 100) / 100 : 0;
-  const reconciliation = extracted.amount
-    ? lineTotal > 0
-      ? Math.abs(difference) <= 0.01
-        ? ` Total bon: **${money(extracted.amount)}**. Liniile se potrivesc cu totalul.`
-        : ` Total bon: **${money(extracted.amount)}**. Liniile însumează **${money(lineTotal)}**; diferență de **${money(Math.abs(difference))}**${difference > 0 ? " (posibilă reducere sau linie necitită)" : " (verifică o posibilă citire dublă)"}.`
-      : ` Total bon identificat: **${money(extracted.amount)}**.`
+  if (!extracted?.amount && !extracted?.vendor && !extracted?.category) return "";
+  const vendor = extracted.vendor ? ` **${extracted.vendor}**.` : "";
+  const total = extracted.amount ? ` Total bon: **${money(extracted.amount)}**.` : "";
+  const group = extracted.category ? spendGroupOf(extracted.category) : "";
+  const category = extracted.category
+    ? ` ${t("Categorie")}: **${extracted.category}** (${group === "Alimente" ? t("alimente") : t("nealimentare")}).`
     : "";
   const confidence = extracted.confidence === "low" ? t(" Verifică atent suma; fotografia nu este suficient de clară.") : "";
-  return `${reconciliation}${products}${confidence}`;
+  return `${vendor}${total}${category}${t(" Produsele le vezi la Bonuri.")}${confidence}`;
 }
 
 function matchEnvelope(data: AppData, token: string) {

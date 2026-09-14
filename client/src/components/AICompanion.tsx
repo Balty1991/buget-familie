@@ -8,6 +8,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { parseModelIntents, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText } from "@/lib/analyst";
+import { dominantReceiptCategory } from "@/lib/product-catalog";
 import { buildSuggestions } from "@/lib/suggestions";
 import {
   claimsSaved,
@@ -52,6 +53,7 @@ export type { FinancialUpdate } from "@/lib/understand";
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void };
 type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
 type ChatAttachment = { name: string; mimeType: string; data: string };
+type PendingReceiptDraft = { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
 const CHAT_KEY = "buget-familie:ai-chat-v1";
 const money = (value: number) => `${Number(value.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
@@ -383,6 +385,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const [pickedChoice, setPickedChoice] = useState<ChatChoice | null>(null);
   const [dateTapped, setDateTapped] = useState(false);
   const lastSaveRef = useRef({ key: "", at: 0 });
+  const pendingReceiptRef = useRef<PendingReceiptDraft | null>(null);
   const monthSummary = useMemo(() => { const month = today().slice(0, 7); const current = data.transactions.filter((item) => item.date.startsWith(month)); return { income: current.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0), expense: current.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0) }; }, [data]);
   const todayPace = useMemo(() => Math.round(todayBrief(data).spendable), [data]);
   /** Ce merită întrebat acum, din situația reală: plic gol, salariu aproape, datorii. */
@@ -455,33 +458,38 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     const update = choice.update.kind === "expense" || choice.update.kind === "income"
       ? { ...choice.update, date: day, clientCaptureId: choice.update.clientCaptureId || newId(`capture-${choice.update.kind}`) }
       : choice.update;
-    onFinancialUpdate(update);
-    if (update.kind === "expense") {
+    const draft = pendingReceiptRef.current;
+    const stamped = update.kind === "expense" && draft && Math.abs(draft.amount - update.amount) <= 0.05
+      ? { ...update, receiptDraft: draft }
+      : update;
+    if (stamped.kind === "expense" && "receiptDraft" in stamped && stamped.receiptDraft) pendingReceiptRef.current = null;
+    onFinancialUpdate(stamped);
+    if (stamped.kind === "expense") {
       const proposed = [...messages].reverse().find((item) => item.role === "assistant" && item.updates?.length)?.updates?.[0];
-      setMemory(learn(update, isCorrection(proposed, update) ? 2 : 1));
+      setMemory(learn(stamped, isCorrection(proposed, stamped) ? 2 : 1));
     }
     resetSpendDraft();
-    if (update.kind === "delete-transaction") {
-      addMessage({ role: "assistant", text: `Am șters **${update.title}**, ${money(update.amount)}.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
+    if (stamped.kind === "delete-transaction") {
+      addMessage({ role: "assistant", text: `Am șters **${stamped.title}**, ${money(stamped.amount)}.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
       return;
     }
-    if (update.kind === "amend-transaction") {
-      addMessage({ role: "assistant", text: `Am schimbat **${update.title}** din ${money(update.was)} în **${money(update.amount)}**.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
+    if (stamped.kind === "amend-transaction") {
+      addMessage({ role: "assistant", text: `Am schimbat **${stamped.title}** din ${money(stamped.was)} în **${money(stamped.amount)}**.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
       setHistoryOpen(false);
       return;
     }
-    if (update.kind === "transfer") {
-      addMessage({ role: "assistant", text: `Am mutat ${money(update.amount)} din **${update.fromLabel}** în **${update.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
+    if (stamped.kind === "transfer") {
+      addMessage({ role: "assistant", text: `Am mutat ${money(stamped.amount)} din **${stamped.fromLabel}** în **${stamped.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
       setHistoryOpen(false);
       return;
     }
-    const spent = update.kind === "expense" || update.kind === "income" ? `${update.title} ${money(update.amount)}` : money("amount" in update ? update.amount : 0);
+    const spent = stamped.kind === "expense" || stamped.kind === "income" ? `${stamped.title} ${money(stamped.amount)}` : money("amount" in stamped ? stamped.amount : 0);
     addMessage({
       role: "assistant",
-      text: noDoubleStop(`Am salvat ${spent} · ${choice.label} · ${dateCopy(day)}.`),
+      text: noDoubleStop(`Am salvat ${spent} · ${choice.label} · ${dateCopy(day)}.${stamped.kind === "expense" && "receiptDraft" in stamped && stamped.receiptDraft ? ` ${t("Produsele sunt la Bonuri.")}` : ""}`),
       action: { type: "journal", label: t("Vezi în Mișcări") },
-      undo: (update.kind === "expense" || update.kind === "income") ? { kind: update.kind, title: update.title, amount: update.amount, date: day } : undefined,
+      undo: (stamped.kind === "expense" || stamped.kind === "income") ? { kind: stamped.kind, title: stamped.title, amount: stamped.amount, date: day } : undefined,
     });
     setHistoryOpen(false);
   };
@@ -530,6 +538,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     setGuideStage(stage);
     setPendingDebtName("");
     setAttachments([]);
+    pendingReceiptRef.current = null;
     resetSpendDraft();
     try {
       window.localStorage.setItem(CHAT_KEY, JSON.stringify(fresh));
@@ -689,6 +698,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
     if (!raw && !attachments.length) return;
     const requestText = raw || t("Analizează bonul atașat și propune cheltuiala.");
     const sentAttachments = attachments;
+    if (!sentAttachments.length) pendingReceiptRef.current = null;
     setMessage("");
     setAttachments([]);
     setHistoryOpen(false);
@@ -772,13 +782,18 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
               local.text ? `text brut: ${local.text.slice(0, 5000)}` : "",
             ].filter(Boolean).join("\n");
             if (local.amount) {
+              pendingReceiptRef.current = {
+                vendor: local.vendor || t("Bon"),
+                amount: local.amount,
+                date: local.date,
+                items: local.items.map((item) => ({ label: item.label, amount: item.amount, category: item.category })),
+              };
               const extracted: ExtractedGuide = {
                 amount: local.amount,
                 title: local.vendor || t("Bon"),
                 vendor: local.vendor,
                 date: local.date,
-                category: local.items[0]?.category,
-                receiptLines: local.items.slice(0, 40).map((item) => ({ name: item.label, amount: item.amount })),
+                category: dominantReceiptCategory(local.items),
                 confidence: receiptReadIsReconciled(local) ? "high" : "medium",
               };
               const localProposal = expenseProposal(requestText, extracted, data, liveMemory, true);
