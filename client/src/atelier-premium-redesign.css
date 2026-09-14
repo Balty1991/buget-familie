@@ -230,7 +230,7 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  padding: 4px 4px 6px !important;
+  padding: 6px 6px 8px !important;
   border-radius: 16px 16px 0 0 !important;
   border: 0 !important;
   background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, transparent) !important;
@@ -243,8 +243,8 @@
 
 .os-shell .os-dock button {
   gap: 1px !important;
-  min-height: 44px !important;
-  height: 44px !important;
+  min-height: 48px !important;
+  height: 48px !important;
   padding: 4px 2px !important;
   border-radius: 12px !important;
   color: var(--os-muted, var(--cf-muted)) !important;

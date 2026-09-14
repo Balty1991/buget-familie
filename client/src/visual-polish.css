@@ -1139,7 +1139,7 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  padding: 4px 4px 6px !important;
+  padding: 6px 6px 8px !important;
   border-radius: 16px 16px 0 0 !important;
   border: 0 !important;
   border-top: 1px solid color-mix(in srgb, var(--os-line) 80%, transparent) !important;
@@ -1183,8 +1183,8 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
 
 .os-shell .os-dock button {
   position: relative;
-  min-height: 44px !important;
-  height: 44px !important;
+  min-height: 48px !important;
+  height: 48px !important;
 }
 
 html.theme-white .os-shell .os-dock {

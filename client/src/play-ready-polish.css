@@ -13,15 +13,15 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  padding: 4px 4px 6px !important;
+  padding: 6px 6px 8px !important;
   border-radius: 16px 16px 0 0 !important;
   background: color-mix(in srgb, var(--os-surface) 96%, transparent) !important;
   box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.22) !important;
 }
 
 .os-shell .os-dock button {
-  min-height: 44px !important;
-  height: 44px !important;
+  min-height: 48px !important;
+  height: 48px !important;
   gap: 1px !important;
   font-size: 10px !important;
   font-weight: 650 !important;
