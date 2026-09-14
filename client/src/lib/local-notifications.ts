@@ -582,6 +582,18 @@ const writeFamilyTxLog = (log: Record<string, string>) => {
   }
 };
 
+function notificationAssetUrl(file: string): string {
+  const base = typeof import.meta !== "undefined" && import.meta.env?.BASE_URL ? import.meta.env.BASE_URL : "/";
+  const path = `${base}icons/${file}`.replace(/\/{2,}/g, "/");
+  try {
+    const origin = typeof window !== "undefined" ? window.location?.origin : "";
+    if (origin) return new URL(path, origin).href;
+  } catch {
+    /* ignore */
+  }
+  return path;
+}
+
 async function showViaServiceWorker(title: string, body: string, tag: string): Promise<boolean> {
   try {
     const serviceWorker = navigator.serviceWorker;
@@ -591,8 +603,8 @@ async function showViaServiceWorker(title: string, body: string, tag: string): P
     await registration.showNotification(title, {
       body,
       tag,
-      icon: "./icons/icon-192.png",
-      badge: "./icons/favicon-32.png",
+      icon: notificationAssetUrl("icon-192.png"),
+      badge: notificationAssetUrl("notify-badge.png"),
       lang: getLocale(),
     });
     return true;
@@ -626,7 +638,11 @@ async function showNow(title: string, body: string, tag: string) {
   if (!("Notification" in window)) return;
   if (Notification.permission !== "granted") return;
   try {
-    new Notification(title, { body, tag });
+    new Notification(title, {
+      body,
+      tag,
+      icon: notificationAssetUrl("icon-192.png"),
+    });
   } catch {
     /* ignore */
   }

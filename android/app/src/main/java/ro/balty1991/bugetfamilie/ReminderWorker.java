@@ -7,6 +7,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -65,7 +67,8 @@ public class ReminderWorker extends Worker {
       PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
     );
     final NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-      .setSmallIcon(R.mipmap.ic_launcher)
+      .setSmallIcon(R.drawable.ic_stat_notify)
+      .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
       .setContentTitle(title)
       .setContentText(body)
       .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
@@ -73,6 +76,10 @@ public class ReminderWorker extends Worker {
       .setAutoCancel(true)
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
       .setCategory(NotificationCompat.CATEGORY_REMINDER);
+    final Bitmap large = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher_round);
+    if (large != null) {
+      builder.setLargeIcon(large);
+    }
     if (tag != null && !tag.isEmpty()) {
       builder.setGroup(tag);
     }

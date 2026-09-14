@@ -49,6 +49,21 @@ def save(img: Image.Image, path: Path) -> None:
     img.save(path, "PNG", optimize=True)
 
 
+def notify_badge(size: int = 96) -> Image.Image:
+    """Plic alb pe transparent — gliful din bara de status (Chrome/Android)."""
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    margin = int(size * 0.10)
+    top = int(size * 0.27)
+    bottom = int(size * 0.82)
+    draw.rounded_rectangle((margin, top + int(size * 0.08), size - margin, bottom), radius=int(size * 0.06), fill=(255, 255, 255, 255))
+    draw.polygon(
+        [(margin, top + int(size * 0.14)), (size // 2, int(size * 0.08)), (size - margin, top + int(size * 0.14))],
+        fill=(255, 255, 255, 255),
+    )
+    return img
+
+
 def splash(width: int, height: int, mark: Image.Image) -> Image.Image:
     img = Image.new("RGBA", (width, height), PAPER)
     side = int(min(width, height) * 0.36)
@@ -71,6 +86,7 @@ def main() -> None:
     save(downscale(master, 48), WEB / "icons/favicon-48.png")
     save(downscale(master, 512), PLAY / "icon-512.png")
     save(downscale(master, 1024), WEB / "icons/icon-1024.png")
+    save(notify_badge(96), WEB / "icons/notify-badge.png")
 
     densities = {
         "mdpi": 108,

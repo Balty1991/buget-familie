@@ -36,6 +36,7 @@ const stubWeb = () => {
   Object.assign(globalThis, {
     window: {
       localStorage,
+      location: { origin: "https://example.test" },
       Notification: FakeNotification,
       setTimeout: (...args: Parameters<typeof setTimeout>) => globalThis.setTimeout(...args),
       addEventListener: () => undefined,
