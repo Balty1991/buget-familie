@@ -29,7 +29,7 @@
         <item name="android:background">@drawable/launch_screen</item>
         <item name="android:windowBackground">@drawable/launch_screen</item>
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_bf_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:statusBarColor">#F4EFE4</item>
         <item name="android:navigationBarColor">#F4EFE4</item>

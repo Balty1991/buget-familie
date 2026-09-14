@@ -1,56 +1,34 @@
 #!/usr/bin/env python3
-"""Casa-plic: semn cald pentru launcher, splash și antet. Fără cub neon pe negru."""
+"""Rasterizează plicul 3D ales (varianta 1) pentru launcher, splash și antet."""
 from __future__ import annotations
 
 from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-SAGE = (232, 243, 236, 255)
-CREAM = (255, 250, 243, 255)
-FOREST = (27, 79, 66, 255)
-FOREST_DEEP = (18, 58, 48, 255)
-MINT = (196, 228, 212, 255)
+IVORY = (251, 244, 233, 255)
 PAPER = (244, 239, 228, 255)
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "client/public"
 PLAY = ROOT / "docs/play-store-assets"
 ANDROID = ROOT / "android/app/src/main/res"
+SOURCE = ROOT / "client/public/icons/icon-master.jpg"
 
 
-def lerp(a, b, t):
-    return tuple(int(x + (y - x) * t) for x, y in zip(a, b))
+def load_master(size: int = 2048) -> Image.Image:
+    src = Image.open(SOURCE).convert("RGB")
+    return src.resize((size, size), Image.Resampling.LANCZOS).convert("RGBA")
 
 
-def draw_house_envelope(size: int, *, pad: float, background: tuple | None) -> Image.Image:
-    img = Image.new("RGBA", (size, size), background or (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    inner = size * (1 - 2 * pad)
-    ox = size * pad
-    oy = size * pad * 1.04
-
-    def p(x: float, y: float) -> tuple[float, float]:
-        return ox + x * inner, oy + y * inner
-
-    stroke = max(2, int(inner * 0.028))
-    radius = max(8, int(inner * 0.075))
-
-    body = [p(0.12, 0.38), p(0.88, 0.92)]
-    draw.rounded_rectangle(body, radius=radius, fill=CREAM, outline=FOREST, width=stroke)
-
-    pocket = [p(0.16, 0.40), p(0.50, 0.74), p(0.84, 0.40)]
-    draw.polygon(pocket, fill=MINT)
-    draw.line([pocket[0], pocket[1], pocket[2]], fill=FOREST, width=max(2, stroke - 1), joint="curve")
-
-    roof = [p(0.08, 0.42), p(0.50, 0.06), p(0.92, 0.42)]
-    draw.polygon(roof, fill=FOREST)
-    inner_roof = [p(0.22, 0.40), p(0.50, 0.16), p(0.78, 0.40)]
-    draw.polygon(inner_roof, fill=CREAM)
-
-    # muchia acoperișului, ca un plic închis — casă și registru în același semn
-    draw.line([p(0.08, 0.42), p(0.50, 0.06), p(0.92, 0.42)], fill=FOREST_DEEP, width=stroke, joint="curve")
-    return img
+def pad_on_ivory(src: Image.Image, pad: float) -> Image.Image:
+    size = src.size[0]
+    canvas = Image.new("RGBA", (size, size), IVORY)
+    inner = int(size * (1 - 2 * pad))
+    icon = src.resize((inner, inner), Image.Resampling.LANCZOS)
+    xy = (size - inner) // 2
+    canvas.paste(icon, (xy, xy), icon)
+    return canvas
 
 
 def downscale(src: Image.Image, size: int) -> Image.Image:
@@ -73,21 +51,21 @@ def save(img: Image.Image, path: Path) -> None:
 
 def splash(width: int, height: int, mark: Image.Image) -> Image.Image:
     img = Image.new("RGBA", (width, height), PAPER)
-    side = int(min(width, height) * 0.28)
+    side = int(min(width, height) * 0.36)
     icon = mark.resize((side, side), Image.Resampling.LANCZOS)
     img.paste(icon, ((width - side) // 2, int(height * 0.38) - side // 2), icon)
     return img
 
 
 def main() -> None:
-    master = draw_house_envelope(2048, pad=0.18, background=SAGE)
-    foreground = draw_house_envelope(2048, pad=0.22, background=None)
-    maskable = draw_house_envelope(2048, pad=0.26, background=SAGE)
+    master = load_master(2048)
+    # Adaptive: mai mult aer, ca masca rotundă să nu taie plicul.
+    foreground = pad_on_ivory(master, 0.08)
 
     save(downscale(master, 192), WEB / "icons/icon-192.png")
     save(downscale(master, 512), WEB / "icons/icon-512.png")
-    save(downscale(maskable, 192), WEB / "icons/icon-192-maskable.png")
-    save(downscale(maskable, 512), WEB / "icons/icon-512-maskable.png")
+    save(downscale(foreground, 192), WEB / "icons/icon-192-maskable.png")
+    save(downscale(foreground, 512), WEB / "icons/icon-512-maskable.png")
     save(downscale(master, 180), WEB / "icons/apple-touch-icon.png")
     save(downscale(master, 32), WEB / "icons/favicon-32.png")
     save(downscale(master, 48), WEB / "icons/favicon-48.png")

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Buget Familie">
-  <rect width="32" height="32" rx="8" fill="#E8F3EC"/>
-  <path fill="#FFFAF3" stroke="#1B4F42" stroke-width=".9" d="M8.2 14.6h15.6c.9 0 1.6.7 1.6 1.5v6.6c0 .8-.7 1.5-1.6 1.5H8.2c-.9 0-1.6-.7-1.6-1.5v-6.6c0-.8.7-1.5 1.6-1.5z"/>
-  <path fill="#C4E4D4" d="M8.4 14.4 16 22.1 23.6 14.4Z"/>
-  <path fill="#1B4F42" d="M6.4 14.8 16 7.2 25.6 14.8Z"/>
-  <path fill="#FFFAF3" d="M9.8 14.4 16 9.4 22.2 14.4Z"/>
+  <rect width="32" height="32" rx="8" fill="#FBF4E9"/>
+  <path fill="#C9D4B8" d="M6 12.4 16 20.6 26 12.4 16 6.6Z"/>
+  <path fill="#FFF6EA" stroke="#C4B49A" stroke-width=".6" d="M7.4 13h17.2c.7 0 1.2.5 1.2 1.1v10.2c0 .6-.5 1.1-1.2 1.1H7.4c-.7 0-1.2-.5-1.2-1.1V14.1c0-.6.5-1.1 1.2-1.1z"/>
+  <path fill="#C9D4B8" d="M7.2 13.1 16 20.2 24.8 13.1Z"/>
+  <path fill="#D4A24A" d="M16 16.2a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6Z"/>
 </svg>

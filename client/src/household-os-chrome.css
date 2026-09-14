@@ -88,7 +88,7 @@ html.capacitor-android {
   border: 0 !important;
   border-radius: 16px !important;
   color: #1B4F42 !important;
-  background: #E8F3EC !important;
+  background: #FBF4E9 !important;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, #d5ddd8) 70%, transparent) !important;
 }
 
@@ -102,18 +102,20 @@ html.capacitor-android {
 }
 
 .os-mark svg {
-  display: block !important;
-  width: 44px !important;
-  height: 44px !important;
+  display: none !important;
 }
 
 .os-mark img {
-  display: none !important;
+  display: block !important;
+  width: 44px !important;
+  height: 44px !important;
+  object-fit: cover !important;
+  border-radius: 16px !important;
 }
 
 @media (max-width: 760px) {
   .os-mark,
-  .os-mark svg {
+  .os-mark img {
     width: 40px !important;
     height: 40px !important;
   }

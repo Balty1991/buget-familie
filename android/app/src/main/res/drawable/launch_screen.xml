@@ -1,4 +1,4 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background"/>
-    <item android:drawable="@drawable/ic_bf_launcher_foreground" android:gravity="center" android:width="114dp" android:height="114dp"/>
+    <item android:drawable="@mipmap/ic_launcher_foreground" android:gravity="center" android:width="128dp" android:height="128dp"/>
 </layer-list>
