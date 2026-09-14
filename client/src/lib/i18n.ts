@@ -1391,7 +1391,7 @@ const en: Record<string, string> = {
   "Alege un obiectiv care contează.": "Choose a goal that matters.",
   "Alertele sunt active pe acest dispozitiv.": "Alerts are on for this device.",
   "Alertele sunt active pe acest dispozitiv. Urmează și o notificare de confirmare.": "Alerts are on for this device. A confirmation notification should follow.",
-  "Am cerut permisiunea. Dacă ai apăsat Permite, închide aplicația și deschide-o din nou — pe unele telefoane grant-ul se înregistrează abia atunci.": "Permission was requested. If you tapped Allow, close the app and open it again — on some phones the grant is only recorded then.",
+  "Am înregistrat Permite pe acest telefon. Dacă nu vezi o notificare, apasă „Trimite o notificare de test”.": "Allow was recorded on this phone. If you do not see a notification, tap “Send a test notification”.",
   "Am trimis o notificare de test pe acest telefon.": "A test notification was sent to this phone.",
   "Notificare de test": "Test notification",
   "Dacă vezi asta, alertele ajung pe telefon.": "If you can see this, alerts are reaching the phone.",

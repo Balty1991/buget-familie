@@ -42,6 +42,8 @@ const stubWindow = (opts?: { native?: boolean; permission?: boolean }) => {
   };
   const documentStub = {
     documentElement: { classList: { contains: (name: string) => Boolean(opts?.native) && name === "capacitor-android" } },
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
   };
   Object.assign(globalThis, {
     window: {

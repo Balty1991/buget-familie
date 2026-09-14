@@ -21,7 +21,7 @@ import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageSto
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { DebtSnowballCard } from "@/components/DebtSnowballCard";
-import { disableLocalAlerts, enableLocalAlerts, getNotificationPermission, isNotificationsEnabled, sendTestAlert, type NotificationPref } from "@/lib/local-notifications";
+import { disableLocalAlerts, enableLocalAlerts, getNotificationPermission, isNotificationsArmed, isNotificationsEnabled, sendTestAlert, type NotificationPref } from "@/lib/local-notifications";
 import { isOfflineOnly, setOfflineOnly, setSimpleMode } from "@/lib/ui-prefs";
 import { disableAppLock, hasAppLockPin, isAppLockEnabled, isValidPin, setAppLockPin } from "@/lib/app-lock";
 import {
@@ -1180,6 +1180,7 @@ function ExchangeRatesSection({ data, settings, change }: { data: AppData; setti
 function LocalAlertsSettings({ data }: { data: AppData }) {
   const [pref, setPref] = useState<NotificationPref>("unknown");
   const [enabled, setEnabled] = useState(() => isNotificationsEnabled());
+  const [armed, setArmed] = useState(() => isNotificationsArmed());
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -1188,6 +1189,7 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
       void getNotificationPermission().then((status) => {
         setPref(status);
         setEnabled(isNotificationsEnabled());
+        setArmed(isNotificationsArmed());
       });
     };
     refresh();
@@ -1201,40 +1203,40 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
     };
   }, []);
 
-  const active = enabled && pref === "granted";
+  const active = pref === "granted" || (armed && enabled && pref !== "denied" && pref !== "unsupported");
 
   const turnOn = () => {
     setBusy(true);
     setNotice("");
+    let finished = false;
+    const apply = (status: NotificationPref) => {
+      if (finished) return;
+      finished = true;
+      setPref(status === "unsupported" ? status : status === "denied" ? "denied" : (status === "granted" ? "granted" : "unknown"));
+      setEnabled(isNotificationsEnabled() && status !== "denied");
+      setArmed(isNotificationsArmed());
+      if (status === "granted") setNotice(t("Alertele sunt active pe acest dispozitiv. Urmează și o notificare de confirmare."));
+      else if (status === "denied") setNotice(t("Permisiunea a fost refuzată. O poți reactiva din setările telefonului."));
+      else if (status === "unsupported") setNotice(t("Notificările nu sunt disponibile în acest browser."));
+      else setNotice(t("Am înregistrat Permite pe acest telefon. Dacă nu vezi o notificare, apasă „Trimite o notificare de test”."));
+      setBusy(false);
+    };
+    const watchdog = window.setTimeout(() => apply("unknown"), 5000);
     void enableLocalAlerts(data)
-      .then(async (status) => {
-        let resolved = status;
-        if (resolved !== "granted" && resolved !== "denied") {
-          for (let i = 0; i < 12; i += 1) {
-            await new Promise((done) => window.setTimeout(done, 250));
-            const again = await getNotificationPermission();
-            if (again === "granted") {
-              resolved = "granted";
-              break;
-            }
-            if (again === "denied") {
-              resolved = "denied";
-              break;
-            }
-          }
-        }
-        setPref(resolved);
-        setEnabled(isNotificationsEnabled() && resolved !== "denied");
-        if (resolved === "granted") setNotice(t("Alertele sunt active pe acest dispozitiv. Urmează și o notificare de confirmare."));
-        else if (resolved === "denied") setNotice(t("Permisiunea a fost refuzată. O poți reactiva din setările telefonului."));
-        else setNotice(t("Am cerut permisiunea. Dacă ai apăsat Permite, închide aplicația și deschide-o din nou — pe unele telefoane grant-ul se înregistrează abia atunci."));
+      .then((status) => {
+        window.clearTimeout(watchdog);
+        apply(status);
       })
-      .finally(() => setBusy(false));
+      .catch(() => {
+        window.clearTimeout(watchdog);
+        apply("unknown");
+      });
   };
 
   const turnOff = () => {
     disableLocalAlerts();
     setEnabled(false);
+    setArmed(false);
     setNotice(t("Alertele au fost oprite pe acest dispozitiv."));
   };
 

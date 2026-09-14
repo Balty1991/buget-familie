@@ -41,7 +41,11 @@ const stubWeb = () => {
       addEventListener: () => undefined,
       removeEventListener: () => undefined,
     },
-    document: { documentElement: { classList: { contains: () => false } } },
+    document: {
+      documentElement: { classList: { contains: () => false } },
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    },
     Notification: FakeNotification,
   });
   try {
@@ -94,12 +98,22 @@ describe("activarea reamintirilor pe web/PWA", () => {
 
   it("un Permite care rămâne unknown nu marchează alertele ca oprite", async () => {
     vi.useFakeTimers();
-    requestImpl = async () => "default";
-    const { enableLocalAlerts, isNotificationsEnabled } = await import("./local-notifications");
+    requestImpl = () => new Promise(() => { /* Huawei: promise-ul nu se rezolvă niciodată */ });
+    const { enableLocalAlerts, isNotificationsEnabled, isNotificationsArmed } = await import("./local-notifications");
     const pending = enableLocalAlerts(createEmptyAppData());
-    await vi.advanceTimersByTimeAsync(5000);
+    await vi.advanceTimersByTimeAsync(4500);
     await expect(pending).resolves.toBe("unknown");
     expect(isNotificationsEnabled()).toBe(true);
+    expect(isNotificationsArmed()).toBe(true);
+  });
+
+  it("nu lasă butonul blocat: un requestPermission care atârnă se închide în câteva secunde", async () => {
+    vi.useFakeTimers();
+    requestImpl = () => new Promise(() => undefined);
+    const { requestNotificationPermission } = await import("./local-notifications");
+    const pending = requestNotificationPermission();
+    await vi.advanceTimersByTimeAsync(4500);
+    await expect(pending).resolves.toBe("unknown");
   });
 
   it("un refuz explicit oprește preferința", async () => {

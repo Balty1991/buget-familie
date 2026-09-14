@@ -17,6 +17,7 @@ import { calendarBudget } from "@/lib/calendar-budget";
 import { getLocale, t } from "./i18n";
 
 const PREF_KEY = "buget-familie:notifications-enabled";
+const ARMED_KEY = "buget-familie:notifications-armed";
 const LAST_SCHEDULE_KEY = "buget-familie:notifications-last-schedule";
 
 export type NotificationPref = "unknown" | "granted" | "denied" | "unsupported";
@@ -75,6 +76,24 @@ export function isNotificationsEnabled(): boolean {
 export function setNotificationsEnabled(enabled: boolean) {
   try {
     window.localStorage.setItem(PREF_KEY, enabled ? "true" : "false");
+    if (!enabled) window.localStorage.removeItem(ARMED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function isNotificationsArmed(): boolean {
+  try {
+    return window.localStorage.getItem(ARMED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function setNotificationsArmed(armed: boolean) {
+  try {
+    if (armed) window.localStorage.setItem(ARMED_KEY, "true");
+    else window.localStorage.removeItem(ARMED_KEY);
   } catch {
     /* ignore */
   }
@@ -132,53 +151,71 @@ export async function getNotificationPermission(): Promise<NotificationPref> {
   return queried ?? fromApi;
 }
 
-function waitForNativePermission(bridge: NativeReminderBridge): Promise<boolean> {
+function waitForNativePermission(bridge: NativeReminderBridge): Promise<"granted" | "denied" | "unknown"> {
   return new Promise((resolve) => {
     if (bridge.hasPermission?.()) {
-      resolve(true);
+      resolve("granted");
       return;
     }
     let settled = false;
     let poll = 0;
-    const finish = (granted: boolean) => {
+    let sawExplicitDeny = false;
+    const finish = (status: "granted" | "denied" | "unknown") => {
       if (settled) return;
       settled = true;
       try { window.clearInterval(poll); } catch { /* ignore */ }
       window.removeEventListener("buget-familie:notify-permission", onEvent);
-      resolve(granted);
+      document.removeEventListener("visibilitychange", onResume);
+      window.removeEventListener("focus", onResume);
+      resolve(status);
+    };
+    const read = (): "granted" | "denied" | "unknown" => {
+      if (bridge.hasPermission?.()) return "granted";
+      if (sawExplicitDeny) return "denied";
+      return "unknown";
     };
     const onEvent = (event: Event) => {
-      if (bridge.hasPermission?.()) {
-        finish(true);
+      const granted = (event as CustomEvent<{ granted?: boolean }>).detail?.granted;
+      if (granted === true || bridge.hasPermission?.()) {
+        finish("granted");
         return;
       }
-      const granted = Boolean((event as CustomEvent<{ granted?: boolean }>).detail?.granted);
-      if (granted) finish(true);
-      /* un eveniment „false” nu închide așteptarea: Huawei poate semnala înainte ca grant-ul să fie vizibil */
+      if (granted === false) {
+        sawExplicitDeny = true;
+        window.setTimeout(() => finish(read()), 300);
+      }
+    };
+    const onResume = () => {
+      window.setTimeout(() => {
+        const status = read();
+        if (status !== "unknown") finish(status);
+      }, 200);
     };
     window.addEventListener("buget-familie:notify-permission", onEvent);
+    document.addEventListener("visibilitychange", onResume);
+    window.addEventListener("focus", onResume);
     try {
       bridge.requestPermission?.();
     } catch {
-      finish(false);
+      finish("unknown");
       return;
     }
     try {
       poll = window.setInterval(() => {
-        if (bridge.hasPermission?.()) finish(true);
+        if (bridge.hasPermission?.()) finish("granted");
       }, 400);
     } catch {
-      /* unele harness-uri de test nu expun setInterval pe window */
+      /* ignore */
     }
-    window.setTimeout(() => finish(Boolean(bridge.hasPermission?.())), 25_000);
+    window.setTimeout(() => finish(read()), 8_000);
   });
 }
 
 /**
- * Chrome pe Android (și Huawei) arată dialogul, utilizatorul apasă Permite,
- * dar `requestPermission()` se poate rezolva cu `"default"` înainte ca
- * `Notification.permission` să treacă pe `"granted"`. Folosim valoarea
- * întoarsă, API-ul vechi cu callback, Permissions API și un sondaj scurt.
+ * Chrome/Huawei: dialogul e un overlay (fără visibilitychange), promise-ul poate
+ * să nu se rezolve niciodată, iar `Notification.permission` rămâne `"default"`
+ * după Permite. Nu combinăm callback + promise (blochează unii fork-uri) și
+ * nu așteptăm 25s pe un buton înghețat.
  */
 async function requestWebNotificationPermission(): Promise<NotificationPref> {
   const current = readWebPermission();
@@ -186,22 +223,39 @@ async function requestWebNotificationPermission(): Promise<NotificationPref> {
 
   const fromDialog = await new Promise<string>((resolve) => {
     let settled = false;
-    const finish = (value: string) => {
+    const finish = (value?: string) => {
       if (settled) return;
       settled = true;
+      document.removeEventListener("visibilitychange", onResume);
+      window.removeEventListener("focus", onResume);
       resolve(value || Notification.permission || "default");
     };
+    const onResume = () => {
+      window.setTimeout(() => {
+        if (Notification.permission === "granted" || Notification.permission === "denied") {
+          finish(Notification.permission);
+        }
+      }, 200);
+    };
     try {
-      const returned = Notification.requestPermission((permission) => finish(permission));
+      const returned: unknown = Notification.requestPermission();
       if (returned && typeof (returned as Promise<string>).then === "function") {
         void (returned as Promise<string>).then(
           (permission) => finish(permission),
           () => finish(Notification.permission),
         );
+      } else {
+        Notification.requestPermission((permission) => finish(permission));
       }
     } catch {
-      finish(Notification.permission);
+      try {
+        Notification.requestPermission((permission) => finish(permission));
+      } catch {
+        finish(Notification.permission);
+      }
     }
+    document.addEventListener("visibilitychange", onResume);
+    window.addEventListener("focus", onResume);
     const started = Date.now();
     const poll = () => {
       if (settled) return;
@@ -209,26 +263,19 @@ async function requestWebNotificationPermission(): Promise<NotificationPref> {
         finish(Notification.permission);
         return;
       }
-      if (Date.now() - started > 25_000) {
+      if (Date.now() - started > 4_000) {
         finish(Notification.permission);
         return;
       }
-      window.setTimeout(poll, 250);
+      window.setTimeout(poll, 200);
     };
-    window.setTimeout(poll, 200);
+    window.setTimeout(poll, 150);
   });
 
   if (fromDialog === "granted" || Notification.permission === "granted") return "granted";
   if (fromDialog === "denied" || Notification.permission === "denied") return "denied";
   const queried = await readPermissionsApi();
   if (queried === "granted" || queried === "denied") return queried;
-
-  /* Huawei: grant-ul apare un tick după închiderea dialogului. */
-  for (let i = 0; i < 8; i += 1) {
-    await sleep(200);
-    const later = readWebPermission();
-    if (later === "granted" || later === "denied") return later;
-  }
   return "unknown";
 }
 
@@ -237,9 +284,10 @@ export async function requestNotificationPermission(): Promise<NotificationPref>
     const bridge = await waitForNativeBridge();
     if (bridge?.hasPermission?.()) return "granted";
     if (bridge?.requestPermission) {
-      const granted = await waitForNativePermission(bridge);
-      if (granted) return "granted";
-      return bridge.hasPermission?.() ? "granted" : "denied";
+      const status = await waitForNativePermission(bridge);
+      if (status === "granted") return "granted";
+      if (status === "denied") return "denied";
+      return bridge.hasPermission?.() ? "granted" : "unknown";
     }
     try {
       const plugin = await loadNativeNotifications();
@@ -722,22 +770,26 @@ export async function enableLocalAlerts(data: AppData): Promise<NotificationPref
   const status = await requestNotificationPermission();
   if (status === "denied") {
     setNotificationsEnabled(false);
+    setNotificationsArmed(false);
     return status;
   }
   if (status === "unsupported") {
     return status;
   }
 
-  /* Huawei/Chrome: dialogul poate rămâne pe „default” un moment după Permite.
-     Nu marcăm alertele ca oprite — încercăm confirmarea și re-citim permisiunea. */
   setNotificationsEnabled(true);
+  setNotificationsArmed(true);
   await scheduleFinancialReminders(data);
   await pingAlertsOn();
   if (status === "granted") return "granted";
-
   const again = await getNotificationPermission();
   if (again === "granted") return "granted";
-  return again === "denied" ? "denied" : "unknown";
+  if (again === "denied") {
+    setNotificationsEnabled(false);
+    setNotificationsArmed(false);
+    return "denied";
+  }
+  return "unknown";
 }
 
 export async function sendTestAlert(): Promise<boolean> {
@@ -753,6 +805,7 @@ export async function sendTestAlert(): Promise<boolean> {
 /** Oprește preferința locală și anulează job-urile WorkManager / Capacitor. */
 export function disableLocalAlerts(): void {
   setNotificationsEnabled(false);
+  setNotificationsArmed(false);
   try {
     nativeReminders()?.cancelAll?.();
   } catch {
