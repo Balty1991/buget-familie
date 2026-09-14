@@ -837,21 +837,25 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
           new Promise<string>((_, reject) => window.setTimeout(() => reject(new Error(t("Poza a durat prea mult. Încearcă din galerie sau salvează bonul fără fotografie."))), 20000)),
         ]));
       }
-      setImages((current) => [...current, ...compressed].slice(0, 2));
+      const next = [...images, ...compressed].slice(0, 2);
+      setImages(next);
+      await scanImages(next);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("Poza bonului nu a putut fi procesată. Poți salva cumpărăturile fără fotografie."));
     } finally {
       setBusy(false);
     }
   };
-  const scan = async () => {
+  const scan = async () => { await scanImages(images); };
+  const scanImages = async (photos: string[]) => {
+    if (!photos.length) return;
     try {
       setBusy(true);
       setError("");
       setOcrSummary("");
       setProgress(0);
-      const { readReceiptLocally, ocrTextLooksUseful } = await import("@/lib/receipt-utils");
-      const result = await readReceiptLocally(images, setProgress);
+      const { readReceiptLocally, ocrTextLooksUseful, receiptReadIsReconciled } = await import("@/lib/receipt-utils");
+      const result = await readReceiptLocally(photos, setProgress);
       setOcrText(result.text);
       if (result.vendor && !vendor.trim()) setVendor(result.vendor);
       if (result.amount) setAmount(String(result.amount).replace(".", ","));
@@ -866,7 +870,11 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
         setLines(suggestedLines);
         const detectedTotal = result.items.reduce((sum, item) => sum + item.amount, 0);
         const who = result.vendor ? `${result.vendor}, ` : "";
-        setOcrSummary(t("Am citit {who}{count} produs(e) după reduceri ({total}). Verifică categoriile înainte de salvare.", { who, count: result.items.length, total: fmtExact.format(detectedTotal) }));
+        if (result.amount && !receiptReadIsReconciled(result)) {
+          setOcrSummary(t("Am citit totalul {total} la {who}dar produsele însumează {sum}. Verifică liniile înainte de salvare.", { total: fmtExact.format(result.amount), who, sum: fmtExact.format(detectedTotal) }));
+        } else {
+          setOcrSummary(t("Am citit {who}{count} produs(e) după reduceri ({total}). Verifică categoriile înainte de salvare.", { who, count: result.items.length, total: fmtExact.format(detectedTotal) }));
+        }
       } else if (result.amount) {
         setOcrSummary(t("Am citit totalul {total}{vendor}, dar produsele nu sunt sigure. Completează magazinul dacă lipsește — fotografia rămâne atașată.", { total: fmtExact.format(result.amount), vendor: result.vendor ? ` la ${result.vendor}` : "" }));
       } else {
@@ -954,7 +962,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
             <p className="bf-kicker">{t("FOTOGRAFII OPȚIONALE")}</p>
             <strong>{images.length}/2 imagini</strong>
           </div>
-          <p className="bf-receipt-photo-hint">{t("Pozele rămân pe telefon. Nu sunt obligatorii — poți salva magazinul și totalul fără ele.")}</p>
+          <p className="bf-receipt-photo-hint">{t("Pozele rămân pe telefon. După ce adaugi o fotografie, citesc magazinul, produsele și totalul. Poți corecta înainte să salvezi.")}</p>
           <div className="bf-receipt-photo-actions">
             <label className="bf-upload-control gallery">
               <Images size={18} /> {busy && !progress ? t("Comprimăm…") : t("Din galerie")}

@@ -113,6 +113,7 @@ const parseSignedAmount = (raw: string) => {
 
 const suggestedCategory = (label: string) => {
   const value = label.toLocaleLowerCase("ro-RO");
+  if (/(garantie|garanție|sgr|pet sgr)/.test(value)) return "Alimente";
   if (/(jucarie|jucării|scutec|bibero)/.test(value)) return "Consumabile copil";
   if (/(ciorap|tenis|hain|pantal|chilot|rochie|bluza|geaca|tricou|incalt|punga|hanorac)/.test(value)) return "Timp liber";
   if (/(apa|suc|cola|bere|vin|cafea|ceai|bautur)/.test(value)) return "Băuturi";
@@ -187,6 +188,8 @@ const knownVendors: Array<[RegExp, string]> = [
   [/\bpepco\b/i, "Pepco"],
   [/\bsinsay\b/i, "Sinsay"],
   [/\bfamiliaro\b|\bfamilia\s*ro\b|\bfamiliar0\b/i, "Familiaro"],
+  [/\bshop\s*&\s*go\b|\bshopandgo\b/i, "Shop&Go"],
+  [/\bprofi\s*city\b/i, "Profi"],
   [/\bdm\s+drogerie|\bdrogerie\s*markt\b/i, "dm drogerie markt"],
   [/\brossmann\b/i, "Rossmann"],
   [/\baltex\b/i, "Altex"],
@@ -239,24 +242,9 @@ function fuzzyKnownVendor(blob: string) {
   return undefined;
 }
 
-/** Tesseract pe hârtie mototolită rupe TOTAL, LEI și sumele. Reparația e idempotentă pe text curat. */
+/** Tesseract pe hârtie mototolită rupe TOTAL, LEI, sumele și lipește cuvintele. Reparația e idempotentă pe text curat. */
 export function repairOcrLines(input: string[]): string[] {
-  const cleaned = input.map((line) => {
-    let value = line.replace(/\s+/g, " ").trim();
-    if (!value) return "";
-    value = value.replace(/\bT[O0][T7]AL\b/gi, "TOTAL");
-    value = value.replace(/\bLE[I1l]\b/gi, "LEI");
-    value = value.replace(/\bREDUC[E3]R[E3]\b/gi, "REDUCERE");
-    value = value.replace(/\bNUM[E3]RAR\b/gi, "NUMERAR");
-    value = value.replace(/\bGARANT[I1][E3]\b/gi, "GARANTIE");
-    value = value.replace(/\b[S5]GR\b/g, "SGR");
-    value = value.replace(/\bECON[O0]MIS[I1]T\b/gi, "ECONOMISIT");
-    value = value.replace(/\bR[E3][S5]T(?:\s*LEI)?\b/gi, "REST");
-    value = value.replace(/\bBU[CĆc]\b/g, "BUC");
-    value = value.replace(/(\d{1,4})[.,]\s+(\d{2})(?=\s*(?:[A-Ea-e]|lei|=|$))/gi, "$1.$2");
-    value = value.replace(/(\d{1,4})\s+(\d{2})(?=\s*(?:[A-Ea-e]|=))/gi, "$1.$2");
-    return value.replace(/\s+/g, " ").trim();
-  }).filter(Boolean);
+  const cleaned = input.map((line) => repairOcrLine(line)).filter(Boolean);
   const out: string[] = [];
   for (const line of cleaned) {
     const prev = out[out.length - 1];
@@ -264,9 +252,84 @@ export function repairOcrLines(input: string[]): string[] {
       out[out.length - 1] = `${prev} ${line}`;
       continue;
     }
+    if (prev && parseQtyUnit(prev) && /^[-−]?\d+[.,]\d{2}\s*[abe]?\s*$/i.test(line)) {
+      out[out.length - 1] = `${prev} ${line}`;
+      continue;
+    }
     out.push(line);
   }
   return out;
+}
+
+function repairOcrLine(line: string) {
+  let value = line.replace(/\s+/g, " ").trim();
+  if (!value) return "";
+  value = value.replace(/\bT[O0][T7]AL\s*LE[I1l]\b/gi, "TOTAL LEI");
+  value = value.replace(/\bTOTALLE[I1l]\b/gi, "TOTAL LEI");
+  value = value.replace(/\bTOTALTVA\b/gi, "TOTAL TVA");
+  value = value.replace(/\bT[O0][T7]AL\b/gi, "TOTAL");
+  value = value.replace(/\bLE[I1l]\b/gi, "LEI");
+  value = value.replace(/\bREDUC[E3]R[E3]\b/gi, "REDUCERE");
+  value = value.replace(/REDUCERE(?=\s*[-−]?\d)/gi, "REDUCERE ");
+  value = value.replace(/\bNUM[E3]RAR\b/gi, "NUMERAR");
+  value = value.replace(/\bGARANT[I1][E3]\b/gi, "GARANTIE");
+  value = value.replace(/\b[S5]GR\b/g, "SGR");
+  value = value.replace(/\bECON[O0]MIS[I1]T\b/gi, "ECONOMISIT");
+  value = value.replace(/\bR[E3][S5]T(?:\s*LEI)?\b/gi, "REST");
+  value = value.replace(/\bBU[CĆc](?:ATI)?\b/g, "BUC");
+  value = value.replace(/(\d)\s*BUC[xX×]/gi, "$1 BUC X ");
+  value = value.replace(/(\d)\s*BUC\b/gi, "$1 BUC");
+  value = value.replace(/\bBUC\s*[xX×]\s*/g, "BUC X ");
+  value = value.replace(/([xX×=])(\d+[.,]\d{2})/g, "$1 $2");
+  if (value.length <= 28) {
+    value = value.replace(/\bs[:;i1l]n?s[a4]y\b/gi, "sinsay");
+    value = value.replace(/\bfamilia\s*r[o0]\b/gi, "familiaro");
+    value = value.replace(/\bfamiliar[o0]\b/gi, "familiaro");
+  }
+  value = value.replace(/[0-9OIlSZB]{1,4}[.,][0-9OIlSZ]{2}\b/g, (token) => (
+    token.replace(/O/g, "0").replace(/[Il]/g, "1").replace(/S/g, "5").replace(/Z/g, "2").replace(/B/g, "8")
+  ));
+  value = value.replace(/(\d{1,4})[.,]\s+(\d{2})(?=\s*(?:[A-Ea-e]|lei|=|$))/gi, "$1.$2");
+  value = value.replace(/(\d{1,4})\s+(\d{2})(?=\s*(?:[A-Ea-e]|=))/gi, "$1.$2");
+  return value.replace(/\s+/g, " ").trim();
+}
+
+export type OcrWord = { text: string; confidence?: number; bbox: { x0: number; y0: number; x1: number; y1: number } };
+
+/**
+ * Bonurile fiscale au numele în stânga și prețul în dreapta. Tesseract pe o coloană
+ * citește întâi toate numele, apoi toate sumele. Regrupăm cuvintele după Y, ca pe hârtie.
+ */
+export function clusterOcrWordsToLines(words: OcrWord[]): string[] {
+  const useful = words
+    .map((word) => ({ ...word, text: word.text.replace(/\s+/g, " ").trim() }))
+    .filter((word) => {
+      if (!word.text) return false;
+      if ((word.confidence ?? 40) >= 18) return true;
+      return moneyPattern.test(word.text) || /\b(total|lei|reducere|sgr|garantie|cash|card|numerar|rest|buc)\b/i.test(word.text);
+    });
+  if (!useful.length) return [];
+  useful.sort((left, right) => left.bbox.y0 - right.bbox.y0 || left.bbox.x0 - right.bbox.x0);
+  const rows: OcrWord[][] = [];
+  for (const word of useful) {
+    const height = Math.max(8, word.bbox.y1 - word.bbox.y0);
+    const last = rows[rows.length - 1];
+    if (!last) {
+      rows.push([word]);
+      continue;
+    }
+    const mid = last.reduce((sum, item) => sum + (item.bbox.y0 + item.bbox.y1) / 2, 0) / last.length;
+    const wordMid = (word.bbox.y0 + word.bbox.y1) / 2;
+    if (Math.abs(wordMid - mid) <= Math.max(10, height * 0.62)) last.push(word);
+    else rows.push([word]);
+  }
+  return rows.map((row) => row
+    .sort((left, right) => left.bbox.x0 - right.bbox.x0)
+    .map((item) => item.text)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim())
+    .filter(Boolean);
 }
 
 function inferVendor(lines: string[]) {
@@ -464,7 +527,11 @@ function mergeReceiptLines(lines: string[]) {
       out[out.length - 1] = `${prev} ${line}`;
       continue;
     }
-    if (prev && isBarePriceLine(prev) && looksLikeNameLine(line) && /^\d{5,}/.test(line)) {
+    if (prev && parseQtyUnit(prev) && /^[-−]?\d+[.,]\d{2}\s*[abe]?\s*$/i.test(line)) {
+      out[out.length - 1] = `${prev} ${line}`;
+      continue;
+    }
+    if (prev && isBarePriceLine(prev) && looksLikeNameLine(line) && !/=/.test(prev) && !/^[-−]/.test(prev.trim()) && (qtyOnlyPattern.test(prev) || parseQtyUnit(prev)) && !totalLinePattern.test(line)) {
       out[out.length - 1] = `${line} ${prev}`;
       continue;
     }
@@ -482,6 +549,7 @@ function applyLineDiscount(item: ReceiptDetectedItem, amounts: number[]) {
   }
   const qty = parseQtyUnit(item.raw);
   if (qty && Math.abs(item.amount - round2(qty.qty * qty.unit - cut)) <= 0.06) return;
+  if (round2(item.amount - cut) <= 0.05) return;
   if (qty && Math.abs(item.amount - qty.lineTotal) <= 0.06) {
     item.amount = round2(Math.max(0.01, item.amount - cut));
     return;
@@ -500,7 +568,14 @@ function parseProductLines(lines: string[]): ReceiptDetectedItem[] {
       const previous = items.at(-1);
       const source = stripPercentages(line);
       let amounts = Array.from(source.matchAll(moneyPattern)).map((match) => parseSignedAmount(match[0])).filter((value): value is number => value !== undefined);
-      if (!amounts.length && next && /^[-−]?\s*\d+[.,]\d{2}\s*[abe]?\s*$/i.test(stripPercentages(next))) {
+      const hasMinus = amounts.some((value) => value < 0) || /[-−]/.test(line);
+      if (!hasMinus && next && /^[-−]\s*\d+[.,]\d{2}\s*[abe]?\s*$/i.test(stripPercentages(next))) {
+        const taken = parseSignedAmount(next);
+        if (taken !== undefined) {
+          amounts = [taken];
+          index += 1;
+        }
+      } else if (!amounts.length && next && /^[-−]?\s*\d+[.,]\d{2}\s*[abe]?\s*$/i.test(stripPercentages(next))) {
         const taken = parseSignedAmount(next);
         if (taken !== undefined) {
           amounts = [taken];
@@ -584,48 +659,34 @@ function lumaOf(data: Uint8ClampedArray, i: number) {
   return (data[i] * 299 + data[i + 1] * 587 + data[i + 2] * 114) / 1000;
 }
 
-function otsuThreshold(data: Uint8ClampedArray) {
-  const hist = new Uint32Array(256);
-  const count = data.length / 4;
-  for (let i = 0; i < data.length; i += 4) hist[Math.round(lumaOf(data, i))] += 1;
-  let sum = 0;
-  for (let i = 0; i < 256; i += 1) sum += i * hist[i];
-  let wB = 0, sumB = 0, best = 0, thresh = 128;
-  for (let t = 0; t < 256; t += 1) {
-    wB += hist[t];
-    if (!wB) continue;
-    const wF = count - wB;
-    if (!wF) break;
-    sumB += t * hist[t];
-    const mB = sumB / wB;
-    const mF = (sum - sumB) / wF;
-    const between = wB * wF * (mB - mF) * (mB - mF);
-    if (between > best) { best = between; thresh = t; }
-  }
-  return Math.max(90, Math.min(170, thresh));
+function isPaperLike(r: number, g: number, b: number) {
+  const luma = (r * 299 + g * 587 + b * 114) / 1000;
+  const sat = Math.max(r, g, b) - Math.min(r, g, b);
+  if (luma >= 168 && sat < 52) return true;
+  if (luma >= 145 && sat < 28) return true;
+  return false;
 }
 
 function findPaperBox(data: Uint8ClampedArray, width: number, height: number) {
-  const THRESH = otsuThreshold(data);
   const rowScore = new Float32Array(height);
   const colScore = new Float32Array(width);
   for (let y = 0; y < height; y += 1) {
-    let bright = 0;
+    let paper = 0;
     for (let x = 0; x < width; x += 1) {
       const i = (y * width + x) * 4;
-      if (lumaOf(data, i) >= THRESH) {
-        bright += 1;
+      if (isPaperLike(data[i], data[i + 1], data[i + 2])) {
+        paper += 1;
         colScore[x] += 1;
       }
     }
-    rowScore[y] = bright / width;
+    rowScore[y] = paper / width;
   }
   for (let x = 0; x < width; x += 1) colScore[x] /= height;
   let y0 = 0, y1 = height - 1, x0 = 0, x1 = width - 1;
-  while (y0 < height && rowScore[y0] < 0.14) y0 += 1;
-  while (y1 > y0 && rowScore[y1] < 0.14) y1 -= 1;
-  while (x0 < width && colScore[x0] < 0.10) x0 += 1;
-  while (x1 > x0 && colScore[x1] < 0.10) x1 -= 1;
+  while (y0 < height && rowScore[y0] < 0.18) y0 += 1;
+  while (y1 > y0 && rowScore[y1] < 0.18) y1 -= 1;
+  while (x0 < width && colScore[x0] < 0.12) x0 += 1;
+  while (x1 > x0 && colScore[x1] < 0.12) x1 -= 1;
   const padX = Math.round((x1 - x0) * 0.04);
   const padY = Math.round((y1 - y0) * 0.03);
   x0 = Math.max(0, x0 - padX);
@@ -668,6 +729,74 @@ function stretchContrast(data: Uint8ClampedArray) {
     data[i] = data[i + 1] = data[i + 2] = boosted;
     data[i + 3] = 255;
   }
+}
+
+function unsharp(data: Uint8ClampedArray, width: number, height: number) {
+  const copy = new Uint8ClampedArray(data);
+  const at = (x: number, y: number) => lumaOf(copy, (y * width + x) * 4);
+  for (let y = 1; y < height - 1; y += 1) {
+    for (let x = 1; x < width - 1; x += 1) {
+      const blur = (
+        at(x - 1, y - 1) + at(x, y - 1) + at(x + 1, y - 1)
+        + at(x - 1, y) + at(x, y) + at(x + 1, y)
+        + at(x - 1, y + 1) + at(x, y + 1) + at(x + 1, y + 1)
+      ) / 9;
+      const luma = at(x, y);
+      const sharp = Math.max(0, Math.min(255, Math.round(luma + 1.15 * (luma - blur))));
+      const i = (y * width + x) * 4;
+      data[i] = data[i + 1] = data[i + 2] = sharp;
+    }
+  }
+}
+
+function estimateSkew(data: Uint8ClampedArray, width: number, height: number) {
+  const sample = Math.max(1, Math.floor(Math.min(width, height) / 220));
+  let bestAngle = 0;
+  let bestScore = -1;
+  for (let tenth = -80; tenth <= 80; tenth += 8) {
+    const angle = tenth / 10;
+    const rad = angle * Math.PI / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const bins = new Float32Array(height);
+    for (let y = 0; y < height; y += sample) {
+      for (let x = 0; x < width; x += sample) {
+        if (lumaOf(data, (y * width + x) * 4) > 150) continue;
+        const ry = Math.round((x - width / 2) * sin + (y - height / 2) * cos + height / 2);
+        if (ry >= 0 && ry < height) bins[ry] += 1;
+      }
+    }
+    let mean = 0;
+    for (let i = 0; i < height; i += 1) mean += bins[i];
+    mean /= height;
+    let variance = 0;
+    for (let i = 0; i < height; i += 1) {
+      const d = bins[i] - mean;
+      variance += d * d;
+    }
+    if (variance > bestScore) {
+      bestScore = variance;
+      bestAngle = angle;
+    }
+  }
+  return Math.abs(bestAngle) >= 0.6 ? bestAngle : 0;
+}
+
+function rotateCanvas(source: HTMLCanvasElement, angle: number) {
+  const rad = angle * Math.PI / 180;
+  const cos = Math.abs(Math.cos(rad));
+  const sin = Math.abs(Math.sin(rad));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(source.width * cos + source.height * sin));
+  canvas.height = Math.max(1, Math.round(source.width * sin + source.height * cos));
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) return source;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(rad);
+  ctx.drawImage(source, -source.width / 2, -source.height / 2);
+  return canvas;
 }
 
 function isLikelyScreenshot(data: Uint8ClampedArray) {
@@ -737,8 +866,8 @@ export async function prepareReceiptImageForOcr(dataUrl: string, options?: { bin
   const cropW = Math.max(1, box.x1 - box.x0);
   const cropH = Math.max(1, box.y1 - box.y0);
   const maxEdge = Math.max(cropW, cropH);
-  const scale = maxEdge < 1700 ? Math.min(3.2, 2200 / maxEdge) : maxEdge > 2600 ? 2400 / maxEdge : 1;
-  const canvas = document.createElement("canvas");
+  const scale = maxEdge < 1700 ? Math.min(3.4, 2400 / maxEdge) : maxEdge > 2800 ? 2600 / maxEdge : 1;
+  let canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(cropW * scale));
   canvas.height = Math.max(1, Math.round(cropH * scale));
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
@@ -751,9 +880,14 @@ export async function prepareReceiptImageForOcr(dataUrl: string, options?: { bin
   const prepared = ctx.getImageData(0, 0, canvas.width, canvas.height);
   if (!screenshot) {
     stretchContrast(prepared.data);
+    unsharp(prepared.data, canvas.width, canvas.height);
     if (options?.binarize) localBinarize(prepared.data, canvas.width, canvas.height);
   }
   ctx.putImageData(prepared, 0, 0);
+  if (!screenshot) {
+    const skew = estimateSkew(prepared.data, canvas.width, canvas.height);
+    if (skew) canvas = rotateCanvas(canvas, -skew);
+  }
   return canvas.toDataURL("image/jpeg", 0.95);
 }
 
@@ -819,7 +953,8 @@ export function receiptReadIsReconciled(result: LocalReceiptOcr): result is Loca
   return Math.abs(round2(result.items.reduce((sum, item) => sum + item.amount, 0)) - result.amount) <= 0.08;
 }
 
-type TesseractLine = { text: string; confidence: number; bbox?: { y0: number; x0: number } };
+type TesseractWord = { text: string; confidence: number; bbox?: { y0: number; x0: number; y1: number; x1: number } };
+type TesseractLine = { text: string; confidence: number; bbox?: { y0: number; x0: number }; words?: TesseractWord[] };
 type TesseractPage = {
   text: string;
   confidence: number;
@@ -827,25 +962,39 @@ type TesseractPage = {
 };
 
 function collectOcrLines(page: TesseractPage) {
-  const boxed = page.blocks?.flatMap((block) => block.paragraphs.flatMap((paragraph) => paragraph.lines)) || [];
-  boxed.sort((a, b) => (a.bbox?.y0 ?? 0) - (b.bbox?.y0 ?? 0) || (a.bbox?.x0 ?? 0) - (b.bbox?.x0 ?? 0));
+  const boxedLines = page.blocks?.flatMap((block) => block.paragraphs.flatMap((paragraph) => paragraph.lines)) || [];
+  const words: OcrWord[] = boxedLines.flatMap((line) => (line.words || []).map((word) => ({
+    text: word.text,
+    confidence: word.confidence,
+    bbox: {
+      x0: word.bbox?.x0 ?? line.bbox?.x0 ?? 0,
+      y0: word.bbox?.y0 ?? line.bbox?.y0 ?? 0,
+      x1: word.bbox?.x1 ?? (word.bbox?.x0 ?? 0) + Math.max(8, word.text.length * 8),
+      y1: word.bbox?.y1 ?? (word.bbox?.y0 ?? 0) + 16,
+    },
+  })));
+  const clustered = words.length >= 6 ? clusterOcrWordsToLines(words) : [];
+  boxedLines.sort((a, b) => (a.bbox?.y0 ?? 0) - (b.bbox?.y0 ?? 0) || (a.bbox?.x0 ?? 0) - (b.bbox?.x0 ?? 0));
   const keep = (text: string, confidence: number) => {
     if (!text.trim()) return false;
     if (confidence >= 18) return true;
     return totalLinePattern.test(text) || discountLinePattern.test(text) || moneyPattern.test(text) || /\b(cash|card|numerar|total|reducere|sgr|garantie)\b/i.test(text);
   };
-  const confident = boxed
+  const confident = boxedLines
     .filter((line) => keep(line.text, line.confidence))
     .map((line) => line.text.replace(/\s+/g, " ").trim())
     .filter(Boolean);
   const fallback = page.text.split(/\r?\n/).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
-  if (confident.length >= 4) {
-    const extras = fallback.filter((line) => totalLinePattern.test(line) || /\b(cash|card|numerar|rest|economisit)\b/i.test(line));
+  const extras = fallback.filter((line) => totalLinePattern.test(line) || /\b(cash|card|numerar|rest|economisit)\b/i.test(line));
+  const withTotals = (lines: string[]) => {
+    const next = [...lines];
     for (const line of extras) {
-      if (!confident.some((item) => item.includes(line) || line.includes(item))) confident.push(line);
+      if (!next.some((item) => item.includes(line) || line.includes(item))) next.push(line);
     }
-    return confident;
-  }
+    return next;
+  };
+  if (clustered.length >= 4) return withTotals(clustered);
+  if (confident.length >= 4) return withTotals(confident);
   return fallback;
 }
 
@@ -888,15 +1037,15 @@ export async function readReceiptLocally(images: string[], onProgress?: (percent
       const interpreted = interpretReceiptText(lineTexts.length ? lineTexts : parts);
       return { ...interpreted, text: parts.join("\n").trim() || interpreted.text };
     };
-    let interpreted = await runPass(PSM.SINGLE_COLUMN, false);
+    let interpreted = await runPass(PSM.AUTO, false);
     if (!receiptReadIsReconciled(interpreted) || scoreOcr(interpreted) < 18) {
       onProgress?.(68);
-      const retry = await runPass(PSM.AUTO, true);
+      const retry = await runPass(PSM.SINGLE_BLOCK, true);
       if (scoreOcr(retry) > scoreOcr(interpreted)) interpreted = retry;
     }
     if (!receiptReadIsReconciled(interpreted) && scoreOcr(interpreted) < 22) {
       onProgress?.(88);
-      const last = await runPass(PSM.SINGLE_BLOCK, false);
+      const last = await runPass(PSM.SPARSE_TEXT, false);
       if (scoreOcr(last) > scoreOcr(interpreted)) interpreted = last;
     }
     if (!interpreted.date) {

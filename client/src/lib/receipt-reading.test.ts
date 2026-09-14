@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { interpretReceiptText, repairOcrLines, receiptReadIsReconciled } from "./receipt-utils";
+import { interpretReceiptText, repairOcrLines, receiptReadIsReconciled, clusterOcrWordsToLines } from "./receipt-utils";
 
 const labels = (text: string[]) => interpretReceiptText(text).items.map((item) => `${item.label} ${item.amount}`);
 
@@ -293,6 +293,88 @@ describe("OCR mototolit — aceleași 4 bonuri, text stricat", () => {
     expect(result.date).toBe("2026-09-13");
     expect(result.amount).toBe(50.48);
     expect(result.items.filter((item) => /la minut/i.test(item.label))).toHaveLength(1);
+    expect(receiptReadIsReconciled(result)).toBe(true);
+  });
+});
+
+describe("citire inteligentă — OCR mototolit și două coloane", () => {
+  it("lipește TOTALLEI, repară 5O.97 și s:nsay", () => {
+    expect(repairOcrLines(["TOTALLEI 5O.97", "1BUCX11.99=11.99 E"])).toEqual([
+      "TOTAL LEI 50.97",
+      "1 BUC X 11.99= 11.99 E",
+    ]);
+  });
+
+  it("reunește pe același rând numele din stânga și prețul din dreapta", () => {
+    const y = (row: number) => ({ x0: 10, y0: row * 20, x1: 180, y1: row * 20 + 14 });
+    const price = (row: number) => ({ x0: 220, y0: row * 20, x1: 360, y1: row * 20 + 14 });
+    const lines = clusterOcrWordsToLines([
+      { text: "AQUA", bbox: y(0) },
+      { text: "CARPATICA", bbox: { ...y(0), x0: 50, x1: 140 } },
+      { text: "1", bbox: price(0) },
+      { text: "PET", bbox: { ...price(0), x0: 240, x1: 270 } },
+      { text: "X", bbox: { ...price(0), x0: 275, x1: 290 } },
+      { text: "2.58=", bbox: { ...price(0), x0: 295, x1: 330 } },
+      { text: "2.58", bbox: { ...price(0), x0: 332, x1: 360 } },
+      { text: "B", bbox: { ...price(0), x0: 362, x1: 374 } },
+      { text: "GARANTIE", bbox: y(1) },
+      { text: "PET", bbox: { ...y(1), x0: 80, x1: 120 } },
+      { text: "SGR", bbox: { ...y(1), x0: 125, x1: 160 } },
+      { text: "1", bbox: price(1) },
+      { text: "BUC", bbox: { ...price(1), x0: 240, x1: 270 } },
+      { text: "X", bbox: { ...price(1), x0: 275, x1: 290 } },
+      { text: "0.50=", bbox: { ...price(1), x0: 295, x1: 330 } },
+      { text: "0.50", bbox: { ...price(1), x0: 332, x1: 360 } },
+      { text: "E", bbox: { ...price(1), x0: 362, x1: 374 } },
+    ]);
+    expect(lines[0]).toMatch(/AQUA CARPATICA.*2\.58/);
+    expect(lines[1]).toMatch(/GARANTIE PET SGR.*0\.50/);
+  });
+
+  it("lipește cantitatea Pepco de numele de pe rândul următor, fără SKU", () => {
+    const result = interpretReceiptText([
+      "PEPCO RETAIL SRL",
+      "1.000 buc x 3.50",
+      "3.50 A",
+      "Chiloti de dama L Me",
+      "PLU: 62821203",
+      "1.000 buc x 12.00",
+      "12.00 A",
+      "Tricou barbati cu ri",
+      "TOTAL 15.50",
+    ]);
+    expect(result.vendor).toBe("Pepco");
+    expect(result.amount).toBe(15.5);
+    expect(result.items.map((item) => item.label).join(" ")).toMatch(/Chiloti/i);
+    expect(result.items.map((item) => item.label).join(" ")).toMatch(/Tricou/i);
+    expect(receiptReadIsReconciled(result)).toBe(true);
+  });
+
+  it("citește 31 august 2026 de pe rama galeriei", () => {
+    const result = interpretReceiptText([
+      "31 august 2026",
+      "sinsay",
+      "CIORAPI 1 BUC X 11.99= 8.57 E",
+      "TOTAL LEI 8.57",
+    ]);
+    expect(result.date).toBe("2026-08-31");
+    expect(result.vendor).toBe("Sinsay");
+  });
+
+  it("pe Profi nu scade reducerea ecranului a doua oară, nici când OCR rupe linia", () => {
+    const result = interpretReceiptText([
+      "PROFI ROSIORII DE VEDE",
+      "Sep. 13, 2026 01:25PM",
+      "LIPICI FIX STRONG 8,98",
+      "3 buc @ 5,99",
+      "Reducere 17,97",
+      "-8,99",
+      "CEREALE COOKIE CRISP 9,99",
+      "Total Economisit 8,99",
+      "Total 18,97",
+    ]);
+    expect(result.items.find((item) => /lipici/i.test(item.label))?.amount).toBe(8.98);
+    expect(result.amount).toBe(18.97);
     expect(receiptReadIsReconciled(result)).toBe(true);
   });
 });
