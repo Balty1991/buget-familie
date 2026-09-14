@@ -1486,6 +1486,12 @@ html.theme-ink .bf-obligations-workspace > .bf-obligations-header h1 em {
     max(16px, var(--os-inset-left, env(safe-area-inset-left, 0px))) !important;
 }
 
+.os-shell .bf-onboarding-backdrop.bf-first-run-backdrop.bf-modal-backdrop,
+.bf-onboarding-backdrop.bf-first-run-backdrop {
+  align-items: flex-end !important;
+  place-items: end center !important;
+}
+
 .bf-onboarding,
 .bf-onboarding.bf-first-run {
   overflow: auto !important;

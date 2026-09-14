@@ -1264,9 +1264,43 @@ body .bf-command-palette .bf-icon-button,
   z-index: 200 !important;
 }
 
+.os-shell .bf-onboarding-backdrop.bf-first-run-backdrop.bf-modal-backdrop,
+.bf-onboarding-backdrop.bf-first-run-backdrop {
+  align-items: flex-end !important;
+  place-items: end center !important;
+  padding-top: max(8px, var(--os-inset-top, env(safe-area-inset-top, 0px))) !important;
+  padding-bottom: max(10px, var(--os-inset-bottom, env(safe-area-inset-bottom, 10px))) !important;
+}
+
 .bf-onboarding.bf-first-run {
-  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 24px) !important;
+  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 16px) !important;
   padding-bottom: 22px !important;
+  border-radius: 28px 28px 20px 20px !important;
+}
+
+.bf-onboarding-back {
+  position: absolute !important;
+  z-index: 8 !important;
+  top: 10px !important;
+  left: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 8px 12px 8px 6px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  color: var(--cf-ink, #1a322a) !important;
+  background: color-mix(in srgb, var(--cf-surface, #fffefa) 88%, transparent) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  pointer-events: auto !important;
+}
+
+.bf-first-run:has(.bf-onboarding-back) .bf-setup-visual {
+  margin-top: 28px !important;
 }
 
 @media (max-height: 780px) {

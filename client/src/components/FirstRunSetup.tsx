@@ -3,7 +3,7 @@
  * track spending / organize month / family budget — rezultat în < 3 minute.
  */
 import { useState } from "react";
-import { Check, ChevronRight, Home, PiggyBank, ReceiptText, Users, WalletCards } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Home, PiggyBank, ReceiptText, Users, WalletCards } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { generateFamilyPassword } from "@/lib/family-password";
@@ -23,8 +23,12 @@ const PRESETS = [
 ] as const;
 
 export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpenSync }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void; onOpenSync?: (password: string) => void }) {
-  const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const [intent, setIntent] = useState<Intent | null>(null);
+  const goBack = () => setIntent(null);
+  const dialogRef = useFocusTrap<HTMLElement>(() => {
+    if (intent) goBack();
+    else onClose();
+  });
   const [familyName, setFamilyName] = useState(data.settings.familyName === "Familia mea" ? "" : data.settings.familyName);
   const [memberName, setMemberName] = useState(data.settings.memberName === "Eu" ? "" : data.settings.memberName);
   const [partnerName, setPartnerName] = useState("");
@@ -106,8 +110,14 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   };
 
   return (
-    <div className="bf-modal-backdrop bf-onboarding-backdrop" role="presentation">
+    <div className="bf-modal-backdrop bf-onboarding-backdrop bf-first-run-backdrop" role="presentation">
       <section ref={dialogRef} tabIndex={-1} className="bf-onboarding bf-setup bf-first-run" role="dialog" aria-modal="true" aria-labelledby="bf-setup-title">
+        {intent && (
+          <button type="button" className="bf-onboarding-back" onClick={goBack}>
+            <ChevronLeft size={18} aria-hidden="true" />
+            {t("Înapoi")}
+          </button>
+        )}
         <div className="bf-setup-visual" aria-hidden="true"><BrandMark size={72} /></div>
 
         {!intent && (
