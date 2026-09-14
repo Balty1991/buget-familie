@@ -1017,7 +1017,7 @@ export async function readReceiptLocally(images: string[], onProgress?: (percent
     });
   }
   try {
-    const runPass = async (mode: number, tiled: boolean) => {
+    const runPass = async (mode: (typeof PSM)[keyof typeof PSM], tiled: boolean) => {
       await worker.setParameters({
         tessedit_pageseg_mode: mode,
         preserve_interword_spaces: "1",

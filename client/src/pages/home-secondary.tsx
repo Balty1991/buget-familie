@@ -825,13 +825,15 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
   const pick = async (files?: FileList | null) => {
     const selected = files ? Array.from(files) : [];
     if (!selected.length) return;
-    if (images.length + selected.length > 2) return setError(t("Un bon poate avea maximum două fotografii. Elimină una înainte de a adăuga alta."));
+    const room = 2 - images.length;
+    if (room <= 0) return setError(t("Un bon poate avea maximum două fotografii. Elimină una înainte de a adăuga alta."));
+    const take = selected.slice(0, room);
     try {
       setBusy(true);
       setError("");
       const { compressReceiptImage } = await import("@/lib/receipt-utils");
       const compressed: string[] = [];
-      for (const file of selected) {
+      for (const file of take) {
         compressed.push(await Promise.race([
           compressReceiptImage(file),
           new Promise<string>((_, reject) => window.setTimeout(() => reject(new Error(t("Poza a durat prea mult. Încearcă din galerie sau salvează bonul fără fotografie."))), 20000)),
