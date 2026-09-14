@@ -8,14 +8,18 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Buget Familie — atelierul deciziilor financiare</title>
     <meta name="description" content="Un spațiu personal sau comun pentru buget, datorii, economii și decizii financiare clare." />
-    <meta name="theme-color" content="#F4EFE4" />
+    <meta name="theme-color" content="#FBF4E9" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <link rel="icon" type="image/svg+xml" href="bf-favicon.svg?v=41" />
-    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=41" />
-    <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png?v=41" />
-    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=41" />
+    <link rel="icon" type="image/svg+xml" href="bf-favicon.svg?v=42" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=42" />
+    <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png?v=42" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=42" />
     <link rel="manifest" href="manifest.webmanifest" />
+    <style>
+      html, body, #root { margin: 0; background: #FBF4E9; }
+      html.dark, html.dark body, html.dark #root { background: #0B0F0E; }
+    </style>
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
@@ -27,9 +31,10 @@
       (function () {
         try {
           var root = document.documentElement;
+          var legacy = { snow: "white", ivory: "white", ink: "white", sand: "white", sage: "white", slate: "white", lagoon: "cyber", forest: "cyber", midnight: "aurora", plum: "aurora", graphite: "dark", copper: "dark", rosewood: "dark" };
+          var theme = localStorage.getItem("buget-familie:theme") || "white";
+          if (legacy[theme]) theme = legacy[theme];
           var schedule = localStorage.getItem("buget-familie:theme-schedule");
-          var theme = localStorage.getItem("buget-familie:theme") || "ivory";
-          if (theme === "dark") theme = "forest";
           if (schedule === "auto") {
             var now = new Date();
             var minutes = now.getHours() * 60 + now.getMinutes();
@@ -47,14 +52,20 @@
             var day = toMin(times.dayStart, 360);
             var evening = toMin(times.eveningStart, 1020);
             var night = toMin(times.nightStart, 1260);
-            theme = minutes >= day && minutes < evening ? "ivory" : minutes >= evening && minutes < night ? "forest" : "midnight";
+            theme = minutes >= day && minutes < evening ? "white" : minutes >= evening && minutes < night ? "cyber" : "dark";
           }
-          var themes = { snow: 1, ivory: 1, sand: 1, sage: 1, slate: 1, lagoon: 1, forest: 1, midnight: 1, navy: 1, graphite: 1, copper: 1, plum: 1, rosewood: 1 };
-          if (!themes[theme]) theme = "ivory";
+          var known = { white: 1, dark: 1, aurora: 1, navy: 1, cyber: 1 };
+          if (!known[theme]) theme = "white";
           var background = localStorage.getItem("buget-familie:background") || "plain";
           if (!{ plain: 1, paper: 1, grid: 1, aurora: 1, dots: 1 }[background]) background = "plain";
           root.classList.add("theme-" + theme, "background-" + background);
-          if (!{ snow: 1, ivory: 1, sand: 1, sage: 1, slate: 1, lagoon: 1 }[theme]) root.classList.add("dark");
+          var dark = theme !== "white";
+          if (dark) root.classList.add("dark");
+          var paint = dark ? "#0B0F0E" : "#FBF4E9";
+          root.style.backgroundColor = paint;
+          root.style.colorScheme = dark ? "dark" : "light";
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", paint);
           if (localStorage.getItem("buget-familie:high-contrast") === "true") root.classList.add("bf-high-contrast");
         } catch (e) {}
       })();

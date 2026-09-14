@@ -21,10 +21,12 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    getWindow().setBackgroundDrawableResource(R.color.splash_background);
     WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     pendingQuickAction = readQuickAction(getIntent());
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
+    webView.setBackgroundColor(android.graphics.Color.parseColor("#FBF4E9"));
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     ViewCompat.setOnApplyWindowInsetsListener(webView, (view, insets) -> {

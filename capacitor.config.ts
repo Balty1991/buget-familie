@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   appName: "Buget Familie",
   webDir: "dist/public",
   android: {
-    backgroundColor: "#F4EFE4",
+    backgroundColor: "#FBF4E9",
     adjustMarginsForEdgeToEdge: "disable",
   },
   plugins: {
