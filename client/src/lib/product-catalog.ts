@@ -84,7 +84,31 @@ const ITEMS: Array<[string, string, string?]> = [
   ["Supe", "Alimente", "supa"],
   ["Cartofi congelați", "Alimente", "cartofi prajiti"],
   ["Înghețată", "Dulciuri", "inghetata"],
-  ["Ciocolată", "Dulciuri", "ciocolata kinder milka"],
+  ["Ciocolată", "Dulciuri", "ciocolata"],
+  ["Kinder Ou", "Dulciuri", "kinder surprise kinder egg kinder oua kinder joy"],
+  ["Kinder Joy", "Dulciuri"],
+  ["Kinder Bueno", "Dulciuri"],
+  ["Kinder Bueno White", "Dulciuri", "kinder bueno alb"],
+  ["Kinder Ciocolată", "Dulciuri", "kinder chocolate kinder ciocolata"],
+  ["Kinder Country", "Dulciuri"],
+  ["Kinder Delice", "Dulciuri"],
+  ["Kinder Schoko-Bons", "Dulciuri", "kinder schokobons schoko bons"],
+  ["Kinder Cards", "Dulciuri"],
+  ["Kinder Happy Hippo", "Dulciuri", "happy hippo"],
+  ["Kinder Pingui", "Dulciuri"],
+  ["Kinder Felie de lapte", "Dulciuri", "kinder milk slice"],
+  ["Kinder Tronky", "Dulciuri"],
+  ["Kinder Duplo", "Dulciuri"],
+  ["Kinder Maxi", "Dulciuri"],
+  ["Milka", "Dulciuri"],
+  ["Poiana", "Dulciuri"],
+  ["Africana", "Dulciuri"],
+  ["Rom", "Dulciuri", "ciocolata rom"],
+  ["Joe", "Dulciuri"],
+  ["Oreo", "Dulciuri"],
+  ["Nutella", "Dulciuri"],
+  ["Twix", "Dulciuri"],
+  ["Snickers", "Dulciuri"],
   ["Biscuiți", "Dulciuri", "biscuiti"],
   ["Napolitane", "Dulciuri"],
   ["Bomboane", "Dulciuri"],
@@ -234,7 +258,15 @@ export function searchProductCatalog(query: string, receipts: Receipt[] = [], li
       .map((item) => {
         const hay = foldedName(item);
         const name = foldRomanian(item.name);
-        const score = name === needle ? 3 : name.startsWith(needle) || hay.startsWith(needle) ? 2 : hay.includes(needle) ? 1 : 0;
+        const tokens = needle.split(/\s+/).filter((token) => token.length >= 2);
+        const allTokens = tokens.length > 0 && tokens.every((token) => hay.includes(token));
+        const brand = tokens[0] && tokens[0].length >= 4 && (name.startsWith(tokens[0]) || hay.split(" ").includes(tokens[0]));
+        const score = name === needle ? 6
+          : name.startsWith(needle) || hay.startsWith(needle) ? 5
+          : hay.includes(needle) ? 4
+          : allTokens ? 3
+          : brand ? 2
+          : 0;
         return { item, score };
       })
       .filter((row) => row.score > 0)
@@ -286,7 +318,7 @@ type OffProduct = {
   product_name?: string;
   product_name_ro?: string;
   product_name_en?: string;
-  brands?: string;
+  brands?: string | string[];
   categories_tags?: string[];
   quantity?: string;
 };
@@ -294,6 +326,7 @@ type OffProduct = {
 /** Mapează etichetele Open Food Facts / Open Products Facts pe categoriile casei. */
 export function categoryFromOnlineTags(tags: string[] = [], name = ""): string {
   const hay = foldRomanian(`${tags.join(" ")} ${name}`);
+  if (/\b(milk|milks|dairy|dairies|yogurts|cheeses|butter|lapte|iaurt|branza|unt)\b/.test(hay)) return "Alimente";
   if (/\b(water|waters|mineral-water|apa)\b/.test(hay)) return "Apă";
   if (/\b(beverage|beverages|soda|juices|beer|wines|coffee|teas|suc|bere|bautur)\b/.test(hay)) return "Băuturi";
   if (/\b(chocolate|chocolates|sweet|sweets|biscuit|biscuits|candy|cookies|ice-cream|ciocol|dulce)\b/.test(hay)) return "Dulciuri";
@@ -303,43 +336,70 @@ export function categoryFromOnlineTags(tags: string[] = [], name = ""): string {
   return classifyProductLabel(name);
 }
 
+function brandOf(product: OffProduct): string {
+  const raw = product.brands;
+  if (Array.isArray(raw)) return (raw[0] || "").trim();
+  return (raw || "").split(",")[0]?.trim() || "";
+}
+
 function onlineProductName(product: OffProduct): string | undefined {
   const raw = (product.product_name_ro || product.product_name || product.product_name_en || "").replace(/\s+/g, " ").trim();
   if (raw.replace(/[^a-zA-ZăâîșțĂÂÎȘȚ]/g, "").length < 3) return undefined;
-  const brand = (product.brands || "").split(",")[0]?.trim();
+  const brand = brandOf(product);
   const labeled = brand && !foldRomanian(raw).includes(foldRomanian(brand)) ? `${brand} ${raw}` : raw;
   const withQty = product.quantity && !labeled.includes(product.quantity) ? `${labeled} ${product.quantity}` : labeled;
   return withQty.slice(0, 72).trim();
 }
 
-async function searchOffHost(host: string, query: string, fetchImpl: typeof fetch, signal?: AbortSignal): Promise<ProductHit[]> {
-  const params = new URLSearchParams({
-    search_terms: query,
-    search_simple: "1",
-    action: "process",
-    json: "1",
-    page_size: "8",
-    lc: "ro",
-    cc: "ro",
-  });
-  const response = await fetchImpl(`https://${host}/cgi/search.pl?${params.toString()}`, {
-    signal,
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok) return [];
-  const payload = await response.json() as { products?: OffProduct[] };
+function relevantOnlineName(name: string, query: string): boolean {
+  const hay = foldRomanian(name);
+  const tokens = foldRomanian(query).split(/\s+/).filter((token) => token.length >= 3);
+  const main = [...tokens].sort((left, right) => right.length - left.length)[0] || foldRomanian(query);
+  return Boolean(main) && hay.includes(main);
+}
+
+function expandOnlineQueries(query: string): string[] {
+  const folded = foldRomanian(query);
+  const queries = [query.trim()];
+  if (/\bkinder\b/.test(folded) && /\b(ou|oua|egg|joy)\b/.test(folded)) {
+    queries.push("Kinder Surprise", "Kinder Joy");
+  }
+  return Array.from(new Set(queries.filter(Boolean)));
+}
+
+function hitsFromPayload(payload: { products?: OffProduct[]; hits?: OffProduct[] }, query: string): ProductHit[] {
   const hits: ProductHit[] = [];
-  for (const product of payload.products || []) {
+  const seen = new Set<string>();
+  for (const product of payload.hits || payload.products || []) {
     const name = onlineProductName(product);
-    if (!name) continue;
+    if (!name || !relevantOnlineName(name, query)) continue;
+    const key = foldRomanian(name);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
     hits.push({
       name,
       category: categoryFromOnlineTags(product.categories_tags || [], name),
       source: "online",
     });
-    if (hits.length >= 8) break;
+    if (hits.length >= 10) break;
   }
   return hits;
+}
+
+async function searchOffUrl(url: string, query: string, fetchImpl: typeof fetch, signal?: AbortSignal): Promise<ProductHit[]> {
+  const response = await fetchImpl(url, { signal, headers: { Accept: "application/json" } });
+  if (!response.ok) return [];
+  return hitsFromPayload(await response.json() as { products?: OffProduct[]; hits?: OffProduct[] }, query);
+}
+
+async function searchOffHost(host: string, query: string, fetchImpl: typeof fetch, signal?: AbortSignal): Promise<ProductHit[]> {
+  const params = new URLSearchParams({
+    action: "process",
+    json: "1",
+    page_size: "12",
+    search_terms: query,
+  });
+  return searchOffUrl(`https://${host}/cgi/search.pl?${params.toString()}`, query, fetchImpl, signal);
 }
 
 /**
@@ -353,10 +413,15 @@ export async function searchOnlineProducts(
   const needle = query.trim();
   if (needle.length < 3) return [];
   const fetchImpl = options.fetchImpl || fetch;
-  const settled = await Promise.allSettled([
-    searchOffHost("world.openfoodfacts.org", needle, fetchImpl, options.signal),
-    searchOffHost("world.openproductsfacts.org", needle, fetchImpl, options.signal),
-  ]);
+  const queries = expandOnlineQueries(needle);
+  const requests: Array<Promise<ProductHit[]>> = [];
+  for (const term of queries) {
+    const search = new URLSearchParams({ q: term, page_size: "12", langs: "ro,en" });
+    requests.push(searchOffUrl(`https://search.openfoodfacts.org/search?${search.toString()}`, term, fetchImpl, options.signal));
+    requests.push(searchOffHost("world.openfoodfacts.org", term, fetchImpl, options.signal));
+  }
+  requests.push(searchOffHost("world.openproductsfacts.org", needle, fetchImpl, options.signal));
+  const settled = await Promise.allSettled(requests);
   const merged: ProductHit[] = [];
   const seen = new Set<string>();
   for (const result of settled) {
@@ -368,7 +433,7 @@ export async function searchOnlineProducts(
       merged.push(hit);
     }
   }
-  return merged.slice(0, 10);
+  return merged.slice(0, 12);
 }
 
 const CHAT_SKIP = new Set([
@@ -389,4 +454,4 @@ export function looksLikeProductSearch(raw: string): boolean {
   return words.length > 0 && words.length <= 5;
 }
 
-export const CATALOG_STARTERS = ["Lapte", "Napolact", "Pâine", "Ariel", "Detergent", "Ciorapi", "Ouă", "Ulei"];
+export const CATALOG_STARTERS = ["Kinder", "Lapte", "Napolact", "Pâine", "Ariel", "Detergent", "Ciorapi", "Ouă"];

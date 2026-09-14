@@ -50,6 +50,10 @@ describe("catalogul de produse", () => {
     const hits = searchProductCatalog("lipi", data.receipts);
     expect(hits.some((item) => /lipici/i.test(item.name))).toBe(true);
     expect(searchProductCatalog("hanor").some((item) => item.name === "Hanorac")).toBe(true);
+    const kinder = searchProductCatalog("Kinder ou");
+    expect(kinder.some((item) => /kinder ou/i.test(item.name))).toBe(true);
+    expect(searchProductCatalog("kinder").filter((item) => /kinder/i.test(item.name)).length).toBeGreaterThan(5);
+    expect(classifyProductLabel("Kinder Bueno")).toBe("Dulciuri");
   });
 
   it("repartizează alimente vs nealimentare din liniile bonului", () => {
@@ -76,6 +80,7 @@ describe("catalogul de produse", () => {
     expect(categoryFromOnlineTags(["en:mineral-waters"], "Bucovina")).toBe("Apă");
     expect(categoryFromOnlineTags(["en:chocolates"], "Milka")).toBe("Dulciuri");
     expect(categoryFromOnlineTags(["en:cleaning"], "Ariel")).toBe("Casă & facturi");
+    expect(categoryFromOnlineTags(["en:milks", "en:beverages"], "Napolact lapte")).toBe("Alimente");
   });
 
   it("citește catalogul online doar după denumire, fără să amestece registrul", async () => {
@@ -88,7 +93,8 @@ describe("catalogul de produse", () => {
     };
     const hits = await searchOnlineProducts("lapte", { fetchImpl });
     expect(hits.some((item) => /lapte/i.test(item.name) && item.source === "online")).toBe(true);
-    expect(hits.some((item) => /ariel/i.test(item.name) && item.category === "Casă & facturi")).toBe(true);
+    const house = await searchOnlineProducts("ariel", { fetchImpl });
+    expect(house.some((item) => /ariel/i.test(item.name) && item.category === "Casă & facturi")).toBe(true);
   });
 
   it("recunoaște un nume de produs fără sumă, nu o conversație cu ghidul", () => {

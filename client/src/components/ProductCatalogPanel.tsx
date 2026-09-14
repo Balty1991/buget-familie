@@ -68,7 +68,7 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
   const [onlineError, setOnlineError] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const offline = isOfflineOnly();
-  const hits = useMemo(() => searchProductCatalog(query, data.receipts, 10), [query, data.receipts]);
+  const hits = useMemo(() => searchProductCatalog(query, data.receipts, 18), [query, data.receipts]);
   const basketTotal = Math.round(lines.reduce((sum, line) => sum + line.amount, 0) * 100) / 100;
 
   useEffect(() => {
@@ -124,7 +124,7 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
       seen.add(key);
       merged.push(hit);
     }
-    return merged.slice(0, 18);
+    return merged.slice(0, 24);
   }, [hits, onlineHits]);
 
   const addToBasket = (hit: ProductHit, rawAmount: string) => {
