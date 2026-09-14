@@ -17,6 +17,18 @@ import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
 
 if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
+if (/Android/i.test(navigator.userAgent)) document.documentElement.classList.add("is-android");
+
+const syncAndroidNavOverlay = () => {
+  if (!document.documentElement.classList.contains("is-android") && !document.documentElement.classList.contains("capacitor-android")) return;
+  const viewport = window.visualViewport;
+  const overlap = viewport ? Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop)) : 0;
+  document.documentElement.style.setProperty("--os-nav-overlay", `${Math.max(48, overlap)}px`);
+};
+syncAndroidNavOverlay();
+window.addEventListener("resize", syncAndroidNavOverlay);
+window.visualViewport?.addEventListener("resize", syncAndroidNavOverlay);
+
 createRoot(document.getElementById("root")!).render(<App />);
 startPerformanceMonitoring();
 

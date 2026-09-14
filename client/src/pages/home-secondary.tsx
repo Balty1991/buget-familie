@@ -89,6 +89,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
           </div>
           <button type="button" className="bf-icon-button" aria-label={t("Închide alegerea temei")} onClick={onClose}><X size={19} /></button>
         </header>
+        <div className="bf-theme-picker-body">
         <p className="bf-theme-picker-intro">{t("Previzualizezi tema înainte de aplicare. Verdele rămâne progres, mierea înseamnă revizuire, iar coralul atrage atenția.")}</p>
         <section className={`bf-theme-preview ${preview} background-preview-${previewBackground}`} aria-label={`Previzualizare ${previewOption.name}`}>
           <div className="bf-theme-preview-top"><span>{previewOption.mood}</span><b>{previewOption.name}</b></div>
@@ -166,7 +167,10 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
             <i aria-hidden="true" />
           </button>
         </section>
+        </div>
+        <div className="bf-theme-picker-footer">
         <button type="button" className="bf-primary bf-theme-apply" onClick={applyPreview}><Check size={17} /> {t("Aplică {name}", { name: previewOption.name })}</button>
+        </div>
       </section>
     </div>,
     document.body,

@@ -1495,6 +1495,16 @@ html.theme-ink .bf-obligations-workspace > .bf-obligations-header h1 em {
 .bf-onboarding,
 .bf-onboarding.bf-first-run {
   overflow: auto !important;
-  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 24px) !important;
+  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 16px) !important;
+}
+
+.bf-theme-picker {
+  overflow: hidden !important;
+}
+.bf-theme-picker-body {
+  overflow-y: auto !important;
+}
+.bf-theme-picker-footer {
+  padding-bottom: calc(14px + var(--os-inset-bottom, 0px)) !important;
 }
 
