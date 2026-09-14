@@ -1,7 +1,7 @@
 /**
  * Alerte locale pentru plicuri, scadențe și ritm.
  * Pe Android: permisiunea sistemului + WorkManager (și Capacitor, dacă plugin-ul răspunde).
- * Pe web/PWA: Notification API. Nu trimite date pe server.
+ * Pe web/PWA: Notification API + service worker. Nu trimite date pe server.
  */
 
 import {
@@ -89,6 +89,26 @@ const nativePermissionFromBridge = (): NotificationPref | undefined => {
   return "unknown";
 };
 
+function readWebPermission(): NotificationPref {
+  if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
+  if (Notification.permission === "granted") return "granted";
+  if (Notification.permission === "denied") return "denied";
+  return "unknown";
+}
+
+async function readPermissionsApi(): Promise<NotificationPref | undefined> {
+  try {
+    const permissions = navigator.permissions;
+    if (!permissions?.query) return undefined;
+    const status = await permissions.query({ name: "notifications" as PermissionName });
+    if (status.state === "granted") return "granted";
+    if (status.state === "denied") return "denied";
+    return "unknown";
+  } catch {
+    return undefined;
+  }
+}
+
 export async function getNotificationPermission(): Promise<NotificationPref> {
   if (isNative()) {
     try {
@@ -106,10 +126,10 @@ export async function getNotificationPermission(): Promise<NotificationPref> {
     if (viaBridge === "granted") return "granted";
     return viaBridge ?? "unknown";
   }
-  if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
-  if (Notification.permission === "granted") return "granted";
-  if (Notification.permission === "denied") return "denied";
-  return "unknown";
+  const fromApi = readWebPermission();
+  if (fromApi === "granted" || fromApi === "denied" || fromApi === "unsupported") return fromApi;
+  const queried = await readPermissionsApi();
+  return queried ?? fromApi;
 }
 
 function waitForNativePermission(bridge: NativeReminderBridge): Promise<boolean> {
@@ -119,15 +139,22 @@ function waitForNativePermission(bridge: NativeReminderBridge): Promise<boolean>
       return;
     }
     let settled = false;
+    let poll = 0;
     const finish = (granted: boolean) => {
       if (settled) return;
       settled = true;
+      try { window.clearInterval(poll); } catch { /* ignore */ }
       window.removeEventListener("buget-familie:notify-permission", onEvent);
       resolve(granted);
     };
     const onEvent = (event: Event) => {
+      if (bridge.hasPermission?.()) {
+        finish(true);
+        return;
+      }
       const granted = Boolean((event as CustomEvent<{ granted?: boolean }>).detail?.granted);
-      finish(granted);
+      if (granted) finish(true);
+      /* un eveniment „false” nu închide așteptarea: Huawei poate semnala înainte ca grant-ul să fie vizibil */
     };
     window.addEventListener("buget-familie:notify-permission", onEvent);
     try {
@@ -136,8 +163,73 @@ function waitForNativePermission(bridge: NativeReminderBridge): Promise<boolean>
       finish(false);
       return;
     }
-    window.setTimeout(() => finish(Boolean(bridge.hasPermission?.())), 20_000);
+    try {
+      poll = window.setInterval(() => {
+        if (bridge.hasPermission?.()) finish(true);
+      }, 400);
+    } catch {
+      /* unele harness-uri de test nu expun setInterval pe window */
+    }
+    window.setTimeout(() => finish(Boolean(bridge.hasPermission?.())), 25_000);
   });
+}
+
+/**
+ * Chrome pe Android (și Huawei) arată dialogul, utilizatorul apasă Permite,
+ * dar `requestPermission()` se poate rezolva cu `"default"` înainte ca
+ * `Notification.permission` să treacă pe `"granted"`. Folosim valoarea
+ * întoarsă, API-ul vechi cu callback, Permissions API și un sondaj scurt.
+ */
+async function requestWebNotificationPermission(): Promise<NotificationPref> {
+  const current = readWebPermission();
+  if (current === "granted" || current === "denied" || current === "unsupported") return current;
+
+  const fromDialog = await new Promise<string>((resolve) => {
+    let settled = false;
+    const finish = (value: string) => {
+      if (settled) return;
+      settled = true;
+      resolve(value || Notification.permission || "default");
+    };
+    try {
+      const returned = Notification.requestPermission((permission) => finish(permission));
+      if (returned && typeof (returned as Promise<string>).then === "function") {
+        void (returned as Promise<string>).then(
+          (permission) => finish(permission),
+          () => finish(Notification.permission),
+        );
+      }
+    } catch {
+      finish(Notification.permission);
+    }
+    const started = Date.now();
+    const poll = () => {
+      if (settled) return;
+      if (Notification.permission === "granted" || Notification.permission === "denied") {
+        finish(Notification.permission);
+        return;
+      }
+      if (Date.now() - started > 25_000) {
+        finish(Notification.permission);
+        return;
+      }
+      window.setTimeout(poll, 250);
+    };
+    window.setTimeout(poll, 200);
+  });
+
+  if (fromDialog === "granted" || Notification.permission === "granted") return "granted";
+  if (fromDialog === "denied" || Notification.permission === "denied") return "denied";
+  const queried = await readPermissionsApi();
+  if (queried === "granted" || queried === "denied") return queried;
+
+  /* Huawei: grant-ul apare un tick după închiderea dialogului. */
+  for (let i = 0; i < 8; i += 1) {
+    await sleep(200);
+    const later = readWebPermission();
+    if (later === "granted" || later === "denied") return later;
+  }
+  return "unknown";
 }
 
 export async function requestNotificationPermission(): Promise<NotificationPref> {
@@ -160,16 +252,7 @@ export async function requestNotificationPermission(): Promise<NotificationPref>
     }
     return "unknown";
   }
-  if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
-  if (Notification.permission === "granted") return "granted";
-  if (Notification.permission === "denied") return "denied";
-  try {
-    const result = await Notification.requestPermission();
-    if (result === "granted") return "granted";
-    return result === "denied" ? "denied" : "unknown";
-  } catch {
-    return "unsupported";
-  }
+  return requestWebNotificationPermission();
 }
 
 type PlannedAlert = {
@@ -340,6 +423,30 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     });
   }
 
+  // Check-in calm de seară, doar dacă azi nu e nicio cheltuială.
+  const spentToday = (data.transactions || []).some((item) => item.kind === "expense" && item.date === today);
+  if (!spentToday) {
+    const when = atLocalHour(0, 20, 0);
+    if (when.getTime() > Date.now() - 60_000) {
+      alerts.push({
+        id: id++,
+        title: t("Check-in de seară"),
+        body: t("Nicio cheltuială înregistrată azi. Un minut de ordine e de ajuns."),
+        at: when,
+        tag: `checkin-${today}`,
+      });
+    } else {
+      const tomorrow = atLocalHour(1, 20, 0);
+      alerts.push({
+        id: id++,
+        title: t("Check-in de seară"),
+        body: t("Dacă ziua trece fără nicio mișcare, îți amintesc seara — fără grabă."),
+        at: tomorrow,
+        tag: `checkin-next`,
+      });
+    }
+  }
+
   return alerts.slice(0, 10);
 }
 
@@ -372,18 +479,15 @@ async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
 }
 
 async function scheduleWeb(alerts: PlannedAlert[]) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  const permission = await getNotificationPermission();
+  if (permission !== "granted" && readWebPermission() !== "granted") return;
   const now = Date.now();
   for (const alert of alerts) {
     const delta = alert.at.getTime() - now;
     if (delta < -5 * 60_000 || delta > 14 * 60 * 60_000) continue;
     try {
       window.setTimeout(() => {
-        try {
-          new Notification(alert.title, { body: alert.body, tag: alert.tag });
-        } catch {
-          /* ignore */
-        }
+        void showNow(alert.title, alert.body, alert.tag);
       }, Math.max(0, delta));
     } catch {
       /* ignore */
@@ -391,8 +495,8 @@ async function scheduleWeb(alerts: PlannedAlert[]) {
   }
 }
 
-
 const FAMILY_ALERT_KEY = "buget-familie:family-envelope-alerts";
+const FAMILY_TX_ALERT_KEY = "buget-familie:family-tx-alerts";
 
 const readFamilyAlertLog = (): Record<string, string> => {
   try {
@@ -411,6 +515,43 @@ const writeFamilyAlertLog = (log: Record<string, string>) => {
     /* jurnalul de alerte nu trebuie să blocheze datele financiare */
   }
 };
+
+const readFamilyTxLog = (): Record<string, string> => {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(FAMILY_TX_ALERT_KEY) || "{}") as unknown;
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeFamilyTxLog = (log: Record<string, string>) => {
+  try {
+    const entries = Object.entries(log).slice(-80);
+    window.localStorage.setItem(FAMILY_TX_ALERT_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch {
+    /* ignore */
+  }
+};
+
+async function showViaServiceWorker(title: string, body: string, tag: string): Promise<boolean> {
+  try {
+    const serviceWorker = navigator.serviceWorker;
+    if (!serviceWorker) return false;
+    const registration = (await serviceWorker.getRegistration()) || (await serviceWorker.ready.catch(() => undefined));
+    if (!registration?.showNotification) return false;
+    await registration.showNotification(title, {
+      body,
+      tag,
+      icon: "./icons/icon-192.png",
+      badge: "./icons/favicon-32.png",
+      lang: getLocale(),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function showNow(title: string, body: string, tag: string) {
   const bridge = nativeReminders();
@@ -433,7 +574,9 @@ async function showNow(title: string, body: string, tag: string) {
       /* cădem pe Notification API */
     }
   }
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  if (await showViaServiceWorker(title, body, tag)) return;
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
   try {
     new Notification(title, { body, tag });
   } catch {
@@ -443,17 +586,13 @@ async function showNow(title: string, body: string, tag: string) {
 
 /**
  * Anunță imediat când o actualizare primită de la un alt telefon împinge un plic
- * peste pragul lui. Alertele zilnice programate acoperă propriile cheltuieli; aceasta
- * acoperă cazul în care altcineva din familie a cheltuit, iar tu afli abia la final de lună.
- *
- * Se declanșează doar la trecerea pragului, doar pentru mișcări ale altui membru și cel
- * mult o dată pe zi pentru fiecare plic și stare, ca sincronizarea să nu devină o sursă
- * de notificări repetate.
+ * peste pragul lui sau când altcineva din familie a adăugat o cheltuială.
+ * Nu anunță propriile tale înregistrări — le vezi deja pe ecran.
  */
 export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppData): Promise<void> {
   if (!isNotificationsEnabled()) return;
   const permission = await getNotificationPermission();
-  if (permission !== "granted") return;
+  if (permission === "denied" || permission === "unsupported") return;
 
   const me = next.settings.members.find((member) => member.name === next.settings.memberName);
   const knownIds = new Set(previous.transactions.map((item) => item.id));
@@ -463,6 +602,7 @@ export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppDa
   const day = isoToday();
   const log = readFamilyAlertLog();
   let changed = false;
+  let envelopeAlerted = false;
 
   for (const allocation of next.settings.salaryPlan.allocations || []) {
     const before = previous.settings.salaryPlan.allocations.find((item) => item.id === allocation.id);
@@ -481,6 +621,7 @@ export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppDa
     if (log[key] === day) continue;
     log[key] = day;
     changed = true;
+    envelopeAlerted = true;
 
     const names = Array.from(new Set(responsible.map((item) => item.person).filter(Boolean)));
     const who = names.length === 1 ? names[0] : names.length ? t("{first} și {last}", { first: names.slice(0, -1).join(", "), last: names[names.length - 1] }) : t("Un membru");
@@ -495,6 +636,35 @@ export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppDa
   }
 
   if (changed) writeFamilyAlertLog(log);
+
+  const txLog = readFamilyTxLog();
+  const fresh = incoming.filter((item) => !txLog[item.id]);
+  if (!fresh.length) return;
+  for (const item of fresh) txLog[item.id] = day;
+  writeFamilyTxLog(txLog);
+
+  /* Dacă plicul a fost deja anunțat, rezumatul de cheltuială e redundant. */
+  if (envelopeAlerted) return;
+
+  const names = Array.from(new Set(fresh.map((item) => item.person).filter(Boolean)));
+  const who = names.length === 1 ? names[0] : names.length ? t("{first} și {last}", { first: names.slice(0, -1).join(", "), last: names[names.length - 1] }) : t("Un membru");
+  const spent = fresh.reduce((sum, item) => sum + item.amount, 0);
+  const firstTitle = fresh[0]?.title?.trim();
+  if (fresh.length === 1) {
+    await showNow(
+      t("Cheltuială nouă în familie"),
+      firstTitle
+        ? t("{who} a înregistrat {spent} · {title}.", { who, spent: money(spent), title: firstTitle })
+        : t("{who} a înregistrat {spent}.", { who, spent: money(spent) }),
+      `family-tx-${fresh[0].id}`,
+    );
+    return;
+  }
+  await showNow(
+    t("Cheltuieli noi în familie"),
+    t("{who} a înregistrat {count} cheltuieli · {spent}.", { who, count: fresh.length, spent: money(spent) }),
+    `family-tx-batch-${day}-${fresh[0].id}`,
+  );
 }
 
 function scheduleWorkManager(alerts: PlannedAlert[]): boolean {
@@ -528,7 +698,7 @@ export async function scheduleFinancialReminders(data: AppData): Promise<void> {
   if (isNative()) {
     if (alerts.length) scheduleWorkManager(alerts);
     if (permission === "granted") await tryCapacitorSchedule(alerts);
-  } else if (permission === "granted" && alerts.length) {
+  } else if (alerts.length) {
     await scheduleWeb(alerts);
   }
 
@@ -542,7 +712,7 @@ export async function scheduleFinancialReminders(data: AppData): Promise<void> {
 async function pingAlertsOn() {
   await showNow(
     t("Reamintiri active"),
-    t("Îți spun pe telefon când e o scadență sau un plic aproape de limită."),
+    t("Îți spun pe telefon când e o scadență, un plic aproape de limită sau o cheltuială adăugată de familie."),
     "alerts-on",
   );
 }
@@ -550,14 +720,34 @@ async function pingAlertsOn() {
 /** Activează: cere permisiunea sistemului, programează, trimite o notificare de confirmare. */
 export async function enableLocalAlerts(data: AppData): Promise<NotificationPref> {
   const status = await requestNotificationPermission();
-  if (status === "granted") {
-    setNotificationsEnabled(true);
-    await scheduleFinancialReminders(data);
-    await pingAlertsOn();
-  } else if (status === "denied") {
+  if (status === "denied") {
     setNotificationsEnabled(false);
+    return status;
   }
-  return status;
+  if (status === "unsupported") {
+    return status;
+  }
+
+  /* Huawei/Chrome: dialogul poate rămâne pe „default” un moment după Permite.
+     Nu marcăm alertele ca oprite — încercăm confirmarea și re-citim permisiunea. */
+  setNotificationsEnabled(true);
+  await scheduleFinancialReminders(data);
+  await pingAlertsOn();
+  if (status === "granted") return "granted";
+
+  const again = await getNotificationPermission();
+  if (again === "granted") return "granted";
+  return again === "denied" ? "denied" : "unknown";
+}
+
+export async function sendTestAlert(): Promise<boolean> {
+  if (!isNotificationsEnabled()) return false;
+  await showNow(
+    t("Notificare de test"),
+    t("Dacă vezi asta, alertele ajung pe telefon."),
+    "alerts-test",
+  );
+  return true;
 }
 
 /** Oprește preferința locală și anulează job-urile WorkManager / Capacitor. */

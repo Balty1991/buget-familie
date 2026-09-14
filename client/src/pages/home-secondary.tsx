@@ -21,7 +21,7 @@ import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageSto
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { DebtSnowballCard } from "@/components/DebtSnowballCard";
-import { disableLocalAlerts, enableLocalAlerts, getNotificationPermission, isNotificationsEnabled, type NotificationPref } from "@/lib/local-notifications";
+import { disableLocalAlerts, enableLocalAlerts, getNotificationPermission, isNotificationsEnabled, sendTestAlert, type NotificationPref } from "@/lib/local-notifications";
 import { isOfflineOnly, setOfflineOnly, setSimpleMode } from "@/lib/ui-prefs";
 import { disableAppLock, hasAppLockPin, isAppLockEnabled, isValidPin, setAppLockPin } from "@/lib/app-lock";
 import {
@@ -1184,7 +1184,21 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
-    void getNotificationPermission().then(setPref);
+    const refresh = () => {
+      void getNotificationPermission().then((status) => {
+        setPref(status);
+        setEnabled(isNotificationsEnabled());
+      });
+    };
+    refresh();
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("buget-familie:notify-permission", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("buget-familie:notify-permission", refresh);
+    };
   }, []);
 
   const active = enabled && pref === "granted";
@@ -1193,12 +1207,27 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
     setBusy(true);
     setNotice("");
     void enableLocalAlerts(data)
-      .then((status) => {
-        setPref(status);
-        setEnabled(status === "granted");
-        if (status === "granted") setNotice(t("Alertele sunt active pe acest dispozitiv."));
-        else if (status === "denied") setNotice(t("Permisiunea a fost refuzată. O poți reactiva din setările telefonului."));
-        else setNotice(t("Notificările nu sunt disponibile în acest browser."));
+      .then(async (status) => {
+        let resolved = status;
+        if (resolved !== "granted" && resolved !== "denied") {
+          for (let i = 0; i < 12; i += 1) {
+            await new Promise((done) => window.setTimeout(done, 250));
+            const again = await getNotificationPermission();
+            if (again === "granted") {
+              resolved = "granted";
+              break;
+            }
+            if (again === "denied") {
+              resolved = "denied";
+              break;
+            }
+          }
+        }
+        setPref(resolved);
+        setEnabled(isNotificationsEnabled() && resolved !== "denied");
+        if (resolved === "granted") setNotice(t("Alertele sunt active pe acest dispozitiv. Urmează și o notificare de confirmare."));
+        else if (resolved === "denied") setNotice(t("Permisiunea a fost refuzată. O poți reactiva din setările telefonului."));
+        else setNotice(t("Am cerut permisiunea. Dacă ai apăsat Permite, închide aplicația și deschide-o din nou — pe unele telefoane grant-ul se înregistrează abia atunci."));
       })
       .finally(() => setBusy(false));
   };
@@ -1209,18 +1238,30 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
     setNotice(t("Alertele au fost oprite pe acest dispozitiv."));
   };
 
+  const ping = () => {
+    void sendTestAlert().then(() => setNotice(t("Am trimis o notificare de test pe acest telefon.")));
+  };
+
   return (
     <section className={"bf-settings-notifications" + (active ? " is-on" : "")} aria-labelledby="bf-alerts-title">
       <p className="bf-kicker">{t("ALERTE LOCALE")}</p>
       <h2 id="bf-alerts-title">{t("Reamintiri pe telefon")}</h2>
-      <p>{t("Scadențe, plicuri aproape de limită și un check-in calm. Rămân pe dispozitiv; nu se trimit pe server.")}</p>
+      <p>{t("Rămân pe dispozitiv; nu se trimit pe server. Nu te anunț când tu însuți adaugi o cheltuială — o vezi deja pe ecran.")}</p>
+      <ul className="bf-alert-kinds">
+        <li>{t("Scadențe în următoarele 3 zile")}</li>
+        <li>{t("Plic aproape de limită sau epuizat")}</li>
+        <li>{t("Venitul de mâine sau de azi")}</li>
+        <li>{t("Check-in de seară, dacă ziua e goală")}</li>
+        <li>{t("Cheltuială adăugată de alt membru, când telefoanele sunt sincronizate")}</li>
+      </ul>
       {active ? (
         <div className="bf-notification-actions">
           <button type="button" className="bf-secondary" onClick={turnOff}>{t("Oprește alertele")}</button>
+          <button type="button" className="bf-ghost" onClick={ping}>{t("Trimite o notificare de test")}</button>
         </div>
       ) : (
         <div className="bf-notification-actions">
-          <button type="button" className="bf-primary" disabled={busy} onClick={turnOn}>{t("Activează alertele")}</button>
+          <button type="button" className="bf-primary" disabled={busy} onClick={turnOn}>{busy ? t("Se cere permisiunea…") : t("Activează alertele")}</button>
         </div>
       )}
       <p className="bf-helper">{active ? t("Active pe acest telefon.") : t("Oprite pe acest telefon.")}</p>

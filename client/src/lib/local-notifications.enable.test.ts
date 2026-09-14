@@ -54,6 +54,8 @@ const stubWindow = (opts?: { native?: boolean; permission?: boolean }) => {
         listeners[type] = (listeners[type] || []).filter((item) => item !== fn);
       },
       setTimeout: globalThis.setTimeout.bind(globalThis),
+      setInterval: globalThis.setInterval.bind(globalThis),
+      clearInterval: globalThis.clearInterval.bind(globalThis),
       dispatchEvent: (event: Event) => {
         (listeners[event.type] || []).forEach((fn) => fn(event));
         return true;

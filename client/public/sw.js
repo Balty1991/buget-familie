@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v51";
+const CACHE = "buget-familie-shell-v52";
 
 const SHELL = ["./manifest.webmanifest", "./bf-favicon.svg", "./icons/favicon-32.png", "./icons/icon-192.png"];
 
@@ -12,6 +12,18 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   if (event.data === "SKIP_WAITING" || event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const existing = windows.find((client) => "focus" in client);
+      if (existing) return existing.focus();
+      if (self.clients.openWindow) return self.clients.openWindow("./");
+      return undefined;
+    }),
+  );
 });
 
 self.addEventListener("fetch", (event) => {

@@ -83,22 +83,26 @@ describe("alerta de plic din sincronizare", () => {
     expect(sent).toEqual([]);
   });
 
-  it("nu anunță când plicul rămâne în limite", async () => {
+  it("anunță cheltuiala altui membru chiar dacă plicul rămâne în limite", async () => {
     const notify = await load();
     const previous = household();
     const next = { ...previous, transactions: [expense("t1", "member-doi", "Ana", 100, "2026-09-08")] };
     await notify(previous, next);
-    expect(sent).toEqual([]);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].title).toContain("Cheltuială nouă");
+    expect(sent[0].body).toContain("Ana");
   });
 
-  it("nu repetă aceeași alertă la fiecare sincronizare din aceeași zi", async () => {
+  it("nu repetă aceeași alertă de plic la fiecare sincronizare din aceeași zi", async () => {
     const notify = await load();
     const previous = household();
     const next = { ...previous, transactions: [expense("t1", "member-doi", "Ana", 850, "2026-09-08")] };
     await notify(previous, next);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].title).toContain("aproape de limită");
     const later = { ...next, transactions: [...next.transactions, expense("t2", "member-doi", "Ana", 20, "2026-09-09")] };
     await notify(next, later);
-    expect(sent).toHaveLength(1);
+    expect(sent.filter((item) => item.title.includes("aproape de limită") || item.title.includes("depășit"))).toHaveLength(1);
   });
 
   it("anunță separat trecerea de la avertisment la depășire", async () => {

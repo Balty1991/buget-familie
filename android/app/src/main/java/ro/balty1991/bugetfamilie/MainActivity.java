@@ -139,12 +139,14 @@ public class MainActivity extends BridgeActivity {
   private void notifyWebNotifyPermission(boolean granted) {
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
-    webView.post(() -> webView.evaluateJavascript(
+    final String js =
       "try{window.dispatchEvent(new CustomEvent('buget-familie:notify-permission',{detail:{granted:"
         + (granted ? "true" : "false")
-        + "}}))}catch(e){}",
-      null
-    ));
+        + "}}))}catch(e){}";
+    webView.post(() -> webView.evaluateJavascript(js, null));
+    /* WebView-ul e adesea pauzat cât e deschis dialogul de permisiune; repetăm după reluare. */
+    webView.postDelayed(() -> webView.evaluateJavascript(js, null), 400);
+    webView.postDelayed(() -> webView.evaluateJavascript(js, null), 1200);
   }
 
   @Override

@@ -1457,6 +1457,21 @@ html[data-simple-mode="1"] .bf-utilities-workspace .bf-more-tabs button {
   outline: 2px solid #1f6b4a;
   background: color-mix(in srgb, #1f6b4a 8%, transparent);
 }
+.bf-alert-kinds {
+  margin: 10px 0 16px;
+  padding: 0 0 0 1.15em;
+  display: grid;
+  gap: 6px;
+  color: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.bf-notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
 .bf-plan-simple-tip {
   display: block;
   margin: 8px 0 14px;
