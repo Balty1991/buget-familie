@@ -34,6 +34,18 @@ function nativeReminders(): NativeReminderBridge | undefined {
   return (window as unknown as { BugetFamilieReminders?: NativeReminderBridge }).BugetFamilieReminders;
 }
 
+const sleep = (ms: number) => new Promise<void>((resolve) => { window.setTimeout(resolve, ms); });
+
+/** addJavascriptInterface poate întârzia un tick față de first paint. */
+async function waitForNativeBridge(): Promise<NativeReminderBridge | undefined> {
+  for (let i = 0; i < 12; i += 1) {
+    const bridge = nativeReminders();
+    if (bridge && (typeof bridge.requestPermission === "function" || typeof bridge.hasPermission === "function")) return bridge;
+    await sleep(80);
+  }
+  return nativeReminders();
+}
+
 /**
  * WebView-ul Android nu expune Notification API. Semnalul adevărat pe telefon:
  * puntea Java (`BugetFamilieReminders`), clasa `capacitor-android`, sau Capacitor.
@@ -130,23 +142,21 @@ function waitForNativePermission(bridge: NativeReminderBridge): Promise<boolean>
 
 export async function requestNotificationPermission(): Promise<NotificationPref> {
   if (isNative()) {
+    const bridge = await waitForNativeBridge();
+    if (bridge?.hasPermission?.()) return "granted";
+    if (bridge?.requestPermission) {
+      const granted = await waitForNativePermission(bridge);
+      if (granted) return "granted";
+      return bridge.hasPermission?.() ? "granted" : "denied";
+    }
     try {
       const plugin = await loadNativeNotifications();
       const current = await plugin.checkPermissions();
       const status = current.display === "granted" ? current : await plugin.requestPermissions();
       if (status.display === "granted") return "granted";
-      if (status.display === "denied") {
-        if (nativeReminders()?.hasPermission?.()) return "granted";
-        return "denied";
-      }
+      if (status.display === "denied") return "denied";
     } catch {
-      /* cădem pe puntea din MainActivity */
-    }
-    const bridge = nativeReminders();
-    if (bridge?.hasPermission?.()) return "granted";
-    if (bridge?.requestPermission) {
-      const granted = await waitForNativePermission(bridge);
-      return granted ? "granted" : "denied";
+      /* pluginul Capacitor e opțional */
     }
     return "unknown";
   }

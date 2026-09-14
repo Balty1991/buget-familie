@@ -108,7 +108,6 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   return (
     <div className="bf-modal-backdrop bf-onboarding-backdrop" role="presentation">
       <section ref={dialogRef} tabIndex={-1} className="bf-onboarding bf-setup bf-first-run" role="dialog" aria-modal="true" aria-labelledby="bf-setup-title">
-        <button className="bf-onboarding-skip" onClick={complete}>{t("Mai târziu")}</button>
         <div className="bf-setup-visual" aria-hidden="true"><BrandMark size={72} /></div>
 
         {!intent && (
@@ -212,6 +211,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             </div>
           </div>
         )}
+        <button type="button" className="bf-onboarding-skip" onClick={complete}>{t("Mai târziu")}</button>
       </section>
     </div>
   );

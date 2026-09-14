@@ -25,15 +25,25 @@ public class MainActivity extends BridgeActivity {
    * Dacă aplicația e deja vizibilă, onNewIntent semnalează JS să consume imediat.
    */
   private String pendingQuickAction;
+  private boolean nativeBridgesAttached;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    registerPlugin(BugetFamilieNativePlugin.class);
     super.onCreate(savedInstanceState);
     getWindow().setBackgroundDrawableResource(R.color.splash_background);
     WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     pendingQuickAction = readQuickAction(getIntent());
-    final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
-    if (webView == null) return;
+    if (getBridge() != null) attachNativeBridges(getBridge().getWebView());
+  }
+
+  /**
+   * Trebuie apelat din Plugin.load() — înainte de loadUrl. Altfel
+   * window.BugetFamilieReminders rămâne undefined pe sesiunea curentă.
+   */
+  void attachNativeBridges(WebView webView) {
+    if (webView == null || nativeBridgesAttached) return;
+    nativeBridgesAttached = true;
     webView.setBackgroundColor(android.graphics.Color.parseColor("#FBF4E9"));
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
