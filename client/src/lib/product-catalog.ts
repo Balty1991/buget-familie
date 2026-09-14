@@ -6,7 +6,7 @@
 import { foldRomanian, type Receipt } from "./finance-data";
 
 export type CatalogProduct = { name: string; category: string; aliases?: string[] };
-export type ProductHit = { name: string; category: string; source: "catalog" | "bon" };
+export type ProductHit = { name: string; category: string; source: "catalog" | "bon" | "online" };
 export type SpendGroup = "Alimente" | "Nealimentare";
 export type CategorySpend = { category: string; group: SpendGroup; amount: number; count: number };
 export type ProductSpend = { key: string; label: string; category: string; group: SpendGroup; amount: number; count: number };
@@ -281,3 +281,92 @@ export function productSpendBreakdown(receipts: Receipt[], month?: string) {
 }
 
 export const catalogSize = catalog.length;
+
+type OffProduct = {
+  product_name?: string;
+  product_name_ro?: string;
+  product_name_en?: string;
+  brands?: string;
+  categories_tags?: string[];
+  quantity?: string;
+};
+
+/** Mapează etichetele Open Food Facts / Open Products Facts pe categoriile casei. */
+export function categoryFromOnlineTags(tags: string[] = [], name = ""): string {
+  const hay = foldRomanian(`${tags.join(" ")} ${name}`);
+  if (/\b(water|waters|mineral-water|apa)\b/.test(hay)) return "Apă";
+  if (/\b(beverage|beverages|soda|juices|beer|wines|coffee|teas|suc|bere|bautur)\b/.test(hay)) return "Băuturi";
+  if (/\b(chocolate|chocolates|sweet|sweets|biscuit|biscuits|candy|cookies|ice-cream|ciocol|dulce)\b/.test(hay)) return "Dulciuri";
+  if (/\b(baby|infant|diaper|nappies|scutec|bibero)\b/.test(hay)) return "Consumabile copil";
+  if (/\b(clean|cleaning|detergent|soap|hygiene|paper-tissues|household|deterg|sapun)\b/.test(hay)) return "Casă & facturi";
+  if (/\b(clothes|clothing|socks|footwear|textile|ciorap|hain)\b/.test(hay)) return "Timp liber";
+  return classifyProductLabel(name);
+}
+
+function onlineProductName(product: OffProduct): string | undefined {
+  const raw = (product.product_name_ro || product.product_name || product.product_name_en || "").replace(/\s+/g, " ").trim();
+  if (raw.replace(/[^a-zA-ZăâîșțĂÂÎȘȚ]/g, "").length < 3) return undefined;
+  const brand = (product.brands || "").split(",")[0]?.trim();
+  const labeled = brand && !foldRomanian(raw).includes(foldRomanian(brand)) ? `${brand} ${raw}` : raw;
+  const withQty = product.quantity && !labeled.includes(product.quantity) ? `${labeled} ${product.quantity}` : labeled;
+  return withQty.slice(0, 72).trim();
+}
+
+async function searchOffHost(host: string, query: string, fetchImpl: typeof fetch, signal?: AbortSignal): Promise<ProductHit[]> {
+  const params = new URLSearchParams({
+    search_terms: query,
+    search_simple: "1",
+    action: "process",
+    json: "1",
+    page_size: "8",
+    lc: "ro",
+    cc: "ro",
+  });
+  const response = await fetchImpl(`https://${host}/cgi/search.pl?${params.toString()}`, {
+    signal,
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) return [];
+  const payload = await response.json() as { products?: OffProduct[] };
+  const hits: ProductHit[] = [];
+  for (const product of payload.products || []) {
+    const name = onlineProductName(product);
+    if (!name) continue;
+    hits.push({
+      name,
+      category: categoryFromOnlineTags(product.categories_tags || [], name),
+      source: "online",
+    });
+    if (hits.length >= 8) break;
+  }
+  return hits;
+}
+
+/**
+ * Caută în cataloagele deschise Open Food Facts (alimente) și Open Products Facts
+ * (casă / nealimentare). Pleacă doar denumirea căutată — fără poze, fără registru.
+ */
+export async function searchOnlineProducts(
+  query: string,
+  options: { signal?: AbortSignal; fetchImpl?: typeof fetch } = {},
+): Promise<ProductHit[]> {
+  const needle = query.trim();
+  if (needle.length < 3) return [];
+  const fetchImpl = options.fetchImpl || fetch;
+  const settled = await Promise.allSettled([
+    searchOffHost("world.openfoodfacts.org", needle, fetchImpl, options.signal),
+    searchOffHost("world.openproductsfacts.org", needle, fetchImpl, options.signal),
+  ]);
+  const merged: ProductHit[] = [];
+  const seen = new Set<string>();
+  for (const result of settled) {
+    if (result.status !== "fulfilled") continue;
+    for (const hit of result.value) {
+      const key = foldRomanian(hit.name);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      merged.push(hit);
+    }
+  }
+  return merged.slice(0, 10);
+}

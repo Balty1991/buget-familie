@@ -3,10 +3,11 @@
  * categoria (alimente vs nealimentare) și căutarea în catalogul local.
  */
 import "../receipts-studio.css";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, ReceiptText, Search } from "lucide-react";
-import { isoToday, newId, parseRomanianAmount, type AppData, type Receipt } from "@/lib/finance-data";
-import { classifyProductLabel, productSpendBreakdown, searchProductCatalog, type ProductHit } from "@/lib/product-catalog";
+import { foldRomanian, isoToday, newId, parseRomanianAmount, type AppData, type Receipt } from "@/lib/finance-data";
+import { classifyProductLabel, productSpendBreakdown, searchOnlineProducts, searchProductCatalog, type ProductHit } from "@/lib/product-catalog";
+import { isOfflineOnly } from "@/lib/ui-prefs";
 import { fmtExact, money } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 
@@ -25,6 +26,39 @@ export function ReceiptsStudio({ data, onChange, onAddReceipt }: Props) {
   const [date, setDate] = useState(isoToday());
   const [vendor, setVendor] = useState("");
   const hits = useMemo(() => searchProductCatalog(query, data.receipts), [query, data.receipts]);
+  const [onlineHits, setOnlineHits] = useState<ProductHit[]>([]);
+  const [onlineBusy, setOnlineBusy] = useState(false);
+  const offline = isOfflineOnly();
+  useEffect(() => {
+    if (offline || query.trim().length < 3) {
+      setOnlineHits([]);
+      setOnlineBusy(false);
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setOnlineBusy(true);
+      void searchOnlineProducts(query, { signal: controller.signal })
+        .then((next) => { if (!controller.signal.aborted) setOnlineHits(next); })
+        .catch(() => { if (!controller.signal.aborted) setOnlineHits([]); })
+        .finally(() => { if (!controller.signal.aborted) setOnlineBusy(false); });
+    }, 420);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [query, offline]);
+  const shownHits = useMemo(() => {
+    const merged = [...hits];
+    const seen = new Set(hits.map((item) => foldRomanian(item.name)));
+    for (const hit of onlineHits) {
+      const key = foldRomanian(hit.name);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      merged.push(hit);
+    }
+    return merged.slice(0, 16);
+  }, [hits, onlineHits]);
   const foodShare = split.total > 0 ? Math.round((split.food / split.total) * 100) : 0;
 
   const addProduct = (hit: ProductHit, rawAmount: string) => {
@@ -56,7 +90,7 @@ export function ReceiptsStudio({ data, onChange, onAddReceipt }: Props) {
         </div>
         <ReceiptText size={18} />
       </header>
-      <p className="bf-helper">{t("Ghidul trece doar totalul în registru. Aici vezi produsele: alimente vs nealimentare, pe categorii, și poți căuta un articol din catalog.")}</p>
+      <p className="bf-helper">{t("Ghidul trece doar totalul în registru. Aici vezi produsele: alimente vs nealimentare. Căutarea e locală, plus catalogul deschis Open Food Facts — pleacă doar denumirea, niciodată poza sau registrul.")}</p>
 
       <div className="bf-receipts-split">
         <article>
@@ -104,20 +138,21 @@ export function ReceiptsStudio({ data, onChange, onAddReceipt }: Props) {
         />
         {query.trim().length >= 2 ? (
           <div className="bf-receipts-hits">
-            {hits.map((hit) => (
+            {shownHits.map((hit) => (
               <button type="button" key={`${hit.source}-${hit.name}`} onClick={() => setPicked(hit)}>
-                <span>{hit.name}<small> · {hit.source === "bon" ? t("din bonurile tale") : t("din catalog")} · {t(hit.category)}</small></span>
+                <span>{hit.name}<small> · {hit.source === "bon" ? t("din bonurile tale") : hit.source === "online" ? t("din catalogul online") : t("din catalog")} · {t(hit.category)}</small></span>
                 <Search size={14} />
               </button>
             ))}
-            {!hits.some((hit) => hit.name.toLocaleLowerCase("ro-RO") === query.trim().toLocaleLowerCase("ro-RO")) ? (
+            {onlineBusy ? <p className="bf-helper">{t("Căutăm în catalogul online…")}</p> : null}
+            {!shownHits.some((hit) => hit.name.toLocaleLowerCase("ro-RO") === query.trim().toLocaleLowerCase("ro-RO")) ? (
               <button type="button" onClick={() => setPicked({ name: query.trim(), category: classifyProductLabel(query), source: "catalog" })}>
                 <span>{t("Adaugă „{name}”", { name: query.trim() })}<small> · {t(classifyProductLabel(query))} · {t("categorie propusă")}</small></span>
                 <Plus size={14} />
               </button>
             ) : null}
           </div>
-        ) : <p className="bf-helper">{t("Scrie denumirea — catalogul local + ce ai mai cumpărat.")}</p>}
+        ) : <p className="bf-helper">{offline ? t("Scrie denumirea — catalogul de pe telefon + ce ai mai cumpărat.") : t("Scrie denumirea — catalogul local, bonurile tale și milioane de produse din Open Food Facts.")}</p>}
       </section>
 
       {picked ? (
