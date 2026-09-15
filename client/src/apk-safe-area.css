@@ -1,0 +1,30 @@
+/**
+ * APK / PWA: bara de sistem acoperă WebView-ul (edge-to-edge).
+ * În Chrome cu URL overlay rămâne 0 — viewport-ul e deja deasupra barei.
+ */
+html.capacitor-android,
+html.is-android-standalone {
+  --os-nav-overlay: 48px;
+}
+
+html {
+  --os-inset-bottom: max(
+    var(--os-nav-overlay, 0px),
+    var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))
+  );
+}
+
+.os-dock,
+.os-shell .os-dock {
+  padding-bottom: max(8px, var(--os-inset-bottom)) !important;
+}
+
+.bf-onboarding-backdrop.bf-first-run-backdrop,
+.os-shell .bf-onboarding-backdrop.bf-first-run-backdrop.bf-modal-backdrop {
+  padding-bottom: max(16px, var(--os-inset-bottom)) !important;
+}
+
+.bf-theme-picker-footer,
+.os-shell .bf-theme-picker-footer {
+  padding-bottom: calc(14px + var(--os-inset-bottom)) !important;
+}

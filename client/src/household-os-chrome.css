@@ -1282,7 +1282,7 @@ body .bf-command-palette .bf-icon-button,
   align-items: flex-end !important;
   place-items: end center !important;
   padding-top: max(8px, var(--os-inset-top, env(safe-area-inset-top, 0px))) !important;
-  padding-bottom: max(12px, var(--os-inset-bottom, env(safe-area-inset-bottom, 12px))) !important;
+  padding-bottom: max(16px, var(--os-inset-bottom, env(safe-area-inset-bottom, 16px))) !important;
 }
 
 .bf-onboarding.bf-first-run {

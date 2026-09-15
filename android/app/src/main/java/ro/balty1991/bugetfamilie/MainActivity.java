@@ -115,9 +115,14 @@ public class MainActivity extends BridgeActivity {
 
   private void injectSafeArea(WebView webView, Insets bars) {
     final float density = getResources().getDisplayMetrics().density;
+    int bottomPx = bars.bottom;
+    /* Overlay 3 butoane (Huawei): systemBars.bottom e 0, dar bara acoperă WebView-ul. */
+    if (bottomPx < (int) (24f * density)) {
+      bottomPx = (int) (48f * density);
+    }
     final String top = (bars.top / density) + "px";
     final String right = (bars.right / density) + "px";
-    final String bottom = (bars.bottom / density) + "px";
+    final String bottom = (bottomPx / density) + "px";
     final String left = (bars.left / density) + "px";
     final String js =
       "(function(){var r=document.documentElement;"
@@ -130,7 +135,6 @@ public class MainActivity extends BridgeActivity {
         + "r.style.setProperty('--os-inset-right','" + right + "');"
         + "r.style.setProperty('--os-inset-bottom','" + bottom + "');"
         + "r.style.setProperty('--os-inset-left','" + left + "');"
-        + "r.style.setProperty('--os-nav-overlay','0px');"
         + "})()";
     webView.evaluateJavascript(js, null);
   }
