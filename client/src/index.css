@@ -171,7 +171,7 @@
 .os-start-steps button {
   width: 100%; min-height: 56px; display: flex; align-items: center; gap: 12px;
   padding: 12px 14px; text-align: left; border-radius: 16px; cursor: pointer;
-  border: 1px solid var(--cf-line, currentColor); background: var(--cf-surface, transparent);
+  border: 1px solid var(--cf-line, #c9d2cc); background: var(--cf-surface, #ffffff);
 }
 .os-start-steps button::before {
   content: counter(os-step); flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;

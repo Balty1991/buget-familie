@@ -3,7 +3,7 @@ import { hideNativeSplash, onAppRevealed, resetNativeSplashForTests } from "./na
 
 type BootNode = { attrs: Set<string>; setAttribute: (name: string, value?: string) => void; hasAttribute: (name: string) => boolean };
 
-function stubDocument(options?: { card?: boolean; hero?: boolean; appbarHidden?: boolean }) {
+function stubDocument(options?: { card?: boolean; hero?: boolean; transparentCard?: boolean; appbarOnly?: boolean }) {
   const classes = new Set<string>();
   const boot: BootNode = {
     attrs: new Set<string>(),
@@ -14,32 +14,26 @@ function stubDocument(options?: { card?: boolean; hero?: boolean; appbarHidden?:
       return this.attrs.has(name);
     },
   };
-  const firstRun = options?.card === false
+  const firstRun = options?.card === false || options?.appbarOnly
     ? null
     : {
         classList: { contains: (name: string) => name === "bf-first-run" },
         getBoundingClientRect: () => ({ height: 640, width: 360 }),
+        __bg: options?.transparentCard ? "rgba(0, 0, 0, 0)" : "rgb(247, 248, 246)",
       };
   const hero = options?.hero
     ? {
         classList: { contains: (name: string) => name === "os-hero" },
         getBoundingClientRect: () => ({ height: 280, width: 360 }),
+        __bg: "rgb(247, 248, 246)",
       }
     : null;
-  const appbar = {
-    classList: { contains: (name: string) => name === "os-appbar" },
-    getBoundingClientRect: () => (
-      options?.appbarHidden !== false && !options?.hero && options?.card === false
-        ? { height: 0, width: 0 }
-        : options?.card === false && !options?.hero
-          ? { height: 0, width: 0 }
-          : { height: 0, width: 0 }
-    ),
-  };
-  const nodes = [firstRun, hero, appbar].filter(Boolean);
-  vi.stubGlobal("getComputedStyle", (el: { classList?: { contains: (n: string) => boolean } }) => ({
-    display: el.classList?.contains("os-appbar") ? "none" : "block",
+  /* .os-appbar nu e în READY_SELECTOR — querySelectorAll nu-l întoarce. */
+  const nodes = [firstRun, hero].filter(Boolean) as Array<{ classList: { contains: (n: string) => boolean }; __bg?: string }>;
+  vi.stubGlobal("getComputedStyle", (el: { classList?: { contains: (n: string) => boolean }; __bg?: string }) => ({
+    display: "block",
     visibility: "visible",
+    backgroundColor: el.__bg || "rgb(247, 248, 246)",
   }));
   vi.stubGlobal("document", {
     documentElement: {
@@ -75,7 +69,7 @@ describe("splash nativ", () => {
     resetNativeSplashForTests();
   });
 
-  it("scoate puntea nativă imediat și overlay-ul HTML după 1 cadru real", () => {
+  it("scoate puntea nativă imediat și overlay-ul HTML după 1 cadru real opac", () => {
     const { classes, boot } = stubDocument();
     const hide = vi.fn();
     const setChrome = vi.fn();
@@ -120,6 +114,22 @@ describe("splash nativ", () => {
     expect(boot.hasAttribute("hidden")).toBe(false);
   });
 
+  it("nu dezvăluie First Run-ul transparent (CSS încă neîncărcat)", () => {
+    const { boot } = stubDocument({ transparentCard: true });
+    const hide = vi.fn();
+    vi.stubGlobal("window", { BugetFamilieSplash: { hide } });
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      frames.push(cb);
+      return frames.length;
+    });
+
+    hideNativeSplash();
+    expect(hide).toHaveBeenCalled();
+    flushFrames(frames, 4);
+    expect(boot.hasAttribute("hidden")).toBe(false);
+  });
+
   it("acceptă hero-ul Astăzi ca prim cadru", () => {
     const { boot, classes } = stubDocument({ card: false, hero: true });
     const hide = vi.fn();
@@ -135,6 +145,22 @@ describe("splash nativ", () => {
     flushFrames(frames, 2);
     expect(classes.has("bf-ready")).toBe(true);
     expect(boot.hasAttribute("hidden")).toBe(true);
+  });
+
+  it("nu ia antetul ca prim cadru — altfel Astăzi apare spălăcit", () => {
+    const { boot } = stubDocument({ appbarOnly: true });
+    const hide = vi.fn();
+    vi.stubGlobal("window", { BugetFamilieSplash: { hide } });
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      frames.push(cb);
+      return frames.length;
+    });
+
+    hideNativeSplash();
+    expect(hide).toHaveBeenCalled();
+    flushFrames(frames, 4);
+    expect(boot.hasAttribute("hidden")).toBe(false);
   });
 
   it("pornește foile amânate abia după reveal", () => {

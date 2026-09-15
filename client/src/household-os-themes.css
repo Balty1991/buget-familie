@@ -240,10 +240,17 @@ html.theme-aurora {
  * Alb (White) — Atelier Premium (default). Alias theme-ink.
  * Fintech premium: suprafețe mai adânci, contrast tipografic, accent pin.
  * ============================================================ */
+:is(html.theme-ink, html.theme-white) {
+  --cf-bg: #e4e9e6;
+  --cf-surface: #f7f8f6;
+  --cf-surface-alt: #eef1ef;
+  --cf-ink: #0c1612;
+  --cf-line: #c9d2cc;
+}
 :is(html.theme-ink, html.theme-white) .os-shell.bf-app,
 :is(html.theme-ink, html.theme-white) .bf-today-workspace {
   --os-bg: #e4e9e6;
-  --os-surface: #f5f7f6;
+  --os-surface: #f7f8f6;
   --os-surface-2: #d8e0db;
   --os-fg: #0c1612;
   --os-muted: #4a5852;

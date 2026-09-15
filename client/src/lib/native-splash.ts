@@ -1,9 +1,11 @@
 /**
  * Handoff splash nativ / HTML → primul cadru real.
  *
- * Splash-ul NATIV (plic mare) trebuie scos imediat ce #bf-boot e pe ecran —
- * arată la fel, deci nu e flash, dar nu mai ținem 5s plicul nativ.
- * Overlay-ul HTML stă până First Run / antet / hero au dimensiune.
+ * 1. Splash-ul NATIV pleacă imediat ce #bf-boot (plic HTML) e pictat —
+ *    scriptul din index.html așteaptă imaginea decodată, ca să nu rămână mint gol.
+ * 2. Overlay-ul HTML stă până First Run / hero-ul Astăzi / PIN au dimensiune
+ *    ȘI umplutură opacă. Antetul (.os-appbar) nu e destul — altfel se vede
+ *    cardul fără CSS (First Run stricat, Astăzi spălăcit).
  */
 
 export type SplashBridge = {
@@ -22,7 +24,7 @@ let revealed = false;
 let nativeHideTries = 0;
 const afterReveal: Array<() => void> = [];
 
-const READY_SELECTOR = ".bf-first-run, .os-hero, .os-appbar, .bf-app-lock";
+const READY_SELECTOR = ".bf-first-run, .os-hero, .bf-app-lock";
 
 function paintThen(run: () => void, frames = 1) {
   const raf = typeof requestAnimationFrame === "function" ? requestAnimationFrame : null;
@@ -37,6 +39,18 @@ function nowMs() {
   return typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
 }
 
+function isOpaqueFill(bg: string): boolean {
+  if (!bg) return false;
+  const value = bg.trim().toLowerCase();
+  if (!value || value === "transparent" || value === "rgba(0, 0, 0, 0)" || value === "rgba(0,0,0,0)") return false;
+  const match = value.match(/^rgba?\(([^)]+)\)$/);
+  if (match) {
+    const parts = match[1].split(",").map((part) => part.trim());
+    if (parts.length === 4 && Number(parts[3]) < 0.55) return false;
+  }
+  return true;
+}
+
 function nodePainted(node: Element): boolean {
   if (typeof (node as HTMLElement).getBoundingClientRect !== "function") return true;
   const box = node.getBoundingClientRect();
@@ -45,6 +59,8 @@ function nodePainted(node: Element): boolean {
     if (typeof getComputedStyle !== "function") return true;
     const style = getComputedStyle(node);
     if (style.display === "none" || style.visibility === "hidden") return false;
+    const needsFill = node.classList?.contains("bf-first-run") || node.classList?.contains("os-hero");
+    if (needsFill && !isOpaqueFill(style.backgroundColor)) return false;
   } catch {
     /* jsdom / teste fără CSSOM */
   }
@@ -68,6 +84,7 @@ function firstScreenReady(): boolean {
 function waitUntilPainted(run: () => void) {
   const started = nowMs();
   const tick = () => {
+    /* 900ms: destul pentru CSS critic, nu 5s de plic. */
     if (firstScreenReady() || nowMs() - started > 900) {
       paintThen(run, 1);
       return;

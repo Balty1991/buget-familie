@@ -4,6 +4,24 @@
  */
 
 .os-shell.bf-app {
+  --os-bg: var(--cf-bg, #E4E9E6);
+  --os-surface: var(--cf-surface, #f7f8f6);
+  --os-surface-2: var(--cf-surface-alt, #eef1ef);
+  --os-fg: var(--cf-ink, #0c1612);
+  --os-muted: var(--cf-muted, #4a5852);
+  --os-subtle: var(--cf-muted, #5c675f);
+  --os-mint: var(--cf-primary, #176b54);
+  --os-mint-fg: var(--cf-on-forest, #ffffff);
+  --os-mint-dim: color-mix(in srgb, var(--cf-primary, #176b54) 22%, var(--cf-surface, #f7f8f6));
+  --os-line: var(--cf-line, #c9d2cc);
+  --os-line-strong: color-mix(in srgb, var(--cf-primary, #176b54) 28%, var(--cf-line, #c9d2cc));
+  --os-warn: var(--cf-warning, #9a6b10);
+  --os-out: var(--cf-danger, #b93d36);
+  color: var(--os-fg) !important;
+  background: var(--os-bg) !important;
+  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
+}
+html.dark .os-shell.bf-app {
   --os-bg: var(--cf-bg, #07090c);
   --os-surface: var(--cf-surface, #10151a);
   --os-surface-2: var(--cf-surface-alt, #161d23);
@@ -17,9 +35,6 @@
   --os-line-strong: color-mix(in srgb, var(--cf-primary, #7cffc4) 28%, var(--cf-line, #22302a));
   --os-warn: var(--cf-warning, #e8c38a);
   --os-out: var(--cf-danger, #ff8a7a);
-  color: var(--os-fg) !important;
-  background: var(--os-bg) !important;
-  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
 }
 
 .os-shell.bf-app::before,
@@ -180,7 +195,7 @@ html.capacitor-android {
   border: 0 !important;
   border-radius: 16px !important;
   color: var(--os-fg) !important;
-  background: var(--os-surface) !important;
+  background: var(--os-surface, #f7f8f6) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
 }
 
@@ -201,9 +216,9 @@ html.capacitor-android {
   padding: 20px 20px 22px !important;
   border: 0 !important;
   border-radius: 2rem !important;
-  color: var(--os-fg) !important;
-  background: var(--os-surface) !important;
-  box-shadow: 0 0 0 1px var(--os-line) !important;
+  color: var(--os-fg, #0c1612) !important;
+  background: var(--lu-card, var(--os-surface, #f7f8f6)) !important;
+  box-shadow: 0 0 0 1px var(--os-line, #c9d2cc), 0 16px 36px rgba(12, 22, 18, .08) !important;
 }
 
 .os-hero::before {
@@ -457,7 +472,7 @@ html.capacitor-android {
 
 .os-ghid.is-open {
   color: var(--os-fg) !important;
-  background: var(--os-surface) !important;
+  background: var(--os-surface, #f7f8f6) !important;
 }
 
 .os-ghid-bf {
@@ -740,7 +755,7 @@ html body .bf-command-search input::placeholder {
   border: 0 !important;
   border-radius: 1.6rem !important;
   color: var(--os-fg) !important;
-  background: var(--os-surface) !important;
+  background: var(--os-surface, #f7f8f6) !important;
   box-shadow: 0 0 0 1px var(--os-line), 0 24px 60px rgba(0, 0, 0, .35) !important;
   font-family: Outfit, sans-serif !important;
 }
@@ -976,7 +991,7 @@ body > .bf-modal-backdrop {
 
 body .bf-command-palette {
   color: var(--os-fg) !important;
-  background: var(--os-surface) !important;
+  background: var(--os-surface, #f7f8f6) !important;
   border: 1px solid var(--os-line) !important;
   box-shadow: 0 24px 60px rgba(0, 0, 0, .38) !important;
   font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
@@ -1141,7 +1156,7 @@ body .bf-command-palette .bf-icon-button,
 .os-shell .bf-modal,
 .os-shell .bf-quick-entry-panel {
   color: var(--os-fg) !important;
-  background: var(--os-surface) !important;
+  background: var(--os-surface, #f7f8f6) !important;
   border: 1px solid var(--os-line) !important;
   box-shadow: 0 24px 60px rgba(0, 0, 0, .35) !important;
 }
@@ -1388,7 +1403,36 @@ html.dark .bf-first-run-chrome {
 }
 
 .bf-first-run .bf-setup-visual {
-  margin-top: 8px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 8px 0 12px !important;
+}
+.bf-first-run .os-mark,
+.bf-first-run .os-mark img {
+  width: 72px !important;
+  height: 72px !important;
+  flex-basis: 72px !important;
+  border-radius: 20px !important;
+}
+.bf-first-run h2,
+.bf-setup h2 {
+  margin: 6px 0 0 !important;
+  color: var(--lu-ink, var(--cf-ink, #0c1612)) !important;
+  font-family: "IBM Plex Serif", Georgia, serif !important;
+  font-size: 28px !important;
+  font-weight: 560 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -.02em !important;
+}
+.bf-first-run h2 em,
+.bf-setup h2 em { font-style: italic !important; }
+.bf-first-run .bf-kicker {
+  margin: 0 !important;
+  color: var(--os-mint, #176b54) !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
 }
 
 @media (max-height: 780px) {
@@ -1396,6 +1440,7 @@ html.dark .bf-first-run-chrome {
     margin: 4px 0 8px !important;
   }
   .bf-first-run .os-mark,
+  .bf-first-run .os-mark img,
   .bf-first-run .os-mark svg {
     width: 52px !important;
     height: 52px !important;

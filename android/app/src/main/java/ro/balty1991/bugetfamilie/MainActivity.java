@@ -93,17 +93,8 @@ public class MainActivity extends BridgeActivity {
     });
     ViewCompat.requestApplyInsets(webView);
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
-    /* Primul cadru HTML (#bf-boot) e destul — nu așteptăm React. */
-    webView.postDelayed(() -> {
-      if (Build.VERSION.SDK_INT >= 23) {
-        webView.postVisualStateCallback(0xBF01, new WebView.VisualStateCallback() {
-          @Override
-          public void onComplete(long requestId) {
-            keepSplash = false;
-          }
-        });
-      }
-    }, 180);
+    /* Native-ul stă până JS spune că #bf-boot e pictat (imaginea decodată).
+       Nu-l scoatem pe primul paint gol al WebView-ului — se vedea mint fără plic. */
   }
 
   @Override
