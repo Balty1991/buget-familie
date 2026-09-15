@@ -34,7 +34,7 @@
       html.dark #bf-boot { background: #0B0F0E; }
       html.bf-ready #bf-boot,
       #bf-boot[hidden] { display: none !important; }
-      #bf-boot img { width: 160px; height: 160px; display: block; object-fit: contain; }
+      #bf-boot img { width: 240px; height: 240px; display: block; object-fit: contain; }
       html:not(.bf-ready) .bf-onboarding,
       html:not(.bf-ready) .bf-onboarding-backdrop,
       html:not(.bf-ready) .bf-first-run,
@@ -272,51 +272,9 @@
 
   <body>
     <div id="bf-boot" aria-hidden="true">
-      <img src="icons/icon-192.png?v=42" alt="" width="160" height="160" decoding="sync" fetchpriority="high" />
+      <img src="icons/icon-192.png?v=42" alt="" width="240" height="240" decoding="sync" fetchpriority="high" />
     </div>
     <div id="root"></div>
-    <script>
-      (function () {
-        var tries = 0;
-        var hidden = false;
-        function hideNative() {
-          if (hidden) return;
-          hidden = true;
-          tries += 1;
-          try {
-            if (window.BugetFamilieSplash && window.BugetFamilieSplash.hide) {
-              window.BugetFamilieSplash.hide();
-              return;
-            }
-          } catch (e) {}
-          hidden = false;
-          if (tries < 40) setTimeout(hideNative, 40);
-        }
-        function whenBootPainted(run) {
-          var img = document.querySelector("#bf-boot img");
-          if (!img || img.complete) {
-            if (window.requestAnimationFrame) requestAnimationFrame(function () { run(); });
-            else run();
-            return;
-          }
-          var done = false;
-          function finish() {
-            if (done) return;
-            done = true;
-            if (window.requestAnimationFrame) requestAnimationFrame(function () { run(); });
-            else run();
-          }
-          img.addEventListener("load", finish);
-          img.addEventListener("error", finish);
-          setTimeout(finish, 400);
-        }
-        function start() {
-          whenBootPainted(hideNative);
-        }
-        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
-        else start();
-      })();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 

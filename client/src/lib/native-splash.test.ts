@@ -28,7 +28,6 @@ function stubDocument(options?: { card?: boolean; hero?: boolean; transparentCar
         __bg: "rgb(247, 248, 246)",
       }
     : null;
-  /* .os-appbar nu e în READY_SELECTOR — querySelectorAll nu-l întoarce. */
   const nodes = [firstRun, hero].filter(Boolean) as Array<{ classList: { contains: (n: string) => boolean }; __bg?: string }>;
   vi.stubGlobal("getComputedStyle", (el: { classList?: { contains: (n: string) => boolean }; __bg?: string }) => ({
     display: "block",
@@ -69,7 +68,7 @@ describe("splash nativ", () => {
     resetNativeSplashForTests();
   });
 
-  it("scoate puntea nativă imediat și overlay-ul HTML după 1 cadru real opac", () => {
+  it("ține plicul nativ până ecranul e gata, apoi scoate HTML-ul și nativul", () => {
     const { classes, boot } = stubDocument();
     const hide = vi.fn();
     const setChrome = vi.fn();
@@ -84,21 +83,22 @@ describe("splash nativ", () => {
 
     hideNativeSplash();
     hideNativeSplash();
-    expect(hide).toHaveBeenCalled();
+    expect(hide).not.toHaveBeenCalled();
     expect(classes.has("bf-ready")).toBe(false);
     expect(boot.hasAttribute("hidden")).toBe(false);
 
     flushFrames(frames, 1);
     expect(setChrome).toHaveBeenCalledTimes(1);
     expect(persistTheme).toHaveBeenCalledTimes(1);
-    expect(classes.has("bf-ready")).toBe(false);
-
-    flushFrames(frames, 1);
     expect(classes.has("bf-ready")).toBe(true);
     expect(boot.hasAttribute("hidden")).toBe(true);
+    expect(hide).not.toHaveBeenCalled();
+
+    flushFrames(frames, 1);
+    expect(hide).toHaveBeenCalledTimes(1);
   });
 
-  it("ține overlay-ul HTML dacă nu există card, chiar dacă puntea nativă a plecat", () => {
+  it("nu scoate nativul dacă nu există card", () => {
     const { boot } = stubDocument({ card: false });
     const hide = vi.fn();
     vi.stubGlobal("window", { BugetFamilieSplash: { hide } });
@@ -109,8 +109,8 @@ describe("splash nativ", () => {
     });
 
     hideNativeSplash();
-    expect(hide).toHaveBeenCalled();
     flushFrames(frames, 4);
+    expect(hide).not.toHaveBeenCalled();
     expect(boot.hasAttribute("hidden")).toBe(false);
   });
 
@@ -125,8 +125,8 @@ describe("splash nativ", () => {
     });
 
     hideNativeSplash();
-    expect(hide).toHaveBeenCalled();
     flushFrames(frames, 4);
+    expect(hide).not.toHaveBeenCalled();
     expect(boot.hasAttribute("hidden")).toBe(false);
   });
 
@@ -141,10 +141,13 @@ describe("splash nativ", () => {
     });
 
     hideNativeSplash();
-    expect(hide).toHaveBeenCalled();
-    flushFrames(frames, 2);
+    expect(hide).not.toHaveBeenCalled();
+    flushFrames(frames, 1);
     expect(classes.has("bf-ready")).toBe(true);
     expect(boot.hasAttribute("hidden")).toBe(true);
+    expect(hide).not.toHaveBeenCalled();
+    flushFrames(frames, 1);
+    expect(hide).toHaveBeenCalledTimes(1);
   });
 
   it("nu ia antetul ca prim cadru — altfel Astăzi apare spălăcit", () => {
@@ -158,8 +161,8 @@ describe("splash nativ", () => {
     });
 
     hideNativeSplash();
-    expect(hide).toHaveBeenCalled();
     flushFrames(frames, 4);
+    expect(hide).not.toHaveBeenCalled();
     expect(boot.hasAttribute("hidden")).toBe(false);
   });
 

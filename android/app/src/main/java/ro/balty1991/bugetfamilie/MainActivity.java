@@ -44,8 +44,8 @@ public class MainActivity extends BridgeActivity {
     }
     SplashScreen splash = SplashScreen.installSplashScreen(this);
     splash.setKeepOnScreenCondition(() -> keepSplash);
-    /* Fără zoom/fade. Overlay-ul HTML (#bf-boot) acoperă golul; nu ținem
-       plicul nativ extra 280ms — se vedea ca o imagine de 5s. */
+    /* Fără zoom/fade. Plicul nativ stă până JS spune că First Run / Astăzi
+       e pictat — nu când WebView-ul e gol sau când e doar overlay-ul HTML. */
     splash.setOnExitAnimationListener(splashView -> splashView.remove());
     registerPlugin(BugetFamilieNativePlugin.class);
     super.onCreate(savedInstanceState);
@@ -93,8 +93,7 @@ public class MainActivity extends BridgeActivity {
     });
     ViewCompat.requestApplyInsets(webView);
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
-    /* Native-ul stă până JS spune că #bf-boot e pictat (imaginea decodată).
-       Nu-l scoatem pe primul paint gol al WebView-ului — se vedea mint fără plic. */
+    /* Nativul stă până hide() din JS (ecranul real e gata). Failsafe în onCreate. */
   }
 
   @Override

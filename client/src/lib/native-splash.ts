@@ -1,11 +1,13 @@
 /**
- * Handoff splash nativ / HTML → primul cadru real.
+ * Handoff splash nativ → primul cadru real.
  *
- * 1. Splash-ul NATIV pleacă imediat ce #bf-boot (plic HTML) e pictat —
- *    scriptul din index.html așteaptă imaginea decodată, ca să nu rămână mint gol.
- * 2. Overlay-ul HTML stă până First Run / hero-ul Astăzi / PIN au dimensiune
- *    ȘI umplutură opacă. Antetul (.os-appbar) nu e destul — altfel se vede
- *    cardul fără CSS (First Run stricat, Astăzi spălăcit).
+ * Pe APK, plicul NATIV (mărimea icoanei de sistem) stă până First Run /
+ * hero-ul Astăzi / PIN sunt pictate cu umplutură opacă. Abia atunci
+ * scoatem overlay-ul HTML (invizibil sub nativ) și, pe cadrul următor,
+ * splash-ul nativ. Utilizatorul vede: plic → ecran gata.
+ *
+ * Nu scoatem nativul când #bf-boot e pictat — plicul HTML e altfel de
+ * mare, deci se vede saltul și, o clipă, mint gol.
  */
 
 export type SplashBridge = {
@@ -132,16 +134,18 @@ export function syncAndroidChrome() {
   }
 }
 
-/** Ascunde overlay-ul HTML după primul cadru real — o singură dată. */
+/**
+ * După primul cadru real: scoate overlay-ul HTML, apoi splash-ul nativ.
+ * Nativul NU pleacă la apel — altfel se vede plicul HTML (altă mărime).
+ */
 export function hideNativeSplash() {
-  requestNativeHide();
   if (revealed) return;
   revealed = true;
   waitUntilPainted(() => {
-    requestNativeHide();
     syncAndroidChrome();
+    revealDom();
     paintThen(() => {
-      revealDom();
+      requestNativeHide();
       afterReveal.splice(0).forEach((fn) => {
         try {
           fn();
