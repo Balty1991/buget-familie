@@ -21,6 +21,11 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -29,6 +34,7 @@ public class MainActivity extends BridgeActivity {
   private static final String PREF_DARK = "dark";
   private volatile boolean keepSplash = true;
   private boolean launchDark;
+  private View splashCover;
 
   /**
    * Acțiunea cerută din widget sau din dală, până când stratul web o cere.
@@ -52,7 +58,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(BugetFamilieNativePlugin.class);
     super.onCreate(savedInstanceState);
     getWindow().setBackgroundDrawableResource(
-      launchDark ? R.color.splash_background_dark : R.color.splash_background
+      launchDark ? R.drawable.launch_screen_dark : R.drawable.launch_screen
     );
     WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     if (Build.VERSION.SDK_INT >= 29) {
@@ -61,7 +67,7 @@ public class MainActivity extends BridgeActivity {
     applyChrome(Color.parseColor(launchDark ? "#12161C" : "#EEF1EF"), !launchDark);
     pendingQuickAction = readQuickAction(getIntent());
     if (getBridge() != null) attachNativeBridges(getBridge().getWebView());
-    new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash = false, 1600);
+    new Handler(Looper.getMainLooper()).postDelayed(this::hideSplashOverlay, 1600);
   }
 
   private void applyChrome(int navColor, boolean lightIcons) {
@@ -100,7 +106,44 @@ public class MainActivity extends BridgeActivity {
     });
     ViewCompat.requestApplyInsets(webView);
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
-    /* Nativul stă până hide() din JS (ecranul real e gata). Failsafe în onCreate. */
+    attachSplashOverlay(webView);
+  }
+
+  /**
+   * Plic nativ, 240dp — aceeași mărime ca icoana splash de sistem.
+   * Pe unele telefoane (Deschide din Fișiere) splash-ul de sistem e doar mint.
+   * Stratul ăsta e deasupra WebView-ului până JS spune că First Run / Astăzi e gata.
+   */
+  private void attachSplashOverlay(WebView webView) {
+    if (splashCover != null || webView == null) return;
+    if (!(webView.getParent() instanceof ViewGroup)) return;
+    final FrameLayout cover = new FrameLayout(this);
+    cover.setBackgroundColor(Color.parseColor(launchDark ? "#0B0F0E" : "#E4E9E6"));
+    cover.setClickable(true);
+    final ImageView icon = new ImageView(this);
+    icon.setImageResource(R.mipmap.ic_launcher_foreground);
+    icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+    final int size = Math.round(240f * getResources().getDisplayMetrics().density);
+    final FrameLayout.LayoutParams iconLp = new FrameLayout.LayoutParams(size, size);
+    iconLp.gravity = Gravity.CENTER;
+    cover.addView(icon, iconLp);
+    ((ViewGroup) webView.getParent()).addView(
+      cover,
+      new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    );
+    splashCover = cover;
+    cover.post(() -> keepSplash = false);
+  }
+
+  private void hideSplashOverlay() {
+    keepSplash = false;
+    final View cover = splashCover;
+    if (cover == null) return;
+    splashCover = null;
+    cover.setVisibility(View.GONE);
+    if (cover.getParent() instanceof ViewGroup) {
+      ((ViewGroup) cover.getParent()).removeView(cover);
+    }
   }
 
   @Override
@@ -185,7 +228,7 @@ public class MainActivity extends BridgeActivity {
   private final class SplashBridge {
     @JavascriptInterface
     public void hide() {
-      new Handler(Looper.getMainLooper()).post(() -> keepSplash = false);
+      new Handler(Looper.getMainLooper()).post(() -> hideSplashOverlay());
     }
 
     @JavascriptInterface
