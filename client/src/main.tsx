@@ -37,8 +37,8 @@ const idle = (fn: () => void, timeout: number) => {
 
 idle(() => startPerformanceMonitoring(), 2500);
 
-/* Splash-ul nativ rămâne până Home anunță primul cadru. Fallback lung, nu 1.6s. */
-window.setTimeout(hideNativeSplash, 5000);
+/* Splash-ul nativ e scos din HTML; overlay-ul așteaptă Home. Fallback scurt. */
+window.setTimeout(hideNativeSplash, 1600);
 
 /** Foi atelier / ledger — după reveal, pe idle, ca animațiile with `both` să nu șteargă primul cadru. */
 onAppRevealed(() => {

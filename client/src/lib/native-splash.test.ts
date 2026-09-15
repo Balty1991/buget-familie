@@ -3,7 +3,7 @@ import { hideNativeSplash, onAppRevealed, resetNativeSplashForTests } from "./na
 
 type BootNode = { attrs: Set<string>; setAttribute: (name: string, value?: string) => void; hasAttribute: (name: string) => boolean };
 
-function stubDocument(options?: { card?: boolean; hero?: boolean; transparentCard?: boolean }) {
+function stubDocument(options?: { card?: boolean; hero?: boolean; appbarHidden?: boolean }) {
   const classes = new Set<string>();
   const boot: BootNode = {
     attrs: new Set<string>(),
@@ -19,20 +19,27 @@ function stubDocument(options?: { card?: boolean; hero?: boolean; transparentCar
     : {
         classList: { contains: (name: string) => name === "bf-first-run" },
         getBoundingClientRect: () => ({ height: 640, width: 360 }),
-        __bg: options?.transparentCard ? "rgba(0, 0, 0, 0)" : "rgb(247, 248, 246)",
       };
   const hero = options?.hero
     ? {
         classList: { contains: (name: string) => name === "os-hero" },
         getBoundingClientRect: () => ({ height: 280, width: 360 }),
-        __bg: "rgb(247, 248, 246)",
       }
     : null;
-  const nodes = [firstRun, hero].filter(Boolean) as Array<{ classList: { contains: (n: string) => boolean }; __bg?: string }>;
-  vi.stubGlobal("getComputedStyle", (el: { classList?: { contains: (n: string) => boolean }; __bg?: string }) => ({
-    display: "block",
+  const appbar = {
+    classList: { contains: (name: string) => name === "os-appbar" },
+    getBoundingClientRect: () => (
+      options?.appbarHidden !== false && !options?.hero && options?.card === false
+        ? { height: 0, width: 0 }
+        : options?.card === false && !options?.hero
+          ? { height: 0, width: 0 }
+          : { height: 0, width: 0 }
+    ),
+  };
+  const nodes = [firstRun, hero, appbar].filter(Boolean);
+  vi.stubGlobal("getComputedStyle", (el: { classList?: { contains: (n: string) => boolean } }) => ({
+    display: el.classList?.contains("os-appbar") ? "none" : "block",
     visibility: "visible",
-    backgroundColor: el.__bg || "rgb(247, 248, 246)",
   }));
   vi.stubGlobal("document", {
     documentElement: {
@@ -68,7 +75,7 @@ describe("splash nativ", () => {
     resetNativeSplashForTests();
   });
 
-  it("nu ascunde puntea până există un cadru real, apoi overlay-ul HTML după 4 cadre", () => {
+  it("scoate puntea nativă imediat și overlay-ul HTML după 1 cadru real", () => {
     const { classes, boot } = stubDocument();
     const hide = vi.fn();
     const setChrome = vi.fn();
@@ -83,23 +90,22 @@ describe("splash nativ", () => {
 
     hideNativeSplash();
     hideNativeSplash();
-    expect(hide).not.toHaveBeenCalled();
-    expect(classes.has("bf-ready")).toBe(false);
-
-    flushFrames(frames, 3);
-    expect(hide).toHaveBeenCalledTimes(1);
-    expect(setChrome).toHaveBeenCalledTimes(1);
-    expect(persistTheme).toHaveBeenCalledTimes(1);
+    expect(hide).toHaveBeenCalled();
     expect(classes.has("bf-ready")).toBe(false);
     expect(boot.hasAttribute("hidden")).toBe(false);
 
-    flushFrames(frames, 4);
+    flushFrames(frames, 1);
+    expect(setChrome).toHaveBeenCalledTimes(1);
+    expect(persistTheme).toHaveBeenCalledTimes(1);
+    expect(classes.has("bf-ready")).toBe(false);
+
+    flushFrames(frames, 1);
     expect(classes.has("bf-ready")).toBe(true);
     expect(boot.hasAttribute("hidden")).toBe(true);
   });
 
-  it("așteaptă cardul First Run, nu rAF gol", () => {
-    stubDocument({ card: false });
+  it("ține overlay-ul HTML dacă nu există card, chiar dacă puntea nativă a plecat", () => {
+    const { boot } = stubDocument({ card: false });
     const hide = vi.fn();
     vi.stubGlobal("window", { BugetFamilieSplash: { hide } });
     const frames: FrameRequestCallback[] = [];
@@ -109,12 +115,13 @@ describe("splash nativ", () => {
     });
 
     hideNativeSplash();
+    expect(hide).toHaveBeenCalled();
     flushFrames(frames, 4);
-    expect(hide).not.toHaveBeenCalled();
+    expect(boot.hasAttribute("hidden")).toBe(false);
   });
 
-  it("nu dezvăluie First Run-ul transparent (CSS încă neîncărcat)", () => {
-    stubDocument({ transparentCard: true });
+  it("acceptă hero-ul Astăzi ca prim cadru", () => {
+    const { boot, classes } = stubDocument({ card: false, hero: true });
     const hide = vi.fn();
     vi.stubGlobal("window", { BugetFamilieSplash: { hide } });
     const frames: FrameRequestCallback[] = [];
@@ -124,23 +131,10 @@ describe("splash nativ", () => {
     });
 
     hideNativeSplash();
-    flushFrames(frames, 4);
-    expect(hide).not.toHaveBeenCalled();
-  });
-
-  it("acceptă hero-ul Astăzi ca prim cadru, nu doar antetul", () => {
-    stubDocument({ card: false, hero: true });
-    const hide = vi.fn();
-    vi.stubGlobal("window", { BugetFamilieSplash: { hide } });
-    const frames: FrameRequestCallback[] = [];
-    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
-      frames.push(cb);
-      return frames.length;
-    });
-
-    hideNativeSplash();
-    flushFrames(frames, 3);
-    expect(hide).toHaveBeenCalledTimes(1);
+    expect(hide).toHaveBeenCalled();
+    flushFrames(frames, 2);
+    expect(classes.has("bf-ready")).toBe(true);
+    expect(boot.hasAttribute("hidden")).toBe(true);
   });
 
   it("pornește foile amânate abia după reveal", () => {
@@ -154,9 +148,9 @@ describe("splash nativ", () => {
     onAppRevealed(later);
     expect(later).not.toHaveBeenCalled();
     hideNativeSplash();
-    flushFrames(frames, 3);
+    flushFrames(frames, 1);
     expect(later).not.toHaveBeenCalled();
-    flushFrames(frames, 4);
+    flushFrames(frames, 1);
     expect(later).toHaveBeenCalledTimes(1);
   });
 });

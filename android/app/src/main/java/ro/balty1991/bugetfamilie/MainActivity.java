@@ -44,11 +44,9 @@ public class MainActivity extends BridgeActivity {
     }
     SplashScreen splash = SplashScreen.installSplashScreen(this);
     splash.setKeepOnScreenCondition(() -> keepSplash);
-    /* Fără zoom/fade. Întârziem scoaterea: WebView-ul trebuie să fi pictat
-       cardul sub splash, altfel se vede mint gol (Huawei). */
-    splash.setOnExitAnimationListener(splashView ->
-      new Handler(Looper.getMainLooper()).postDelayed(splashView::remove, 280)
-    );
+    /* Fără zoom/fade. Overlay-ul HTML (#bf-boot) acoperă golul; nu ținem
+       plicul nativ extra 280ms — se vedea ca o imagine de 5s. */
+    splash.setOnExitAnimationListener(splashView -> splashView.remove());
     registerPlugin(BugetFamilieNativePlugin.class);
     super.onCreate(savedInstanceState);
     getWindow().setBackgroundDrawableResource(
@@ -61,7 +59,7 @@ public class MainActivity extends BridgeActivity {
     applyChrome(Color.parseColor(launchDark ? "#12161C" : "#EEF1EF"), !launchDark);
     pendingQuickAction = readQuickAction(getIntent());
     if (getBridge() != null) attachNativeBridges(getBridge().getWebView());
-    new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash = false, 5000);
+    new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash = false, 1600);
   }
 
   private void applyChrome(int navColor, boolean lightIcons) {
@@ -95,6 +93,17 @@ public class MainActivity extends BridgeActivity {
     });
     ViewCompat.requestApplyInsets(webView);
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
+    /* Primul cadru HTML (#bf-boot) e destul — nu așteptăm React. */
+    webView.postDelayed(() -> {
+      if (Build.VERSION.SDK_INT >= 23) {
+        webView.postVisualStateCallback(0xBF01, new WebView.VisualStateCallback() {
+          @Override
+          public void onComplete(long requestId) {
+            keepSplash = false;
+          }
+        });
+      }
+    }, 180);
   }
 
   @Override

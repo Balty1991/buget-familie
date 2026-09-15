@@ -1,12 +1,9 @@
 /**
  * Handoff splash nativ / HTML → primul cadru real.
  *
- * Nu ascundem splash-ul pe rAF gol sau pe antetul gol: așteptăm First Run /
- * hero-ul Astăzi / PIN, cu umplutură opacă. Altfel se vede mint, apoi
- * HTML-ul fără CSS (intențiile ca text, fără card).
- *
- * Plicul HTML (#bf-boot) stă PESTE WebView după ce splash-ul nativ pleacă,
- * până când cardul e deja pictat sub el.
+ * Splash-ul NATIV (plic mare) trebuie scos imediat ce #bf-boot e pe ecran —
+ * arată la fel, deci nu e flash, dar nu mai ținem 5s plicul nativ.
+ * Overlay-ul HTML stă până First Run / antet / hero au dimensiune.
  */
 
 export type SplashBridge = {
@@ -22,11 +19,12 @@ declare global {
 }
 
 let revealed = false;
+let nativeHideTries = 0;
 const afterReveal: Array<() => void> = [];
 
-const READY_SELECTOR = ".bf-first-run, .os-hero, .bf-app-lock";
+const READY_SELECTOR = ".bf-first-run, .os-hero, .os-appbar, .bf-app-lock";
 
-function paintThen(run: () => void, frames = 2) {
+function paintThen(run: () => void, frames = 1) {
   const raf = typeof requestAnimationFrame === "function" ? requestAnimationFrame : null;
   if (!raf || frames <= 0) {
     run();
@@ -39,18 +37,6 @@ function nowMs() {
   return typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
 }
 
-function isOpaqueFill(bg: string): boolean {
-  if (!bg) return false;
-  const value = bg.trim().toLowerCase();
-  if (!value || value === "transparent" || value === "rgba(0, 0, 0, 0)" || value === "rgba(0,0,0,0)") return false;
-  const match = value.match(/^rgba?\(([^)]+)\)$/);
-  if (match) {
-    const parts = match[1].split(",").map((part) => part.trim());
-    if (parts.length === 4 && Number(parts[3]) < 0.55) return false;
-  }
-  return true;
-}
-
 function nodePainted(node: Element): boolean {
   if (typeof (node as HTMLElement).getBoundingClientRect !== "function") return true;
   const box = node.getBoundingClientRect();
@@ -59,8 +45,6 @@ function nodePainted(node: Element): boolean {
     if (typeof getComputedStyle !== "function") return true;
     const style = getComputedStyle(node);
     if (style.display === "none" || style.visibility === "hidden") return false;
-    const needsFill = node.classList?.contains("bf-first-run") || node.classList?.contains("os-hero");
-    if (needsFill && !isOpaqueFill(style.backgroundColor)) return false;
   } catch {
     /* jsdom / teste fără CSSOM */
   }
@@ -84,8 +68,8 @@ function firstScreenReady(): boolean {
 function waitUntilPainted(run: () => void) {
   const started = nowMs();
   const tick = () => {
-    if (firstScreenReady() || nowMs() - started > 2800) {
-      paintThen(run, 3);
+    if (firstScreenReady() || nowMs() - started > 900) {
+      paintThen(run, 1);
       return;
     }
     const raf = typeof requestAnimationFrame === "function" ? requestAnimationFrame : null;
@@ -102,6 +86,23 @@ function revealDom() {
   }
 }
 
+/** Scoate splash-ul nativ. Reîncearcă dacă puntea încă nu există. */
+export function requestNativeHide() {
+  try {
+    if (typeof window !== "undefined" && window.BugetFamilieSplash?.hide) {
+      window.BugetFamilieSplash.hide();
+      nativeHideTries = 50;
+      return;
+    }
+  } catch {
+    /* puntea lipsește în browser */
+  }
+  nativeHideTries += 1;
+  if (nativeHideTries < 40 && typeof setTimeout === "function") {
+    setTimeout(requestNativeHide, 40);
+  }
+}
+
 /** Potrivește bara de navigare Android cu dock-ul și reține tema pentru următoarea lansare. */
 export function syncAndroidChrome() {
   try {
@@ -114,16 +115,13 @@ export function syncAndroidChrome() {
   }
 }
 
-/** Ascunde splash-ul după primul cadru real — o singură dată. */
+/** Ascunde overlay-ul HTML după primul cadru real — o singură dată. */
 export function hideNativeSplash() {
+  requestNativeHide();
   if (revealed) return;
   revealed = true;
   waitUntilPainted(() => {
-    try {
-      if (typeof window !== "undefined") window.BugetFamilieSplash?.hide?.();
-    } catch {
-      /* puntea lipsește în browser */
-    }
+    requestNativeHide();
     syncAndroidChrome();
     paintThen(() => {
       revealDom();
@@ -134,11 +132,11 @@ export function hideNativeSplash() {
           /* foile amânate nu trebuie să blocheze ecranul */
         }
       });
-    }, 4);
+    }, 1);
   });
 }
 
-/** Rulează după ce splash-ul a fost ascuns (sau imediat, dacă deja e). */
+/** Rulează după ce overlay-ul a fost ascuns (sau imediat, dacă deja e). */
 export function onAppRevealed(fn: () => void) {
   const ready = typeof document !== "undefined" && document.documentElement.classList.contains("bf-ready");
   if (ready) {
@@ -150,6 +148,7 @@ export function onAppRevealed(fn: () => void) {
 
 export function resetNativeSplashForTests() {
   revealed = false;
+  nativeHideTries = 0;
   afterReveal.length = 0;
   if (typeof document !== "undefined") document.documentElement.classList.remove("bf-ready");
 }
