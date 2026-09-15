@@ -18,8 +18,16 @@ import "./apk-safe-area.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
 import { hideNativeSplash, onAppRevealed } from "./lib/native-splash";
+import {
+  deferredStylesDelayMs,
+  releaseServiceWorkerCache,
+  scheduleDeferredStyles,
+  shouldRegisterServiceWorker,
+  startRamHygiene,
+} from "./lib/ram-hygiene";
 
-if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
+const platform = Capacitor.getPlatform();
+if (platform === "android") document.documentElement.classList.add("capacitor-android");
 if (/Android/i.test(navigator.userAgent)) {
   document.documentElement.classList.add("is-android");
   if (window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches) {
@@ -36,24 +44,17 @@ const idle = (fn: () => void, timeout: number) => {
 };
 
 idle(() => startPerformanceMonitoring(), 2500);
+startRamHygiene();
 
 /* Overlay-ul HTML așteaptă Home. Fallback dacă First Run / Astăzi întârzie. */
 window.setTimeout(hideNativeSplash, 1600);
 
-/** Foi atelier / ledger — după reveal, pe idle, ca animațiile with `both` să nu șteargă primul cadru. */
+/** Foi atelier — după reveal, târziu, ca first paint și WebView-ul să nu parseze ~1 MB CSS. */
 onAppRevealed(() => {
-  idle(() => {
-    void import("./deferred-atelier.css").then(() => {
-      void import("./contrast-fix.css").then(() => {
-        void import("./visual-polish.css").then(() => {
-          void import("./apk-safe-area.css");
-        });
-      });
-    });
-  }, 1200);
+  scheduleDeferredStyles(deferredStylesDelayMs(platform));
 });
 
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
+if (shouldRegisterServiceWorker(import.meta.env.PROD, platform) && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=${APP_VERSION}`).then((registration) => {
       void registration.update();
@@ -66,4 +67,6 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
       window.location.reload();
     });
   });
+} else if (platform === "android" || platform === "ios") {
+  void releaseServiceWorkerCache();
 }

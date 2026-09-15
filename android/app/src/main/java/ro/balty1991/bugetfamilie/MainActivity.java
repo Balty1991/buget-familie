@@ -1,6 +1,7 @@
 package ro.balty1991.bugetfamilie;
 
 import android.Manifest;
+import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -10,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import androidx.core.splashscreen.SplashScreen;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -81,6 +83,11 @@ public class MainActivity extends BridgeActivity {
     if (webView == null || nativeBridgesAttached) return;
     nativeBridgesAttached = true;
     webView.setBackgroundColor(Color.parseColor(launchDark ? "#0B0F0E" : "#E4E9E6"));
+    final WebSettings settings = webView.getSettings();
+    settings.setGeolocationEnabled(false);
+    if (Build.VERSION.SDK_INT >= 23) {
+      settings.setOffscreenPreRaster(false);
+    }
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");
@@ -105,6 +112,49 @@ public class MainActivity extends BridgeActivity {
       pendingQuickAction = action;
       notifyWebQuickAction();
     }
+  }
+
+  /**
+   * WebView-ul ține JS-ul, timer-ele și rasterul pornite în fundal dacă nu
+   * îl pauzăm. Asta e memoria care umflă aplicația când treci la alt ecran.
+   */
+  @Override
+  public void onPause() {
+    final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView != null) {
+      webView.onPause();
+      webView.pauseTimers();
+    }
+    super.onPause();
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView != null) {
+      webView.resumeTimers();
+      webView.onResume();
+    }
+  }
+
+  @Override
+  public void onTrimMemory(int level) {
+    super.onTrimMemory(level);
+    final boolean tight = level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW
+      || level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN;
+    if (!tight) return;
+    final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView == null) return;
+    /* Cache RAM doar când sistemul e la limită — nu la fiecare ieșire în recents. */
+    if (level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
+      || level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
+      webView.clearCache(false);
+    }
+    webView.post(() -> webView.evaluateJavascript(
+      "try{window.dispatchEvent(new CustomEvent('buget-familie:trim-memory'))}catch(e){}",
+      null
+    ));
   }
 
   /**
