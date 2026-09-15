@@ -38,14 +38,14 @@ html {
   --os-nav-overlay: 0px;
   --os-inset-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
   --os-inset-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
-  --os-inset-bottom: max(var(--os-nav-overlay), env(safe-area-inset-bottom, 0px));
+  --os-inset-bottom: max(var(--os-nav-overlay), var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
   --os-inset-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 
-/* Doar PWA/APK fullscreen: bara de 3 butoane poate acoperi pagina. În Chrome (cu URL) viewport-ul e deja deasupra ei. */
+/* APK / PWA: fallback 48px până vin inset-urile native. În Chrome cu URL, overlay rămâne 0. */
 html.capacitor-android,
 html.is-android-standalone {
-  --os-nav-overlay: 12px;
+  --os-nav-overlay: 48px;
 }
 
 html.capacitor-android {
@@ -493,7 +493,7 @@ html.capacitor-android {
   align-items: center !important;
   justify-content: space-between !important;
   height: auto !important;
-  padding: 6px 8px 8px !important;
+  padding: 6px 8px max(8px, var(--os-inset-bottom)) !important;
   border: 0 !important;
   border-top: 1px solid var(--os-line) !important;
   border-radius: 22px 22px 0 0 !important;
@@ -1282,7 +1282,7 @@ body .bf-command-palette .bf-icon-button,
   align-items: flex-end !important;
   place-items: end center !important;
   padding-top: max(8px, var(--os-inset-top, env(safe-area-inset-top, 0px))) !important;
-  padding-bottom: max(10px, var(--os-inset-bottom, env(safe-area-inset-bottom, 10px))) !important;
+  padding-bottom: max(12px, var(--os-inset-bottom, env(safe-area-inset-bottom, 12px))) !important;
 }
 
 .bf-onboarding.bf-first-run {

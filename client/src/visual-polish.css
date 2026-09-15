@@ -1139,7 +1139,7 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  padding: 6px 8px 8px !important;
+  padding: 6px 8px max(8px, var(--os-inset-bottom)) !important;
   border-radius: 22px 22px 0 0 !important;
   border: 0 !important;
   border-top: 1px solid color-mix(in srgb, var(--os-line) 80%, transparent) !important;
@@ -1483,6 +1483,7 @@ html.theme-ink .bf-obligations-workspace > .bf-obligations-header h1 em {
 .bf-onboarding-backdrop.bf-first-run-backdrop {
   align-items: flex-end !important;
   place-items: end center !important;
+  padding-bottom: max(12px, var(--os-inset-bottom, env(safe-area-inset-bottom, 12px))) !important;
 }
 
 .bf-onboarding,
