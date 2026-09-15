@@ -1,31 +1,49 @@
 /**
- * APK / PWA: bara de sistem acoperă WebView-ul (edge-to-edge).
- * În Chrome cu URL overlay rămâne 0 — viewport-ul e deja deasupra barei.
+ * APK / PWA, edge-to-edge.
+ *
+ * Meniul (dock) stă LIPIT de josul ecranului. Butoanele urcă pe
+ * padding-bottom = inset, ca să nu intre sub cele 3 butoane de sistem.
+ * Fundalul dock-ului acoperă zona de sub butoane — conținutul nu mai
+ * transpare între meniu și bara de navigare.
+ *
+ * NU ridica tot dock-ul cu `bottom: inset` — asta lasă o fâșie goală
+ * pe unde se vede pagina.
  */
-html.capacitor-android,
-html.is-android-standalone {
-  --os-nav-overlay: 52px;
+html {
+  --os-nav-overlay: 0px;
+  --os-inset-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
 }
 
-html {
-  --os-inset-bottom: max(
-    var(--os-nav-overlay, 0px),
-    var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))
-  );
+html.capacitor-android,
+html.is-android-standalone {
+  --os-nav-overlay: 0px;
 }
 
 .os-dock,
-.os-shell .os-dock {
-  bottom: var(--os-inset-bottom) !important;
-  padding-bottom: 8px !important;
+.os-shell .os-dock,
+html.capacitor-android .os-shell .os-dock,
+html.theme-white .os-shell .os-dock,
+html.theme-ink .os-shell .os-dock,
+:is(html.theme-ink, html.theme-white) .os-shell .os-dock {
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  padding-top: 6px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  padding-bottom: max(10px, var(--os-inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
+  border-radius: 22px 22px 0 0 !important;
+  background: var(--os-surface, #f5f7f6) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .bf-onboarding-backdrop.bf-first-run-backdrop,
 .os-shell .bf-onboarding-backdrop.bf-first-run-backdrop.bf-modal-backdrop {
-  padding-bottom: max(16px, var(--os-inset-bottom)) !important;
+  padding-bottom: max(16px, var(--os-inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
 }
 
 .bf-theme-picker-footer,
 .os-shell .bf-theme-picker-footer {
-  padding-bottom: calc(14px + var(--os-inset-bottom)) !important;
+  padding-bottom: calc(14px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
 }

@@ -31,21 +31,22 @@
 }
 
 html, body {
-  background: var(--cf-bg, #F4EFE4);
+  background: var(--cf-bg, #E4E9E6);
 }
 
 html {
   --os-nav-overlay: 0px;
   --os-inset-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
   --os-inset-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
-  --os-inset-bottom: max(var(--os-nav-overlay), var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  --os-inset-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   --os-inset-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
 }
 
-/* APK / PWA: fallback 48px până vin inset-urile native. În Chrome cu URL, overlay rămâne 0. */
+/* APK / PWA: inset-urile reale vin din native. Nu mai forțăm 52px — dock-ul
+   se lipește de jos și urcă butoanele pe padding, nu tot meniul. */
 html.capacitor-android,
 html.is-android-standalone {
-  --os-nav-overlay: 52px;
+  --os-nav-overlay: 0px;
 }
 
 html.capacitor-android {
@@ -482,24 +483,24 @@ html.capacitor-android {
   text-transform: uppercase !important;
 }
 
-/* ---- Dock lipit de jos și de laterale; tab-ul activ rămâne pastilă ---- */
+/* ---- Dock lipit de jos; butoanele stau deasupra barei de sistem ---- */
 .os-dock {
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
-  bottom: var(--os-inset-bottom) !important;
+  bottom: 0 !important;
   z-index: 40 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   height: auto !important;
-  padding: 6px 8px 8px !important;
+  padding: 6px 8px max(10px, var(--os-inset-bottom)) !important;
   border: 0 !important;
   border-top: 1px solid var(--os-line) !important;
   border-radius: 22px 22px 0 0 !important;
-  background: color-mix(in srgb, var(--os-surface) 94%, transparent) !important;
+  background: var(--os-surface) !important;
   box-shadow: 0 -10px 24px color-mix(in srgb, #000 16%, transparent) !important;
-  backdrop-filter: blur(18px) saturate(1.15) !important;
+  backdrop-filter: none !important;
   grid-template-columns: none !important;
 }
 

@@ -8,7 +8,7 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Buget Familie — atelierul deciziilor financiare</title>
     <meta name="description" content="Un spațiu personal sau comun pentru buget, datorii, economii și decizii financiare clare." />
-    <meta name="theme-color" content="#FBF4E9" />
+    <meta name="theme-color" content="#E4E9E6" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="icon" type="image/svg+xml" href="bf-favicon.svg?v=42" />
@@ -17,7 +17,7 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=42" />
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
-      html, body, #root { margin: 0; background: #FBF4E9; }
+      html, body, #root { margin: 0; background: #E4E9E6; min-height: 100%; }
       html.dark, html.dark body, html.dark #root { background: #0B0F0E; }
     </style>
     <script>
@@ -61,7 +61,7 @@
           root.classList.add("theme-" + theme, "background-" + background);
           var dark = theme !== "white";
           if (dark) root.classList.add("dark");
-          var paint = dark ? "#0B0F0E" : "#FBF4E9";
+          var paint = dark ? "#0B0F0E" : "#E4E9E6";
           root.style.backgroundColor = paint;
           root.style.colorScheme = dark ? "dark" : "light";
           var meta = document.querySelector('meta[name="theme-color"]');

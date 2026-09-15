@@ -38,9 +38,14 @@ public class MainActivity extends BridgeActivity {
     super.onCreate(savedInstanceState);
     getWindow().setBackgroundDrawableResource(R.color.splash_background);
     WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+    if (Build.VERSION.SDK_INT >= 29) {
+      getWindow().setNavigationBarContrastEnforced(false);
+    }
+    getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+    getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
     pendingQuickAction = readQuickAction(getIntent());
     if (getBridge() != null) attachNativeBridges(getBridge().getWebView());
-    new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash = false, 2800);
+    new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash = false, 5000);
   }
 
   /**
@@ -50,7 +55,7 @@ public class MainActivity extends BridgeActivity {
   void attachNativeBridges(WebView webView) {
     if (webView == null || nativeBridgesAttached) return;
     nativeBridgesAttached = true;
-    webView.setBackgroundColor(android.graphics.Color.parseColor("#FBF4E9"));
+    webView.setBackgroundColor(android.graphics.Color.parseColor("#E4E9E6"));
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");

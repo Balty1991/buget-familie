@@ -2,7 +2,7 @@
  * Primul flux: 3 intenții (PRODUCT_STRATEGY) + Mai târziu.
  * track spending / organize month / family budget — rezultat în < 3 minute.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Home, PiggyBank, ReceiptText, Users, WalletCards } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation } from "@/lib/finance-data";
@@ -11,6 +11,7 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
 import { safeSetItem } from "@/lib/safe-storage";
+import { hideNativeSplash } from "@/lib/native-splash";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -24,6 +25,7 @@ const PRESETS = [
 
 export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpenSync }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void; onOpenSync?: (password: string) => void }) {
   const [intent, setIntent] = useState<Intent | null>(null);
+  useEffect(() => { hideNativeSplash(); }, []);
   const goBack = () => setIntent(null);
   const dialogRef = useFocusTrap<HTMLElement>(() => {
     if (intent) goBack();

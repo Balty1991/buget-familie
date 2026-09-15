@@ -2,7 +2,7 @@
  * Atelierul Financiar — tablou mobil pentru o persoană sau o gospodărie, cu decizia următoare în prim-plan.
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
-import { lazy, startTransition, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
@@ -35,6 +35,7 @@ import {
 import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/theme-default";
 import { markFirstWeekTourSeen, shouldOfferFirstWeekTour } from "@/lib/first-week-tour";
 import { getLocale, t } from "@/lib/i18n";
+import { hideNativeSplash } from "@/lib/native-splash";
 import { useLanguage } from "@/hooks/use-language";
 import { useUndo } from "@/hooks/useUndo";
 import { useThemeChrome } from "@/hooks/useThemeChrome";
@@ -42,10 +43,10 @@ import { useFamilySync, syncPortable } from "@/hooks/useFamilySync";
 import { usePersistAppData, readInitialAppData } from "@/hooks/usePersistAppData";
 import { useSimpleMode } from "@/hooks/useSimpleMode";
 import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/EnvelopeConflictBanner";
+import { FirstRunSetup } from "@/components/FirstRunSetup";
 
 const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio })));
 const QuickEntryPanel = lazy(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel })));
-const FirstRunSetup = lazy(() => import("@/components/FirstRunSetup").then((module) => ({ default: module.FirstRunSetup })));
 const FirstWeekTour = lazy(() => import("@/components/FirstWeekTour").then((module) => ({ default: module.FirstWeekTour })));
 const WeeklySummaryPanel = lazy(() => import("@/components/WeeklySummaryPanel").then((module) => ({ default: module.WeeklySummaryPanel })));
 const SafeSpendSheet = lazy(() => import("@/components/SafeSpendSheet").then((module) => ({ default: module.SafeSpendSheet })));
@@ -596,8 +597,23 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
 export default function Home() {
   const [data, setData] = useState<AppData>(readInitialAppData);
   const { storageNotice, setStorageNotice, storageReady, applyData } = usePersistAppData(data, setData);
-  const [onboardingOpen, setOnboardingOpen] = useState(false); const [setupOpen, setSetupOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(() => {
+    try {
+      if (window.localStorage.getItem("buget-familie:setup-complete")) return false;
+      const seed = readInitialAppData();
+      const hasStarted = seed.transactions.length > 0 || seed.settings.salaryPlan.allocations.length > 0 || seed.debts.length > 0 || seed.savings.length > 0 || seed.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(seed.settings.salaryPlan.nextPayday);
+      return !hasStarted;
+    } catch {
+      return false;
+    }
+  });
   const { simpleMode, setSimpleMode: setSimpleModePref } = useSimpleMode();
+  useLayoutEffect(() => {
+    hideNativeSplash();
+    const later = window.setTimeout(hideNativeSplash, 80);
+    return () => window.clearTimeout(later);
+  }, []);
   useEffect(() => {
     document.documentElement.dataset.simpleMode = simpleMode ? "1" : "0";
     return () => { delete document.documentElement.dataset.simpleMode; };
@@ -613,7 +629,7 @@ export default function Home() {
   const [editGoal, setEditGoal] = useState<Debt | SavingsGoal>();
   const [receiptStorageNotice, setReceiptStorageNotice] = useState("");
   const legacyReceiptMigrationStarted = useRef(false);
-  const setupOffered = useRef(false);
+  const setupOffered = useRef(setupOpen);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false); const [firstWeekTourOpen, setFirstWeekTourOpen] = useState(false);
   const {
     themePickerOpen, setThemePickerOpen,
@@ -859,7 +875,7 @@ export default function Home() {
     {data.pendingReview.length > 0 && <button type="button" className="bf-dock-review-badge" onClick={() => { setMore("review"); go("utilities"); }} aria-label={t("Deschide De verificat · {count}", { count: data.pendingReview.length })}><Inbox size={15} /> {t("De verificat")} · {data.pendingReview.length}</button>}
     <nav className="os-dock" aria-label={t("Navigație mobilă")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={16} aria-hidden="true" /><span>{item.label}</span>{item.id === "journal" && data.pendingReview.length > 0 ? <i className="bf-dock-dot" aria-hidden="true" /> : null}</button>; })}</nav>
     {!simpleMode && guideOn && <Suspense fallback={null}><AICompanion initiallyOpen data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>}
-    {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={theme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={<div className="bf-modal-backdrop bf-onboarding-backdrop" aria-hidden="true" />}><FirstRunSetup data={data} onChange={applyData} onClose={() => setSetupOpen(false)} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={(password) => { setSyncPassword(password); setSyncPasswordReveal(password); setMore("sync"); go("utilities"); }} /></Suspense>}
+    {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={theme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <FirstRunSetup data={data} onChange={applyData} onClose={() => setSetupOpen(false)} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={(password) => { setSyncPassword(password); setSyncPasswordReveal(password); setMore("sync"); go("utilities"); }} />}
     {modal === "quick" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); }} onMore={(draft) => { setEditTx(draft); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
     {modal === "transaction" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); }} /></Suspense>}
     {modal === "receipt" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim bonul…")}</div></div>}><ReceiptForm data={data} onSave={saveReceipt} onClose={() => setModal(null)} /></Suspense>}
