@@ -77,6 +77,81 @@
         border: 0 !important;
         border-radius: 16px !important;
       }
+      /* First Run: cardul trebuie să existe înainte de foaia mare (altfel e text pe mint). */
+      .bf-onboarding-backdrop.bf-first-run-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 8px 12px 16px;
+        background: #E4E9E6;
+      }
+      html.dark .bf-onboarding-backdrop.bf-first-run-backdrop { background: #0B0F0E; }
+      .bf-onboarding.bf-first-run {
+        width: min(520px, calc(100vw - 20px));
+        max-height: calc(100svh - 24px);
+        overflow: auto;
+        padding: 22px 20px 22px;
+        border-radius: 28px 28px 20px 20px;
+        background: #f7f8f6;
+        color: #0c1612;
+        border: 1px solid #c9d2cc;
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      html.dark .bf-onboarding.bf-first-run {
+        background: #161225;
+        color: #e8eeea;
+        border-color: #2a2438;
+      }
+      .bf-first-run-chrome {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 44px;
+      }
+      .bf-onboarding-skip {
+        margin-left: auto;
+        min-height: 44px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 12px;
+        background: transparent;
+        color: inherit;
+        font: 650 13px Outfit, sans-serif;
+      }
+      .bf-first-run-intents { display: grid; gap: 10px; margin-top: 1.1rem; }
+      .bf-first-run-intents button {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 2px 12px;
+        align-items: start;
+        min-height: 72px;
+        padding: 14px 16px;
+        text-align: left;
+        border-radius: 18px;
+        border: 1px solid #c9d2cc;
+        background: #eef1ef;
+        color: inherit;
+      }
+      html.dark .bf-first-run-intents button {
+        border-color: #2a2438;
+        background: #1c1830;
+      }
+      .bf-first-run-intents button b { font: 650 15px/1.25 Georgia, serif; }
+      .bf-first-run-intents button small { color: #5d7283; font: 500 12px/1.4 Outfit, sans-serif; }
+      .os-hero {
+        display: grid;
+        gap: 0;
+        margin: 0 16px;
+        padding: 20px;
+        border-radius: 2rem;
+        background: #f7f8f6;
+      }
+      html.dark .os-hero { background: #161d23; }
     </style>
     <script>
       if ("serviceWorker" in navigator) {

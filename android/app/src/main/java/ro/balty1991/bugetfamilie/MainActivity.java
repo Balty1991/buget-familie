@@ -44,8 +44,11 @@ public class MainActivity extends BridgeActivity {
     }
     SplashScreen splash = SplashScreen.installSplashScreen(this);
     splash.setKeepOnScreenCondition(() -> keepSplash);
-    /* Fără zoom/fade: altfel se vede ecranul mint gol, apoi cardul transparent. */
-    splash.setOnExitAnimationListener(splashView -> splashView.remove());
+    /* Fără zoom/fade. Întârziem scoaterea: WebView-ul trebuie să fi pictat
+       cardul sub splash, altfel se vede mint gol (Huawei). */
+    splash.setOnExitAnimationListener(splashView ->
+      splashView.postDelayed(splashView::remove, 280)
+    );
     registerPlugin(BugetFamilieNativePlugin.class);
     super.onCreate(savedInstanceState);
     getWindow().setBackgroundDrawableResource(

@@ -1302,12 +1302,39 @@ html.dark .bf-onboarding-backdrop {
 }
 
 .bf-onboarding.bf-first-run {
+  width: min(520px, calc(100vw - 20px)) !important;
   max-height: calc(100svh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - var(--bf-keyboard, 0px) - 16px) !important;
-  padding-bottom: 22px !important;
+  padding: 22px 20px 22px !important;
   border-radius: 28px 28px 20px 20px !important;
+  background: var(--lu-card, #f7f8f6) !important;
+  color: var(--lu-ink, #0c1612) !important;
+  border: 1px solid var(--lu-line, #c9d2cc) !important;
   animation: none !important;
   opacity: 1 !important;
   transform: none !important;
+}
+html.dark .bf-onboarding.bf-first-run {
+  background: var(--lu-card, #161225) !important;
+  color: var(--os-fg, #e8eeea) !important;
+  border-color: var(--os-line, #2a2438) !important;
+}
+.bf-first-run-intents {
+  display: grid !important;
+  gap: 10px !important;
+  margin-top: 1.1rem !important;
+}
+.bf-first-run-intents button {
+  display: grid !important;
+  grid-template-columns: 28px minmax(0, 1fr) !important;
+  gap: 2px 12px !important;
+  align-items: start !important;
+  min-height: 72px !important;
+  padding: 14px 16px !important;
+  text-align: left !important;
+  border-radius: 18px !important;
+  border: 1px solid var(--lu-line, #c9d2cc) !important;
+  background: color-mix(in srgb, var(--lu-card, #fff) 88%, var(--lu-accent, #143c36)) !important;
+  color: inherit !important;
 }
 
 .bf-first-run:focus,

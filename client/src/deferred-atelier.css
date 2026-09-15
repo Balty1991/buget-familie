@@ -37,7 +37,6 @@
 @import "./visual-polish.css";
 
 @import "./shell-menu-delight.css";
-@import "./ledger-unify-2026.css";
 
 /* Primul ecran e deja desenat când ajunge foaia. Animațiile `both` ar porni
    de la opacity 0 și ar face flash — le oprim pe suprafețele de start. */

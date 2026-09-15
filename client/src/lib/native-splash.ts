@@ -1,13 +1,12 @@
 /**
  * Handoff splash nativ / HTML → primul cadru real.
  *
- * Nu ascundem splash-ul pe rAF gol: așteptăm ca First Run, antetul sau
- * ecranul de PIN să aibă dimensiuni reale. Altfel se vede mint gol, apoi
- * cardul (sau antetul stricat, fără plic).
+ * Nu ascundem splash-ul pe rAF gol sau pe antetul gol: așteptăm First Run /
+ * hero-ul Astăzi / PIN, cu umplutură opacă. Altfel se vede mint, apoi
+ * HTML-ul fără CSS (intențiile ca text, fără card).
  *
- * .os-appbar e în DOM și la First Run, dar e display:none — luăm primul
- * nod VIZIBIL, nu primul din selector. Pentru antet cerem și display:flex
- * ca să nu dezvăluim HTML-ul înainte să se aplice CSS-ul.
+ * Plicul HTML (#bf-boot) stă PESTE WebView după ce splash-ul nativ pleacă,
+ * până când cardul e deja pictat sub el.
  */
 
 export type SplashBridge = {
@@ -25,7 +24,7 @@ declare global {
 let revealed = false;
 const afterReveal: Array<() => void> = [];
 
-const READY_SELECTOR = ".bf-first-run, .os-appbar, .bf-app-lock";
+const READY_SELECTOR = ".bf-first-run, .os-hero, .bf-app-lock";
 
 function paintThen(run: () => void, frames = 2) {
   const raf = typeof requestAnimationFrame === "function" ? requestAnimationFrame : null;
@@ -40,15 +39,28 @@ function nowMs() {
   return typeof performance !== "undefined" && typeof performance.now === "function" ? performance.now() : Date.now();
 }
 
+function isOpaqueFill(bg: string): boolean {
+  if (!bg) return false;
+  const value = bg.trim().toLowerCase();
+  if (!value || value === "transparent" || value === "rgba(0, 0, 0, 0)" || value === "rgba(0,0,0,0)") return false;
+  const match = value.match(/^rgba?\(([^)]+)\)$/);
+  if (match) {
+    const parts = match[1].split(",").map((part) => part.trim());
+    if (parts.length === 4 && Number(parts[3]) < 0.55) return false;
+  }
+  return true;
+}
+
 function nodePainted(node: Element): boolean {
   if (typeof (node as HTMLElement).getBoundingClientRect !== "function") return true;
   const box = node.getBoundingClientRect();
   if (box.height <= 48 || box.width <= 48) return false;
   try {
     if (typeof getComputedStyle !== "function") return true;
-    const display = getComputedStyle(node).display;
-    if (display === "none") return false;
-    if (node.classList?.contains("os-appbar") && display !== "flex") return false;
+    const style = getComputedStyle(node);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+    const needsFill = node.classList?.contains("bf-first-run") || node.classList?.contains("os-hero");
+    if (needsFill && !isOpaqueFill(style.backgroundColor)) return false;
   } catch {
     /* jsdom / teste fără CSSOM */
   }
@@ -73,7 +85,7 @@ function waitUntilPainted(run: () => void) {
   const started = nowMs();
   const tick = () => {
     if (firstScreenReady() || nowMs() - started > 2800) {
-      paintThen(run, 2);
+      paintThen(run, 3);
       return;
     }
     const raf = typeof requestAnimationFrame === "function" ? requestAnimationFrame : null;
@@ -122,7 +134,7 @@ export function hideNativeSplash() {
           /* foile amânate nu trebuie să blocheze ecranul */
         }
       });
-    }, 2);
+    }, 4);
   });
 }
 

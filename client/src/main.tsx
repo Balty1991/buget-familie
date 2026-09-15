@@ -13,6 +13,7 @@ import "./visibility-safety.css";
 import "./mobile-speed.css";
 // Contrast pe critical path ca filled-urile din first paint să fie lizibile.
 import "./contrast-fix.css";
+import "./ledger-unify-2026.css";
 import "./apk-safe-area.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
