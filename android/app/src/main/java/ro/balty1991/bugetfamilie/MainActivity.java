@@ -126,6 +126,11 @@ public class MainActivity extends BridgeActivity {
         + "r.style.setProperty('--safe-area-inset-right','" + right + "');"
         + "r.style.setProperty('--safe-area-inset-bottom','" + bottom + "');"
         + "r.style.setProperty('--safe-area-inset-left','" + left + "');"
+        + "r.style.setProperty('--os-inset-top','" + top + "');"
+        + "r.style.setProperty('--os-inset-right','" + right + "');"
+        + "r.style.setProperty('--os-inset-bottom','" + bottom + "');"
+        + "r.style.setProperty('--os-inset-left','" + left + "');"
+        + "r.style.setProperty('--os-nav-overlay','0px');"
         + "})()";
     webView.evaluateJavascript(js, null);
   }
