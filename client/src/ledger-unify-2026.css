@@ -159,11 +159,11 @@ html.theme-cyber {
 
 /* —— Dock Ledger Flow —— */
 .os-shell .os-dock {
-  left: 10px;
-  right: 10px;
-  bottom: max(8px, env(safe-area-inset-bottom, 0px));
-  padding: 5px;
-  border-radius: 999px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 8px 8px;
+  border-radius: 22px 22px 0 0;
   border: 1px solid color-mix(in srgb, var(--lu-line, #c9d2cc) 80%, transparent);
   background: color-mix(in srgb, var(--lu-card, #f7f8f6) 88%, transparent);
   backdrop-filter: blur(18px) saturate(1.2);

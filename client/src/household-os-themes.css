@@ -304,11 +304,11 @@ html.theme-aurora {
 
 /* Dock: frosted warm platinum, active = pin — distinct de look-ul stark negru */
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
-  left: 10px !important;
-  right: 10px !important;
-  bottom: max(8px, var(--os-inset-bottom)) !important;
-  padding: 5px !important;
-  border-radius: 999px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  padding: 6px 8px 8px !important;
+  border-radius: 22px 22px 0 0 !important;
   background: rgba(251, 250, 247, .94) !important;
   box-shadow:
     0 0 0 1px #d5d2c8,
@@ -479,7 +479,7 @@ html.theme-aurora {
     border-radius: 14px !important;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
-    left: 10px !important;
-    right: 10px !important;
+    left: 0 !important;
+    right: 0 !important;
   }
 }
