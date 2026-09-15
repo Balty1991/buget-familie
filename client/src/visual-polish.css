@@ -1138,8 +1138,8 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
 .os-shell .os-dock {
   left: 0 !important;
   right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 8px max(8px, var(--os-inset-bottom)) !important;
+  bottom: var(--os-inset-bottom) !important;
+  padding: 6px 8px 8px !important;
   border-radius: 22px 22px 0 0 !important;
   border: 0 !important;
   border-top: 1px solid color-mix(in srgb, var(--os-line) 80%, transparent) !important;

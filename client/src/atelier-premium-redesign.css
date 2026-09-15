@@ -229,8 +229,8 @@
 .os-shell .os-dock {
   left: 0 !important;
   right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 8px max(8px, var(--os-inset-bottom)) !important;
+  bottom: var(--os-inset-bottom) !important;
+  padding: 6px 8px 8px !important;
   border-radius: 22px 22px 0 0 !important;
   border: 0 !important;
   background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, transparent) !important;

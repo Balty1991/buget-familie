@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import androidx.core.splashscreen.SplashScreen;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import androidx.annotation.NonNull;
@@ -18,6 +21,7 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
   private static final int REQ_POST_NOTIFICATIONS = 4101;
+  private volatile boolean keepSplash = true;
 
   /**
    * Acțiunea cerută din widget sau din dală, până când stratul web o cere.
@@ -29,12 +33,14 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    SplashScreen.installSplashScreen(this).setKeepOnScreenCondition(() -> keepSplash);
     registerPlugin(BugetFamilieNativePlugin.class);
     super.onCreate(savedInstanceState);
     getWindow().setBackgroundDrawableResource(R.color.splash_background);
     WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     pendingQuickAction = readQuickAction(getIntent());
     if (getBridge() != null) attachNativeBridges(getBridge().getWebView());
+    new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash = false, 2800);
   }
 
   /**
@@ -47,6 +53,7 @@ public class MainActivity extends BridgeActivity {
     webView.setBackgroundColor(android.graphics.Color.parseColor("#FBF4E9"));
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
+    webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");
     ViewCompat.setOnApplyWindowInsetsListener(webView, (view, insets) -> {
       final Insets bars = insets.getInsets(
         WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
@@ -94,6 +101,13 @@ public class MainActivity extends BridgeActivity {
     return action;
   }
 
+  private final class SplashBridge {
+    @JavascriptInterface
+    public void hide() {
+      new Handler(Looper.getMainLooper()).post(() -> keepSplash = false);
+    }
+  }
+
   /**
    * Singurul lucru pe care îl expune este numele acțiunii cerute, o singură dată.
    * publishTemplates scrie doar etichete pe widget — fără sume.
@@ -117,8 +131,8 @@ public class MainActivity extends BridgeActivity {
     final float density = getResources().getDisplayMetrics().density;
     int bottomPx = bars.bottom;
     /* Overlay 3 butoane (Huawei): systemBars.bottom e 0, dar bara acoperă WebView-ul. */
-    if (bottomPx < (int) (24f * density)) {
-      bottomPx = (int) (48f * density);
+    if (bottomPx < (int) (28f * density)) {
+      bottomPx = (int) (52f * density);
     }
     final String top = (bars.top / density) + "px";
     final String right = (bars.right / density) + "px";

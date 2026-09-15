@@ -161,8 +161,8 @@ html.theme-cyber {
 .os-shell .os-dock {
   left: 0;
   right: 0;
-  bottom: 0;
-  padding: 6px 8px max(8px, var(--os-inset-bottom));
+  bottom: var(--os-inset-bottom, 0px);
+  padding: 6px 8px 8px;
   border-radius: 22px 22px 0 0;
   border: 1px solid color-mix(in srgb, var(--lu-line, #c9d2cc) 80%, transparent);
   background: color-mix(in srgb, var(--lu-card, #f7f8f6) 88%, transparent);

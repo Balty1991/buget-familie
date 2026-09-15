@@ -28,6 +28,12 @@ if (/Android/i.test(navigator.userAgent)) {
 createRoot(document.getElementById("root")!).render(<App />);
 startPerformanceMonitoring();
 
+const hideNativeSplash = () => {
+  try { (window as unknown as { BugetFamilieSplash?: { hide?: () => void } }).BugetFamilieSplash?.hide?.(); } catch { /* ignore */ }
+};
+requestAnimationFrame(() => requestAnimationFrame(hideNativeSplash));
+window.setTimeout(hideNativeSplash, 1600);
+
 /** Foi atelier / ledger / redesign / visual-polish — după first paint; contrast-fix din nou, apoi polish. */
 void import("./deferred-atelier.css").then(() => {
   void import("./contrast-fix.css").then(() => {

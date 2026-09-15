@@ -4,7 +4,7 @@
  */
 html.capacitor-android,
 html.is-android-standalone {
-  --os-nav-overlay: 48px;
+  --os-nav-overlay: 52px;
 }
 
 html {
@@ -16,7 +16,8 @@ html {
 
 .os-dock,
 .os-shell .os-dock {
-  padding-bottom: max(8px, var(--os-inset-bottom)) !important;
+  bottom: var(--os-inset-bottom) !important;
+  padding-bottom: 8px !important;
 }
 
 .bf-onboarding-backdrop.bf-first-run-backdrop,
