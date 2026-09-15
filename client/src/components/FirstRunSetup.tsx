@@ -2,7 +2,7 @@
  * Primul flux: 3 intenții (PRODUCT_STRATEGY) + Mai târziu.
  * track spending / organize month / family budget — rezultat în < 3 minute.
  */
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, Home, PiggyBank, ReceiptText, Users, WalletCards } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation } from "@/lib/finance-data";
@@ -25,12 +25,36 @@ const PRESETS = [
 
 export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpenSync }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void; onOpenSync?: (password: string) => void }) {
   const [intent, setIntent] = useState<Intent | null>(null);
-  useEffect(() => { hideNativeSplash(); }, []);
-  const goBack = () => setIntent(null);
+  useLayoutEffect(() => { hideNativeSplash(); }, []);
+  useLayoutEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const sync = () => {
+      const covered = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      document.documentElement.style.setProperty("--bf-keyboard", `${covered}px`);
+    };
+    viewport.addEventListener("resize", sync);
+    viewport.addEventListener("scroll", sync);
+    sync();
+    return () => {
+      viewport.removeEventListener("resize", sync);
+      viewport.removeEventListener("scroll", sync);
+      document.documentElement.style.removeProperty("--bf-keyboard");
+    };
+  }, []);
   const dialogRef = useFocusTrap<HTMLElement>(() => {
-    if (intent) goBack();
-    else onClose();
+    if (intent) {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement) active.blur();
+      setIntent(null);
+    } else onClose();
   });
+  const goBack = () => {
+    const active = document.activeElement;
+    if (active instanceof HTMLElement) active.blur();
+    dialogRef.current?.focus({ preventScroll: true });
+    setIntent(null);
+  };
   const [familyName, setFamilyName] = useState(data.settings.familyName === "Familia mea" ? "" : data.settings.familyName);
   const [memberName, setMemberName] = useState(data.settings.memberName === "Eu" ? "" : data.settings.memberName);
   const [partnerName, setPartnerName] = useState("");
@@ -114,12 +138,17 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   return (
     <div className="bf-modal-backdrop bf-onboarding-backdrop bf-first-run-backdrop" role="presentation">
       <section ref={dialogRef} tabIndex={-1} className="bf-onboarding bf-setup bf-first-run" role="dialog" aria-modal="true" aria-labelledby="bf-setup-title">
-        {intent && (
-          <button type="button" className="bf-onboarding-back" onClick={goBack}>
-            <ChevronLeft size={18} aria-hidden="true" />
-            {t("Înapoi")}
-          </button>
-        )}
+        <div className="bf-first-run-chrome">
+          {intent ? (
+            <button type="button" className="bf-onboarding-back" onClick={goBack}>
+              <ChevronLeft size={18} aria-hidden="true" />
+              {t("Înapoi")}
+            </button>
+          ) : (
+            <span className="bf-first-run-chrome-spacer" aria-hidden="true" />
+          )}
+          <button type="button" className="bf-onboarding-skip" onClick={complete}>{t("Mai târziu")}</button>
+        </div>
         <div className="bf-setup-visual" aria-hidden="true"><BrandMark size={72} /></div>
 
         {!intent && (
@@ -153,7 +182,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p className="bf-kicker">{t("URMĂREȘTE CHELTUIELILE")}</p>
             <h2 id="bf-setup-title">{t("Cum te cheamă?")}</h2>
             <p>{t("Opțional, dar ajută la jurnal. Poți spune și cât ai acum pe card — altfel cifra de pe Astăzi poate părea 0.")}</p>
-            <label className="bf-field"><span>{t("Numele tău")}</span><input autoFocus value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
+            <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" enterKeyHint="done" /></label>
             {data.settings.paymentSources.slice(0, 1).map((source) => (
               <label className="bf-field" key={source.id}>
                 <span>{t("Cât ai acum pe {name}? (opțional)", { name: source.name })}</span>
@@ -223,7 +252,6 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             </div>
           </div>
         )}
-        <button type="button" className="bf-onboarding-skip" onClick={complete}>{t("Mai târziu")}</button>
       </section>
     </div>
   );

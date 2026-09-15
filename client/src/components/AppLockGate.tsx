@@ -1,8 +1,9 @@
 /** Ecran de blocare locală: se afișează la deschidere și după ce aplicația a stat ascunsă un timp. */
 import "../app-lock.css";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Delete, LockKeyhole } from "lucide-react";
 import { APP_LOCK_BACKGROUND_RELOCK_MS, hasAppLockPin, isAppLockEnabled, verifyAppLockPin } from "@/lib/app-lock";
+import { hideNativeSplash } from "@/lib/native-splash";
 import { t } from "@/lib/i18n";
 
 const PIN_LENGTH = 4;
@@ -14,6 +15,10 @@ export function AppLockGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const hiddenAtRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (locked) hideNativeSplash();
+  }, [locked]);
 
   useEffect(() => {
     const onVisibility = () => {

@@ -529,8 +529,7 @@ body .bf-command-palette,
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .os-shell .bf-page,
-  .os-shell .bf-today-workspace,
+  /* Astăzi e first paint — fără page-in, altfel CSS-ul amânat face flash la opacity 0. */
   .os-shell .bf-movements-workspace,
   .os-shell .bf-obligations-workspace,
   .os-shell .bf-plan-workspace,
@@ -576,28 +575,23 @@ body .bf-command-palette,
   .os-shell .bf-more-grid > button:nth-child(8),
   .os-shell .bf-settings-row:nth-child(8) { animation-delay: calc(8 * var(--bf-delight-stagger)); }
 
-  /* Card reveal on common surfaces */
-  .os-shell .bf-pulse-grid article,
-  .os-shell .bf-ledger-mini,
-  .os-shell .bf-today-situation,
+  /* Card reveal — nu pe Astăzi (first paint). */
   .os-shell .bf-movement-day,
   .os-shell .bf-obligation-ledger article,
   .os-shell .bf-goal-card,
   .os-shell .bf-more-list article {
     animation: bf-delight-row-in 400ms var(--bf-delight-spring) both;
   }
-  .os-shell .bf-pulse-grid article:nth-child(2) { animation-delay: 50ms; }
-  .os-shell .bf-pulse-grid article:nth-child(3) { animation-delay: 90ms; }
   .os-shell .bf-more-list article:nth-child(2) { animation-delay: 40ms; }
   .os-shell .bf-more-list article:nth-child(3) { animation-delay: 80ms; }
   .os-shell .bf-more-list article:nth-child(4) { animation-delay: 120ms; }
 
-  /* Sheet spring */
-  .bf-modal,
+  /* Sheet spring — nu pe first-run: foaia amânată repornea animația la opacity 0. */
+  .bf-modal:not(.bf-first-run),
   .bf-health-sheet,
   .bf-theme-picker,
   .bf-whats-new,
-  .bf-onboarding,
+  .bf-onboarding:not(.bf-first-run),
   .bf-command-palette,
   .bf-plan-sheet,
   .bf-journal-filter-sheet {

@@ -14,9 +14,9 @@
   right: 0 !important;
   bottom: 0 !important;
   padding: 6px 8px max(10px, var(--os-inset-bottom, 0px)) !important;
-  border-radius: 22px 22px 0 0 !important;
-  background: var(--os-surface, #f5f7f6) !important;
-  box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.18) !important;
+  border-radius: 0 !important;
+  background: var(--os-dock-bg, var(--os-surface, #eef1ef)) !important;
+  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.18) !important;
 }
 
 .os-shell .os-dock button {

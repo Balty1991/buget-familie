@@ -15,6 +15,7 @@ import {
 } from "@/pages/home-kit";
 import { ALL_THEME_CLASS_IDS, resolveInitialTheme } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
+import { syncAndroidChrome } from "@/lib/native-splash";
 
 export function useThemeChrome() {
   const [themePickerOpen, setThemePickerOpen] = useState(false);
@@ -51,6 +52,7 @@ export function useThemeChrome() {
     root.classList.remove(...ALL_THEME_CLASS_IDS.map((id) => `theme-${id}`));
     root.classList.add(`theme-${activeTheme}`);
     root.classList.toggle("dark", !LIGHT_THEMES.includes(activeTheme));
+    syncAndroidChrome();
     if (themeTransitionReady.current && previous !== activeTheme) {
       root.classList.remove("theme-transitioning");
       root.classList.add("theme-transitioning");

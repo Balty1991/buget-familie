@@ -3,6 +3,7 @@ package ro.balty1991.bugetfamilie;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,11 +18,15 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
   private static final int REQ_POST_NOTIFICATIONS = 4101;
+  private static final String PREFS_CHROME = "bf_chrome";
+  private static final String PREF_DARK = "dark";
   private volatile boolean keepSplash = true;
+  private boolean launchDark;
 
   /**
    * Acțiunea cerută din widget sau din dală, până când stratul web o cere.
@@ -33,19 +38,38 @@ public class MainActivity extends BridgeActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    SplashScreen.installSplashScreen(this).setKeepOnScreenCondition(() -> keepSplash);
+    launchDark = getSharedPreferences(PREFS_CHROME, MODE_PRIVATE).getBoolean(PREF_DARK, false);
+    if (launchDark) {
+      setTheme(R.style.AppTheme_NoActionBarLaunchDark);
+    }
+    SplashScreen splash = SplashScreen.installSplashScreen(this);
+    splash.setKeepOnScreenCondition(() -> keepSplash);
+    /* Fără zoom/fade: altfel se vede ecranul mint gol, apoi cardul transparent. */
+    splash.setOnExitAnimationListener(splashView -> splashView.remove());
     registerPlugin(BugetFamilieNativePlugin.class);
     super.onCreate(savedInstanceState);
-    getWindow().setBackgroundDrawableResource(R.color.splash_background);
+    getWindow().setBackgroundDrawableResource(
+      launchDark ? R.color.splash_background_dark : R.color.splash_background
+    );
     WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     if (Build.VERSION.SDK_INT >= 29) {
       getWindow().setNavigationBarContrastEnforced(false);
     }
-    getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
-    getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+    applyChrome(Color.parseColor(launchDark ? "#12161C" : "#EEF1EF"), !launchDark);
     pendingQuickAction = readQuickAction(getIntent());
     if (getBridge() != null) attachNativeBridges(getBridge().getWebView());
     new Handler(Looper.getMainLooper()).postDelayed(() -> keepSplash = false, 5000);
+  }
+
+  private void applyChrome(int navColor, boolean lightIcons) {
+    getWindow().setNavigationBarColor(navColor);
+    getWindow().setStatusBarColor(Color.TRANSPARENT);
+    WindowInsetsControllerCompat controller =
+      WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+    if (controller != null) {
+      controller.setAppearanceLightNavigationBars(lightIcons);
+      controller.setAppearanceLightStatusBars(lightIcons);
+    }
   }
 
   /**
@@ -55,7 +79,7 @@ public class MainActivity extends BridgeActivity {
   void attachNativeBridges(WebView webView) {
     if (webView == null || nativeBridgesAttached) return;
     nativeBridgesAttached = true;
-    webView.setBackgroundColor(android.graphics.Color.parseColor("#E4E9E6"));
+    webView.setBackgroundColor(Color.parseColor(launchDark ? "#0B0F0E" : "#E4E9E6"));
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");
@@ -110,6 +134,33 @@ public class MainActivity extends BridgeActivity {
     @JavascriptInterface
     public void hide() {
       new Handler(Looper.getMainLooper()).post(() -> keepSplash = false);
+    }
+
+    @JavascriptInterface
+    public void setChrome(String navHex, boolean lightIcons) {
+      new Handler(Looper.getMainLooper()).post(() -> {
+        try {
+          final int color = Color.parseColor(navHex);
+          applyChrome(color, lightIcons);
+        } catch (Exception ignored) {
+          /* hex invalid din JS — păstrăm culoarea curentă */
+        }
+      });
+    }
+
+    @JavascriptInterface
+    public void persistTheme(boolean dark) {
+      getSharedPreferences(PREFS_CHROME, MODE_PRIVATE).edit().putBoolean(PREF_DARK, dark).apply();
+      new Handler(Looper.getMainLooper()).post(() -> {
+        launchDark = dark;
+        getWindow().setBackgroundDrawableResource(
+          dark ? R.color.splash_background_dark : R.color.splash_background
+        );
+        final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+        if (webView != null) {
+          webView.setBackgroundColor(Color.parseColor(dark ? "#0B0F0E" : "#E4E9E6"));
+        }
+      });
     }
   }
 

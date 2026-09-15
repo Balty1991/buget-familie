@@ -163,12 +163,13 @@ html.theme-cyber {
   right: 0;
   bottom: 0;
   padding: 6px 8px max(10px, var(--os-inset-bottom, 0px));
-  border-radius: 22px 22px 0 0;
-  border: 1px solid color-mix(in srgb, var(--lu-line, #c9d2cc) 80%, transparent);
-  background: var(--lu-card, #f7f8f6);
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--lu-line, #c9d2cc) 80%, transparent);
+  background: var(--os-dock-bg, var(--lu-card, #eef1ef));
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: 0 -10px 24px color-mix(in srgb, var(--lu-ink, #0c1612) 16%, transparent);
+  box-shadow: 0 -8px 22px color-mix(in srgb, var(--lu-ink, #0c1612) 16%, transparent);
 }
 .os-shell .os-dock button {
   min-height: 52px;
@@ -284,6 +285,17 @@ html.theme-cyber .os-shell .os-dock button.is-on {
 .bf-first-run-intents button:focus-visible {
   border-color: var(--lu-accent, #143c36);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--lu-accent, #143c36) 18%, transparent);
+}
+.bf-first-run-intents button:focus:not(:focus-visible) {
+  border-color: var(--lu-line, #c9d2cc);
+  box-shadow: none;
+  outline: none;
+}
+@media (hover: none) {
+  .bf-first-run-intents button:hover {
+    border-color: var(--lu-line, #c9d2cc);
+    box-shadow: none;
+  }
 }
 .bf-onboarding-skip {
   min-height: 44px;

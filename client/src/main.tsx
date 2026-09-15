@@ -16,7 +16,7 @@ import "./contrast-fix.css";
 import "./apk-safe-area.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
-import { hideNativeSplash } from "./lib/native-splash";
+import { hideNativeSplash, onAppRevealed } from "./lib/native-splash";
 
 if (Capacitor.getPlatform() === "android") document.documentElement.classList.add("capacitor-android");
 if (/Android/i.test(navigator.userAgent)) {
@@ -27,18 +27,29 @@ if (/Android/i.test(navigator.userAgent)) {
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
-startPerformanceMonitoring();
+
+const idle = (fn: () => void, timeout: number) => {
+  const win = window as Window & { requestIdleCallback?: (cb: IdleRequestCallback, opts?: IdleRequestOptions) => number };
+  if (typeof win.requestIdleCallback === "function") win.requestIdleCallback(() => fn(), { timeout });
+  else window.setTimeout(fn, Math.min(timeout, 400));
+};
+
+idle(() => startPerformanceMonitoring(), 2500);
 
 /* Splash-ul nativ rămâne până Home anunță primul cadru. Fallback lung, nu 1.6s. */
 window.setTimeout(hideNativeSplash, 5000);
 
-/** Foi atelier / ledger / redesign / visual-polish — după first paint; contrast-fix din nou, apoi polish. */
-void import("./deferred-atelier.css").then(() => {
-  void import("./contrast-fix.css").then(() => {
-    void import("./visual-polish.css").then(() => {
-      void import("./apk-safe-area.css");
+/** Foi atelier / ledger — după reveal, pe idle, ca animațiile with `both` să nu șteargă primul cadru. */
+onAppRevealed(() => {
+  idle(() => {
+    void import("./deferred-atelier.css").then(() => {
+      void import("./contrast-fix.css").then(() => {
+        void import("./visual-polish.css").then(() => {
+          void import("./apk-safe-area.css");
+        });
+      });
     });
-  });
+  }, 1200);
 });
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {

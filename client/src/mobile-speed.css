@@ -178,7 +178,9 @@ html {
   .bf-today-decision,
   .bf-today-activity,
   .bf-major-enter,
-  .bf-atelier-enter {
+  .bf-atelier-enter,
+  .bf-first-run-backdrop,
+  .bf-onboarding.bf-first-run {
     animation: none !important;
   }
 

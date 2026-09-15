@@ -16,9 +16,67 @@
     <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png?v=42" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=42" />
     <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="preload" as="image" href="icons/icon-192.png?v=42" />
     <style>
       html, body, #root { margin: 0; background: #E4E9E6; min-height: 100%; }
       html.dark, html.dark body, html.dark #root { background: #0B0F0E; }
+      #bf-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        display: grid;
+        place-items: center;
+        margin: 0;
+        background: #E4E9E6;
+        pointer-events: none;
+        transition: none;
+      }
+      html.dark #bf-boot { background: #0B0F0E; }
+      html.bf-ready #bf-boot,
+      #bf-boot[hidden] { display: none !important; }
+      #bf-boot img { width: 96px; height: 96px; display: block; }
+      html:not(.bf-ready) .bf-onboarding,
+      html:not(.bf-ready) .bf-onboarding-backdrop,
+      html:not(.bf-ready) .bf-first-run,
+      html:not(.bf-ready) .os-shell,
+      html:not(.bf-ready) .bf-page,
+      html:not(.bf-ready) .bf-today-add {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      /* Antetul se pictează corect înainte să se încarce foaia mare de CSS. */
+      .os-appbar.bf-appbar {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+        min-height: 64px;
+      }
+      .os-brand { display: flex !important; flex-shrink: 0 !important; align-items: center !important; gap: 12px !important; }
+      .os-mark {
+        display: grid !important;
+        place-items: center !important;
+        width: 40px !important;
+        height: 40px !important;
+        flex: 0 0 40px !important;
+        overflow: hidden !important;
+        border-radius: 14px !important;
+        background: #FBF4E9 !important;
+      }
+      .os-mark img { display: block !important; width: 40px !important; height: 40px !important; object-fit: cover !important; }
+      .os-tools { display: flex !important; flex-wrap: nowrap !important; flex-shrink: 0 !important; margin-left: auto !important; gap: 6px !important; }
+      .os-tool {
+        display: grid !important;
+        place-items: center !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border: 0 !important;
+        border-radius: 16px !important;
+      }
     </style>
     <script>
       if ("serviceWorker" in navigator) {
@@ -66,6 +124,8 @@
           root.style.colorScheme = dark ? "dark" : "light";
           var meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute("content", paint);
+          var boot = document.getElementById("bf-boot");
+          if (boot) boot.style.background = paint;
           if (localStorage.getItem("buget-familie:high-contrast") === "true") root.classList.add("bf-high-contrast");
         } catch (e) {}
       })();
@@ -73,6 +133,9 @@
   </head>
 
   <body>
+    <div id="bf-boot" aria-hidden="true">
+      <img src="icons/icon-192.png?v=42" alt="" width="96" height="96" decoding="sync" fetchpriority="high" />
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

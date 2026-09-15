@@ -55,6 +55,11 @@ html.capacitor-android {
 
 /* ---- App bar: cub + Buget / Familie + 3 butoane rotunde ---- */
 .os-appbar.bf-appbar {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
   min-height: 64px !important;
   height: auto !important;
   padding-top: calc(8px + var(--os-inset-top)) !important;
@@ -69,6 +74,7 @@ html.capacitor-android {
 
 .os-brand {
   display: flex !important;
+  flex-shrink: 0 !important;
   align-items: center !important;
   gap: 12px !important;
   margin: 0 !important;
@@ -158,6 +164,8 @@ html.capacitor-android {
 .os-tools {
   display: flex !important;
   align-items: center !important;
+  flex-shrink: 0 !important;
+  margin-left: auto !important;
   gap: 6px !important;
 }
 
@@ -489,7 +497,7 @@ html.capacitor-android {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  z-index: 40 !important;
+  z-index: 80 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -497,11 +505,13 @@ html.capacitor-android {
   padding: 6px 8px max(10px, var(--os-inset-bottom)) !important;
   border: 0 !important;
   border-top: 1px solid var(--os-line) !important;
-  border-radius: 22px 22px 0 0 !important;
-  background: var(--os-surface) !important;
-  box-shadow: 0 -10px 24px color-mix(in srgb, #000 16%, transparent) !important;
+  border-radius: 0 !important;
+  background: var(--os-dock-bg, var(--os-surface)) !important;
+  box-shadow: 0 -8px 22px color-mix(in srgb, #000 16%, transparent) !important;
   backdrop-filter: none !important;
   grid-template-columns: none !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 .os-dock button {
@@ -555,7 +565,7 @@ html.capacitor-android {
 .os-shell .bf-obligations-workspace,
 .os-shell .bf-insights-workspace,
 .os-shell .bf-utilities-workspace {
-  padding-bottom: calc(80px + var(--os-inset-bottom)) !important;
+  padding-bottom: calc(88px + var(--os-inset-bottom)) !important;
 }
 
 @media (min-width: 761px) {
@@ -1259,20 +1269,25 @@ body .bf-command-palette .bf-icon-button,
   position: fixed !important;
   inset: 0 !important;
   z-index: 200 !important;
-  background: var(--os-bg, #fbf4e9) !important;
+  background: #E4E9E6 !important;
   backdrop-filter: none !important;
+}
+
+html.dark .os-shell .bf-onboarding-backdrop.bf-modal-backdrop,
+html.dark .bf-onboarding-backdrop {
+  background: #0B0F0E !important;
 }
 
 /* FirstRun / tur: nu lăsa Astăzi, dock-ul sau visual-polish să iasă deasupra. */
 .os-shell.is-setup > header,
 .os-shell.is-setup > main,
 .os-shell.is-setup > .os-dock,
+.os-shell.is-setup > .os-nav-fill,
 .os-shell.is-setup > .bf-dock-review-badge,
 .os-shell.is-setup > .bf-undo-bar,
 .os-shell.is-setup > .bf-offline-banner,
 .os-shell.is-setup > .bf-storage-notice {
-  visibility: hidden !important;
-  pointer-events: none !important;
+  display: none !important;
 }
 .os-shell.bf-app.is-setup > .bf-modal-backdrop {
   z-index: 200 !important;
@@ -1287,16 +1302,48 @@ body .bf-command-palette .bf-icon-button,
 }
 
 .bf-onboarding.bf-first-run {
-  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 16px) !important;
+  max-height: calc(100svh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - var(--bf-keyboard, 0px) - 16px) !important;
   padding-bottom: 22px !important;
   border-radius: 28px 28px 20px 20px !important;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
-.bf-onboarding-back {
-  position: absolute !important;
+.bf-first-run:focus,
+.bf-first-run:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.bf-first-run-chrome {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  min-height: 44px !important;
+  margin: -8px -10px 4px !important;
+  padding: 6px 6px 8px !important;
+  background: var(--cf-surface, #fffefa) !important;
+}
+html.dark .bf-first-run-chrome {
+  background: var(--cf-surface, #161225) !important;
+}
+
+.bf-first-run-chrome-spacer {
+  width: 44px !important;
+  min-height: 44px !important;
+}
+
+.bf-onboarding-back,
+.bf-first-run .bf-onboarding-back {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
   z-index: 8 !important;
-  top: 10px !important;
-  left: 10px !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 2px !important;
@@ -1313,8 +1360,8 @@ body .bf-command-palette .bf-icon-button,
   pointer-events: auto !important;
 }
 
-.bf-first-run:has(.bf-onboarding-back) .bf-setup-visual {
-  margin-top: 28px !important;
+.bf-first-run .bf-setup-visual {
+  margin-top: 8px !important;
 }
 
 @media (max-height: 780px) {
@@ -1334,11 +1381,12 @@ body .bf-command-palette .bf-icon-button,
   }
 }
 
-.bf-onboarding-skip {
-  position: absolute !important;
+.bf-onboarding-skip,
+.bf-first-run .bf-onboarding-skip {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
   z-index: 8 !important;
-  top: 10px !important;
-  right: 10px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;

@@ -437,12 +437,11 @@
   border-color: color-mix(in srgb, var(--cf-primary) 35%, transparent) !important;
 }
 
-/* —— Mișcare scurtă, oprită dacă se cere —— */
+/* —— Mișcare scurtă, oprită pe first paint —— */
 .bf-screen-transition {
   animation: bf-atelier-enter .34s var(--bf-ease) both;
 }
 
-.bf-today-situation,
 .bf-plan-resource-band,
 .bf-today-measurements article,
 .bf-household-recap {

@@ -5,6 +5,9 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea:not([disab
 /**
  * Reține focusul tastaturii în interiorul unui dialog modal cât timp e montat, tratează Escape ca închidere
  * și întoarce focusul la controlul care l-a deschis când dialogul se demontează.
+ *
+ * Nu mută focusul pe primul buton: pe Android, .focus() e tratat ca :focus-visible
+ * și primul card din First Run părea bifat fără să-l fi atins.
  */
 export function useFocusTrap<T extends HTMLElement>(onClose: () => void): RefObject<T | null> {
   const containerRef = useRef<T>(null);
@@ -17,7 +20,9 @@ export function useFocusTrap<T extends HTMLElement>(onClose: () => void): RefObj
     const container = containerRef.current;
     if (!container) return;
     const focusableElements = () => Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => element.offsetParent !== null);
-    if (!container.contains(document.activeElement)) (focusableElements()[0] || container).focus();
+    if (!container.contains(document.activeElement)) {
+      container.focus({ preventScroll: true });
+    }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") { event.preventDefault(); onCloseRef.current(); return; }

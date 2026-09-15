@@ -9,7 +9,8 @@ export function BrandMark({ size = 44 }: { size?: number }) {
         alt=""
         width={size}
         height={size}
-        decoding="async"
+        decoding="sync"
+        fetchPriority="high"
       />
     </span>
   );

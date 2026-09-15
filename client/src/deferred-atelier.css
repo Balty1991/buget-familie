@@ -38,3 +38,25 @@
 
 @import "./shell-menu-delight.css";
 @import "./ledger-unify-2026.css";
+
+/* Primul ecran e deja desenat când ajunge foaia. Animațiile `both` ar porni
+   de la opacity 0 și ar face flash — le oprim pe suprafețele de start. */
+.bf-first-run-backdrop,
+.bf-first-run-backdrop.bf-modal-backdrop,
+.bf-onboarding.bf-first-run,
+.os-shell.is-setup .bf-onboarding,
+.os-shell.is-setup .bf-modal-backdrop {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.os-shell .bf-today-workspace,
+.os-shell .bf-today-situation,
+.os-shell .bf-ledger-mini,
+.os-shell .bf-pulse-grid article,
+.os-shell .bf-page,
+.os-shell .os-dock button.is-on svg,
+.os-shell .os-dock button.active svg {
+  animation: none !important;
+}
