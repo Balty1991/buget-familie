@@ -113,7 +113,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const [payday, setPayday] = useState(data.settings.salaryPlan.nextPayday || "");
   const [selected, setSelected] = useState<string[]>(["Alimente", "Casă & facturi"]);
   const [weekLeft, setWeekLeft] = useState<Record<string, string>>({ Alimente: "150", Transport: "" });
-  const [weeklyRate, setWeeklyRate] = useState<Record<string, string>>({ Alimente: "600", Transport: "160" });
+  const [weeklyRate, setWeeklyRate] = useState<Record<string, string>>({ Alimente: "600", Transport: "" });
 
   const complete = () => {
     safeSetItem(window.localStorage, "buget-familie:setup-complete", "true");
@@ -137,31 +137,34 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     const existingLabels = new Set(data.settings.salaryPlan.allocations.map((item) => item.category || item.label));
     const horizon = midHorizon(payday);
     const weekTransfers: WeekTransfer[] = [...(data.settings.salaryPlan.weekTransfers || [])];
+    const funded = [...paymentSources].sort((a, b) => b.openingBalance - a.openingBalance)[0] || paymentSources[0];
     const presets = opts.midMonth ? PRESETS.filter((preset) => preset.weekly) : PRESETS.filter((preset) => selected.includes(preset.category));
     const allocations: BudgetAllocation[] = opts.withEnvelopes
       ? [
           ...data.settings.salaryPlan.allocations,
-          ...presets.filter((preset) => !existingLabels.has(preset.category)).map((preset) => {
+          ...presets.filter((preset) => !existingLabels.has(preset.category)).flatMap((preset) => {
+            const leftoverFilled = (weekLeft[preset.category] || "").trim() !== "";
+            if (opts.midMonth && preset.weekly && !leftoverFilled) return [];
             const id = newId("alloc");
             let amount = preset.amount;
             let note: string | undefined;
             if (opts.midMonth && preset.weekly) {
               const leftover = Math.max(0, parseRomanianAmount(weekLeft[preset.category] || "0"));
-              const rate = Math.max(0, parseRomanianAmount(weeklyRate[preset.category] || String(preset.weeklyRate)));
+              const rate = Math.max(0, parseRomanianAmount((weeklyRate[preset.category] || "").trim() || String(preset.weeklyRate)));
               amount = leftover + rate * horizon.weeksAfter;
               note = t("{left} rămas săptămâna asta, {rate} pe săptămână", { left: money(leftover), rate: money(rate) });
               weekTransfers.push(...pinFirstWeek(id, leftover, amount, horizon.start, payday, now));
             }
-            return {
+            return [{
               id,
               label: preset.category,
               amount,
               category: preset.category,
               weeklyPace: preset.weekly ? undefined : false,
               memberId: "member-me",
-              sourceId: paymentSources[0]?.id,
+              sourceId: funded?.id,
               note,
-            };
+            }];
           }),
         ]
       : data.settings.salaryPlan.allocations;
@@ -179,6 +182,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
           nextPayday: opts.withPayday ? (payday || data.settings.salaryPlan.nextPayday) : data.settings.salaryPlan.nextPayday,
           allocations,
           weekTransfers,
+          joinedMidCycle: opts.midMonth ? true : data.settings.salaryPlan.joinedMidCycle,
           updatedAt: now,
         },
       },
@@ -214,6 +218,14 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const horizon = midHorizon(payday);
   const weeks = horizon.weeksAfter;
   const daysLeft = horizon.daysLeft;
+  const cashNow = data.settings.paymentSources.slice(0, 2).reduce((sum, source) => sum + Math.max(0, parseRomanianAmount(balances[source.id] || "0")), 0);
+  const midFilled = PRESETS.filter((preset) => preset.weekly && (weekLeft[preset.category] || "").trim());
+  const midWeekReserved = midFilled.reduce((sum, preset) => sum + Math.max(0, parseRomanianAmount(weekLeft[preset.category] || "0")), 0);
+  const midCycleTotal = midFilled.reduce((sum, preset) => {
+    const leftover = Math.max(0, parseRomanianAmount(weekLeft[preset.category] || "0"));
+    const rate = Math.max(0, parseRomanianAmount((weeklyRate[preset.category] || "").trim() || String(preset.weeklyRate)));
+    return sum + leftover + rate * weeks;
+  }, 0);
 
   return (
     <div className="bf-modal-backdrop bf-onboarding-backdrop bf-first-run-backdrop" role="presentation">
@@ -293,21 +305,26 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 : t("{days} zile săptămâna asta, apoi {weeks} săptămâni până la salariu.", { days: String(daysLeft), weeks: String(weeks) })}
             </p>
             {PRESETS.filter((preset) => preset.weekly).map((preset) => {
-              const leftover = parseRomanianAmount(weekLeft[preset.category] || "0");
-              const rate = parseRomanianAmount(weeklyRate[preset.category] || String(preset.weeklyRate));
+              const leftoverFilled = (weekLeft[preset.category] || "").trim() !== "";
+              const leftover = leftoverFilled ? parseRomanianAmount(weekLeft[preset.category] || "0") : 0;
+              const rate = leftoverFilled ? parseRomanianAmount((weeklyRate[preset.category] || "").trim() || String(preset.weeklyRate)) : 0;
               const total = leftover + rate * weeks;
               return (
                 <div key={preset.category} className="bf-setup-sources">
                   <p><b>{t(preset.category)}</b></p>
                   <label className="bf-field">
                     <span>{t("Rămas săptămâna asta")}</span>
-                    <input inputMode="decimal" value={weekLeft[preset.category] || ""} onChange={(event) => setWeekLeft((current) => ({ ...current, [preset.category]: event.target.value }))} placeholder="150" />
+                    <input inputMode="decimal" value={weekLeft[preset.category] || ""} onChange={(event) => setWeekLeft((current) => ({ ...current, [preset.category]: event.target.value }))} placeholder={preset.category === "Alimente" ? "150" : "0"} />
                   </label>
                   <label className="bf-field">
                     <span>{t("Pe săptămână")}</span>
                     <input inputMode="decimal" value={weeklyRate[preset.category] || ""} onChange={(event) => setWeeklyRate((current) => ({ ...current, [preset.category]: event.target.value }))} placeholder={String(preset.weeklyRate)} />
                   </label>
-                  <p className="bf-helper">{money(leftover)} · {daysLeft} {t("zile")}. {t("Apoi")} {weeks} × {money(rate)} = {money(total)} {t("până la salariu.")}</p>
+                  {leftoverFilled ? (
+                    <p className="bf-helper">{money(leftover)} · {daysLeft} {t("zile")}. {t("Apoi")} {weeks} × {money(rate)} = {money(total)} {t("până la salariu.")}</p>
+                  ) : (
+                    <p className="bf-helper">{t("Lasă gol dacă nu pui plicul.")}</p>
+                  )}
                 </div>
               );
             })}
@@ -319,6 +336,13 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 </label>
               ))}
             </div>
+            {midWeekReserved > 0 && (
+              <p className="bf-helper">
+                {t("Săptămâna asta rezervăm {week} din {cash}.", { week: money(midWeekReserved), cash: money(cashNow) })}
+                {" "}
+                {t("Rămân {left} azi. Plicurile până la salariu sunt {cycle}.", { left: money(Math.max(0, cashNow - midWeekReserved)), cycle: money(midCycleTotal) })}
+              </p>
+            )}
             <div className="bf-onboarding-actions">
               <button className="bf-primary" onClick={finishMid}><Home size={17} /> {t("Așază de azi")}</button>
             </div>

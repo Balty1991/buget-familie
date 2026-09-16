@@ -1367,6 +1367,61 @@ html.dark .bf-first-run-intents button.bf-intent-mid {
   border-color: #2a6b5c !important;
 }
 
+.os-shell .bf-first-run-intents button,
+.bf-first-run-intents button {
+  background: #ffffff !important;
+  color: #12201b !important;
+  border: 1px solid #b7c4be !important;
+}
+.os-shell .bf-first-run-intents button b,
+.bf-first-run-intents button b {
+  color: #12201b !important;
+}
+.os-shell .bf-first-run-intents button small,
+.bf-first-run-intents button small {
+  color: #3a4a44 !important;
+}
+.os-shell .bf-first-run-intents button svg,
+.bf-first-run-intents button svg {
+  color: #176b54 !important;
+}
+.os-shell .bf-first-run-intents button.bf-intent-mid,
+.bf-first-run-intents button.bf-intent-mid {
+  background: #143c36 !important;
+  color: #f4f7f4 !important;
+  border-color: #0f2f2a !important;
+}
+.os-shell .bf-first-run-intents button.bf-intent-mid b,
+.os-shell .bf-first-run-intents button.bf-intent-mid small,
+.os-shell .bf-first-run-intents button.bf-intent-mid svg,
+.bf-first-run-intents button.bf-intent-mid b,
+.bf-first-run-intents button.bf-intent-mid small,
+.bf-first-run-intents button.bf-intent-mid svg {
+  color: #f4f7f4 !important;
+}
+.os-shell .bf-first-run-intents button.bf-intent-mid small,
+.bf-first-run-intents button.bf-intent-mid small {
+  color: #d5e6de !important;
+}
+
+.os-shell .bf-guide-hero {
+  color: #f4f7f4 !important;
+  background: #143c36 !important;
+}
+.os-shell .bf-guide-hero .bf-kicker {
+  color: #c5ddd4 !important;
+  opacity: 1 !important;
+}
+.os-shell .bf-guide-hero h2 {
+  color: #f7faf7 !important;
+}
+.os-shell .bf-guide-hero p {
+  color: #e2eee8 !important;
+}
+.os-shell .bf-guide-hero svg {
+  color: #e8c75a !important;
+}
+
 .bf-first-run:focus,
 .bf-first-run:focus-visible {
   outline: none !important;

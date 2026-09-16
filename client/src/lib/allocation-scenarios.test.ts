@@ -271,4 +271,30 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     expect(weeks[1]).toMatchObject({ spent: 0, remaining: 250 });
     expect(planAllocationMath(data).unrepartized).toBe(0);
   });
+
+  it("la mijlocul ciclului, nerepartizații sunt cash minus restul săptămânii, nu tot plicul", () => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [{ id: "cash", name: "Cash", kind: "cash", memberId: me, openingBalance: 1800 }];
+    data.settings.salaryPlan.periodStart = "2026-09-14";
+    data.settings.salaryPlan.nextPayday = "2026-10-10";
+    data.settings.salaryPlan.sourceIds = ["cash"];
+    data.settings.salaryPlan.joinedMidCycle = true;
+    data.settings.salaryPlan.allocations = [{
+      id: "env-food", label: "Alimente", category: "Alimente", amount: 1950, sourceId: "cash", memberId: me, weeklyPace: true,
+    }];
+    const calendar = calendarBudget(1950, "2026-09-14", "2026-10-10")!;
+    const first = calendar.weeks[0];
+    const last = calendar.weeks[calendar.weeks.length - 1];
+    const delta = Math.round((first.amount - 150) * 100) / 100;
+    if (delta > 0.5) {
+      data.settings.salaryPlan.weekTransfers = [{
+        id: "wt-mid", allocationId: "env-food", fromWeekIndex: first.index, toWeekIndex: last.index, amount: delta, createdAt: "2026-09-16T12:00:00.000Z",
+      }];
+    }
+    const math = planAllocationMath(data);
+    expect(math.availableSources).toBe(1800);
+    expect(math.allocated).toBeCloseTo(150, 0);
+    expect(math.reservedInEnvelopes).toBeCloseTo(150, 0);
+    expect(math.unrepartized).toBeCloseTo(1650, 0);
+  });
 });
