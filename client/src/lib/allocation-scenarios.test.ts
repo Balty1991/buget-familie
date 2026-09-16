@@ -15,6 +15,7 @@ import {
   planEndDate,
   plannedEnvelopeReserved,
   sourceBalance,
+  sourceFreeBalance,
   transferBetweenWeeks,
   type AppData,
 } from "./finance-data";
@@ -315,5 +316,81 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     expect(math.allocated).toBe(0);
     expect(math.reservedInEnvelopes).toBe(0);
     expect(math.unrepartized).toBe(1800);
+  });
+});
+
+/**
+ * Banii puși deja într-un plic nu mai sunt „de repartizat”. Ecranul de plicuri îi arăta
+ * a doua oară ca sold liber al sursei, deci o familie își repartiza aceiași lei de două ori.
+ */
+describe("banii liberi dintr-o sursă", () => {
+  const twoPurses = (): AppData => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [
+      { id: "cash", name: "Cash", kind: "cash", memberId: me, openingBalance: 1800 },
+      { id: "cash-angi", name: "Cash · Angi", kind: "cash", openingBalance: 300 },
+    ];
+    data.settings.salaryPlan.periodStart = "2026-09-14";
+    data.settings.salaryPlan.nextPayday = "2026-10-12";
+    data.settings.salaryPlan.allocations = [
+      { id: "env-food", label: "Alimente", category: "Alimente", amount: 1800, sourceId: "cash", weeklyPace: true },
+      { id: "env-taxi", label: "Taxi", category: "Transport", amount: 300, sourceId: "cash-angi", weeklyPace: false },
+    ];
+    return data;
+  };
+
+  it("scade din sold ce ține deja plicul plătit din sursa aceea", () => {
+    const data = twoPurses();
+    expect(sourceBalance(data, "cash")).toBe(1800);
+    expect(sourceFreeBalance(data, "cash")).toEqual({ balance: 1800, reserved: 1800, free: 0 });
+    expect(sourceFreeBalance(data, "cash-angi")).toEqual({ balance: 300, reserved: 300, free: 0 });
+  });
+
+  it("cheltuiala din plic eliberează sursa, pentru că banii au și plecat din ea", () => {
+    const data = twoPurses();
+    data.transactions.push({
+      id: "ex-taxi", title: "Taxi", amount: 100, kind: "expense", category: "Transport",
+      source: "Cash · Angi", sourceId: "cash-angi", person: "Eu", memberId: me, date: "2026-09-16", allocationId: "env-taxi",
+    });
+    expect(sourceFreeBalance(data, "cash-angi")).toEqual({ balance: 200, reserved: 200, free: 0 });
+  });
+
+  it("plicul editat își dă înapoi rezerva, altfel nu l-ai mai putea salva", () => {
+    const data = twoPurses();
+    expect(sourceFreeBalance(data, "cash", "env-food").free).toBe(1800);
+    expect(sourceFreeBalance(data, "cash", "env-taxi").free).toBe(0);
+  });
+
+  it("scadențele neplătite din sursă intră tot în rezervă", () => {
+    const data = twoPurses();
+    data.settings.salaryPlan.allocations = [];
+    data.recurring = [{
+      id: "rec-net", name: "Internet", amount: 120, dueDay: 20, category: "Casă & facturi",
+      sourceId: "cash", memberId: me, active: true,
+    }];
+    const free = sourceFreeBalance(data, "cash");
+    expect(free.reserved).toBe(120);
+    expect(free.free).toBe(1680);
+  });
+});
+
+/** Mutarea între tranșe merge în ambele sensuri: și din S1 spre următoarele. */
+describe("mutarea între săptămâni, în ambele sensuri", () => {
+  it("scoate bani din prima săptămână spre a treia", () => {
+    const data = house();
+    addIncome(data, 500);
+    addEnvelope(data, 500);
+    const moved = transferBetweenWeeks(data, { allocationId: "env-food", fromWeekIndex: 1, toWeekIndex: 2, amount: 80 })!;
+    const weeks = allocationWeeksStatus(moved, moved.settings.salaryPlan.allocations[0]);
+    expect(weeks[0]).toMatchObject({ index: 1, budget: 170 });
+    expect(weeks[1]).toMatchObject({ index: 2, budget: 330 });
+    expect(planAllocationMath(moved).unrepartized).toBe(0);
+  });
+
+  it("nu poate trimite mai mult decât a rămas în săptămâna sursă", () => {
+    const data = house();
+    addIncome(data, 500);
+    addEnvelope(data, 500);
+    expect(transferBetweenWeeks(data, { allocationId: "env-food", fromWeekIndex: 1, toWeekIndex: 2, amount: 400 })).toBeUndefined();
   });
 });

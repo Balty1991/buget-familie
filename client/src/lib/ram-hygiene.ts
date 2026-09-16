@@ -16,6 +16,7 @@ async function loadDeferredStyleSheets() {
   await import("../contrast-fix.css");
   await import("../visual-polish.css");
   await import("../apk-safe-area.css");
+  await import("../display-fixes-pass.css");
 }
 
 /** PWA pe web; pe Capacitor Android/iOS fișierele sunt deja în pachet. */

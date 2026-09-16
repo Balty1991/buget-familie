@@ -15,6 +15,7 @@ import "./mobile-speed.css";
 import "./contrast-fix.css";
 import "./ledger-unify-2026.css";
 import "./apk-safe-area.css";
+import "./display-fixes-pass.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
 import { hideNativeSplash, onAppRevealed } from "./lib/native-splash";

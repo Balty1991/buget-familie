@@ -21,7 +21,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, sourceBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, sourceFreeBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace } from "@/lib/household-insights";
 import { getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
@@ -76,6 +76,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const [editingAllocationId, setEditingAllocationId] = useState("");
   const [allocationError, setAllocationError] = useState("");
   const [weekTransferAllocationId, setWeekTransferAllocationId] = useState("");
+  const [weekTransferDirection, setWeekTransferDirection] = useState<"in" | "out">("in");
   const [weekTransferFromIndex, setWeekTransferFromIndex] = useState("");
   const [weekTransferAmount, setWeekTransferAmount] = useState("");
   const [weekTransferError, setWeekTransferError] = useState("");
@@ -115,6 +116,27 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     setCashflowOpen(false);
   };
   const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
+  /**
+   * Eticheta sursei arată banii care mai pot fi repartizați, nu soldul brut: ce stă deja în
+   * plicuri plătite din sursa asta nu mai e disponibil pentru un plic nou. Când editezi un
+   * plic, propria lui rezervă intră la loc în disponibil — altfel n-ai putea să-l salvezi.
+   */
+  const sourceAvailable = (sourceId: string) => sourceFreeBalance(data, sourceId, editingAllocationId || undefined);
+  const wholeLei = (value: number) => Math.round(value).toLocaleString(getLocale());
+  const sourceOptionLabel = (source: { id: string; name: string }) => {
+    const { balance, free } = sourceAvailable(source.id);
+    return Math.round(free) === Math.round(balance)
+      ? `${source.name} · ${wholeLei(balance)}`
+      : `${source.name} · ${wholeLei(free)} ${t("liberi din")} ${wholeLei(balance)}`;
+  };
+  const selectedSourceAvailable = allocationSourceId ? sourceAvailable(allocationSourceId) : undefined;
+  const sourceFreeHint = !selectedSourceAvailable
+    ? undefined
+    : Math.round(selectedSourceAvailable.reserved) <= 0
+      ? undefined
+      : selectedSourceAvailable.free > 0
+        ? t("Din {balance} ai deja {reserved} în plicuri sau scadențe; liberi rămân {free}.", { balance: money(selectedSourceAvailable.balance), reserved: money(selectedSourceAvailable.reserved), free: money(selectedSourceAvailable.free) })
+        : t("Toți banii din această sursă sunt deja repartizați.");
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return isoDate(date); };
@@ -198,15 +220,22 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     }
   };
 
-  const openWeekTransfer = (allocationId: string) => { setWeekTransferAllocationId(allocationId); setWeekTransferFromIndex(""); setWeekTransferAmount(""); setWeekTransferError(""); };
-  const closeWeekTransfer = () => { setWeekTransferAllocationId(""); setWeekTransferFromIndex(""); setWeekTransferAmount(""); setWeekTransferError(""); };
-  const applyWeekTransfer = (allocationId: string, toWeekIndex: number) => {
-    const fromWeekIndex = Number(weekTransferFromIndex);
+  const openWeekTransfer = (allocationId: string) => { setWeekTransferAllocationId(allocationId); setWeekTransferDirection("in"); setWeekTransferFromIndex(""); setWeekTransferAmount(""); setWeekTransferError(""); };
+  const closeWeekTransfer = () => { setWeekTransferAllocationId(""); setWeekTransferDirection("in"); setWeekTransferFromIndex(""); setWeekTransferAmount(""); setWeekTransferError(""); };
+  /**
+   * `currentWeekIndex` e tranșa din care se citește cardul. Direcția alege dacă banii vin
+   * spre ea („aduc din altă săptămână”) sau pleacă din ea spre tranșa aleasă — aceeași
+   * mișcare, în ambele sensuri, ca săptămâna 1 să nu fie doar destinație.
+   */
+  const applyWeekTransfer = (allocationId: string, currentWeekIndex: number) => {
+    const otherWeekIndex = Number(weekTransferFromIndex);
     const amount = parseRomanianAmount(weekTransferAmount);
     const allocation = plan.allocations.find((item) => item.id === allocationId);
     if (!allocation) return setWeekTransferError(t("Plicul nu mai există în plan."));
-    if (!fromWeekIndex) return setWeekTransferError(t("Alege săptămâna din care muți bani."));
+    if (!otherWeekIndex) return setWeekTransferError(weekTransferDirection === "in" ? t("Alege săptămâna din care muți bani.") : t("Alege săptămâna în care muți bani."));
     if (amount <= 0) return setWeekTransferError(t("Introdu o sumă mai mare decât zero."));
+    const fromWeekIndex = weekTransferDirection === "in" ? otherWeekIndex : currentWeekIndex;
+    const toWeekIndex = weekTransferDirection === "in" ? currentWeekIndex : otherWeekIndex;
     const next = transferBetweenWeeks(data, { allocationId, fromWeekIndex, toWeekIndex, amount });
     if (!next) return setWeekTransferError(t("Suma depășește ce a mai rămas în săptămâna aleasă."));
     const transfer = next.settings.salaryPlan.weekTransfers?.[0];
@@ -378,7 +407,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         <PlanField label={t("Ce plătește plicul")}><select value={allocationCategory} onChange={(event) => setAllocationCategory(event.target.value)}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></PlanField>
         <PlanField label={t("Nume plic")} hint={t("Poți scrie «Taxi soție» sau lăsa automat.")}><input value={allocationLabel} onChange={(event) => setAllocationLabel(event.target.value)} placeholder={t("ex. Alimente · card soție")} /></PlanField>
         <PlanField label={t("Membru")}><select value={allocationMemberId} onChange={(event) => { const memberId = event.target.value; setAllocationMemberId(memberId); const firstCompatible = data.settings.paymentSources.find((source) => !source.memberId || source.memberId === memberId); if (firstCompatible) setAllocationSourceId(firstCompatible.id); }}><option value="">{t("Familie")}</option>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></PlanField>
-        <PlanField label={t("Plătit din")}><select value={allocationSourceId} onChange={(event) => setAllocationSourceId(event.target.value)}>{currentSourceOptions.map((source) => <option key={source.id} value={source.id}>{source.name} · {Math.round(sourceBalance(data, source.id)).toLocaleString("ro-RO")}</option>)}</select></PlanField>
+        <PlanField label={t("Plătit din")} hint={sourceFreeHint}><select value={allocationSourceId} onChange={(event) => setAllocationSourceId(event.target.value)}>{currentSourceOptions.map((source) => <option key={source.id} value={source.id}>{sourceOptionLabel(source)}</option>)}</select></PlanField>
         <PlanField label={t("Suma acestei categorii")} hint={allocationWeeklyPace ? (allocationPreview ? `În fiecare săptămână: aproximativ ${money(allocationPreview.weeklyAmount)} din acest plic.` : t("Alege perioada mai sus ca să vezi ritmul săptămânal.")) : t("Fără ritm săptămânal — contează doar totalul.")}><input value={allocationAmount} onChange={(event) => { setAllocationAmount(event.target.value); setAllocationError(""); }} inputMode="decimal" placeholder="ex. 1200" /></PlanField>
         <PlanField label={t("Avertizează la")}><select value={allocationThreshold} onChange={(event) => setAllocationThreshold(Number(event.target.value))}>{thresholdOptions.map((value) => <option key={value} value={value}>{value}%</option>)}</select></PlanField>
         <PlanField label="Detaliu liber"><input value={allocationNote} onChange={(event) => setAllocationNote(event.target.value)} placeholder={t("ex. telefon, cablu și aplicații")} /></PlanField>
@@ -392,20 +421,25 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       <div className="bf-allocation-list bf-envelope-desk" aria-live="polite">
         {envelopes.map(({ item, budget, remaining, usage, state, week, weeks }) => <article key={item.id} className={state}>
           <div className="bf-envelope-portrait" aria-hidden="true"><EnvelopeMark remaining={Math.max(0, 1 - usage)} state={state} size={58} /></div>
-          <div className="bf-allocation-list-heading"><span className={`bf-allocation-state ${state}`}>{state === "over" ? t("depășit") : state === "watch" ? t("aproape de limită") : t("în plan")}</span>{(() => { const burn = envelopeBurnPace(data).find((entry) => entry.allocationId === item.id); if (!burn || !burn.totalDays) return null; const label = burn.pace === "ahead" ? t("în avans") : burn.pace === "behind" ? t("în urmă") : burn.pace === "over" ? t("depășit") : t("în ritm"); return <span className={`bf-plic-pace pace-${burn.pace}`} title={burn.reason}>{label} · {Math.round(burn.expectedUsage * 100)}% așteptat</span>; })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
+          <div className="bf-allocation-list-heading"><div className="bf-allocation-flags"><span className={`bf-allocation-state ${state}`}>{state === "over" ? t("depășit") : state === "watch" ? t("aproape de limită") : t("în plan")}</span>{(() => { const burn = envelopeBurnPace(data).find((entry) => entry.allocationId === item.id); if (!burn || !burn.totalDays) return null; const label = burn.pace === "ahead" ? t("în avans") : burn.pace === "behind" ? t("în urmă") : burn.pace === "over" ? t("depășit") : t("în ritm"); return <span className={`bf-plic-pace pace-${burn.pace}`} title={burn.reason}>{label} · {Math.round(burn.expectedUsage * 100)}% așteptat</span>; })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>{t("rămași din {amount}", { amount: money(budget) })}</small></div>
           {week && <div className={`bf-allocation-week ${week.state === "over" ? "over" : ""}`}><span>S{week.index} · {formatDate(week.start)} – {formatDate(week.end)}</span><b>{money(Math.max(0, week.remaining))}</b><small>{money(week.spent)} cheltuiți din {money(week.budget)} în această tranșă</small></div>}
           <p className="bf-allocation-why"><b>{state === "over" ? t("De ce cere atenție") : state === "watch" ? t("De ce apare aici") : t("Cum se citește")}:</b> {state === "over" ? `Ai depășit limita cu ${money(Math.abs(remaining))}. Redu suma planificată sau revizuiește cheltuielile înainte de următorul venit.` : state === "watch" ? `${Math.round(usage * 100)}% din plic este consumat; mai ai ${money(Math.max(0, remaining))} pentru perioada aleasă.` : week ? `Mai ai ${money(Math.max(0, remaining))} în plic, iar ritmul săptămânal este ${money(week.budget)}.` : `Ai planificat ${money(budget)} pentru această categorie, fără presiune pe o tranșă săptămânală.`}</p>
           {week && weeks.length > 1 && <div className="bf-week-transfer">
             {weekTransferAllocationId === item.id ? <div className="bf-week-transfer-form">
-              <select value={weekTransferFromIndex} onChange={(event) => { setWeekTransferFromIndex(event.target.value); setWeekTransferError(""); }}>
-                <option value="">{t("Din ce săptămână?")}</option>
+              <div className="bf-week-transfer-direction" role="group" aria-label={t("Sensul mutării")}>
+                <button type="button" className={weekTransferDirection === "in" ? "active" : ""} aria-pressed={weekTransferDirection === "in"} onClick={() => { setWeekTransferDirection("in"); setWeekTransferFromIndex(""); setWeekTransferError(""); }}>{t("Adu în S{index}", { index: String(week.index) })}</button>
+                <button type="button" className={weekTransferDirection === "out" ? "active" : ""} aria-pressed={weekTransferDirection === "out"} onClick={() => { setWeekTransferDirection("out"); setWeekTransferFromIndex(""); setWeekTransferError(""); }}>{t("Trimite din S{index}", { index: String(week.index) })}</button>
+              </div>
+              <select value={weekTransferFromIndex} aria-label={weekTransferDirection === "in" ? t("Din ce săptămână?") : t("În ce săptămână?")} onChange={(event) => { setWeekTransferFromIndex(event.target.value); setWeekTransferError(""); }}>
+                <option value="">{weekTransferDirection === "in" ? t("Din ce săptămână?") : t("În ce săptămână?")}</option>
                 {weeks.filter((other) => other.index !== week.index).map((other) => <option key={other.index} value={other.index}>S{other.index} · {formatDate(other.start)}–{formatDate(other.end)} · {money(other.remaining)} rămași</option>)}
               </select>
-              <input value={weekTransferAmount} onChange={(event) => { setWeekTransferAmount(event.target.value); setWeekTransferError(""); }} inputMode="decimal" placeholder="ex. 100" />
-              <div><button className="bf-primary" onClick={() => applyWeekTransfer(item.id, week.index)}>Transferă în S{week.index}</button><button onClick={closeWeekTransfer}>{t("Renunță")}</button></div>
+              <input value={weekTransferAmount} onChange={(event) => { setWeekTransferAmount(event.target.value); setWeekTransferError(""); }} inputMode="decimal" placeholder="ex. 100" aria-label={t("Suma mutată")} />
+              <small className="bf-week-transfer-note">{weekTransferDirection === "in" ? t("Mai ai {amount} în S{index}; aduci din altă tranșă.", { amount: money(Math.max(0, week.remaining)), index: String(week.index) }) : t("Poți trimite cel mult {amount}, cât a rămas în S{index}.", { amount: money(Math.max(0, week.remaining)), index: String(week.index) })}</small>
+              <div><button className="bf-primary" onClick={() => applyWeekTransfer(item.id, week.index)}>{weekTransferDirection === "in" ? t("Transferă în S{index}", { index: String(week.index) }) : t("Transferă din S{index}", { index: String(week.index) })}</button><button onClick={closeWeekTransfer}>{t("Renunță")}</button></div>
               {weekTransferError && <p className="bf-form-error" role="alert">{weekTransferError}</p>}
-            </div> : <button type="button" className="bf-week-transfer-toggle" onClick={() => openWeekTransfer(item.id)}>{t("Mută bani dintr-o altă săptămână")}</button>}
+            </div> : <button type="button" className="bf-week-transfer-toggle" onClick={() => openWeekTransfer(item.id)}>{t("Mută bani între săptămâni")}</button>}
           </div>}
           <div className="bf-allocation-track" aria-label={`${Math.round(usage * 100)}% consumat`}><i style={{ width: `${Math.min(100, Math.max(0, usage * 100))}%` }} /></div>
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> {t("Editează")}</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> {t("Șterge")}</button></div>

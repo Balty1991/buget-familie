@@ -1,0 +1,155 @@
+/**
+ * Corecții de afișaj, septembrie 2026 — fiecare regulă repară ceva vizibil pe telefon:
+ *
+ * 1. Plicuri: eticheta de stare și pastila de ritm stăteau lipite pe aceeași linie, iar
+ *    fundalul pastilei acoperea literele lui „ÎN PLAN”. Acum sunt un rând flexibil.
+ * 2. Previzualizarea repartizării: foaia de jos se termina la 10px de marginea ecranului,
+ *    deci butoanele intrau sub bara de navigare Android. Acum respectă zona sigură.
+ * 3. Selectorul de teme: pătratele de previzualizare erau stinse de o regulă `!important`
+ *    din clarity-rebuild; fiecare temă își primește din nou fața, cu specificitate mai mare.
+ *
+ * Specificitatea e intenționat mai mare decât a foilor „pass” încărcate amânat: altfel
+ * ordinea de import ar decide cine câștigă, iar ea se schimbă la fiecare refactor.
+ */
+
+/* —— 1. Plic: rândul de etichete nu se mai suprapune peste text —— */
+.bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-bottom: 7px !important;
+}
+.bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags:empty {
+  display: none !important;
+}
+.bf-allocation-list .bf-allocation-flags .bf-allocation-state {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 18px !important;
+}
+.bf-allocation-list .bf-allocation-flags .bf-plic-pace {
+  max-width: 100% !important;
+  white-space: normal !important;
+}
+
+/* Pastila de ritm avea doar paleta de zi; pe fundal întunecat ardea ochiul. */
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-ahead {
+  color: #8fe3bd !important;
+  background: color-mix(in srgb, #8fe3bd 16%, transparent) !important;
+}
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-on_track {
+  color: #c3d3ca !important;
+  background: color-mix(in srgb, #c3d3ca 14%, transparent) !important;
+}
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-behind {
+  color: #f0c98a !important;
+  background: color-mix(in srgb, #f0c98a 16%, transparent) !important;
+}
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-over {
+  color: #ffa593 !important;
+  background: color-mix(in srgb, #ffa593 16%, transparent) !important;
+}
+
+/* —— 2. Previzualizare repartizare: deasupra barei de sistem, nu sub ea —— */
+.bf-allocation-preview,
+.os-shell .bf-allocation-preview {
+  padding-bottom: max(10px, calc(10px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)))) !important;
+  padding-top: max(10px, calc(10px + var(--os-inset-top, env(safe-area-inset-top, 0px)))) !important;
+}
+.bf-allocation-preview > div,
+.os-shell .bf-allocation-preview > div {
+  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 28px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+/* Footer-ul lipicios are nevoie de fundal opac: altfel textul derulat trece pe sub butoane. */
+.bf-allocation-preview > div > footer {
+  position: sticky !important;
+  bottom: 0 !important;
+  padding-top: 8px !important;
+  background: var(--cf-surface) !important;
+}
+
+/* —— 3. Selectorul de teme: fiecare temă își arată fața —— */
+.bf-theme-picker .bf-theme-option .bf-theme-swatch {
+  background: var(--cf-surface-alt) !important;
+}
+.bf-theme-picker .bf-theme-option.white .bf-theme-swatch {
+  background: linear-gradient(135deg, #e4e9e6 0 46%, #176b54 47% 70%, #0c1612 71%) !important;
+}
+.bf-theme-picker .bf-theme-option.dark .bf-theme-swatch {
+  background: linear-gradient(135deg, #111214 0 46%, #d4d8e0 47% 70%, #23262b 71%) !important;
+}
+.bf-theme-picker .bf-theme-option.aurora .bf-theme-swatch {
+  background:
+    radial-gradient(circle at 74% 24%, #a781ff 0 12%, transparent 30%),
+    linear-gradient(145deg, #0d0b1c 0 46%, #319e7b 47% 70%, #74d0ff 71%) !important;
+}
+.bf-theme-picker .bf-theme-option.navy .bf-theme-swatch {
+  background: linear-gradient(135deg, #0b1220 0 46%, #d4b06a 47% 70%, #141c2e 71%) !important;
+}
+.bf-theme-picker .bf-theme-option.cyber .bf-theme-swatch {
+  background: linear-gradient(135deg, #07090c 0 46%, #5ee0aa 47% 70%, #10151a 71%) !important;
+}
+/* Pânza interioară dă textura; fără ea pătratul arată ca o gaură în foaie. */
+.bf-theme-picker .bf-theme-option .bf-theme-swatch span {
+  background-image:
+    linear-gradient(color-mix(in srgb, #ffffff 18%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, #ffffff 18%, transparent) 1px, transparent 1px) !important;
+  background-size: 8px 8px !important;
+}
+.bf-theme-picker .bf-theme-option.white .bf-theme-swatch span {
+  background-image:
+    linear-gradient(rgba(23, 107, 84, .16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 107, 84, .16) 1px, transparent 1px) !important;
+}
+
+/* Butonul de aplicare: aceeași rază ca restul acțiunilor principale și o linie care
+   desparte foaia derulată de bara de jos, ca lista să nu pară tăiată sub buton. */
+.bf-theme-picker .bf-theme-picker-footer {
+  border-top: 1px solid var(--cf-line) !important;
+  background: var(--cf-surface) !important;
+  box-shadow: none !important;
+}
+.bf-theme-picker .bf-theme-picker-footer .bf-theme-apply {
+  border-radius: 14px !important;
+}
+
+/* —— 4. Tab-uri de perioadă: capsula era desenată pentru un singur rând —— */
+/* Sub 640px lista devine grilă 2×2 (mobile-speed), dar rămânea cu rază de pastilă:
+   conturul ieșea pe lângă butoane ca o umbră de capsulă. Colțuri de card, nu de pastilă. */
+@media (max-width: 640px) {
+  .bf-allocation-period .bf-allocation-period-tabs {
+    border-radius: 16px !important;
+  }
+}
+
+/* —— 5. Înregistrare rapidă: butonul lipicios nu mai stă peste câmpuri —— */
+/* Butonul „Salvează acum” e `position: sticky` chiar în corpul care derulează, iar
+   singura lui mască era o umbră translucidă: pe fundal întunecat câmpurile se vedeau
+   prin ea și textul părea suprapus. Umbra plină în culoarea foii ține banda opacă. */
+.bf-modal.bf-quick-entry-panel > .bf-primary.full,
+.os-shell .bf-modal.bf-quick-entry-panel > .bf-primary.full {
+  box-shadow:
+    0 0 0 10px var(--cf-surface),
+    0 -18px 0 10px var(--cf-surface),
+    0 26px 0 10px var(--cf-surface),
+    0 -34px 16px 10px color-mix(in srgb, var(--cf-surface), transparent 25%) !important;
+}
+
+/* —— 6. Confirmarea repartizării lunare: aceeași zonă sigură ca restul foilor —— */
+.bf-wizard-confirm,
+.os-shell .bf-wizard-confirm {
+  padding-bottom: max(18px, calc(18px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)))) !important;
+  padding-top: max(18px, calc(18px + var(--os-inset-top, env(safe-area-inset-top, 0px)))) !important;
+}
+.bf-wizard-confirm > div {
+  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 44px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}

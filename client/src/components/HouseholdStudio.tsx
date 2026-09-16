@@ -8,7 +8,7 @@ import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-da
 import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection, type SubscriptionDetection } from "@/lib/household-insights";
-import { getLocale, t } from "@/lib/i18n";
+import { countLabel, getLocale, t } from "@/lib/i18n";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
@@ -88,7 +88,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           <div className="bf-household-members">
             {activity.members.map((member) => (
               <article key={member.memberId}>
-                <header><b>{member.name}</b><small>{member.count} mișcări</small></header>
+                <header><b>{member.name}</b><small>{countLabel(member.count, { one: "{count} mișcare", few: "{count} mișcări", many: "{count} de mișcări" })}</small></header>
                 <div><span>{t("Cheltuit")}</span><strong>{money(member.expense)}</strong></div>
                 <div><span>{t("Încasat")}</span><strong>{money(member.income)}</strong></div>
                 <i><em style={{ width: `${Math.round(member.share * 100)}%` }} /></i>

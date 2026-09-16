@@ -687,6 +687,15 @@ export const allocationStatus = (data: AppData, allocation: BudgetAllocation) =>
  * `allocated` e suma limitelor; `reservedInEnvelopes` e ce a mai rămas de cheltuit
  * din plicuri; `unrepartized` e soldul minus rezervă minus scadențe.
  */
+/** Felia de plan a unui plic: limita și cât mai e rezervat din ea, cu regula de ciclu început. */
+const allocationPlanSlice = (data: AppData, item: BudgetAllocation) => {
+  if (data.settings.salaryPlan.joinedMidCycle === true && item.weeklyPace !== false) {
+    const week = allocationWeekStatus(data, item);
+    if (week) return { budget: week.budget, remaining: Math.max(0, week.remaining) };
+  }
+  return { budget: allocationBudget(data, item), remaining: Math.max(0, allocationStatus(data, item).remaining) };
+};
+
 export const planAllocationMath = (data: AppData) => {
   const plan = data.settings.salaryPlan;
   const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
@@ -694,18 +703,31 @@ export const planAllocationMath = (data: AppData) => {
     .filter((source) => sourceIds.includes(source.id))
     .reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
   const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
-  const midWeek = plan.joinedMidCycle === true;
-  const slice = (item: BudgetAllocation) => {
-    if (midWeek && item.weeklyPace !== false) {
-      const week = allocationWeekStatus(data, item);
-      if (week) return { budget: week.budget, remaining: Math.max(0, week.remaining) };
-    }
-    return { budget: allocationBudget(data, item), remaining: Math.max(0, allocationStatus(data, item).remaining) };
-  };
+  const slice = (item: BudgetAllocation) => allocationPlanSlice(data, item);
   const allocated = plan.allocations.reduce((sum, item) => sum + slice(item).budget, 0);
   const reservedInEnvelopes = plan.allocations.reduce((sum, item) => sum + slice(item).remaining, 0);
   const unrepartized = availableSources - reservedInEnvelopes - scheduled;
   return { sourceIds, availableSources, scheduled, allocated, reservedInEnvelopes, unrepartized };
+};
+
+/**
+ * Cât mai poate fi repartizat dintr-o sursă: soldul ei, minus ce ține deja rezervat în
+ * plicurile plătite din ea și în scadențele care o vor goli. Fără scăderea asta, banii
+ * puși deja într-un plic apar a doua oară ca disponibili când deschizi un plic nou.
+ */
+export const sourceFreeBalance = (data: AppData, sourceId: string, ignoreAllocationId?: string) => {
+  const balance = sourceBalance(data, sourceId);
+  const reservedInEnvelopes = data.settings.salaryPlan.allocations
+    .filter((item) => item.sourceId === sourceId && item.id !== ignoreAllocationId)
+    .reduce((sum, item) => sum + allocationPlanSlice(data, item).remaining, 0);
+  const scheduled = pendingRecurringInPlan(data)
+    .filter((item) => item.sourceId === sourceId)
+    .reduce((sum, item) => sum + item.amount, 0);
+  return {
+    balance: money2(balance),
+    reserved: money2(reservedInEnvelopes + scheduled),
+    free: money2(balance - reservedInEnvelopes - scheduled),
+  };
 };
 
 /** Ce rămâne rezervat în plicuri după o modificare de limite, ținând cont de ce s-a cheltuit deja. */

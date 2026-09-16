@@ -24,7 +24,7 @@ import {
 } from "@/lib/finance-data";
 import { parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
-import { t } from "@/lib/i18n";
+import { countLabel, t } from "@/lib/i18n";
 import { partnerPendingReviewMeta } from "@/lib/family-crypto";
 
 const originCopy = (origin: ReviewOrigin) => {
@@ -111,7 +111,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
             <p>
               {STATEMENT_BANK_LABELS[summary.bank]} · {summary.rowCount} {t("rânduri citite")}
               {" · "}
-              {summary.added ? t("{count} mișcări propuse", { count: summary.added }) : t("Nicio mișcare nouă")}
+              {summary.added ? countLabel(summary.added, { one: "{count} mișcare propusă", few: "{count} mișcări propuse", many: "{count} de mișcări propuse" }) : t("Nicio mișcare nouă")}
               {summary.duplicates ? ` · ${summary.duplicates} ${t("existau deja")}` : ""}
               {summary.skipped.length ? ` · ${summary.skipped.length} ${t("rânduri necitibile")}` : ""}
             </p>

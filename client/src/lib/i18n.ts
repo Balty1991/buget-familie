@@ -65,6 +65,17 @@ export function t(source: string, vars?: Record<string, string | number>): strin
   return translated.replace(/\{(\w+)\}/g, (match, key: string) => (key in vars ? String(vars[key]) : match));
 }
 
+/**
+ * Numărătoare la plural, cu regula românească: „1 mișcare”, „3 mișcări”, „21 de mișcări”.
+ * Fără ea, ecranul scria „1 mișcări” chiar pe primul rând al registrului.
+ */
+export const countLabel = (count: number, forms: { one: string; few: string; many: string }) => {
+  const whole = Math.abs(Math.round(count));
+  const rest = whole % 100;
+  const form = whole === 1 ? forms.one : whole !== 0 && (rest === 0 || rest >= 20) ? forms.many : forms.few;
+  return t(form, { count });
+};
+
 /** Formatare de sumă și dată în limba activă. Moneda registrului rămâne leul. */
 export const moneyFormat = (value: number, options: Intl.NumberFormatOptions = { maximumFractionDigits: 0 }) =>
   new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", ...options }).format(Number.isFinite(value) ? value : 0);
@@ -2453,6 +2464,26 @@ const en: Record<string, string> = {
   "Mai mult → Tutorial": "More → Tutorial",
   "Captură": "Capture",
   "Plicul e o limită pe categorie, nu un cont. Reperul e ritmul zilei din plan, nu soldul din bancă.": "The envelope is a category limit, not an account. The cue is the day’s pace from the plan, not the bank balance.",
+
+  "liberi din": "free of",
+  "Din {balance} ai deja {reserved} în plicuri sau scadențe; liberi rămân {free}.": "Of {balance} you already hold {reserved} in envelopes or due payments; {free} stays free.",
+  "Toți banii din această sursă sunt deja repartizați.": "Every leu in this source is already allocated.",
+  "Mută bani între săptămâni": "Move money between weeks",
+  "Sensul mutării": "Direction of the move",
+  "Adu în S{index}": "Bring into W{index}",
+  "Trimite din S{index}": "Send from W{index}",
+  "Alege săptămâna în care muți bani.": "Choose the week you are moving money into.",
+  "În ce săptămână?": "Into which week?",
+  "Suma mutată": "Amount moved",
+  "Mai ai {amount} în S{index}; aduci din altă tranșă.": "You still have {amount} in W{index}; you are bringing more from another tranche.",
+  "Poți trimite cel mult {amount}, cât a rămas în S{index}.": "You can send at most {amount}, what is left in W{index}.",
+  "Transferă în S{index}": "Transfer into W{index}",
+  "Transferă din S{index}": "Transfer from W{index}",
+  "Pregătim mișcările…": "Preparing the movements…",
+  "{count} mișcare": "{count} movement",
+  "{count} de mișcări": "{count} movements",
+  "{count} mișcare propusă": "{count} proposed movement",
+  "{count} de mișcări propuse": "{count} proposed movements",
 };
 
 

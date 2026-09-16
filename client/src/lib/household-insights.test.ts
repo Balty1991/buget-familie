@@ -301,6 +301,8 @@ describe("fereastra de comparație Analiză", () => {
     const digest = weeklyDigestHeadline(data, "2026-09-10");
     expect(digest.title).toMatch(/Transport|ritm|goală|Cheltuielile|depășesc/i);
     expect(digest.detail.length).toBeGreaterThan(0);
+    // Sumele din titlu poartă moneda: „cu 80 lei”, nu „cu 80”.
+    expect(digest.title).toMatch(/\d\s?lei/);
   });
 
 });

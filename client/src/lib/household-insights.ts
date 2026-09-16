@@ -526,7 +526,7 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
   ];
   const summary = !brief.hasPayday
     ? t("Fără dată de venit nu putem calcula un reper zilnic. Setează salariul în Plan.")
-    : t("Reperul zilei ({amount}) e minimul dintre ritmul sigur și lichidul împărțit pe zile. Nu e un sold bancar.", { amount: Math.round(brief.spendable) });
+    : t("Reperul zilei ({amount}) e minimul dintre ritmul sigur și lichidul împărțit pe zile. Nu e un sold bancar.", { amount: lei(brief.spendable) });
   return {
     spendable: brief.spendable,
     hasPayday: brief.hasPayday,
@@ -836,14 +836,14 @@ export const weeklyDigestHeadline = (data: AppData, asOf = isoToday()) => {
   if (check.cashflow < 0) {
     return {
       tone: "watch" as const,
-      title: t("Cheltuielile depășesc veniturile cu {amount}", { amount: Math.round(Math.abs(check.cashflow)) }),
+      title: t("Cheltuielile depășesc veniturile cu {amount}", { amount: lei(Math.abs(check.cashflow)) }),
       detail: check.nextStep,
     };
   }
   const top = check.categories[0];
   return {
     tone: "good" as const,
-    title: top ? t("Cel mai mult: {category} ({amount})", { category: top[0], amount: Math.round(Number(top[1])) }) : t("Săptămâna e în ritm"),
+    title: top ? t("Cel mai mult: {category} ({amount})", { category: top[0], amount: lei(Number(top[1])) }) : t("Săptămâna e în ritm"),
     detail: check.nextStep,
   };
 };
