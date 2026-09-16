@@ -21,6 +21,7 @@ import { acquireReceiptObjectUrl, acquireReceiptPreviewUrl, clearReceiptImageSto
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { DebtSnowballCard } from "@/components/DebtSnowballCard";
+import { DebtMonitor } from "@/components/DebtMonitor";
 import { disableLocalAlerts, enableLocalAlerts, getNotificationPermission, isNotificationsArmed, isNotificationsEnabled, sendTestAlert, type NotificationPref } from "@/lib/local-notifications";
 import { isOfflineOnly, setOfflineOnly, setSimpleMode } from "@/lib/ui-prefs";
 import { disableAppLock, hasAppLockPin, isAppLockEnabled, isValidPin, setAppLockPin } from "@/lib/app-lock";
@@ -666,6 +667,7 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
       </section>
       <DebtSnowballCard data={data} onPay={onPayDebt} />
       <DebtPayoffPlan data={data} />
+      <DebtMonitor data={data} />
       <DebtPayoffSimulator data={data} />
       <section className="bf-obligation-ai">
         <div className="bf-obligation-ai-icon"><Bot size={22} /></div>

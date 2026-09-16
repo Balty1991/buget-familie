@@ -3,18 +3,48 @@
  * (Open Food Facts / Open Products Facts). Căutarea online trimite doar
  * denumirea tastată — fără poze și fără registru.
  */
-import { foldRomanian, type Receipt } from "./finance-data";
+import { addIsoDays, foldRomanian, isoDate, isoToday, type Receipt } from "./finance-data";
 
 export type CatalogProduct = { name: string; category: string; aliases?: string[] };
 export type ProductHit = { name: string; category: string; source: "catalog" | "bon" | "online" };
 export type SpendGroup = "Alimente" | "Nealimentare";
 export type CategorySpend = { category: string; group: SpendGroup; amount: number; count: number };
 export type ProductSpend = { key: string; label: string; category: string; group: SpendGroup; amount: number; count: number };
+export type SpendPeriodId = "week" | "month" | "quarter" | "all";
+export type SpendGrain = "week" | "month";
+export type SpendScope = string | { from?: string; to?: string };
+export type SpendWindow = { from: string; to: string; grain: SpendGrain };
+export type SpendBucket = { key: string; from: string; to: string; food: number; nonFood: number; total: number };
 
 export const FOOD_CATEGORIES = new Set(["Alimente", "Băuturi", "Dulciuri", "Apă"]);
 
 export function spendGroupOf(category: string): SpendGroup {
   return FOOD_CATEGORIES.has(category) ? "Alimente" : "Nealimentare";
+}
+
+export function isoWeekStart(iso: string) {
+  const date = new Date(`${iso}T12:00:00`);
+  const dow = date.getDay();
+  date.setDate(date.getDate() + (dow === 0 ? -6 : 1 - dow));
+  return isoDate(date);
+}
+
+export function spendWindow(period: SpendPeriodId, today = isoToday(), receipts: Receipt[] = []): SpendWindow {
+  if (period === "week") return { from: isoWeekStart(today), to: today, grain: "week" };
+  if (period === "month") return { from: `${today.slice(0, 7)}-01`, to: today, grain: "week" };
+  if (period === "quarter") return { from: addIsoDays(today, -90), to: today, grain: "week" };
+  const dated = receipts.map((item) => item.date).filter(Boolean).sort();
+  const from = dated[0] && dated[0] < today ? dated[0] : addIsoDays(today, -365);
+  const span = Math.max(1, Math.round((new Date(`${today}T12:00:00`).getTime() - new Date(`${from}T12:00:00`).getTime()) / 86400000));
+  return { from, to: today, grain: span > 45 ? "month" : "week" };
+}
+
+function receiptInScope(receipt: Receipt, scope?: SpendScope) {
+  if (!scope) return true;
+  if (typeof scope === "string") return receipt.date.startsWith(scope);
+  if (scope.from && receipt.date < scope.from) return false;
+  if (scope.to && receipt.date > scope.to) return false;
+  return true;
 }
 
 const ITEMS: Array<[string, string, string?]> = [
@@ -276,8 +306,8 @@ export function searchProductCatalog(query: string, receipts: Receipt[] = [], li
   return hits.slice(0, limit);
 }
 
-export function productSpendBreakdown(receipts: Receipt[], month?: string) {
-  const scoped = month ? receipts.filter((item) => item.date.startsWith(month)) : receipts;
+export function productSpendBreakdown(receipts: Receipt[], scope?: SpendScope) {
+  const scoped = receipts.filter((item) => receiptInScope(item, scope));
   const byCategory = new Map<string, CategorySpend>();
   const byProduct = new Map<string, ProductSpend>();
   let food = 0;
@@ -310,6 +340,59 @@ export function productSpendBreakdown(receipts: Receipt[], month?: string) {
     products: Array.from(byProduct.values()).map((item) => ({ ...item, amount: round(item.amount) })).sort((left, right) => right.amount - left.amount),
     receiptCount: scoped.length,
   };
+}
+
+function monthStart(iso: string) {
+  return `${iso.slice(0, 7)}-01`;
+}
+
+function nextMonthStart(iso: string) {
+  const date = new Date(`${monthStart(iso)}T12:00:00`);
+  date.setMonth(date.getMonth() + 1);
+  return isoDate(date);
+}
+
+function iterateBuckets(from: string, to: string, grain: SpendGrain): Array<{ key: string; from: string; to: string }> {
+  const buckets: Array<{ key: string; from: string; to: string }> = [];
+  if (grain === "month") {
+    let cursor = monthStart(from);
+    while (cursor <= to) {
+      const next = nextMonthStart(cursor);
+      const end = addIsoDays(next, -1);
+      buckets.push({ key: cursor.slice(0, 7), from: cursor < from ? from : cursor, to: end < to ? end : to });
+      cursor = next;
+    }
+    return buckets;
+  }
+  let cursor = isoWeekStart(from);
+  while (cursor <= to) {
+    const end = addIsoDays(cursor, 6);
+    buckets.push({ key: cursor, from: cursor < from ? from : cursor, to: end < to ? end : to });
+    cursor = addIsoDays(cursor, 7);
+  }
+  return buckets;
+}
+
+export function productSpendSeries(receipts: Receipt[], opts: { from: string; to: string; grain: SpendGrain; productKey?: string; group?: SpendGroup }): SpendBucket[] {
+  const round = (value: number) => Math.round(value * 100) / 100;
+  return iterateBuckets(opts.from, opts.to, opts.grain).map((bucket) => {
+    const slice = productSpendBreakdown(
+      receipts
+        .filter((item) => item.date >= bucket.from && item.date <= bucket.to)
+        .map((receipt) => {
+          if (!opts.productKey && !opts.group) return receipt;
+          const lines = (receipt.lines?.length ? receipt.lines : [{ id: "whole", category: receipt.category, amount: receipt.amount, label: receipt.vendor }]).filter((line) => {
+            const category = line.category || classifyProductLabel(line.label || receipt.vendor);
+            if (opts.group && spendGroupOf(category) !== opts.group) return false;
+            if (opts.productKey && foldRomanian(line.label || category) !== opts.productKey) return false;
+            return true;
+          });
+          return { ...receipt, lines, amount: lines.reduce((sum, line) => sum + line.amount, 0) };
+        })
+        .filter((receipt) => !opts.productKey && !opts.group ? true : (receipt.lines?.length || 0) > 0),
+    );
+    return { key: bucket.key, from: bucket.from, to: bucket.to, food: round(slice.food), nonFood: round(slice.nonFood), total: round(slice.total) };
+  });
 }
 
 export const catalogSize = catalog.length;

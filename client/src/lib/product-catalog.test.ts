@@ -7,9 +7,11 @@ import {
   dominantReceiptCategory,
   looksLikeProductSearch,
   productSpendBreakdown,
+  productSpendSeries,
   searchOnlineProducts,
   searchProductCatalog,
   spendGroupOf,
+  spendWindow,
 } from "./product-catalog";
 
 describe("catalogul de produse", () => {
@@ -74,6 +76,41 @@ describe("catalogul de produse", () => {
     expect(split.food).toBeCloseTo(51.3, 1);
     expect(split.nonFood).toBeCloseTo(6, 1);
     expect(spendGroupOf("Timp liber")).toBe("Nealimentare");
+  });
+
+  it("taie bonurile după interval, nu doar după lună", () => {
+    const receipts = [
+      { id: "r1", vendor: "Lidl", amount: 10, category: "Alimente", date: "2026-09-01", lines: [{ id: "a", category: "Alimente", amount: 10, label: "Pâine" }] },
+      { id: "r2", vendor: "Lidl", amount: 20, category: "Alimente", date: "2026-09-16", lines: [{ id: "b", category: "Alimente", amount: 20, label: "Lapte" }] },
+      { id: "r3", vendor: "Pepco", amount: 30, category: "Timp liber", date: "2026-08-20", lines: [{ id: "c", category: "Timp liber", amount: 30, label: "Hanorac" }] },
+    ];
+    const week = productSpendBreakdown(receipts, { from: "2026-09-14", to: "2026-09-20" });
+    expect(week.total).toBe(20);
+    expect(week.products[0]?.label).toBe("Lapte");
+    const range = productSpendBreakdown(receipts, { from: "2026-08-01", to: "2026-09-30" });
+    expect(range.nonFood).toBe(30);
+    expect(range.food).toBe(30);
+  });
+
+  it("desenează săptămâni și filtrează un articol pe grafic", () => {
+    const receipts = [
+      { id: "r1", vendor: "Lidl", amount: 10, category: "Alimente", date: "2026-09-08", lines: [{ id: "a", category: "Alimente", amount: 10, label: "Pâine" }] },
+      { id: "r2", vendor: "Lidl", amount: 25, category: "Alimente", date: "2026-09-15", lines: [
+        { id: "b", category: "Alimente", amount: 20, label: "Lapte" },
+        { id: "c", category: "Casă & facturi", amount: 5, label: "Sacoșă" },
+      ] },
+    ];
+    const series = productSpendSeries(receipts, { from: "2026-09-07", to: "2026-09-20", grain: "week" });
+    expect(series.length).toBe(2);
+    expect(series[0].total).toBe(10);
+    expect(series[1].food).toBe(20);
+    expect(series[1].nonFood).toBe(5);
+    const onlyMilk = productSpendSeries(receipts, { from: "2026-09-07", to: "2026-09-20", grain: "week", productKey: "lapte" });
+    expect(onlyMilk[0].total).toBe(0);
+    expect(onlyMilk[1].total).toBe(20);
+    const window = spendWindow("month", "2026-09-16");
+    expect(window.from).toBe("2026-09-01");
+    expect(window.grain).toBe("week");
   });
 
   it("mapează etichetele Open Food Facts pe categoriile casei", () => {
