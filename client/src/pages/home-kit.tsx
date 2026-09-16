@@ -115,7 +115,7 @@ export function WhatsNewSheet({ onClose, onOpenTheme, onOpenMore }: { onClose: (
         <ul className="bf-whats-new-list">
           <li>{t("Cele 5 teme — Alb, Întunecat, Aurora, Navy, Cyber — au materiale distincte, aceeași semantică.")}</li>
           <li>{t("Astăzi pornește de la o fișă de decizie: cât poți folosi și ce urmează.")}</li>
-          <li>{t("La prima deschidere alegi o intenție: urmărești, organizezi luna sau buget de familie. Mai târziu e permis.")}</li>
+          <li>{t("La prima deschidere alegi o intenție: urmărești, începi din săptămâna începută, organizezi luna sau buget de familie. Mai târziu e permis.")}</li>
           <li>{t("Obligații începe cu „Ce urmează”: rate, facturi și obiective pe o singură listă.")}</li>
         </ul>
         <div className="bf-whats-new-actions">
