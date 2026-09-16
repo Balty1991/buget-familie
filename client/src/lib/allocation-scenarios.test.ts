@@ -297,4 +297,23 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     expect(math.reservedInEnvelopes).toBeCloseTo(150, 0);
     expect(math.unrepartized).toBeCloseTo(1650, 0);
   });
+
+  it("la mijlocul ciclului, fără plicuri, tot cash-ul rămâne nerepartizat", () => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [
+      { id: "cash", name: "Cash", kind: "cash", memberId: me, openingBalance: 1800 },
+      { id: "card", name: "Card debit", kind: "card", memberId: me, openingBalance: 0 },
+      { id: "meal", name: "Bonuri de masă", kind: "meal", memberId: me, openingBalance: 0 },
+    ];
+    data.settings.salaryPlan.periodStart = "2026-09-14";
+    data.settings.salaryPlan.nextPayday = "2026-10-10";
+    data.settings.salaryPlan.sourceIds = [];
+    data.settings.salaryPlan.joinedMidCycle = true;
+    data.settings.salaryPlan.allocations = [];
+    const math = planAllocationMath(data);
+    expect(math.availableSources).toBe(1800);
+    expect(math.allocated).toBe(0);
+    expect(math.reservedInEnvelopes).toBe(0);
+    expect(math.unrepartized).toBe(1800);
+  });
 });
