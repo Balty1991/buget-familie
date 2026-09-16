@@ -1,9 +1,9 @@
 /**
- * Primul flux: 4 intenții + Mai târziu.
- * track / mid-month / organize / family — rezultat în < 3 minute.
+ * Primul flux: 4 intenții egale + Mai târziu.
+ * Banii de azi întâi; plicurile rămân opționale, în Plan.
  */
 import { useLayoutEffect, useState } from "react";
-import { CalendarRange, Check, ChevronLeft, ChevronRight, Home, PiggyBank, ReceiptText, Users, WalletCards } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Home, PiggyBank, ReceiptText, Users, Wallet, WalletCards } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { isoDate, isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type PaymentKind } from "@/lib/finance-data";
@@ -16,7 +16,7 @@ import { hideNativeSplash } from "@/lib/native-splash";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
-type Intent = "track" | "mid" | "organize" | "family";
+type Intent = "track" | "money" | "organize" | "family";
 
 const PRESETS = [
   { category: "Alimente", amount: 1500, weekly: true, weeklyRate: 600 },
@@ -30,7 +30,7 @@ const PARTNER_KINDS: Array<{ kind: PaymentKind; label: string }> = [
   { kind: "meal", label: "Bonuri de masă" },
 ];
 
-/** Luni din săptămâna curentă — prima tranșă e „săptămâna asta”, nu un plan de la 1. */
+/** Luni din săptămâna curentă — dacă spui banii de azi, planul pornește de aici, nu de la 1. */
 function isoMonday(from = new Date()) {
   const date = new Date(from);
   date.setHours(12, 0, 0, 0);
@@ -39,21 +39,13 @@ function isoMonday(from = new Date()) {
   return isoDate(date);
 }
 
-function daysLeftThisWeek() {
-  const now = new Date();
-  const dow = now.getDay();
-  return dow === 0 ? 1 : 8 - dow;
-}
-
 function midHorizon(paydayISO: string) {
   const start = isoMonday();
   const end = paydayISO || "";
   const calendar = end ? calendarBudget(100, start, end) : undefined;
-  const slices = calendar?.weeks.length ?? 3;
   return {
     start,
-    weeksAfter: Math.max(0, slices - 1),
-    daysLeft: daysLeftThisWeek(),
+    weeksAfter: Math.max(0, (calendar?.weeks.length ?? 1) - 1),
   };
 }
 
@@ -106,7 +98,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     onClose();
   };
 
-  const applyBase = (opts: { withPartner?: boolean; withEnvelopes?: boolean; withPayday?: boolean; midMonth?: boolean }) => {
+  const applyBase = (opts: { withPartner?: boolean; withEnvelopes?: boolean; withPayday?: boolean; moneyFirst?: boolean }) => {
     const now = new Date().toISOString();
     const yourName = memberName.trim() || "Eu";
     const members = [{ id: "member-me", name: yourName, color: "#256B5B" }];
@@ -160,10 +152,10 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
         paymentSources,
         salaryPlan: {
           ...data.settings.salaryPlan,
-          periodStart: opts.midMonth ? horizon.start : data.settings.salaryPlan.periodStart || isoToday(),
+          periodStart: opts.moneyFirst ? horizon.start : data.settings.salaryPlan.periodStart || isoToday(),
           nextPayday: opts.withPayday ? (payday || data.settings.salaryPlan.nextPayday) : data.settings.salaryPlan.nextPayday,
           allocations,
-          joinedMidCycle: opts.midMonth ? true : data.settings.salaryPlan.joinedMidCycle,
+          joinedMidCycle: opts.moneyFirst ? true : data.settings.salaryPlan.joinedMidCycle,
           updatedAt: now,
         },
       },
@@ -182,8 +174,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     onGoPlan();
   };
 
-  const finishMid = () => {
-    applyBase({ withPartner: Boolean(partnerName.trim()), withEnvelopes: false, withPayday: true, midMonth: true });
+  const finishMoney = () => {
+    applyBase({ withPartner: Boolean(partnerName.trim()), withEnvelopes: false, withPayday: true, moneyFirst: true });
     complete();
   };
 
@@ -195,9 +187,6 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     else onGoPlan();
   };
 
-  const horizon = midHorizon(payday);
-  const weeks = horizon.weeksAfter;
-  const daysLeft = horizon.daysLeft;
   const cashNow = moneySources.reduce((sum, source) => sum + Math.max(0, parseRomanianAmount(balances[source.id] || "0")), 0);
   const partnerNow = PARTNER_KINDS.reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(partnerBalances[item.kind] || "0")), 0);
   const totalNow = cashNow + (partnerName.trim() ? partnerNow : 0);
@@ -230,10 +219,10 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 <b>{t("Vreau doar să văd pe ce se duc banii.")}</b>
                 <small>{t("Deschide direct înregistrarea unei cheltuieli.")}</small>
               </button>
-              <button type="button" onClick={() => setIntent("mid")}>
-                <CalendarRange size={20} />
-                <b>{t("Nu încep luna întreagă.")}</b>
-                <small>{t("Spui câți bani ai azi — tu și partenerul. Plicurile le pui după, dacă vrei.")}</small>
+              <button type="button" onClick={() => setIntent("money")}>
+                <Wallet size={20} />
+                <b>{t("Vreau să pun banii de azi.")}</b>
+                <small>{t("Card, cash, bonuri — tu și partenerul. Plicurile, după, dacă e nevoie.")}</small>
               </button>
               <button type="button" onClick={() => setIntent("organize")}>
                 <WalletCards size={20} />
@@ -267,19 +256,14 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
           </div>
         )}
 
-        {intent === "mid" && (
+        {intent === "money" && (
           <div className="bf-setup-copy">
             <p className="bf-kicker">{t("BANII DE AZI")}</p>
             <h2 id="bf-setup-title">{t("Câți bani")} <em>{t("ai acum?")}</em></h2>
             <p>{t("Card, cash, bonuri — ale tale și ale partenerului, dacă e cazul. Plicurile le pui mai târziu, în Plan, doar dacă ai nevoie.")}</p>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
-            <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
-            <p className="bf-helper">
-              {weeks === 0
-                ? t("Doar săptămâna asta până la salariu — {days} zile.", { days: String(daysLeft) })
-                : t("{days} zile săptămâna asta, apoi {weeks} săptămâni până la salariu.", { days: String(daysLeft), weeks: String(weeks) })}
-            </p>
+            <label className="bf-field"><span>{t("Următorul venit (opțional)")}</span><input type="date" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-sources">
               <p><b>{t("Banii tăi")}</b></p>
               {moneySources.map((source) => (
@@ -306,7 +290,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
               <p className="bf-helper">{t("Lasă gol ce nu ai. Repartizarea pe plicuri nu e obligatorie.")}</p>
             )}
             <div className="bf-onboarding-actions">
-              <button className="bf-primary" onClick={finishMid}><Home size={17} /> {t("Pune banii de azi")}</button>
+              <button className="bf-primary" onClick={finishMoney}><Home size={17} /> {t("Pune banii de azi")}</button>
             </div>
           </div>
         )}
