@@ -2,7 +2,7 @@
  * Atelierul Financiar 2.0 — registru financiar local, normalizat și portabil.
  * Toate sumele sunt în RON, toate datele sunt ISO (YYYY-MM-DD), iar identitățile sunt stabile.
  */
-import { calendarBudget } from "./calendar-budget";
+import { calendarBudget, periodDays, type CalendarBudget } from "./calendar-budget";
 import { getLocale, t } from "./i18n";
 
 export type TransactionKind = "income" | "expense";
@@ -115,7 +115,7 @@ export type AllocationHistoryKind = "created" | "updated" | "deleted" | "income-
 export type AllocationHistoryEntry = { id: string; referenceId?: string; kind: AllocationHistoryKind; allocationId?: string; allocationLabel?: string; fromAllocationId?: string; fromAllocationLabel?: string; toAllocationId?: string; toAllocationLabel?: string; amount?: number; previousAmount?: number; newAmount?: number; incomeId?: string; incomeTitle?: string; fromWeekIndex?: number; toWeekIndex?: number; note?: string; createdAt: string };
 /** Preferință de viteză locală: păstrează suma și durata, nu fixează datele calendaristice ale următorului ciclu. */
 export type SalaryCycleTemplate = { id: string; label: string; amount: number; durationDays: number; updatedAt?: string };
-export type SalaryPlan = { periodStart: string; nextPayday: string; /** Prima zi în care venitul poate intra; planul folosește această dată prudentă. */ earliestPayday?: string; /** Câte zile poate varia salariul față de data obișnuită. Implicit 3. */ paydayFlexDays?: number; sourceIds: string[]; totalLimit: number; weeklyLimit: number; allocations: BudgetAllocation[]; transfers: BudgetTransfer[]; weekTransfers?: WeekTransfer[]; salaryAllocationRules?: SalaryAllocationRule[]; salaryAllocationApplications?: SalaryAllocationApplication[]; allocationHistory?: AllocationHistoryEntry[]; /** Start din săptămâna începută: nerepartizații se citesc din restul săptămânii, nu din tot plicul până la salariu. */ joinedMidCycle?: boolean; updatedAt?: string };
+export type SalaryPlan = { periodStart: string; nextPayday: string; /** Prima zi în care venitul poate intra; planul folosește această dată prudentă. */ earliestPayday?: string; /** Câte zile poate varia salariul față de data obișnuită. Implicit 3. */ paydayFlexDays?: number; sourceIds: string[]; totalLimit: number; weeklyLimit: number; allocations: BudgetAllocation[]; transfers: BudgetTransfer[]; weekTransfers?: WeekTransfer[]; salaryAllocationRules?: SalaryAllocationRule[]; salaryAllocationApplications?: SalaryAllocationApplication[]; allocationHistory?: AllocationHistoryEntry[]; /** Păstrat din configurarea inițială (bani deja în casă). Nerepartizații scad tot plicul, nu doar săptămâna curentă. */ joinedMidCycle?: boolean; updatedAt?: string };
 /** Preferință locală pentru completarea rapidă; nu este o mișcare financiară până la confirmare. */
 export type QuickTransactionTemplate = { id: string; label: string; kind: TransactionKind; category: string; amount: number; memberId?: string; sourceId?: string; updatedAt?: string };
 export type ArchivedQuickTransactionTemplate = QuickTransactionTemplate & { archivedAt: string };
@@ -692,13 +692,12 @@ export const allocationStatus = (data: AppData, allocation: BudgetAllocation) =>
  * Cifrele de repartizare, aceleași pe Plan, Astăzi și în teste.
  * `allocated` e suma limitelor; `reservedInEnvelopes` e ce a mai rămas de cheltuit
  * din plicuri; `unrepartized` e soldul minus rezervă minus scadențe.
+ *
+ * Un plic de 1.850 rezervă 1.850, chiar dacă perioada e începută și tranșa de azi
+ * ține doar zilele rămase. Altfel „nerepartizați” ar arăta doar restul săptămânii
+ * și familia ar putea pune a doua oară aceiași lei în alt plic.
  */
-/** Felia de plan a unui plic: limita și cât mai e rezervat din ea, cu regula de ciclu început. */
 const allocationPlanSlice = (data: AppData, item: BudgetAllocation) => {
-  if (data.settings.salaryPlan.joinedMidCycle === true && item.weeklyPace !== false) {
-    const week = allocationWeekStatus(data, item);
-    if (week) return { budget: week.budget, remaining: Math.max(0, week.remaining) };
-  }
   return { budget: allocationBudget(data, item), remaining: Math.max(0, allocationStatus(data, item).remaining) };
 };
 
@@ -768,8 +767,6 @@ export const sourceFreeBalance = (data: AppData, sourceId: string, ignoreAllocat
       const mine = shares.filter((entry) => entry.sourceId === sourceId).reduce((total, entry) => total + entry.amount, 0);
       if (mine <= 0) return sum;
       const spentHere = allocationSpentFromSource(data, item, sourceId);
-      /* Un plic fără ritm săptămânal poate fi tăiat de `allocationPlanSlice` (start la mijloc
-         de ciclu): rezervarea nu poate depăși ce mai ține plicul în total. */
       const cap = allocationPlanSlice(data, item).remaining;
       return sum + Math.min(cap, Math.max(0, mine - spentHere));
     }, 0);
@@ -824,6 +821,45 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
     const days = weekEnd === week.end ? week.days : Math.round((new Date(`${weekEnd}T12:00:00`).valueOf() - new Date(`${week.start}T12:00:00`).valueOf()) / 86400000) + 1;
     return { ...week, end: weekEnd, days, budget: weekBudget, spent: roundedMoney(spent), remaining, usage: weekBudget > 0 ? spent / weekBudget : 0, state: remaining < 0 ? "over" as const : "healthy" as const };
   });
+};
+
+/**
+ * Tranșele de pe Plan, după transferurile „de azi”. calendarBudget pe suma plicurilor
+ * ignoră echilibrarea și arată 480 pe S1 inclusiv zilele deja trecute.
+ */
+export const planWeeklyCycle = (data: AppData): CalendarBudget | undefined => {
+  const plan = data.settings.salaryPlan;
+  const end = planEndDate(plan);
+  const paced = plan.allocations.filter((item) => item.weeklyPace !== false);
+  if (!end || !plan.periodStart || !paced.length) return undefined;
+  const byIndex = new Map<number, CalendarBudget["weeks"][number]>();
+  for (const item of paced) {
+    for (const week of allocationWeeksStatus(data, item)) {
+      const prev = byIndex.get(week.index);
+      if (!prev) {
+        byIndex.set(week.index, { index: week.index, start: week.start, end: week.end, days: week.days, amount: week.budget });
+      } else {
+        prev.amount = money2(prev.amount + week.budget);
+        if (week.end > prev.end) {
+          prev.end = week.end;
+          prev.days = week.days;
+        }
+      }
+    }
+  }
+  const weeks = [...byIndex.values()].sort((left, right) => left.index - right.index);
+  if (!weeks.length) return undefined;
+  const total = money2(weeks.reduce((sum, week) => sum + week.amount, 0));
+  const fullWeek = weeks.find((week) => week.days === 7) || weeks.find((week) => week.days >= 7);
+  return {
+    total,
+    start: plan.periodStart,
+    end,
+    days: periodDays(plan.periodStart, end),
+    exactWeeks: periodDays(plan.periodStart, end) / 7,
+    weeklyAmount: fullWeek?.amount ?? weeks[0].amount,
+    weeks,
+  };
 };
 
 /** Situația unui plic în tranșa calendaristică ce conține data verificată. */

@@ -22,7 +22,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, sourceFreeBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace } from "@/lib/household-insights";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
@@ -106,7 +106,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
 
   const periodValid = Boolean(cycleStart && cycleEnd && cycleEnd >= cycleStart);
   const weeklyPacedTotal = plan.allocations.filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
-  const activeCycle = planEnd ? calendarBudget(weeklyPacedTotal, plan.periodStart, planEnd) : undefined;
+  const activeCycle = planWeeklyCycle(data) || (planEnd && weeklyPacedTotal > 0 ? calendarBudget(weeklyPacedTotal, plan.periodStart, planEnd) : undefined);
   const activeWeek = activeCycle?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end);
   const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: item.weeklyPace === false ? undefined : allocationWeekStatus(data, item), weeks: item.weeklyPace === false ? [] : allocationWeeksStatus(data, item) }));
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);

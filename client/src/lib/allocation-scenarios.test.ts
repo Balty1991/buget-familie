@@ -13,6 +13,7 @@ import {
   envelopeDecisionStatus,
   planAllocationMath,
   planEndDate,
+  planWeeklyCycle,
   plannedEnvelopeReserved,
   sourceBalance,
   sourceFreeBalance,
@@ -22,6 +23,7 @@ import {
 import { calendarBudget } from "./calendar-budget";
 import { parseAssistantMessage } from "./assistant-intents";
 import { emptyGuideMemory, expenseProposal, understand, decide, buildExpenseOffer } from "./understand";
+import { levelStartedWeek } from "./started-week";
 
 const me = "member-me";
 
@@ -273,7 +275,7 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     expect(planAllocationMath(data).unrepartized).toBe(0);
   });
 
-  it("la mijlocul ciclului, nerepartizații sunt cash minus restul săptămânii, nu tot plicul", () => {
+  it("la mijlocul ciclului, plicul rezervă tot, nu doar săptămâna curentă", () => {
     const data = createEmptyAppData();
     data.settings.paymentSources = [{ id: "cash", name: "Cash", kind: "cash", memberId: me, openingBalance: 1800 }];
     data.settings.salaryPlan.periodStart = "2026-09-14";
@@ -294,9 +296,9 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     }
     const math = planAllocationMath(data);
     expect(math.availableSources).toBe(1800);
-    expect(math.allocated).toBeCloseTo(150, 0);
-    expect(math.reservedInEnvelopes).toBeCloseTo(150, 0);
-    expect(math.unrepartized).toBeCloseTo(1650, 0);
+    expect(math.allocated).toBe(1950);
+    expect(math.reservedInEnvelopes).toBe(1950);
+    expect(math.unrepartized).toBeCloseTo(-150, 0);
   });
 
   it("la mijlocul ciclului, fără plicuri, tot cash-ul rămâne nerepartizat", () => {
@@ -316,6 +318,39 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     expect(math.allocated).toBe(0);
     expect(math.reservedInEnvelopes).toBe(0);
     expect(math.unrepartized).toBe(1800);
+  });
+
+  it("1.850 alocați de joi scad tot plicul, iar S1 ține doar zilele rămase", () => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [
+      { id: "cash", name: "Cash", kind: "cash", memberId: me, openingBalance: 1800 },
+      { id: "angi", name: "Cash · Angi", kind: "cash", openingBalance: 450 },
+    ];
+    data.settings.salaryPlan.periodStart = "2026-09-14";
+    data.settings.salaryPlan.nextPayday = "2026-10-10";
+    data.settings.salaryPlan.sourceIds = ["cash", "angi"];
+    data.settings.salaryPlan.joinedMidCycle = true;
+    data.settings.salaryPlan.allocations = [{
+      id: "env-food", label: "Alimente", category: "Alimente", amount: 1850, sourceId: "cash", memberId: me, weeklyPace: true,
+      funding: [{ sourceId: "angi", amount: 50 }],
+    }];
+    const leveled = levelStartedWeek(data, "env-food", "2026-09-17");
+    const math = planAllocationMath(leveled);
+    expect(math.availableSources).toBe(2250);
+    expect(math.allocated).toBe(1850);
+    expect(math.reservedInEnvelopes).toBe(1850);
+    expect(math.unrepartized).toBe(400);
+    const weeks = allocationWeeksStatus(leveled, leveled.settings.salaryPlan.allocations[0]);
+    expect(weeks[0].budget).toBeCloseTo(308, 0);
+    const later = weeks.slice(1).reduce((sum, week) => sum + week.budget, 0);
+    expect(later).toBeCloseTo(1542, 0);
+    const cycle = planWeeklyCycle(leveled)!;
+    expect(cycle.weeks[0].amount).toBeCloseTo(308, 0);
+    expect(cycle.total).toBeCloseTo(1850, 0);
+    expect(sourceFreeBalance(leveled, "cash").reserved).toBe(1800);
+    expect(sourceFreeBalance(leveled, "cash").free).toBe(0);
+    expect(sourceFreeBalance(leveled, "angi").reserved).toBe(50);
+    expect(sourceFreeBalance(leveled, "angi").free).toBe(400);
   });
 });
 
