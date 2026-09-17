@@ -1,20 +1,71 @@
 import { useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { ArrowRight, Check, ChevronLeft, ChevronRight, SlidersHorizontal, Sparkles, WalletCards } from "lucide-react";
+import { Check, Sparkles, WalletCards } from "lucide-react";
 import type { BudgetAllocation } from "@/lib/finance-data";
 import { plannedEnvelopeReserved } from "@/lib/finance-data";
-import { envelopesLabel, getLocale, t } from "@/lib/i18n";
+import { getLocale, t } from "@/lib/i18n";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const round2 = (value: number) => Math.round(value * 100) / 100;
 
 type AllocationChange = { id: string; amount: number };
 
-export function MonthlyAllocationWizard({ allocations, available, scheduled, remainingById = {}, periodLabel, onApply, onChangeGoal }: { allocations: BudgetAllocation[]; available: number; scheduled: number; remainingById?: Record<string, number>; periodLabel: string; onApply: (changes: AllocationChange[]) => void; onChangeGoal?: () => void }) {
-  const [step, setStep] = useState(1); const [draft, setDraft] = useState<Record<string, number>>(() => Object.fromEntries(allocations.map((item) => [item.id, item.amount]))); const [confirmed, setConfirmed] = useState(false);
-  const total = allocations.reduce((sum, item) => sum + (draft[item.id] || 0), 0); const safeAvailable = Math.max(0, available - scheduled); const reserved = plannedEnvelopeReserved(allocations, remainingById, draft); const remainder = safeAvailable - reserved; const essentials = allocations.filter((item) => item.weeklyPace !== false); const flexibles = allocations.filter((item) => item.weeklyPace === false); const changed = useMemo(() => allocations.filter((item) => Math.round((draft[item.id] || 0) * 100) !== Math.round(item.amount * 100)).map((item) => ({ id: item.id, amount: Math.max(0, draft[item.id] || 0) })), [allocations, draft]);
-  const updateAmount = (id: string, value: string) => setDraft((current) => ({ ...current, [id]: Math.max(0, Number(value) || 0) }));
-  const keepProportions = () => { if (total <= 0 || safeAvailable <= 0) return; const factor = safeAvailable / total; setDraft(Object.fromEntries(allocations.map((item) => [item.id, Math.round(item.amount * factor * 100) / 100]))); };
-  const close = () => { setConfirmed(false); setStep(1); };
-  return <section className="bf-monthly-wizard" aria-labelledby="monthly-wizard-title"><div className="bf-monthly-wizard-head"><div><p className="bf-kicker">{t("REPARTIZARE LUNARĂ")}</p><h2 id="monthly-wizard-title">{t("Așază banii")} <em>{t("cu liniște.")}</em></h2><p>{periodLabel}{t(" · trei pași, o singură confirmare.")}</p></div><span><WalletCards size={20} /></span></div><div className="bf-wizard-progress" aria-label={`Pasul ${step} din 3`}>{[1, 2, 3].map((value) => <span key={value} className={step >= value ? "active" : ""}>{value}</span>)}</div>{step === 1 && <div className="bf-wizard-step"><p className="bf-wizard-overline">{t("PASUL 1 · PRIVIRE DE ANSAMBLU")}</p><h3>{remainder > 0 ? t("Cât ai de așezat?") : remainder < 0 ? t("Plicurile depășesc disponibilul") : t("Banii sunt așezați")}</h3><div className="bf-wizard-hero"><strong className={remainder < 0 ? "negative" : ""}>{money(remainder > 0 ? remainder : remainder < 0 ? Math.abs(remainder) : 0)}</strong><span>{remainder > 0 ? t("rămași de pus în plicuri") : remainder < 0 ? t("peste disponibil") : t("totul are un loc")}</span></div><div className="bf-wizard-metrics"><span><b>{money(total)}</b><small>{t("în plicuri acum")}</small></span><span><b>{money(safeAvailable)}</b><small>{t("disponibil după scadențe")}</small></span></div><div className="bf-wizard-message"><Check size={16} /><span>{t("Începem cu ce este esențial, apoi lăsăm loc pentru flexibilitate.")}</span></div></div>}{step === 2 && <div className="bf-wizard-step"><p className="bf-wizard-overline">PASUL 2 · ORDINEA CASEI</p><h3>{t("Ce protejăm mai întâi?")}</h3><p className="bf-wizard-help">{t("Plicurile cu ritm săptămânal țin direcția. Celelalte îți lasă spațiu pentru viața de zi cu zi.")}</p><div className="bf-wizard-priority"><div><b>{t("01 · De protejat")}</b><small>{money(essentials.reduce((sum, item) => sum + (draft[item.id] || 0), 0))} în {envelopesLabel(essentials.length)}</small></div><div><b>{t("02 · De ajustat")}</b><small>{money(flexibles.reduce((sum, item) => sum + (draft[item.id] || 0), 0))} în {envelopesLabel(flexibles.length)}</small></div></div><button type="button" className="bf-wizard-suggestion" onClick={keepProportions}><Sparkles size={16} /><span><b>{t("Păstrează proporțiile")}</b><small>{t("Distribuie disponibilul păstrând echilibrul actual dintre plicuri.")}</small></span><ArrowRight size={16} /></button></div>}{step === 3 && <div className="bf-wizard-step"><p className="bf-wizard-overline">{t("PASUL 3 · AJUSTARE BLÂNDĂ")}</p><h3>{t("Verifică sumele")}</h3><p className="bf-wizard-help">{t("Poți ajusta orice plic. Schimbarea nu se aplică până nu confirmi la final.")}</p><div className="bf-wizard-edit-list">{allocations.map((item) => <label key={item.id}><span><b>{item.label}</b><small>{item.weeklyPace === false ? "flexibil" : t("esențial")}</small></span><div><input type="number" min="0" step="10" value={draft[item.id] ?? 0} onChange={(event) => updateAmount(item.id, event.target.value)} /><span>RON</span></div></label>)}</div><div className={`bf-wizard-total ${remainder < 0 ? "negative" : ""}`}><span>{t("După repartizare")}</span><b>{money(total)}</b><small>{remainder < 0 ? `Mai lipsesc ${money(Math.abs(remainder))}` : `Rămân ${money(remainder)} liberi`}</small></div></div>}{onChangeGoal && <button type="button" className="bf-wizard-change-goal" onClick={onChangeGoal}>{t("Schimbă acțiunea")}</button>}{<footer className="bf-wizard-footer">{step > 1 ? <button type="button" onClick={() => setStep((value) => value - 1)}><ChevronLeft size={16} /> {t("Înapoi")}</button> : <span />}{step < 3 ? <button type="button" className="bf-primary" onClick={() => setStep((value) => value + 1)}>{t("Continuă")} <ChevronRight size={16} /></button> : <button type="button" className="bf-primary" disabled={remainder < 0 || !changed.length} onClick={() => setConfirmed(true)}><SlidersHorizontal size={16} /> {t("Verifică și confirmă")}</button>}</footer>}{/* Prin portal, din același motiv ca dialogul plicului: `overflow: clip` pe `.bf-app`. */}
-      {confirmed && createPortal(<div className="bf-wizard-confirm" role="dialog" aria-modal="true" aria-labelledby="wizard-confirm-title"><div><p className="bf-kicker">ULTIMA PRIVIRE</p><h3 id="wizard-confirm-title">{t("Aplici această repartizare?")}</h3><p>{changed.length} {changed.length === 1 ? t("plic se schimbă") : t("plicuri se schimbă")}. Rămân {money(remainder)} nealocați pentru flexibilitate.</p><div>{changed.map((item) => { const allocation = allocations.find((entry) => entry.id === item.id); return <span key={item.id}><b>{allocation?.label}</b><small>{money(allocation?.amount || 0)} → {money(item.amount)}</small></span>; })}</div><footer><button type="button" onClick={close}>{t("Înapoi")}</button><button type="button" className="bf-primary" onClick={() => { onApply(changed); close(); }}>{t("Confirmă repartizarea")} <Check size={15} /></button></footer></div></div>, document.body)}</section>;
+export function MonthlyAllocationWizard({ allocations, available, scheduled, remainingById = {}, periodLabel, onApply }: { allocations: BudgetAllocation[]; available: number; scheduled: number; remainingById?: Record<string, number>; periodLabel: string; onApply: (changes: AllocationChange[]) => void; onChangeGoal?: () => void }) {
+  const [dismissed, setDismissed] = useState(false);
+  const safeAvailable = Math.max(0, available - scheduled);
+  const reserved = plannedEnvelopeReserved(allocations, remainingById, Object.fromEntries(allocations.map((item) => [item.id, item.amount])));
+  const remainder = round2(safeAvailable - reserved);
+  const only = allocations.length === 1 ? allocations[0] : undefined;
+  const scaled = useMemo(() => {
+    const total = allocations.reduce((sum, item) => sum + item.amount, 0);
+    if (total <= 0 || safeAvailable <= 0) return [];
+    const factor = safeAvailable / total;
+    return allocations.map((item) => ({ id: item.id, label: item.label, from: item.amount, amount: round2(item.amount * factor) })).filter((item) => Math.round(item.amount * 100) !== Math.round(item.from * 100));
+  }, [allocations, safeAvailable]);
+
+  if (dismissed || !allocations.length) return null;
+  if (remainder > -0.5 && remainder < 0.5) return null;
+
+  const apply = (changes: AllocationChange[]) => {
+    if (!changes.length) return;
+    onApply(changes);
+  };
+
+  return (
+    <section className="bf-monthly-wizard" aria-labelledby="monthly-wizard-title">
+      <div className="bf-monthly-wizard-head">
+        <div>
+          <p className="bf-kicker">{t("REPARTIZARE LUNARĂ")}</p>
+          <h2 id="monthly-wizard-title">{remainder > 0 ? t("Îți rămân bani fără plic.") : t("Plicurile depășesc disponibilul")}</h2>
+          <p>{periodLabel}. {remainder > 0 ? t("Nu e un pas obligatoriu — cei {amount} stau liberi până îi pui într-un plic sau faci unul nou, mai jos.", { amount: money(remainder) }) : t("Scade un plic sau lasă-i așa și revino când ai venitul.")}</p>
+        </div>
+        <span><WalletCards size={20} /></span>
+      </div>
+      {remainder > 0 && (
+        <div className="bf-wizard-step">
+          <div className="bf-wizard-hero">
+            <strong>{money(remainder)}</strong>
+            <span>{t("rămași de pus în plicuri")}</span>
+          </div>
+          <div className="bf-wizard-footer" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {only ? (
+              <button type="button" className="bf-primary" onClick={() => apply([{ id: only.id, amount: round2(only.amount + remainder) }])}>
+                <Sparkles size={16} /> {t("Pune {amount} în {label}", { amount: money(remainder), label: only.label })}
+              </button>
+            ) : scaled.length > 0 ? (
+              <button type="button" className="bf-primary" onClick={() => apply(scaled.map((item) => ({ id: item.id, amount: item.amount })))}>
+                <Sparkles size={16} /> {t("Distribuie {amount} în plicurile existente", { amount: money(remainder) })}
+              </button>
+            ) : null}
+            <button type="button" onClick={() => setDismissed(true)}>{t("Lasă-i liberi")}</button>
+          </div>
+        </div>
+      )}
+      {remainder < 0 && (
+        <div className="bf-wizard-step">
+          <p className="bf-wizard-help">{t("Editează un plic mai jos ca sumele să încapă în {amount}.", { amount: money(safeAvailable) })}</p>
+          <button type="button" onClick={() => setDismissed(true)}><Check size={16} /> {t("Am înțeles")}</button>
+        </div>
+      )}
+    </section>
+  );
 }
