@@ -316,3 +316,14 @@ html:not(.dark) .bf-source-name small,
 html:not(.dark) .bf-source-edit label small {
   color: #5c675f !important;
 }
+
+/* —— 14. Ultimele texte la un fir de prag, în tema deschisă —— */
+/* Titlurile de secțiune din „Mai mult” (4,44) și eticheta „Confirmare manuală” (4,30)
+   stăteau sub 4,5 pe pastilele lor verzi-pal. Un pas mai închis le trece pragul. */
+html:not(.dark) .bf-more-grid .bf-kicker.bf-more-section,
+html:not(.dark) .bf-kicker.bf-more-section {
+  color: #28604b !important;
+}
+html:not(.dark) .bf-recurring-list article > span:not(.done) {
+  color: #3b6152 !important;
+}
