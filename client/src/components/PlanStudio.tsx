@@ -70,7 +70,12 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const [allocationCategory, setAllocationCategory] = useState(categories[0] || "Alimente");
   const [allocationAmount, setAllocationAmount] = useState("");
   const [allocationMemberId, setAllocationMemberId] = useState("");
-  const [allocationSourceId, setAllocationSourceId] = useState(data.settings.paymentSources[0]?.id || "");
+  /* Prima sursă din listă e rareori cea potrivită: un card gol nu poate plăti niciun plic.
+     Pornim de la sursa care chiar are bani liberi. */
+  const richestSourceId = () => [...data.settings.paymentSources]
+    .map((source) => ({ id: source.id, free: sourceFreeBalance(data, source.id).free }))
+    .sort((left, right) => right.free - left.free)[0]?.id || data.settings.paymentSources[0]?.id || "";
+  const [allocationSourceId, setAllocationSourceId] = useState(() => richestSourceId());
   const [allocationNote, setAllocationNote] = useState("");
   const [allocationThreshold, setAllocationThreshold] = useState(80);
   const [allocationWeeklyPace, setAllocationWeeklyPace] = useState(true);
@@ -81,6 +86,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
    * curente doar partea zilelor rămase și trimite restul în săptămânile următoare, la salvare.
    */
   const [allocationLevelStarted, setAllocationLevelStarted] = useState(true);
+  /** Completări din alte surse, când sursa principală nu acoperă singură plicul. */
+  const [allocationFunding, setAllocationFunding] = useState<Array<{ sourceId: string; amount: string }>>([]);
   const [editingAllocationId, setEditingAllocationId] = useState("");
   const [allocationError, setAllocationError] = useState("");
   const [weekTransferAllocationId, setWeekTransferAllocationId] = useState("");
@@ -121,9 +128,6 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     return Math.round(totalFromWeeklyPace(typed, plan.periodStart, planEnd, paceToday));
   };
   const allocationTotal = allocationTotalFromInput();
-  /** La editare, rezerva proprie a plicului intră la loc în disponibil — altfel nu l-ai putea salva. */
-  const freeForThisEnvelope = unrepartized + (editingAllocationId ? plan.allocations.find((item) => item.id === editingAllocationId)?.amount ?? 0 : 0);
-  const overBudget = allocationTotal > freeForThisEnvelope + 0.5;
   const allocationPreview = planEnd ? calendarBudget(allocationTotal, plan.periodStart, planEnd) : undefined;
   /** Câți bani i-ar reveni tranșei începute din suma scrisă, ca să se vadă înainte de salvare. */
   const allocationStartedShare = (() => {
@@ -138,11 +142,15 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
    * mai strâns până la venit. Ambele repartizează exact aceiași bani.
    */
   const paceOptions = (() => {
-    if (!paceByWeek || unrepartized <= 0) return [];
+    /* Variantele se socotesc pe suma scrisă în câmp, nu pe toți banii liberi: dacă omul a
+       hotărât că plicul ăsta ia 1.800, nu are ce face cu o împărțire a celor 2.200 din casă.
+       Doar cu câmpul gol se propune întreg disponibilul. */
+    const base = allocationTotal > 0 ? allocationTotal : unrepartized;
+    if (!paceByWeek || base <= 0) return [];
     const today = isoToday();
-    const cycle = calendarBudget(unrepartized, plan.periodStart, planEnd);
+    const cycle = calendarBudget(base, plan.periodStart, planEnd);
     const current = cycle?.weeks.find((week) => today >= week.start && today <= week.end);
-    const pace = remainingPace(unrepartized, planEnd, today > plan.periodStart ? today : plan.periodStart);
+    const pace = remainingPace(base, planEnd, today > plan.periodStart ? today : plan.periodStart);
     if (!pace || !cycle) return [];
     const share = current ? startedWeekShare(current, today, pace) : undefined;
     const started = Boolean(share && share.daysLeft < share.daysTotal);
@@ -156,7 +164,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         : t("{weekly} pe fiecare săptămână întreagă, ≈{perDay} pe zi.", { weekly: money(Math.round(pace.weekly)), perDay: money(pace.perDay) }),
     }];
     if (started && current && share) {
-      const wholeWeekly = weeklyPaceFromTotal(unrepartized, plan.periodStart, planEnd);
+      const wholeWeekly = weeklyPaceFromTotal(base, plan.periodStart, planEnd);
       options.push({
         id: "whole",
         weekly: Math.round(wholeWeekly),
@@ -199,6 +207,29 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       : `${source.name} · ${wholeLei(free)} ${t("liberi din")} ${wholeLei(balance)}`;
   };
   const selectedSourceAvailable = allocationSourceId ? sourceAvailable(allocationSourceId) : undefined;
+  /**
+   * Acoperirea plicului: sursa principală plus completările, fiecare limitată la cât are
+   * liber. Un plic fără bani în spate nu e un plan, e o dorință — de aceea suma se compară
+   * cu ce chiar există, nu cu totalul casei.
+   */
+  const fundingEntries = allocationFunding
+    .map((entry) => ({ sourceId: entry.sourceId, amount: Math.max(0, parseRomanianAmount(entry.amount)) }))
+    .filter((entry) => entry.sourceId && entry.sourceId !== allocationSourceId && entry.amount > 0);
+  const fundingTotal = Math.round(fundingEntries.reduce((sum, entry) => sum + entry.amount, 0) * 100) / 100;
+  const fundingOverdrawn = fundingEntries.filter((entry) => entry.amount > sourceAvailable(entry.sourceId).free + 0.5);
+  const fundingExcess = allocationTotal > 0 && fundingTotal > allocationTotal + 0.5;
+  const primaryNeeded = Math.max(0, allocationTotal - fundingTotal);
+  const primaryFree = selectedSourceAvailable?.free ?? 0;
+  const covered = Math.min(primaryNeeded, primaryFree) + fundingTotal;
+  const shortfall = Math.round(Math.max(0, allocationTotal - covered) * 100) / 100;
+  /** Surse care mai au bani liberi și nu sunt deja folosite de acest plic. */
+  const fundingCandidates = data.settings.paymentSources.filter((source) =>
+    source.id !== allocationSourceId
+    && !allocationFunding.some((entry) => entry.sourceId === source.id)
+    && sourceAvailable(source.id).free > 0.5);
+  /** Câți bani mai stau liberi în toată casa, dacă surplusul se caută în altă parte. */
+  const freeElsewhere = Math.round(fundingCandidates.reduce((sum, source) => sum + sourceAvailable(source.id).free, 0) * 100) / 100;
+  const overBudget = shortfall > 0.5 || fundingOverdrawn.length > 0 || fundingExcess;
   const sourceFreeHint = !selectedSourceAvailable
     ? undefined
     : Math.round(selectedSourceAvailable.reserved) <= 0
@@ -211,7 +242,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const addDays = (start: string, amount: number) => { const date = new Date(`${start || isoToday()}T12:00:00`); date.setDate(date.getDate() + amount); return isoDate(date); };
   const allocationPeriodOptions = [{ id: "next-income" as const, label: t("Până la următorul venit") }, { id: "month" as const, label: t("Luna aceasta") }, { id: "week" as const, label: t("Săptămâna aceasta") }, { id: "custom" as const, label: t("Personalizat") }];
   const selectAllocationPeriod = (periodId: typeof allocationPeriod) => { setAllocationPeriod(periodId); if (periodId === "next-income") { setCycleStart(plan.periodStart); setCycleEnd(plan.nextPayday || ""); } else if (periodId === "month") { const now = new Date(); setCycleStart(isoDate(new Date(now.getFullYear(), now.getMonth(), 1))); setCycleEnd(isoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0))); } else if (periodId === "week") { setCycleStart(isoToday()); setCycleEnd(addIsoDays(isoToday(), 6)); } };
-  const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(data.settings.paymentSources[0]?.id || ""); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setEditingAllocationId(""); setAllocationError(""); };
+  const resetAllocationBuilder = () => { setAllocationLabel(""); setAllocationCategory(categories[0] || "Alimente"); setAllocationAmount(""); setAllocationMemberId(""); setAllocationSourceId(richestSourceId()); setAllocationNote(""); setAllocationThreshold(80); setAllocationWeeklyPace(true); setAllocationFunding([]); setEditingAllocationId(""); setAllocationError(""); };
 
   const windowPayday = paydayWindow(plan);
   const persistCycle = (start: string, end: string, flex = cycleFlex) => {
@@ -250,13 +281,19 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     const source = data.settings.paymentSources.find((item) => item.id === allocationSourceId);
     const member = data.settings.members.find((item) => item.id === allocationMemberId);
     if (amount <= 0) return setAllocationError(t("Introdu suma pentru această categorie."));
-    if (overBudget) return setAllocationError(t("Suma trece peste cei {amount} rămași de repartizat. Scade-o sau eliberează bani dintr-un alt plic.", { amount: money(Math.max(0, unrepartized)) }));
+    if (fundingExcess) return setAllocationError(t("Completările depășesc suma plicului. Scade-le sau mărește suma."));
+    if (fundingOverdrawn.length) return setAllocationError(t("O completare cere mai mult decât are sursa liberă. Scade suma sau alege altă sursă."));
+    if (shortfall > 0.5) {
+      return setAllocationError(freeElsewhere > 0.5
+        ? t("Mai lipsesc {amount}. Completează din altă sursă mai jos sau scade suma plicului.", { amount: money(shortfall) })
+        : t("Mai lipsesc {amount} și nu mai sunt bani liberi în nicio sursă. Scade suma plicului.", { amount: money(shortfall) }));
+    }
     if (!source) return setAllocationError(t("Alege sursa din care vei plăti această categorie."));
     if (!editingAllocationId && !canAddEnvelope(plan.allocations.length)) {
       return setAllocationError(t("Casa include până la {n} plicuri. Planul Familia deblochează plicuri nelimitate.", { n: String(PLANS.casa.envelopes) }));
     }
     const label = allocationLabel.trim() || `${allocationCategory}${member ? ` · ${member.name}` : ""}`;
-    const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold, weeklyPace: allocationWeeklyPace ? undefined : false };
+    const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, funding: fundingEntries.length ? fundingEntries : undefined, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold, weeklyPace: allocationWeeklyPace ? undefined : false };
     const previous = editingAllocationId ? plan.allocations.find((item) => item.id === editingAllocationId) : undefined;
     const nextAllocations = editingAllocationId ? plan.allocations.map((item) => item.id === editingAllocationId ? next : item) : [...plan.allocations, next];
     const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), updatedAt: new Date().toISOString() } } };
@@ -264,7 +301,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     onChange(levelStarted ? levelStartedWeek(saved, next.id) : saved);
     resetAllocationBuilder();
   };
-  const editAllocation = (item: BudgetAllocation) => { setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationWeeklyPace(item.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
+  const editAllocation = (item: BudgetAllocation) => { setAllocationFunding((item.funding || []).map((entry) => ({ sourceId: entry.sourceId, amount: String(entry.amount) }))); setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationWeeklyPace(item.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
   const applyRecommendation = (allocation: BudgetAllocation, amount: number) => { setEditingAllocationId(allocation.id); setAllocationLabel(allocation.label); setAllocationCategory(allocation.category || categories[0] || "Alimente"); setAllocationAmount(String(amount)); setAllocationMemberId(allocation.memberId || ""); setAllocationSourceId(allocation.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(allocation.note || ""); setAllocationThreshold(allocation.alertThreshold || 80); setAllocationWeeklyPace(allocation.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
   const applyMonthlyAllocation = (changes: { id: string; amount: number }[]) => { let nextData = data; changes.forEach(({ id, amount }) => { const currentPlan = nextData.settings.salaryPlan; const previous = currentPlan.allocations.find((item) => item.id === id); if (!previous || previous.amount === amount) return; const nextAllocations = currentPlan.allocations.map((item) => item.id === id ? { ...item, amount } : item); const changedData = { ...nextData, settings: { ...nextData.settings, salaryPlan: { ...currentPlan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), updatedAt: new Date().toISOString() } } }; nextData = appendAllocationHistory(changedData, { kind: "updated", allocationId: id, allocationLabel: previous.label, amount, previousAmount: previous.amount, newAmount: amount }); }); if (nextData !== data) onChange(nextData); };
   const deleteAllocation = (id: string, label: string) => {
@@ -357,8 +394,6 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         {!simpleMode && <button type="button" className="bf-link-button" onClick={() => { markEnvelopeGlossarySeen(); setShowGlossary(false); }}>{t("Am înțeles")}</button>}
       </aside>
     )}
-    <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">{t("REPARTIZARE PE PERIOADĂ")}</p><h2 id="allocation-period-title">{t("Alege ritmul casei.")}</h2><p>{t("Vezi banii disponibili pentru intervalul în care iei decizia.")}</p></div><span>{money(Math.max(0, unrepartized))}<small>{t("rămași de repartizat")}</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label={t("Perioada repartizării")}>{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>{t("disponibil în surse")}</small></span><span><b>{money(reservedInEnvelopes)}</b><small>{t("în plicuri")}</small></span><span><b>{money(scheduled)}</b><small>{t("scadențe rezervate")}</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>{t("de repartizat")}</small></span></div></section>
-
     <section className="bf-allocation-progress-card" aria-label="Progres repartizare">
       <div className="bf-allocation-progress-top">
         <div>
@@ -403,7 +438,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       )}
     </section>
 
-    {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} remainingById={Object.fromEntries(envelopes.map((envelope) => [envelope.item.id, Math.max(0, envelope.remaining)]))} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
+    <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">{t("REPARTIZARE PE PERIOADĂ")}</p><h2 id="allocation-period-title">{t("Alege ritmul casei.")}</h2><p>{t("Vezi banii disponibili pentru intervalul în care iei decizia.")}</p></div><span>{money(Math.max(0, unrepartized))}<small>{t("rămași de repartizat")}</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label={t("Perioada repartizării")}>{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>{t("disponibil în surse")}</small></span><span><b>{money(reservedInEnvelopes)}</b><small>{t("în plicuri")}</small></span><span><b>{money(scheduled)}</b><small>{t("scadențe rezervate")}</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>{t("de repartizat")}</small></span></div></section>
+
+
     <section className="bf-plan-cashflow-suggest" aria-labelledby="bf-cashflow-suggest-title">
       <div>
         <p className="bf-kicker">{t("DIN FLUXUL REAL")}</p>
@@ -492,7 +529,43 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         <PlanField label={t("Ce plătește plicul")}><select value={allocationCategory} onChange={(event) => setAllocationCategory(event.target.value)}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></PlanField>
         <PlanField label={t("Nume plic")} hint={t("Poți scrie «Taxi soție» sau lăsa automat.")}><input value={allocationLabel} onChange={(event) => setAllocationLabel(event.target.value)} placeholder={t("ex. Alimente · card soție")} /></PlanField>
         <PlanField label={t("Membru")}><select value={allocationMemberId} onChange={(event) => { const memberId = event.target.value; setAllocationMemberId(memberId); const firstCompatible = data.settings.paymentSources.find((source) => !source.memberId || source.memberId === memberId); if (firstCompatible) setAllocationSourceId(firstCompatible.id); }}><option value="">{t("Familie")}</option>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></PlanField>
+        {/* Sursa și completările ei stau într-un singur loc din grilă: regulile vechi de
+            layout numără copiii, așa că un element în plus ar muta coloanele celorlalte câmpuri. */}
+        <div className={`bf-source-field${allocationTotal > 0 && (shortfall > 0.5 || allocationFunding.length > 0) ? " is-funding" : ""}`}>
         <PlanField label={t("Plătit din")} hint={sourceFreeHint}><select value={allocationSourceId} onChange={(event) => setAllocationSourceId(event.target.value)}>{currentSourceOptions.map((source) => <option key={source.id} value={source.id}>{sourceOptionLabel(source)}</option>)}</select></PlanField>
+        {/* Plicul se plătește din surse reale. Când cea aleasă nu ajunge, diferența se ia
+            explicit din alta — 1.800 din cashul tău și 100 din al partenerei — în loc să fie
+            promisă din bani care nu există. */}
+        {allocationTotal > 0 && (shortfall > 0.5 || allocationFunding.length > 0) && (
+          <div className="bf-funding">
+            <p className={shortfall > 0.5 || fundingExcess ? "bf-funding-gap" : "bf-funding-ok"}>
+              {fundingExcess
+                ? t("Completările fac {funded}, mai mult decât plicul de {total}.", { funded: money(fundingTotal), total: money(allocationTotal) })
+                : shortfall > 0.5
+                ? t("{source} acoperă {covered} din {total}. Mai lipsesc {gap}.", { source: sourceName(data, allocationSourceId), covered: money(Math.max(0, covered)), total: money(allocationTotal), gap: money(shortfall) })
+                : t("Acoperit integral: {total}.", { total: money(allocationTotal) })}
+            </p>
+            {allocationFunding.map((entry, index) => {
+              const free = entry.sourceId ? sourceAvailable(entry.sourceId).free : 0;
+              const asked = Math.max(0, parseRomanianAmount(entry.amount));
+              return <div className="bf-funding-row" key={`${entry.sourceId}-${index}`}>
+                <select value={entry.sourceId} aria-label={t("Sursa completării")} onChange={(event) => setAllocationFunding((current) => current.map((row, position) => position === index ? { ...row, sourceId: event.target.value } : row))}>
+                  {data.settings.paymentSources.filter((source) => source.id !== allocationSourceId).map((source) => <option key={source.id} value={source.id}>{sourceOptionLabel(source)}</option>)}
+                </select>
+                <input value={entry.amount} inputMode="decimal" aria-label={t("Cât iei din această sursă")} onChange={(event) => { setAllocationFunding((current) => current.map((row, position) => position === index ? { ...row, amount: event.target.value } : row)); setAllocationError(""); }} />
+                <button type="button" aria-label={t("Renunță la completare")} onClick={() => setAllocationFunding((current) => current.filter((_, position) => position !== index))}>×</button>
+                {asked > free + 0.5 && <small className="bf-funding-over">{t("Liberi doar {amount}.", { amount: money(free) })}</small>}
+              </div>;
+            })}
+            {shortfall > 0.5 && fundingCandidates.length > 0 && (
+              <button type="button" className="bf-funding-add" onClick={() => { const best = fundingCandidates[0]; setAllocationFunding((current) => [...current, { sourceId: best.id, amount: String(Math.round(Math.min(shortfall, sourceAvailable(best.id).free))) }]); setAllocationError(""); }}>
+                <Plus size={14} /> {t("Ia {amount} din {source}", { amount: money(Math.min(shortfall, sourceAvailable(fundingCandidates[0].id).free)), source: fundingCandidates[0].name })}
+              </button>
+            )}
+            {shortfall > 0.5 && fundingCandidates.length === 0 && <small className="bf-funding-none">{t("Nu mai sunt bani liberi în nicio sursă. Scade suma plicului.")}</small>}
+          </div>
+        )}
+        </div>
         {/* Un singur loc în grilă: câmpul sumei plus comutatorul „total / pe săptămână”.
             Regulile vechi de layout numără copiii, așa că tot ce ține de sumă stă împreună. */}
         <div className="bf-pace-field">
@@ -540,7 +613,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
              Sunt variante, nu o singură cifră: familia alege dacă săptămâna începută primește
              partea zilelor rămase sau bugetul ei întreg. */
           <div className="bf-pace-advice">
-            <p><b>{t("Cum împarți cei {amount} nerepartizați", { amount: money(unrepartized) })}</b></p>
+            <p><b>{allocationTotal > 0 ? t("Cum împarți cei {amount} din acest plic", { amount: money(allocationTotal) }) : t("Cum împarți cei {amount} nerepartizați", { amount: money(unrepartized) })}</b></p>
             <ul>
               {paceOptions.map((option) => <li key={option.id}>
                 <div><b>{option.title}</b><small>{option.detail}</small></div>
@@ -555,7 +628,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             </ul>
           </div>
         )}
-        {overBudget && <p className="bf-form-error" role="alert">{t("Suma trece peste cei {amount} rămași de repartizat. Scade-o sau eliberează bani dintr-un alt plic.", { amount: money(Math.max(0, freeForThisEnvelope)) })}</p>}
+        {fundingOverdrawn.length > 0 && <p className="bf-form-error" role="alert">{t("O completare cere mai mult decât are sursa liberă. Scade suma sau alege altă sursă.")}</p>}
         <div className="bf-allocation-builder-actions"><button className="bf-primary" onClick={() => setAllocationPreviewOpen(true)}><Plus size={17} /> {editingAllocationId ? t("Salvează plicul") : t("Adaugă plicul")}</button>{editingAllocationId && <button onClick={resetAllocationBuilder}>{t("Renunță")}</button>}</div>
       </div>
       {/* Randat prin portal în <body>: `.bf-app` are `overflow: clip`, care limitează un element
@@ -604,6 +677,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       {!simpleMode && <SalaryRitualPanel data={data} onChange={onChange} />}
       {!simpleMode && <AllocationHistoryPanel data={data} />}
     </section>
+    {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} remainingById={Object.fromEntries(envelopes.map((envelope) => [envelope.item.id, Math.max(0, envelope.remaining)]))} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
     <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> {t("Instrumente pentru perioade repetate")}</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>{t("Un șablon reține doar durata perioadei; începi mereu următorul ciclu cu data aleasă de tine.")}</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={periodValid ? `ex. Salariu ${daysBetween(cycleStart, cycleEnd)} zile` : t("Completează mai întâi perioada")} disabled={!periodValid} /><button disabled={!periodValid} onClick={saveCycleTemplate}>{t("Salvează șablonul")}</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>{t("Salvează")}</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>{t("Anulează")}</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>{t("Nu ai șabloane salvate încă.")}</span>}</div></div></details>
   </div>;
 }

@@ -35,10 +35,10 @@ jobs:
           ./gradlew assembleDebug
           ls -la app/build/outputs/apk/debug
           apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -n 1)"
-          cp "$apk" "app/build/outputs/apk/debug/Buget-Familie-1.1.38.apk"
+          cp "$apk" "app/build/outputs/apk/debug/Buget-Familie-1.1.39.apk"
       - name: Publică APK-ul ca artefact GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: Buget-Familie-1.1.38
-          path: android/app/build/outputs/apk/debug/Buget-Familie-1.1.38.apk
+          name: Buget-Familie-1.1.39
+          path: android/app/build/outputs/apk/debug/Buget-Familie-1.1.39.apk
           retention-days: 14

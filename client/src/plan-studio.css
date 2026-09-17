@@ -249,3 +249,78 @@
     justify-self: start;
   }
 }
+
+/* ------------------------------------------------------------------ surse
+   Sursa plicului și completările din alte surse. Un plic de 1.900 care nu încape
+   în cei 1.800 dintr-un card poate lua restul din altă parte, spus explicit. */
+.bf-source-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+/* Cu completări, sursa are nevoie de toată lățimea: un select de sursă și o sumă nu încap
+   pe jumătate de rând fără să se strivească unul pe altul. */
+.bf-source-field.is-funding {
+  grid-column: 1 / -1;
+}
+.bf-funding {
+  display: grid;
+  gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--cf-honey, #b4741f) 30%, var(--cf-line, #c9d2cc));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--cf-honey, #b4741f) 6%, var(--cf-surface, #fff));
+}
+.bf-funding > p {
+  margin: 0;
+  font: 700 11.5px/1.4 "IBM Plex Sans", system-ui, sans-serif;
+}
+.bf-funding-gap { color: var(--cf-honey, #8a5a12); }
+.bf-funding-ok { color: var(--cf-primary-strong, #176b54); }
+.bf-funding-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px 32px;
+  align-items: center;
+  gap: 6px;
+}
+.bf-funding-row select,
+.bf-funding-row input {
+  min-height: 38px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--cf-line, #c9d2cc);
+  border-radius: 8px;
+  background: var(--cf-surface, #fff);
+  color: var(--cf-ink, #0c1612);
+  font: 650 12.5px/1 "IBM Plex Sans", system-ui, sans-serif;
+}
+.bf-funding-row > button {
+  min-height: 38px;
+  border: 1px solid var(--cf-line, #c9d2cc);
+  border-radius: 8px;
+  background: var(--cf-surface, #fff);
+  color: var(--cf-coral, #a8352b);
+  font: 750 15px/1 "IBM Plex Sans", system-ui, sans-serif;
+}
+.bf-funding-over,
+.bf-funding-none {
+  grid-column: 1 / -1;
+  color: var(--cf-coral, #a8352b);
+  font: 650 11px/1.35 "IBM Plex Sans", system-ui, sans-serif;
+}
+.bf-funding-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--cf-primary, #256b5b);
+  border-radius: 9px;
+  background: var(--cf-surface, #fff);
+  color: var(--cf-ink, #0c1612);
+  font: 750 12px/1 "IBM Plex Sans", system-ui, sans-serif;
+}
+@media (max-width: 380px) {
+  .bf-funding-row { grid-template-columns: minmax(0, 1fr) 72px 30px; }
+}

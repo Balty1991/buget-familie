@@ -330,3 +330,33 @@ html:not(.dark) .bf-more-grid .bf-kicker.bf-more-section-label {
 html:not(.dark) .bf-recurring-list article > span:not(.done) {
   color: #3b6152 !important;
 }
+
+/* 15 · Acoperirea plicului din mai multe surse.
+   `.os-shell p` pictează orice paragraf cu culoarea de text secundar, `!important`, deci
+   mesajul „mai lipsesc 100 RON” ieșea gri-verde la 2,79 pe fundalul lui — sub pragul AA.
+   Aici primesc culorile lor, cu specificitate peste regula de temă. */
+.os-shell .bf-funding > p.bf-funding-gap {
+  color: color-mix(in srgb, var(--cf-coral, #a8352b) 78%, var(--cf-ink, #0c1612)) !important;
+}
+.os-shell .bf-funding > p.bf-funding-ok {
+  color: var(--cf-primary-strong, #176b54) !important;
+}
+.os-shell .bf-funding small.bf-funding-over,
+.os-shell .bf-funding small.bf-funding-none {
+  color: color-mix(in srgb, var(--cf-coral, #a8352b) 78%, var(--cf-ink, #0c1612)) !important;
+}
+/* Butonul și câmpurile completării iau suprafața temei, nu albul implicit al butoanelor. */
+.os-shell .bf-funding .bf-funding-add,
+.os-shell .bf-funding-row > select,
+.os-shell .bf-funding-row > input,
+.os-shell .bf-funding-row > button {
+  background: var(--cf-surface, #fff) !important;
+  color: var(--cf-ink, #0c1612) !important;
+}
+.os-shell .bf-funding-row > button {
+  color: color-mix(in srgb, var(--cf-coral, #a8352b) 78%, var(--cf-ink, #0c1612)) !important;
+}
+/* Regula de grilă a constructorului e `!important`, deci lățimea completării o cere la fel. */
+.bf-allocation-builder .bf-source-field.is-funding {
+  grid-column: 1 / -1 !important;
+}

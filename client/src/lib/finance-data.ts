@@ -97,7 +97,13 @@ export const supportedCurrencies = ["RON", "EUR", "USD", "GBP", "CHF", "MDL", "H
 /** `rate` este câți lei face o unitate din valuta respectivă. */
 export type ExchangeRate = { currency: string; rate: number; updatedAt: string };
 export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei, în valuta sursei. */ openingBalance: number; /** Implicit RON. */ currency?: string };
-export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string; /** Implicit adevărat: arată tranșa săptămânii active. Fals pentru plicuri fără ritm fix, unde contează doar totalul ciclului. */ weeklyPace?: boolean; updatedAt?: string };
+/**
+ * Completare dintr-o a doua sursă. O familie ține banii în mai multe locuri, iar un plic de
+ * 1.900 poate să nu încapă în cei 1.800 din cash: restul vine din cashul partenerei, spus
+ * explicit, nu ghicit. Sursa principală rămâne `sourceId`; aici stau doar completările.
+ */
+export type AllocationFunding = { sourceId: string; amount: number };
+export type BudgetAllocation = { id: string; label: string; amount: number; memberId?: string; category?: string; sourceId?: string; funding?: AllocationFunding[]; /** Prag local de atenție; depășirea rămâne la 100%. */ alertThreshold?: number; /** Detaliu liber, de exemplu „Taxi până la salariu”. */ note?: string; /** Implicit adevărat: arată tranșa săptămânii active. Fals pentru plicuri fără ritm fix, unde contează doar totalul ciclului. */ weeklyPace?: boolean; updatedAt?: string };
 export type BudgetTransfer = { id: string; fromAllocationId: string; toAllocationId: string; amount: number; note?: string; createdAt: string };
 /** Mută bani între tranșele săptămânale ale aceluiași plic, de exemplu când săptămâna curentă s-a epuizat. */
 export type WeekTransfer = { id: string; allocationId: string; fromWeekIndex: number; toWeekIndex: number; amount: number; note?: string; createdAt: string };
@@ -447,7 +453,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     savings: realRows<SavingsGoal>(old.savings).map((item) => ({ ...item, current: Math.max(0, parseRomanianAmount(item.current)), target: Math.max(0, parseRomanianAmount(item.target)) })),
     recurring: realRows<RecurringPayment>(old.recurring).map((item, index) => ({ id: item.id || `recurring-${index}`, name: item.name || `Plată recurentă ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), category: item.category || "Casă & facturi", sourceId: sources.some((source) => source.id === item.sourceId) ? String(item.sourceId) : sources[0]?.id || "", memberId: members.some((member) => member.id === item.memberId) ? String(item.memberId) : members[0]?.id || "", dueDay: Math.min(31, Math.max(1, Math.round(parseRomanianAmount(item.dueDay || 1)))), active: item.active !== false, autoPost: item.autoPost === true, note: item.note || undefined, updatedAt: item.updatedAt || undefined })),
     deleted: Array.isArray(old.deleted) ? old.deleted.filter((item): item is DeletedRecord => Boolean(item && typeof item.id === "string" && typeof item.deletedAt === "string" && ["transactions", "debts", "savings", "receipts", "recurring"].includes(item.entity))).slice(-500) : [],
-    settings: { familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], quickTemplates, archivedQuickTemplates, savedJournalFilters, salaryCycleTemplates, exchangeRates, seenWeeklyPlanTranches, basketProducts, syncDevices, merchantRules, syncRecoveryIssuedAt, salaryPlan: { periodStart, nextPayday, earliestPayday, paydayFlexDays: Number.isFinite((oldPlan as Partial<SalaryPlan>).paydayFlexDays) ? Math.min(5, Math.max(0, Math.round(Number((oldPlan as Partial<SalaryPlan>).paydayFlexDays)))) : undefined, sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: Array.isArray(oldPlan.allocations) ? oldPlan.allocations.map((item, index) => ({ ...item, id: item.id || `allocation-${index}`, label: item.label || item.category || `Plic ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), alertThreshold: Math.min(95, Math.max(50, Math.round(parseRomanianAmount(item.alertThreshold ?? 80)))) })) : [], transfers: Array.isArray((oldPlan as Partial<SalaryPlan>).transfers) ? (oldPlan as Partial<SalaryPlan>).transfers!.filter((item) => item && typeof item.id === "string" && typeof item.fromAllocationId === "string" && typeof item.toAllocationId === "string" && item.fromAllocationId !== item.toAllocationId).map((item) => ({ id: item.id, fromAllocationId: item.fromAllocationId, toAllocationId: item.toAllocationId, amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], weekTransfers: Array.isArray((oldPlan as Partial<SalaryPlan>).weekTransfers) ? (oldPlan as Partial<SalaryPlan>).weekTransfers!.filter((item) => item && typeof item.id === "string" && typeof item.allocationId === "string" && Number.isFinite(item.fromWeekIndex) && Number.isFinite(item.toWeekIndex) && item.fromWeekIndex !== item.toWeekIndex).map((item) => ({ id: item.id, allocationId: item.allocationId, fromWeekIndex: Math.max(1, Math.round(item.fromWeekIndex)), toWeekIndex: Math.max(1, Math.round(item.toWeekIndex)), amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], salaryAllocationRules: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationRules) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationRules!.map((item, index) => ({ id: item.id || `salary-rule-${index}`, label: String(item.label || "Repartizare venit").trim(), allocationId: String(item.allocationId || ""), mode: item.mode === "percent" ? "percent" as const : "fixed" as const, value: Math.max(0, item.mode === "percent" ? Math.min(100, parseRomanianAmount(item.value)) : parseRomanianAmount(item.value)), active: item.active !== false, updatedAt: item.updatedAt || undefined })).filter((item) => item.label && item.allocationId && item.value > 0).slice(0, 24) : [], salaryAllocationApplications: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationApplications!.map((item, index) => ({ id: item.id || `salary-application-${index}`, incomeId: String(item.incomeId || ""), incomeTitle: String(item.incomeTitle || "Venit"), incomeAmount: Math.max(0, parseRomanianAmount(item.incomeAmount)), sourceId: item.sourceId || undefined, memberId: item.memberId || undefined, appliedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.appliedAt || "")) ? String(item.appliedAt) : new Date().toISOString(), allocations: Array.isArray(item.allocations) ? item.allocations.map((entry) => ({ ruleId: String(entry.ruleId || ""), allocationId: String(entry.allocationId || ""), amount: Math.max(0, parseRomanianAmount(entry.amount)) })).filter((entry) => entry.ruleId && entry.allocationId && entry.amount > 0) : [] })).filter((item) => item.incomeId && item.allocations.length).slice(0, 80) : [], allocationHistory, joinedMidCycle: (oldPlan as Partial<SalaryPlan>).joinedMidCycle === true, updatedAt: oldPlan.updatedAt || undefined } },
+    settings: { familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], quickTemplates, archivedQuickTemplates, savedJournalFilters, salaryCycleTemplates, exchangeRates, seenWeeklyPlanTranches, basketProducts, syncDevices, merchantRules, syncRecoveryIssuedAt, salaryPlan: { periodStart, nextPayday, earliestPayday, paydayFlexDays: Number.isFinite((oldPlan as Partial<SalaryPlan>).paydayFlexDays) ? Math.min(5, Math.max(0, Math.round(Number((oldPlan as Partial<SalaryPlan>).paydayFlexDays)))) : undefined, sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: Array.isArray(oldPlan.allocations) ? oldPlan.allocations.map((item, index) => ({ ...item, id: item.id || `allocation-${index}`, label: item.label || item.category || `Plic ${index + 1}`, amount: Math.max(0, parseRomanianAmount(item.amount)), alertThreshold: Math.min(95, Math.max(50, Math.round(parseRomanianAmount(item.alertThreshold ?? 80)))), funding: Array.isArray((item as Partial<BudgetAllocation>).funding) ? (item as BudgetAllocation).funding!.map((entry) => ({ sourceId: String(entry?.sourceId || ""), amount: Math.max(0, parseRomanianAmount(entry?.amount)) })).filter((entry) => entry.sourceId && entry.amount > 0).slice(0, 6) : undefined })) : [], transfers: Array.isArray((oldPlan as Partial<SalaryPlan>).transfers) ? (oldPlan as Partial<SalaryPlan>).transfers!.filter((item) => item && typeof item.id === "string" && typeof item.fromAllocationId === "string" && typeof item.toAllocationId === "string" && item.fromAllocationId !== item.toAllocationId).map((item) => ({ id: item.id, fromAllocationId: item.fromAllocationId, toAllocationId: item.toAllocationId, amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], weekTransfers: Array.isArray((oldPlan as Partial<SalaryPlan>).weekTransfers) ? (oldPlan as Partial<SalaryPlan>).weekTransfers!.filter((item) => item && typeof item.id === "string" && typeof item.allocationId === "string" && Number.isFinite(item.fromWeekIndex) && Number.isFinite(item.toWeekIndex) && item.fromWeekIndex !== item.toWeekIndex).map((item) => ({ id: item.id, allocationId: item.allocationId, fromWeekIndex: Math.max(1, Math.round(item.fromWeekIndex)), toWeekIndex: Math.max(1, Math.round(item.toWeekIndex)), amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], salaryAllocationRules: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationRules) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationRules!.map((item, index) => ({ id: item.id || `salary-rule-${index}`, label: String(item.label || "Repartizare venit").trim(), allocationId: String(item.allocationId || ""), mode: item.mode === "percent" ? "percent" as const : "fixed" as const, value: Math.max(0, item.mode === "percent" ? Math.min(100, parseRomanianAmount(item.value)) : parseRomanianAmount(item.value)), active: item.active !== false, updatedAt: item.updatedAt || undefined })).filter((item) => item.label && item.allocationId && item.value > 0).slice(0, 24) : [], salaryAllocationApplications: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications) ? (oldPlan as Partial<SalaryPlan>).salaryAllocationApplications!.map((item, index) => ({ id: item.id || `salary-application-${index}`, incomeId: String(item.incomeId || ""), incomeTitle: String(item.incomeTitle || "Venit"), incomeAmount: Math.max(0, parseRomanianAmount(item.incomeAmount)), sourceId: item.sourceId || undefined, memberId: item.memberId || undefined, appliedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.appliedAt || "")) ? String(item.appliedAt) : new Date().toISOString(), allocations: Array.isArray(item.allocations) ? item.allocations.map((entry) => ({ ruleId: String(entry.ruleId || ""), allocationId: String(entry.allocationId || ""), amount: Math.max(0, parseRomanianAmount(entry.amount)) })).filter((entry) => entry.ruleId && entry.allocationId && entry.amount > 0) : [] })).filter((item) => item.incomeId && item.allocations.length).slice(0, 80) : [], allocationHistory, joinedMidCycle: (oldPlan as Partial<SalaryPlan>).joinedMidCycle === true, updatedAt: oldPlan.updatedAt || undefined } },
   };
 };
 
@@ -673,7 +679,7 @@ export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => 
       ? item.allocationId === allocation.id
       : (!allocation.memberId || item.memberId === allocation.memberId)
         && (!allocation.category || item.category === allocation.category)
-        && (!allocation.sourceId || item.sourceId === allocation.sourceId);
+        && (!allocation.sourceId || !item.sourceId || allocationSourceIds(allocation).includes(item.sourceId));
     if (matches) total += item.amount;
   }
   return total;
@@ -715,11 +721,58 @@ export const planAllocationMath = (data: AppData) => {
  * plicurile plătite din ea și în scadențele care o vor goli. Fără scăderea asta, banii
  * puși deja într-un plic apar a doua oară ca disponibili când deschizi un plic nou.
  */
+/** Toate sursele din care se plătește un plic: cea principală plus completările. */
+export const allocationSourceIds = (item: BudgetAllocation) =>
+  [item.sourceId, ...(item.funding || []).map((entry) => entry.sourceId)].filter((id): id is string => Boolean(id));
+
+/**
+ * Cât ține fiecare sursă din plic. Completările își scriu suma, iar sursa principală duce
+ * restul — așa, un plic de 1.900 cu 100 de la partener rezervă 1.800 din cashul propriu.
+ */
+export const allocationFundingShares = (item: BudgetAllocation): AllocationFunding[] => {
+  const extras = (item.funding || []).filter((entry) => entry.sourceId && entry.amount > 0);
+  const fromExtras = extras.reduce((sum, entry) => sum + entry.amount, 0);
+  const primary = money2(Math.max(0, item.amount - fromExtras));
+  return item.sourceId ? [{ sourceId: item.sourceId, amount: primary }, ...extras] : extras;
+};
+
+/** Cât din plic s-a plătit chiar din sursa asta, în perioada planului. */
+const allocationSpentFromSource = (data: AppData, allocation: BudgetAllocation, sourceId: string) => {
+  const plan = data.settings.salaryPlan;
+  const start = plan.periodStart;
+  const end = planCoverEndDate(plan);
+  let total = 0;
+  for (const item of data.transactions) {
+    if (item.kind !== "expense" || item.sourceId !== sourceId) continue;
+    if (start && item.date < start) continue;
+    if (end && item.date > end) continue;
+    const matches = item.allocationId
+      ? item.allocationId === allocation.id
+      : (!allocation.memberId || item.memberId === allocation.memberId)
+        && (!allocation.category || item.category === allocation.category)
+        && (!allocation.sourceId || allocationSourceIds(allocation).includes(item.sourceId || ""));
+    if (matches) total += item.amount;
+  }
+  return total;
+};
+
 export const sourceFreeBalance = (data: AppData, sourceId: string, ignoreAllocationId?: string) => {
   const balance = sourceBalance(data, sourceId);
   const reservedInEnvelopes = data.settings.salaryPlan.allocations
-    .filter((item) => item.sourceId === sourceId && item.id !== ignoreAllocationId)
-    .reduce((sum, item) => sum + allocationPlanSlice(data, item).remaining, 0);
+    .filter((item) => item.id !== ignoreAllocationId && allocationSourceIds(item).includes(sourceId))
+    .reduce((sum, item) => {
+      /* Rezervarea urmează banii reali: fiecare sursă ține partea ei din plic, mai puțin ce
+         s-a cheltuit chiar din ea. Împărțirea proporțională ar scădea de două ori aceeași
+         cheltuială — o dată din soldul sursei, o dată din rezervă — și ar scoate sursa pe minus. */
+      const shares = allocationFundingShares(item);
+      const mine = shares.filter((entry) => entry.sourceId === sourceId).reduce((total, entry) => total + entry.amount, 0);
+      if (mine <= 0) return sum;
+      const spentHere = allocationSpentFromSource(data, item, sourceId);
+      /* Un plic fără ritm săptămânal poate fi tăiat de `allocationPlanSlice` (start la mijloc
+         de ciclu): rezervarea nu poate depăși ce mai ține plicul în total. */
+      const cap = allocationPlanSlice(data, item).remaining;
+      return sum + Math.min(cap, Math.max(0, mine - spentHere));
+    }, 0);
   const scheduled = pendingRecurringInPlan(data)
     .filter((item) => item.sourceId === sourceId)
     .reduce((sum, item) => sum + item.amount, 0);
@@ -765,7 +818,7 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
     const spent = data.transactions.filter((item) => {
       if (item.kind !== "expense" || item.date < week.start || item.date > weekEnd) return false;
       if (item.allocationId) return item.allocationId === allocation.id;
-      return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || item.sourceId === allocation.sourceId);
+      return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || !item.sourceId || allocationSourceIds(allocation).includes(item.sourceId));
     }).reduce((sum, item) => sum + item.amount, 0);
     const remaining = roundSigned(weekBudget - spent);
     const days = weekEnd === week.end ? week.days : Math.round((new Date(`${weekEnd}T12:00:00`).valueOf() - new Date(`${week.start}T12:00:00`).valueOf()) / 86400000) + 1;
@@ -873,7 +926,7 @@ const RELATED_ENVELOPE_CATEGORIES: Record<string, string[]> = {
 };
 
 const envelopeFitsSourceAndMember = (data: AppData, allocation: BudgetAllocation, input: { memberId?: string; sourceId?: string }, sourceFit: BudgetAllocation[]) => {
-  if (allocation.sourceId && input.sourceId && allocation.sourceId !== input.sourceId) return false;
+  if (allocation.sourceId && input.sourceId && !allocationSourceIds(allocation).includes(input.sourceId)) return false;
   if (!allocation.memberId || allocation.memberId === input.memberId) return true;
   const exactMemberMatchExists = sourceFit.some((item) => item.memberId === input.memberId);
   const sourceOwnerId = data.settings.paymentSources.find((source) => source.id === input.sourceId)?.memberId;
@@ -883,7 +936,7 @@ const envelopeFitsSourceAndMember = (data: AppData, allocation: BudgetAllocation
 const rankEnvelope = (data: AppData, item: BudgetAllocation) => (item.memberId ? 2 : 0) + (item.sourceId ? 2 : 0) + (allocationBudget(data, item) - allocationSpent(data, item) > 0 ? 1 : 0);
 
 const sourceCompatibleAllocations = (data: AppData, input: { sourceId?: string }) =>
-  data.settings.salaryPlan.allocations.filter((allocation) => !allocation.sourceId || !input.sourceId || allocation.sourceId === input.sourceId);
+  data.settings.salaryPlan.allocations.filter((allocation) => !allocation.sourceId || !input.sourceId || allocationSourceIds(allocation).includes(input.sourceId));
 
 export const matchingAllocationsForExpense = (data: AppData, input: { category: string; memberId?: string; sourceId?: string }) => {
   const pool = data.settings.salaryPlan.allocations;
