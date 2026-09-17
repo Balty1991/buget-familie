@@ -305,7 +305,7 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
       return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
     }
     case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date };
-    case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit };
+    case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit, amountIsWeekly: intent.amountIsWeekly };
     case "debt": return { kind: "debt", name: intent.name, remaining: intent.remaining };
     case "recurring": return { kind: "recurring", name: intent.name, amount: intent.amount, dueDay: intent.dueDay, category: intent.category };
     case "goal": return { kind: "goal", name: intent.name, target: intent.target, current: intent.current, dueDate: intent.dueDate };
@@ -335,7 +335,7 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
       const target = planIncome(data)[0];
       return target ? `${head}\n  ↳ intră în ${target.source.name} (${money(target.balance)} acum)` : head;
     }
-    case "envelope": return `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ""}`;
+    case "envelope": return intent.amountIsWeekly ? `plicul „${intent.label}” cu ${money(intent.amount)} pe săptămână întreagă, până la venit` : `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ""}`;
     case "debt": return `datoria „${intent.name}”, sold ${money(intent.remaining)}${intent.monthly ? `, rată ${money(intent.monthly)}` : ""}`;
     case "recurring": return `scadența „${intent.name}”, ${money(intent.amount)} pe data de ${intent.dueDay}`;
     case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;

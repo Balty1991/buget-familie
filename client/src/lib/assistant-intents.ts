@@ -23,7 +23,7 @@ const fold = (value: string) => value.replace(/[ăâîșşțţĂÂÎȘŞȚŢ]/g,
 export type AssistantIntent =
   | { kind: "expense"; amount: number; category: string; title: string; date: string }
   | { kind: "income"; amount: number; title: string; date: string }
-  | { kind: "envelope"; label: string; amount: number; category?: string; weeklyLimit?: number; weeklyPace: boolean }
+  | { kind: "envelope"; label: string; amount: number; category?: string; weeklyLimit?: number; weeklyPace: boolean; amountIsWeekly?: boolean }
   | { kind: "debt"; name: string; remaining: number; monthly?: number }
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
@@ -283,6 +283,13 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
   const category = guessCategoryFromText(named || leftover || segment, expenseCategories, rules);
   const rawName = titleCase(named || leftover);
   const label = category && named && named.split(/\s+/).length === 1 ? category : (rawName || category || "Plic nou");
+  /**
+   * „Plic Alimente, 600 pe săptămână” spune un ritm, nu un total: singura sumă din mesaj stă
+   * lângă un marcator săptămânal. Fără semnalul ăsta, plicul primea 600 de lei pentru toată
+   * perioada — de șase ori mai puțin decât ceruse omul. Totalul îl calculează aplicația,
+   * fiindcă numai ea știe câte zile mai sunt până la venit.
+   */
+  const amountIsWeekly = Boolean(weekly) && weekly === total && !perWeek;
   return {
     kind: "envelope",
     label: label || category || "Plic nou",
@@ -291,6 +298,7 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
     weeklyLimit: perWeek,
     // Un plic cu limită săptămânală are ritm săptămânal; altfel contează doar totalul ciclului.
     weeklyPace: Boolean(perWeek) || WEEKLY.test(folded),
+    amountIsWeekly: amountIsWeekly || undefined,
   };
 }
 
@@ -488,14 +496,17 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
       const amount = num(item.amount, { min: 0.01 });
       const label = text(item.label, 60);
       if (!amount || !label) return undefined;
-      const weeklyLimit = num(item.weeklyLimit, { min: 0.01, max: amount });
+      const amountIsWeekly = item.amountIsWeekly === true;
+      // Când suma e un ritm, limita săptămânală e chiar ea; altfel trebuie să încapă în total.
+      const weeklyLimit = amountIsWeekly ? amount : num(item.weeklyLimit, { min: 0.01, max: amount });
       return {
         kind: "envelope",
         label,
         amount,
         category: text(item.category, 60),
         weeklyLimit,
-        weeklyPace: typeof item.weeklyPace === "boolean" ? item.weeklyPace : Boolean(weeklyLimit),
+        weeklyPace: amountIsWeekly || (typeof item.weeklyPace === "boolean" ? item.weeklyPace : Boolean(weeklyLimit)),
+        amountIsWeekly: amountIsWeekly || undefined,
       };
     }
     case "debt": {

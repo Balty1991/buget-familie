@@ -28,9 +28,11 @@ import {
   parseNaturalSpendScenario,
   pendingRecurringInPlan,
   planAllocationMath,
+  planEndDate,
   sourceBalance,
   type AppData,
 } from "./finance-data";
+import { calendarBudget, periodDays, remainingPace, startedWeekShare } from "./calendar-budget";
 import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
@@ -43,7 +45,7 @@ export type FinancialUpdate =
   | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string; recurringId?: string; fromWeekIndex?: number; receiptDraft?: { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> } }
   | { kind: "debt"; name: string; remaining: number; due?: string }
   | { kind: "debt-monthly"; amount: number; name?: string }
-  | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string }
+  | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string; amountIsWeekly?: boolean }
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
   | { kind: "payday"; date: string; flexDays: number }
@@ -596,13 +598,52 @@ export function readingLabel(reading: Reading): string {
 }
 
 /**
- * Ce poate vedea modelul online: plicuri, scadențe, datorii, totalul lunii.
+ * Perioada, așa cum o vede planul: câte zile mai sunt până la venit, câți bani sunt liberi
+ * și ce ritm încap ei pe zilele rămase.
+ *
+ * Fără cifrele astea, modelul răspundea la „vreau 600 pe săptămână” socotind săptămâni
+ * întregi de calendar, deci și zilele care trecuseră deja. `paceWeekly` e ritmul pe care îl
+ * susțin banii liberi de azi până la venit, iar `startedWeekShare` e partea care revine
+ * zilelor rămase din tranșa curentă — aceleași cifre pe care le arată ecranul Plan.
+ */
+function planPeriodContext(data: AppData) {
+  const round = (value: number) => Math.round(value * 100) / 100;
+  const plan = data.settings.salaryPlan;
+  const end = planEndDate(plan);
+  const today = isoToday();
+  if (!end || !plan.periodStart) return null;
+  const free = Math.max(0, planAllocationMath(data).unrepartized);
+  const pace = remainingPace(free, end, today > plan.periodStart ? today : plan.periodStart);
+  const cycle = free > 0 ? calendarBudget(free, plan.periodStart, end) : undefined;
+  const current = cycle?.weeks.find((week) => today >= week.start && today <= week.end);
+  const share = current && pace ? startedWeekShare(current, today, pace) : undefined;
+  return {
+    start: plan.periodStart,
+    end,
+    today,
+    started: today > plan.periodStart,
+    daysTotal: periodDays(plan.periodStart, end),
+    daysLeft: periodDays(today > plan.periodStart ? today : plan.periodStart, end),
+    free: round(free),
+    /** Ritmul pe săptămână întreagă pe care îl susțin banii liberi, socotit pe zilele rămase. */
+    paceWeekly: pace ? round(pace.weekly) : null,
+    pacePerDay: pace ? round(pace.perDay) : null,
+    /** Tranșa începută: câte zile mai are și cât îi revine din ritmul de mai sus. */
+    startedWeek: share && share.daysLeft < share.daysTotal
+      ? { index: current?.index ?? 1, daysLeft: share.daysLeft, share: round(share.fair) }
+      : null,
+  };
+}
+
+/**
+ * Ce poate vedea modelul online: perioada, plicuri, scadențe, datorii, totalul lunii.
  * Nu jurnalul. Lidl-ul de ieri rămâne pe telefon.
  */
 export function compactGuideContext(data: AppData, extras: { view?: string; income?: number; expense?: number } = {}) {
   const round = (value: number) => Math.round(value * 100) / 100;
   return {
     view: extras.view,
+    period: planPeriodContext(data),
     month: { income: round(extras.income || 0), expense: round(extras.expense || 0) },
     members: data.settings.members.map((item) => item.name).slice(0, 6),
     payday: data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday || null,

@@ -6,6 +6,7 @@ import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, u
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
+import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -772,7 +773,39 @@ export default function Home() {
       const earliest = addIsoDays(change.date, 0);
       return { ...current, settings: { ...current.settings, salaryPlan: { ...plan, nextPayday: change.date, earliestPayday: earliest >= plan.periodStart ? earliest : plan.periodStart, paydayFlexDays: change.flexDays, updatedAt: now } } };
     }
-    if (change.kind !== "allocation") return current; const labels: Record<string, string> = { Alimente: "Alimente", Facturi: "Casă & facturi", Transport: "Transport", Economii: "Economii", Datorii: "Rate produse" }; const label = change.label || labels[change.category] || change.category; const existing = current.settings.salaryPlan.allocations.find((item) => item.label === label || item.category === label || (change.category && item.category === change.category)); const weeklyPace = change.weekly ? undefined : false; const nextAllocation = existing ? { ...existing, amount: change.amount, weeklyPace, category: label, updatedAt: now } : { id: newId("guided-allocation"), label, category: label, amount: change.amount, weeklyPace, memberId: member?.id, sourceId: source?.id }; const allocations = existing ? current.settings.salaryPlan.allocations.map((item) => item.id === existing.id ? nextAllocation : item) : [...current.settings.salaryPlan.allocations, nextAllocation]; const plan = current.settings.salaryPlan; const start = plan.periodStart || isoToday(); const weeks = change.weeks && change.weeks >= 2 ? change.weeks : 4; const fallbackPayday = new Date(`${start}T12:00:00`); fallbackPayday.setDate(fallbackPayday.getDate() + weeks * 7 - 1); const spokenPayday = "payday" in change && change.payday && change.payday >= start ? change.payday : undefined; const nextPayday = spokenPayday || plan.nextPayday || isoDate(fallbackPayday); const flex = spokenPayday ? (plan.paydayFlexDays ?? 3) : (plan.paydayFlexDays ?? 3); const earliest = new Date(`${nextPayday}T12:00:00`); earliest.setDate(earliest.getDate() - flex); const earliestIso = isoDate(earliest); const earliestPayday = earliestIso < start ? start : earliestIso; const weeklyLimit = change.weeklyAmount || plan.weeklyLimit || (change.weekly ? Math.round((change.amount / weeks) * 100) / 100 : plan.weeklyLimit); return { ...current, settings: { ...current.settings, salaryPlan: { ...plan, periodStart: start, nextPayday, earliestPayday, paydayFlexDays: flex, weeklyLimit, sourceIds: plan.sourceIds.length ? plan.sourceIds : source ? [source.id] : plan.sourceIds, allocations, updatedAt: now } } }; });
+    if (change.kind !== "allocation") return current;
+    const labels: Record<string, string> = { Alimente: "Alimente", Facturi: "Casă & facturi", Transport: "Transport", Economii: "Economii", Datorii: "Rate produse" };
+    const label = change.label || labels[change.category] || change.category;
+    const existing = current.settings.salaryPlan.allocations.find((item) => item.label === label || item.category === label || (change.category && item.category === change.category));
+    const weeklyPace = change.weekly ? undefined : false;
+    const plan = current.settings.salaryPlan;
+    const start = plan.periodStart || isoToday();
+    const weeks = change.weeks && change.weeks >= 2 ? change.weeks : 4;
+    const fallbackPayday = new Date(`${start}T12:00:00`); fallbackPayday.setDate(fallbackPayday.getDate() + weeks * 7 - 1);
+    const spokenPayday = "payday" in change && change.payday && change.payday >= start ? change.payday : undefined;
+    const nextPayday = spokenPayday || plan.nextPayday || isoDate(fallbackPayday);
+    const flex = plan.paydayFlexDays ?? 3;
+    const earliest = new Date(`${nextPayday}T12:00:00`); earliest.setDate(earliest.getDate() - flex);
+    const earliestIso = isoDate(earliest);
+    const earliestPayday = earliestIso < start ? start : earliestIso;
+    /**
+     * „Fă-mi plic Alimente cu 600 pe săptămână” spune un ritm, nu un total. Cât înseamnă în
+     * bani se poate afla abia după ce se știe perioada, așa că suma se calculează aici, pe
+     * zilele rămase până la venit — nu pe cele 26 din calendar, dintre care unele au trecut.
+     */
+    const withPeriod = { ...current, settings: { ...current.settings, salaryPlan: { ...plan, periodStart: start, nextPayday, earliestPayday, paydayFlexDays: flex } } };
+    const amount = (change.amountIsWeekly ? totalForWeeklyPace(withPeriod, change.amount) : undefined) ?? change.amount;
+    const nextAllocation = existing ? { ...existing, amount, weeklyPace, category: label, updatedAt: now } : { id: newId("guided-allocation"), label, category: label, amount, weeklyPace, memberId: member?.id, sourceId: source?.id };
+    const allocations = existing ? current.settings.salaryPlan.allocations.map((item) => item.id === existing.id ? nextAllocation : item) : [...current.settings.salaryPlan.allocations, nextAllocation];
+    const weeklyLimit = change.weeklyAmount || plan.weeklyLimit || (change.weekly ? Math.round((amount / weeks) * 100) / 100 : plan.weeklyLimit);
+    const saved = { ...current, settings: { ...current.settings, salaryPlan: { ...plan, periodStart: start, nextPayday, earliestPayday, paydayFlexDays: flex, weeklyLimit, sourceIds: plan.sourceIds.length ? plan.sourceIds : source ? [source.id] : plan.sourceIds, allocations, updatedAt: now } } };
+    /**
+     * Aceeași regulă ca pe ecranul Plan: dacă săptămâna e deja începută, tranșa curentă
+     * păstrează doar partea zilelor rămase, iar restul pleacă în săptămânile următoare.
+     * Nu face nimic pentru un plic fără ritm săptămânal sau pentru o perioadă neîncepută.
+     */
+    return levelStartedWeek(saved, nextAllocation.id);
+  });
   const revertGuided = (item: GuidedRevert) => update((current) => {
     const index = current.transactions.findIndex((entry) => entry.kind === item.kind && entry.title === item.title && entry.amount === item.amount && entry.date === item.date && (entry.note || "").includes("ghidul AI"));
     if (index < 0) return current;

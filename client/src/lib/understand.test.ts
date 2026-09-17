@@ -112,6 +112,27 @@ describe("ce pleacă către model", () => {
     expect(ctx.members).toContain("Soția");
   });
 
+  /**
+   * Fără cifrele perioadei, modelul răspundea la „vreau 600 pe săptămână” socotind săptămâni
+   * de calendar, deci și zilele care trecuseră. Contextul îi dă acum zilele rămase, banii
+   * liberi și ritmul pe care îl susțin — aceleași cifre pe care le arată ecranul Plan.
+   */
+  it("duce perioada și ritmul până la model", () => {
+    const ctx = compactGuideContext(house(), { view: "plan" });
+    expect(ctx.period).toMatchObject({ start: "2026-09-11", end: "2026-10-09", started: true });
+    expect(ctx.period!.daysLeft).toBeLessThan(ctx.period!.daysTotal);
+    // Casa din fixture are totul repartizat, deci nu are ce ritm să recomande.
+    expect(ctx.period!.paceWeekly).toBeNull();
+
+    const spare = house();
+    spare.settings.paymentSources[0].openingBalance = 9000;
+    const rich = compactGuideContext(spare, { view: "plan" });
+    expect(rich.period!.paceWeekly).toBeGreaterThan(0);
+    expect(rich.period!.pacePerDay).toBeGreaterThan(0);
+    // Săptămâna e începută, deci tranșa curentă primește partea zilelor rămase.
+    expect(rich.period!.startedWeek!.daysLeft).toBeLessThan(7);
+  });
+
   it("când e nesigur, trebuie întrebat — nu scris tăcut", () => {
     const expense: Reading = { kind: "expense", score: 70, why: "x", proposal: { text: "", choices: [] } };
     const income: Reading = { kind: "income", score: 68, why: "y", proposal: { text: "", choices: [] } };

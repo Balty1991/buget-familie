@@ -102,6 +102,24 @@ describe("plicuri", () => {
     expect(at("Împarte cei 500 disponibili in plicuri de alimentae pe 2 săptămâni")[0].intent)
       .toMatchObject({ kind: "envelope", label: "Alimente", amount: 500, weeklyLimit: 250, weeklyPace: true });
   });
+
+  /**
+   * „600 pe săptămână” e un ritm, nu un total. Fără semnalul `amountIsWeekly`, plicul primea
+   * 600 de lei pentru toată perioada — de câteva ori mai puțin decât ceruse omul.
+   */
+  it("marchează suma drept ritm când singura cifră e săptămânală", () => {
+    expect(at("fă-mi plic Alimente cu 600 pe săptămână")[0].intent)
+      .toMatchObject({ kind: "envelope", label: "Alimente", amount: 600, weeklyPace: true, amountIsWeekly: true });
+  });
+
+  it("nu marchează ritm când s-a spus și totalul", () => {
+    expect(at("plic Alimente 2400, limită săptămânală 600")[0].intent)
+      .toMatchObject({ kind: "envelope", amount: 2400, weeklyLimit: 600, amountIsWeekly: undefined });
+  });
+
+  it("nu marchează ritm pentru o sumă simplă", () => {
+    expect(at("creează plic Transport 800 lei")[0].intent).toMatchObject({ kind: "envelope", amountIsWeekly: undefined });
+  });
 });
 
 describe("mesaje pe care nu le înțelege", () => {

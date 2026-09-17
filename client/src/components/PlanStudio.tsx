@@ -14,7 +14,8 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
-import { calendarBudget, periodDays, remainingPace, startedWeekShare, totalFromWeeklyPace, weeklyPaceFromTotal } from "@/lib/calendar-budget";
+import { calendarBudget, remainingPace, startedWeekShare, totalFromWeeklyPace, weeklyPaceFromTotal } from "@/lib/calendar-budget";
+import { levelStartedWeek, spreadStartedWeekSurplus, startedWeekPlan } from "@/lib/started-week";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
 import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
 import { AllocationRecommendationsPanel } from "@/components/AllocationRecommendationsPanel";
@@ -260,7 +261,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     const nextAllocations = editingAllocationId ? plan.allocations.map((item) => item.id === editingAllocationId ? next : item) : [...plan.allocations, next];
     const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), updatedAt: new Date().toISOString() } } };
     const saved = appendAllocationHistory(nextData, { kind: editingAllocationId ? "updated" : "created", allocationId: next.id, allocationLabel: label, amount, previousAmount: previous?.amount, newAmount: amount });
-    onChange(levelStarted ? levelStartedWeekIn(saved, next.id) : saved);
+    onChange(levelStarted ? levelStartedWeek(saved, next.id) : saved);
     resetAllocationBuilder();
   };
   const editAllocation = (item: BudgetAllocation) => { setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationWeeklyPace(item.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
@@ -319,63 +320,6 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
    * nu dispare: se împarte în tranșele următoare, proporțional cu zilele lor, prin aceleași
    * transferuri pe care le poți face și de mână (deci se văd în istoric și se pot desface).
    */
-  /**
-   * Mută surplusul tranșei începute în săptămânile care urmează, proporțional cu zilele lor.
-   * Pe un buget împărțit egal, redistribuirea pe zile dă exact ritmul pe săptămână întreagă:
-   * ce nu s-a putut cheltui luni–miercuri se împarte peste zilele rămase, nu se pierde.
-   */
-  const spreadStartedWeekSurplus = (source: AppData, allocationId: string, weekIndex: number, amount: number): AppData => {
-    const allocation = source.settings.salaryPlan.allocations.find((item) => item.id === allocationId);
-    if (!allocation || amount <= 0) return source;
-    const targets = allocationWeeksStatus(source, allocation).filter((week) => week.index > weekIndex);
-    /* Ultima tranșă e întinsă peste zilele de flexibilitate ca să numere cheltuielile, dar
-       buget primesc doar zilele până la venit — altfel ar trage spre ea mai mult decât i se cuvine. */
-    const horizon = planEndDate(source.settings.salaryPlan);
-    const budgetDays = (week: { start: string; end: string; days: number }) => (horizon && week.end > horizon ? Math.max(1, periodDays(week.start, horizon)) : week.days);
-    const totalDays = targets.reduce((sum, week) => sum + budgetDays(week), 0);
-    if (!targets.length || totalDays <= 0) return source;
-    let next = source;
-    let moved = 0;
-    targets.forEach((target, index) => {
-      const raw = index === targets.length - 1 ? amount - moved : Math.round(amount * budgetDays(target) / totalDays * 100) / 100;
-      const share = Math.round(raw * 100) / 100;
-      if (share <= 0) return;
-      const step = transferBetweenWeeks(next, { allocationId, fromWeekIndex: weekIndex, toWeekIndex: target.index, amount: share, note: t("Echilibrare: săptămâna începută păstrează partea zilelor rămase") });
-      if (!step) return;
-      const transfer = step.settings.salaryPlan.weekTransfers?.[0];
-      next = appendAllocationHistory(step, { kind: "week-transfer", referenceId: transfer?.id, allocationId, allocationLabel: allocation.label, amount: share, fromWeekIndex: weekIndex, toWeekIndex: target.index });
-      moved = Math.round((moved + share) * 100) / 100;
-    });
-    return moved > 0 ? next : source;
-  };
-
-  /** Câți bani revin zilelor rămase din tranșa curentă a unui plic, la ritmul egal al perioadei. */
-  const startedWeekPlan = (source: AppData, allocation: BudgetAllocation) => {
-    if (allocation.weeklyPace === false) return undefined;
-    const weeks = allocationWeeksStatus(source, allocation);
-    if (weeks.length < 2) return undefined;
-    const today = isoToday();
-    const index = weeks.findIndex((week) => today >= week.start && today <= week.end);
-    if (index < 0) return undefined;
-    const week = weeks[index];
-    const left = weeks.slice(index).reduce((sum, item) => sum + Math.max(0, item.remaining), 0);
-    /* Orizontul e data venitului, nu sfârșitul ultimei tranșe: aceasta din urmă e întinsă peste
-       zilele de flexibilitate doar ca să numere cheltuielile, și ar dilua ritmul cu zile care
-       nu primesc buget. */
-    const horizon = planEndDate(source.settings.salaryPlan);
-    const share = horizon ? startedWeekShare({ start: week.start, end: week.end, days: week.days, budget: week.budget }, today, remainingPace(left, horizon, today)) : undefined;
-    if (!share || share.daysLeft >= share.daysTotal) return undefined;
-    return { week, share, movable: Math.round(Math.max(0, week.remaining - share.fair) * 100) / 100 };
-  };
-
-  /** Aceeași echilibrare, aplicată automat la salvare când familia a ales „de azi, egal pe zile”. */
-  const levelStartedWeekIn = (source: AppData, allocationId: string): AppData => {
-    const allocation = source.settings.salaryPlan.allocations.find((item) => item.id === allocationId);
-    const shift = allocation ? startedWeekPlan(source, allocation) : undefined;
-    if (!shift || shift.movable < 0.01) return source;
-    return spreadStartedWeekSurplus(source, allocationId, shift.week.index, shift.movable);
-  };
-
   const rebalanceStartedWeek = (allocationId: string, weekIndex: number, amount: number) => {
     const next = spreadStartedWeekSurplus(data, allocationId, weekIndex, amount);
     if (next !== data) onChange(next);
@@ -630,7 +574,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             return <div className="bf-week-started">
               <p>{t("Săptămâna e începută: pentru {days} rămase revin {fair} (≈{perDay}/zi).", { days: daysLabel(shift.share.daysLeft), fair: money(shift.share.fair), perDay: money(shift.share.perDay) })}</p>
               {shift.movable >= 1
-                ? <button type="button" onClick={() => rebalanceStartedWeek(item.id, shift.week.index, shift.movable)}>{t("Mută {amount} în săptămânile următoare", { amount: money(shift.movable) })}</button>
+                ? <button type="button" onClick={() => rebalanceStartedWeek(item.id, shift.weekIndex, shift.movable)}>{t("Mută {amount} în săptămânile următoare", { amount: money(shift.movable) })}</button>
                 : <small>{t("Nu prisosește nimic de mutat în săptămânile următoare.")}</small>}
             </div>;
           })()}
