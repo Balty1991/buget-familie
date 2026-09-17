@@ -8,7 +8,7 @@ import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-da
 import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection, type SubscriptionDetection } from "@/lib/household-insights";
-import { countLabel, getLocale, t } from "@/lib/i18n";
+import { countLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
@@ -51,7 +51,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
         <div className="bf-household-flow">
           <article><small>{t("Venituri")}</small><b>{money(recap.income)}</b><em>{recap.priorIncome ? t("{delta} vs luna trecută", { delta: `${recap.income - recap.priorIncome >= 0 ? "+" : ""}${money(recap.income - recap.priorIncome)}` }) : t("prima lună cu date")}</em></article>
           <article><small>{t("Cheltuieli")}</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : t("fără categorie dominantă")}</em></article>
-          <article><small>{t("Bilanț")}</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? `${recap.envelopesOver} plicuri depășite` : recap.envelopesWatch ? `${recap.envelopesWatch} plicuri de urmărit` : t("plicuri în ritm")}</em></article>
+          <article><small>{t("Bilanț")}</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? t("{envelopes} depășite", { envelopes: envelopesLabel(recap.envelopesOver) }) : recap.envelopesWatch ? t("{envelopes} de urmărit", { envelopes: envelopesLabel(recap.envelopesWatch) }) : t("plicuri în ritm")}</em></article>
         </div>
         <div className="bf-household-actions">
           <button className="bf-primary" disabled={exporting} onClick={() => void close()}>

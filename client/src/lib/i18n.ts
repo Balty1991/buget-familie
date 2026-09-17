@@ -76,6 +76,12 @@ export const countLabel = (count: number, forms: { one: string; few: string; man
   return t(form, { count });
 };
 
+/** Formele gata scrise pentru numărătorile care apar peste tot în interfață. */
+export const daysLabel = (count: number) => countLabel(count, { one: "{count} zi", few: "{count} zile", many: "{count} de zile" });
+export const monthsLabel = (count: number) => countLabel(count, { one: "{count} lună", few: "{count} luni", many: "{count} de luni" });
+export const envelopesLabel = (count: number) => countLabel(count, { one: "{count} plic", few: "{count} plicuri", many: "{count} de plicuri" });
+export const movesLabel = (count: number) => countLabel(count, { one: "{count} mișcare", few: "{count} mișcări", many: "{count} de mișcări" });
+
 /** Formatare de sumă și dată în limba activă. Moneda registrului rămâne leul. */
 export const moneyFormat = (value: number, options: Intl.NumberFormatOptions = { maximumFractionDigits: 0 }) =>
   new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", ...options }).format(Number.isFinite(value) ? value : 0);
@@ -2482,6 +2488,43 @@ const en: Record<string, string> = {
   "Pregătim mișcările…": "Preparing the movements…",
   "{count} mișcare": "{count} movement",
   "{count} de mișcări": "{count} movements",
+  "Ritm {pace} lei/zi, din {available} disponibili pe {days}.": "Pace {pace} lei/day, out of {available} available across {days}.",
+  "{days} până la venit": "{days} until payday",
+  "Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.": "This is what is left to use from the envelopes you set. The daily cue splits it across the {days} until payday — it is not extra money, it is the pace that keeps the envelopes from running dry.",
+  "~{months} la ritmul actual": "~{months} at the current pace",
+  " · ~{months} la minim": " · ~{months} at the minimum",
+  "{envelopes} depășite": "{envelopes} over plan",
+  "{envelopes} de urmărit": "{envelopes} to watch",
+  "{count} propunere": "{count} proposal",
+  "{count} propuneri": "{count} proposals",
+  "{count} de propuneri": "{count} proposals",
+  "{count} propunere pe celălalt telefon": "{count} proposal on the other phone",
+  "{count} de propuneri pe celălalt telefon": "{count} proposals on the other phone",
+  "datorie activă": "active debt",
+  "{count} programată": "{count} scheduled",
+  "{count} programate": "{count} scheduled",
+  "{count} de programate": "{count} scheduled",
+  "{count} obiectiv": "{count} goal",
+  "{count} obiective": "{count} goals",
+  "{count} de obiective": "{count} goals",
+  "{count} activă": "{count} active",
+  "{count} active": "{count} active",
+  "{count} de active": "{count} active",
+  "Luna asta ai plătit {paid} la rate. Mai rămân {left} pe {debts}.": "This month you paid {paid} toward instalments. {left} is left across {debts}.",
+  "{count} datorie": "{count} debt",
+  "{count} datorii": "{count} debts",
+  "{count} de datorii": "{count} debts",
+  "{count} datorie activă": "{count} active debt",
+  "{count} de datorii active": "{count} active debts",
+  "{count} zi": "{count} day",
+  "{count} zile": "{count} days",
+  "{count} luni": "{count} months",
+  "{count} de zile": "{count} days",
+  "{count} lună": "{count} month",
+  "{count} de luni": "{count} months",
+  "{count} plic": "{count} envelope",
+  "{count} plicuri": "{count} envelopes",
+  "{count} de plicuri": "{count} envelopes",
   "{count} mișcare propusă": "{count} proposed movement",
   "{count} de mișcări propuse": "{count} proposed movements",
 };

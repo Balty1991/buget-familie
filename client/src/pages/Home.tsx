@@ -32,7 +32,7 @@ import {
 } from "@/pages/home-kit";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/theme-default";
 import { markFirstWeekTourSeen, shouldOfferFirstWeekTour } from "@/lib/first-week-tour";
-import { getLocale, t } from "@/lib/i18n";
+import { daysLabel, getLocale, t } from "@/lib/i18n";
 import { hideNativeSplash, syncAndroidChrome } from "@/lib/native-splash";
 import { ensureDeferredStyles } from "@/lib/ram-hygiene";
 import { useLanguage } from "@/hooks/use-language";
@@ -288,7 +288,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
     : brief.hasPayday
       ? t("Reperul zilei este minimul dintre ritmul sigur ({daily}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt {envelopes}; în surse {sources}.", { daily: money(daily), envelopes: money(envelopeTotalRemaining), sources: money(math.availableSources) })
       : data.settings.salaryPlan.allocations.length
-        ? t("Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} zile până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.", { days: forecast.remainingDays })
+        ? t("Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.", { days: daysLabel(forecast.remainingDays) })
         : trackHero.kind === "liquid"
           ? t("Este soldul de pe card, cash sau bonuri, după ce ai înregistrat. Fără data venitului nu calculăm un ritm zilnic.")
           : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");

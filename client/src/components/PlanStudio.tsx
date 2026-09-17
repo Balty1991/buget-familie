@@ -23,7 +23,7 @@ import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, sourceFreeBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace } from "@/lib/household-insights";
-import { getLocale, t } from "@/lib/i18n";
+import { envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
 import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-prefs";
 import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/EnvelopeConflictBanner";
@@ -296,8 +296,12 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       >
         <i aria-hidden="true" style={{ width: `${Math.round(allocatedRatio * 100)}%` }} className={allocationHealth} />
       </div>
+      {/* Bara merge de la 0 la banii disponibili, deci partea „repartizați” trebuie să fie
+          exact complementul celor rămași: rezerva din plicuri plus scadențele. Cu totalul
+          planificat (care include și ce s-a cheltuit deja) cele două cifre nu se adunau la
+          capătul axei, iar procentul părea greșit. */}
       <div className="bf-allocation-progress-meta">
-        <span><b>{money(allocated)}</b> {t("repartizați")}</span>
+        <span><b>{money(Math.max(0, availableSources - Math.max(0, unrepartized)))}</b> {t("repartizați")}</span>
         <span><b>{money(Math.max(0, unrepartized))}</b> {t("rămași")}</span>
       </div>
       <div className="bf-plan-allocation-axis" aria-hidden="true">
@@ -381,7 +385,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">{t("ACUM · TRANȘA S{index}", { index: activeWeek.index })}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>{t("Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.")}</span></div><strong>{money(activeWeek.amount)}<small>{t("ritm total")}</small></strong></section>}
 
     <section className="bf-cycle-setup" aria-labelledby="cycle-setup-title">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">{t("CATEGORII")}</p><h2 id="cycle-setup-title">{t("Unde merge fiecare leu")}</h2></div><span>{envelopes.length} plicuri · {money(allocated)}</span></div>
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">{t("CATEGORII")}</p><h2 id="cycle-setup-title">{t("Unde merge fiecare leu")}</h2></div><span>{envelopesLabel(envelopes.length)} · {money(allocated)}</span></div>
       <p>{t("Perioada e opțională — o folosesc doar categoriile cu ritm săptămânal. Data salariului poate varia; alege o fereastră, nu o zi exactă.")}</p>
       <div className="bf-cycle-setup-fields">
         <PlanField label={t("Prima zi a perioadei (opțional)")}><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>

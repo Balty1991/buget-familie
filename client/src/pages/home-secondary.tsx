@@ -10,6 +10,9 @@ import "../transaction-envelope-picker.css";
 import "../mobile-capture-pass.css";
 import "../mobile-obligations-pass.css";
 import "../mobile-settings-pass.css";
+/* Rândurile de membri din Setări își iau aspectul din pocket.css, care până acum venea
+   doar cu panoul „Buzunar”: fără el, numele, bifa „Copil” și coșul se îngrămădeau. */
+import "../pocket.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
@@ -46,7 +49,7 @@ import {
   type ThemeSchedule,
   type ThemeScheduleTimes,
 } from "@/pages/home-kit";
-import { getLocale, languages, t } from "@/lib/i18n";
+import { getLocale, languages, t, monthsLabel, countLabel } from "@/lib/i18n";
 import { canAddMember, PLANS } from "@/lib/entitlements";
 import { UsageTutorial } from "@/components/UsageTutorial";
 import { ReceiptsStudio } from "@/components/ReceiptsStudio";
@@ -559,7 +562,7 @@ function DebtPayoffPlan({ data }: { data: AppData }) {
   const progress = originalTotal > 0 ? Math.min(100, Math.round((paidTotal / originalTotal) * 100)) : 0;
   const finish = months ? new Date(new Date().getFullYear(), new Date().getMonth() + months, 1) : undefined;
   const finishText = finish ? finish.toLocaleDateString(getLocale(), { month: "long", year: "numeric" }) : t("adaugă rate lunare");
-  return <section className="bf-debt-plan"><div className="bf-debt-plan-top"><div><p className="bf-kicker">{t("PLANUL DE IEȘIRE")}</p><h2>{t("Mai sunt aproximativ")} <em>{months ?? "—"} luni</em>.</h2><span>{t("La ritmul minim actual, datoriile pot fi închise până în")} <b>{finishText}</b>.</span></div><div className="bf-debt-plan-total"><strong>{money(total)}</strong><small>{t("sold total")}</small></div></div><div className="bf-debt-plan-progress"><div><span>{t("Progres real")}</span><b>{progress}%</b></div><i><em style={{ width: progress + "%" }} /></i></div><div className="bf-debt-plan-stats"><span><b>{money(monthly)}</b><small>{t("rate / lună")}</small></span><span><b>{openDebts.length}</b><small>{t("datorii active")}</small></span><span><b>{money(paidTotal)}</b><small>{t("achitat până acum")}</small></span></div></section>;
+  return <section className="bf-debt-plan"><div className="bf-debt-plan-top"><div><p className="bf-kicker">{t("PLANUL DE IEȘIRE")}</p><h2>{t("Mai sunt aproximativ")} <em>{months === undefined ? "— luni" : monthsLabel(months)}</em>.</h2><span>{t("La ritmul minim actual, datoriile pot fi închise până în")} <b>{finishText}</b>.</span></div><div className="bf-debt-plan-total"><strong>{money(total)}</strong><small>{t("sold total")}</small></div></div><div className="bf-debt-plan-progress"><div><span>{t("Progres real")}</span><b>{progress}%</b></div><i><em style={{ width: progress + "%" }} /></i></div><div className="bf-debt-plan-stats"><span><b>{money(monthly)}</b><small>{t("rate / lună")}</small></span><span><b>{openDebts.length}</b><small>{openDebts.length === 1 ? t("datorie activă") : t("datorii active")}</small></span><span><b>{money(paidTotal)}</b><small>{t("achitat până acum")}</small></span></div></section>;
 }
 function DebtPayoffSimulator({ data }: { data: AppData }) {
   const [extra, setExtra] = useState(0);
@@ -1047,15 +1050,15 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
           <button type="button" className={data.pendingReview.length ? "bf-settings-row has-badge" : "bf-settings-row"} onClick={() => setTab("review")}><Inbox size={20} /><span className="bf-settings-copy"><b>{t("De verificat")}{data.pendingReview.length > 0 && <span className="bf-nav-count">{data.pendingReview.length}</span>}</b><small>{data.pendingReview.length ? t("{count} propuneri de confirmat", { count: data.pendingReview.length }) : t("import și confirmări")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("catalog")}><Search size={20} /><span className="bf-settings-copy"><b>{t("Catalog")}</b><small>{t("caută Napolact, Ariel, lapte — liste online")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("receipts")}><ReceiptText size={20} /><span className="bf-settings-copy"><b>{t("Bonuri")}</b><small>{t("produse, catalog și alimente vs nealimentare")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
-          <button type="button" className="bf-settings-row" onClick={() => setTab("recurring")}><CalendarClock size={20} /><span className="bf-settings-copy"><b>{t("Scadențe")}</b><small>{data.recurring.length} {t("programate")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("recurring")}><CalendarClock size={20} /><span className="bf-settings-copy"><b>{t("Scadențe")}</b><small>{countLabel(data.recurring.length, { one: "{count} programată", few: "{count} programate", many: "{count} de programate" })}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={onOpenCalendar}><CalendarDays size={20} /><span className="bf-settings-copy"><b>{t("Calendar")}</b><small>{t("scadențe și obiective")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
         </div>
       </section>
       <section className="bf-more-group" aria-labelledby="more-money-title">
         <p className="bf-kicker bf-more-section-label" id="more-money-title">{t("BANI PE TERMEN LUNG")}</p>
         <div className="bf-more-grid bf-settings-group">
-          <button type="button" className="bf-settings-row" onClick={() => setTab("debts")}><BellRing size={20} /><span className="bf-settings-copy"><b>{t("Datorii")}</b><small>{data.debts.length} {t("active")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
-          <button type="button" className="bf-settings-row" onClick={() => setTab("savings")}><PiggyBank size={20} /><span className="bf-settings-copy"><b>{t("Economii")}</b><small>{data.savings.length} {t("obiective")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("debts")}><BellRing size={20} /><span className="bf-settings-copy"><b>{t("Datorii")}</b><small>{countLabel(data.debts.length, { one: "{count} activă", few: "{count} active", many: "{count} de active" })}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("savings")}><PiggyBank size={20} /><span className="bf-settings-copy"><b>{t("Economii")}</b><small>{countLabel(data.savings.length, { one: "{count} obiectiv", few: "{count} obiective", many: "{count} de obiective" })}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("prices")}><ShoppingBasket size={20} /><span className="bf-settings-copy"><b>{t("Prețuri")}</b><small>{t("istoric și coșul etalon")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           {data.settings.members.some((item) => item.kind === "child") && <button type="button" className="bf-settings-row" onClick={() => setTab("pocket")}><PiggyBankIcon size={20} /><span className="bf-settings-copy"><b>{t("Buzunar")}</b><small>{t("banii copilului")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>}
         </div>

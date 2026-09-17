@@ -153,3 +153,166 @@
   overflow-y: auto !important;
   overscroll-behavior: contain !important;
 }
+
+/* —— 7. Ținte de atingere: degetul are nevoie de ~9mm, nu de 23px —— */
+/* Butoanele mici rămân la fel de mici la vedere (layout-ul din jur depinde de ele), dar
+   primesc o zonă sensibilă mai mare printr-un pseudo-element: aria de atins crește fără
+   ca desenul să se miște. Confirmarea unei rate mișcă bani — nu poate cere ochire. */
+.bf-schedule-check,
+.bf-weekly-tranche-notice .dismiss,
+.bf-week-transfer-toggle,
+.bf-plan-toggle > input[type="checkbox"] {
+  position: relative !important;
+}
+.bf-schedule-check::after,
+.bf-weekly-tranche-notice .dismiss::after,
+.bf-week-transfer-toggle::after,
+.bf-plan-toggle > input[type="checkbox"]::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: -9px !important;
+  border-radius: inherit !important;
+  background: transparent !important;
+  pointer-events: auto !important;
+}
+/* Legătura „Mută bani între săptămâni” era un rând de text de 16px: îi dăm înălțimea unui
+   rând de atins, fără să devină buton plin. */
+.bf-week-transfer .bf-week-transfer-toggle {
+  min-height: 34px !important;
+  padding-block: 9px !important;
+}
+.bf-plan-toggle > input[type="checkbox"] {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* —— 8. Ecranul nu se mai lățește după un singur rând de butoane —— */
+/* `.bf-page` e o grilă cu coloană `auto`: un copil care nu poate fi îngustat (aici cele
+   două butoane cu `white-space: nowrap`) trage toată pagina peste lățimea telefonului,
+   iar pe 360px cardurile ies în dreapta. `minmax(0, 1fr)` ține coloana în ecran, iar
+   rândul de acțiuni se așază pe două rânduri când nu încape. */
+.bf-app .bf-page {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+.bf-obligation-actions {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+}
+.bf-obligation-actions > button {
+  min-width: 0 !important;
+  white-space: normal !important;
+  padding-inline: 12px !important;
+}
+
+/* Rândul de acțiuni al unei datorii („Confirmă plata · Editează · coș”) nu încăpea pe
+   360px și ieșea din card; acum se rupe pe două rânduri în loc să împingă pagina. */
+.bf-obligation-entry-actions {
+  flex-wrap: wrap !important;
+}
+.bf-obligation-entry-actions > button {
+  min-width: 0 !important;
+}
+
+/* Inelul decorativ al antetului din Plan stă la `right: -28px`, deci ieșea din card și
+   lățea pagina cu 28px pe orice telefon (pe 360px asta însemna și carduri tăiate la
+   dreapta). Cardul își taie propria decorație; desenul rămâne, scurgerea dispare. */
+/* Taiem doar pe orizontală: pe verticală antetul trebuie să rămână `visible`, altfel
+   titlul cu line-height sub 1 își pierde vârful literelor (de asta era pus `visible`). */
+.bf-app .bf-plan-workspace > .bf-plan-studio-header,
+.bf-app .bf-salary-cycle-plan > .bf-plan-studio-header {
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+}
+
+/* —— 9. Text lizibil pe cardurile întunecate din tema deschisă —— */
+/* `.os-shell p { color: var(--os-muted) !important }` vopsește orice paragraf cu gri de
+   text secundar. Pe cardurile care își aduc propriul fundal închis (verdictul de rate,
+   scadențarul) rezultatul era gri pe verde-închis: raport de contrast 1,05–1,6. */
+.os-shell .bf-receipts-verdict,
+.os-shell p.bf-receipts-verdict {
+  color: #f4f7f4 !important;
+}
+.os-shell .bf-debt-schedule-head p {
+  color: #7fe7c1 !important;
+}
+.os-shell .bf-debt-schedule-head b,
+.os-shell .bf-debt-schedule-row b {
+  color: #edf9f2 !important;
+}
+.os-shell .bf-debt-schedule-row small {
+  color: #b9cfc6 !important;
+}
+
+/* Butonul „Plan” din anunțul de tranșă are fundal `--cf-info`, care pe temele de noapte
+   e o culoare deschisă; textul alb dispărea (raport 1,2–2,1). Pe fundal deschis punem
+   cerneala închisă a temei. */
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-weekly-tranche-notice > button:not(.dismiss) {
+  color: var(--cf-on-primary, #0c1612) !important;
+}
+
+/* —— 10. Ultimele trei texte sub pragul AA din tema deschisă —— */
+/* Ziua curentă, ziua depășită și data din antet stăteau la 3,9–4,3 față de 4,5 cerut.
+   Aceleași culori, doar cu un pas mai închise; pe temele de noapte erau deja bune. */
+html:not(.dark) .bf-os-day.is-today span {
+  color: #125a46 !important;
+}
+html:not(.dark) .bf-os-day.is-over b {
+  color: #8a5f0c !important;
+}
+html:not(.dark) .os-date b {
+  color: #5f6d67 !important;
+}
+
+/* —— 11. Legătura „Sari la conținut” și mesajul din vrăjitor —— */
+/* Legătura de accesibilitate apare doar la navigarea cu tastatura, iar acolo ieșea
+   alb pe alb (1,08). Primește perechea de culori a temei, nu tokenuri intermediare. */
+.bf-app.os-shell > .bf-skip-link:focus-visible,
+.bf-app.os-shell > .bf-skip-link:focus {
+  color: var(--cf-on-primary, #04140e) !important;
+  background: var(--cf-primary, #7cffc4) !important;
+}
+/* Mesajul verde din repartizarea lunară folosea verdele „strong”, prea închis pe fundalul
+   de noapte (3,86). Varianta deschisă a aceleiași culori trece pragul. */
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-wizard-message {
+  color: var(--cf-primary, #8fe3bd) !important;
+}
+
+/* —— 12. Verdele „strong” și coralul de zi, pe fundal de noapte —— */
+/* Aceste culori sunt scrise pentru hârtie: pe carduri întunecate coboară la 2,6–4,4.
+   Pe temele de noapte folosim varianta deschisă a aceleiași culori, nu alta. */
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-calendar-empty,
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-calendar-filter button.active {
+  color: var(--cf-primary, #8fe3bd) !important;
+}
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-recurring-list strong {
+  color: var(--cf-danger, #ff8a7a) !important;
+}
+
+/* Kicker-ul global e vopsit cu `--cf-primary-strong !important`; pe cardul verde-închis
+   al ghidului asta însemna verde pe verde (1,94). Cardul își păstrează perechea proprie. */
+/* Regula temei deschise („:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker”)
+   are specificitate 0,3,1; ca s-o depășim fără un al doilea „!important” inutil, repetăm
+   același prefix de temă și adăugăm cardul. */
+:is(html.theme-ink, html.theme-white) .os-shell .bf-guide-hero .bf-kicker,
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .os-shell .bf-guide-hero .bf-kicker,
+.os-shell .bf-guide-hero .bf-kicker,
+.bf-guide-hero > .bf-kicker {
+  color: #d4e3d9 !important;
+}
+
+/* Rândul evidențiat din paleta de acțiuni rapide: descrierea rămânea la gri de text
+   secundar peste fundalul mai deschis al rândului (4,07). */
+.bf-command-list [role="option"].is-primary small,
+.os-shell .bf-command-list [role="option"].is-primary small {
+  color: var(--cf-ink, #eceff3) !important;
+  opacity: .85 !important;
+}
+
+/* —— 13. Etichetele câmpurilor din Setări, în tema deschisă —— */
+/* „Denumire”, „Valută”, „Aparține de” și notele de sub câmpuri stăteau la 2,9–3,6 față
+   de 4,5: gri prea deschis pe card alb. Aceeași familie de gri, un pas mai închisă. */
+html:not(.dark) .bf-field small,
+html:not(.dark) .bf-source-edit small,
+html:not(.dark) .bf-source-name small,
+html:not(.dark) .bf-source-edit label small {
+  color: #5c675f !important;
+}

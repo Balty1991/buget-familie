@@ -1,6 +1,6 @@
 import { Check, ListOrdered } from "lucide-react";
 import { debtSnowball, type AppData, type Debt } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { getLocale, t, monthsLabel } from "@/lib/i18n";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
@@ -26,7 +26,7 @@ export function DebtSnowballCard({ data, onPay }: { data: AppData; onPay: (debt:
       <div className="bf-snowball-next">
         <span>{t("01 · următoarea")}</span>
         <strong>{money(next.remaining)}</strong>
-        <small>{t("rată {amount}", { amount: money(next.monthly) })}{next.monthsAtMinimum ? t(" · ~{months} luni la minim", { months: next.monthsAtMinimum }) : ""}</small>
+        <small>{t("rată {amount}", { amount: money(next.monthly) })}{next.monthsAtMinimum ? t(" · ~{months} la minim", { months: monthsLabel(next.monthsAtMinimum) }) : ""}</small>
         <button type="button" className="pay" onClick={() => onPay(next.debt)}><Check size={16} /> {t("Confirmă {amount}", { amount: money(next.recommended) })}</button>
       </div>
       {ball.order.length > 1 && (

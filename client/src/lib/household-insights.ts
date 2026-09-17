@@ -27,7 +27,7 @@ import {
   type Transaction,
   isoDate,
 } from "./finance-data";
-import { getLocale, t } from "./i18n";
+import { daysLabel, getLocale, t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
 
 const fold = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -442,7 +442,7 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
     ? t("Setează următorul venit ca să calculăm cât poți cheltui azi.")
     : spendable <= 0
       ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
-      : t("Ritm {pace} lei/zi, din {available} disponibili pe {days} zile.", { pace: Math.round(fromPace), available: Math.round(safe.available), days: remainingDays });
+      : t("Ritm {pace} lei/zi, din {available} disponibili pe {days}.", { pace: Math.round(fromPace), available: Math.round(safe.available), days: daysLabel(remainingDays) });
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);
@@ -522,7 +522,7 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
     { label: t("Minus scadențe active"), amount: -safe.reservedRecurring, note: t("Chirie, abonamente rezervate, încă neconfirmate") },
     { label: t("Disponibil prudent"), amount: safe.available },
     { label: t("Ritm sigur din plan"), amount: forecast.safeDaily, note: t("Ce rămâne după plicuri și cheltuieli, pe zi") },
-    { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} zile până la venit", { days: remainingDays }) },
+    { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} până la venit", { days: daysLabel(remainingDays) }) },
   ];
   const summary = !brief.hasPayday
     ? t("Fără dată de venit nu putem calcula un reper zilnic. Setează salariul în Plan.")

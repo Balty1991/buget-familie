@@ -20,6 +20,29 @@
     <style>
       html, body, #root { margin: 0; background: #E4E9E6; min-height: 100%; }
       html.dark, html.dark body, html.dark #root { background: #0B0F0E; }
+      /*
+       * Culorile foii de start (pictate înainte de CSS-ul aplicației) trec prin tokens.
+       * Fiecare regulă de mai jos cere întâi tokenul real al temei (`--cf-*`, definit de
+       * foaia mare) și abia apoi cade pe varianta de boot. Fără asta, regulile `!important`
+       * scrise pentru tema deschisă rămâneau peste temele de noapte: titlul „Trei pași…”
+       * ieșea negru pe negru, iar cardurile pașilor albe cu text alb.
+       */
+      :root {
+        --boot-ink: #0c1612;
+        --boot-muted: #4a5852;
+        --boot-surface: #ffffff;
+        --boot-card: #f7f8f6;
+        --boot-line: #c9d2cc;
+        --boot-accent: #176b54;
+      }
+      html.dark {
+        --boot-ink: #eef2f6;
+        --boot-muted: #9aa3ad;
+        --boot-surface: #1c232b;
+        --boot-card: #161d23;
+        --boot-line: #2b333c;
+        --boot-accent: #7fd7b4;
+      }
       #bf-boot {
         position: fixed;
         inset: 0;
@@ -139,7 +162,7 @@
       .bf-setup-copy { display: grid !important; gap: 12px !important; }
       .bf-first-run .bf-kicker {
         margin: 0 !important;
-        color: #176b54 !important;
+        color: var(--cf-primary-strong, var(--boot-accent)) !important;
         font: 750 10px/1.2 Outfit, sans-serif !important;
         letter-spacing: .14em !important;
         text-transform: uppercase !important;
@@ -147,17 +170,15 @@
       .bf-first-run h2,
       .bf-setup h2 {
         margin: 6px 0 0 !important;
-        color: #0c1612 !important;
+        color: var(--cf-ink, var(--boot-ink)) !important;
         font: 560 28px/1.15 Georgia, "Times New Roman", serif !important;
         letter-spacing: -.02em !important;
       }
-      html.dark .bf-first-run h2,
-      html.dark .bf-setup h2 { color: #e8eeea !important; }
       .bf-first-run h2 em,
       .bf-setup h2 em { font-style: italic !important; }
       .bf-setup-copy p {
         margin: 0 !important;
-        color: #4a5852 !important;
+        color: var(--cf-muted, var(--boot-muted)) !important;
         font: 400 14px/1.5 Outfit, sans-serif !important;
       }
       .bf-first-run-intents { display: grid; gap: 10px; margin-top: 1.1rem; }
@@ -179,20 +200,19 @@
         background: #1c1830;
       }
       .bf-first-run-intents button b { font: 650 15px/1.25 Georgia, serif; }
-      .bf-first-run-intents button small { color: #5d7283; font: 500 12px/1.4 Outfit, sans-serif; }
+      .bf-first-run-intents button small { color: var(--cf-muted, var(--boot-muted)); font: 500 12px/1.4 Outfit, sans-serif; }
       .os-hero {
         display: grid !important;
         gap: 0;
         margin: 0 16px !important;
         padding: 20px !important;
         border-radius: 2rem !important;
-        background: #f7f8f6 !important;
-        box-shadow: 0 0 0 1px #c9d2cc !important;
+        background: var(--cf-surface, var(--boot-card)) !important;
+        box-shadow: 0 0 0 1px var(--cf-line, var(--boot-line)) !important;
       }
-      html.dark .os-hero { background: #161d23 !important; }
       .os-start-title {
         margin: 0 !important;
-        color: #0c1612 !important;
+        color: var(--cf-ink, var(--boot-ink)) !important;
         font: 560 28px/1.18 Georgia, "Times New Roman", serif !important;
       }
       .os-start-steps {
@@ -211,9 +231,9 @@
         padding: 12px 14px !important;
         text-align: left !important;
         border-radius: 16px !important;
-        border: 1px solid #c9d2cc !important;
-        background: #ffffff !important;
-        color: #0c1612 !important;
+        border: 1px solid var(--cf-line, var(--boot-line)) !important;
+        background: var(--cf-surface, var(--boot-surface)) !important;
+        color: var(--cf-ink, var(--boot-ink)) !important;
       }
     </style>
     <script>

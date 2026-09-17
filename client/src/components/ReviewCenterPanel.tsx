@@ -130,7 +130,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           <div className="bf-section-heading">
             <div>
               <p className="bf-kicker">{t("LA PARTENER")}</p>
-              <h2 id="review-partner-title">{t("{count} propuneri pe celălalt telefon", { count: partnerQueue.length })}</h2>
+              <h2 id="review-partner-title">{countLabel(partnerQueue.length, { one: "{count} propunere pe celălalt telefon", few: "{count} propuneri pe celălalt telefon", many: "{count} de propuneri pe celălalt telefon" })}</h2>
             </div>
             <Inbox size={19} aria-hidden="true" />
           </div>
@@ -150,7 +150,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
         <div className="bf-section-heading">
           <div>
             <p className="bf-kicker">{t("DE VERIFICAT")}</p>
-            <h2 id="review-queue-title">{drafts.length ? t("{n} propuneri", { n: drafts.length }) : t("Nimic de verificat")}</h2>
+            <h2 id="review-queue-title">{drafts.length ? countLabel(drafts.length, { one: "{count} propunere", few: "{count} propuneri", many: "{count} de propuneri" }) : t("Nimic de verificat")}</h2>
           </div>
           <Inbox size={19} />
         </div>

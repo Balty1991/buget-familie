@@ -6,7 +6,7 @@ import "../receipts-studio.css";
 import { useMemo } from "react";
 import { Landmark } from "lucide-react";
 import { type AppData } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { getLocale, t, monthsLabel, countLabel } from "@/lib/i18n";
 import { debtMonitor } from "@/lib/debt-monitor";
 import { money } from "@/pages/home-kit";
 
@@ -29,7 +29,7 @@ export function DebtMonitor({ data }: { data: AppData }) {
       </header>
       <p className="bf-receipts-verdict">
         {monitor.thisMonthPaid > 0
-          ? t("Luna asta ai plătit {paid} la rate. Mai rămân {left} pe {count} datorii.", { paid: money(monitor.thisMonthPaid), left: money(monitor.remaining), count: String(monitor.activeCount) })
+          ? t("Luna asta ai plătit {paid} la rate. Mai rămân {left} pe {debts}.", { paid: money(monitor.thisMonthPaid), left: money(monitor.remaining), debts: countLabel(monitor.activeCount, { one: "{count} datorie", few: "{count} datorii", many: "{count} de datorii" }) })
           : monitor.remaining > 0
             ? t("Nu ai confirmat nicio rată luna asta. Mai rămân {left}, ritm {monthly}/lună.", { left: money(monitor.remaining), monthly: money(monitor.monthly) })
             : t("Nu mai ai datorii active.")}
@@ -38,7 +38,7 @@ export function DebtMonitor({ data }: { data: AppData }) {
         <article>
           <span>{t("Rămas")}</span>
           <strong>{money(monitor.remaining)}</strong>
-          <small>{t("{count} datorii active", { count: monitor.activeCount })}</small>
+          <small>{countLabel(monitor.activeCount, { one: "{count} datorie activă", few: "{count} datorii active", many: "{count} de datorii active" })}</small>
         </article>
         <article>
           <span>{t("Rate / lună")}</span>
@@ -73,7 +73,7 @@ export function DebtMonitor({ data }: { data: AppData }) {
               <li key={debt.id}>
                 <div>
                   <b>{debt.name}</b>
-                  <em>{debt.monthsLeft ? t("~{n} luni la ritmul actual", { n: String(debt.monthsLeft) }) : t("fără rată lunară")} · {t("rată {amount}/lună", { amount: money(debt.monthly) })}</em>
+                  <em>{debt.monthsLeft ? t("~{months} la ritmul actual", { months: monthsLabel(debt.monthsLeft) }) : t("fără rată lunară")} · {t("rată {amount}/lună", { amount: money(debt.monthly) })}</em>
                   <span className="bf-cat-meter" aria-hidden="true"><i style={{ width: `${share}%` }} /></span>
                 </div>
                 <strong>{money(debt.remaining)}</strong>

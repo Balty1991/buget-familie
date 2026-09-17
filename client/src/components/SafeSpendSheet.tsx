@@ -8,7 +8,7 @@ import { formatDate, type AppData } from "@/lib/finance-data";
 import { paydayTrack, safeSpendBreakdown } from "@/lib/household-insights";
 import { PaydayStrip } from "@/components/LedgerArt";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
-import { getLocale, t } from "@/lib/i18n";
+import { daysLabel, getLocale, t } from "@/lib/i18n";
 import "../safe-spend-sheet.css";
 
 const money = (value: number) =>
@@ -49,7 +49,7 @@ export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onC
               <b>
                 {track.remaining === 0
                   ? t("Venitul e așteptat azi")
-                  : t("{days} zile până la venit", { days: track.remaining })}
+                  : t("{days} până la venit", { days: daysLabel(track.remaining) })}
               </b>
               <small>
                 {sheet.paydayDate

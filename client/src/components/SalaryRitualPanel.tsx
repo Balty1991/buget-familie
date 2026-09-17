@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Banknote, Check, RotateCcw, Trash2 } from "lucide-react";
 import { applySalaryAllocationRules, eligibleSalaryAllocationRules, formatDate, newId, parseRomanianAmount, revertSalaryAllocationApplication, unappliedSalaryIncomes, type AppData, type SalaryAllocationRule } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { envelopesLabel, getLocale, t } from "@/lib/i18n";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
@@ -116,7 +116,7 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
             <article key={item.id}>
               <div>
                 <b>{item.incomeTitle}</b>
-                <small>{formatDate(item.appliedAt.slice(0, 10))} · {money(item.allocations.reduce((sum, entry) => sum + entry.amount, 0))} în {item.allocations.length} plicuri</small>
+                <small>{formatDate(item.appliedAt.slice(0, 10))} · {money(item.allocations.reduce((sum, entry) => sum + entry.amount, 0))} în {envelopesLabel(item.allocations.length)}</small>
               </div>
               <button type="button" onClick={() => revert(item.id)}><RotateCcw size={14} /> {t("Anulează")}</button>
             </article>
