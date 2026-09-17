@@ -320,8 +320,11 @@ html:not(.dark) .bf-source-edit label small {
 /* —— 14. Ultimele texte la un fir de prag, în tema deschisă —— */
 /* Titlurile de secțiune din „Mai mult” (4,44) și eticheta „Confirmare manuală” (4,30)
    stăteau sub 4,5 pe pastilele lor verzi-pal. Un pas mai închis le trece pragul. */
-html:not(.dark) .bf-more-grid .bf-kicker.bf-more-section,
-html:not(.dark) .bf-kicker.bf-more-section {
+/* Regula de temă „:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker” are 0,3,1;
+   adăugăm învelișul `.os-shell` ca să trecem peste ea fără alt „!important”. */
+:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker.bf-more-section-label,
+html:not(.dark) .os-shell .bf-kicker.bf-more-section-label,
+html:not(.dark) .bf-more-grid .bf-kicker.bf-more-section-label {
   color: #28604b !important;
 }
 html:not(.dark) .bf-recurring-list article > span:not(.done) {
