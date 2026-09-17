@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData } from "./finance-data";
+import { levelStartedWeek } from "./started-week";
 import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
 
 const base = () => {
@@ -226,6 +227,28 @@ describe("analize de gospodărie", () => {
     expect(rhythm.todayShare).toBeCloseTo(85.71, 1);
     expect(rhythm.todayLeft).toBeCloseTo(85.71, 1);
     expect(rhythm.days.every((item) => item.left === rhythm.todayShare)).toBe(true);
+  });
+
+  it("„poți folosi azi” e limita din plicul săptămânii, nu tot cash-ul pe zilele până la salariu", () => {
+    const { data } = base();
+    data.settings.paymentSources = [
+      { id: "cash", name: "Cash", kind: "cash", openingBalance: 1800 },
+      { id: "angi", name: "Cash · Angi", kind: "cash", openingBalance: 480 },
+    ];
+    data.settings.salaryPlan.periodStart = "2026-09-14";
+    data.settings.salaryPlan.nextPayday = "2026-10-10";
+    data.settings.salaryPlan.sourceIds = ["cash", "angi"];
+    data.settings.salaryPlan.allocations = [{
+      id: "env-food", label: "Alimente", category: "Alimente", amount: 1850, sourceId: "cash", weeklyPace: true,
+    }];
+    const leveled = levelStartedWeek(data, "env-food", "2026-09-17");
+    const rhythm = weeklyEnvelopeDailyRhythm(leveled, "2026-09-17");
+    const brief = todayBrief(leveled, "2026-09-17");
+    expect(rhythm.remaining).toBeCloseTo(308, 0);
+    expect(rhythm.todayLeft).toBeCloseTo(77, 0);
+    expect(brief.spendable).toBe(rhythm.todayLeft);
+    expect(brief.spendable).toBeLessThan(90);
+    expect(brief.reason).toContain("plicul săptămânii");
   });
 });
 

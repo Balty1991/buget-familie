@@ -426,9 +426,10 @@ export type TodayBrief = {
 };
 
 /**
- * Cât poți cheltui azi fără să rupi ritmul până la venit.
- * Minim dintre ritmul sigur al planului și lichidul împărțit pe zilele rămase.
- * Nu scrie în AppData.
+ * Cât poți cheltui azi fără să rupi ritmul plicurilor săptămânale.
+ * Când există plicuri cu ritm, cifra e limita de azi a săptămânii — nu tot cash-ul
+ * împărțit pe zilele până la salariu. Fără plicuri, rămâne minimul dintre ritmul
+ * planului și lichidul pe zilele rămase.
  */
 export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const hasPayday = Boolean(data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday);
@@ -437,12 +438,16 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const remainingDays = Math.max(1, forecast.remainingDays);
   const fromPace = Math.max(0, forecast.safeDaily);
   const fromLiquid = Math.max(0, safe.available / remainingDays);
-  const spendable = hasPayday ? Math.max(0, Math.min(fromPace, fromLiquid)) : 0;
+  const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
+  const fromWeek = rhythm.hasWeekly ? Math.max(0, rhythm.todayLeft) : undefined;
+  const spendable = hasPayday ? Math.max(0, Math.min(fromWeek ?? fromPace, fromLiquid, safe.available)) : 0;
   const reason = !hasPayday
     ? t("Setează următorul venit ca să calculăm cât poți cheltui azi.")
     : spendable <= 0
       ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
-      : t("Ritm {pace} lei/zi, din {available} disponibili pe {days}.", { pace: Math.round(fromPace), available: Math.round(safe.available), days: daysLabel(remainingDays) });
+      : fromWeek != null
+        ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: Math.round(fromWeek), available: Math.round(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
+        : t("Ritm {pace} lei/zi, din {available} disponibili pe {days}.", { pace: Math.round(fromPace), available: Math.round(safe.available), days: daysLabel(remainingDays) });
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);
@@ -517,16 +522,26 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
   const paydayDate = data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday || "";
   const remainingDays = Math.max(1, forecast.remainingDays);
   const fromLiquidDaily = Math.max(0, safe.available / remainingDays);
-  const steps = [
-    { label: t("Lichid în surse"), amount: safe.liquidFunds, note: t("Card, cash, bonuri — sold calculat local") },
-    { label: t("Minus scadențe active"), amount: -safe.reservedRecurring, note: t("Chirie, abonamente rezervate, încă neconfirmate") },
-    { label: t("Disponibil prudent"), amount: safe.available },
-    { label: t("Ritm sigur din plan"), amount: forecast.safeDaily, note: t("Ce rămâne după plicuri și cheltuieli, pe zi") },
-    { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} până la venit", { days: daysLabel(remainingDays) }) },
-  ];
+  const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
+  const steps = rhythm.hasWeekly
+    ? [
+      { label: t("Rămas în plicul săptămânii"), amount: rhythm.remaining, note: t("Doar tranșa activă, nu tot cash-ul până la salariu") },
+      { label: t("Limita de azi"), amount: rhythm.todayLeft, note: t("{days} rămase din săptămână", { days: daysLabel(rhythm.remainingDays) }) },
+      { label: t("Lichid în surse"), amount: safe.liquidFunds },
+      { label: t("Minus scadențe active"), amount: -safe.reservedRecurring },
+    ]
+    : [
+      { label: t("Lichid în surse"), amount: safe.liquidFunds, note: t("Card, cash, bonuri — sold calculat local") },
+      { label: t("Minus scadențe active"), amount: -safe.reservedRecurring, note: t("Chirie, abonamente rezervate, încă neconfirmate") },
+      { label: t("Disponibil prudent"), amount: safe.available },
+      { label: t("Ritm sigur din plan"), amount: forecast.safeDaily, note: t("Ce rămâne după plicuri și cheltuieli, pe zi") },
+      { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} până la venit", { days: daysLabel(remainingDays) }) },
+    ];
   const summary = !brief.hasPayday
     ? t("Fără dată de venit nu putem calcula un reper zilnic. Setează salariul în Plan.")
-    : t("Reperul zilei ({amount}) e minimul dintre ritmul sigur și lichidul împărțit pe zile. Nu e un sold bancar.", { amount: lei(brief.spendable) });
+    : rhythm.hasWeekly
+      ? t("Reperul zilei ({amount}) e limita de azi din plicurile săptămânii. Banii fără plic nu măresc cifra.", { amount: lei(brief.spendable) })
+      : t("Reperul zilei ({amount}) e minimul dintre ritmul sigur și lichidul împărțit pe zile. Nu e un sold bancar.", { amount: lei(brief.spendable) });
   return {
     spendable: brief.spendable,
     hasPayday: brief.hasPayday,
