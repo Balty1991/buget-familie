@@ -847,7 +847,7 @@ export const planWeeklyCycle = (data: AppData): CalendarBudget | undefined => {
       }
     }
   }
-  const weeks = [...byIndex.values()].sort((left, right) => left.index - right.index);
+  const weeks = Array.from(byIndex.values()).sort((left, right) => left.index - right.index);
   if (!weeks.length) return undefined;
   const total = money2(weeks.reduce((sum, week) => sum + week.amount, 0));
   const fullWeek = weeks.find((week) => week.days === 7) || weeks.find((week) => week.days >= 7);
