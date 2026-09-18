@@ -33,6 +33,7 @@ import {
   type AppData,
 } from "./finance-data";
 import { calendarBudget, periodDays, remainingPace, startedWeekShare } from "./calendar-budget";
+import { plannedEventsPressure, upcomingPlannedEvents } from "./planned-events";
 import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
@@ -48,6 +49,7 @@ export type FinancialUpdate =
   | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string; amountIsWeekly?: boolean }
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
+  | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
   | { kind: "payday"; date: string; flexDays: number }
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string }
   | { kind: "delete-transaction"; id: string; title: string; amount: number }
@@ -384,7 +386,15 @@ export function localInsight(raw: string, data: AppData, memory: GuideMemory): s
   const free = unrepartized > 0.005 ? `\n• ${t("Liber, fără plic")}: ${money(unrepartized)}` : "";
   const known = memory.phrases.filter((item) => item.count >= 2).slice(-6).map((item) => item.title);
   const learned = known.length ? `\nȚin minte de la tine: ${known.join(", ")}.` : "";
-  return `Uite ce e disponibil, din registrul de pe telefon:${envelopes.length ? `\n${envelopes.join("\n")}` : ""}\n${sources.join("\n")}${free}${learned}`;
+  /**
+   * Cifra de pe ecran spune ce e liber azi. Ce urmează în calendar nu e liber:
+   * un Crăciun la trei săptămâni distanță, nefinanțat, schimbă înțelesul sumei.
+   */
+  const ahead = plannedEventsPressure(data.settings.plannedEvents, isoToday(), 90);
+  const events = ahead.next && ahead.remaining > 0.005
+    ? `\n${t("Urmează {name} pe {date}: mai ai de strâns {amount}.", { name: ahead.next.event.name, date: dateCopy(ahead.next.date), amount: money(ahead.remaining) })}`
+    : "";
+  return `Uite ce e disponibil, din registrul de pe telefon:${envelopes.length ? `\n${envelopes.join("\n")}` : ""}\n${sources.join("\n")}${free}${events}${learned}`;
 }
 
 /* ------------------------------------------------- corectarea unei greșeli */
@@ -636,8 +646,42 @@ function planPeriodContext(data: AppData) {
 }
 
 /**
- * Ce poate vedea modelul online: perioada, plicuri, scadențe, datorii, totalul lunii.
- * Nu jurnalul. Lidl-ul de ieri rămâne pe telefon.
+ * Evenimentele din calendar, așa cum le vede planul: ce urmează, cât costă, cât e
+ * strâns și cât mai trebuie pus deoparte.
+ *
+ * Fără ele, întrebarea „îmi permit 500 acum?” primea un răspuns corect pe ciclul de
+ * salariu și greșit pe an: Crăciunul de peste trei săptămâni nu apărea nicăieri.
+ * `perMonth` e ritmul care ține evenimentul la zi, socotit pe zilele rămase.
+ */
+function plannedEventsContext(data: AppData) {
+  const round = (value: number) => Math.round(value * 100) / 100;
+  const today = isoToday();
+  const events = data.settings.plannedEvents;
+  if (!events.length) return null;
+  const pressure = plannedEventsPressure(events, today);
+  return {
+    /** Cât cere fondul de evenimente pe lună, pentru tot ce urmează în anul următor. */
+    perMonth: round(pressure.perMonth),
+    estimate: round(pressure.estimate),
+    saved: round(pressure.saved),
+    remaining: round(pressure.remaining),
+    next: upcomingPlannedEvents(events, today, 180).slice(0, 6).map((status) => ({
+      name: status.event.name,
+      date: status.date,
+      daysLeft: status.daysLeft,
+      estimate: round(status.estimate),
+      saved: round(status.saved),
+      remaining: round(status.remaining),
+      perMonth: round(status.perMonth),
+      /** Ediția a trecut și nu a fost închisă — banii strânși sunt ai ei, nu ai celei viitoare. */
+      passed: status.passed,
+    })),
+  };
+}
+
+/**
+ * Ce poate vedea modelul online: perioada, plicuri, scadențe, datorii, evenimentele
+ * viitoare, totalul lunii. Nu jurnalul. Lidl-ul de ieri rămâne pe telefon.
  */
 export function compactGuideContext(data: AppData, extras: { view?: string; income?: number; expense?: number } = {}) {
   const round = (value: number) => Math.round(value * 100) / 100;
@@ -653,6 +697,7 @@ export function compactGuideContext(data: AppData, extras: { view?: string; inco
     }),
     dues: pendingRecurringInPlan(data).slice(0, 6).map((item) => ({ name: item.name, amount: round(item.amount), due: item.dueDate })),
     debts: data.debts.filter((item) => item.remaining > 0).slice(0, 6).map((item) => ({ name: item.name, remaining: round(item.remaining) })),
+    events: plannedEventsContext(data),
   };
 }
 

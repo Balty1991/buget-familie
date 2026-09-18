@@ -133,3 +133,44 @@ describe("mesaje pe care nu le înțelege", () => {
     expect(at("am cheltuit la magazin")).toEqual([]);
   });
 });
+
+/**
+ * Evenimentele din calendar au intrat în parser mai târziu decât cheltuielile, iar
+ * pericolul e într-o singură direcție: o sărbătoare citită ca plată scoate bani din
+ * registru pentru ceva care nu s-a întâmplat încă.
+ */
+describe("evenimente viitoare scrise în cuvinte", () => {
+  it("citește sărbătoarea cu data și costul spuse", () => {
+    expect(at("pune-mi Crăciun 1200 pe 25 decembrie")[0].intent)
+      .toEqual({ kind: "planned-event", name: "Crăciun", date: "2026-12-25", estimate: 1200, repeat: "yearly" });
+  });
+
+  it("completează data unei sărbători știute, fără să o ghicească", () => {
+    expect(at("notează-mi Crăciun, cam 1200 de lei")[0].intent)
+      .toMatchObject({ kind: "planned-event", name: "Crăciun", date: "2026-12-25" });
+    // Paștele nu are zi fixă: data vine din calculul lui, nu dintr-o zi și o lună copiate.
+    expect(at("pune deoparte pentru Paște vreo 500")[0].intent)
+      .toMatchObject({ kind: "planned-event", name: "Paște", date: "2027-05-02" });
+  });
+
+  it("acceptă un eveniment fără sărbătoare în spate, dacă are dată", () => {
+    expect(at("adaugă eveniment ziua Anei pe 18 octombrie, 400 lei")[0].intent)
+      .toMatchObject({ kind: "planned-event", date: "2026-10-18", estimate: 400, repeat: "once" });
+  });
+
+  it("marchează aniversarea ca revenind în fiecare an", () => {
+    expect(at("aniversarea soției pe 3 martie, vreo 500")[0].intent).toMatchObject({ kind: "planned-event", repeat: "yearly" });
+  });
+
+  it("nu notează un eveniment necunoscut fără dată — ar ateriza într-o zi aleasă de aplicație", () => {
+    expect(at("vreau un eveniment pentru botez, 900 de lei").filter((item) => item.intent.kind === "planned-event")).toEqual([]);
+  });
+
+  it("lasă cheltuiala deja făcută să rămână cheltuială", () => {
+    expect(at("am dat 200 de Crăciun pe cadouri")[0].intent).toMatchObject({ kind: "expense", amount: 200 });
+  });
+
+  it("nu fură fraza plicului care pomenește o sărbătoare", () => {
+    expect(at("fă-mi plic Alimente 2400")[0].intent).toMatchObject({ kind: "envelope", label: "Alimente" });
+  });
+});

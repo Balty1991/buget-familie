@@ -10,6 +10,7 @@
  * spre confirmare. Nicio mișcare nu intră în registru fără o apăsare explicită.
  */
 import { expenseCategories, guessCategoryFromText, isoDate, isoToday, parseRomanianAmount, type MerchantRule } from "./finance-data";
+import { matchKnownEvent } from "./planned-events";
 
 /**
  * Normalizare care păstrează lungimea textului. `foldRomanian` descompune în NFD și
@@ -27,6 +28,8 @@ export type AssistantIntent =
   | { kind: "debt"; name: string; remaining: number; monthly?: number }
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
+  /** Eveniment din calendar cu cost estimat: Crăciun, o aniversare, începutul școlii. */
+  | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
   | { kind: "payday"; date: string; flexDays: number };
 
 export type ParsedIntent = { intent: AssistantIntent; segment: string };
@@ -163,6 +166,12 @@ type Marker = { kind: AssistantIntent["kind"]; index: number; length: number };
 const MARKERS: Array<[AssistantIntent["kind"], RegExp]> = [
   // Ordinea contează: „următorul salariu” este o dată de plan, nu un venit încasat.
   ["payday", /\b(urmatorul salariu|urmatorul venit|urmatoarea leafa|salariul urmator|data salariului|salariul (vine|intra)|urmatoarea plata a salariului)\b/g],
+  /**
+   * Sărbătorile stau înaintea plicului și a cheltuielii. „Pune-mi Crăciun 1200 pe 25
+   * decembrie” era citit ca plată de 1.200 de lei făcută azi: o cheltuială inventată,
+   * propusă cu toate cifrele la locul lor, deci ușor de confirmat din greșeală.
+   */
+  ["planned-event", /\b(eveniment(ul|e|ele)?|sarbatoare|sarbatori|aniversare[ae]?|craciun(ul)?|revelion(ul)?|paste(le)?|pasti|8 martie|1 iunie|inceput(ul)? de scoala|vinerea neagra|black friday)\b/g],
   ["envelope", /\b(fa-?mi|fa |creeaza|creaza|adauga|vreau|pune)?\s*(un |o )?plic(ul)?\b/g],
   ["envelope", /\b(repartizeaz[ăa]|repartizez|imparte|impart)\b/g],
   ["recurring", /\b(abonament|chiri[ae]|factura|scadenta|rata lunara la)\b/g],
@@ -393,6 +402,25 @@ function parseGoal(segment: string, masked: string, amounts: AmountHit[], dates:
   return { kind: "goal", name: name || "Obiectiv", target: target.value, current: current?.value, dueDate: dates[0]?.start };
 }
 
+/**
+ * Sărbătorile știute își aduc data cu ele: „notează-mi Crăciun, cam 1.200” nu spune
+ * nicio zi, dar 25 decembrie nu e o ghiceală, ci calendarul. Pentru orice alt nume
+ * („ziua Anei”) data trebuie spusă — altfel evenimentul ar ateriza într-o zi aleasă
+ * de aplicație, iar fondul ar începe să numere greșit zilele rămase.
+ */
+function parsePlannedEvent(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[], asOf: string): AssistantIntent | undefined {
+  const folded = fold(masked);
+  const suggestion = matchKnownEvent(masked, asOf);
+  const date = dates[0]?.start || suggestion?.date;
+  if (!date) return undefined;
+  const name = suggestion?.name
+    || titleCase(cleanLabel(segment.replace(/\b(eveniment(ul|e|ele)?|sarbatoare|sarbatori|noteaza(-?mi)?|adauga|pune(-?mi)?|vreau|urmeaza)\b/gi, "")))
+    || "Eveniment";
+  // O sărbătoare revine an de an; un eveniment spus generic e presupus singular.
+  const yearly = Boolean(suggestion) || /\banivers/.test(folded);
+  return { kind: "planned-event", name, date, estimate: amounts.sort((a, b) => b.value - a.value)[0]?.value || 0, repeat: yearly ? "yearly" : "once" };
+}
+
 /* ------------------------------------------------------------------ API */
 
 /**
@@ -434,6 +462,7 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
       : marker.kind === "debt" ? parseDebt(segment, masked, amounts)
       : marker.kind === "recurring" ? parseRecurring(segment, masked, amounts, dates, rules)
       : marker.kind === "goal" ? parseGoal(segment, masked, amounts, dates)
+      : marker.kind === "planned-event" ? parsePlannedEvent(segment, masked, amounts, dates, asOf)
       : undefined;
     // Un singur marcator poate da mai multe intrări: „50 la Lidl și 30 la farmacie”.
     for (const intent of Array.isArray(found) ? found : found ? [found] : []) results.push({ intent, segment });
@@ -527,6 +556,23 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
       const name = text(item.name, 60);
       if (!target || !name) return undefined;
       return { kind: "goal", name, target, current: num(item.current, { min: 0, max: target }), dueDate: isoDay(item.dueDate) };
+    }
+    /**
+     * Un eveniment fără dată nu are ce căuta în calendar, iar o dată ghicită de model
+     * ar pune Crăciunul altundeva decât în decembrie. Costul poate lipsi: se scrie mai
+     * târziu, în ecranul lui. Implicit se repetă anual, fiindcă sărbătorile revin.
+     */
+    case "planned-event": {
+      const date = isoDay(item.date);
+      const name = text(item.name, 60) || text(item.label, 60);
+      if (!date || !name) return undefined;
+      return {
+        kind: "planned-event",
+        name,
+        date,
+        estimate: num(item.estimate, { min: 0.01 }) ?? num(item.amount, { min: 0.01 }) ?? 0,
+        repeat: item.repeat === "once" ? "once" : "yearly",
+      };
     }
     case "payday": {
       const date = isoDay(item.date);

@@ -281,3 +281,37 @@ export function plannedEventSuggestions(today: string): PlannedEventSuggestion[]
     { id: "suggest-black-friday", name: t("Vinerea Neagră"), date: blackFriday(), kind: "other", repeat: "yearly" },
   ];
 }
+
+
+/**
+ * Sărbătoarea din spatele unui nume scris de om sau de model.
+ *
+ * Contează pentru două lucruri pe care numele singur nu le poate spune: felul
+ * evenimentului („Crăciun” e sărbătoare, nu „altceva”) și reperul mobil — un Paște
+ * notat prin asistent trebuie să se mute an de an cu data lui reală, nu cu ziua și
+ * luna copiate. Se caută și în engleză, fiindcă numele urmează limba interfeței.
+ */
+const KNOWN_EVENT_PATTERNS: Array<[RegExp, string]> = [
+  [/\bcraciun(ul)?\b|\bchristmas\b/, "suggest-craciun"],
+  [/\brevelion(ul)?\b|\bnew year\b/, "suggest-revelion"],
+  [/\bpaste(le)?\b|\bpasti\b|\beaster\b/, "suggest-paste"],
+  [/\b8 (martie|march)\b/, "suggest-8-martie"],
+  [/\b1 (iunie|june)\b/, "suggest-1-iunie"],
+  [/\binceput(ul)? de scoala\b|\bback to school\b/, "suggest-scoala"],
+  [/\bvinerea neagra\b|\bblack friday\b/, "suggest-black-friday"],
+];
+
+const foldName = (raw: string) => raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\u0219/g, "s").replace(/\u021b/g, "t");
+
+export function matchKnownEvent(text: string, today: string): PlannedEventSuggestion | undefined {
+  const folded = foldName(String(text || ""));
+  const found = KNOWN_EVENT_PATTERNS.find(([pattern]) => pattern.test(folded));
+  return found ? plannedEventSuggestions(today).find((item) => item.id === found[1]) : undefined;
+}
+
+/** Felul și reperul unei sărbători știute; „altceva”, fără reper, pentru orice alt nume. */
+export function eventTraits(name: string, today: string): { kind: PlannedEventKind; anchor?: PlannedEventAnchor } {
+  const known = matchKnownEvent(name, today);
+  if (known) return { kind: known.kind, anchor: known.anchor };
+  return { kind: /\banivers|\bziua\b|\bbirthday\b/.test(foldName(name)) ? "anniversary" : "other" };
+}

@@ -6,6 +6,7 @@ import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, u
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
+import { eventTraits } from "@/lib/planned-events";
 import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
@@ -768,6 +769,20 @@ export default function Home() {
     if (change.kind === "goal") {
       const goal: SavingsGoal = { id: newId("goal"), name: change.name, current: change.current || 0, target: change.target, due: change.dueDate ? formatDate(change.dueDate, { day: "2-digit", month: "long", year: "numeric" }) : t("Fără termen"), dueDate: change.dueDate, memberId: member?.id, tone: "honey", updatedAt: now };
       return { ...current, savings: [goal, ...current.savings] };
+    }
+    /**
+     * Evenimentul cerut prin asistent intră în aceeași listă ca cel scris de mână.
+     * Același nume la aceeași dată nu se dublează: „notează Crăciunul” spus de două
+     * ori într-o conversație ar fi făcut două fonduri pentru aceeași zi.
+     */
+    if (change.kind === "planned-event") {
+      const key = change.name.toLocaleLowerCase("ro-RO").trim();
+      const events = current.settings.plannedEvents;
+      const existing = events.find((item) => item.name.toLocaleLowerCase("ro-RO").trim() === key && item.date === change.date);
+      const next = existing
+        ? events.map((item) => item.id === existing.id ? { ...item, estimate: change.estimate || item.estimate, repeat: change.repeat, updatedAt: now } : item)
+        : [...events, { id: newId("planned-event"), name: change.name, date: change.date, estimate: change.estimate, repeat: change.repeat, memberId: member?.id, updatedAt: now, ...eventTraits(change.name, isoToday()) }];
+      return { ...current, settings: { ...current.settings, plannedEvents: next } };
     }
     if (change.kind === "payday") {
       // Data cerută devine reperul planului; fereastra spune cât poate întârzia salariul.

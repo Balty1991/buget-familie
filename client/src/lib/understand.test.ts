@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, type AppData } from "./finance-data";
+import { createEmptyAppData, isoToday, type AppData } from "./finance-data";
 import { decide, understand, compactGuideContext, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, canCommitGuideSpend, isDatedSpendChoice, type Reading } from "./understand";
 import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
@@ -124,13 +124,53 @@ describe("ce pleacă către model", () => {
     // Casa din fixture are totul repartizat, deci nu are ce ritm să recomande.
     expect(ctx.period!.paceWeekly).toBeNull();
 
+    /**
+     * Perioada se așază față de ziua reală, nu pe datele fixe ale fixture-ului:
+     * cu 2026-09-11 scris de mână, tranșa curentă începea chiar azi în unele zile
+     * ale anului, iar „săptămâna e începută” devenea fals fără ca ceva să fie stricat.
+     */
     const spare = house();
     spare.settings.paymentSources[0].openingBalance = 9000;
+    const shift = (days: number) => {
+      const date = new Date(`${isoToday()}T12:00:00`);
+      date.setDate(date.getDate() + days);
+      return date.toISOString().slice(0, 10);
+    };
+    spare.settings.salaryPlan.periodStart = shift(-3);
+    spare.settings.salaryPlan.nextPayday = shift(18);
     const rich = compactGuideContext(spare, { view: "plan" });
     expect(rich.period!.paceWeekly).toBeGreaterThan(0);
     expect(rich.period!.pacePerDay).toBeGreaterThan(0);
-    // Săptămâna e începută, deci tranșa curentă primește partea zilelor rămase.
+    // Săptămâna e începută de trei zile, deci tranșa curentă primește doar partea celor rămase.
     expect(rich.period!.startedWeek!.daysLeft).toBeLessThan(7);
+  });
+
+  /**
+   * Evenimentele nu au dată fixă în fixture: se socotesc față de ziua reală a
+   * telefonului, la fel ca în aplicație, ca testul să nu pice într-un decembrie.
+   */
+  it("duce evenimentele viitoare și fondul lor până la model", () => {
+    const shift = (days: number) => {
+      const date = new Date(`${isoToday()}T12:00:00`);
+      date.setDate(date.getDate() + days);
+      return date.toISOString().slice(0, 10);
+    };
+    const plain = compactGuideContext(house(), { view: "today" });
+    // Fără evenimente notate, câmpul lipsește — modelul nu are ce să inventeze.
+    expect(plain.events).toBeNull();
+
+    const withEvents = house();
+    withEvents.settings.plannedEvents = [
+      { id: "ev-1", name: "Crăciun", date: shift(60), estimate: 1200, kind: "holiday", repeat: "yearly", contributions: [{ id: "p1", amount: 300, date: isoToday() }] },
+      { id: "ev-2", name: "Ziua Anei", date: shift(-4), estimate: 400, kind: "anniversary", repeat: "yearly" },
+    ];
+    const ctx = compactGuideContext(withEvents, { view: "today" });
+    expect(ctx.events).toMatchObject({ estimate: 1600, saved: 300, remaining: 1300 });
+    expect(ctx.events!.perMonth).toBeGreaterThan(0);
+    const craciun = ctx.events!.next.find((item) => item.name === "Crăciun")!;
+    expect(craciun).toMatchObject({ estimate: 1200, saved: 300, remaining: 900, daysLeft: 60, passed: false });
+    // Ediția trecută rămâne vizibilă ca atare, ca modelul să nu o dea drept viitoare.
+    expect(ctx.events!.next.find((item) => item.name === "Ziua Anei")!.passed).toBe(true);
   });
 
   it("când e nesigur, trebuie întrebat — nu scris tăcut", () => {

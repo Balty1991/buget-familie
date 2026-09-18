@@ -12,7 +12,7 @@
  * acolo se rupe înțelegerea.
  */
 export type Outcome =
-  | "expense" | "income" | "envelope" | "debt" | "recurring" | "goal" | "payday"
+  | "expense" | "income" | "envelope" | "debt" | "recurring" | "goal" | "payday" | "planned-event"
   | "transfer" | "answer" | "confirm" | "revise" | "due" | "none";
 
 export type Case = {
@@ -84,6 +84,13 @@ export const CORPUS: Case[] = [
   { text: "abonament Netflix 45 lei pe 12 ale lunii", want: "recurring" },
   { text: "vreau să strâng 10000 lei pentru concediu", want: "goal" },
   { text: "obiectiv fond de urgență 6000", want: "goal" },
+
+  // --- evenimente din calendar, cu costul lor ------------------------------
+  { text: "pune-mi Crăciun 1200 pe 25 decembrie", want: "planned-event" },
+  { text: "notează-mi Crăciun, cam 1200 de lei", want: "planned-event", note: "sărbătoarea își aduce data cu ea" },
+  { text: "adaugă eveniment ziua Anei pe 18 octombrie, 400 lei", want: "planned-event" },
+  { text: "aniversarea soției pe 3 martie, vreo 500", want: "planned-event" },
+  { text: "am dat 200 de Crăciun pe cadouri", want: "expense", note: "cheltuială deja făcută, nu un eveniment de planificat" },
   { text: "următorul salariu pe 07.10.2026", want: "payday" },
   { text: "salariul vine pe 15 octombrie", want: "payday" },
 

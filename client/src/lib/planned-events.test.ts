@@ -8,7 +8,9 @@ import {
   addContribution,
   daysBetween,
   eventSaved,
+  eventTraits,
   followingOccurrence,
+  matchKnownEvent,
   nextOccurrence,
   occurrenceInMonth,
   orthodoxEaster,
@@ -241,5 +243,28 @@ describe("zile între date", () => {
     expect(daysBetween("2026-09-18", "2026-09-19")).toBe(1);
     expect(daysBetween("2026-09-18", "2026-09-18")).toBe(0);
     expect(daysBetween("", "2026-09-18")).toBe(0);
+  });
+});
+
+describe("sărbătoarea din spatele numelui", () => {
+  it("recunoaște sărbătorile știute, cu felul și reperul lor", () => {
+    expect(eventTraits("Crăciun", "2026-09-18")).toEqual({ kind: "holiday", anchor: undefined });
+    // Paștele primește reperul mobil, altfel ediția următoare ar fi tot în aprilie.
+    expect(eventTraits("Paște", "2026-09-18")).toEqual({ kind: "holiday", anchor: "easter" });
+    expect(eventTraits("Easter", "2026-09-18").anchor).toBe("easter");
+  });
+
+  it("citește o aniversare după cuvintele ei", () => {
+    expect(eventTraits("Aniversarea Anei", "2026-09-18")).toEqual({ kind: "anniversary" });
+    expect(eventTraits("Ziua bunicii", "2026-09-18")).toEqual({ kind: "anniversary" });
+  });
+
+  it("nu forțează un fel pentru un nume oarecare", () => {
+    expect(eventTraits("Excursie la munte", "2026-09-18")).toEqual({ kind: "other" });
+  });
+
+  it("dă sugestia completă, cu data ediției următoare", () => {
+    expect(matchKnownEvent("pune-mi crăciun 1200", "2026-09-18")).toMatchObject({ id: "suggest-craciun", date: "2026-12-25" });
+    expect(matchKnownEvent("ziua Anei", "2026-09-18")).toBeUndefined();
   });
 });

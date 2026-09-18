@@ -23,6 +23,37 @@ describe("ce trece de la model în registru", () => {
   });
 });
 
+describe("evenimente viitoare spuse modelului", () => {
+  it("citește un eveniment cu dată și cost", () => {
+    expect(read([{ kind: "planned-event", name: "Crăciun", date: "2026-12-25", estimate: 1200 }]))
+      .toEqual([{ kind: "planned-event", name: "Crăciun", date: "2026-12-25", estimate: 1200, repeat: "yearly" }]);
+  });
+
+  it("acceptă un eveniment fără cost — suma se scrie mai târziu", () => {
+    expect(read([{ kind: "planned-event", name: "Ziua Anei", date: "2026-10-18" }])[0])
+      .toMatchObject({ estimate: 0, repeat: "yearly" });
+  });
+
+  it("păstrează „o singură dată” când așa s-a spus", () => {
+    expect(read([{ kind: "planned-event", name: "Nuntă", date: "2027-06-12", estimate: 800, repeat: "once" }])[0])
+      .toMatchObject({ repeat: "once" });
+  });
+
+  it("primește suma și sub numele folosit de celelalte feluri", () => {
+    expect(read([{ kind: "planned-event", label: "Paște", date: "2027-05-02", amount: 500 }])[0])
+      .toMatchObject({ name: "Paște", estimate: 500 });
+  });
+
+  it("nu notează un eveniment fără dată sau fără nume — ar ateriza în altă zi", () => {
+    expect(read([{ kind: "planned-event", name: "Crăciun", estimate: 1200 }])).toEqual([]);
+    expect(read([{ kind: "planned-event", date: "2026-12-25", estimate: 1200 }])).toEqual([]);
+  });
+
+  it("nu acceptă o dată imposibilă", () => {
+    expect(read([{ kind: "planned-event", name: "Crăciun", date: "2026-02-31" }])).toEqual([]);
+  });
+});
+
 describe("ce NU trece — registrul omului nu se scrie din ghicite", () => {
   it("nu crede o formă care nu e listă", () => {
     for (const bad of [null, undefined, {}, "expense", 7, true]) expect(read(bad)).toEqual([]);

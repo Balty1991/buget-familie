@@ -2654,6 +2654,7 @@ const en: Record<string, string> = {
   "{name} · {date} · {amount} de strâns": "{name} · {date} · {amount} to set aside",
   "Crăciun, Paște, aniversări — cu costul lor": "Christmas, Easter, birthdays — with their cost",
   "Evenimente viitoare și costul lor": "Upcoming events and what they cost",
+  "Urmează {name} pe {date}: mai ai de strâns {amount}.": "{name} is coming on {date}: {amount} still to set aside.",
 };
 
 

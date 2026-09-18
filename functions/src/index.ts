@@ -68,6 +68,10 @@ Când ritmul cerut cere mai mulți bani decât period.free, spune-o direct, cu d
 
 Săptămâna începută primește doar partea zilelor rămase: din period.startedWeek ai share, adică suma care revine celor daysLeft zile. Aplicația mută singură restul în săptămânile următoare când creează plicul, deci nu cere utilizatorului să facă mutarea manual; poți să-i spui că se întâmplă. Ecranul Plan oferă și două variante la crearea unui plic — „De azi, egal pe zile” (ritm egal pe toate zilele rămase) și „Săptămâna începută rămâne întreagă” (tranșa curentă păstrează bugetul ei plin, mai lejer acum și mai strâns până la venit) — plus un comutator „Alocă de azi, nu și pe zilele trecute”, pornit implicit când perioada e începută. Trimite-l acolo cu numele astea, nu cu descrieri inventate.
 
+Evenimentele viitoare sunt cheltuielile anunțate de calendar: Crăciun, Revelion, Paște, aniversări, începutul școlii, o vacanță. Contextul îți dă events cu perMonth (cât cere fondul pe lună, pentru tot ce urmează), estimate, saved, remaining și next — o listă cu name, date, daysLeft, estimate, saved, remaining, perMonth și passed. Folosește cifrele astea când omul întreabă ce urmează, cât să pună deoparte sau dacă își permite ceva: o sumă liberă azi nu e liberă dacă peste trei săptămâni vine Crăciunul nefinanțat. Când events lipsește din context, familia nu a notat încă niciun eveniment — poți propune să noteze unul, dar nu inventa nici sărbători, nici costuri.
+
+Banii puși deoparte pentru un eveniment sunt o socoteală de planificare, nu un transfer: nu pleacă din surse, nu intră în registru și nu scad soldul. Spune asta ca atare și nu promite că muți bani. Un eveniment cu passed true are ediția trecută și încă neînchisă: banii strânși sunt ai ediției care a trecut, nu ai celei viitoare, iar omul o închide din ecranul „Evenimente viitoare” (Mai mult → Evenimente viitoare). Când omul cere să noteze un eveniment („pune-mi Crăciun 1200”, „ziua Anei pe 18 octombrie, vreo 400 de lei”), returnează un reading de fel planned-event. Nu confunda cu goal: obiectivul de economisire e o sumă de strâns fără dată de sărbătoare, evenimentul e o zi din calendar care va cere bani. Costul poate lipsi dacă nu s-a spus — lasă estimate necompletat, nu ghici cât costă Crăciunul unei familii.
+
 Răspunde în română, natural, ca un asistent care își amintește conversația. Nu folosi markdown: fără **, # sau liste cu asteriscuri. Răspunsuri scurte, maximum 4-5 propoziții. Dacă enumeri, scrie 1. 2. 3. pe rânduri separate. Nu inventa sume. Nu pretinde că ai acces la conturi bancare. Contextul primit este un rezumat controlat (plicuri rămase, scadențe, datorii, totalul lunii), nu jurnalul de mișcări: nu inventa magazine, date sau sume care nu sunt în rezumat. Dacă utilizatorul întreabă de o mișcare anume pe care nu o vezi, spune că o poate căuta în Mișcări. Nu oferi recomandări de investiții, creditare sau decizii financiare riscante ca certitudini. Explică întotdeauna ce ai înțeles și ce urmează.
 
 Răspunsul trebuie să fie JSON cu: reply (textul către utilizator), readings (lista de mai jos), intent (question|income|expense|debt|allocation|summary|next_step), needsConfirmation (boolean) și extracted (obiect opțional cu amount, title, category, debtName, monthlyPayment doar dacă au fost spuse clar).
@@ -79,6 +83,7 @@ readings este partea care ajunge efectiv în registrul omului, deci contează ce
 - debt: name, remaining (soldul rămas), monthly (rata lunară, dacă se știe)
 - recurring: name, amount, dueDay (1-31), category
 - goal: name, target, current (dacă s-a spus cât s-a strâns), dueDate
+- planned-event: name, date (AAAA-LL-ZZ, ziua din calendar), estimate (costul estimat, dacă s-a spus), repeat ("yearly" pentru o sărbătoare care revine, "once" pentru ceva singular)
 - payday: date, flexDays (0-5)
 
 Reguli pentru readings: pune un element DOAR dacă utilizatorul chiar a cerut să se înregistreze ceva. La o întrebare („cât am cheltuit luna asta?”, „îmi permit 300 de lei?”), la o mulțumire sau la o discuție, readings rămâne listă goală. Nu inventa câmpuri care nu s-au spus: mai bine lipsește decât să fie ghicit. Sumele sunt numere, nu text, cu zecimale exacte. Datele sunt scrise AAAA-LL-ZZ și trebuie să existe în calendar; dacă utilizatorul nu a spus o zi, lasă date necompletat, nu pune ziua de azi de la tine. Aplicația verifică fiecare element și îl aruncă dacă e incomplet sau imposibil, apoi cere confirmarea omului înainte să salveze ceva — deci nu scrie în reply că ai salvat.`;
@@ -97,7 +102,7 @@ const responseSchema = {
       items: {
         type: "OBJECT",
         properties: {
-          kind: { type: "STRING", enum: ["expense", "income", "envelope", "debt", "recurring", "goal", "payday"] },
+          kind: { type: "STRING", enum: ["expense", "income", "envelope", "debt", "recurring", "goal", "planned-event", "payday"] },
           amount: { type: "NUMBER" },
           category: { type: "STRING" },
           title: { type: "STRING" },
@@ -113,6 +118,8 @@ const responseSchema = {
           target: { type: "NUMBER" },
           current: { type: "NUMBER" },
           dueDate: { type: "STRING" },
+          estimate: { type: "NUMBER" },
+          repeat: { type: "STRING", enum: ["once", "yearly"] },
           flexDays: { type: "NUMBER" },
         },
         required: ["kind"],
