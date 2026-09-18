@@ -29,16 +29,23 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+      # Numele fișierului urmează versiunea din pachet. Scris de mână, rămânea în urmă:
+      # un APK cu 1.1.44 înăuntru se descărca numit „1.1.39”, deci nu se știa ce s-a instalat.
+      - name: Află versiunea aplicației
+        id: versiune
+        run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
       - name: Construiește APK-ul debug
         working-directory: android
+        env:
+          VERSIUNE: ${{ steps.versiune.outputs.value }}
         run: |
           ./gradlew assembleDebug
           ls -la app/build/outputs/apk/debug
           apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -n 1)"
-          cp "$apk" "app/build/outputs/apk/debug/Buget-Familie-1.1.39.apk"
+          cp "$apk" "app/build/outputs/apk/debug/Buget-Familie-$VERSIUNE.apk"
       - name: Publică APK-ul ca artefact GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: Buget-Familie-1.1.39
-          path: android/app/build/outputs/apk/debug/Buget-Familie-1.1.39.apk
+          name: Buget-Familie-${{ steps.versiune.outputs.value }}
+          path: android/app/build/outputs/apk/debug/Buget-Familie-${{ steps.versiune.outputs.value }}.apk
           retention-days: 14
