@@ -9,7 +9,7 @@ import { type SyncJournalEntry } from "@/lib/app-storage";
 import { moneyFormat, t } from "@/lib/i18n";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
-export type MoreView = "overview" | "review" | "prices" | "pocket" | "debts" | "savings" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "settings" | "sync" | "guide";
+export type MoreView = "overview" | "review" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "settings" | "sync" | "guide";
 export type ThemeId = "white" | "dark" | "aurora" | "navy" | "cyber";
 export type ThemeSchedule = "manual" | "auto";
 export type ThemeScheduleTimes = { dayStart: string; eveningStart: string; nightStart: string };

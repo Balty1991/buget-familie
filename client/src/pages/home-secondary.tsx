@@ -16,7 +16,7 @@ import "../pocket.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Copy, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Copy, Gift, Images, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
 import { BASE_CURRENCY, activeCurrencies, currenciesMissingRate, supportedCurrencies, addIsoDays, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, createEmptyAppData, exchangeRateFor, sourceBalanceInCurrency, sourceCurrency, toBaseAmount, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoDate, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, guessCategoryFromText, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind, type ShareScope, transactionShareScope} from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type SyncJournalEntry } from "@/lib/app-storage";
 import { checkFamilyPassword, generateFamilyPassword } from "@/lib/family-password";
@@ -51,6 +51,7 @@ import {
 } from "@/pages/home-kit";
 import { getLocale, languages, t, monthsLabel, countLabel } from "@/lib/i18n";
 import { canAddMember, PLANS } from "@/lib/entitlements";
+import { plannedEventsPressure, upcomingPlannedEvents } from "@/lib/planned-events";
 import { UsageTutorial } from "@/components/UsageTutorial";
 import { ReceiptsStudio } from "@/components/ReceiptsStudio";
 import { ProductCatalogPanel } from "@/components/ProductCatalogPanel";
@@ -64,6 +65,7 @@ const RecurringPanel = lazy(() => import("@/components/RecurringPanel").then((mo
 const ReviewCenterPanel = lazy(() => import("@/components/ReviewCenterPanel").then((module) => ({ default: module.ReviewCenterPanel })));
 const PriceWatchPanel = lazy(() => import("@/components/PriceWatchPanel").then((module) => ({ default: module.PriceWatchPanel })));
 const PocketPanel = lazy(() => import("@/components/PocketPanel").then((module) => ({ default: module.PocketPanel })));
+const PlannedEventsPanel = lazy(() => import("@/components/PlannedEventsPanel").then((module) => ({ default: module.PlannedEventsPanel })));
 const AdvisorPanel = lazy(() => import("@/components/AdvisorPanel").then((module) => ({ default: module.AdvisorPanel })));
 const HouseholdStudio = lazy(() => import("@/components/HouseholdStudio").then((module) => ({ default: module.HouseholdStudio })));
 const TrustCenter = lazy(() => import("@/components/TrustCenter").then((module) => ({ default: module.TrustCenter })));
@@ -576,7 +578,7 @@ function DebtPayoffSimulator({ data }: { data: AppData }) {
   const maxExtra = Math.max(100, Math.ceil(minimum * 1.5 / 100) * 100);
   return <section className="bf-debt-simulator"><div className="bf-debt-simulator-head"><div><p className="bf-kicker">{t("SIMULATOR DE DECIZIE")}</p><h2>{t("Dacă plătești")} <em>{t("în plus")}</em>?</h2><span>{t("Testează un efort lunar suplimentar. Nu schimbă datele tale, doar îți arată scenariul.")}</span></div><div className="bf-debt-simulator-result"><strong>{savedMonths ? "−" + savedMonths : "0"}</strong><small>{t("luni câștigate")}</small></div></div><div className="bf-debt-slider"><div><span>{t("Sumă extra / lună")}</span><b>{money(extra)}</b></div><input type="range" min="0" max={maxExtra} step="50" value={extra} onChange={(event) => setExtra(Number(event.target.value))} aria-label={t("Sumă suplimentară lunară")} /><div className="bf-debt-slider-labels"><small>0 RON</small><small>{money(maxExtra)}</small></div></div><div className="bf-debt-simulator-summary"><span><b>{baseMonths}</b><small>{t("luni acum")}</small></span><span><b>{simulatedMonths}</b><small>{t("luni cu extra")}</small></span><span><b>{money(minimum + extra)}</b><small>{t("efort lunar")}</small></span></div></section>;
 }
-export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onOpenGoals, onOpenCalendar, onOpenAssistant }: { data: AppData; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenAssistant: () => void }) {
+export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onOpenGoals, onOpenCalendar, onOpenEvents, onOpenAssistant }: { data: AppData; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenEvents: () => void; onOpenAssistant: () => void }) {
   const [laterIds, setLaterIds] = useState<string[]>([]);
   const totalDebt = data.debts.reduce((sum, item) => sum + item.remaining, 0);
   const totalSavings = data.savings.reduce((sum, item) => sum + item.current, 0);
@@ -614,6 +616,20 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
       amount: Math.max(0, item.target - item.current),
       onConfirm: onOpenGoals,
     })),
+    /**
+     * Evenimentele din calendar stau lângă rate și facturi, fiindcă la fel se cer:
+     * la o dată știută, cu o sumă știută. Suma arătată e cât mai lipsește din fond,
+     * nu costul întreg — restul e deja pus deoparte.
+     */
+    ...upcomingPlannedEvents(data.settings.plannedEvents, today, 120).map((status) => ({
+      id: `event-${status.event.id}`,
+      kind: "event" as const,
+      date: status.date,
+      label: status.event.name,
+      detail: status.remaining > 0 ? t("mai ai de strâns {amount}", { amount: money(status.remaining) }) : t("fondul e complet"),
+      amount: status.remaining,
+      onConfirm: onOpenEvents,
+    })),
     ...pendingRecurringInPlan(data).map((item) => ({
       id: `recurring-${item.id}`,
       kind: "recurring" as const,
@@ -624,7 +640,7 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
       onConfirm: () => onPayRecurring(item.id),
     })),
   ].filter((entry) => !laterIds.includes(entry.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
-  const kindLabel = (kind: "debt" | "saving" | "recurring") => kind === "debt" ? t("Rată") : kind === "saving" ? t("Obiectiv") : t("Factură / abonament");
+  const kindLabel = (kind: "debt" | "saving" | "recurring" | "event") => kind === "debt" ? t("Rată") : kind === "saving" ? t("Obiectiv") : kind === "event" ? t("Eveniment") : t("Factură / abonament");
   const whenLabel = (date: string) => {
     if (date < today) return t("Întârziată");
     if (date === today) return t("Azi");
@@ -641,13 +657,14 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
         <div className="bf-obligations-links">
           <button className="bf-goals-link" onClick={onOpenGoals}><PiggyBank size={16} /> {t("Obiective pe termen lung")}</button>
           <button className="bf-goals-link" onClick={onOpenCalendar}><CalendarDays size={16} /> {t("Calendar de scadențe")}</button>
+          <button className="bf-goals-link" onClick={onOpenEvents}><Gift size={16} /> {t("Evenimente viitoare")}</button>
         </div>
         {upcoming.length ? (
           <div className="bf-upcoming-list">
             {upcoming.map((entry, index) => (
               <article key={entry.id} className={`bf-upcoming-item kind-${entry.kind}${index === 0 ? " is-next" : ""}${entry.date < today ? " is-overdue" : ""}`}>
                 <div className="bf-upcoming-item-main">
-                  <span>{entry.kind === "saving" ? <PiggyBank size={17} /> : entry.kind === "recurring" ? <CalendarClock size={17} /> : <BellRing size={17} />}</span>
+                  <span>{entry.kind === "saving" ? <PiggyBank size={17} /> : entry.kind === "recurring" ? <CalendarClock size={17} /> : entry.kind === "event" ? <Gift size={17} /> : <BellRing size={17} />}</span>
                   <div>
                     <b>{entry.label}</b>
                     <small>{kindLabel(entry.kind)} · {whenLabel(entry.date)} · {entry.detail}</small>
@@ -655,7 +672,7 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
                   <strong>{money(entry.amount)}</strong>
                 </div>
                 <div className="bf-upcoming-actions">
-                  <button type="button" className="pay" onClick={entry.onConfirm}><Check size={16} /> {entry.kind === "saving" ? t("Deschide") : t("Confirmă plata")}</button>
+                  <button type="button" className="pay" onClick={entry.onConfirm}><Check size={16} /> {entry.kind === "saving" || entry.kind === "event" ? t("Deschide") : t("Confirmă plata")}</button>
                   <button type="button" onClick={() => setLaterIds((current) => [...current, entry.id])}>{t("Mai târziu")}</button>
                 </div>
               </article>
@@ -1019,6 +1036,11 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
     if (!allowed.has(tab)) setTab("overview");
   }, [simpleMode, tab, setTab]);
   const isCollaborative = data.settings.members.length > 1;
+  /** Rândul din „Mai mult” spune deja cifra care contează: ce urmează și cât mai lipsește. */
+  const eventsPressure = plannedEventsPressure(data.settings.plannedEvents, isoToday(), 90);
+  const eventsHint = eventsPressure.next
+    ? t("{name} · {date} · {amount} de strâns", { name: eventsPressure.next.event.name, date: dateText(eventsPressure.next.date), amount: money(eventsPressure.remaining) })
+    : t("Crăciun, Paște, aniversări — cu costul lor");
   const simpleAllowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring", "catalog"]);
   const setSettings = (patch: Partial<AppData["settings"]>) => onChange({ ...data, settings: { ...data.settings, ...patch } });
   const content = () => {
@@ -1059,6 +1081,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
         <div className="bf-more-grid bf-settings-group">
           <button type="button" className="bf-settings-row" onClick={() => setTab("debts")}><BellRing size={20} /><span className="bf-settings-copy"><b>{t("Datorii")}</b><small>{countLabel(data.debts.length, { one: "{count} activă", few: "{count} active", many: "{count} de active" })}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("savings")}><PiggyBank size={20} /><span className="bf-settings-copy"><b>{t("Economii")}</b><small>{countLabel(data.savings.length, { one: "{count} obiectiv", few: "{count} obiective", many: "{count} de obiective" })}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("events")}><Gift size={20} /><span className="bf-settings-copy"><b>{t("Evenimente viitoare")}</b><small>{eventsHint}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("prices")}><ShoppingBasket size={20} /><span className="bf-settings-copy"><b>{t("Prețuri")}</b><small>{t("istoric și coșul etalon")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           {data.settings.members.some((item) => item.kind === "child") && <button type="button" className="bf-settings-row" onClick={() => setTab("pocket")}><PiggyBankIcon size={20} /><span className="bf-settings-copy"><b>{t("Buzunar")}</b><small>{t("banii copilului")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>}
         </div>
@@ -1085,6 +1108,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
     if (tab === "review") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim revizuirea…")}</div>}><ReviewCenterPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "prices") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim prețurile…")}</div>}><PriceWatchPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "pocket") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim buzunarul…")}</div>}><PocketPanel data={data} /></Suspense>;
+    if (tab === "events") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim evenimentele…")}</div>}><PlannedEventsPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "recurring") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim scadențele…")}</div>}><RecurringPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "reports") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim statisticile…")}</div>}><ReportsPanel data={data} onGo={onGo} /></Suspense>;
     if (tab === "assistant") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim asistentul…")}</div>}><AdvisorPanel data={data} onChange={onChange} /></Suspense>;

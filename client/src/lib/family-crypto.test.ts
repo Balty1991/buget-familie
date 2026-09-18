@@ -120,6 +120,43 @@ describe("unirea planului pe plicuri, nu pe obiect întreg", () => {
   });
 });
 
+describe("unirea evenimentelor viitoare", () => {
+  it("păstrează evenimentele scrise pe telefoane diferite", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    local.settings.plannedEvents = [{ id: "event-craciun", name: "Crăciun", date: "2026-12-25", estimate: 1200, kind: "holiday", repeat: "yearly", updatedAt: "2026-09-12T10:00:00.000Z" }];
+    remote.settings.plannedEvents = [{ id: "event-zi", name: "Ziua Mariei", date: "2026-10-18", estimate: 300, kind: "anniversary", repeat: "yearly", updatedAt: "2026-09-12T09:00:00.000Z" }];
+
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.settings.plannedEvents.map((item) => item.id).sort()).toEqual(["event-craciun", "event-zi"]);
+  });
+
+  it("adună banii puși deoparte pe ambele telefoane, în loc să-i suprascrie", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    const event = { id: "event-craciun", name: "Crăciun", date: "2026-12-25", estimate: 1200, kind: "holiday" as const, repeat: "yearly" as const };
+    local.settings.plannedEvents = [{ ...event, estimate: 1400, updatedAt: "2026-11-02T10:00:00.000Z", contributions: [{ id: "put-1", amount: 200, date: "2026-10-01" }] }];
+    remote.settings.plannedEvents = [{ ...event, updatedAt: "2026-10-30T10:00:00.000Z", contributions: [{ id: "put-2", amount: 150, date: "2026-10-20" }] }];
+
+    const merged = mergeFamilyData(local, remote);
+    const saved = merged.settings.plannedEvents[0];
+    // Estimarea urmează ultima scriere; jurnalul se adună, ca nicio sumă reală să nu dispară.
+    expect(saved.estimate).toBe(1400);
+    expect(saved.contributions?.map((item) => item.id)).toEqual(["put-1", "put-2"]);
+  });
+
+  it("nu dublează aceeași punere deoparte întoarsă de sincronizare", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    const contribution = { id: "put-1", amount: 200, date: "2026-10-01" };
+    local.settings.plannedEvents = [{ id: "event-craciun", name: "Crăciun", date: "2026-12-25", estimate: 1200, kind: "holiday", repeat: "yearly", contributions: [contribution] }];
+    remote.settings.plannedEvents = [{ id: "event-craciun", name: "Crăciun", date: "2026-12-25", estimate: 1200, kind: "holiday", repeat: "yearly", contributions: [contribution] }];
+
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.settings.plannedEvents[0].contributions).toHaveLength(1);
+  });
+});
+
 describe("rezolvarea conflictelor de plic", () => {
   it("Keep remote aplică suma remote și Undo o readuce", () => {
     const base = createEmptyAppData();

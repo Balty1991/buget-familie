@@ -15,6 +15,7 @@ import {
   type Transaction,
   type TransactionConflict,
 } from "@/lib/finance-data";
+import { type PlannedEvent } from "@/lib/planned-events";
 
 export type EncryptedEnvelope = {
   version: 1;
@@ -321,6 +322,23 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
     salaryAllocationApplications: mergeById(localPlan.salaryAllocationApplications || [], remotePlan.salaryAllocationApplications || []),
     allocationHistory,
   };
+  /**
+   * Evenimentele viitoare se unesc pe id, dar jurnalul „pus deoparte” se adună din
+   * ambele telefoane: dacă 200 puși de acasă și 150 puși de la serviciu ar intra în
+   * LWW, o sumă reală ar dispărea din fondul de Crăciun fără ca cineva să vadă.
+   */
+  const mergePlannedEvents = (left: PlannedEvent[], right: PlannedEvent[]): PlannedEvent[] => {
+    const ids = Array.from(new Set([...right, ...left].map((item) => item.id)));
+    return ids.map((id) => {
+      const mine = left.find((item) => item.id === id);
+      const theirs = right.find((item) => item.id === id);
+      const base = !theirs ? mine! : !mine ? theirs : itemTime(mine) >= itemTime(theirs) ? mine : theirs;
+      const contributions = mergeById([...(mine?.contributions || [])], [...(theirs?.contributions || [])], (item) => Date.parse(item.date) || 0)
+        .sort((first, second) => first.date.localeCompare(second.date));
+      return { ...base, contributions: contributions.length ? contributions : undefined };
+    }).slice(0, 80);
+  };
+  const plannedEvents = mergePlannedEvents(local.settings.plannedEvents || [], remote.settings.plannedEvents || []);
   const syncDevices = mergeSyncDevices(local.settings.syncDevices || [], remote.settings.syncDevices || []);
   const { transactions, conflicts: txConflicts } = mergeTransactionsWithConflicts(
     local.transactions,
@@ -363,6 +381,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches,
       basketProducts: local.settings.basketProducts,
       merchantRules: local.settings.merchantRules || [],
+      plannedEvents,
       syncDevices,
       salaryPlan,
       syncRecoveryIssuedAt: local.settings.syncRecoveryIssuedAt || remote.settings.syncRecoveryIssuedAt,
