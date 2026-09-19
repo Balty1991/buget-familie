@@ -270,7 +270,8 @@ export function parseBackup(raw: string): AppBackup {
  * este o eroare.
  */
 export type BackupOutcome =
-  | { how: "shared" }
+  /** `fallback` = s-a cerut salvare, dar telefonul n-a permis scrierea în Documents. */
+  | { how: "shared"; fallback?: true }
   | { how: "saved"; path: string }
   | { how: "downloaded" }
   | { how: "cancelled" }
@@ -289,16 +290,28 @@ const isAbort = (error: unknown) =>
   error instanceof Error && (error.name === "AbortError" || /abort|cancel|dismiss/i.test(error.message));
 
 /**
- * Calea nativă. Două lucruri trebuie să meargă și niciunul nu e garantat pe toate
- * telefoanele: scrierea în folderul public Documente (pe Android 10+ accesul direct
- * este restrâns) și foaia de partajare. Așa că încercăm întâi Documente și verificăm
- * prin `stat` că fișierul chiar există, iar dacă nu, scriem în cache — care merge
- * întotdeauna și este expus de FileProvider. Abia apoi deschidem foaia de partajare.
+ * Ce vrea omul de la buton: să-l aibă pe telefon, sau să-l trimită mai departe.
  *
- * Dacă utilizatorul închide foaia, spunem „salvat” doar când fișierul a ajuns undeva
- * unde chiar îl poate găsi; un fișier rămas în cache nu îi folosește la nimic.
+ * Nu e același lucru, iar până acum exportul făcea al doilea lucru în locul primului:
+ * scria fișierul în Documente, apoi deschidea imediat foaia de partajare. Cine voia
+ * doar o copie pe telefon vedea o listă de WhatsApp și Drive și credea că aplicația
+ * nu știe să salveze — deși fișierul era deja scris.
  */
-async function saveNatively(text: string, name: string): Promise<BackupOutcome> {
+export type BackupIntent = "save" | "share";
+
+/**
+ * Calea nativă. Două lucruri trebuie să meargă și niciunul nu e garantat pe toate
+ * telefoanele: scrierea în folderul public Documents (pe Android 10+ accesul direct
+ * este restrâns) și foaia de partajare. Așa că încercăm întâi Documents și verificăm
+ * prin `stat` că fișierul chiar există, iar dacă nu, scriem în cache — care merge
+ * întotdeauna și este expus de FileProvider.
+ *
+ * Cache-ul e singurul caz în care partajarea rămâne obligatorie chiar și la „salvează”:
+ * un fișier acolo nu poate fi găsit cu aplicația Fișiere, deci singura cale să ajungă
+ * undeva util este să-l scoatem din aplicație. Dacă utilizatorul închide foaia, spunem
+ * „salvat” doar când fișierul chiar a ajuns într-un loc unde îl poate găsi.
+ */
+async function saveNatively(text: string, name: string, intent: BackupIntent): Promise<BackupOutcome> {
   const [{ Filesystem, Directory, Encoding }, { Share }] = await Promise.all([
     import("@capacitor/filesystem"),
     import("@capacitor/share"),
@@ -316,14 +329,18 @@ async function saveNatively(text: string, name: string): Promise<BackupOutcome> 
   let visiblePath = "";
   try {
     uri = await writeTo(Directory.Documents);
-    visiblePath = `Documente/${name}`;
+    // Numele folderului e cel de pe disc, nu unul tradus: exact ce scrie în aplicația Fișiere.
+    visiblePath = `Documents/${name}`;
   } catch {
     uri = await writeTo(Directory.Cache);
   }
 
+  if (intent === "save" && visiblePath) return { how: "saved", path: visiblePath };
+
   try {
     await Share.share({ title: name, text: name, url: uri, dialogTitle: "Salvează backupul" });
-    return { how: "shared" };
+    // Omul a cerut „salvează” și a primit lista de aplicații: spunem de ce, nu-l lăsăm să ghicească.
+    return intent === "save" ? { how: "shared", fallback: true } : { how: "shared" };
   } catch (error) {
     if (visiblePath) return { how: "saved", path: visiblePath };
     if (isAbort(error)) return { how: "cancelled" };
@@ -331,13 +348,13 @@ async function saveNatively(text: string, name: string): Promise<BackupOutcome> 
   }
 }
 
-export async function downloadBackup(data: AppData): Promise<BackupOutcome> {
+export async function downloadBackup(data: AppData, intent: BackupIntent = "save"): Promise<BackupOutcome> {
   const name = backupFileName();
   const text = JSON.stringify(makeBackup(data), null, 2);
 
   if (isNativeApp()) {
     try {
-      return await saveNatively(text, name);
+      return await saveNatively(text, name, intent);
     } catch (error) {
       return { how: "failed", reason: error instanceof Error ? error.message : undefined };
     }
@@ -345,15 +362,19 @@ export async function downloadBackup(data: AppData): Promise<BackupOutcome> {
 
   const blob = new Blob([text], { type: "application/json" });
 
-  try {
-    const file = new File([blob], name, { type: "application/json" });
-    const shareApi = navigator as Navigator & { canShare?: (value: { files: File[] }) => boolean };
-    if (typeof navigator.share === "function" && shareApi.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: name });
-      return { how: "shared" };
+  // Pe web, „trimite” înseamnă foaia de partajare, iar „salvează” înseamnă descărcare.
+  // Inversate, butonul de salvare deschidea tot lista de aplicații pe Android Chrome.
+  if (intent === "share") {
+    try {
+      const file = new File([blob], name, { type: "application/json" });
+      const shareApi = navigator as Navigator & { canShare?: (value: { files: File[] }) => boolean };
+      if (typeof navigator.share === "function" && shareApi.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: name });
+        return { how: "shared" };
+      }
+    } catch (error) {
+      if (isAbort(error)) return { how: "cancelled" };
     }
-  } catch (error) {
-    if (isAbort(error)) return { how: "cancelled" };
   }
 
   try {

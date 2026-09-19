@@ -51,14 +51,25 @@ describe("backup Buget Familie", () => {
       native.share.mockReset().mockResolvedValue({ activityType: "com.google.android.apps.docs" });
     });
 
-    it("scrie fișierul în Documente și deschide foaia de partajare", async () => {
-      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+    /**
+     * Cazul raportat de pe telefon: „Exportă backup” deschidea direct lista de aplicații,
+     * deci omul credea că aplicația nu știe să salveze local — deși fișierul era deja scris.
+     */
+    it("salvează în Documents fără să deschidă lista de aplicații", async () => {
+      const result = await downloadBackup(data());
 
+      expect(result.how).toBe("saved");
+      expect(result.how === "saved" && result.path).toMatch(/^Documents\/buget-familie-backup/);
       expect(native.writeFile).toHaveBeenCalledOnce();
       const call = native.writeFile.mock.calls[0][0];
       expect(call.path).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d-\d{4}\.json$/);
       expect(call.directory).toBe("DOCUMENTS");
       expect(JSON.parse(call.data).data.settings.familyName).toBe("Familia Test");
+      expect(native.share).not.toHaveBeenCalled();
+    });
+
+    it("deschide foaia de partajare doar când asta s-a cerut", async () => {
+      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
       expect(native.share).toHaveBeenCalledOnce();
       expect(native.share.mock.calls[0][0].url).toBe("file:///Documents/backup.json");
     });
@@ -66,25 +77,37 @@ describe("backup Buget Familie", () => {
     it("nu crede o scriere care lasă fișierul gol — trece pe cache", async () => {
       native.stat.mockResolvedValueOnce({ size: 0, uri: "file:///Documents/backup.json" });
 
-      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
       expect(native.writeFile).toHaveBeenCalledTimes(2);
       expect(native.writeFile.mock.calls[1][0].directory).toBe("CACHE");
     });
 
-    it("dacă Documente este refuzat, scrie în cache în loc să eșueze", async () => {
+    it("dacă Documents este refuzat, scrie în cache în loc să eșueze", async () => {
       native.writeFile.mockRejectedValueOnce(new Error("Directory does not exist"));
 
-      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
       expect(native.writeFile).toHaveBeenCalledTimes(2);
       expect(native.writeFile.mock.calls[1][0].directory).toBe("CACHE");
     });
 
-    it("dacă utilizatorul închide foaia de partajare, fișierul rămâne în Documente și îi spunem unde", async () => {
+    /**
+     * Un fișier rămas în cache nu poate fi găsit cu aplicația Fișiere, deci „salvează”
+     * nu are ce salva: singura cale să ajungă undeva util este să iasă din aplicație.
+     */
+    it("la salvare, cache-ul cere totuși partajarea — altfel fișierul e de negăsit", async () => {
+      native.writeFile.mockRejectedValueOnce(new Error("Directory does not exist"));
+
+      // `fallback` ține minte că omul ceruse salvare, ca mesajul să explice lista de aplicații.
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared", fallback: true });
+      expect(native.share).toHaveBeenCalledOnce();
+    });
+
+    it("dacă utilizatorul închide foaia de partajare, fișierul rămâne în Documents și îi spunem unde", async () => {
       native.share.mockRejectedValue(Object.assign(new Error("Share canceled"), { name: "AbortError" }));
 
-      const result = await downloadBackup(data());
+      const result = await downloadBackup(data(), "share");
       expect(result.how).toBe("saved");
-      expect(result.how === "saved" && result.path).toMatch(/^Documente\/buget-familie-backup/);
+      expect(result.how === "saved" && result.path).toMatch(/^Documents\/buget-familie-backup/);
     });
 
     it("nu pretinde că a salvat ceva când fișierul e doar în cache și partajarea a fost anulată", async () => {
@@ -104,15 +127,33 @@ describe("backup Buget Familie", () => {
   describe("pe web", () => {
     const webWindow = () => vi.stubGlobal("window", { setTimeout: vi.fn() });
 
-    it("folosește foaia de partajare a browserului când există", async () => {
+    it("folosește foaia de partajare a browserului când asta s-a cerut", async () => {
       webWindow();
       const share = vi.fn(async () => undefined);
       vi.stubGlobal("navigator", { share, canShare: () => true });
       vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string, public options: unknown) {} });
       vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
 
-      await expect(downloadBackup(data())).resolves.toEqual({ how: "shared" });
+      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
       expect(share).toHaveBeenCalledOnce();
+    });
+
+    // Pe Android, Chrome are navigator.share: fără separarea intenției, butonul de
+    // salvare deschidea și pe web tot lista de aplicații.
+    it("la salvare descarcă fișierul, chiar dacă browserul știe să partajeze", async () => {
+      const click = vi.fn();
+      const anchor = { href: "", download: "", rel: "", click, remove: vi.fn() } as unknown as HTMLAnchorElement;
+      webWindow();
+      const share = vi.fn(async () => undefined);
+      vi.stubGlobal("navigator", { share, canShare: () => true });
+      vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
+      vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
+      vi.stubGlobal("URL", { createObjectURL: () => "blob:test", revokeObjectURL: vi.fn() });
+      vi.stubGlobal("document", { createElement: () => anchor, body: { appendChild: vi.fn() } });
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "downloaded" });
+      expect(share).not.toHaveBeenCalled();
+      expect(click).toHaveBeenCalledOnce();
     });
 
     it("cade pe descărcarea clasică atunci când partajarea nu este disponibilă", async () => {
@@ -136,7 +177,7 @@ describe("backup Buget Familie", () => {
       vi.stubGlobal("File", class { constructor(public parts: unknown[], public name: string) {} });
       vi.stubGlobal("Blob", class { constructor(public parts: unknown[]) {} });
 
-      await expect(downloadBackup(data())).resolves.toEqual({ how: "cancelled" });
+      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "cancelled" });
     });
   });
 });

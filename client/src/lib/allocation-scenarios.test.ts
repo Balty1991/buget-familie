@@ -11,6 +11,7 @@ import {
   allocationWeeksStatus,
   createEmptyAppData,
   envelopeDecisionStatus,
+  isoToday,
   planAllocationMath,
   planEndDate,
   planWeeklyCycle,
@@ -113,7 +114,14 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     expect(labels).toMatch(/Alimente · S1/);
     expect(labels).toMatch(/Alimente · S2/);
     expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.allocationId).toBe("env-food");
-    expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.fromWeekIndex).toBe(1);
+    /**
+     * Prima alegere ia tranșa zilei de azi, nu tranșa numărul 1: scris ca număr fix,
+     * testul pica singur în ziua în care perioada fixture-ului intra în a doua săptămână.
+     */
+    const weeks = allocationWeeksStatus(data, data.settings.salaryPlan.allocations[0]);
+    const today = isoToday();
+    const currentWeek = weeks.find((week) => today >= week.start && today <= week.end) || weeks[0];
+    expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.fromWeekIndex).toBe(currentWeek.index);
   });
 
   it("la o cheltuială din S2, Confirmă pe toate ia S2, nu prima săptămână cu bani", () => {
