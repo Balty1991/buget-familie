@@ -38,7 +38,7 @@ import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
 import { spendGroupOf } from "./product-catalog";
-import { extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } from "./assistant-intents";
+import { extractAmounts, extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
@@ -74,6 +74,13 @@ const money = (value: number) => `${Number(value.toFixed(2)).toLocaleString("ro-
 export function foldRo(raw: string) {
   return raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
+
+/**
+ * Vorbește despre împărțirea banilor, nu despre o plată: plic, împart, repartizez, aloc.
+ * Semnalul ăsta oprește propunerea de cheltuială și, când o sumă rămâne necitită, trimite
+ * mesajul la model în loc să răspundem cu o situație generală.
+ */
+export const plansMoney = (raw: string) => /\bplic|\bimpart|\brepartiz|\baloc[aă]/.test(foldRo(raw));
 
 export function habitKey(raw: string) {
   return foldRo(raw).replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
@@ -318,6 +325,17 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const draftTitle = spendTitle(folded, extracted, parsed.category || "Altele");
   const habit = findHabit(memory, raw, draftTitle);
+  /**
+   * „Am 1800 lei de împărțit în plicuri până pe 9 octombrie” nu este o plată de 1.800 de lei.
+   *
+   * `looksSpend` de mai jos acceptă orice propoziție care conține „pe ”, așa că o frază
+   * despre planificare ajungea propunere de cheltuială, cu suma și ziua la locul lor —
+   * gata de confirmat din greșeală. Cuvintele de plic și de împărțire opresc drumul ăsta,
+   * dar numai cât timp nimeni nu spune că a și plătit ceva: „am dat 50 din plicul de
+   * alimente” rămâne cheltuială.
+   */
+  const spendsMoney = /cheltui|platit|plateste|cumpar|am dat|am luat|am scos/.test(folded);
+  if (!forced && plansMoney(raw) && !spendsMoney) return undefined;
   const looksSpend = forced
     || Boolean(habit)
     || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|uitat|\bpe |\bpentru /.test(folded)
@@ -495,7 +513,16 @@ export function paidRecurringProposal(raw: string, data: AppData): Proposal | un
 export type Proposal = { text: string; choices: ChatChoice[] };
 
 /** O citire posibilă a mesajului, cu cât de tare o susține textul și de ce. */
-export type Reading =
+/**
+ * `soft` = am înțeles ceva, dar probabil nu tot.
+ *
+ * Citirea locală câștiga întotdeauna în fața modelului online, chiar și când lăsa pe
+ * dinafară jumătate din mesaj: „am 1800 de lei pe care îi împart în plicuri până pe 9
+ * octombrie” se oprea la dată, iar cei 1800 și plicurile dispăreau fără ca cineva să
+ * afle. Marcajul nu schimbă cine câștigă local — spune doar că, dacă există rețea,
+ * merită întrebat modelul înainte de a răspunde cu o bucată.
+ */
+export type Reading = { soft?: true } & (
   | { kind: "confirm"; score: number; why: string }
   | { kind: "revise"; score: number; why: string; proposal: Proposal }
   | { kind: "intents"; score: number; why: string; intents: ParsedIntent[] }
@@ -504,7 +531,8 @@ export type Reading =
   | { kind: "transfer"; score: number; why: string; proposal: Proposal }
   | { kind: "due"; score: number; why: string; proposal: Proposal }
   | { kind: "income"; score: number; why: string; proposal: Proposal }
-  | { kind: "insight"; score: number; why: string; text: string };
+  | { kind: "insight"; score: number; why: string; text: string }
+);
 
 export type UnderstandContext = {
   memory?: GuideMemory;
@@ -523,6 +551,37 @@ export type UnderstandContext = {
  * restul.
  */
 const BASE = { confirm: 100, revise: 95, intents: 90, question: 80, due: 78, transfer: 75, expense: 70, income: 50, insight: 40 } as const;
+
+/** Sumele pe care o intenție chiar le folosește; restul rămân necitite. */
+const intentAmounts = (intent: ParsedIntent["intent"]): number[] => {
+  switch (intent.kind) {
+    case "expense": case "income": case "recurring": return [intent.amount];
+    case "envelope": return [intent.amount, ...(intent.weeklyLimit ? [intent.weeklyLimit] : [])];
+    case "debt": return [intent.remaining, ...(intent.monthly ? [intent.monthly] : [])];
+    case "goal": return [intent.target, ...(intent.current ? [intent.current] : [])];
+    case "planned-event": return intent.estimate ? [intent.estimate] : [];
+    case "payday": return [];
+  }
+};
+
+/**
+ * A rămas vreo sumă din mesaj pe care nicio intenție nu a folosit-o? Atunci citirea e
+ * parțială: omul a spus o cifră, iar noi am înțeles altceva din propoziție.
+ */
+const leavesMoneyUnread = (raw: string, intents: ParsedIntent[]) => {
+  const spoken = extractAmounts(extractDates(raw).masked).map((hit) => hit.value);
+  if (!spoken.length) return false;
+  const used = intents.flatMap((item) => intentAmounts(item.intent));
+  return spoken.some((value) => !used.some((item) => Math.abs(item - value) < 0.005));
+};
+
+/**
+ * „Împarte în plic alimente cu limita săptămânală” este o comandă, nu o întrebare.
+ * Analistul local o revendica oricum și răspundea cu o situație generală, deci omul
+ * primea altceva decât ceruse, iar modelul nu mai apuca să vadă mesajul.
+ */
+const soundsLikeCommand = (raw: string) =>
+  !raw.includes("?") && /\b(imparte|imparti|impartiti|impartit|impartita|pune|pune-mi|fa|fa-mi|creeaza|creaza|repartizeaza|repartizeza|aloca|muta|seteaza|schimba)\b/.test(foldRo(raw));
 
 export function understand(text: string, data: AppData, ctx: UnderstandContext = {}): Reading[] {
   const raw = text.trim();
@@ -546,11 +605,17 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
       score: BASE.intents,
       why: `${intents.length === 1 ? "o intenție scrisă limpede" : `${intents.length} intenții scrise limpede`}: ${intents.map((item) => item.intent.kind).join(", ")}`,
       intents,
+      ...(leavesMoneyUnread(raw, intents) ? { soft: true as const } : {}),
     });
   }
 
+  /**
+   * Un răspuns local e o presupunere când mesajul cere o împărțire, sau când conține o
+   * sumă pe care nimeni nu a folosit-o: acolo modelul are ce adăuga.
+   */
+  const guessy = soundsLikeCommand(raw) || (plansMoney(raw) && leavesMoneyUnread(raw, intents));
   const answer = analyze(raw, data, ctx.asOf);
-  if (answer) readings.push({ kind: "question", score: BASE.question, why: "are formă de întrebare despre bani", answer });
+  if (answer) readings.push({ kind: "question", score: BASE.question, why: "are formă de întrebare despre bani", answer, ...(guessy ? { soft: true as const } : {}) });
 
   const spend = expenseProposal(raw, ctx.extracted, data, memory, ctx.forcedExpense);
   if (spend) readings.push({ kind: "expense", score: BASE.expense, why: "sumă plus un cuvânt de cheltuială", proposal: spend });
@@ -565,7 +630,7 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
   if (income) readings.push({ kind: "income", score: BASE.income, why: "sumă plus un cuvânt de venit", proposal: income });
 
   const insight = localInsight(raw, data, memory);
-  if (insight) readings.push({ kind: "insight", score: BASE.insight, why: "întreabă ce mai are disponibil", text: insight });
+  if (insight) readings.push({ kind: "insight", score: BASE.insight, why: "întreabă ce mai are disponibil", text: insight, ...(guessy ? { soft: true as const } : {}) });
 
   return readings.sort((left, right) => right.score - left.score);
 }

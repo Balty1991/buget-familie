@@ -764,18 +764,28 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       });
       return;
     }
-    if (winner) {
+    const blocked = quota.mode === "local" || quota.remaining <= 0;
+    /**
+     * Citirea locală câștiga întotdeauna, chiar și când lăsa jumătate de mesaj necitit:
+     * „am 1800 de lei pe care îi împart în plicuri până pe 9 octombrie” primea înapoi
+     * doar data salariului, iar modelul online — plătit și disponibil — nu vedea mesajul.
+     *
+     * Când citirea e marcată `soft`, drumul online trece primul. Nu pierdem nimic:
+     * dacă rețeaua cade sau modelul nu întoarce nimic folosibil, `localSend` reia exact
+     * aceeași cascadă locală și propune ce ar fi propus și acum.
+     */
+    const escalate = Boolean(winner?.soft) && !blocked && !sentPhotos;
+    if (winner && !escalate) {
       setMemory(markLocalSave());
       if (act(winner)) return;
     }
-    if (!sentPhotos && isQuestion(requestText)) {
+    if (!sentPhotos && !escalate && isQuestion(requestText)) {
       const answer = analyze(requestText, data);
       if (answer) {
         addMessage({ role: "assistant", text: answerToText(answer), followUps: answer.followUps });
         return;
       }
     }
-    const blocked = quota.mode === "local" || quota.remaining <= 0;
     if (blocked && !sentPhotos) {
       setQuota((current) => ({ ...current, mode: "local", remaining: Math.min(current.remaining, 0) }));
       localSend(true, raw);

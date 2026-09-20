@@ -103,6 +103,55 @@ describe("o citire nu se ia pe tăcute", () => {
   });
 });
 
+/**
+ * Cazul raportat de pe telefon: „Am 1800 lei pe care îi împart în plicuri săptămânale
+ * până pe 09-10-26” primea înapoi doar data salariului. Cei 1800 și plicurile se
+ * pierdeau, iar mesajul nici nu ajungea la modelul online, fiindcă citirea locală
+ * câștiga oricum.
+ */
+describe("când citirea locală nu e destulă, întrebăm modelul", () => {
+  const winnerFor = (text: string) => decide(understand(text, house(), { asOf: "2026-09-20" })).winner;
+
+  it("marchează drept parțială citirea care lasă o sumă necitită", () => {
+    const winner = winnerFor("Am 1800 lei pe care ii împart în plicuri săptămânale pana pe data de 09-10-26, când iau următorul salariu");
+    expect(winner?.kind).toBe("intents");
+    expect(winner?.soft).toBe(true);
+  });
+
+  it("nu marchează o citire care folosește toate sumele spuse", () => {
+    expect(winnerFor("fă-mi plic Alimente 1800")?.soft).toBeUndefined();
+    expect(winnerFor("am dat 50 lei pe benzină")?.soft).toBeUndefined();
+    expect(winnerFor("fă-mi plic Cheltuieli alimentare, 2400, cu limita săptămânala 600 lei")?.soft).toBeUndefined();
+  });
+
+  it("trimite mai departe o comandă pe care analistul o revendica drept întrebare", () => {
+    const winner = winnerFor("Pai împarte în plic alimente cu limita săptămânala împărțită la perioada rămasa");
+    expect(winner?.soft).toBe(true);
+  });
+
+  it("lasă întrebările curate să primească răspuns local", () => {
+    expect(winnerFor("cât mai am în plicuri?")?.soft).toBeUndefined();
+    expect(winnerFor("îmi permit 300 de lei?")?.soft).toBeUndefined();
+  });
+});
+
+/**
+ * „Am 1800 lei de împărțit în plicuri până pe 9 octombrie” ajungea propunere de plată
+ * de 1.800 de lei, fiindcă orice propoziție cu „pe ” trecea drept cheltuială.
+ */
+describe("planificarea nu e cheltuială", () => {
+  it("nu propune o plată pentru o frază despre împărțirea banilor", () => {
+    const winner = decide(understand("Am 1800 lei de împărțit în plicuri până pe 9 octombrie", house(), { asOf: "2026-09-20" })).winner;
+    expect(winner?.kind).not.toBe("expense");
+    expect(winner?.soft).toBe(true);
+  });
+
+  it("dar o plată chiar făcută din plic rămâne cheltuială", () => {
+    expect(expenseProposal("am dat 50 de lei din plicul de alimente", undefined, house(), emptyGuideMemory())).toBeTruthy();
+    expect(expenseProposal("am platit 120 lei, ii scad din plicul de transport", undefined, house(), emptyGuideMemory())).toBeTruthy();
+  });
+});
+
 describe("ce pleacă către model", () => {
   it("nu conține mișcările din jurnal", () => {
     const ctx = compactGuideContext(house(), { view: "today", income: 0, expense: 290 });
