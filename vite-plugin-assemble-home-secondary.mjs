@@ -8,8 +8,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
-const page = path.resolve(root, "../client/src/pages/home-secondary.tsx");
-const partsDir = path.resolve(root, "../client/src/pages/home-secondary.parts");
+const page = path.resolve(root, "client/src/pages/home-secondary.tsx");
+const partsDir = path.resolve(root, "client/src/pages/home-secondary.parts");
 const GOOD_COMMIT = "f454d90c720ae8afb42d19bc4a34f607bd50ec1b";
 const RAW_URL = `https://raw.githubusercontent.com/Balty1991/buget-familie/${GOOD_COMMIT}/client/src/pages/home-secondary.tsx`;
 
@@ -57,7 +57,9 @@ export default function assembleHomeSecondary() {
     enforce: "pre",
     async load(id) {
       const normalized = id.split("?")[0];
-      if (normalized !== page && !normalized.endsWith("/pages/home-secondary.tsx")) return null;
+      if (normalized !== page && !normalized.endsWith("/pages/home-secondary.tsx") && !normalized.endsWith("\\pages\\home-secondary.tsx")) {
+        return null;
+      }
       const local = fromParts();
       if (local) return local;
       return await fromGithub();
