@@ -142,3 +142,28 @@ describe("catalogul de produse", () => {
     expect(looksLikeProductSearch("ce fac azi")).toBe(false);
   });
 });
+
+/**
+ * Căutarea de produse se declanșează înaintea înțelegerii, deci orice frază pe care o
+ * revendică din greșeală nu mai ajunge la ghid. „Șterge plicul de transport” pleca la
+ * catalog fiindcă „plicul” nu se potrivea cu tiparul „plic”.
+ */
+describe("catalogul nu fură frazele despre bani", () => {
+  it("lasă în pace plicurile, oricum ar fi scrise", () => {
+    for (const text of ["sterge plicul de transport", "imparte-mi 1800 in plicuri", "mareste plicul de alimente cu 200", "nu mai vreau plicul de transport"]) {
+      expect(looksLikeProductSearch(text), text).toBe(false);
+    }
+  });
+
+  it("lasă în pace sumele și verbele de bani", () => {
+    for (const text of ["pune deoparte 300", "repartizeaza 1500", "economisesc pentru vacanta"]) {
+      expect(looksLikeProductSearch(text), text).toBe(false);
+    }
+  });
+
+  it("dar recunoaște în continuare un produs căutat pe nume", () => {
+    for (const text of ["napolact lapte", "detergent ariel", "kinder bueno"]) {
+      expect(looksLikeProductSearch(text), text).toBe(true);
+    }
+  });
+});

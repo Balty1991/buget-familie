@@ -531,7 +531,15 @@ export function looksLikeProductSearch(raw: string): boolean {
   const folded = foldRomanian(text);
   if (!folded || CHAT_SKIP.has(folded)) return false;
   if (/[?]/.test(text)) return false;
-  if (/\b(lei|ron|eur|cheltui|platit|am dat|adaug|muta|transfer|venit|salariu|factura|plic|bon)\b/.test(folded)) return false;
+  /**
+   * „Plic” scris cu articol nu se mai prindea: `\bplic\b` rata „plicul” și „plicuri”, așa
+   * că „șterge plicul de transport” și „împarte-mi 1800 în plicuri” plecau la căutarea de
+   * produse, nu la ghid. La fel orice verb de acțiune pe bani și orice sumă de trei cifre:
+   * un produs se caută pe nume, nu pe cifre.
+   */
+  if (/\b(lei|ron|eur|cheltui|platit|am dat|adaug|muta|transfer|venit|salariu|factura|bon)\b/.test(folded)) return false;
+  if (/\bplic|\bimpart|\brepartiz|\baloc[aă]|\bsterge|\bmareste|\bmicsoreaza|\bscade|\bcreeaza|\bnoteaza|\beconomis|\bstrang|\bpun[e]? deoparte/.test(folded)) return false;
+  if (/\b\d{3,}\b/.test(folded)) return false;
   if (/^(ce |cum |cat |cati |cate |unde |de ce |cand )/.test(folded)) return false;
   const words = folded.split(/\s+/).filter(Boolean);
   return words.length > 0 && words.length <= 5;

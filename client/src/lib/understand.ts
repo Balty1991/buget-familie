@@ -34,6 +34,7 @@ import {
 } from "./finance-data";
 import { calendarBudget, periodDays, remainingPace, startedWeekShare } from "./calendar-budget";
 import { plannedEventsPressure, upcomingPlannedEvents } from "./planned-events";
+import { proposeSplit } from "./split-proposal";
 import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
@@ -50,6 +51,7 @@ export type FinancialUpdate =
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
   | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
+  | { kind: "allocation-delete"; label: string }
   | { kind: "payday"; date: string; flexDays: number }
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string }
   | { kind: "delete-transaction"; id: string; title: string; amount: number }
@@ -106,6 +108,22 @@ export type ExtractedGuide = {
  * cuvântul cu care începe — aceleași semne pe care le folosește și analistul,
  * ca cele două să nu se contrazică.
  */
+/**
+ * Gospodăria are deja o bază: un venit trecut, plan cu plicuri, dată de salariu, solduri
+ * sau datorii.
+ *
+ * Contează pentru ghid: pasul de configurare („ce bani intră într-o lună obișnuită?”)
+ * pornea mereu primul și ținea captiv orice mesaj cu cifre, citindu-l ca venit. Cine are
+ * deja un plan nu mai trebuie întrebat de la capăt — nici la prima deschidere, nici după
+ * o reinstalare care a păstrat datele.
+ */
+export const householdIsSetUp = (data: AppData) =>
+  data.transactions.some((item) => item.kind === "income")
+  || data.settings.salaryPlan.allocations.length > 0
+  || Boolean(data.settings.salaryPlan.nextPayday)
+  || data.settings.paymentSources.some((item) => item.openingBalance > 0)
+  || data.debts.length > 0;
+
 export function isQuestion(raw: string) {
   const folded = foldRo(raw).replace(/\s+/g, " ").trim();
   return /\?\s*$/.test(raw.trim())
@@ -525,7 +543,7 @@ export type Proposal = { text: string; choices: ChatChoice[] };
 export type Reading = { soft?: true } & (
   | { kind: "confirm"; score: number; why: string }
   | { kind: "revise"; score: number; why: string; proposal: Proposal }
-  | { kind: "intents"; score: number; why: string; intents: ParsedIntent[] }
+  | { kind: "intents"; score: number; why: string; intents: ParsedIntent[]; /** Titlu propriu al propunerii, când nu e o simplă înțelegere a mesajului. */ headline?: string }
   | { kind: "question"; score: number; why: string; answer: AnalystAnswer }
   | { kind: "expense"; score: number; why: string; proposal: Proposal }
   | { kind: "transfer"; score: number; why: string; proposal: Proposal }
@@ -552,6 +570,41 @@ export type UnderstandContext = {
  */
 const BASE = { confirm: 100, revise: 95, intents: 90, question: 80, due: 78, transfer: 75, expense: 70, income: 50, insight: 40 } as const;
 
+/**
+ * „Împarte-mi 1800 în plicuri”, „fă-mi un plan pentru banii ăștia”.
+ *
+ * Până acum, cererea asta fie nu era înțeleasă deloc, fie fabrica un plic numit „Plic nou”
+ * cu toți banii în el. Acum devine o propunere adevărată: plicuri cu nume și sume, calculate
+ * din ce are familia (plicurile de dinainte, altfel cheltuielile ultimelor 90 de zile), cu
+ * scadențele scoase deoparte. Dacă nu știm nimic despre familie, nu propunem nimic — mesajul
+ * pleacă la model, care poate întreba.
+ */
+const WANTS_SPLIT = /\b(imparte|imparti|impart[ei]?|impartim|reparti|fa-?mi un plan|fa un plan|un plan (pentru|pe)|cum (sa )?impart)\b/;
+
+function splitReading(raw: string, data: AppData, asOf: string, alreadyNamed: boolean): Reading | undefined {
+  const folded = foldRo(raw);
+  if (alreadyNamed || !WANTS_SPLIT.test(folded)) return undefined;
+  const spoken = extractAmounts(extractDates(raw).masked).map((hit) => hit.value).sort((left, right) => right - left)[0];
+  const free = Math.max(0, planAllocationMath(data).unrepartized);
+  const total = spoken || free;
+  if (total <= 0) return undefined;
+  const split = proposeSplit(data, total, asOf);
+  if (!split.lines.length) return undefined;
+  const intents: ParsedIntent[] = split.lines.map((line) => ({
+    intent: { kind: "envelope" as const, label: line.label, amount: line.amount, category: line.category, weeklyPace: true },
+    segment: raw,
+  }));
+  const reserved = split.reserved > 0 ? t(" Scadențele rezervate ({amount}) rămân deoparte.", { amount: money(split.reserved) }) : "";
+  const basis = split.basis === "envelopes" ? t("după cum ai împărțit și până acum") : t("după cheltuielile tale din ultimele 90 de zile");
+  return {
+    kind: "intents",
+    score: BASE.intents,
+    why: `cerere de împărțire a ${total} lei`,
+    intents,
+    headline: t("Îți propun împărțirea celor {amount}, {basis}.{reserved}", { amount: money(split.spendable), basis, reserved }),
+  };
+}
+
 /** Sumele pe care o intenție chiar le folosește; restul rămân necitite. */
 const intentAmounts = (intent: ParsedIntent["intent"]): number[] => {
   switch (intent.kind) {
@@ -560,7 +613,7 @@ const intentAmounts = (intent: ParsedIntent["intent"]): number[] => {
     case "debt": return [intent.remaining, ...(intent.monthly ? [intent.monthly] : [])];
     case "goal": return [intent.target, ...(intent.current ? [intent.current] : [])];
     case "planned-event": return intent.estimate ? [intent.estimate] : [];
-    case "payday": return [];
+    case "payday": case "envelope-delete": return [];
   }
 };
 
@@ -614,6 +667,9 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
    * sumă pe care nimeni nu a folosit-o: acolo modelul are ce adăuga.
    */
   const guessy = soundsLikeCommand(raw) || (plansMoney(raw) && leavesMoneyUnread(raw, intents));
+  const split = splitReading(raw, data, ctx.asOf || isoToday(), intents.some((item) => item.intent.kind === "envelope"));
+  if (split) readings.push(split);
+
   const answer = analyze(raw, data, ctx.asOf);
   if (answer) readings.push({ kind: "question", score: BASE.question, why: "are formă de întrebare despre bani", answer, ...(guessy ? { soft: true as const } : {}) });
 

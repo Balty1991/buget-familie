@@ -29,6 +29,8 @@ export type AssistantIntent =
   | { kind: "debt"; name: string; remaining: number; monthly?: number }
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
+  /** Ștergerea unui plic existent; banii lui se întorc în nerepartizat. */
+  | { kind: "envelope-delete"; label: string }
   /** Eveniment din calendar cu cost estimat: Crăciun, o aniversare, începutul școlii. */
   | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
   | { kind: "payday"; date: string; flexDays: number };
@@ -181,6 +183,8 @@ const MARKERS: Array<[AssistantIntent["kind"], RegExp]> = [
    * fără sumă și nu era înțeles deloc.
    */
   ["envelope", /\b(mareste|micsoreaza|scade|suplimenteaza|creste)\b/g],
+  // Ștergerea se citește separat: „șterge plicul X” nu e o modificare de sumă.
+  ["envelope-delete", /\b(sterge|sterg|elimina|renunt la|nu mai vreau|scapa de|desfiinteaza)\b/g],
   ["recurring", /\b(abonament|chiri[ae]|factura|scadenta|rata lunara la)\b/g],
   ["debt", /\b(datorie|datorii|credit|imprumut|mai am de (platit|achitat))\b/g],
   ["goal", /\b(obiectiv|vreau sa strang|sa strang|economisesc pentru|fond de (siguranta|urgenta))\b/g],
@@ -214,7 +218,14 @@ function findMarkers(folded: string, categories: string[] = []): Marker[] {
       found.push({ kind: "envelope", index: allocate.index, length: allocate[0].length });
     }
   }
-  const sorted = found.sort((a, b) => a.index - b.index);
+  /**
+   * „Șterge plicul de transport” conține și cuvântul „plic”, deci deschidea două segmente:
+   * unul de ștergere fără nume și unul de creare fără sumă. Când cineva cere o ștergere,
+   * nu cere și un plic nou — marcatorii de creare ies din discuție.
+   */
+  const deletes = found.some((item) => item.kind === "envelope-delete");
+  const kept = deletes ? found.filter((item) => item.kind !== "envelope") : found;
+  const sorted = kept.sort((a, b) => a.index - b.index);
   // „am primit 4500 lei salariu” conține doi marcatori de venit. Fără unire, al doilea ar
   // deschide un segment fără sumă, iar primul ar pierde cuvântul care îi dă titlul.
   return sorted.filter((marker, index) => index === 0 || sorted[index - 1].kind !== marker.kind);
@@ -245,6 +256,9 @@ const STOPWORDS = new Set([
   "saptamanala", "saptamanal", "saptamana", "saptamani", "saptamanile", "ori", "lunar", "lunara", "luna", "total", "totalul",
   "suma", "sume", "mi", "imi", "vreau", "sa", "am", "e", "este", "banca", "estimativ", "intre", "data",
   "cei", "cel", "cele", "doar", "disponibil", "disponibili", "disponibile", "disponibilul",
+  // Cuvintele de timp nu sunt nume de plic: „până în octombrie” dădea plicul „Pana octombrie”.
+  "pana", "panala", "catre", "incepand", "ianuarie", "februarie", "martie", "aprilie", "mai", "iunie",
+  "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie", "azi", "maine", "ieri",
   "plic", "plicul", "plicuri", "imparte", "impart", "repartizeaza", "repartizez", "aloca", "pune",
 ]);
 const cleanLabel = (raw: string) => raw
@@ -310,7 +324,12 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
   const leftover = cleanLabel(segment.slice(markerLength));
   const category = guessCategoryFromText(named || leftover || segment, expenseCategories, rules);
   const rawName = titleCase(named || leftover);
-  const label = category && named && named.split(/\s+/).length === 1 ? category : (rawName || category || "Plic nou");
+  /**
+   * Fără un nume adevărat nu se creează nimic. „Împarte-mi 1800 în plicuri” producea un
+   * plic chiar numit „Plic nou”, cu toți banii în el — mai rău decât dacă n-am fi înțeles.
+   */
+  const label = category && named && named.split(/\s+/).length === 1 ? category : (rawName || category || "");
+  if (!label) return undefined;
   /**
    * „Plic Alimente, 600 pe săptămână” spune un ritm, nu un total: singura sumă din mesaj stă
    * lângă un marcator săptămânal. Fără semnalul ăsta, plicul primea 600 de lei pentru toată
@@ -324,11 +343,11 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
    * ciclul, nu 200 pe săptămână.
    */
   if (delta) {
-    return { kind: "envelope", label: label || category || "Plic nou", amount: total.value, category, weeklyPace: WEEKLY.test(folded), delta };
+    return { kind: "envelope", label, amount: total.value, category, weeklyPace: WEEKLY.test(folded), delta };
   }
   return {
     kind: "envelope",
-    label: label || category || "Plic nou",
+    label,
     amount: total.value,
     category,
     weeklyLimit: perWeek,
@@ -435,6 +454,22 @@ function parseGoal(segment: string, masked: string, amounts: AmountHit[], dates:
  * („ziua Anei”) data trebuie spusă — altfel evenimentul ar ateriza într-o zi aleasă
  * de aplicație, iar fondul ar începe să numere greșit zilele rămase.
  */
+/**
+ * „Șterge plicul de transport”, „nu mai vreau plicul de transport”.
+ *
+ * Singura operație din chat care distruge ceva, deci se cere un nume limpede: fără numele
+ * plicului nu se propune nimic. Banii nu se pierd — plicul șters își întoarce suma în
+ * nerepartizat — dar asta se spune în propunere, nu se presupune.
+ */
+function parseEnvelopeDelete(_segment: string, _masked: string, fullText: string): AssistantIntent | undefined {
+  const folded = fold(fullText);
+  if (!/\bplic/.test(folded)) return undefined;
+  // Numele se caută o singură dată, în mesajul întreg: lipite, segmentul și mesajul dădeau „Transport sterge transport”.
+  const named = fullText.match(/\bplic(?:ul|uri)?(?:\s+(?:de|pentru|din))?\s+([A-Za-zăâîșțĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ\-]{1,30}(?:\s+[A-Za-zăâîșțĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ\-]{1,30})?)/i);
+  const label = titleCase(cleanLabel(named?.[1] || ""));
+  return label ? { kind: "envelope-delete", label } : undefined;
+}
+
 function parsePlannedEvent(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[], asOf: string): AssistantIntent | undefined {
   const folded = fold(masked);
   const suggestion = matchKnownEvent(masked, asOf);
@@ -454,6 +489,26 @@ function parsePlannedEvent(segment: string, masked: string, amounts: AmountHit[]
  * Citește un mesaj și întoarce toate intențiile găsite, în ordinea din text.
  * Un mesaj poate conține mai multe: „fă-mi plic X … Următorul salariu pe …”.
  */
+/**
+ * O întrebare nu scrie în registru.
+ *
+ * „Cum să împart 2000 până pe 10 octombrie?” fabrica un plic numit „Pana octombrie” cu
+ * 2.000 de lei, iar „cât pe lună ca să strâng 5000 până în iunie?” un obiectiv „Pana
+ * iunie”. Amândouă cereau un sfat, nu o înregistrare — dar aveau sumă, dată și un verb
+ * prin apropiere, deci parserul le lua drept comenzi și punea un buton de confirmare sub
+ * o invenție. Verbul explicit rămâne mai tare decât semnul întrebării: „fă-mi plic
+ * Alimente 1800?” tot un plic cere.
+ */
+const RECORD_VERBS = /\b(fa-?mi|fa un|fac|creeaza|creaza|adauga|adaug|noteaza|treci|trece|pune|pun|pui|mareste|micsoreaza|scade|suplimenteaza|creste|repartizeaza|imparte|schimba|seteaza|muta|sterge)\b/;
+const QUESTION_START = /^(cat|cate|cati|cum|unde|cand|care|ce |ce-|cine|de ce|oare|as putea|pot sa|merita|imi permit|mi permit)/;
+
+export const asksInsteadOfOrders = (raw: string, folded: string) => {
+  const isQuestion = raw.trim().endsWith("?") || QUESTION_START.test(folded);
+  if (!isQuestion) return false;
+  // „Cum să împart 2000?” cere un sfat; „împarte 2000” cere fapta. Diferența e cine începe fraza.
+  return !RECORD_VERBS.test(folded.replace(QUESTION_START, ""));
+};
+
 export function parseAssistantMessage(raw: string, options: { asOf?: string; categories?: string[]; merchantRules?: MerchantRule[] } = {}): ParsedIntent[] {
   const text = raw.trim();
   if (!text) return [];
@@ -461,6 +516,7 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
   const categories = options.categories || expenseCategories;
   const rules = options.merchantRules || [];
   const folded = fold(text);
+  if (asksInsteadOfOrders(text, folded)) return [];
   const markers = findMarkers(folded, categories);
   if (!markers.length) return [];
 
@@ -490,6 +546,7 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
       : marker.kind === "recurring" ? parseRecurring(segment, masked, amounts, dates, rules)
       : marker.kind === "goal" ? parseGoal(segment, masked, amounts, dates)
       : marker.kind === "planned-event" ? parsePlannedEvent(segment, masked, amounts, dates, asOf)
+      : marker.kind === "envelope-delete" ? parseEnvelopeDelete(segment, masked, text)
       : undefined;
     // Un singur marcator poate da mai multe intrări: „50 la Lidl și 30 la farmacie”.
     for (const intent of Array.isArray(found) ? found : found ? [found] : []) results.push({ intent, segment });
@@ -602,6 +659,10 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
         estimate: num(item.estimate, { min: 0.01 }) ?? num(item.amount, { min: 0.01 }) ?? 0,
         repeat: item.repeat === "once" ? "once" : "yearly",
       };
+    }
+    case "envelope-delete": {
+      const label = text(item.label, 60) || text(item.name, 60);
+      return label ? { kind: "envelope-delete", label } : undefined;
     }
     case "payday": {
       const date = isoDay(item.date);

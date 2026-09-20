@@ -2654,6 +2654,10 @@ const en: Record<string, string> = {
   "{name} · {date} · {amount} de strâns": "{name} · {date} · {amount} to set aside",
   "Crăciun, Paște, aniversări — cu costul lor": "Christmas, Easter, birthdays — with their cost",
   "Evenimente viitoare și costul lor": "Upcoming events and what they cost",
+  " Scadențele rezervate ({amount}) rămân deoparte.": " The reserved bills ({amount}) stay out of it.",
+  "după cum ai împărțit și până acum": "the way you have split it so far",
+  "după cheltuielile tale din ultimele 90 de zile": "based on what you spent over the last 90 days",
+  "Îți propun împărțirea celor {amount}, {basis}.{reserved}": "Here is how I would split the {amount}, {basis}.{reserved}",
   /* Texte adăugate în pasul de Play/FirstRun; traduse ca testul de acoperire să rămână verde. */
   "Plicuri pe ciclul de salariu, fără bancă. Alege o intenție — poți schimba totul mai târziu, sau Mai târziu fără nicio pierdere.": "Envelopes across the salary cycle, no bank. Pick an intent — you can change everything later, or tap Later and lose nothing.",
   "Datele stau pe telefon. Sync-ul e opțional și criptat — fără login bancar.": "The data stays on the phone. Sync is optional and encrypted — no bank login.",

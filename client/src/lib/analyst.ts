@@ -15,6 +15,7 @@ import {
   foldRomanian,
   formatDate,
   guessCategoryFromText,
+  inPlanPeriod,
   isoDate,
   isoToday,
   pendingRecurringInPlan,
@@ -736,20 +737,144 @@ type Matcher = { kind: string; test: RegExp; run: (data: AppData, folded: string
  * Briefingul, „e normal?” și „cine a cheltuit” stau înaintea restului, ca să nu
  * fie înghițite de «cât mai am» sau «cel mai mult».
  */
+/**
+ * „De ce mi-a scăzut plicul de alimente?”
+ *
+ * Cifra din plic scade din trei motive, iar omul nu are de unde să știe care: cheltuieli
+ * puse pe el, mutări către alt plic și tranșa săptămânii care s-a închis. Răspunsul le
+ * arată pe toate, cu mișcările care au consumat banii — nu doar cifra rămasă.
+ */
+function answerEnvelopeWhy(data: AppData, folded: string, asOf: string): AnalystAnswer {
+  const category = readCategory(folded, data);
+  const allocations = data.settings.salaryPlan.allocations;
+  const envelope = (category ? allocations.find((item) => (item.category || item.label) === category) : undefined)
+    || allocations.find((item) => folded.includes(foldRomanian(item.label)))
+    || allocations[0];
+  if (!envelope) {
+    return { kind: "envelope-why", headline: "Nu ai niciun plic deschis.", detail: "Fă unul din Plan și îți urmăresc eu consumul.", followUps: ["Cum stau cu banii?"] };
+  }
+  const status = envelopeDecisionStatus(data, envelope, asOf);
+  const plan = data.settings.salaryPlan;
+  const moves = data.transactions
+    .filter((item) => item.kind === "expense" && item.allocationId === envelope.id && inPlanPeriod(item.date, plan))
+    .sort((left, right) => right.amount - left.amount);
+  const transfersOut = (plan.transfers || []).filter((item) => item.fromAllocationId === envelope.id).reduce((sum, item) => sum + item.amount, 0);
+  const transfersIn = (plan.transfers || []).filter((item) => item.toAllocationId === envelope.id).reduce((sum, item) => sum + item.amount, 0);
+  const scope = status.scope === "week" && status.weekIndex ? `tranșa S${status.weekIndex}` : "ciclul";
+  const scopeGenitive = status.scope === "week" && status.weekIndex ? `tranșei S${status.weekIndex}` : "ciclului";
+  return {
+    kind: "envelope-why",
+    headline: `Din „${envelope.label}” au plecat ${money(round(status.spent))} pe ${scope}; rămân ${money(round(Math.max(0, status.remaining)))}.`,
+    detail: sentences(
+      `Limita ${scopeGenitive} este ${money(round(status.budget))}`,
+      transfersOut > 0 && `Ai mutat ${money(round(transfersOut))} către alt plic.`,
+      transfersIn > 0 && `Ai adus ${money(round(transfersIn))} din alt plic.`,
+      !moves.length && !transfersOut && "Nicio mișcare pusă pe plic în perioada asta.",
+    ),
+    rows: moves.slice(0, 5).map((item) => ({ label: item.title, value: money(item.amount), hint: formatDate(item.date) })),
+    followUps: ["Cât mai pot cheltui azi?", `Cât am cheltuit pe ${envelope.label}?`],
+  };
+}
+
+/**
+ * „Am uitat să trec niște cheltuieli săptămâna trecută.”
+ *
+ * Nu e o întrebare despre cifre, e o teamă: că registrul e deja greșit și că nu mai are
+ * rost. Răspunsul spune exact cum se repară, cu fraza pe care o poate scrie aici.
+ */
+function answerLateEntry(): AnalystAnswer {
+  return {
+    kind: "late-entry",
+    headline: "Se poate trece oricând, cu ziua ei.",
+    detail: "Scrie-mi mișcarea cu data în ea — „marți am dat 60 de lei pe alimente” sau „pe 12 septembrie 120 lei la Kaufland” — și o pun pe ziua aceea, nu pe azi. Plicul săptămânii respective se ajustează singur.",
+    followUps: ["Cât am cheltuit luna asta?", "Cum stau cu banii?"],
+  };
+}
+
+const LUNI = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
+
+/**
+ * Termenul dintr-o întrebare de economisire: „până în decembrie”, „până pe 10 octombrie”,
+ * „în 6 luni”. Luna spusă fără an înseamnă prima ei venire de acum înainte — cine întreabă
+ * în septembrie „până în iunie” se gândește la iunie anul viitor, nu la cel trecut.
+ */
+function readDeadline(folded: string, asOf: string): { date: string; label: string } | undefined {
+  const today = new Date(`${asOf}T12:00:00`);
+  const inMonths = folded.match(/\bin (\d{1,2}) luni\b/);
+  if (inMonths) {
+    const target = new Date(today.getFullYear(), today.getMonth() + Number(inMonths[1]), today.getDate(), 12);
+    return { date: isoDate(target), label: `peste ${inMonths[1]} luni` };
+  }
+  const withDay = folded.match(/\b(?:pana )?(?:pe|la|in) (\d{1,2}) (ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\b/);
+  const monthOnly = folded.match(/\b(?:pana )?(?:in|la|pe) (ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\b/);
+  const name = withDay?.[2] || monthOnly?.[1];
+  if (!name) return undefined;
+  const month = LUNI.indexOf(name);
+  const day = withDay ? Math.min(Number(withDay[1]), new Date(today.getFullYear(), month + 1, 0).getDate()) : 1;
+  let target = new Date(today.getFullYear(), month, day, 12);
+  if (isoDate(target) <= asOf) target = new Date(today.getFullYear() + 1, month, day, 12);
+  return { date: isoDate(target), label: withDay ? `${day} ${name}` : name };
+}
+
+/**
+ * „Cât ar trebui să pun deoparte ca să am 3000 până în decembrie?”
+ *
+ * Întrebarea are un singur calcul în spate — suma împărțită la timpul rămas — dar omul o
+ * scrie în zece feluri, iar aplicația nu răspundea la niciunul. Ritmul se dă și pe lună, și
+ * pe săptămână, fiindcă unii pun deoparte la salariu și alții pe măsură ce cheltuie.
+ */
+function answerSaveBy(data: AppData, folded: string, asOf: string): AnalystAnswer {
+  const target = firstAmount(folded);
+  const deadline = readDeadline(folded, asOf);
+  if (target === undefined || !deadline) {
+    return {
+      kind: "save-by",
+      headline: "Spune-mi suma și termenul și îți calculez ritmul.",
+      detail: "De exemplu: „cât pun deoparte ca să am 3000 până în decembrie?”",
+      followUps: ["Cât mai am disponibil?"],
+    };
+  }
+  const days = Math.max(1, Math.round((Date.parse(`${deadline.date}T12:00:00`) - Date.parse(`${asOf}T12:00:00`)) / 86400000));
+  const perMonth = round(target * 30 / days);
+  const perWeek = round(target * 7 / days);
+  const months = Math.max(1, Math.round(days / 30));
+  /** Banii deja strânși în obiective nu se inventează: se numesc doar dacă există. */
+  const saved = round(data.savings.reduce((sum, item) => sum + item.current, 0));
+  return {
+    kind: "save-by",
+    headline: sentences(`${money(perMonth)} pe lună — sau ${money(perWeek)} pe săptămână — ca să ai ${money(target)} până pe ${formatDate(deadline.date)}`),
+    detail: sentences(
+      `Mai sunt ${plural(days, "zi", "zile")}, adică aproape ${plural(months, "lună", "luni")}`,
+      saved > 0 && `Ai deja ${money(saved)} în obiective; dacă îi socotești, ritmul scade la ${money(round(Math.max(0, target - saved) * 30 / days))} pe lună`,
+    ),
+    followUps: ["Cât mai am disponibil?", "Ce evenimente urmează?"],
+  };
+}
+
 const MATCHERS: Matcher[] = [
   { kind: "next", test: /\b(ce fac( azi| acum)?|ce sa fac|ce[- ]?mi recoman|ce imi recoman|recomand[- ]?mi|ce urmeaza\b|sfat(ul)?\b|briefing|cum stau azi|ce merita (azi|acum)|ce parere|parere ai)/, run: (d, _f, a) => answerNext(d, a) },
   { kind: "unusual", test: /\b(prea mult|e normal|neobisnuit|iesit din ritm|am depasit|cheltuieli (mari|neobisnuite)|sunt peste buget)/, run: (d, f, a) => answerUnusual(d, f, a) },
   { kind: "who", test: /\b(cine (a )?(cheltuit|dat|platit)|cine cheltuie|care dintre (noi|voi)|intre noi)/, run: (d, f, a) => answerWho(d, f, a) },
-  { kind: "afford", test: /\b(imi permit|mi permit|pot sa (dau|cheltui)|as putea sa (dau|cheltui)|am bani de|ajung banii|mai am \d|cat ar ramane|ce mi ar ramane)/, run: (d, f, a) => answerAfford(d, f, a) },
-  { kind: "pace", test: /\b(cat pot cheltui|cat am voie|ritm|pe zi|zilnic)/, run: (d, _f, a) => answerPace(d, a) },
+  /**
+   * Aceeași întrebare, scrisă cum îi vine omului: „îmi permit 400?”, „cât îmi rămâne dacă
+   * plătesc chiria de 1500?”, „ce se întâmplă dacă dau 400 pe anvelope?”. Toate cer același
+   * calcul — suma scăzută din ce e liber — dar doar prima era recunoscută.
+   */
+  { kind: "afford", test: /\b(imi permit|mi permit|pot sa (dau|cheltui)|as putea sa (dau|cheltui)|am bani de|ajung banii|mai am \d|cat ar ramane|ce mi ar ramane|cat (imi |mi )?(mai )?ramane|cat mai ramane|ce se intampla daca|daca (platesc|dau|cheltui|scot|cumpar))/, run: (d, f, a) => answerAfford(d, f, a) },
+  { kind: "pace", test: /\b(cat (mai )?pot (sa )?cheltui|cat am voie|ritm|pe zi|zilnic|cat pe zi)/, run: (d, _f, a) => answerPace(d, a) },
   { kind: "payday", test: /\b(cand (vine|intra) (salariul|venitul)|cate zile pana|pana la salariu)/, run: (d, _f, a) => answerPayday(d, a) },
   { kind: "subscriptions", test: /\b(abonament|scadent|facturi lunare|recurent)/, run: (d) => answerSubscriptions(d) },
   { kind: "debts", test: /\b(datorii|datorie|rate|de platit la|credit)/, run: (d) => answerDebts(d) },
+  /** Întrebarea de ritm („cât pe lună ca să am X până în Y”) trece înaintea celei de sold. */
+  { kind: "save-by", test: /\b(ca sa (am|strang|adun|ajung la)|cat (ar trebui |trebuie )?(sa )?pun (deoparte|pe luna)|cat pe luna ca sa|cat pe saptamana ca sa|ca sa imi ajunga pentru)/, run: (d, f, a) => answerSaveBy(d, f, a) },
   { kind: "savings", test: /\b(economi|strans|obiectiv|pusi deoparte)/, run: (d) => answerSavings(d) },
   { kind: "biggest", test: /\b(cea mai mare|cel mai mare|top cheltui|cele mai mari)/, run: (d, f, a) => answerBiggest(d, f, a) },
   { kind: "compare", test: /\b(compar|fata de luna|mai mult ca|mai putin ca|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
   { kind: "where", test: /\b(unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui|a dat|am dat)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
   { kind: "spend", test: /\b(cat am (cheltuit|dat|platit)|cat a (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos|ce am cumparat|de cate ori am dat|arata[- ]?mi cheltuielile|listeaza cheltuielile)/, run: (d, f, a) => answerSpend(d, f, a) },
+  // „mi-a scăzut”, „mi a scazut”, „s-a dus” — aceeași întrebare, scrisă în trei feluri.
+  { kind: "envelope-why", test: /\bde ce .{0,14}(scazut|micsorat|mancat|dus|terminat|golit)|unde s-?au dus banii din plic|ce s-?a intamplat cu plicul/, run: (d, f, a) => answerEnvelopeWhy(d, f, a) },
+  { kind: "late-entry", test: /\b(am uitat sa (trec|notez|adaug)|nu am trecut|nu am notat|cum (trec|adaug|notez) .{0,20}(trecut|alta zi|ieri|saptamana trecuta))/, run: () => answerLateEntry() },
   { kind: "remaining", test: /\b(cat (mai )?am|ce mai am|cat mi a ramas|ramas|sold|situatia|bilant|disponibil|cum stau cu|cum sta)/, run: (d, _f, a) => answerRemaining(d, a) },
 ];
 

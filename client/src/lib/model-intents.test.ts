@@ -69,6 +69,16 @@ describe("ajustări de plic venite de la model", () => {
   });
 });
 
+describe("ștergerea cerută de model", () => {
+  it("trece cu numele plicului", () => {
+    expect(read([{ kind: "envelope-delete", label: "Transport" }])[0]).toEqual({ kind: "envelope-delete", label: "Transport" });
+  });
+
+  it("nu trece fără nume", () => {
+    expect(read([{ kind: "envelope-delete" }])).toEqual([]);
+  });
+});
+
 describe("ce NU trece — registrul omului nu se scrie din ghicite", () => {
   it("nu crede o formă care nu e listă", () => {
     for (const bad of [null, undefined, {}, "expense", 7, true]) expect(read(bad)).toEqual([]);

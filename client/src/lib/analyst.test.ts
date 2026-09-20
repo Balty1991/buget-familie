@@ -321,3 +321,58 @@ describe("aceeași cifră ca pe Acasă", () => {
     expect(answer.detail).toMatch(/Tranșa S/);
   });
 });
+
+/**
+ * Aceeași întrebare, scrisă cum îi vine omului. Analistul știa să răspundă doar la
+ * formularea „de manual”, iar restul cădeau în gol — de acolo senzația că nu înțelege.
+ */
+describe("formulări omenești pentru aceleași întrebări", () => {
+  const raspunde = (text: string) => analyze(text, house(), ASOF);
+
+  it("prinde ritmul zilnic scris cu „mai”", () => {
+    expect(raspunde("cat mai pot cheltui azi?")?.kind).toBe("pace");
+    expect(raspunde("cat pot cheltui pe zi?")?.kind).toBe("pace");
+  });
+
+  it("prinde simularea, nu doar «îmi permit»", () => {
+    for (const intrebare of [
+      "cat imi ramane daca platesc chiria de 1500?",
+      "ce se intampla daca dau 400 pe anvelope?",
+      "imi permit 400 de lei?",
+    ]) {
+      expect(raspunde(intrebare)?.kind, intrebare).toBe("afford");
+    }
+  });
+
+  it("explică de ce a scăzut un plic, cu mișcările care l-au consumat", () => {
+    const answer = raspunde("de ce mi-a scazut plicul de alimente?");
+    expect(answer?.kind).toBe("envelope-why");
+    expect(answer?.headline).toContain("Alimente");
+    expect(answerToText(answer!)).toMatch(/RON/);
+  });
+
+  it("calculează ritmul până la o țintă cu termen", () => {
+    const answer = raspunde("cat ar trebui sa pun deoparte ca sa am 3000 pana in decembrie?");
+    expect(answer?.kind).toBe("save-by");
+    expect(answer?.headline).toMatch(/pe lună/);
+    expect(answer?.headline).toMatch(/3\.000/);
+  });
+
+  it("citește luna ca fiind următoarea ei venire, nu una trecută", () => {
+    // Întrebarea e pusă în septembrie: „până în iunie” înseamnă iunie de anul viitor.
+    const answer = raspunde("cat pe luna ca sa strang 5000 pana in iunie?");
+    expect(answer?.kind).toBe("save-by");
+    expect(answer?.detail).toMatch(/zile/);
+  });
+
+  it("liniștește pe cineva care a uitat să treacă cheltuieli", () => {
+    const answer = raspunde("am uitat sa trec niste cheltuieli saptamana trecuta");
+    expect(answer?.kind).toBe("late-entry");
+    expect(answer?.detail).toMatch(/data/i);
+  });
+
+  it("nu răspunde la o comandă de înregistrare", () => {
+    expect(raspunde("am dat 50 lei pe benzina")).toBeUndefined();
+    expect(raspunde("fa-mi plic Alimente 1800")).toBeUndefined();
+  });
+});

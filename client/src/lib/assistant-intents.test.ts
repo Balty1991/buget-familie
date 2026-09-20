@@ -205,3 +205,44 @@ describe("ajustarea unui plic, nu înlocuirea lui", () => {
     expect(intent).not.toHaveProperty("weeklyLimit");
   });
 });
+
+
+/**
+ * Ștergerea e singura comandă din chat care distruge ceva. Are nevoie de un nume limpede,
+ * și nu trebuie să lase în urmă și un plic nou creat din același cuvânt „plic”.
+ */
+describe("ștergerea unui plic", () => {
+  it("citește numele plicului cerut", () => {
+    expect(at("sterge plicul de transport")).toEqual([{ intent: { kind: "envelope-delete", label: "Transport" }, segment: expect.any(String) }]);
+    expect(at("nu mai vreau plicul de transport")[0].intent).toEqual({ kind: "envelope-delete", label: "Transport" });
+  });
+
+  it("nu șterge nimic fără nume", () => {
+    expect(at("sterge plicul")).toEqual([]);
+    expect(at("sterge")).toEqual([]);
+  });
+
+  it("nu creează un plic nou din aceeași frază", () => {
+    expect(at("sterge plicul de transport").every((item) => item.intent.kind === "envelope-delete")).toBe(true);
+  });
+});
+
+/**
+ * O întrebare cere un sfat, nu o înregistrare. „Cum să împart 2000 până pe 10 octombrie?”
+ * fabrica un plic numit „Pana octombrie” cu 2.000 de lei în el, gata de confirmat.
+ */
+describe("întrebările nu scriu în registru", () => {
+  it("nu fabrică plicuri sau obiective dintr-o întrebare", () => {
+    expect(at("cum sa impart 2000 pana pe 10 octombrie?")).toEqual([]);
+    expect(at("cat pe luna ca sa strang 5000 pana in iunie?")).toEqual([]);
+    expect(at("cat ar trebui sa pun deoparte pentru vacanta?")).toEqual([]);
+  });
+
+  it("dar un verb explicit rămâne mai tare decât semnul întrebării", () => {
+    expect(at("fă-mi plic Alimente 1800?")[0].intent).toMatchObject({ kind: "envelope", amount: 1800 });
+  });
+
+  it("nu dă un plic fără nume adevărat", () => {
+    expect(at("imparte-mi 1800 in plicuri")).toEqual([]);
+  });
+});

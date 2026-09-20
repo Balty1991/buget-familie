@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, isoToday, type AppData } from "./finance-data";
-import { decide, understand, compactGuideContext, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, canCommitGuideSpend, isDatedSpendChoice, type Reading } from "./understand";
+import { decide, understand, compactGuideContext, householdIsSetUp, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, canCommitGuideSpend, isDatedSpendChoice, type Reading } from "./understand";
 import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
 /** O gospodărie obișnuită: două persoane, patru locuri cu bani, trei plicuri. */
@@ -149,6 +149,69 @@ describe("planificarea nu e cheltuială", () => {
   it("dar o plată chiar făcută din plic rămâne cheltuială", () => {
     expect(expenseProposal("am dat 50 de lei din plicul de alimente", undefined, house(), emptyGuideMemory())).toBeTruthy();
     expect(expenseProposal("am platit 120 lei, ii scad din plicul de transport", undefined, house(), emptyGuideMemory())).toBeTruthy();
+  });
+});
+
+/**
+ * „Împarte-mi 1800 în plicuri” nu mai fabrică un plic numit „Plic nou” cu toți banii:
+ * propune o împărțire adevărată, din ce știe despre familia asta.
+ */
+/**
+ * Pasul de configurare al ghidului pornea mereu de la venituri și rămânea acolo până
+ * primea o sumă — inclusiv pentru o familie care avea deja plan, plicuri și salariu.
+ * De acolo venea senzația că nu ascultă: orice cifră scrisă devenea „venit lunar”.
+ */
+describe("ghidul nu reia configurarea unei case deja configurate", () => {
+  it("recunoaște o gospodărie pornită, după oricare urmă reală", () => {
+    const cuPlic = createEmptyAppData();
+    cuPlic.settings.salaryPlan.allocations = [{ id: "a1", label: "Alimente", amount: 900 }];
+    expect(householdIsSetUp(cuPlic)).toBe(true);
+
+    const cuSalariu = createEmptyAppData();
+    cuSalariu.settings.salaryPlan.nextPayday = "2026-10-09";
+    expect(householdIsSetUp(cuSalariu)).toBe(true);
+
+    const cuSold = createEmptyAppData();
+    cuSold.settings.paymentSources[0].openingBalance = 1200;
+    expect(householdIsSetUp(cuSold)).toBe(true);
+
+    expect(householdIsSetUp(house())).toBe(true);
+  });
+
+  it("dar o casă goală chiar are nevoie de primii pași", () => {
+    expect(householdIsSetUp(createEmptyAppData())).toBe(false);
+  });
+});
+
+describe("propunerea de împărțire", () => {
+  const cuBaniLiberi = () => {
+    const data = house();
+    data.settings.paymentSources[0].openingBalance = 9000;
+    return data;
+  };
+
+  it("propune plicuri cu nume și sume, pornind de la cele existente", () => {
+    const winner = decide(understand("imparte-mi 1800 in plicuri", cuBaniLiberi(), { asOf: "2026-09-20" })).winner;
+    expect(winner?.kind).toBe("intents");
+    if (winner?.kind !== "intents") throw new Error("așteptam o propunere");
+    expect(winner.headline).toContain("propun");
+    expect(winner.intents.every((item) => item.intent.kind === "envelope")).toBe(true);
+    expect(winner.intents.length).toBeGreaterThan(1);
+  });
+
+  it("nu propune nimic când nu știe nimic despre familie", () => {
+    const gol = createEmptyAppData();
+    gol.settings.salaryPlan.periodStart = "2026-09-11";
+    gol.settings.salaryPlan.nextPayday = "2026-10-09";
+    const winner = decide(understand("imparte-mi 1800 in plicuri", gol, { asOf: "2026-09-20" })).winner;
+    expect(winner?.kind).not.toBe("intents");
+  });
+
+  it("nu se amestecă atunci când omul a spus deja ce plic vrea", () => {
+    const winner = decide(understand("imparte 1800: fă-mi plic Alimente 1800", cuBaniLiberi(), { asOf: "2026-09-20" })).winner;
+    if (winner?.kind !== "intents") throw new Error("așteptam intenții");
+    expect(winner.headline).toBeUndefined();
+    expect(winner.intents).toHaveLength(1);
   });
 });
 

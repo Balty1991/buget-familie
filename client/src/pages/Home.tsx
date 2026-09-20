@@ -784,6 +784,29 @@ export default function Home() {
         : [...events, { id: newId("planned-event"), name: change.name, date: change.date, estimate: change.estimate, repeat: change.repeat, memberId: member?.id, updatedAt: now, ...eventTraits(change.name, isoToday()) }];
       return { ...current, settings: { ...current.settings, plannedEvents: next } };
     }
+    /**
+     * Ștergerea unui plic cerută prin asistent. Banii nu dispar: suma plicului se întoarce
+     * în nerepartizat, fiindcă „liberul” se calculează din surse minus plicuri. Un nume care
+     * nu se potrivește cu niciun plic nu șterge nimic — mai bine nimic decât altceva.
+     */
+    if (change.kind === "allocation-delete") {
+      const plan = current.settings.salaryPlan;
+      const target = plan.allocations.find((item) => item.label === change.label || item.category === change.label);
+      if (!target) return current;
+      return {
+        ...current,
+        settings: {
+          ...current.settings,
+          salaryPlan: {
+            ...plan,
+            allocations: plan.allocations.filter((item) => item.id !== target.id),
+            transfers: (plan.transfers || []).filter((item) => item.fromAllocationId !== target.id && item.toAllocationId !== target.id),
+            weekTransfers: (plan.weekTransfers || []).filter((item) => item.allocationId !== target.id),
+            updatedAt: now,
+          },
+        },
+      };
+    }
     if (change.kind === "payday") {
       // Data cerută devine reperul planului; fereastra spune cât poate întârzia salariul.
       const plan = current.settings.salaryPlan;

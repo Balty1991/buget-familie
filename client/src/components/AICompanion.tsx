@@ -22,6 +22,7 @@ import {
   isCorrection,
   isQuestion,
   localInsight,
+  householdIsSetUp,
   memberIdFor,
   rememberExpense,
   parsePayday,
@@ -310,6 +311,7 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
     case "recurring": return { kind: "recurring", name: intent.name, amount: intent.amount, dueDay: intent.dueDay, category: intent.category };
     case "goal": return { kind: "goal", name: intent.name, target: intent.target, current: intent.current, dueDate: intent.dueDate };
     case "planned-event": return { kind: "planned-event", name: intent.name, date: intent.date, estimate: intent.estimate, repeat: intent.repeat };
+    case "envelope-delete": return { kind: "allocation-delete", label: intent.label };
     case "payday": return { kind: "payday", date: intent.date, flexDays: intent.flexDays };
   }
 }
@@ -356,14 +358,22 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
     case "debt": return `datoria „${intent.name}”, sold ${money(intent.remaining)}${intent.monthly ? `, rată ${money(intent.monthly)}` : ""}`;
     case "recurring": return `scadența „${intent.name}”, ${money(intent.amount)} pe data de ${intent.dueDay}`;
     case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;
+    case "envelope-delete": {
+      const current = data?.settings.salaryPlan.allocations.find((item) => item.label === intent.label || item.category === intent.label);
+      return current
+        ? `șterge plicul „${current.label}” — cei ${money(current.amount)} din el se întorc în nerepartizat`
+        : `șterge plicul „${intent.label}” — nu găsesc niciun plic cu numele ăsta`;
+    }
     case "planned-event": return `evenimentul „${intent.name}” pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.estimate ? `, cost estimat ${money(intent.estimate)}` : ", fără cost estimat încă"}${intent.repeat === "yearly" ? ", în fiecare an" : ""}`;
     case "payday": return `următorul venit pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.flexDays ? `, cu ${intent.flexDays} zile de flexibilitate` : ""}`;
   }
 }
 
 /** Textul propunerii, scris o singură dată ca să poată fi refăcut la schimbarea zilei. */
-function proposalText(intents: AssistantIntent[], data?: AppData, memory?: GuideMemory): string {
-  const head = intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`;
+function proposalText(intents: AssistantIntent[], data?: AppData, memory?: GuideMemory, headline?: string): string {
+  // O propunere de împărțire nu e o înțelegere a mesajului, deci nu se anunță „am înțeles”.
+  // Titlul propriu își aduce punctul lui; lista de dedesubt adaugă „:”, deci ar ieși „.:”.
+  const head = (headline ? headline.replace(/\.$/, "") : undefined) || (intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`);
   return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}\n\nConfirmi să le trec în registru?`;
 }
 
@@ -391,7 +401,20 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
   const [attachmentBusy, setAttachmentBusy] = useState(false);
   const [typing, setTyping] = useState(false);
   const [pendingDebtName, setPendingDebtName] = useState("");
-  const [guideStage, setGuideStage] = useState<GuideStage>(() => { const saved = window.localStorage.getItem("buget-familie:ai-guide-stage-v1") as GuideStage | null; return saved || "income"; });
+  const [guideStage, setGuideStage] = useState<GuideStage>(() => {
+    const saved = window.localStorage.getItem("buget-familie:ai-guide-stage-v1") as GuideStage | null;
+    /**
+     * Ghidul pornea mereu de la „ce bani intră într-o lună obișnuită?” și rămânea acolo
+     * până primea un venit — inclusiv pentru o familie care avea deja salariu, plicuri și
+     * plan. De acolo venea senzația că nu te ascultă: orice sumă scrisă era citită ca venit,
+     * fiindcă pasul de configurare avea prioritate.
+     *
+     * Configurarea se citește din registru, nu din memoria unui pas bifat cândva: cine are
+     * deja plan sau mișcări nu mai e întrebat de la început, nici la prima deschidere, nici
+     * după o reinstalare care a păstrat datele.
+     */
+    return saved && saved !== "income" ? saved : householdIsSetUp(data) ? "ready" : saved || "income";
+  });
   const [messages, setMessages] = useState<ChatMessage[]>(() => { try { return JSON.parse(window.localStorage.getItem(CHAT_KEY) || "[]") as ChatMessage[]; } catch { return []; } });
   const [historyOpen, setHistoryOpen] = useState(false);
   const [quota, setQuota] = useState<QuotaInfo>(() => loadQuota());
@@ -702,7 +725,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       resetSpendDraft();
       addMessage({
         role: "assistant",
-        text: proposalText(intents, data, liveMemory),
+        text: proposalText(intents, data, liveMemory, reading.headline),
         updates: intents.map((item) => intentToUpdate(item, data, liveMemory)),
         intents,
         action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },

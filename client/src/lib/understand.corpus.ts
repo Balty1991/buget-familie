@@ -12,7 +12,7 @@
  * acolo se rupe înțelegerea.
  */
 export type Outcome =
-  | "expense" | "income" | "envelope" | "debt" | "recurring" | "goal" | "payday" | "planned-event"
+  | "expense" | "income" | "envelope" | "envelope-delete" | "debt" | "recurring" | "goal" | "payday" | "planned-event"
   | "transfer" | "answer" | "confirm" | "revise" | "due" | "none";
 
 export type Case = {
@@ -90,6 +90,19 @@ export const CORPUS: Case[] = [
   { text: "mai pune 200 la alimente", want: "envelope" },
   { text: "scade 100 din plicul de transport", want: "envelope", note: "suma e spusă înaintea cuvântului plic" },
   { text: "mută 100 din transport în alimente", want: "transfer", note: "mutarea între plicuri nu e cheltuială" },
+
+  // --- întrebări scrise cum îi vine omului ---------------------------------
+  { text: "cât mai pot cheltui azi?", want: "answer" },
+  { text: "cât îmi rămâne dacă plătesc chiria de 1500?", want: "answer", note: "simulare, nu cheltuială" },
+  { text: "ce se întâmplă dacă dau 400 pe anvelope?", want: "answer" },
+  { text: "de ce mi-a scăzut plicul de alimente?", want: "answer" },
+  { text: "cât ar trebui să pun deoparte ca să am 3000 până în decembrie?", want: "answer" },
+  { text: "am uitat să trec niște cheltuieli săptămâna trecută", want: "answer" },
+  { text: "cum să împart 2000 până pe 10 octombrie?", want: ["answer", "envelope"], note: "sfat, nu un plic numit „Pana octombrie”" },
+
+  // --- ștergerea unui plic --------------------------------------------------
+  { text: "șterge plicul de transport", want: "envelope-delete" },
+  { text: "nu mai vreau plicul de transport", want: "envelope-delete" },
 
   // --- evenimente din calendar, cu costul lor ------------------------------
   { text: "pune-mi Crăciun 1200 pe 25 decembrie", want: "planned-event" },
