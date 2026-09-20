@@ -85,6 +85,12 @@ export const CORPUS: Case[] = [
   { text: "vreau să strâng 10000 lei pentru concediu", want: "goal" },
   { text: "obiectiv fond de urgență 6000", want: "goal" },
 
+  // --- ajustarea unui plic existent -----------------------------------------
+  { text: "mărește plicul de alimente cu 200", want: "envelope", note: "sumă în plus, nu sumă nouă" },
+  { text: "mai pune 200 la alimente", want: "envelope" },
+  { text: "scade 100 din plicul de transport", want: "envelope", note: "suma e spusă înaintea cuvântului plic" },
+  { text: "mută 100 din transport în alimente", want: "transfer", note: "mutarea între plicuri nu e cheltuială" },
+
   // --- evenimente din calendar, cu costul lor ------------------------------
   { text: "pune-mi Crăciun 1200 pe 25 decembrie", want: "planned-event" },
   { text: "notează-mi Crăciun, cam 1200 de lei", want: "planned-event", note: "sărbătoarea își aduce data cu ea" },

@@ -24,7 +24,8 @@ const fold = (value: string) => value.replace(/[ăâîșşțţĂÂÎȘŞȚŢ]/g,
 export type AssistantIntent =
   | { kind: "expense"; amount: number; category: string; title: string; date: string }
   | { kind: "income"; amount: number; title: string; date: string }
-  | { kind: "envelope"; label: string; amount: number; category?: string; weeklyLimit?: number; weeklyPace: boolean; amountIsWeekly?: boolean }
+  /** `delta` = suma se adaugă sau se scade din plicul existent, nu îl înlocuiește. */
+  | { kind: "envelope"; label: string; amount: number; category?: string; weeklyLimit?: number; weeklyPace: boolean; amountIsWeekly?: boolean; delta?: "increase" | "decrease" }
   | { kind: "debt"; name: string; remaining: number; monthly?: number }
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
@@ -174,6 +175,12 @@ const MARKERS: Array<[AssistantIntent["kind"], RegExp]> = [
   ["planned-event", /\b(eveniment(ul|e|ele)?|sarbatoare|sarbatori|aniversare[ae]?|craciun(ul)?|revelion(ul)?|paste(le)?|pasti|8 martie|1 iunie|inceput(ul)? de scoala|vinerea neagra|black friday)\b/g],
   ["envelope", /\b(fa-?mi|fa |creeaza|creaza|adauga|vreau|pune)?\s*(un |o )?plic(ul)?\b/g],
   ["envelope", /\b(repartizeaz[ăa]|repartizez|imparte|impart)\b/g],
+  /**
+   * Verbele de ajustare deschid segmentul, ca suma spusă înaintea cuvântului „plic” să
+   * rămână în el: „scade 100 din plicul de transport” începea la „plicul”, deci rămânea
+   * fără sumă și nu era înțeles deloc.
+   */
+  ["envelope", /\b(mareste|micsoreaza|scade|suplimenteaza|creste)\b/g],
   ["recurring", /\b(abonament|chiri[ae]|factura|scadenta|rata lunara la)\b/g],
   ["debt", /\b(datorie|datorii|credit|imprumut|mai am de (platit|achitat))\b/g],
   ["goal", /\b(obiectiv|vreau sa strang|sa strang|economisesc pentru|fond de (siguranta|urgenta))\b/g],
@@ -267,7 +274,19 @@ function splitByAmount(segment: string): string[] {
   return withAmount.length >= 2 ? withAmount : [segment];
 }
 
-function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], markerLength: number, rules: MerchantRule[] = []): AssistantIntent | undefined {
+/**
+ * „Mărește plicul de alimente cu 200” cerea 1.100, iar aplicația înțelegea 200: plicul de
+ * 900 era tăiat cu 700 de lei, cu toate cifrele la locul lor și un buton de confirmare
+ * dedesubt. Sensul se citește din mesajul întreg, fiindcă „mai” din „mai pune 200” stă
+ * înaintea marcatorului, deci în afara segmentului.
+ */
+const envelopeDelta = (foldedText: string): "increase" | "decrease" | undefined => {
+  if (/\b(mareste|creste|suplimenteaza|in plus)\b|\bmai (pune|adauga|bag|dau)\b|\badauga inca\b/.test(foldedText)) return "increase";
+  if (/\b(micsoreaza|scade|reduce|taie)\b|\bia (\d|inapoi)/.test(foldedText)) return "decrease";
+  return undefined;
+};
+
+function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], markerLength: number, rules: MerchantRule[] = [], delta?: "increase" | "decrease"): AssistantIntent | undefined {
   if (!amounts.length) return undefined;
   const folded = fold(masked);
   /**
@@ -299,6 +318,14 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
    * fiindcă numai ea știe câte zile mai sunt până la venit.
    */
   const amountIsWeekly = Boolean(weekly) && weekly === total && !perWeek;
+  /**
+   * O ajustare schimbă doar suma plicului existent: nu-i atinge ritmul și nu se traduce
+   * într-un ritm săptămânal, fiindcă „mai pune 200” înseamnă 200 de lei în plus pe tot
+   * ciclul, nu 200 pe săptămână.
+   */
+  if (delta) {
+    return { kind: "envelope", label: label || category || "Plic nou", amount: total.value, category, weeklyPace: WEEKLY.test(folded), delta };
+  }
   return {
     kind: "envelope",
     label: label || category || "Plic nou",
@@ -455,7 +482,7 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
     const dates = own.length ? own : messageDates;
     const amounts = extractAmounts(masked);
     const found =
-      marker.kind === "envelope" ? parseEnvelope(segment, masked, amounts, marker.length, rules)
+      marker.kind === "envelope" ? parseEnvelope(segment, masked, amounts, marker.length, rules, envelopeDelta(folded))
       : marker.kind === "payday" ? parsePayday(dates)
       : marker.kind === "expense" ? parseExpense(segment, amounts, dates, asOf, categories, rules)
       : marker.kind === "income" ? parseIncome(segment, amounts, dates, asOf)
@@ -525,6 +552,8 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
       const amount = num(item.amount, { min: 0.01 });
       const label = text(item.label, 60);
       if (!amount || !label) return undefined;
+      const delta = item.delta === "increase" || item.delta === "decrease" ? item.delta : undefined;
+      if (delta) return { kind: "envelope", label, amount, category: text(item.category, 60), weeklyPace: item.weeklyPace === true, delta };
       const amountIsWeekly = item.amountIsWeekly === true;
       // Când suma e un ritm, limita săptămânală e chiar ea; altfel trebuie să încapă în total.
       const weeklyLimit = amountIsWeekly ? amount : num(item.weeklyLimit, { min: 0.01, max: amount });

@@ -305,7 +305,7 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
       return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
     }
     case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date };
-    case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit, amountIsWeekly: intent.amountIsWeekly };
+    case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit, amountIsWeekly: intent.amountIsWeekly, delta: intent.delta };
     case "debt": return { kind: "debt", name: intent.name, remaining: intent.remaining };
     case "recurring": return { kind: "recurring", name: intent.name, amount: intent.amount, dueDay: intent.dueDay, category: intent.category };
     case "goal": return { kind: "goal", name: intent.name, target: intent.target, current: intent.current, dueDate: intent.dueDate };
@@ -336,7 +336,23 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
       const target = planIncome(data)[0];
       return target ? `${head}\n  ↳ intră în ${target.source.name} (${money(target.balance)} acum)` : head;
     }
-    case "envelope": return intent.amountIsWeekly ? `plicul „${intent.label}” cu ${money(intent.amount)} pe săptămână întreagă, până la venit` : `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ""}`;
+    case "envelope": {
+      /**
+       * La o ajustare se scrie și rezultatul, nu doar suma spusă: „mărește cu 200” și
+       * „pune 200” arătau amândouă „plicul Alimente cu 200 RON”, deci o tăiere de 700 de
+       * lei se confirma fără ca nimic din ecran să o dea de gol.
+       */
+      if (intent.delta && data) {
+        const current = data.settings.salaryPlan.allocations.find((item) => item.label === intent.label || item.category === intent.label);
+        const before = current?.amount ?? 0;
+        const after = intent.delta === "increase" ? before + intent.amount : Math.max(0, before - intent.amount);
+        return current
+          ? `plicul „${intent.label}”: ${intent.delta === "increase" ? "+" : "−"}${money(intent.amount)} (${money(before)} → ${money(after)})`
+          : `plicul „${intent.label}” cu ${money(intent.amount)} — nu există încă, îl creez`;
+      }
+      if (intent.delta) return `plicul „${intent.label}”: ${intent.delta === "increase" ? "+" : "−"}${money(intent.amount)}`;
+      return intent.amountIsWeekly ? `plicul „${intent.label}” cu ${money(intent.amount)} pe săptămână întreagă, până la venit` : `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ""}`;
+    }
     case "debt": return `datoria „${intent.name}”, sold ${money(intent.remaining)}${intent.monthly ? `, rată ${money(intent.monthly)}` : ""}`;
     case "recurring": return `scadența „${intent.name}”, ${money(intent.amount)} pe data de ${intent.dueDay}`;
     case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;

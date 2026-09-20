@@ -174,3 +174,34 @@ describe("evenimente viitoare scrise în cuvinte", () => {
     expect(at("fă-mi plic Alimente 2400")[0].intent).toMatchObject({ kind: "envelope", label: "Alimente" });
   });
 });
+
+
+/**
+ * Cea mai scumpă confuzie a plicurilor: „mărește cu 200” citit ca „pune 200”.
+ * Un plic de 900 se tăia la 200 — 700 de lei dispăreau din buget, cu toate cifrele
+ * la locul lor și un buton de confirmare dedesubt.
+ */
+describe("ajustarea unui plic, nu înlocuirea lui", () => {
+  it("citește mărirea ca sumă în plus", () => {
+    expect(at("mareste plicul de alimente cu 200")[0].intent)
+      .toMatchObject({ kind: "envelope", label: "Alimente", amount: 200, delta: "increase" });
+    expect(at("mai pune 200 la alimente")[0].intent).toMatchObject({ kind: "envelope", amount: 200, delta: "increase" });
+  });
+
+  it("citește scăderea, chiar când suma e spusă înaintea cuvântului „plic”", () => {
+    expect(at("scade 100 din plicul de transport")[0].intent)
+      .toMatchObject({ kind: "envelope", label: "Transport", amount: 100, delta: "decrease" });
+  });
+
+  it("nu marchează drept ajustare un plic scris normal", () => {
+    expect(at("fă-mi plic Alimente 1800")[0].intent).not.toHaveProperty("delta");
+    expect(at("pune 600 pe saptamana la alimente")[0].intent).toMatchObject({ amountIsWeekly: true });
+    expect(at("pune 600 pe saptamana la alimente")[0].intent).not.toHaveProperty("delta");
+  });
+
+  it("o ajustare nu se traduce în ritm săptămânal — 200 în plus e pe tot ciclul", () => {
+    const intent = at("mai pune 200 la alimente")[0].intent;
+    expect(intent).not.toHaveProperty("amountIsWeekly");
+    expect(intent).not.toHaveProperty("weeklyLimit");
+  });
+});

@@ -54,6 +54,21 @@ describe("evenimente viitoare spuse modelului", () => {
   });
 });
 
+describe("ajustări de plic venite de la model", () => {
+  it("păstrează sensul spus de model", () => {
+    expect(read([{ kind: "envelope", label: "Alimente", amount: 200, delta: "increase" }])[0])
+      .toMatchObject({ kind: "envelope", label: "Alimente", amount: 200, delta: "increase" });
+    expect(read([{ kind: "envelope", label: "Transport", amount: 100, delta: "decrease" }])[0])
+      .toMatchObject({ delta: "decrease" });
+  });
+
+  it("ignoră un sens inventat și tratează suma ca total, ca până acum", () => {
+    const intent = read([{ kind: "envelope", label: "Alimente", amount: 1800, delta: "triple" }])[0];
+    expect(intent).not.toHaveProperty("delta");
+    expect(intent).toMatchObject({ amount: 1800 });
+  });
+});
+
 describe("ce NU trece — registrul omului nu se scrie din ghicite", () => {
   it("nu crede o formă care nu e listă", () => {
     for (const bad of [null, undefined, {}, "expense", 7, true]) expect(read(bad)).toEqual([]);

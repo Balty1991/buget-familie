@@ -811,8 +811,17 @@ export default function Home() {
      * zilele rămase până la venit — nu pe cele 26 din calendar, dintre care unele au trecut.
      */
     const withPeriod = { ...current, settings: { ...current.settings, salaryPlan: { ...plan, periodStart: start, nextPayday, earliestPayday, paydayFlexDays: flex } } };
-    const amount = (change.amountIsWeekly ? totalForWeeklyPace(withPeriod, change.amount) : undefined) ?? change.amount;
-    const nextAllocation = existing ? { ...existing, amount, weeklyPace, category: label, updatedAt: now } : { id: newId("guided-allocation"), label, category: label, amount, weeklyPace, memberId: member?.id, sourceId: source?.id };
+    /**
+     * „Mărește plicul de alimente cu 200” cere 1.100 peste 900, nu 200. Fără sensul ăsta,
+     * ajustarea înlocuia suma și tăia 700 de lei din plic fără ca nimic să spună asta.
+     * Scăderea nu trece sub zero, iar un plic care încă nu există primește suma spusă.
+     */
+    const paced = (change.amountIsWeekly ? totalForWeeklyPace(withPeriod, change.amount) : undefined) ?? change.amount;
+    const amount = change.delta && existing
+      ? Math.max(0, Math.round(((change.delta === "increase" ? existing.amount + change.amount : existing.amount - change.amount)) * 100) / 100)
+      : paced;
+    // O ajustare nu atinge ritmul plicului: rămâne cum l-a pus omul.
+    const nextAllocation = existing ? { ...existing, amount, weeklyPace: change.delta ? existing.weeklyPace : weeklyPace, category: label, updatedAt: now } : { id: newId("guided-allocation"), label, category: label, amount, weeklyPace, memberId: member?.id, sourceId: source?.id };
     const allocations = existing ? current.settings.salaryPlan.allocations.map((item) => item.id === existing.id ? nextAllocation : item) : [...current.settings.salaryPlan.allocations, nextAllocation];
     const weeklyLimit = change.weeklyAmount || plan.weeklyLimit || (change.weekly ? Math.round((amount / weeks) * 100) / 100 : plan.weeklyLimit);
     const saved = { ...current, settings: { ...current.settings, salaryPlan: { ...plan, periodStart: start, nextPayday, earliestPayday, paydayFlexDays: flex, weeklyLimit, sourceIds: plan.sourceIds.length ? plan.sourceIds : source ? [source.id] : plan.sourceIds, allocations, updatedAt: now } } };

@@ -40,6 +40,7 @@ readings este partea care ajunge efectiv în registrul omului, deci contează ce
 - expense: amount (număr, în lei), category (text), title (text scurt), date (AAAA-LL-ZZ)
 - income: amount, title, date
 - envelope: label, amount, category, weeklyLimit (dacă s-a spus o limită săptămânală), weeklyPace (boolean), amountIsWeekly (boolean: true doar dacă suma din amount este un ritm pe săptămână, nu totalul perioadei)
+- envelope, cu delta: când omul cere o ajustare („mărește plicul de alimente cu 200”, „mai pune 200 la alimente”, „scade 100 din transport”), pune amount = cât se adaugă sau se scade și delta = "increase" sau "decrease". Fără delta, amount înlocuiește suma plicului — deci o ajustare trimisă fără delta taie banii din plic. La delta nu se trimit weeklyLimit și amountIsWeekly.
 - debt: name, remaining (soldul rămas), monthly (rata lunară, dacă se știe)
 - recurring: name, amount, dueDay (1-31), category
 - goal: name, target, current (dacă s-a spus cât s-a strâns), dueDate
@@ -70,6 +71,7 @@ const responseSchema = {
                     weeklyLimit: { type: "NUMBER" },
                     weeklyPace: { type: "BOOLEAN" },
                     amountIsWeekly: { type: "BOOLEAN" },
+                    delta: { type: "STRING", enum: ["increase", "decrease"] },
                     name: { type: "STRING" },
                     remaining: { type: "NUMBER" },
                     monthly: { type: "NUMBER" },

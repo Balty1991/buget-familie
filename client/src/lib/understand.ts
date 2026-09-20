@@ -46,7 +46,7 @@ export type FinancialUpdate =
   | { kind: "expense"; amount: number; title: string; category: string; date?: string; allocationId?: string; sourceId?: string; memberId?: string; clientCaptureId?: string; recurringId?: string; fromWeekIndex?: number; receiptDraft?: { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> } }
   | { kind: "debt"; name: string; remaining: number; due?: string }
   | { kind: "debt-monthly"; amount: number; name?: string }
-  | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string; amountIsWeekly?: boolean }
+  | { kind: "allocation"; category: string; amount: number; weekly: boolean; weeklyAmount?: number; weeks?: number; payday?: string; label?: string; amountIsWeekly?: boolean; /** Ajustare față de plicul existent, nu sumă nouă. */ delta?: "increase" | "decrease" }
   | { kind: "recurring"; name: string; amount: number; dueDay: number; category: string }
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
   | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
@@ -80,7 +80,7 @@ export function foldRo(raw: string) {
  * Semnalul ăsta oprește propunerea de cheltuială și, când o sumă rămâne necitită, trimite
  * mesajul la model în loc să răspundem cu o situație generală.
  */
-export const plansMoney = (raw: string) => /\bplic|\bimpart|\brepartiz|\baloc[aă]/.test(foldRo(raw));
+export const plansMoney = (raw: string) => /\bplic|\bimpart|\brepartiz|\baloc[aă]|\bmuta\b/.test(foldRo(raw));
 
 export function habitKey(raw: string) {
   return foldRo(raw).replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
