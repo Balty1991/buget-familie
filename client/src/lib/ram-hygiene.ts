@@ -24,8 +24,10 @@ async function loadDeferredStyleSheets() {
   await import("../ui-screens-modern-2026.css");
   // Themes absolute LAST so atelier/clarity cannot override palettes.
   await import("../ui-themes-modern-2026.css");
-  // Bugfix Analiză: linia mint — după themes, ultima în lanțul deferred.
+  // Bugfix Analiză: linia mint — după themes.
   await import("../ui-fix-analysis-line.css");
+  // Bugfix Mai mult: carduri fără gol uriaș — ultima în lanțul deferred.
+  await import("../ui-fix-more-space.css");
 }
 
 /** PWA pe web; pe Capacitor Android/iOS fișierele sunt deja în pachet. */
