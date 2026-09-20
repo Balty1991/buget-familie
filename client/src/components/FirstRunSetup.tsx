@@ -1,1 +1,1 @@
-PLACEHOLDER
+file:///tmp/firstrun_restore.tsx
