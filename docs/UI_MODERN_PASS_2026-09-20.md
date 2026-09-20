@@ -2,22 +2,26 @@
 
 ## Ce s-a schimbat
 
-Strat CSS aditiv `client/src/ui-modern-pass.css`, importat din `client/src/main.tsx` imediat după `display-fixes-pass.css` (critical path, peste `contrast-fix.css`).
+Strat CSS aditiv, importat din `client/src/main.tsx`:
+
+- `client/src/ui-modern-pass.css` — stub `@import`
+- `ui-modern-pass-a1.css` / `a2.css` — tipografie erou, dock, empty states, safe-area
+- `ui-modern-pass-b1.css` / `b2.css` — **Plan feed** (spacing, filled CTA, anti-glow, sans H2 mobil)
 
 ### Tipografie erou
 - Sume erou (`.os-amount`, `.bf-today-situation-number strong`) mai mari pe mobil
 - `tabular-nums` + tracking strâns
 
-### Spațiere carduri (general + Plan)
-- Line-height body ≈ **1.5**
+### Spațiere carduri (general + Plan) — feedback screenshot dark
+- Line-height body ≈ **1.5–1.55**
 - Pași **12–16px** între kicker → titlu → paragraf → CTA
-- Padding card Plan ≈ **16–18px**; gap vertical între secțiuni **16–18px**
+- Padding card Plan ≈ **18–20px** (mobil); gap vertical între secțiuni **16–18px**
 - Liste simulare: **12px** între rânduri; footer CTA cu gap 12px
 
 ### Plan feed (screenshot dark — prioritate)
 - **Anti-înghesuit**: grid pe hero/simulator/simulation headings; note cu aer
 - **CTA filled**: `.bf-plan-simulator-action` / `.bf-secondary.bf-plan-simulator-action` + primary din simulare — mint solid, pill, min 48px (nu outline)
-- **Anti-neon**: fără glow violet; bordură subtilă + umbră de elevație; `backdrop-filter` off pe carduri Plan
+- **Anti-neon**: `--cf-glow: transparent`; fără blur/glow violet; bordură subtilă + umbră de elevație
 - **H2 mobil**: Outfit / IBM Plex Sans, weight 600–650 — seriful greu rămâne pe brand/hero, nu pe feed-ul dens
 
 ### Dock / empty / focus / motion / safe-area
@@ -25,11 +29,7 @@ Strat CSS aditiv `client/src/ui-modern-pass.css`, importat din `client/src/main.
 - Empty geometric CSS (`.bf-empty-state`, `.bf-allocation-empty`, `.bf-today-empty-activity`)
 - Focus-visible + contrast layer *cu* `contrast-fix.css`
 - Enter scurt; `prefers-reduced-motion`
-- Safe-area Capacitor
-
-### Microcopy RO (diff mic)
-- Mișcări / First run / Plan empty — ton calm
-- `Home.tsx` neschimbat
+- Safe-area Capacitor (`capacitor-android` / `is-android-standalone`)
 
 ## Cum verifici (telefon / GitHub Pages)
 
@@ -50,5 +50,8 @@ Strat CSS aditiv `client/src/ui-modern-pass.css`, importat din `client/src/main.
 ## Neatinse
 - `clarity-rebuild.css` — nerescris (doar override)
 - `Home.tsx` — fără rewrite
-- `BILLING_LIVE` — `false` (`docs/BILLING_PLAY_PREP.md`)
+- `BILLING_LIVE` — `false`
 - `PLAY_*` docs — neatins
+
+## Commits cheie
+- stub + a1/a2/b1/b2 pe `main` (înlocuiește PLACEHOLDER accidental)
