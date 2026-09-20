@@ -3,13 +3,21 @@ import { createEmptyAppData } from "./finance-data";
 import { downloadBackup, makeBackup, parseBackup } from "./app-storage";
 
 /** Plugin-urile Capacitor nu există în Node; le înlocuim o singură dată, controlabil. */
-const native = vi.hoisted(() => ({ writeFile: vi.fn(), stat: vi.fn(), share: vi.fn() }));
+const native = vi.hoisted(() => ({
+  writeFile: vi.fn(),
+  stat: vi.fn(),
+  share: vi.fn(),
+  saveBackupToDownloads: vi.fn(),
+}));
 vi.mock("@capacitor/filesystem", () => ({
   Filesystem: { writeFile: native.writeFile, stat: native.stat },
   Directory: { Documents: "DOCUMENTS", Cache: "CACHE", Data: "DATA" },
   Encoding: { UTF8: "utf8" },
 }));
 vi.mock("@capacitor/share", () => ({ Share: { share: native.share } }));
+vi.mock("@capacitor/core", () => ({
+  registerPlugin: () => ({ saveBackupToDownloads: native.saveBackupToDownloads }),
+}));
 
 const data = () => {
   const value = createEmptyAppData();
@@ -42,82 +50,73 @@ describe("backup Buget Familie", () => {
   });
 
   describe("pe telefon (Capacitor)", () => {
-    // Cazul real raportat: în WebView-ul Android nu există nici `navigator.share`,
-    // nici descărcare prin ancoră. Fișierul trebuie scris de un plugin nativ.
     beforeEach(() => {
       vi.stubGlobal("window", { Capacitor: { isNativePlatform: () => true } });
-      native.writeFile.mockReset().mockResolvedValue({ uri: "file:///Documents/backup.json" });
-      native.stat.mockReset().mockResolvedValue({ size: 120, uri: "file:///Documents/backup.json" });
+      native.writeFile.mockReset().mockResolvedValue({ uri: "file:///cache/backup.json" });
+      native.stat.mockReset().mockResolvedValue({ size: 120, uri: "file:///cache/backup.json" });
       native.share.mockReset().mockResolvedValue({ activityType: "com.google.android.apps.docs" });
+      native.saveBackupToDownloads.mockReset().mockImplementation(async ({ name, data }) => {
+        JSON.parse(data);
+        return { path: `Download/${name}` };
+      });
     });
 
     /**
-     * Cazul raportat de pe telefon: „Exportă backup” deschidea direct lista de aplicații,
-     * deci omul credea că aplicația nu știe să salveze local — deși fișierul era deja scris.
+     * Bug raportat: succes „Documents/…” fără fișier vizibil în Fișiere.
+     * Salvare = MediaStore Descărcări, fără foaie de partajare.
      */
-    it("salvează în Documents fără să deschidă lista de aplicații", async () => {
+    it("salvează în Descărcări prin MediaStore, fără lista de aplicații", async () => {
       const result = await downloadBackup(data());
 
       expect(result.how).toBe("saved");
-      expect(result.how === "saved" && result.path).toMatch(/^Documents\/buget-familie-backup/);
-      expect(native.writeFile).toHaveBeenCalledOnce();
-      const call = native.writeFile.mock.calls[0][0];
-      expect(call.path).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d-\d{4}\.json$/);
-      expect(call.directory).toBe("DOCUMENTS");
+      expect(result.how === "saved" && result.path).toMatch(/^Download\/buget-familie-backup/);
+      expect(native.saveBackupToDownloads).toHaveBeenCalledOnce();
+      const call = native.saveBackupToDownloads.mock.calls[0][0];
+      expect(call.name).toMatch(/^buget-familie-backup-20\d\d-\d\d-\d\d-\d{4}\.json$/);
       expect(JSON.parse(call.data).data.settings.familyName).toBe("Familia Test");
       expect(native.share).not.toHaveBeenCalled();
+      expect(native.writeFile).not.toHaveBeenCalled();
     });
 
     it("deschide foaia de partajare doar când asta s-a cerut", async () => {
       await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
       expect(native.share).toHaveBeenCalledOnce();
-      expect(native.share.mock.calls[0][0].url).toBe("file:///Documents/backup.json");
+      expect(native.saveBackupToDownloads).not.toHaveBeenCalled();
+      expect(native.writeFile).toHaveBeenCalledOnce();
+      expect(native.writeFile.mock.calls[0][0].directory).toBe("CACHE");
+      expect(native.share.mock.calls[0][0].url).toBe("file:///cache/backup.json");
     });
 
-    it("nu crede o scriere care lasă fișierul gol — trece pe cache", async () => {
-      native.stat.mockResolvedValueOnce({ size: 0, uri: "file:///Documents/backup.json" });
+    it("la salvare, dacă MediaStore eșuează, deschide partajarea cu fallback sincer", async () => {
+      native.saveBackupToDownloads.mockRejectedValueOnce(new Error("MediaStore denied"));
 
-      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
-      expect(native.writeFile).toHaveBeenCalledTimes(2);
-      expect(native.writeFile.mock.calls[1][0].directory).toBe("CACHE");
-    });
-
-    it("dacă Documents este refuzat, scrie în cache în loc să eșueze", async () => {
-      native.writeFile.mockRejectedValueOnce(new Error("Directory does not exist"));
-
-      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
-      expect(native.writeFile).toHaveBeenCalledTimes(2);
-      expect(native.writeFile.mock.calls[1][0].directory).toBe("CACHE");
-    });
-
-    /**
-     * Un fișier rămas în cache nu poate fi găsit cu aplicația Fișiere, deci „salvează”
-     * nu are ce salva: singura cale să ajungă undeva util este să iasă din aplicație.
-     */
-    it("la salvare, cache-ul cere totuși partajarea — altfel fișierul e de negăsit", async () => {
-      native.writeFile.mockRejectedValueOnce(new Error("Directory does not exist"));
-
-      // `fallback` ține minte că omul ceruse salvare, ca mesajul să explice lista de aplicații.
       await expect(downloadBackup(data())).resolves.toEqual({ how: "shared", fallback: true });
       expect(native.share).toHaveBeenCalledOnce();
+      expect(native.writeFile.mock.calls[0][0].directory).toBe("CACHE");
     });
 
-    it("dacă utilizatorul închide foaia de partajare, fișierul rămâne în Documents și îi spunem unde", async () => {
-      native.share.mockRejectedValue(Object.assign(new Error("Share canceled"), { name: "AbortError" }));
-
-      const result = await downloadBackup(data(), "share");
-      expect(result.how).toBe("saved");
-      expect(result.how === "saved" && result.path).toMatch(/^Documents\/buget-familie-backup/);
-    });
-
-    it("nu pretinde că a salvat ceva când fișierul e doar în cache și partajarea a fost anulată", async () => {
-      native.writeFile.mockRejectedValueOnce(new Error("Directory does not exist"));
+    it("nu pretinde Documents când partajarea e anulată după eșec MediaStore", async () => {
+      native.saveBackupToDownloads.mockRejectedValueOnce(new Error("MediaStore denied"));
       native.share.mockRejectedValue(Object.assign(new Error("Share canceled"), { name: "AbortError" }));
 
       await expect(downloadBackup(data())).resolves.toEqual({ how: "cancelled" });
     });
 
-    it("raportează eroarea reală când nici scrierea nativă nu reușește", async () => {
+    it("la trimite, anularea partajării nu e prezentată ca salvare în Documents", async () => {
+      native.share.mockRejectedValue(Object.assign(new Error("Share canceled"), { name: "AbortError" }));
+
+      await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "cancelled" });
+    });
+
+    it("raportează eroarea când cache-ul e gol după eșec MediaStore", async () => {
+      native.saveBackupToDownloads.mockRejectedValueOnce(new Error("MediaStore denied"));
+      native.stat.mockResolvedValueOnce({ size: 0, uri: "file:///cache/backup.json" });
+
+      await expect(downloadBackup(data())).resolves.toEqual({ how: "failed", reason: "Fișierul a rămas gol." });
+    });
+
+    it("raportează eroarea reală când scrierea în cache eșuează după MediaStore", async () => {
+      native.saveBackupToDownloads.mockRejectedValueOnce(new Error("MediaStore denied"));
       native.writeFile.mockRejectedValue(new Error("Nu există spațiu"));
 
       await expect(downloadBackup(data())).resolves.toEqual({ how: "failed", reason: "Nu există spațiu" });
@@ -136,10 +135,9 @@ describe("backup Buget Familie", () => {
 
       await expect(downloadBackup(data(), "share")).resolves.toEqual({ how: "shared" });
       expect(share).toHaveBeenCalledOnce();
+      expect(native.saveBackupToDownloads).not.toHaveBeenCalled();
     });
 
-    // Pe Android, Chrome are navigator.share: fără separarea intenției, butonul de
-    // salvare deschidea și pe web tot lista de aplicații.
     it("la salvare descarcă fișierul, chiar dacă browserul știe să partajeze", async () => {
       const click = vi.fn();
       const anchor = { href: "", download: "", rel: "", click, remove: vi.fn() } as unknown as HTMLAnchorElement;
@@ -154,6 +152,7 @@ describe("backup Buget Familie", () => {
       await expect(downloadBackup(data())).resolves.toEqual({ how: "downloaded" });
       expect(share).not.toHaveBeenCalled();
       expect(click).toHaveBeenCalledOnce();
+      expect(native.saveBackupToDownloads).not.toHaveBeenCalled();
     });
 
     it("cade pe descărcarea clasică atunci când partajarea nu este disponibilă", async () => {
@@ -181,6 +180,7 @@ describe("backup Buget Familie", () => {
     });
   });
 });
+
 
 import { chooseFresherAppData, hashAppPayload, normalizeSavedAt, resolveHydrateMerge } from "./app-storage";
 
