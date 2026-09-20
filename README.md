@@ -108,7 +108,7 @@ Checklist pe telefon: `PLAY_CHECKLIST.md`.
 | Copie între telefoane | Da, prin export/import sau prin sesiunea de sincronizare Firebase în timp real. |
 | Sincronizare automată în timp real | Da, prin actualizări live Firestore cât aplicația rămâne deschisă pe cel puțin un telefon din sesiune; nu există serviciu de fundal cu aplicația închisă. |
 | Modificări simultane ale aceluiași plan | Fiecare telefon reunește automat, prin ID și marcaj de actualizare, orice pachet primit de la celelalte. Pentru două editări simultane ale acelorași plicuri sau realocări, verifică Planul pe ambele telefoane. |
-| Fotografii ale bonurilor | Maximum două pe bon, comprimate local și păstrate în IndexedDB pe telefon; migrarea din versiunile vechi păstrează poza veche până la confirmarea salvării locale. Fotografiile și cheile pei lor nu intră în pachetul sincronizat. |
+| Fotografii ale bonurilor | Maximum două pe bon, comprimate local și păstrate în IndexedDB pe telefon; migrarea din versiunile vechi păstrează poza veche până la confirmarea salvării locale. Fotografiile și cheile lor nu intră în pachetul sincronizat. |
 | Asistent LLM extern | Nu; GitHub Models a fost retras. Asistentul actual este local și explicabil. |
 | Plata unei rate | Confirmare manuală în aplicație; actualizează registrul și soldul datoriei, păstrând suma, sursa, data și statutul parțial/integral în istoric; nu trimite bani și nu poate accesa banca. |
 | Export PDF | Generat și descărcat local la cerere pentru bilanț sau planul calendaristic; datele nu sunt trimise unui serviciu extern. |
