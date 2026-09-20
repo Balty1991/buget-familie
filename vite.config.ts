@@ -5,7 +5,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
-import assembleHomeSecondary from "./vite-plugin-assemble-home-secondary.mjs";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -238,7 +237,7 @@ function vitePluginPreloadCriticalFonts(): Plugin {
 }
 
 export default defineConfig(({ command }) => {
-  const plugins = [assembleHomeSecondary(), react(), tailwindcss(), vitePluginPreloadCriticalFonts()];
+  const plugins = [react(), tailwindcss(), vitePluginPreloadCriticalFonts()];
   if (command === "serve") {
     plugins.push(jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy());
   }
