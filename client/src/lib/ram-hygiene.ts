@@ -17,6 +17,9 @@ async function loadDeferredStyleSheets() {
   await import("../visual-polish.css");
   await import("../apk-safe-area.css");
   await import("../display-fixes-pass.css");
+  // Modern pass MUST load after atelier/clarity (~1MB) or overrides vanish.
+  await import("../ui-modern-pass.css");
+  await import("../ui-modern-pass-aggressive.css");
 }
 
 /** PWA pe web; pe Capacitor Android/iOS fișierele sunt deja în pachet. */
