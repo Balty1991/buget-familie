@@ -20,6 +20,9 @@ async function loadDeferredStyleSheets() {
   // Modern pass MUST load after atelier/clarity (~1MB) or overrides vanish.
   await import("../ui-modern-pass.css");
   await import("../ui-modern-pass-aggressive.css");
+  await import("../ui-screens-modern-2026.css");
+  // Themes absolute LAST so atelier/clarity cannot override palettes.
+  await import("../ui-themes-modern-2026.css");
 }
 
 /** PWA pe web; pe Capacitor Android/iOS fișierele sunt deja în pachet. */
@@ -60,7 +63,7 @@ const idle = (fn: () => void, timeout: number) => {
   else window.setTimeout(fn, Math.min(timeout, 800));
 };
 
-/** Încarcă foile atelier pe idle, dar nu cât aplicația e în fundal. */
+/** Încară foile atelier pe idle, dar nu cât aplicația e în fundal. */
 export function scheduleDeferredStyles(idleMs: number): void {
   idle(() => {
     if (typeof document !== "undefined" && document.visibilityState === "hidden") {
