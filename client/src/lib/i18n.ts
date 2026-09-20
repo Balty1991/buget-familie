@@ -2658,6 +2658,8 @@ const en: Record<string, string> = {
   "Trimite o copie": "Send a copy",
   "„Salvează pe telefon” scrie fișierul în Documents, fără să deschidă nimic altceva. „Trimite o copie” deschide lista de aplicații, pentru Drive, WhatsApp sau alt telefon.": "“Save to this phone” writes the file to Documents and opens nothing else. “Send a copy” opens the app list, for Drive, WhatsApp or another phone.",
   "Telefonul nu a permis scrierea în Documents, așa că am deschis lista de aplicații. Alege Fișiere, Drive sau altă destinație.": "The phone would not allow writing to Documents, so the app list opened instead. Pick Files, Drive or another destination.",
+  "„Salvează pe telefon” scrie fișierul în Descărcări, fără să deschidă nimic altceva. „Trimite o copie” deschide lista de aplicații, pentru Drive, WhatsApp sau alt telefon.": "“Save to this phone” writes the file to Downloads and opens nothing else. “Send a copy” opens the app list, for Drive, WhatsApp or another phone.",
+  "Telefonul nu a permis scrierea în Descărcări, așa că am deschis lista de aplicații. Alege Fișiere, Drive sau altă destinație.": "The phone would not allow writing to Downloads, so the app list opened instead. Pick Files, Drive or another destination.",
   "Urmează {name} pe {date}: mai ai de strâns {amount}.": "{name} is coming on {date}: {amount} still to set aside.",
 };
 
