@@ -1,0 +1,60 @@
+/* fix(ui): linia mint de pe Analiză nu mai taie textul
+ *
+ * Cauză: redesign-major-mobile pune .bf-insights-header pe grid 2 coloane;
+ * ::before-ul mint din clarity-rebuild devine item de grid și, cu
+ * align-items:end, stă lângă blocul de text — taie subtitrarea
+ * ("explicație locală."). Păstrăm linia DE SUB subtitrare, cu spațiu clar.
+ * Doar ecranul Analiză — fără alte antete.
+ */
+
+html body .bf-app .bf-insights-header,
+html body .os-shell .bf-insights-header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  position: relative !important;
+}
+
+html body .bf-app .bf-insights-header > div,
+html body .os-shell .bf-insights-header > div {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+}
+
+html body .bf-app .bf-insights-header > span,
+html body .os-shell .bf-insights-header > span {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-self: start !important;
+}
+
+/* Accent mint sub subtitrare — niciodată peste text */
+html body .bf-app .bf-insights-header::before,
+html body .os-shell .bf-insights-header::before {
+  content: "" !important;
+  display: block !important;
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 34px !important;
+  max-width: 34px !important;
+  height: 4px !important;
+  margin: 14px 0 0 !important;
+  margin-bottom: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(
+    90deg,
+    var(--os-mint, var(--cf-primary, #7cffc4)),
+    var(--cf-info, var(--os-mint, #7cffc4))
+  ) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  align-self: start !important;
+  justify-self: start !important;
+}
