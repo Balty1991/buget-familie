@@ -26,6 +26,18 @@ const data = () => {
   return value;
 };
 
+/**
+ * Spionii se curăță înaintea fiecărui test, nu doar în blocul nativ: „pe web” verifică
+ * prin `not.toHaveBeenCalled()` că plugin-ul nu e atins, iar fără curățare vedea apelurile
+ * rămase de la testele de pe telefon și pica pe un cod corect.
+ */
+beforeEach(() => {
+  native.writeFile.mockReset();
+  native.stat.mockReset();
+  native.share.mockReset();
+  native.saveBackupToDownloads.mockReset();
+});
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe("backup Buget Familie", () => {
