@@ -53,8 +53,10 @@ Recomand **freemium fără reclame în ecranele financiare**. Un abonament pentr
 
 | Plan | Preț | Ce include |
 | --- | --- | --- |
-| **Casa** | 0 lei | Până la 4 plicuri, 1 membru, 1 telefon, Astăzi / Mișcări / Plan / scadențe, ghid local + 20 mesaje online/zi, export CSV și backup. |
+| **Casa** | 0 lei | Până la **10 plicuri**, 1 membru, 1 telefon, Astăzi / Mișcări / Plan / scadențe, ghid local + 20 mesaje online/zi, export CSV și backup. |
 | **Familia** | 19,99 lei/lună sau **149 lei/an** (14 zile de probă) | Plicuri nelimitate, până la 6 persoane, sync criptat AES-GCM, ghid online încăpător, OCR bonuri, PDF, feed familie. |
+
+> **Sursă de adevăr:** Casa = **10 plicuri** în `client/src/lib/entitlements.ts` (`PLANS.casa.envelopes`); strategia urmează codul, nu invers.
 
 Funcțiile de bază rămân gratuite. Nu blocăm niciodată accesul la datele deja introduse pentru că utilizatorul a anulat abonamentul.
 
