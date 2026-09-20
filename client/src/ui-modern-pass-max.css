@@ -1,0 +1,44 @@
+/* ui-modern-pass-max — FirstRun / Mai mult / Sync / sheets gaps (after aggressive) */
+html body .bf-first-run,
+html body .bf-onboarding.bf-setup {
+  padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+  gap: 16px !important;
+  border-radius: 1.35rem !important;
+}
+html body .bf-first-run-intents { display: grid !important; gap: 10px !important; }
+html body .bf-onboarding-actions { gap: 12px !important; margin-top: 10px !important; }
+html body .bf-app .bf-more-tabs,
+html body .os-shell .bf-more-tabs {
+  border: 0 !important; box-shadow: none !important; outline: none !important;
+  gap: 6px !important; padding: 4px !important; border-radius: 14px !important;
+  background: color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt, var(--cf-surface))) 92%, transparent) !important;
+}
+html body .bf-app .bf-more-tabs button.active,
+html body .bf-app .bf-more-tabs button[aria-selected="true"] {
+  border: 1px solid transparent !important;
+  color: var(--os-mint-fg, var(--cf-on-forest, #04140e)) !important;
+  background: var(--os-mint, var(--cf-primary, #7cffc4)) !important;
+  font-weight: 700 !important;
+}
+html body .bf-app .bf-sync,
+html body .os-shell .bf-sync,
+html body .bf-app .bf-settings > section,
+html body .bf-app .bf-household-card,
+html body .bf-app .bf-more-grid {
+  padding: 20px 18px !important; gap: 12px !important; border-radius: 1.15rem !important;
+}
+html body .bf-app .bf-plan-sheet,
+html body .bf-app .bf-journal-filter-sheet,
+html body .bf-app .bf-safe-spend-sheet,
+html body .bf-quick-entry,
+html body .bf-allocation-preview > div {
+  padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+  gap: 14px !important;
+}
+html body .bf-empty-state [aria-hidden="true"]:empty,
+html body .bf-allocation-empty [aria-hidden="true"]:empty { display: none !important; }
+html body .bf-app .bf-utilities-workspace,
+html body .os-shell .bf-utilities-workspace {
+  padding-bottom: var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 24px)) !important;
+  scroll-padding-bottom: var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 24px)) !important;
+}

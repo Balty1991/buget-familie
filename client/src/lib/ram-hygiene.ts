@@ -20,6 +20,7 @@ async function loadDeferredStyleSheets() {
   // Modern pass MUST load after atelier/clarity (~1MB) or overrides vanish.
   await import("../ui-modern-pass.css");
   await import("../ui-modern-pass-aggressive.css");
+  await import("../ui-modern-pass-max.css");
   await import("../ui-screens-modern-2026.css");
   // Themes absolute LAST so atelier/clarity cannot override palettes.
   await import("../ui-themes-modern-2026.css");
