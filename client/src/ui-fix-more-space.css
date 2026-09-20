@@ -1,0 +1,64 @@
+/* fix(ui): Mai mult — cardurile nu mai au gol uriaș jos
+ *
+ * Cauză: ui-screens-modern-2026 aplică pe .bf-more-grid același
+ * padding-bottom dock (calc(88px + safe-area + 28px)) ca pe pagina
+ * scroll (.bf-utilities-workspace). Cardurile-secțiune (ZILNIC /
+ * BANI / CASĂ) trebuie să îmbrățișeze lista, nu viewport-ul.
+ * Clearance-ul de dock rămâne doar pe containerul de pagină.
+ */
+
+/* ——— Carduri / grile: hug content ——— */
+html body .bf-app .bf-more-grid,
+html body .os-shell .bf-more-grid,
+html body .bf-app .bf-more-grid.bf-settings-group,
+html body .os-shell .bf-more-grid.bf-settings-group,
+html body .bf-app .bf-settings-group,
+html body .os-shell .bf-settings-group,
+html body .bf-app .bf-more-group,
+html body .os-shell .bf-more-group,
+html body .bf-app .bf-more-overview,
+html body .os-shell .bf-more-overview,
+html body .bf-app .bf-more-list,
+html body .os-shell .bf-more-list {
+  height: auto !important;
+  min-height: 0 !important;
+  flex-grow: 0 !important;
+  flex: 0 0 auto !important;
+  align-self: stretch !important;
+}
+
+/* Fără clearance dock pe card — doar spațiu mic după ultimul rând */
+html body .bf-app .bf-more-grid,
+html body .os-shell .bf-more-grid,
+html body .bf-app .bf-more-grid.bf-settings-group,
+html body .os-shell .bf-more-grid.bf-settings-group,
+html body .bf-app .bf-settings-group,
+html body .os-shell .bf-settings-group {
+  padding-bottom: 14px !important;
+  scroll-padding-bottom: 0 !important;
+}
+
+html body .bf-app .bf-more-group,
+html body .os-shell .bf-more-group,
+html body .bf-app .bf-more-overview,
+html body .os-shell .bf-more-overview,
+html body .bf-app .bf-more-list,
+html body .os-shell .bf-more-list {
+  padding-bottom: 0 !important;
+  scroll-padding-bottom: 0 !important;
+}
+
+/* ——— Dock clearance DOAR pe pagina scroll ——— */
+html body .bf-app .bf-page.bf-utilities-workspace,
+html body .os-shell .bf-page.bf-utilities-workspace,
+html body .bf-app .bf-utilities-workspace,
+html body .os-shell .bf-utilities-workspace {
+  padding-bottom: var(
+    --ui-scr-dock,
+    var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 28px))
+  ) !important;
+  scroll-padding-bottom: var(
+    --ui-scr-dock,
+    var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 28px))
+  ) !important;
+}
