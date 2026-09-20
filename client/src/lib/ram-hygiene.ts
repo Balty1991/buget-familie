@@ -63,7 +63,7 @@ const idle = (fn: () => void, timeout: number) => {
   else window.setTimeout(fn, Math.min(timeout, 800));
 };
 
-/** Încară foile atelier pe idle, dar nu cât aplicația e în fundal. */
+/** Încarcă foile atelier pe idle, dar nu cât aplicația e în fundal. */
 export function scheduleDeferredStyles(idleMs: number): void {
   idle(() => {
     if (typeof document !== "undefined" && document.visibilityState === "hidden") {
