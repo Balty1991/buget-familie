@@ -4,6 +4,8 @@
 
 Text gata de lipit în Play Console. **Fără upload fals în store.** Plățile (Play Billing) și App Check Enforce rămân afară. **Nu lipi prețuri IAP cât timp `BILLING_LIVE = false`.**
 
+**Versiune pentru listing (sept 2026):** `1.1.45` / `versionCode` **47** (`package.json` + `android/app/build.gradle`).
+
 ## Identitate
 
 | Câmp | Valoare |
@@ -19,10 +21,10 @@ Text gata de lipit în Play Console. **Fără upload fals în store.** Plățile
 ## Descriere scurtă (≤80 caractere)
 
 ```
-Cât poți cheltui azi, până la salariu. Plicuri de familie, fără bancă.
+Plicuri pe ciclu de salariu, sync familie criptat — fără login bancar.
 ```
 
-(70 caractere cu spații)
+(72 caractere cu spații)
 
 ## Descriere completă
 
@@ -47,14 +49,16 @@ Aplicația nu plătește facturi, nu investește și nu înlocuiește un consult
 
 ## Feature bullets (Play „Despre această aplicație” / highlight)
 
-1. Plicuri pe ciclu salarial, nu doar pe lună calendaristică
-2. Sync familie criptat AES-GCM, fără cont bancar
-3. Bon → De verificat → registru (poze doar pe telefon)
-4. Import CSV bănci RO + dedupe
-5. Un număr clar pe Astăzi: ce poți cheltui azi
-6. Conflict onest pe plicuri și mișcări (nu LWW tăcut pe bani)
-7. Widget rapid Cheltuială / Bon (fără sume pe ecranul de acasă)
-8. PIN local opțional; backup export/import
+1. Plicuri pe **ciclul vostru de salariu** (nu doar luna calendar) + tranșe săptămânale
+2. Fără login bancar — date pe telefon; sync familie opțional, AES-GCM
+3. Un număr clar pe Astăzi: ce poți cheltui azi, fără să strici perioada
+4. El și ea: până la 6 membri, cine a scos din ce plic
+5. Bon → De verificat → registru (poze doar pe telefon; OCR local)
+6. Import CSV bănci RO + dedupe (fără OAuth bancar)
+7. Conflict onest pe plicuri și mișcări (nu LWW tăcut pe bani)
+8. Widget / dală rapidă + PIN local + backup export/import
+
+> Catalog Casa/Familia există în app; **nu** afișa prețuri IAP pe store până `BILLING_LIVE=true` (vezi `BILLING_PLAY_PREP.md`, `ROADMAP_PLAY_2026.md`).
 
 ## Listă capturi (screenshot shot list)
 
