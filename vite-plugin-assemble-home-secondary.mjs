@@ -1,7 +1,6 @@
 /**
- * Asamblează client/src/pages/home-secondary.tsx din părțile din
- * client/src/pages/home-secondary.parts/*.txt (ordonate).
- * Necesar după un push MCP care nu poate urca fișierul monolit (~170KB).
+ * Asamblează home-secondary.tsx din părți base64 (MCP-safe) din
+ * client/src/pages/home-secondary.parts/*.b64
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -13,9 +12,10 @@ const partsDir = path.resolve(root, "../client/src/pages/home-secondary.parts");
 
 function assemble() {
   if (!fs.existsSync(partsDir)) return null;
-  const files = fs.readdirSync(partsDir).filter((f) => f.endsWith(".txt")).sort();
+  const files = fs.readdirSync(partsDir).filter((f) => f.endsWith(".b64")).sort();
   if (!files.length) return null;
-  return files.map((f) => fs.readFileSync(path.join(partsDir, f), "utf8")).join("");
+  const b64 = files.map((f) => fs.readFileSync(path.join(partsDir, f), "utf8").trim()).join("");
+  return Buffer.from(b64, "base64").toString("utf8");
 }
 
 export default function assembleHomeSecondary() {
@@ -25,8 +25,7 @@ export default function assembleHomeSecondary() {
     load(id) {
       const normalized = id.split("?")[0];
       if (normalized !== page && !normalized.endsWith("/pages/home-secondary.tsx")) return null;
-      const code = assemble();
-      return code;
+      return assemble();
     },
   };
 }
