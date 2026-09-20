@@ -1,74 +1,57 @@
 # UI modern pass — 2026-09-20
 
-## Ce s-a schimbat
+## De ce pass 1–2 aproape nu se vedeau
 
-Strat CSS aditiv, importat din `client/src/main.tsx`:
+`main.tsx` importa `ui-modern-pass.css` **înainte** de foile deferred (~1 MB: `deferred-atelier.css` → clarity/atelier/…).  
+`scheduleDeferredStyles` / `loadDeferredStyleSheets` din `client/src/lib/ram-hygiene.ts` le încărca **după** first paint și le **suprascria** pe ale noastre.
 
-- `client/src/ui-modern-pass.css` — stub `@import`
-- `ui-modern-pass-a1.css` / `a2.css` — tipografie erou, dock, empty states, safe-area
-- `ui-modern-pass-b1.css` / `b2.css` — **Plan feed** (spacing, filled CTA, anti-glow, sans H2 mobil)
-- `ui-modern-pass-c1.css` / `c2.css` — **Pass 2**: Astăzi hero + header + dock refine; Mișcări / Obligații / Analiză (același sistem ca Plan)
+**Remediu (acest commit):** la finalul `loadDeferredStyleSheets`:
 
-### Tipografie erou
-- Sume erou (`.os-amount`, `.bf-today-situation-number strong`) mai mari pe mobil
-- `tabular-nums` + tracking strâns
-- **Pass 2**: mai mult aer sub kicker → sumă → hint; label-uri mai puțin „cramped” (letter-spacing / opacitate)
+1. `await import("../ui-modern-pass.css");`
+2. `await import("../ui-modern-pass-aggressive.css");` ← **ultimul** CSS din lanțul deferred
 
-### Spațiere carduri (general + Plan + shell) — feedback screenshot dark
-- Line-height body ≈ **1.5–1.55**
-- Pași **12–16px** între kicker → titlu → paragraf → CTA
-- Padding card ≈ **18–20px** (mobil); gap vertical între secțiuni **16–18px**
-- Liste simulare: **12px** între rânduri; footer CTA cu gap 12px
+Pass-urile a1–c2 rămân utile ca bază; **vizibilitatea reală** vine din `ui-modern-pass-aggressive.css` încărcat ultima oară.
 
-### Plan feed (screenshot dark — prioritate)
-- **Anti-înghesuit**: grid pe hero/simulator/simulation headings; note cu aer
-- **CTA filled**: `.bf-plan-simulator-action` / `.bf-secondary.bf-plan-simulator-action` + primary din simulare — mint solid, pill, min 48px (nu outline)
-- **Anti-neon**: `--cf-glow: transparent`; fără blur/glow violet; bordură subtilă + umbră de elevație
-- **H2 mobil**: Outfit / IBM Plex Sans, weight 600–650 — seriful greu rămâne pe brand/hero, nu pe feed-ul dens
+## Fișiere
 
-### Pass 2 — Astăzi / header / dock / Mișcări·Obligații·Analiză
-- **Astăzi hero** (`.os-hero`, `.bf-today-situation`): aer în jurul numărului de decizie; ierarhie kicker → amount → hint; tabular nums
-- **Header** (`.os-appbar`, `.os-brand`, `.os-tool`): fără chrome „old web”; hit targets ≥46px; fără backdrop blur
-- **Dock** (`.os-dock`): activ mint filled + umbră ușoară; labels 10px/650; safe-area Capacitor
-- **Mișcări / Obligații / Analiză**: același pad/gap/LH ca Plan; CTA filled (`.bf-movement-add`, `.bf-primary`); sans H1/H2 pe mobil
-- **Dark aurora/navy/cyber/dark**: elevație prin umbră + bordură mint subtilă — **nu** violet bloom; coral doar pe `.risk` / timeline obligații
+- `client/src/ui-modern-pass.css` — stub `@import` a1…c2 (early + re-import deferred)
+- `ui-modern-pass-a1…c2.css` — Pass 1–2 (prea slabe vs deferred; păstrate)
+- **`client/src/ui-modern-pass-aggressive.css`** — bug fix + modernizare vizibilă
+- `client/src/lib/ram-hygiene.ts` — import modern + aggressive **după** display-fixes-pass
 
-### Dock / empty / focus / motion / safe-area
-- Dock ≥44–50px, activ clar
-- Empty geometric CSS (`.bf-empty-state`, `.bf-allocation-empty`, `.bf-today-empty-activity`)
-- Focus-visible + contrast layer *cu* `contrast-fix.css`
-- Enter scurt; `prefers-reduced-motion`
-- Safe-area Capacitor (`capacitor-android` / `is-android-standalone`)
+## Aggressive pass — ce rezolvă (vizibil)
 
-## Cum verifici (telefon / GitHub Pages)
+1. **P0 dock overlap** — `padding-bottom: calc(88px + safe-area + 24px)` pe main / Plan / Mișcări / Obligații / Analiză / utilities; filtrele („Acțiune”, „De la”) nu mai sunt sub dock
+2. **Pătrat gri empty** — ascunde `::before` din empty/allocation; SVG `EnvelopeEmptyArt` / `.bf-envelope-empty-art` static, nu absolute pe cutie goală
+3. **Tab-uri segment** (Istoric/Gospodărie/Asistent, Lună/Ciclu, pace) — activ = mint fill, **fără** bordură groasă deschisă
+4. **Glow dock/card** — `--cf-glow: transparent`; umbră negru ~8–32%, zero violet/albastru pe dock
+5. **Aer carduri** — pad ~22px; gap copy 12px; gap CTA 16px; LH ≥1.55
+6. **CTA filled mint** — primary + plan simulator actions, pill, text închis
+7. **H2 mobil sans** — Outfit / IBM Plex Sans, weight 600, ≤640px
+8. **Dock activ** — pill mint 48px, nu blob uriaș
+9. **Light Alb/Atelier** (`theme-ink` / `theme-white`) — aceleași reguli, umbră paper
 
-1. Hard refresh Pages (vezi mai jos), temă **dark**, tab **Astăzi** → apoi **Mișcări** / **Obligații** / **Analiză** / **Plan**.
-2. Astăzi: sumă erou cu aer; label-uri nu „lipite”; tabular.
-3. Header: 3 tool-uri rotunde, tap ușor; fără blur/glow.
-4. Dock: tab activ mint plin; labels lizibile; safe-area pe Android.
-5. Mișcări/Obligații/Analiză: carduri respiră; CTA „Adaugă” / primary = **plin** mint.
-6. Aurora/cyber: fără halou violet; coral doar pe alert/risk.
-7. 5 teme + reduce motion.
+## Cum verifici
 
-### Hard refresh pe GitHub Pages
-- Chrome Android: meniu → **Șterge datele de navigare** pentru site *sau* deschide în tab Incognito; apoi tragere în jos + așteaptă rebuild Pages (~1–2 min după push).
-- iOS Safari: ține apăsat refresh → **Reload Without Content Blockers** / golește cache site; sau Private.
-- Desktop: `Ctrl+Shift+R` / `Cmd+Shift+R` pe URL-ul Pages.
-- Dacă SW blochează: DevTools → Application → Service Workers → **Unregister**, apoi hard refresh.
+1. Hard refresh Pages / Incognito (SW unregister dacă e nevoie). Așteaptă deferred (~6–10 s pe device, sau idle după reveal).
+2. **Plan**: scroll până la filtre — „Acțiune” / „De la” **deasupra** dock-ului.
+3. Plan empty plicuri: **fără** pătrat gri; art SVG sau doar text.
+4. Tab-uri segment: activ mint plin, fără outline alb gros.
+5. Dock: fără bară/glow albastru-violet sub Astăzi; activ mint.
+6. Temă **Alb** + dark: carduri respiră; CTA plin.
 
-## Visual QA rămas
-- [ ] Plan landscape / tabletă
-- [ ] Aurora/cyber: mint filled pe fundal saturat
-- [ ] Regresie flags plic
-- [ ] Deferred atelier vs acest strat pe selectori rari
-- [ ] Obligații timeline pe ecran foarte îngust (<370px)
+### Hard refresh GitHub Pages
+- Android Chrome: Incognito sau șterge date site → pull-to-refresh după rebuild (~1–2 min).
+- iOS: Private / reload fără blockers.
+- Desktop: Ctrl/Cmd+Shift+R; Application → Unregister SW.
 
 ## Neatinse
-- `clarity-rebuild.css` — nerescris (doar override)
+- `clarity-rebuild.css` — nerescris (override din urmă)
 - `Home.tsx` — fără rewrite
-- `BILLING_LIVE` — `false`
-- `PLAY_*` docs — neatins
+- `BILLING_LIVE` / billing — `false`
+- Soft `d1/d2` secondary surfaces — amânate; deferred-last e prioritatea
 
-## Commits cheie
-- stub + a1/a2/b1/b2 pe `main` (Pass 1)
-- c1/c2 + stub import + docs (Pass 2 — Astăzi / header / Mișcări·Obligații·Analiză)
+## Commits
+- Pass 1–2 stub a/b/c (slabe vs deferred — documentat)
+- `feat(ui): modernizare agresivă — override după deferred + dock/empty/tab-uri` (ram-hygiene last imports)
+- `feat(ui): modernizare agresivă — CSS override vizibil + docs deferred-last`
