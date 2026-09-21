@@ -43,9 +43,25 @@ jobs:
           keyAlias=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
           keyPassword=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
           EOF
+      # Aceeași pază ca la APK: o descărcare de Gradle picată nu e o problemă a aplicației.
+      - name: Pregătește Gradle cu reîncercări
+        run: |
+          cat > "$HOME/gradle-cu-reincercari.sh" <<'SCRIPT'
+          gradle_cu_reincercari() {
+            for incercare in 1 2 3; do
+              if ./gradlew "$@"; then return 0; fi
+              echo "::warning::Gradle a picat (încercarea $incercare). Curăț distribuția și reîncerc."
+              rm -rf "$HOME/.gradle/wrapper/dists"
+              sleep $((incercare * 20))
+            done
+            echo "::error::Gradle a picat de trei ori la rând."
+            return 1
+          }
+          SCRIPT
+          echo "BASH_ENV=$HOME/gradle-cu-reincercari.sh" >> "$GITHUB_ENV"
       - name: Construiește AAB-ul semnat
         working-directory: android
-        run: ./gradlew bundleRelease
+        run: gradle_cu_reincercari bundleRelease
       - name: Șterge keystore-ul de pe runner
         if: always()
         working-directory: android/app

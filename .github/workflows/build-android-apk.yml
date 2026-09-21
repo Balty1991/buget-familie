@@ -31,6 +31,28 @@ jobs:
           java-version: "21"
       # Numele fișierului urmează versiunea din pachet. Scris de mână, rămânea în urmă:
       # un APK cu 1.1.44 înăuntru se descărca numit „1.1.39”, deci nu se știa ce s-a instalat.
+      # Descărcarea distribuției Gradle a picat cu 504 de la GitHub, iar buildul s-a oprit
+      # acolo: nimic din aplicație nu era greșit, doar rețeaua altcuiva. Încercăm de trei
+      # ori, ștergând arhiva pe jumătate descărcată între încercări — altfel a doua
+      # încercare ar reciti exact fișierul stricat.
+      - name: Pregătește Gradle cu reîncercări
+        run: |
+          cat >> "$GITHUB_ENV" <<'MEDIU'
+          GRADLE_OPTS=-Dorg.gradle.internal.http.connectionTimeout=120000 -Dorg.gradle.internal.http.socketTimeout=120000
+          MEDIU
+          cat > "$HOME/gradle-cu-reincercari.sh" <<'SCRIPT'
+          gradle_cu_reincercari() {
+            for incercare in 1 2 3; do
+              if ./gradlew "$@"; then return 0; fi
+              echo "::warning::Gradle a picat (încercarea $incercare). Curăț distribuția și reîncerc."
+              rm -rf "$HOME/.gradle/wrapper/dists"
+              sleep $((incercare * 20))
+            done
+            echo "::error::Gradle a picat de trei ori la rând."
+            return 1
+          }
+          SCRIPT
+          echo "BASH_ENV=$HOME/gradle-cu-reincercari.sh" >> "$GITHUB_ENV"
       - name: Află versiunea aplicației
         id: versiune
         run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
@@ -39,7 +61,7 @@ jobs:
         env:
           VERSIUNE: ${{ steps.versiune.outputs.value }}
         run: |
-          ./gradlew assembleDebug
+          gradle_cu_reincercari assembleDebug
           ls -la app/build/outputs/apk/debug
           apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -n 1)"
           cp "$apk" "app/build/outputs/apk/debug/Buget-Familie-$VERSIUNE.apk"
