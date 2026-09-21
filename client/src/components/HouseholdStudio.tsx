@@ -9,6 +9,7 @@ import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection, type SubscriptionDetection } from "@/lib/household-insights";
 import { countLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
+import { SettleUpCard } from "@/components/SettleUpCard";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
@@ -41,6 +42,8 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   };
   return (
     <div className="bf-household">
+      {/* Scăderea pe care o aștepta orice casă cu doi oameni. */}
+      <SettleUpCard data={data} onChange={onChange} />
       <section className={`bf-household-recap bf-statement ${recap.tone}`}>
         <div>
           <p className="bf-kicker">{t("RITUALUL LUNII")}</p>
