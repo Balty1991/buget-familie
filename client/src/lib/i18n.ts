@@ -2654,6 +2654,7 @@ const en: Record<string, string> = {
   "{name} · {date} · {amount} de strâns": "{name} · {date} · {amount} to set aside",
   "Crăciun, Paște, aniversări — cu costul lor": "Christmas, Easter, birthdays — with their cost",
   "Evenimente viitoare și costul lor": "Upcoming events and what they cost",
+  "Ciclul s-a încheiat pe {date} — pornește ciclul nou ca să-ți spun din nou ritmul zilei.": "The cycle ended on {date} — start the new one and I can give you the daily pace again.",
   " Scadențele rezervate ({amount}) rămân deoparte.": " The reserved bills ({amount}) stay out of it.",
   "după cum ai împărțit și până acum": "the way you have split it so far",
   "după cheltuielile tale din ultimele 90 de zile": "based on what you spent over the last 90 days",

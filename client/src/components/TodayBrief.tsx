@@ -50,7 +50,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
             <p className="bf-kicker">{t("REPER PENTRU AZI")}</p>
             <strong>{brief.hasPayday ? money(brief.spendable) : t("Setează venitul")}</strong>
           </span>
-          <p>{brief.hasPayday ? t("{reason} Este un reper din plan, nu un sold separat.", { reason: brief.reason }) : brief.reason}</p>
+          <p>{brief.hasPayday && !brief.expired ? t("{reason} Este un reper din plan, nu un sold separat.", { reason: brief.reason }) : brief.reason}</p>
         </button>
       )}
 

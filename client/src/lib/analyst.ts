@@ -19,6 +19,8 @@ import {
   isoDate,
   isoToday,
   pendingRecurringInPlan,
+  planEndDate,
+  planExpired,
   planForecast,
   sourceBalance,
   type AppData,
@@ -345,6 +347,7 @@ function answerBiggest(data: AppData, folded: string, asOf: string): AnalystAnsw
 }
 
 function answerAfford(data: AppData, folded: string, asOf: string): AnalystAnswer {
+  if (planExpired(data.settings.salaryPlan, asOf)) return answerCycleEnded(data, "afford");
   const amount = firstAmount(folded);
   const forecast = planForecast(data, asOf);
   const free = round(forecast.projectedRemaining);
@@ -402,7 +405,23 @@ function answerAfford(data: AppData, folded: string, asOf: string): AnalystAnswe
   };
 }
 
+/**
+ * Răspunsul pe care îl dă un ciclu expirat: niciunul din cifre, fiindcă toate s-ar calcula
+ * pe zile care au trecut. „Poți cheltui 1.900 pe zi până pe 14 sept.” era cel mai periculos
+ * lucru pe care îl putea spune aplicația — un ritm uriaș, sprijinit pe o fereastră moartă.
+ */
+function answerCycleEnded(data: AppData, kind: string): AnalystAnswer {
+  const end = planEndDate(data.settings.salaryPlan);
+  return {
+    kind,
+    headline: sentences(`Ciclul s-a încheiat pe ${formatDate(end)}, deci n-am pe ce zile să calculez`),
+    detail: "Spune-mi când vine următorul venit — „salariul vine pe 9 octombrie” — sau deschide Plan, și îți dau iar ritmul zilei și tranșele.",
+    followUps: ["Cum stau cu banii?", "Ce cheltuieli am avut luna asta?"],
+  };
+}
+
 function answerPace(data: AppData, asOf: string): AnalystAnswer {
+  if (planExpired(data.settings.salaryPlan, asOf)) return answerCycleEnded(data, "pace");
   const forecast = planForecast(data, asOf);
   const payday = nextPaydayOf(data);
   if (!payday) {
@@ -500,6 +519,7 @@ function answerSavings(data: AppData): AnalystAnswer {
 }
 
 function answerPayday(data: AppData, asOf: string): AnalystAnswer {
+  if (planExpired(data.settings.salaryPlan, asOf)) return answerCycleEnded(data, "payday");
   const plan = data.settings.salaryPlan;
   const payday = plan.nextPayday || plan.earliestPayday;
   if (!payday) return { kind: "payday", headline: "Nu ai stabilit data următorului venit." };

@@ -16,6 +16,7 @@ import {
   newId,
   pendingRecurringInPlan,
   planEndDate,
+  planExpired,
   planCoverEndDate,
   planForecast,
   weeklySummary,
@@ -419,6 +420,8 @@ export type TodayBrief = {
   spendable: number;
   remainingDays: number;
   hasPayday: boolean;
+  /** Ciclul s-a încheiat și nu a fost reînnoit: cifra zilei nu mai are pe ce sta. */
+  expired: boolean;
   reason: string;
   dues: TodayDue[];
   hunts: SubscriptionDetection[];
@@ -433,6 +436,8 @@ export type TodayBrief = {
  */
 export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const hasPayday = Boolean(data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday);
+  /** Un plan expirat nu mai are ce ritm să dea: cifra corectă e zero, iar motivul e altul. */
+  const expired = planExpired(data.settings.salaryPlan, asOf);
   const forecast = planForecast(data, asOf);
   const safe = liquidSafeToSpend(data, asOf);
   const remainingDays = Math.max(1, forecast.remainingDays);
@@ -440,10 +445,12 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const fromLiquid = Math.max(0, safe.available / remainingDays);
   const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
   const fromWeek = rhythm.hasWeekly ? Math.max(0, rhythm.todayLeft) : undefined;
-  const spendable = hasPayday ? Math.max(0, Math.min(fromWeek ?? fromPace, fromLiquid, safe.available)) : 0;
+  const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromPace, fromLiquid, safe.available)) : 0;
   const reason = !hasPayday
     ? t("Setează următorul venit ca să calculăm cât poți cheltui azi.")
-    : spendable <= 0
+    : expired
+      ? t("Ciclul s-a încheiat pe {date} — pornește ciclul nou ca să-ți spun din nou ritmul zilei.", { date: formatDate(planEndDate(data.settings.salaryPlan)) })
+      : spendable <= 0
       ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
       : fromWeek != null
         ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: Math.round(fromWeek), available: Math.round(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
@@ -481,6 +488,7 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
     spendable,
     remainingDays,
     hasPayday,
+    expired,
     reason,
     dues,
     hunts: detectSubscriptions(data, asOf).slice(0, 2),
