@@ -862,9 +862,11 @@ export default function Home() {
      */
     if (change.kind === "funds") {
       const sources = current.settings.paymentSources;
-      const target = (change.sourceHint ? sources.find((item) => item.kind === change.sourceHint) : undefined) || sources[0];
+      const target = sources.find((item) => item.id === change.sourceId)
+        || (change.sourceHint ? sources.find((item) => item.kind === change.sourceHint) : undefined)
+        || sources[0];
       // Aceeași scriere ca la verificarea soldului: diferența intră în registru, nu pe ascuns.
-      return target ? applyDeclaredBalance(current, target.id, change.amount) : current;
+      return target ? applyDeclaredBalance(current, target.id, change.amount, change.date || isoToday()) : current;
     }
     if (change.kind === "allocation-delete") {
       const plan = current.settings.salaryPlan;

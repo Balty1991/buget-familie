@@ -53,7 +53,7 @@ export type FinancialUpdate =
   | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
   | { kind: "allocation-delete"; label: string }
   /** Banii pe care omul spune că îi are: ajung sold de pornire pe o sursă, nu venit în registru. */
-  | { kind: "funds"; amount: number; sourceHint?: "cash" | "card" | "meal" }
+  | { kind: "funds"; amount: number; sourceHint?: "cash" | "card" | "meal"; sourceId?: string; date?: string }
   | { kind: "payday"; date: string; flexDays: number }
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string }
   /** Bani puși deoparte pentru un eveniment: o socoteală de planificare, fără mișcare în registru. */

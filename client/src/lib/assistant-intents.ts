@@ -37,7 +37,7 @@ export type AssistantIntent =
    * Banii pe care omul spune că îi are acum: „am un buget de 1800”, „am 1800 în card”.
    * Nu e un venit încasat azi și nu e o cheltuială — e soldul din care se face planul.
    */
-  | { kind: "funds"; amount: number; sourceHint?: string }
+  | { kind: "funds"; amount: number; sourceHint?: string; /** Sursa aleasă de om din propunere, când a atins una. */ sourceId?: string; date?: string }
   /**
    * Mutare între două plicuri existente: „mută 100 din transport în alimente”. Numele
    * vin în cuvintele omului; aplicația le caută printre plicurile lui și renunță la
