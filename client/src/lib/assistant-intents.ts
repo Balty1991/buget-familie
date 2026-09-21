@@ -48,7 +48,24 @@ export type AssistantIntent =
   | { kind: "event-contribution"; name: string; amount: number; date?: string }
   /** O scadență cunoscută, plătită: „am plătit chiria”. Suma o știe aplicația, nu modelul. */
   | { kind: "due-paid"; name: string; date?: string }
+  /** Deschide un ecran al aplicației. Nu scrie nimic — doar duce omul acolo unde se face. */
+  | { kind: "open"; screen: AppScreen }
+  /**
+   * Corectarea unei mișcări deja trecute. Registrul nu pleacă de pe telefon: modelul spune
+   * doar ce a spus omul — titlu, sumă, zi, sau „ultima” — iar potrivirea cu rândul real se
+   * face aici, local. Niciun id de mișcare nu circulă.
+   */
+  | { kind: "transaction-delete"; title?: string; amount?: number; date?: string; last?: boolean }
+  | { kind: "transaction-amend"; amount: number; title?: string; was?: number; date?: string; last?: boolean }
+  /** „De fiecare dată când scriu Lidl, pune-l pe Alimente.” */
+  | { kind: "merchant-rule"; match: string; category?: string; envelope?: string }
+  /** „Din fiecare salariu pune 20% la economii.” Se aplică la venitul următor, nu acum. */
+  | { kind: "salary-rule"; envelope: string; mode: "percent" | "fixed"; value: number; label?: string }
   | { kind: "payday"; date: string; flexDays: number };
+
+/** Ecranele la care poate trimite ghidul. Aceleași nume ca în bara de jos a aplicației. */
+export const APP_SCREENS = ["today", "journal", "plan", "obligations", "goals", "habits", "calendar", "insights", "utilities"] as const;
+export type AppScreen = (typeof APP_SCREENS)[number];
 
 export type ParsedIntent = { intent: AssistantIntent; segment: string };
 
@@ -882,6 +899,48 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
     case "due-paid": {
       const name = text(item.name, 60) || text(item.label, 60);
       return name ? { kind: "due-paid", name, date: isoDay(item.date) } : undefined;
+    }
+    case "open": {
+      const screen = text(item.screen, 20) || text(item.view, 20) || text(item.name, 20);
+      const found = APP_SCREENS.find((value) => value === fold(screen || ""));
+      return found ? { kind: "open", screen: found } : undefined;
+    }
+    /**
+     * O ștergere fără niciun semn ar putea nimeri orice rând din registru. Cerem cel
+     * puțin un lucru după care se poate căuta; potrivirea o face telefonul, cu mișcările
+     * lui în față, nu modelul.
+     */
+    case "transaction-delete": {
+      const title = text(item.title, 80) || text(item.name, 80);
+      const amount = num(item.amount, { min: 0.01 });
+      const date = isoDay(item.date);
+      const last = item.last === true;
+      if (!title && !amount && !date && !last) return undefined;
+      return { kind: "transaction-delete", title, amount, date, last: last || undefined };
+    }
+    case "transaction-amend": {
+      const amount = num(item.amount, { min: 0.01 });
+      if (!amount) return undefined;
+      const title = text(item.title, 80) || text(item.name, 80);
+      const was = num(item.was, { min: 0.01 });
+      const date = isoDay(item.date);
+      const last = item.last === true;
+      if (!title && !was && !date && !last) return undefined;
+      return { kind: "transaction-amend", amount, title, was, date, last: last || undefined };
+    }
+    case "merchant-rule": {
+      const match = text(item.match, 40) || text(item.title, 40) || text(item.name, 40);
+      const category = text(item.category, 60);
+      const envelope = text(item.envelope, 60) || text(item.label, 60);
+      if (!match || match.length < 3 || (!category && !envelope)) return undefined;
+      return { kind: "merchant-rule", match, category, envelope };
+    }
+    case "salary-rule": {
+      const envelope = text(item.envelope, 60) || text(item.label, 60);
+      const mode = item.mode === "percent" ? "percent" as const : item.mode === "fixed" ? "fixed" as const : undefined;
+      const value = num(item.value, { min: 0.01, max: mode === "percent" ? 100 : Number.MAX_SAFE_INTEGER }) ?? num(item.amount, { min: 0.01 });
+      if (!envelope || !mode || !value) return undefined;
+      return { kind: "salary-rule", envelope, mode, value, label: text(item.ruleLabel, 60) };
     }
     case "payday": {
       const date = isoDay(item.date);

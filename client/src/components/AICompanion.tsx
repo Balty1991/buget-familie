@@ -5,7 +5,7 @@ import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 import { getLocale, t } from "@/lib/i18n";
-import { parseModelIntents, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
+import { parseModelIntents, type AppScreen, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText } from "@/lib/analyst";
 import { dominantReceiptCategory, looksLikeProductSearch } from "@/lib/product-catalog";
@@ -29,6 +29,7 @@ import {
   matchEnvelope,
   matchPlannedEvent,
   matchRecurring,
+  matchTransaction,
   resolveIntents,
   rememberExpense,
   parsePayday,
@@ -58,7 +59,7 @@ export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
 export type { FinancialUpdate } from "@/lib/understand";
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void; initiallyOpen?: boolean };
-type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "plan" | "journal" | "insights" | "apply" | "catalog"; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
+type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "apply" | "catalog" | MainView; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
 type ChatAttachment = { name: string; mimeType: string; data: string };
 type PendingReceiptDraft = { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
@@ -350,6 +351,25 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
       if (!event) return undefined;
       return { kind: "event-contribution", eventId: event.id, name: event.name, amount: intent.amount, date: intent.date || isoToday() };
     }
+    case "open": return undefined; // nu scrie nimic în registru: se deschide un ecran
+    case "transaction-delete": {
+      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.amount, date: intent.date }) : undefined;
+      return found ? { kind: "delete-transaction", id: found.id, title: found.title, amount: found.amount } : undefined;
+    }
+    case "transaction-amend": {
+      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.was, date: intent.date }) : undefined;
+      return found ? { kind: "amend-transaction", id: found.id, amount: intent.amount, title: found.title, was: found.amount } : undefined;
+    }
+    case "merchant-rule": {
+      const envelope = data && intent.envelope ? matchEnvelope(data, intent.envelope) : undefined;
+      if (!intent.category && !envelope) return undefined;
+      return { kind: "merchant-rule", match: intent.match, category: intent.category, allocationId: envelope?.id, envelopeLabel: envelope?.label };
+    }
+    case "salary-rule": {
+      const envelope = data ? matchEnvelope(data, intent.envelope) : undefined;
+      if (!envelope) return undefined;
+      return { kind: "salary-rule", allocationId: envelope.id, label: intent.label || envelope.label, mode: intent.mode, value: intent.value };
+    }
     case "due-paid": {
       const due = data ? matchRecurring(data, intent.name) : undefined;
       if (!due || !data) return undefined;
@@ -377,6 +397,19 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
  * lipsește tocmai lucrul pe care îl decizi acolo — din ce plic se scad banii.
  * `buildExpenseOffer` alege locurile cu bani; omul atinge săptămâna.
  */
+/** Numele ecranelor, exact cum le vede omul în aplicație. */
+const SCREEN_NAMES: Record<AppScreen, string> = {
+  today: "Astăzi",
+  journal: "Mișcări",
+  plan: "Plan",
+  obligations: "Obligații",
+  goals: "Obiective",
+  habits: "Obiceiuri",
+  calendar: "Calendar",
+  insights: "Analiză",
+  utilities: "Mai mult",
+};
+
 function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): string {
   switch (intent.kind) {
     case "expense": {
@@ -440,6 +473,31 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
       return due
         ? `scadența „${due.name}”, ${money(due.amount)} — o trec ca plătită`
         : `scadența „${intent.name}” — nu o găsesc printre plățile tale recurente`;
+    }
+    case "open": return `deschid ecranul ${SCREEN_NAMES[intent.screen]}`;
+    /**
+     * La o corectare se scrie rândul găsit, nu ce a spus omul: „50 lei” poate fi oricare
+     * dintre trei cafele. Dacă pe ecran scrie ziua și titlul exact, confirmarea e informată.
+     */
+    case "transaction-delete": {
+      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.amount, date: intent.date }) : undefined;
+      return found
+        ? `șterge mișcarea „${found.title}” · ${money(found.amount)} · ${formatDate(found.date)}`
+        : `șterge mișcarea „${intent.title || ""}” — nu o găsesc în registru`;
+    }
+    case "transaction-amend": {
+      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.was, date: intent.date }) : undefined;
+      return found
+        ? `corectează „${found.title}” · ${formatDate(found.date)}: ${money(found.amount)} → ${money(intent.amount)}`
+        : `corectează „${intent.title || ""}” — nu găsesc mișcarea`;
+    }
+    case "merchant-rule": {
+      const unde = intent.envelope ? `plicul „${intent.envelope}”` : `categoria ${intent.category}`;
+      return `regulă: de fiecare dată când scrie „${intent.match}”, propun ${unde}`;
+    }
+    case "salary-rule": {
+      const cat = intent.mode === "percent" ? `${intent.value}%` : money(intent.value);
+      return `din fiecare venit, ${cat} merg în plicul „${intent.envelope}” — se aplică la venitul următor`;
     }
   }
 }
@@ -703,7 +761,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       return;
     }
     if (item.action.type === "add") onAdd();
-    else onGo(item.action.type);
+    else onGo(item.action.type as MainView);
     setOpen(false);
   };
   const offerSpend = (proposal: { text: string; choices: ChatChoice[] }) => {
@@ -819,6 +877,20 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
         return true;
       }
       const intents = reading.intents.map((item) => item.intent);
+      /**
+       * „Deschide-mi Planul” nu se confirmă, se face. Un ecran nu scrie nimic în registru,
+       * deci n-are ce căuta într-o propunere cu buton de salvare — ar fi arătat „Confirmă”
+       * pentru ceva ce nu se salvează.
+       */
+      const doarEcran = intents.length === 1 && intents[0].kind === "open" ? intents[0] : undefined;
+      if (doarEcran && doarEcran.kind === "open") {
+        addMessage({
+          role: "assistant",
+          text: t("Deschid „{screen}”.", { screen: SCREEN_NAMES[doarEcran.screen] }),
+          action: { type: doarEcran.screen, label: t("Deschide „{screen}”", { screen: SCREEN_NAMES[doarEcran.screen] }) },
+        });
+        return true;
+      }
       resetSpendDraft();
       addMessage({
         role: "assistant",

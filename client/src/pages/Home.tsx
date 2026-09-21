@@ -794,6 +794,34 @@ export default function Home() {
       return { ...current, settings: { ...current.settings, plannedEvents: next } };
     }
     /**
+     * O regulă de magazin cerută prin asistent: „de fiecare dată când scriu Lidl, pune-l pe
+     * Alimente”. Regula nu scrie nimic singură — la următoarea cheltuială propune, iar omul
+     * confirmă. Același text nu se dublează: se actualizează regula existentă.
+     */
+    if (change.kind === "merchant-rule") {
+      const rules = current.settings.merchantRules || [];
+      const key = change.match.toLocaleLowerCase("ro-RO").trim();
+      const existing = rules.find((item) => item.match.toLocaleLowerCase("ro-RO").trim() === key);
+      const next = existing
+        ? rules.map((item) => item.id === existing.id ? { ...item, category: change.category || item.category, allocationId: change.allocationId || item.allocationId, updatedAt: now } : item)
+        : [...rules, { id: newId("merchant-rule"), match: change.match, category: change.category, allocationId: change.allocationId, updatedAt: now }];
+      return { ...current, settings: { ...current.settings, merchantRules: next.slice(0, 60) } };
+    }
+    /**
+     * Repartizarea automată a venitului: „din fiecare salariu pune 20% la economii”. Se
+     * aplică la venitul următor, nu la banii de acum — de aceea nu atinge nimic aici.
+     */
+    if (change.kind === "salary-rule") {
+      const plan = current.settings.salaryPlan;
+      if (!plan.allocations.some((item) => item.id === change.allocationId)) return current;
+      const rules = plan.salaryAllocationRules || [];
+      const existing = rules.find((item) => item.allocationId === change.allocationId && item.mode === change.mode);
+      const next = existing
+        ? rules.map((item) => item.id === existing.id ? { ...item, label: change.label, value: change.value, active: true, updatedAt: now } : item)
+        : [...rules, { id: newId("salary-rule"), label: change.label, allocationId: change.allocationId, mode: change.mode, value: change.value, active: true, updatedAt: now }];
+      return { ...current, settings: { ...current.settings, salaryPlan: { ...plan, salaryAllocationRules: next.slice(0, 24), updatedAt: now } } };
+    }
+    /**
      * Bani puși deoparte pentru un eveniment, cerut prin asistent. Nu e transfer și nu e
      * cheltuială: surse și registru rămân neatinse, se schimbă doar cât s-a strâns pentru
      * ziua aceea din calendar. Un eveniment care nu există nu se creează aici — asistentul

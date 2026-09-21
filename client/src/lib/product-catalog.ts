@@ -549,6 +549,13 @@ export function looksLikeProductSearch(raw: string): boolean {
    */
   if (/\b(azi|maine|ieri|acum|luna|lunar|saptamana|anul|asta|astea|gata|inca|deja|iar|tot)\b/.test(folded)) return false;
   if (/\b(bani|banii|buget|plan|planul|sold|cont|card|cash|rest|restul|ramas|casa|chirie|rata|datorie|obiectiv|eveniment|craciun|paste|aniversare|vacanta|scadenta)\b/.test(folded)) return false;
+  /**
+   * Un nume de produs e un substantiv, nu o propoziție cu degetul arătat: „scoate de acolo
+   * cafeaua aia” pleca la catalog, deci ghidul nu apuca să-l citească. Cuvintele care arată
+   * spre ceva și verbele de comandă nu apar niciodată într-un nume de produs.
+   */
+  if (/\b(acolo|aici|aia|ala|asta|astea|aceea|acela|ceva|cumva|nimic|orice|mie|imi|mi-?l|mi-?o)\b/.test(folded)) return false;
+  if (/\b(scoate|scot|baga|bag|lasa|las|vezi|uita|uite|arata|zi|spune|schimba|corecteaza|anuleaza|treci|trece|tine|repara|fa|fa-?mi|da-?mi)\b/.test(folded)) return false;
   const words = folded.split(/\s+/).filter(Boolean);
   return words.length > 0 && words.length <= 5;
 }

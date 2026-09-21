@@ -151,9 +151,13 @@ describe("catalogul de produse", () => {
     expect(looksLikeProductSearch("mai am bani de benzina")).toBe(false);
     expect(looksLikeProductSearch("cum stau cu planul")).toBe(false);
     expect(looksLikeProductSearch("pregatiri de craciun")).toBe(false);
+    expect(looksLikeProductSearch("scoate de acolo cafeaua aia")).toBe(false);
+    expect(looksLikeProductSearch("schimba suma")).toBe(false);
     // Dar numele rămân nume.
     expect(looksLikeProductSearch("lapte Napolact")).toBe(true);
     expect(looksLikeProductSearch("ciocolata cu lapte")).toBe(true);
+    expect(looksLikeProductSearch("Kinder Bueno")).toBe(true);
+    expect(looksLikeProductSearch("hartie igienica Zewa")).toBe(true);
   });
 });
 

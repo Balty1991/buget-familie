@@ -436,3 +436,29 @@ describe("împarte banii cum spune omul", () => {
     expect(plicuri("imparte-mi 1800 in plicuri")).toEqual([]);
   });
 });
+
+/**
+ * Ecranele aplicației au nume, iar omul le folosește. „Deschide-mi planul” nu e nimic de
+ * înțeles despre bani — e o cerere de navigare, și trebuie să ducă acolo.
+ */
+describe("du-mă la ecranul cerut", () => {
+  const ecran = (text: string) => {
+    const winner = decide(understand(text, house(), { asOf: "2026-09-11" })).winner;
+    if (!winner || winner.kind !== "intents") return undefined;
+    const intent = winner.intents[0].intent;
+    return intent.kind === "open" ? intent.screen : undefined;
+  };
+
+  it("recunoaște ecranele după numele lor", () => {
+    expect(ecran("deschide-mi planul")).toBe("plan");
+    expect(ecran("du-ma la miscari")).toBe("journal");
+    expect(ecran("mergi la analiza")).toBe("insights");
+    expect(ecran("deschide calendarul")).toBe("calendar");
+    expect(ecran("deschide setarile")).toBe("utilities");
+  });
+
+  it("o întrebare despre bani rămâne întrebare, nu navigare", () => {
+    expect(ecran("cât mai am în plicul de alimente?")).toBeUndefined();
+    expect(ecran("arată-mi cât am cheltuit luna asta")).toBeUndefined();
+  });
+});

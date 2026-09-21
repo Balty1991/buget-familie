@@ -53,6 +53,35 @@ describe("ce spune modelul se leagă de registru sau se spune pe față", () => 
     expect(missing.join(" ")).toMatch(/Vacanța/);
   });
 
+  it("găsește mișcarea din cuvintele omului, fără ca jurnalul să plece de pe telefon", () => {
+    const data = house();
+    data.transactions = [
+      { id: "tx-1", title: "Cafea", amount: 12, kind: "expense", category: "Băuturi", source: "Card", sourceId: "card", person: "Eu", memberId: data.settings.members[0].id, date: "2026-09-20" },
+      { id: "tx-2", title: "Lidl", amount: 50, kind: "expense", category: "Alimente", source: "Card", sourceId: "card", person: "Eu", memberId: data.settings.members[0].id, date: "2026-09-19" },
+    ];
+    expect(read([{ kind: "transaction-delete", title: "cafea" }], data).missing).toEqual([]);
+    expect(read([{ kind: "transaction-delete", last: true }], data).kept).toHaveLength(1);
+    expect(read([{ kind: "transaction-amend", amount: 60, was: 50 }], data).kept).toHaveLength(1);
+  });
+
+  it("o mișcare care nu există se spune, nu se șterge altceva în loc", () => {
+    const { kept, missing } = read([{ kind: "transaction-delete", title: "Dentist" }]);
+    expect(kept).toEqual([]);
+    expect(missing.join(" ")).toMatch(/Dentist/);
+  });
+
+  it("repartizarea automată cere un plic real", () => {
+    expect(read([{ kind: "salary-rule", envelope: "alimente", mode: "percent", value: 20 }]).kept[0].intent)
+      .toMatchObject({ kind: "salary-rule", envelope: "Alimente", mode: "percent", value: 20 });
+    expect(read([{ kind: "salary-rule", envelope: "Pisici", mode: "fixed", value: 100 }]).kept).toEqual([]);
+  });
+
+  it("o regulă de magazin cu categorie trece și fără plic", () => {
+    const { kept, missing } = read([{ kind: "merchant-rule", match: "Lidl", category: "Alimente", envelope: "Pisici" }]);
+    expect(missing).toEqual([]);
+    expect(kept[0].intent).toMatchObject({ kind: "merchant-rule", match: "Lidl", category: "Alimente", envelope: undefined });
+  });
+
   it("ce nu se leagă de nimic existent trece neatins", () => {
     const { kept, missing } = read([{ kind: "expense", amount: 50, category: "Alimente", title: "Lidl" }]);
     expect(missing).toEqual([]);

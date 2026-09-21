@@ -39,7 +39,7 @@ import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
 import { spendGroupOf } from "./product-catalog";
-import { explicitSplitLines, extractAmounts, extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } from "./assistant-intents";
+import { explicitSplitLines, extractAmounts, extractDates, parseAssistantMessage, repeatFactor, type AppScreen, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
@@ -58,6 +58,10 @@ export type FinancialUpdate =
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string }
   /** Bani puși deoparte pentru un eveniment: o socoteală de planificare, fără mișcare în registru. */
   | { kind: "event-contribution"; eventId: string; name: string; amount: number; date: string }
+  /** Regulă de magazin: de fiecare dată când titlul conține textul, propune categoria/plicul. */
+  | { kind: "merchant-rule"; match: string; category?: string; allocationId?: string; envelopeLabel?: string }
+  /** Repartizare automată din venitul următor, nu din banii de acum. */
+  | { kind: "salary-rule"; allocationId: string; label: string; mode: "percent" | "fixed"; value: number }
   | { kind: "delete-transaction"; id: string; title: string; amount: number }
   | { kind: "amend-transaction"; id: string; amount: number; title: string; was: number };
 
@@ -273,6 +277,30 @@ const nameMatches = (label: string, token: string) => {
 export const matchPlannedEvent = (data: AppData, token: string) =>
   (data.settings.plannedEvents || []).find((item) => nameMatches(item.name, token));
 
+/**
+ * Mișcarea despre care vorbește omul, căutată în registrul de pe telefon.
+ *
+ * Nimic din ce identifică un rând nu pleacă la model: el spune „cafeaua de ieri, 12 lei”,
+ * iar potrivirea se face aici, cu registrul în față. Când mai multe rânduri se potrivesc,
+ * câștigă cel mai recent — și se scrie în propunere exact care, ca omul să vadă ce confirmă.
+ */
+export function matchTransaction(data: AppData, hint: { title?: string; amount?: number; date?: string }) {
+  const key = hint.title ? habitKey(hint.title) : "";
+  const candidates = data.transactions.filter((item) => {
+    if (hint.date && item.date !== hint.date) return false;
+    if (hint.amount !== undefined && Math.abs(item.amount - hint.amount) > 0.005) return false;
+    if (key.length >= 3) {
+      const hay = habitKey(`${item.title} ${item.category}`);
+      if (!hay.includes(key) && !key.includes(hay)) return false;
+    }
+    return true;
+  });
+  return candidates.sort((left, right) =>
+    right.date.localeCompare(left.date)
+    || Date.parse(right.createdAt || "") - Date.parse(left.createdAt || "")
+  )[0];
+}
+
 export const matchRecurring = (data: AppData, token: string) =>
   data.recurring.filter((item) => item.active !== false).find((item) => nameMatches(item.name, token));
 
@@ -429,6 +457,40 @@ export function transferProposal(raw: string, data: AppData): { text: string; ch
 }
 
 /**
+ * „Deschide-mi Planul.”
+ *
+ * Ecranele aplicației au nume, iar omul le folosește. Până acum, o cerere de navigare
+ * nu însemna nimic pentru ghid: mesajul pleca la model sau cădea în gol, deși nu e nimic
+ * de înțeles acolo. Verbele acceptate sunt doar cele care chiar cer o deschidere —
+ * „arată-mi cât am cheltuit” rămâne o întrebare cu răspuns, nu un ecran.
+ */
+const OPEN_VERB = /\b(deschide|deschide-?mi|deschidemi|du-?ma la|duma la|mergi la|mergem la|intra in|hai la|navigheaza la)\b/;
+const SCREEN_WORDS: Array<[AppScreen, RegExp]> = [
+  ["plan", /\bplan(ul|ului)?\b|\bplicuri(le)?\b/],
+  ["journal", /\bmiscari(le)?\b|\bjurnal(ul|e)?\b|\bregistru(l)?\b|\bcheltuieli(le)?\b/],
+  ["insights", /\banaliz[ae]\b|\brapoarte(le)?\b|\bstatistici(le)?\b/],
+  ["obligations", /\bobligatii(le)?\b|\bscadente(le)?\b|\bdatorii(le)?\b|\brate(le)?\b/],
+  ["goals", /\bobiective(le)?\b|\beconomii(le)?\b/],
+  ["habits", /\bobiceiuri(le)?\b/],
+  ["calendar", /\bcalendar(ul)?\b|\bevenimente(le)?\b/],
+  ["utilities", /\bsetari(le)?\b|\bmai mult\b|\bunelte(le)?\b|\bbackup\b|\bsincroniz/],
+  ["today", /\bastazi\b|\becranul principal\b|\bacasa\b|\bpagina de start\b/],
+];
+
+function openReading(raw: string): Reading | undefined {
+  const folded = foldRo(raw);
+  if (!OPEN_VERB.test(folded)) return undefined;
+  const found = SCREEN_WORDS.find(([, pattern]) => pattern.test(folded));
+  if (!found) return undefined;
+  return {
+    kind: "intents",
+    score: BASE.intents,
+    why: "cere deschiderea unui ecran",
+    intents: [{ intent: { kind: "open", screen: found[0] }, segment: raw }],
+  };
+}
+
+/**
  * Ce spune modelul despre lucruri care există deja în aplicație — un plic, un eveniment,
  * o scadență — trebuie să se lege de ele, nu să sune bine.
  *
@@ -460,6 +522,33 @@ export function resolveIntents(intents: ParsedIntent[], data: AppData): { kept: 
         continue;
       }
       kept.push({ ...parsed, intent: { ...intent, name: event.name } });
+      continue;
+    }
+    if (intent.kind === "transaction-delete" || intent.kind === "transaction-amend") {
+      const found = matchTransaction(data, { title: intent.title, amount: intent.kind === "transaction-delete" ? intent.amount : intent.was, date: intent.date });
+      if (!found) {
+        missing.push(t("mișcarea „{name}”", { name: intent.title || money(intent.kind === "transaction-delete" ? intent.amount || 0 : intent.was || intent.amount) }));
+        continue;
+      }
+      kept.push(parsed);
+      continue;
+    }
+    if (intent.kind === "salary-rule") {
+      const envelope = matchEnvelope(data, intent.envelope);
+      if (!envelope) {
+        missing.push(t("plicul „{name}”", { name: intent.envelope }));
+        continue;
+      }
+      kept.push({ ...parsed, intent: { ...intent, envelope: envelope.label } });
+      continue;
+    }
+    if (intent.kind === "merchant-rule") {
+      const envelope = intent.envelope ? matchEnvelope(data, intent.envelope) : undefined;
+      if (intent.envelope && !envelope && !intent.category) {
+        missing.push(t("plicul „{name}”", { name: intent.envelope }));
+        continue;
+      }
+      kept.push({ ...parsed, intent: { ...intent, envelope: envelope?.label } });
       continue;
     }
     if (intent.kind === "due-paid") {
@@ -773,12 +862,14 @@ export function planWarningFor(intents: ParsedIntent[], data: AppData): string |
 /** Sumele pe care o intenție chiar le folosește; restul rămân necitite. */
 const intentAmounts = (intent: ParsedIntent["intent"]): number[] => {
   switch (intent.kind) {
-    case "expense": case "income": case "recurring": case "funds": case "transfer": case "event-contribution": return [intent.amount];
+    case "expense": case "income": case "recurring": case "funds": case "transfer": case "event-contribution": case "transaction-amend": return [intent.amount];
     case "envelope": return [intent.amount, ...(intent.weeklyLimit ? [intent.weeklyLimit] : [])];
     case "debt": return [intent.remaining, ...(intent.monthly ? [intent.monthly] : [])];
     case "goal": return [intent.target, ...(intent.current ? [intent.current] : [])];
     case "planned-event": return intent.estimate ? [intent.estimate] : [];
-    case "payday": case "envelope-delete": case "due-paid": return [];
+    case "payday": case "envelope-delete": case "due-paid": case "open": case "merchant-rule": return [];
+    case "transaction-delete": return intent.amount ? [intent.amount] : [];
+    case "salary-rule": return intent.mode === "fixed" ? [intent.value] : [];
   }
 };
 
@@ -852,6 +943,9 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
     const partial = readings.find((item) => item.kind === "intents");
     if (partial) partial.soft = true;
   }
+
+  const goTo = openReading(raw);
+  if (goTo) readings.push(goTo);
 
   const answer = analyze(raw, data, ctx.asOf);
   if (answer) readings.push({ kind: "question", score: BASE.question, why: "are formă de întrebare despre bani", answer, ...(guessy ? { soft: true as const } : {}) });

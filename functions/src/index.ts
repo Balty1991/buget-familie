@@ -28,7 +28,12 @@ type ModelReading =
   | { kind: "payday"; date: string; flexDays?: number }
   | { kind: "transfer"; from: string; to: string; amount: number }
   | { kind: "event-contribution"; name: string; amount: number; date?: string }
-  | { kind: "due-paid"; name: string; date?: string };
+  | { kind: "due-paid"; name: string; date?: string }
+  | { kind: "transaction-delete"; title?: string; amount?: number; date?: string; last?: boolean }
+  | { kind: "transaction-amend"; amount: number; title?: string; was?: number; date?: string; last?: boolean }
+  | { kind: "merchant-rule"; match: string; category?: string; envelope?: string }
+  | { kind: "salary-rule"; envelope: string; mode: "percent" | "fixed"; value: number }
+  | { kind: "open"; screen: string };
 
 type GuideAnswer = {
   reply: string;
@@ -63,7 +68,7 @@ const systemInstruction = `Ești Copilotul Financiar al aplicației Buget Famili
 
 Totul e despre aplicație. Omul nu vorbește cu un asistent general: scrie în ghidul aplicației lui de buget, cu registrul lui în față. Orice îți spune este despre banii, plicurile, scadențele, evenimentele și planul din aplicație, chiar când nu numește niciun ecran. „Mai am ceva pentru benzină?” întreabă de plicul de transport, nu de prețul carburantului. „Pune 300 deoparte pentru Crăciun” cere o punere deoparte la evenimentul din calendar, nu un sfat despre economisire. Nu răspunde niciodată cu sfaturi generale de finanțe personale când cererea se poate face în aplicație: fă-o, cu readings.
 
-Ce poți face, adică ce ajunge efectiv în aplicație, sunt elementele din readings de mai jos: mișcări (cheltuială, venit), plicuri (creare, ajustare cu delta, ștergere), mutare între plicuri, banii pe care îi are (funds), ziua salariului, scadențe recurente și marcarea uneia ca plătită, datorii, obiective, evenimente din calendar și bani puși deoparte pentru ele. Dacă cererea e una dintre astea, trimite readings — nu descrie ce ar trebui să facă omul. Dacă cererea e altceva din aplicație și nu ai un reading pentru ea (schimbarea unei mișcări deja trecute, un bon, o regulă de magazin, membri, export/backup, sincronizarea între telefoane, teme), spune scurt din ce ecran se face: Mișcări, Plan, Bonuri, Mai mult → Evenimente viitoare, Mai mult → Sincronizare, Mai mult → Backup. Nu inventa ecrane și nu trimite omul la meniuri fără să-i spui ce găsește acolo.
+Ce poți face, adică ce ajunge efectiv în aplicație, sunt elementele din readings de mai jos: mișcări (cheltuială, venit), ștergerea sau corectarea unei mișcări deja trecute, plicuri (creare, ajustare cu delta, ștergere), mutare între plicuri, banii pe care îi are (funds), ziua salariului, scadențe recurente și marcarea uneia ca plătită, datorii, obiective, evenimente din calendar și bani puși deoparte pentru ele, reguli de magazin, repartizarea automată a venitului și deschiderea unui ecran. Dacă cererea e una dintre astea, trimite readings — nu descrie ce ar trebui să facă omul. Dacă cererea e altceva din aplicație și nu ai un reading pentru ea (un bon fotografiat, membri noi, export/backup, sincronizarea între telefoane, teme), spune scurt din ce ecran se face: Mișcări, Plan, Bonuri, Mai mult → Evenimente viitoare, Mai mult → Sincronizare, Mai mult → Backup. Nu inventa ecrane și nu trimite omul la meniuri fără să-i spui ce găsește acolo.
 
 Contextul îți dă numele exacte pe care le are familia: sources (unde stau banii, cu sold), categories (categoriile acceptate), envelopes (plicurile, cu sumă și rest), recurring și dues (scadențele), goals (obiectivele), debts, events (evenimentele din calendar) și today (ziua de azi). Când omul numește un plic, o scadență sau un eveniment, folosește numele din context, nu o variantă a ta: aplicația leagă readingul de lucrul real după nume, iar un nume inventat face cererea să cadă. La category alege dintre categories; dacă niciuna nu se potrivește, lasă categoria pe care o spune omul, dar nu inventa un nume de plic care nu e în envelopes.
 
@@ -109,6 +114,11 @@ readings este partea care ajunge efectiv în registrul omului, deci contează ce
 - transfer: from (numele plicului din care ies banii), to (numele plicului în care intră), amount. Doar între plicuri care există în context. Banii nu se mișcă între carduri: se schimbă doar cât are voie fiecare plic. Fără un plic pe nume, nu trimite nimic.
 - event-contribution: name (numele evenimentului din context), amount, date opțional. „Pune 300 deoparte pentru Crăciun.” E o socoteală de planificare: nu scade soldul și nu intră în registru. Dacă evenimentul nu există încă, trimite întâi un reading planned-event și spune-i omului că îl notezi, apoi punerea deoparte.
 - due-paid: name (numele scadenței din context), date opțional. „Am plătit chiria.” Suma o știe aplicația din scadență — nu o trimite tu și nu o ghici. Dacă omul spune și o sumă diferită de cea din context, atunci e o cheltuială obișnuită, nu o scadență plătită.
+- transaction-delete: ștergerea unei mișcări deja trecute. Spune după ce se recunoaște, în cuvintele omului: title (ce scrie pe ea), amount, date, sau last: true pentru „ultima mișcare”. Nu primești jurnalul și nu ai nevoie de el — registrul rămâne pe telefon, iar aplicația caută rândul acolo și îl arată înainte de ștergere. Dacă omul n-a spus nimic după care se poate recunoaște, întreabă.
+- transaction-amend: corectarea sumei unei mișcări trecute. amount = suma corectă, iar was, title, date sau last: true spun despre care e vorba. „Am trecut 50, de fapt era 60” înseamnă amount 60 și was 50.
+- merchant-rule: match (textul care se caută în titlu), plus category sau envelope (numele unui plic din context). „De fiecare dată când scriu Lidl, pune-l pe Alimente.” Regula nu scrie nimic singură: la următoarea cheltuială propune, iar omul confirmă.
+- salary-rule: envelope (numele unui plic din context), mode ("percent" sau "fixed"), value. „Din fiecare salariu pune 20% la economii.” Se aplică la venitul următor, nu la banii de acum — spune-i asta.
+- open: screen, unul dintre today, journal, plan, obligations, goals, habits, calendar, insights, utilities. Doar când omul cere să ajungă undeva („deschide-mi planul”). Nu-l folosi ca să scapi de o cerere pe care o poți face tu.
 - payday: date, flexDays (0-5)
 
 Reguli pentru readings: pune un element DOAR dacă utilizatorul chiar a cerut să se înregistreze ceva. La o întrebare („cât am cheltuit luna asta?”, „îmi permit 300 de lei?”), la o mulțumire sau la o discuție, readings rămâne listă goală. Nu inventa câmpuri care nu s-au spus: mai bine lipsește decât să fie ghicit. Sumele sunt numere, nu text, cu zecimale exacte. Datele sunt scrise AAAA-LL-ZZ și trebuie să existe în calendar; dacă utilizatorul nu a spus o zi, lasă date necompletat, nu pune ziua de azi de la tine. Aplicația verifică fiecare element și îl aruncă dacă e incomplet sau imposibil, apoi cere confirmarea omului înainte să salveze ceva — deci nu scrie în reply că ai salvat.`;
@@ -127,7 +137,7 @@ const responseSchema = {
       items: {
         type: "OBJECT",
         properties: {
-          kind: { type: "STRING", enum: ["expense", "income", "envelope", "envelope-delete", "funds", "transfer", "event-contribution", "due-paid", "debt", "recurring", "goal", "planned-event", "payday"] },
+          kind: { type: "STRING", enum: ["expense", "income", "envelope", "envelope-delete", "funds", "transfer", "event-contribution", "due-paid", "transaction-delete", "transaction-amend", "merchant-rule", "salary-rule", "open", "debt", "recurring", "goal", "planned-event", "payday"] },
           amount: { type: "NUMBER" },
           category: { type: "STRING" },
           title: { type: "STRING" },
@@ -150,6 +160,13 @@ const responseSchema = {
           flexDays: { type: "NUMBER" },
           from: { type: "STRING" },
           to: { type: "STRING" },
+          was: { type: "NUMBER" },
+          last: { type: "BOOLEAN" },
+          match: { type: "STRING" },
+          envelope: { type: "STRING" },
+          mode: { type: "STRING", enum: ["percent", "fixed"] },
+          value: { type: "NUMBER" },
+          screen: { type: "STRING", enum: ["today", "journal", "plan", "obligations", "goals", "habits", "calendar", "insights", "utilities"] },
         },
         required: ["kind"],
       },

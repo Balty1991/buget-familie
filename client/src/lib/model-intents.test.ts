@@ -200,3 +200,45 @@ describe("lucrurile care se leagă de registru", () => {
       .toEqual([{ kind: "due-paid", name: "Chirie", date: undefined }]);
   });
 });
+
+/**
+ * Corecturi, reguli și navigare — lucrurile pe care modelul le putea doar povesti.
+ * Registrul nu pleacă de pe telefon: mișcarea se descrie în cuvintele omului, iar
+ * potrivirea cu rândul real se face local.
+ */
+describe("corecturi, reguli, ecrane", () => {
+  it("citește o ștergere descrisă în cuvintele omului", () => {
+    expect(read([{ kind: "transaction-delete", title: "cafea", amount: 12, date: "2026-09-10" }])[0])
+      .toEqual({ kind: "transaction-delete", title: "cafea", amount: 12, date: "2026-09-10", last: undefined });
+    expect(read([{ kind: "transaction-delete", last: true }])[0]).toMatchObject({ kind: "transaction-delete", last: true });
+  });
+
+  it("nu șterge la întâmplare: fără niciun semn, cererea cade", () => {
+    expect(read([{ kind: "transaction-delete" }])).toEqual([]);
+  });
+
+  it("citește o corectare de sumă", () => {
+    expect(read([{ kind: "transaction-amend", amount: 60, was: 50, title: "Lidl" }])[0])
+      .toMatchObject({ kind: "transaction-amend", amount: 60, was: 50, title: "Lidl" });
+    // Fără suma corectă nu există corectare.
+    expect(read([{ kind: "transaction-amend", was: 50 }])).toEqual([]);
+  });
+
+  it("citește o regulă de magazin, dar nu una fără destinație", () => {
+    expect(read([{ kind: "merchant-rule", match: "Lidl", category: "Alimente" }])[0])
+      .toMatchObject({ kind: "merchant-rule", match: "Lidl", category: "Alimente" });
+    expect(read([{ kind: "merchant-rule", match: "Lidl" }])).toEqual([]);
+  });
+
+  it("citește o repartizare automată a venitului", () => {
+    expect(read([{ kind: "salary-rule", envelope: "Economii", mode: "percent", value: 20 }])[0])
+      .toMatchObject({ kind: "salary-rule", envelope: "Economii", mode: "percent", value: 20 });
+    // Procentul nu trece de 100.
+    expect(read([{ kind: "salary-rule", envelope: "Economii", mode: "percent", value: 140 }])).toEqual([]);
+  });
+
+  it("citește doar ecrane care există", () => {
+    expect(read([{ kind: "open", screen: "plan" }])[0]).toEqual({ kind: "open", screen: "plan" });
+    expect(read([{ kind: "open", screen: "bitcoin" }])).toEqual([]);
+  });
+});
