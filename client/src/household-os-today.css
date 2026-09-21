@@ -1146,6 +1146,42 @@ html:not(.dark) .bf-os-decide {
 .bf-brief-hunt-confirm footer { display: flex; gap: 8px; }
 .bf-brief-hunt-confirm footer button { flex: 1; min-height: 42px; }
 
+/* Verificarea soldului: o întrebare, un răspuns, fără drumuri prin meniuri */
+.bf-brief-check {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--cf-line, #e2dfd6);
+  border-left: 3px solid var(--cf-primary, #185849);
+  border-radius: 12px;
+  background: var(--cf-surface, #fffefa);
+}
+.bf-brief-check > b { font-size: 14px; color: var(--cf-ink, #173f36); }
+.bf-brief-check > small { color: var(--cf-muted, #6c7f77); font-size: 12px; line-height: 1.45; }
+.bf-brief-check-row { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+.bf-brief-check-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--cf-line, #e2dfd6);
+  background: var(--cf-surface, #fff);
+  color: var(--cf-ink, #173f36);
+}
+.bf-brief-check-row button { min-height: 42px; white-space: nowrap; }
+.bf-brief-check-later {
+  justify-self: start;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--cf-muted, #6c7f77);
+  font-size: 12px;
+  text-decoration: underline;
+}
+
 /* Digest săptămânal */
 .bf-week-digest {
   display: grid;

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
+import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
+import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
 import { recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
 import { getLocale, t } from "@/lib/i18n";
 
@@ -42,6 +43,30 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
     if (!result.error) onChange(result.data);
   };
 
+  /**
+   * Verificarea soldului. Se întreabă pe rând, o sursă o dată, fiindcă răspunsul cere
+   * omului să se uite în bancă sau în portofel — o listă lungă ar fi închisă din prima.
+   */
+  const [lastCheck, setLastCheck] = useState<string | null>(() => readLastBalanceCheck());
+  const [checkedNow, setCheckedNow] = useState<string[]>([]);
+  const [draft, setDraft] = useState("");
+  const check = balanceCheckDue(data, lastCheck);
+  const deVerificat = check.rows.filter((item) => !checkedNow.includes(item.id));
+  const acum = deVerificat[0];
+  const inchideVerificarea = () => {
+    markBalanceChecked();
+    setLastCheck(isoToday());
+    setCheckedNow([]);
+    setDraft("");
+  };
+  const raspunde = (row: BalanceCheckRow, spus: string) => {
+    const valoare = spus.trim() ? parseRomanianAmount(spus) : undefined;
+    if (valoare !== undefined && Number.isFinite(valoare) && valoare >= 0) onChange(applyDeclaredBalance(data, row.id, valoare));
+    setDraft("");
+    if (deVerificat.length <= 1) inchideVerificarea();
+    else setCheckedNow((current) => [...current, row.id]);
+  };
+
   return (
     <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
       {!hideSpendStamp && (
@@ -66,6 +91,26 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
           <b>{t("Setează ritualul de salariu")}</b>
           <small>{t("Când înregistrezi venitul, plicurile se umplu după regulile tale.")}</small>
         </button>
+      )}
+
+      {check.due && acum && !simpleMode && (
+        <div className="bf-brief-check">
+          <b>{t("Cât ai de fapt pe „{name}”?", { name: acum.name })}</b>
+          <small>{t("Eu zic {amount}. {why}", { amount: money(acum.balance), why: check.why })}</small>
+          <div className="bf-brief-check-row">
+            <input
+              inputMode="decimal"
+              aria-label={t("Soldul real de pe „{name}”", { name: acum.name })}
+              placeholder={String(acum.balance)}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+            />
+            <button type="button" className="bf-primary" onClick={() => raspunde(acum, draft)}>
+              {draft.trim() ? t("Salvez diferența") : t("Așa e")}
+            </button>
+          </div>
+          <button type="button" className="bf-brief-check-later" onClick={inchideVerificarea}>{t("Mai târziu")}</button>
+        </div>
       )}
 
       {brief.dues.length > 0 && (

@@ -7,6 +7,7 @@ import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock
 import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
+import { applyDeclaredBalance } from "@/lib/balance-check";
 import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
@@ -862,27 +863,8 @@ export default function Home() {
     if (change.kind === "funds") {
       const sources = current.settings.paymentSources;
       const target = (change.sourceHint ? sources.find((item) => item.kind === change.sourceHint) : undefined) || sources[0];
-      if (!target) return current;
-      const diferenta = Math.round((change.amount - sourceBalance(current, target.id)) * 100) / 100;
-      if (Math.abs(diferenta) < 0.005) return current;
-      const urcare = diferenta > 0;
-      const persoana = current.settings.members.find((item) => item.id === target.memberId) || member || current.settings.members[0];
-      const miscare: Transaction = {
-        id: newId("guided-funds"),
-        title: urcare ? t("Bani disponibili") : t("Corecție de sold"),
-        amount: Math.abs(diferenta),
-        kind: urcare ? "income" : "expense",
-        category: urcare ? "Venit" : "Altele",
-        sourceId: target.id,
-        source: target.name,
-        memberId: persoana?.id,
-        person: persoana?.name || "",
-        date: isoToday(),
-        allocationId: urcare ? undefined : "outside",
-        note: t("Bani declarați în ghid — soldul sursei ajunge la cât ai spus."),
-        createdAt: now,
-      };
-      return { ...current, transactions: [miscare, ...current.transactions] };
+      // Aceeași scriere ca la verificarea soldului: diferența intră în registru, nu pe ascuns.
+      return target ? applyDeclaredBalance(current, target.id, change.amount) : current;
     }
     if (change.kind === "allocation-delete") {
       const plan = current.settings.salaryPlan;
