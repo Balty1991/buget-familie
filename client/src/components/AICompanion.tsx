@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, ChevronUp, CircleCheck, FileText, Lightbulb, Paperclip, Send, Trash2, WalletCards, X } from "lucide-react";
-import { newId, expenseCategories, formatDate, isoToday, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
+import { newId, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
 import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
@@ -26,6 +26,10 @@ import {
   memberIdFor,
   planWarningFor,
   planWeeks,
+  matchEnvelope,
+  matchPlannedEvent,
+  matchRecurring,
+  resolveIntents,
   rememberExpense,
   parsePayday,
   parseWeeks,
@@ -311,7 +315,12 @@ export const pickFundsSource = (data: AppData, hint?: string) => {
   return sources[0];
 };
 
-function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): FinancialUpdate {
+/**
+ * Intenția, tradusă în lucrul pe care aplicația îl face. Întoarce `undefined` când
+ * intenția vorbește despre ceva ce nu există în registru — un plic, un eveniment sau o
+ * scadență pe care nu le găsim — ca să nu ajungă în propunere un buton care nu face nimic.
+ */
+function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): FinancialUpdate | undefined {
   switch (intent.kind) {
     case "expense": {
       if (data) {
@@ -330,6 +339,34 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
     case "envelope-delete": return { kind: "allocation-delete", label: intent.label };
     case "funds": return { kind: "funds", amount: intent.amount, sourceHint: intent.sourceHint as "cash" | "card" | "meal" | undefined };
     case "payday": return { kind: "payday", date: intent.date, flexDays: intent.flexDays };
+    case "transfer": {
+      const from = data ? matchEnvelope(data, intent.from) : undefined;
+      const to = data ? matchEnvelope(data, intent.to) : undefined;
+      if (!from || !to || from.id === to.id) return undefined;
+      return { kind: "transfer", amount: intent.amount, fromId: from.id, toId: to.id, fromLabel: from.label, toLabel: to.label };
+    }
+    case "event-contribution": {
+      const event = data ? matchPlannedEvent(data, intent.name) : undefined;
+      if (!event) return undefined;
+      return { kind: "event-contribution", eventId: event.id, name: event.name, amount: intent.amount, date: intent.date || isoToday() };
+    }
+    case "due-paid": {
+      const due = data ? matchRecurring(data, intent.name) : undefined;
+      if (!due || !data) return undefined;
+      const source = data.settings.paymentSources.find((item) => item.id === due.sourceId) || data.settings.paymentSources[0];
+      const matched = matchingAllocationsForExpense(data, { category: due.category, memberId: due.memberId, sourceId: due.sourceId })[0];
+      return {
+        kind: "expense",
+        amount: due.amount,
+        title: due.name,
+        category: due.category,
+        date: intent.date || isoToday(),
+        sourceId: source?.id,
+        allocationId: matched?.id || "outside",
+        memberId: due.memberId,
+        recurringId: due.id,
+      };
+    }
   }
 }
 
@@ -396,6 +433,14 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
     }
     case "planned-event": return `evenimentul „${intent.name}” pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.estimate ? `, cost estimat ${money(intent.estimate)}` : ", fără cost estimat încă"}${intent.repeat === "yearly" ? ", în fiecare an" : ""}`;
     case "payday": return `următorul venit pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.flexDays ? `, cu ${intent.flexDays} zile de flexibilitate` : ""}`;
+    case "transfer": return `mută ${money(intent.amount)} din plicul „${intent.from}” în „${intent.to}” — banii rămân pe același card`;
+    case "event-contribution": return `pune ${money(intent.amount)} deoparte pentru „${intent.name}” — socoteală de planificare, nu iese din surse`;
+    case "due-paid": {
+      const due = data ? matchRecurring(data, intent.name) : undefined;
+      return due
+        ? `scadența „${due.name}”, ${money(due.amount)} — o trec ca plătită`
+        : `scadența „${intent.name}” — nu o găsesc printre plățile tale recurente`;
+    }
   }
 }
 
@@ -778,7 +823,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       addMessage({
         role: "assistant",
         text: proposalText(intents, data, liveMemory, reading.headline, planWarningFor(reading.intents, data)),
-        updates: intents.map((item) => intentToUpdate(item, data, liveMemory)),
+        updates: intents.map((item) => intentToUpdate(item, data, liveMemory)).filter((item): item is FinancialUpdate => Boolean(item)),
         intents,
         action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
         choices: spendAlternatives(data, reading.intents, liveMemory),
@@ -838,24 +883,26 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
      * OCR-ul rămâne pe telefon. La Gemini pleacă doar textul citit local, niciodată poza.
      */
     const sentPhotos = sentAttachments.length > 0;
-    if (!sentPhotos && looksLikeProductSearch(requestText)) {
-      offerCatalog(requestText);
-      return;
-    }
     const readings = sentPhotos ? [] : understand(requestText, data, { memory: liveMemory, asOf: isoToday() });
     const { winner, runnerUp, ambiguous } = decide(readings);
-    if (!sentPhotos && ambiguous && winner && runnerUp && shouldAskWhichReading(winner, runnerUp)) {
-      addMessage({
-        role: "assistant",
-        text: t("Nu sunt sigur. Alege ce-ai vrut:"),
-        picks: [
+    const blocked = quota.mode === "local" || quota.remaining <= 0;
+    /**
+     * Două citiri la fel de bune nu înseamnă că omul a vorbit neclar — înseamnă că noi
+     * citim cu reguli. Până acum îi puneam lui întrebarea („alege ce-ai vrut”) chiar
+     * când aveam la îndemână un model care înțelege fraza întreagă. Acum întrebăm întâi
+     * modelul; alegerea rămâne pregătită, pentru cazul în care nici el nu lămurește.
+     */
+    const picks = !sentPhotos && ambiguous && winner && runnerUp && shouldAskWhichReading(winner, runnerUp)
+      ? [
           { label: readingLabel(winner), reading: winner },
           { label: readingLabel(runnerUp), reading: runnerUp },
-        ],
-      });
+        ]
+      : undefined;
+    const askWhich = (text?: string) => addMessage({ role: "assistant", text: text || t("Nu sunt sigur. Alege ce-ai vrut:"), picks });
+    if (picks && blocked) {
+      askWhich();
       return;
     }
-    const blocked = quota.mode === "local" || quota.remaining <= 0;
     /**
      * Citirea locală câștiga întotdeauna, chiar și când lăsa jumătate de mesaj necitit:
      * „am 1800 de lei pe care îi împart în plicuri până pe 9 octombrie” primea înapoi
@@ -865,10 +912,20 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
      * dacă rețeaua cade sau modelul nu întoarce nimic folosibil, `localSend` reia exact
      * aceeași cascadă locală și propune ce ar fi propus și acum.
      */
-    const escalate = Boolean(winner?.soft) && !blocked && !sentPhotos;
+    const escalate = Boolean(winner?.soft || picks) && !blocked && !sentPhotos;
     if (winner && !escalate) {
       setMemory(markLocalSave());
       if (act(winner)) return;
+    }
+    /**
+     * Catalogul e ultima soluție, nu prima. Verificarea stătea înaintea înțelegerii, deci
+     * o frază despre gospodărie care semăna cu un nume de produs — „gata cu casa luna
+     * asta” — pleca la lista de produse fără ca ghidul să o citească măcar. Acum întâi
+     * citim mesajul; abia ce nu înseamnă nimic pentru registru poate fi un produs.
+     */
+    if (!sentPhotos && !winner && looksLikeProductSearch(requestText)) {
+      offerCatalog(requestText);
+      return;
     }
     if (!sentPhotos && !escalate && isQuestion(requestText)) {
       const answer = analyze(requestText, data);
@@ -971,9 +1028,36 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
          * pe drumul dinainte. Un răspuns stricat nu poate scrie în registru.
          */
         const modelIntents = sentPhotos ? [] : parseModelIntents(payload.readings, { asOf: isoToday(), message: requestText });
-        if (modelIntents.length) {
-          act({ kind: "intents", score: 100, why: "citit de model", intents: modelIntents });
+        /**
+         * Ce spune modelul despre lucruri existente se leagă de ele sau se spune pe față.
+         * Un „mut 200 din Transport în Alimente” fără plicurile alea era aruncat în tăcere,
+         * iar omul primea textul modelului — care povestea o mutare ce nu s-a întâmplat.
+         */
+        const { kept, missing } = resolveIntents(modelIntents, data);
+        if (kept.length) {
+          act({ kind: "intents", score: 100, why: "citit de model", intents: kept });
+          if (missing.length) addMessage({ role: "assistant", text: t("Nu găsesc {what}. Restul e mai sus, gata de confirmat.", { what: missing.join(", ") }) });
           return;
+        }
+        if (missing.length) {
+          addMessage({ role: "assistant", text: t("Nu găsesc {what}. Spune-mi numele exact așa cum e în aplicație, sau creează-l întâi.", { what: missing.join(", ") }) });
+          return;
+        }
+        // Nici modelul nu a ales: atunci întrebarea e cinstită, iar textul lui rămâne deasupra.
+        if (picks) {
+          askWhich(payload.reply);
+          return;
+        }
+        /**
+         * Escaladarea nu are voie să piardă ce înțelesesem deja. „Adaugă scadența chirie
+         * 1500 pe data de 5” pleca online fiindcă rămânea o sumă necitită, iar când modelul
+         * nu întorcea nimic, omul primea doar textul lui: scadența citită corect pe telefon
+         * se pierdea pe drum. Dacă modelul n-a adus nimic de scris, ne întoarcem la citirea
+         * noastră, aceeași pe care ar fi arătat-o și fără rețea.
+         */
+        if (escalate && winner && winner.kind === "intents") {
+          setMemory(markLocalSave());
+          if (act(winner)) return;
         }
         if (payload.intent === "question" || payload.intent === "summary" || payload.intent === "next_step") {
           const localAnswer = analyze(requestText, data);
@@ -1013,7 +1097,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       } catch {
         setQuota((current) => current.remaining <= 0 ? { ...current, mode: "local", remaining: 0 } : current);
         setTyping(false);
-        localSend(true, raw);
+        if (picks) askWhich();
+        else localSend(true, raw);
       }
     })();
   };

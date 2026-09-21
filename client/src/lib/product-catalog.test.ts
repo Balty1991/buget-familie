@@ -141,6 +141,20 @@ describe("catalogul de produse", () => {
     expect(looksLikeProductSearch("am dat 50 lei pe benzină")).toBe(false);
     expect(looksLikeProductSearch("ce fac azi")).toBe(false);
   });
+
+  /**
+   * O propoziție despre gospodărie nu e un nume de produs, chiar dacă are puține cuvinte.
+   * „Gata cu casa luna asta” pleca la catalog, deci ghidul nici nu apuca să o citească.
+   */
+  it("o frază despre gospodărie nu e o căutare de produs", () => {
+    expect(looksLikeProductSearch("gata cu casa luna asta")).toBe(false);
+    expect(looksLikeProductSearch("mai am bani de benzina")).toBe(false);
+    expect(looksLikeProductSearch("cum stau cu planul")).toBe(false);
+    expect(looksLikeProductSearch("pregatiri de craciun")).toBe(false);
+    // Dar numele rămân nume.
+    expect(looksLikeProductSearch("lapte Napolact")).toBe(true);
+    expect(looksLikeProductSearch("ciocolata cu lapte")).toBe(true);
+  });
 });
 
 /**

@@ -56,6 +56,8 @@ export type FinancialUpdate =
   | { kind: "funds"; amount: number; sourceHint?: "cash" | "card" | "meal" }
   | { kind: "payday"; date: string; flexDays: number }
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string }
+  /** Bani puși deoparte pentru un eveniment: o socoteală de planificare, fără mișcare în registru. */
+  | { kind: "event-contribution"; eventId: string; name: string; amount: number; date: string }
   | { kind: "delete-transaction"; id: string; title: string; amount: number }
   | { kind: "amend-transaction"; id: string; amount: number; title: string; was: number };
 
@@ -247,7 +249,7 @@ export function receiptDetails(extracted?: ExtractedGuide) {
   return `${vendor}${total}${category}${t(" Produsele le vezi la Bonuri.")}${confidence}`;
 }
 
-function matchEnvelope(data: AppData, token: string) {
+export function matchEnvelope(data: AppData, token: string) {
   const key = habitKey(token);
   if (key.length < 3) return undefined;
   return data.settings.salaryPlan.allocations.find((item) => {
@@ -255,6 +257,24 @@ function matchEnvelope(data: AppData, token: string) {
     return hay.includes(key) || key.includes(hay);
   });
 }
+
+/**
+ * Numele spus de om, căutat printre lucrurile lui. „Crăciun” trebuie să găsească
+ * „Crăciun 2026”, iar „chiria” trebuie să găsească „Chirie”: româna schimbă
+ * terminațiile, deci potrivirea se face pe rădăcină, în ambele sensuri.
+ */
+const nameMatches = (label: string, token: string) => {
+  const key = habitKey(token);
+  const hay = habitKey(label);
+  if (key.length < 3 || hay.length < 3) return false;
+  return hay === key || hay.includes(key) || key.includes(hay) || hay.startsWith(key.slice(0, -1)) || key.startsWith(hay.slice(0, -1));
+};
+
+export const matchPlannedEvent = (data: AppData, token: string) =>
+  (data.settings.plannedEvents || []).find((item) => nameMatches(item.name, token));
+
+export const matchRecurring = (data: AppData, token: string) =>
+  data.recurring.filter((item) => item.active !== false).find((item) => nameMatches(item.name, token));
 
 /** Locurile din care se poate scoate suma: plicuri (cu săptămâna) și, doar dacă a rămas liber, nealocat. */
 export function buildExpenseOffer(
@@ -406,6 +426,54 @@ export function transferProposal(raw: string, data: AppData): { text: string; ch
     text: `Mut **${money(amount)}** din **${from.label}** în **${to.label}**? Banii rămân pe același card, se mută doar între plicuri.`,
     choices: [{ label: `Mută ${money(amount)}`, update: { kind: "transfer", amount, fromId: from.id, toId: to.id, fromLabel: from.label, toLabel: to.label } }],
   };
+}
+
+/**
+ * Ce spune modelul despre lucruri care există deja în aplicație — un plic, un eveniment,
+ * o scadență — trebuie să se lege de ele, nu să sune bine.
+ *
+ * Cazul care a cerut funcția: „mută 200 din transport în alimente” se întorcea de la model
+ * ca o mutare între două nume. Fără plicuri reale în spatele numelor, aplicația nu avea ce
+ * face cu ea și o arunca în tăcere, iar omul primea un răspuns general, ca și cum n-ar fi
+ * cerut nimic. Acum numele se caută în registrul lui: dacă se găsesc, intenția pleacă mai
+ * departe cu numele exacte; dacă nu, se spune pe față ce lipsește.
+ */
+export function resolveIntents(intents: ParsedIntent[], data: AppData): { kept: ParsedIntent[]; missing: string[] } {
+  const kept: ParsedIntent[] = [];
+  const missing: string[] = [];
+  for (const parsed of intents) {
+    const intent = parsed.intent;
+    if (intent.kind === "transfer") {
+      const from = matchEnvelope(data, intent.from);
+      const to = matchEnvelope(data, intent.to);
+      if (!from || !to || from.id === to.id) {
+        missing.push(t("plicul „{name}”", { name: !from ? intent.from : intent.to }));
+        continue;
+      }
+      kept.push({ ...parsed, intent: { ...intent, from: from.label, to: to.label } });
+      continue;
+    }
+    if (intent.kind === "event-contribution") {
+      const event = matchPlannedEvent(data, intent.name);
+      if (!event) {
+        missing.push(t("evenimentul „{name}”", { name: intent.name }));
+        continue;
+      }
+      kept.push({ ...parsed, intent: { ...intent, name: event.name } });
+      continue;
+    }
+    if (intent.kind === "due-paid") {
+      const due = matchRecurring(data, intent.name);
+      if (!due) {
+        missing.push(t("scadența „{name}”", { name: intent.name }));
+        continue;
+      }
+      kept.push({ ...parsed, intent: { ...intent, name: due.name } });
+      continue;
+    }
+    kept.push(parsed);
+  }
+  return { kept, missing };
 }
 
 export function localInsight(raw: string, data: AppData, memory: GuideMemory): string | undefined {
@@ -705,12 +773,12 @@ export function planWarningFor(intents: ParsedIntent[], data: AppData): string |
 /** Sumele pe care o intenție chiar le folosește; restul rămân necitite. */
 const intentAmounts = (intent: ParsedIntent["intent"]): number[] => {
   switch (intent.kind) {
-    case "expense": case "income": case "recurring": case "funds": return [intent.amount];
+    case "expense": case "income": case "recurring": case "funds": case "transfer": case "event-contribution": return [intent.amount];
     case "envelope": return [intent.amount, ...(intent.weeklyLimit ? [intent.weeklyLimit] : [])];
     case "debt": return [intent.remaining, ...(intent.monthly ? [intent.monthly] : [])];
     case "goal": return [intent.target, ...(intent.current ? [intent.current] : [])];
     case "planned-event": return intent.estimate ? [intent.estimate] : [];
-    case "payday": case "envelope-delete": return [];
+    case "payday": case "envelope-delete": case "due-paid": return [];
   }
 };
 
@@ -922,17 +990,28 @@ function plannedEventsContext(data: AppData) {
 export function compactGuideContext(data: AppData, extras: { view?: string; income?: number; expense?: number } = {}) {
   const round = (value: number) => Math.round(value * 100) / 100;
   return {
+    today: isoToday(),
     view: extras.view,
     period: planPeriodContext(data),
     month: { income: round(extras.income || 0), expense: round(extras.expense || 0) },
     members: data.settings.members.map((item) => item.name).slice(0, 6),
     payday: data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday || null,
+    /**
+     * Numele exacte ale lucrurilor din aplicație. Fără ele, modelul putea doar să
+     * inventeze: cerea „mută din Mâncare în Benzină” peste plicuri care se cheamă
+     * altfel, iar aplicația arunca intenția fiindcă nu avea ce să atingă. Un nume
+     * scris aici este un nume pe care îl poate folosi.
+     */
+    sources: data.settings.paymentSources.slice(0, 8).map((item) => ({ name: item.name, kind: item.kind, balance: round(sourceBalance(data, item.id)) })),
+    categories: [...expenseCategories, ...data.settings.customCategories].slice(0, 26),
     envelopes: data.settings.salaryPlan.allocations.slice(0, 12).map((item) => {
       const status = envelopeDecisionStatus(data, item);
-      return { label: item.label, remaining: round(status.remaining), state: status.state };
+      return { label: item.label, amount: round(item.amount), remaining: round(status.remaining), state: status.state, weekly: item.weeklyPace !== false };
     }),
     dues: pendingRecurringInPlan(data).slice(0, 6).map((item) => ({ name: item.name, amount: round(item.amount), due: item.dueDate })),
-    debts: data.debts.filter((item) => item.remaining > 0).slice(0, 6).map((item) => ({ name: item.name, remaining: round(item.remaining) })),
+    recurring: data.recurring.filter((item) => item.active !== false).slice(0, 8).map((item) => ({ name: item.name, amount: round(item.amount), dueDay: item.dueDay })),
+    goals: data.savings.slice(0, 6).map((item) => ({ name: item.name, target: round(item.target), saved: round(item.current) })),
+    debts: data.debts.filter((item) => item.remaining > 0).slice(0, 6).map((item) => ({ name: item.name, remaining: round(item.remaining), monthly: round(item.monthly || 0) })),
     events: plannedEventsContext(data),
   };
 }

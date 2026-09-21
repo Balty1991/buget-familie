@@ -173,3 +173,30 @@ describe("reparația din cuvintele omului", () => {
     expect(cu([{ kind: "envelope", label: "Alimente", amount: 200, delta: "increase" }], "mai pune 200 pe saptamani")[0]).toMatchObject({ delta: "increase" });
   });
 });
+
+/**
+ * Ce spune modelul despre lucruri care există deja: o mutare între plicuri, o punere
+ * deoparte pentru un eveniment, o scadență plătită. Forma se verifică aici; existența
+ * plicului sau a evenimentului o verifică `resolveIntents`, cu registrul în față.
+ */
+describe("lucrurile care se leagă de registru", () => {
+  it("citește o mutare între două plicuri", () => {
+    expect(read([{ kind: "transfer", from: "Transport", to: "Alimente", amount: 200 }]))
+      .toEqual([{ kind: "transfer", from: "Transport", to: "Alimente", amount: 200 }]);
+  });
+
+  it("nu mută din plic în el însuși și nu mută fără sumă", () => {
+    expect(read([{ kind: "transfer", from: "Alimente", to: "alimente", amount: 200 }])).toEqual([]);
+    expect(read([{ kind: "transfer", from: "Transport", to: "Alimente" }])).toEqual([]);
+  });
+
+  it("citește o punere deoparte pentru un eveniment", () => {
+    expect(read([{ kind: "event-contribution", name: "Crăciun", amount: 300 }]))
+      .toEqual([{ kind: "event-contribution", name: "Crăciun", amount: 300, date: undefined }]);
+  });
+
+  it("citește o scadență plătită, fără sumă de la model", () => {
+    expect(read([{ kind: "due-paid", name: "Chirie" }]))
+      .toEqual([{ kind: "due-paid", name: "Chirie", date: undefined }]);
+  });
+});

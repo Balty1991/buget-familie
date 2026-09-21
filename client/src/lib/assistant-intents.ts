@@ -38,6 +38,16 @@ export type AssistantIntent =
    * Nu e un venit încasat azi și nu e o cheltuială — e soldul din care se face planul.
    */
   | { kind: "funds"; amount: number; sourceHint?: string }
+  /**
+   * Mutare între două plicuri existente: „mută 100 din transport în alimente”. Numele
+   * vin în cuvintele omului; aplicația le caută printre plicurile lui și renunță la
+   * intenție dacă nu le găsește — un plic nu se naște dintr-o mutare.
+   */
+  | { kind: "transfer"; from: string; to: string; amount: number }
+  /** Bani puși deoparte pentru un eveniment din calendar. Planificare, nu transfer real. */
+  | { kind: "event-contribution"; name: string; amount: number; date?: string }
+  /** O scadență cunoscută, plătită: „am plătit chiria”. Suma o știe aplicația, nu modelul. */
+  | { kind: "due-paid"; name: string; date?: string }
   | { kind: "payday"; date: string; flexDays: number };
 
 export type ParsedIntent = { intent: AssistantIntent; segment: string };
@@ -850,6 +860,28 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
       if (!amount) return undefined;
       const hint = text(item.sourceHint, 10);
       return { kind: "funds", amount, sourceHint: hint === "cash" || hint === "card" || hint === "meal" ? hint : undefined };
+    }
+    /**
+     * Mutarea, punerea deoparte și scadența plătită vorbesc despre lucruri care există
+     * deja în aplicație. Aici se verifică doar forma; existența plicului, a evenimentului
+     * sau a scadenței o verifică `resolveIntents`, care are registrul în față.
+     */
+    case "transfer": {
+      const amount = num(item.amount, { min: 0.01 });
+      const from = text(item.from, 60) || text(item.fromLabel, 60);
+      const to = text(item.to, 60) || text(item.toLabel, 60);
+      if (!amount || !from || !to || fold(from) === fold(to)) return undefined;
+      return { kind: "transfer", from, to, amount };
+    }
+    case "event-contribution": {
+      const amount = num(item.amount, { min: 0.01 });
+      const name = text(item.name, 60) || text(item.label, 60);
+      if (!amount || !name) return undefined;
+      return { kind: "event-contribution", name, amount, date: isoDay(item.date) };
+    }
+    case "due-paid": {
+      const name = text(item.name, 60) || text(item.label, 60);
+      return name ? { kind: "due-paid", name, date: isoDay(item.date) } : undefined;
     }
     case "payday": {
       const date = isoDay(item.date);

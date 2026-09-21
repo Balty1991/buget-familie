@@ -541,6 +541,14 @@ export function looksLikeProductSearch(raw: string): boolean {
   if (/\bplic|\bimpart|\brepartiz|\baloc[aă]|\bsterge|\bmareste|\bmicsoreaza|\bscade|\bcreeaza|\bnoteaza|\beconomis|\bstrang|\bpun[e]? deoparte/.test(folded)) return false;
   if (/\b\d{3,}\b/.test(folded)) return false;
   if (/^(ce |cum |cat |cati |cate |unde |de ce |cand )/.test(folded)) return false;
+  /**
+   * Un produs se caută pe nume — „lapte Napolact”, „ciorapi copii”. O propoziție despre
+   * gospodărie nu e un nume, chiar dacă are puține cuvinte: „gata cu casa luna asta”
+   * pleca la catalogul de produse, deci ghidul nici nu apuca să o citească. Cuvintele de
+   * timp și cele despre bani o dau de gol.
+   */
+  if (/\b(azi|maine|ieri|acum|luna|lunar|saptamana|anul|asta|astea|gata|inca|deja|iar|tot)\b/.test(folded)) return false;
+  if (/\b(bani|banii|buget|plan|planul|sold|cont|card|cash|rest|restul|ramas|casa|chirie|rata|datorie|obiectiv|eveniment|craciun|paste|aniversare|vacanta|scadenta)\b/.test(folded)) return false;
   const words = folded.split(/\s+/).filter(Boolean);
   return words.length > 0 && words.length <= 5;
 }

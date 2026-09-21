@@ -6,7 +6,7 @@ import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, u
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
-import { eventTraits } from "@/lib/planned-events";
+import { addContribution, eventTraits } from "@/lib/planned-events";
 import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
@@ -792,6 +792,24 @@ export default function Home() {
         ? events.map((item) => item.id === existing.id ? { ...item, estimate: change.estimate || item.estimate, repeat: change.repeat, updatedAt: now } : item)
         : [...events, { id: newId("planned-event"), name: change.name, date: change.date, estimate: change.estimate, repeat: change.repeat, memberId: member?.id, updatedAt: now, ...eventTraits(change.name, isoToday()) }];
       return { ...current, settings: { ...current.settings, plannedEvents: next } };
+    }
+    /**
+     * Bani puși deoparte pentru un eveniment, cerut prin asistent. Nu e transfer și nu e
+     * cheltuială: surse și registru rămân neatinse, se schimbă doar cât s-a strâns pentru
+     * ziua aceea din calendar. Un eveniment care nu există nu se creează aici — asistentul
+     * cere întâi să fie notat.
+     */
+    if (change.kind === "event-contribution") {
+      const events = current.settings.plannedEvents;
+      const target = events.find((item) => item.id === change.eventId);
+      if (!target) return current;
+      return {
+        ...current,
+        settings: {
+          ...current.settings,
+          plannedEvents: events.map((item) => item.id === target.id ? addContribution(item, change.amount, change.date, t("Pus deoparte din ghidul AI")) : item),
+        },
+      };
     }
     /**
      * Ștergerea unui plic cerută prin asistent. Banii nu dispar: suma plicului se întoarce
