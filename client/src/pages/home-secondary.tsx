@@ -16,7 +16,7 @@ import "../pocket.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, BellRing, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Copy, Gift, Images, Inbox, Share2, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
+import { AlertTriangle, BellRing, BrainCircuit, ClipboardPaste, BookOpen, Bot, CalendarClock, CalendarDays, Camera, Check, Copy, Gift, Images, Inbox, Share2, ChevronLeft, ChevronRight, Cloud, Download, Goal, LayoutDashboard, LockKeyhole, Search, Upload, Palette, Pencil, PiggyBank, Plus, ReceiptText, RotateCcw, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2, Users, WalletCards, X , Smartphone, KeyRound, ShieldAlert } from "lucide-react";
 import { BASE_CURRENCY, activeCurrencies, currenciesMissingRate, supportedCurrencies, addIsoDays, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, createEmptyAppData, exchangeRateFor, sourceBalanceInCurrency, sourceCurrency, toBaseAmount, createFamilyCode, debtPaymentHistory, debtSnowball, expenseCategories, formatDate, isoDate, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, recordDebtPayment, guessCategoryFromText, resolveReceiptLines, sourceBalance, type AppData, type Debt, type PaymentKind, type Receipt, type SavingsGoal, type Transaction, type TransactionKind, type ShareScope, transactionShareScope} from "@/lib/finance-data";
 import { downloadBackup, parseBackup, type BackupIntent, type SyncJournalEntry } from "@/lib/app-storage";
 import { BACKUP_SAVE_FALLBACK, BACKUP_SAVE_HELPER } from "@/lib/backup-ui-copy";
@@ -55,6 +55,7 @@ import { canAddMember, PLANS } from "@/lib/entitlements";
 import { plannedEventsPressure, upcomingPlannedEvents } from "@/lib/planned-events";
 import { UsageTutorial } from "@/components/UsageTutorial";
 import { ReceiptsStudio } from "@/components/ReceiptsStudio";
+import { LearnedRulesPanel } from "@/components/LearnedRulesPanel";
 import { ProductCatalogPanel } from "@/components/ProductCatalogPanel";
 import { useLanguage } from "@/hooks/use-language";
 import { matchCommandQuery, searchLedgerHits, writeJournalQuery } from "@/lib/command-search";
@@ -1084,6 +1085,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
           <button type="button" className="bf-settings-row" onClick={() => setTab("savings")}><PiggyBank size={20} /><span className="bf-settings-copy"><b>{t("Economii")}</b><small>{countLabel(data.savings.length, { one: "{count} obiectiv", few: "{count} obiective", many: "{count} de obiective" })}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("events")}><Gift size={20} /><span className="bf-settings-copy"><b>{t("Evenimente viitoare")}</b><small>{eventsHint}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("prices")}><ShoppingBasket size={20} /><span className="bf-settings-copy"><b>{t("Prețuri")}</b><small>{t("istoric și coșul etalon")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("learned")}><BrainCircuit size={20} /><span className="bf-settings-copy"><b>{t("Ce am învățat")}</b><small>{t("regulile după care îți propun")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           {data.settings.members.some((item) => item.kind === "child") && <button type="button" className="bf-settings-row" onClick={() => setTab("pocket")}><PiggyBankIcon size={20} /><span className="bf-settings-copy"><b>{t("Buzunar")}</b><small>{t("banii copilului")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>}
         </div>
       </section>
@@ -1113,6 +1115,7 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
     if (tab === "recurring") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim scadențele…")}</div>}><RecurringPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "reports") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim statisticile…")}</div>}><ReportsPanel data={data} onGo={onGo} /></Suspense>;
     if (tab === "assistant") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim asistentul…")}</div>}><AdvisorPanel data={data} onChange={onChange} /></Suspense>;
+    if (tab === "learned") return <LearnedRulesPanel data={data} onChange={onChange} />;
     if (tab === "settings") return <SettingsPanel data={data} onChange={onChange} onReset={() => { if (!window.confirm(t("Ștergi toate datele locale de pe acest dispozitiv?"))) return; void clearReceiptImageStorage(); onChange(createEmptyAppData()); }} />;
     if (tab === "guide") return <FamilyGuide onGo={onGo} onOpenReview={() => setTab("review")} onOpenSync={() => setTab("sync")} />;
     return <SyncPanel {...sync} />;
