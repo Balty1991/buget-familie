@@ -33,6 +33,11 @@ export type AssistantIntent =
   | { kind: "envelope-delete"; label: string }
   /** Eveniment din calendar cu cost estimat: Crăciun, o aniversare, începutul școlii. */
   | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
+  /**
+   * Banii pe care omul spune că îi are acum: „am un buget de 1800”, „am 1800 în card”.
+   * Nu e un venit încasat azi și nu e o cheltuială — e soldul din care se face planul.
+   */
+  | { kind: "funds"; amount: number; sourceHint?: string }
   | { kind: "payday"; date: string; flexDays: number };
 
 export type ParsedIntent = { intent: AssistantIntent; segment: string };
@@ -188,6 +193,13 @@ const MARKERS: Array<[AssistantIntent["kind"], RegExp]> = [
   ["recurring", /\b(abonament|chiri[ae]|factura|scadenta|rata lunara la)\b/g],
   ["debt", /\b(datorie|datorii|credit|imprumut|mai am de (platit|achitat))\b/g],
   ["goal", /\b(obiectiv|vreau sa strang|sa strang|economisesc pentru|fond de (siguranta|urgenta))\b/g],
+  /**
+   * „Am un buget de 1800” nu e nici venit, nici cheltuială: sunt banii din care se face
+   * planul. Fără el, fraza „am 1800, pune-i în plic alimente” crea plicul peste un sold
+   * de zero, iar aplicația arăta „PESTE LIMITA PLANULUI” și „nerepartizați −1.800”.
+   * Stă înaintea venitului, fiindcă „am un buget” conține și cuvinte de venit.
+   */
+  ["funds", /\b(am un buget|avem un buget|bugetul (meu|nostru)|am disponibil|avem disponibil|dispun de|am in (card|cont|cash|banca)|am pe card|am cash|am in mana)\b|\bam\s+\d[\d.,\s]*(lei|ron)\b|\bam\s+\d[\d.,\s]*(lei|ron)?\s*(in|pe)\s+(card|cont|cash|banca)\b/g],
   ["income", /\b(am primit|am incasat|mi-?a intrat|venit(uri)? (de|din)|salariu|leafa|bonus|prima de)\b/g],
   ["expense", /\b(am cheltuit|am dat|am platit|am luat|cheltuiala|plata de)\b/g],
 ];
@@ -289,6 +301,96 @@ function splitByAmount(segment: string): string[] {
 }
 
 /**
+ * Plicurile spuse pe nume, în aceeași frază cu cererea de împărțire.
+ *
+ * „Împarte-l pe săptămâni: alimente 800, transport 300, restul diverse” este felul în care
+ * vorbește omul — trei plicuri, două sume și un rest. Parserul vedea o singură cerere și
+ * scotea un plic numit „L alimente transport restul diverse” cu 300 de lei: toate cuvintele
+ * într-o etichetă, restul frazei pierdut. Aici fiecare bucată devine un rând cu numele și
+ * suma lui, iar „restul” rămâne fără sumă — cine cunoaște banii o va completa.
+ *
+ * Nu inventează nimic: o bucată fără nume adevărat (verbul cererii, un „pe săptămâni”)
+ * cade, iar sub două rânduri întoarcem gol, ca propunerea obișnuită să-și facă treaba.
+ */
+export type NamedSplitLine = { label: string; category?: string; amount?: number; rest?: boolean };
+
+const REST_WORDS = "restul|rest|ce\\s+(?:mai\\s+)?ramane|diferenta";
+const REST_PART = new RegExp(`^(?:si\\s+)?\\s*(?:${REST_WORDS})\\b`);
+const LETTER = "[a-zA-ZăâîșțĂÂÎȘȚşţŞŢ]";
+/** „restul la economii”, „ce rămâne în vacanță” — numele vine după cuvântul de rest. */
+const REST_TAIL = new RegExp(`\\b(?:${REST_WORDS})\\s+(?:la\\s+|in\\s+|pe\\s+|pentru\\s+)?(${LETTER}${LETTER}{2,})`);
+
+/** Cuvinte care însoțesc cererea, nu numesc un plic: „împarte banii”, „bugetul în alimente”. */
+const SPLIT_FILLER = new Set(["banii", "bani", "bugetul", "buget", "tot", "totul", "asa", "astfel", "vreau", "uite"]);
+
+function splitLine(part: string, rules: MerchantRule[]): NamedSplitLine | undefined {
+  const { masked } = extractDates(part);
+  const amounts = extractAmounts(masked);
+  const rest = REST_PART.test(fold(part));
+  const withoutRest = rest ? part.replace(new RegExp(`^(?:si\\s+)?\\s*(?:${REST_WORDS})\\b`, "i"), " ") : part;
+  const label = cleanLabel(withoutRest)
+    .split(/\s+/)
+    .filter((word) => word.length > 1 && !SPLIT_FILLER.has(fold(word)))
+    .slice(0, 3)
+    .join(" ");
+  if (!label) return undefined;
+  if (!rest && !amounts.length) return undefined;
+  const category = guessCategoryFromText(label, expenseCategories, rules);
+  const amount = amounts.sort((left, right) => right.value - left.value)[0]?.value;
+  const single = label.split(/\s+/).length === 1;
+  return { label: titleCase(category && single ? category : label), category, amount: rest && !amount ? undefined : amount, rest: rest || undefined };
+}
+
+export function explicitSplitLines(raw: string, rules: MerchantRule[] = []): NamedSplitLine[] {
+  const parts = raw.split(/\s+(?:si|și|iar)\s+|\s*[,;:\n]\s*|\s+-\s+/i).map((item) => item.trim()).filter(Boolean);
+  const lines = parts.length > 1 ? parts.map((part) => splitLine(part, rules)).filter((line): line is NamedSplitLine => Boolean(line)) : [];
+  const useful = lines.filter((line) => line.amount !== undefined || line.rest);
+  if (useful.length >= 2 && useful.some((line) => line.amount !== undefined)) return useful.slice(0, 8);
+
+  /**
+   * Fără virgule, fraza rămâne întreagă: „împarte pe săptămâni alimente 800 transport 300”.
+   * Atunci citim cuvintele la rând și legăm fiecare sumă de numele de lângă ea. Partea în
+   * care stă numele — înainte sau după cifră — se hotărăște o singură dată, din prima
+   * pereche: „600 alimente 400 transport” și „alimente 600 transport 400” spun același
+   * lucru, dar amestecarea celor două citiri ar lega greșit toate sumele.
+   */
+  const tokens = raw.split(/[\s,;:]+/).map((item) => item.trim()).filter(Boolean);
+  const isAmount = (token: string) => /^\d[\d.,]*$/.test(token) && parseRomanianAmount(token) > 0;
+  const nameOf = (token?: string) => {
+    if (!token) return "";
+    const word = cleanLabel(token);
+    return word.length >= 3 && !SPLIT_FILLER.has(fold(word)) && !isAmount(token) ? word : "";
+  };
+  const numbers = tokens.map((token, index) => ({ token, index })).filter((item) => isAmount(item.token));
+  if (numbers.length < 2) return [];
+  const first = numbers[0];
+  const before = Boolean(nameOf(tokens[first.index - 1]));
+  const after = Boolean(nameOf(tokens[first.index + 1]) || nameOf(tokens[first.index + 2]));
+  if (!before && !after) return [];
+  const scanned: NamedSplitLine[] = [];
+  const seen = new Set<string>();
+  for (const item of numbers) {
+    // „800 lei alimente”: unitatea nu e nume, deci numele poate sta cu un pas mai departe.
+    const name = before
+      ? nameOf(tokens[item.index - 1])
+      : nameOf(tokens[item.index + 1]) || nameOf(tokens[item.index + 2]);
+    const value = parseRomanianAmount(item.token);
+    if (!name || !value || seen.has(fold(name))) continue;
+    seen.add(fold(name));
+    const category = guessCategoryFromText(name, expenseCategories, rules);
+    scanned.push({ label: titleCase(category || name), category, amount: value });
+  }
+  if (scanned.length < 2) return [];
+  const tail = REST_TAIL.exec(fold(raw));
+  if (tail) {
+    const label = cleanLabel(tail[1]);
+    const category = label ? guessCategoryFromText(label, expenseCategories, rules) : undefined;
+    if (label && !seen.has(fold(label))) scanned.push({ label: titleCase(category || label), category, rest: true });
+  }
+  return scanned.slice(0, 8);
+}
+
+/**
  * „Mărește plicul de alimente cu 200” cerea 1.100, iar aplicația înțelegea 200: plicul de
  * 900 era tăiat cu 700 de lei, cu toate cifrele la locul lor și un buton de confirmare
  * dedesubt. Sensul se citește din mesajul întreg, fiindcă „mai” din „mai pune 200” stă
@@ -300,7 +402,7 @@ const envelopeDelta = (foldedText: string): "increase" | "decrease" | undefined 
   return undefined;
 };
 
-function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], markerLength: number, rules: MerchantRule[] = [], delta?: "increase" | "decrease"): AssistantIntent | undefined {
+function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], markerLength: number, rules: MerchantRule[] = [], delta?: "increase" | "decrease", borrowedTotal = false): AssistantIntent | undefined {
   if (!amounts.length) return undefined;
   const folded = fold(masked);
   /**
@@ -328,7 +430,14 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
    * Fără un nume adevărat nu se creează nimic. „Împarte-mi 1800 în plicuri” producea un
    * plic chiar numit „Plic nou”, cu toți banii în el — mai rău decât dacă n-am fi înțeles.
    */
-  const label = category && named && named.split(/\s+/).length === 1 ? category : (rawName || category || "");
+  /**
+   * „Plic alimente și în părți pe săptămâni până iau salariul” dădea plicul „Alimente părți
+   * ia”: tot ce urma după nume intra în etichetă. Când primul cuvânt al numelui e chiar o
+   * categorie cunoscută, categoria e numele — restul frazei spune altceva despre plic.
+   */
+  const firstWord = fold(named).split(/\s+/)[0] || "";
+  const namedIsCategory = Boolean(category) && (named.split(/\s+/).length === 1 || firstWord === fold(category || ""));
+  const label = category && named && namedIsCategory ? category : (rawName || category || "");
   if (!label) return undefined;
   /**
    * „Plic Alimente, 600 pe săptămână” spune un ritm, nu un total: singura sumă din mesaj stă
@@ -336,7 +445,12 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
    * perioada — de șase ori mai puțin decât ceruse omul. Totalul îl calculează aplicația,
    * fiindcă numai ea știe câte zile mai sunt până la venit.
    */
-  const amountIsWeekly = Boolean(weekly) && weekly === total && !perWeek;
+  /**
+   * O sumă împrumutată de la „banii pe care îi am” este întotdeauna totalul, nu un ritm:
+   * „am un buget de 1800 … pe săptămâni” înseamnă 1.800 împărțiți pe săptămâni, nu 1.800
+   * în fiecare săptămână. Fără paza asta, plicul ieșea de câteva ori mai mare decât banii.
+   */
+  const amountIsWeekly = !borrowedTotal && Boolean(weekly) && weekly === total && !perWeek;
   /**
    * O ajustare schimbă doar suma plicului existent: nu-i atinge ritmul și nu se traduce
    * într-un ritm săptămânal, fiindcă „mai pune 200” înseamnă 200 de lei în plus pe tot
@@ -355,6 +469,21 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
     weeklyPace: Boolean(perWeek) || WEEKLY.test(folded),
     amountIsWeekly: amountIsWeekly || undefined,
   };
+}
+
+/**
+ * Suma pe care o are omul, plus locul ei dacă l-a spus („în card”, „cash”).
+ * Fără sumă nu se propune nimic: „am un buget” singur nu spune cât.
+ */
+function parseFunds(segment: string, masked: string, amounts: AmountHit[]): AssistantIntent | undefined {
+  const total = amounts.sort((left, right) => right.value - left.value)[0];
+  if (!total) return undefined;
+  const folded = fold(masked);
+  const sourceHint = /\bcash\b|\bnumerar\b/.test(folded) ? "cash"
+    : /\bcard\b|\bcont\b|\bbanca\b/.test(folded) ? "card"
+    : /\bbonuri\b|\btichete\b/.test(folded) ? "meal"
+    : undefined;
+  return { kind: "funds", amount: total.value, sourceHint };
 }
 
 function parsePayday(dates: DateHit[]): AssistantIntent | undefined {
@@ -540,6 +669,7 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
     const found =
       marker.kind === "envelope" ? parseEnvelope(segment, masked, amounts, marker.length, rules, envelopeDelta(folded))
       : marker.kind === "payday" ? parsePayday(dates)
+      : marker.kind === "funds" ? parseFunds(segment, masked, amounts)
       : marker.kind === "expense" ? parseExpense(segment, amounts, dates, asOf, categories, rules)
       : marker.kind === "income" ? parseIncome(segment, amounts, dates, asOf)
       : marker.kind === "debt" ? parseDebt(segment, masked, amounts)
@@ -551,6 +681,57 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
     // Un singur marcator poate da mai multe intrări: „50 la Lidl și 30 la farmacie”.
     for (const intent of Array.isArray(found) ? found : found ? [found] : []) results.push({ intent, segment });
   });
+
+  /**
+   * O sumă cu două roluri.
+   *
+   * „Am un buget de 1800, îl pui în plic alimente” spune o singură cifră, dar despre două
+   * lucruri: banii pe care îi are și plicul în care merg. Suma stă lângă primul marcator,
+   * deci segmentul plicului rămânea fără cifră și plicul se pierdea — omul vedea doar
+   * „am înțeles: următorul venit”, iar restul frazei dispărea.
+   *
+   * Împrumutul se face doar din „banii pe care îi am”: o cheltuială nu-și dă suma unui
+   * plic, altfel „am dat 50 de lei, scade din plicul de transport” ar fi creat un plic.
+   */
+  const funds = results.find((item) => item.intent.kind === "funds");
+  const areEnvelope = results.some((item) => item.intent.kind === "envelope");
+  if (!areEnvelope) {
+    const marker = markers.find((item) => item.kind === "envelope");
+    /**
+     * Suma spusă înaintea cuvântului „plic” rămânea în afara segmentului, deci „pune 1800
+     * în plic alimente” nu însemna nimic. Se împrumută doar când nimeni altcineva nu a
+     * folosit-o — o cheltuială sau un venit își păstrează suma — sau când e chiar suma
+     * declarată ca bani avuți, care are voie să aibă două roluri.
+     */
+    const spuse = extractAmounts(extractDates(text, asOf).masked);
+    const folositeDeAltii = results
+      .filter((item) => item.intent.kind !== "funds")
+      .flatMap((item) => {
+        const intent = item.intent;
+        return intent.kind === "expense" || intent.kind === "income" || intent.kind === "recurring" ? [intent.amount]
+          : intent.kind === "debt" ? [intent.remaining, intent.monthly ?? 0]
+          : intent.kind === "goal" ? [intent.target, intent.current ?? 0]
+          : intent.kind === "planned-event" ? [intent.estimate] : [];
+      });
+    const declarata = funds && funds.intent.kind === "funds" ? funds.intent.amount : undefined;
+    const singura = spuse.length === 1 && !folositeDeAltii.some((value) => Math.abs(value - spuse[0].value) < 0.005) ? spuse[0].value : undefined;
+    const candidat = declarata ?? singura;
+    if (marker && candidat) {
+      const to = markers.filter((item) => item.index > marker.index).sort((a, b) => a.index - b.index)[0]?.index ?? text.length;
+      const segment = text.slice(marker.index, to).trim();
+      const { masked } = extractDates(segment, asOf);
+      const imprumutat: AmountHit[] = [{ value: candidat, index: 0, length: 0 }];
+      const intent = parseEnvelope(segment, masked, imprumutat, marker.length, rules, envelopeDelta(folded), true);
+      /**
+       * O sumă împrumutată e deja o presupunere; un nume presupus peste ea ar fi două.
+       * „Am 1800 lei pe care îi împart în plicuri săptămânale” producea un plic chiar
+       * numit „Săptămânale”, cu toți banii în el. Se acceptă doar un plic al cărui nume
+       * este o categorie cunoscută — „plic alimente”, „la transport” — restul merge la
+       * model, care poate întreba în ce plicuri.
+       */
+      if (intent && intent.kind === "envelope" && intent.category) results.push({ intent, segment });
+    }
+  }
   return results;
 }
 
@@ -664,6 +845,12 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
       const label = text(item.label, 60) || text(item.name, 60);
       return label ? { kind: "envelope-delete", label } : undefined;
     }
+    case "funds": {
+      const amount = num(item.amount, { min: 0.01 });
+      if (!amount) return undefined;
+      const hint = text(item.sourceHint, 10);
+      return { kind: "funds", amount, sourceHint: hint === "cash" || hint === "card" || hint === "meal" ? hint : undefined };
+    }
     case "payday": {
       const date = isoDay(item.date);
       if (!date) return undefined;
@@ -679,12 +866,27 @@ function oneModelIntent(row: unknown, asOf: string): AssistantIntent | undefined
  * validarea pur și simplu lipsește, iar un răspuns întreg fără nimic valid face
  * aplicația să folosească citirea locală.
  */
-export function parseModelIntents(value: unknown, options: { asOf?: string } = {}): ParsedIntent[] {
+/**
+ * Ce a scăpat modelul, dar omul a spus limpede.
+ *
+ * „Am un buget de 1800, îl pui în plic alimente și în părți pe săptămâni până iau salariul”
+ * s-a întors de la model ca un plic simplu de 1.800, fără ritm săptămânal — deși fraza
+ * spunea „pe săptămâni”. Modelul nu are voie să inventeze, dar aplicația are mesajul
+ * original în mână: ce e scris acolo negru pe alb se poate completa fără să ghicim nimic.
+ */
+const repairFromMessage = (intent: AssistantIntent, folded: string): AssistantIntent => {
+  if (intent.kind !== "envelope" || intent.delta) return intent;
+  if (intent.weeklyPace || !WEEKLY.test(folded)) return intent;
+  return { ...intent, weeklyPace: true };
+};
+
+export function parseModelIntents(value: unknown, options: { asOf?: string; message?: string } = {}): ParsedIntent[] {
   if (!Array.isArray(value)) return [];
   const asOf = options.asOf || isoToday();
+  const folded = fold(options.message || "");
   return value
     .slice(0, 8)
     .map((row) => oneModelIntent(row, asOf))
     .filter((intent): intent is AssistantIntent => Boolean(intent))
-    .map((intent) => ({ intent, segment: "" }));
+    .map((intent) => ({ intent: folded ? repairFromMessage(intent, folded) : intent, segment: "" }));
 }

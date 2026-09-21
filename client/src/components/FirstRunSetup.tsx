@@ -205,6 +205,16 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
           )}
           <button type="button" className="bf-onboarding-skip" onClick={complete}>{t("Mai târziu")}</button>
         </div>
+        {/**
+         * Tot ce se derulează stă într-un singur loc, sub antet.
+         *
+         * Înainte derula chiar dialogul, iar bara cu „Mai târziu” rămânea lipită deasupra
+         * conținutului: plicul aluneca pe sub ea, iar bara — pictată cu o culoare plată
+         * peste fundalul dialogului — se vedea ca un dreptunghi mai alb. Cu antetul scos
+         * din zona care derulează, nu mai are ce trece pe sub el și nu mai trebuie nicio
+         * potrivire de culoare.
+         */}
+        <div className="bf-first-run-body">
         <div className="bf-setup-visual" aria-hidden="true"><BrandMark size={72} /></div>
 
         {!intent && (
@@ -352,6 +362,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             </div>
           </div>
         )}
+        </div>
       </section>
     </div>
   );

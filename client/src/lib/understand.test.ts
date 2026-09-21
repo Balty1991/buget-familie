@@ -113,9 +113,25 @@ describe("când citirea locală nu e destulă, întrebăm modelul", () => {
   const winnerFor = (text: string) => decide(understand(text, house(), { asOf: "2026-09-20" })).winner;
 
   it("marchează drept parțială citirea care lasă o sumă necitită", () => {
-    const winner = winnerFor("Am 1800 lei pe care ii împart în plicuri săptămânale pana pe data de 09-10-26, când iau următorul salariu");
+    // 500 nu intră în nicio intenție: rămâne o sumă necitită, deci se întreabă modelul.
+    const winner = winnerFor("urmatorul salariu pe 9 octombrie si 500 raman deoparte");
     expect(winner?.kind).toBe("intents");
     expect(winner?.soft).toBe(true);
+  });
+
+  /**
+   * Fraza care a produs „PESTE LIMITA PLANULUI” pe telefon. Acum e citită întreagă pe loc:
+   * banii pe care îi are, plicul cu ritm săptămânal și data salariului.
+   */
+  it("citește pe telefon fraza cu trei lucruri, fără să mai ceară modelul", () => {
+    const winner = winnerFor("Am 1800 lei pe care ii împart în plicuri săptămânale pana pe data de 09-10-26, când iau următorul salariu");
+    expect(winner?.kind).toBe("intents");
+    expect(winner?.soft).toBeUndefined();
+    if (winner?.kind !== "intents") throw new Error("așteptam intenții");
+    // Banii, data și plicurile propuse din ce are familia — totul într-o singură confirmare.
+    const kinds = new Set(winner.intents.map((item) => item.intent.kind));
+    expect([...kinds].sort()).toEqual(["envelope", "funds", "payday"]);
+    expect(winner.intents.filter((item) => item.intent.kind === "envelope").length).toBe(house().settings.salaryPlan.allocations.length);
   });
 
   it("nu marchează o citire care folosește toate sumele spuse", () => {
@@ -143,7 +159,9 @@ describe("planificarea nu e cheltuială", () => {
   it("nu propune o plată pentru o frază despre împărțirea banilor", () => {
     const winner = decide(understand("Am 1800 lei de împărțit în plicuri până pe 9 octombrie", house(), { asOf: "2026-09-20" })).winner;
     expect(winner?.kind).not.toBe("expense");
-    expect(winner?.soft).toBe(true);
+    if (winner?.kind !== "intents") throw new Error("așteptam intenții");
+    // 1.800 sunt banii pe care îi are, nu o plată de 1.800 de lei.
+    expect(winner.intents.some((item) => item.intent.kind === "funds")).toBe(true);
   });
 
   it("dar o plată chiar făcută din plic rămâne cheltuială", () => {
@@ -358,5 +376,63 @@ describe("ghidul salvează cheltuiala doar după plic și zi", () => {
   it("plicul și venitul cer ziua; un transfer nu", () => {
     expect(isDatedSpendChoice({ label: "Din Alimente", update: { kind: "expense", amount: 10, title: "Taxi", category: "Transport" } })).toBe(true);
     expect(isDatedSpendChoice({ label: "Mută", update: { kind: "transfer", amount: 10, fromId: "a", toId: "b", fromLabel: "A", toLabel: "B" } })).toBe(false);
+  });
+});
+
+/**
+ * Împărțirea spusă pe nume: omul enumeră plicurile și sumele într-o singură frază,
+ * iar aplicația trebuie să le facă pe toate, nu unul cu numele întregii fraze.
+ */
+describe("împarte banii cum spune omul", () => {
+  const goala = (): AppData => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [{ id: "card", name: "Card", kind: "card", memberId: data.settings.members[0].id, openingBalance: 1800 }];
+    data.settings.salaryPlan.periodStart = "2026-09-14";
+    data.settings.salaryPlan.nextPayday = "2026-10-09";
+    data.settings.salaryPlan.sourceIds = ["card"];
+    return data;
+  };
+  const plicuri = (text: string, data = goala()) => {
+    const winner = decide(understand(text, data, { asOf: "2026-09-21" })).winner;
+    if (!winner || winner.kind !== "intents") return [];
+    return winner.intents
+      .map((item) => item.intent)
+      .filter((intent): intent is Extract<typeof intent, { kind: "envelope" }> => intent.kind === "envelope")
+      .map((intent) => ({ label: intent.label, amount: intent.amount, weekly: intent.weeklyPace }));
+  };
+
+  it("face un plic pentru fiecare nume, iar «restul» ia ce rămâne", () => {
+    expect(plicuri("imparte-l pe saptamani, alimente 800, transport 300, restul diverse")).toEqual([
+      { label: "Alimente", amount: 800, weekly: true },
+      { label: "Transport", amount: 300, weekly: true },
+      { label: "Diverse", amount: 700, weekly: true },
+    ]);
+  });
+
+  it("citește și suma scrisă înaintea numelui", () => {
+    expect(plicuri("repartizează 1500: 800 alimente, 400 transport, 300 diverse")).toEqual([
+      { label: "Alimente", amount: 800, weekly: false },
+      { label: "Transport", amount: 400, weekly: false },
+      { label: "Diverse", amount: 300, weekly: false },
+    ]);
+  });
+
+  it("se descurcă și fără virgule", () => {
+    expect(plicuri("imparte pe saptamani alimente 800 transport 300")).toEqual([
+      { label: "Alimente", amount: 800, weekly: true },
+      { label: "Transport", amount: 300, weekly: true },
+    ]);
+  });
+
+  it("«banii» nu e nume de plic", () => {
+    expect(plicuri("imparte-mi banii 600 alimente 400 transport restul economii")).toEqual([
+      { label: "Alimente", amount: 600, weekly: false },
+      { label: "Transport", amount: 400, weekly: false },
+      { label: "Economii", amount: 800, weekly: false },
+    ]);
+  });
+
+  it("o singură cerere de împărțire rămâne pe seama propunerii, nu inventează nume", () => {
+    expect(plicuri("imparte-mi 1800 in plicuri")).toEqual([]);
   });
 });

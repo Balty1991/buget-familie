@@ -24,6 +24,8 @@ import {
   localInsight,
   householdIsSetUp,
   memberIdFor,
+  planWarningFor,
+  planWeeks,
   rememberExpense,
   parsePayday,
   parseWeeks,
@@ -295,6 +297,20 @@ function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide 
   return [];
 }
 
+/**
+ * Unde se pun banii declarați. Indiciul din frază („în card”, „cash”) alege sursa; altfel
+ * prima sursă a omului. Nu se creează surse noi dintr-o frază — ar apărea conturi pe care
+ * nu le-a cerut nimeni.
+ */
+export const pickFundsSource = (data: AppData, hint?: string) => {
+  const sources = data.settings.paymentSources;
+  if (hint) {
+    const match = sources.find((item) => item.kind === hint);
+    if (match) return match;
+  }
+  return sources[0];
+};
+
 function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): FinancialUpdate {
   switch (intent.kind) {
     case "expense": {
@@ -312,6 +328,7 @@ function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideM
     case "goal": return { kind: "goal", name: intent.name, target: intent.target, current: intent.current, dueDate: intent.dueDate };
     case "planned-event": return { kind: "planned-event", name: intent.name, date: intent.date, estimate: intent.estimate, repeat: intent.repeat };
     case "envelope-delete": return { kind: "allocation-delete", label: intent.label };
+    case "funds": return { kind: "funds", amount: intent.amount, sourceHint: intent.sourceHint as "cash" | "card" | "meal" | undefined };
     case "payday": return { kind: "payday", date: intent.date, flexDays: intent.flexDays };
   }
 }
@@ -353,11 +370,24 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
           : `plicul „${intent.label}” cu ${money(intent.amount)} — nu există încă, îl creez`;
       }
       if (intent.delta) return `plicul „${intent.label}”: ${intent.delta === "increase" ? "+" : "−"}${money(intent.amount)}`;
-      return intent.amountIsWeekly ? `plicul „${intent.label}” cu ${money(intent.amount)} pe săptămână întreagă, până la venit` : `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ""}`;
+      if (intent.amountIsWeekly) return `plicul „${intent.label}” cu ${money(intent.amount)} pe săptămână întreagă, până la venit`;
+      /**
+       * Ritmul se scrie în propunere, nu se lasă pe ghicite: omul cere „împarte-mi banii pe
+       * săptămâni”, vede o listă de plicuri cu totaluri și crede că n-am împărțit nimic.
+       */
+      const saptamani = intent.weeklyPace && !intent.weeklyLimit && data ? planWeeks(data) : 0;
+      const ritm = saptamani > 1 ? `, pe săptămâni (~${money(Math.round(intent.amount / saptamani))} pe săptămână)` : "";
+      return `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ritm}`;
     }
     case "debt": return `datoria „${intent.name}”, sold ${money(intent.remaining)}${intent.monthly ? `, rată ${money(intent.monthly)}` : ""}`;
     case "recurring": return `scadența „${intent.name}”, ${money(intent.amount)} pe data de ${intent.dueDay}`;
     case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;
+    case "funds": {
+      const source = data ? pickFundsSource(data, intent.sourceHint) : undefined;
+      return source
+        ? `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” (sold de pornire, nu venit în registru)`
+        : `banii pe care îi ai acum: ${money(intent.amount)}`;
+    }
     case "envelope-delete": {
       const current = data?.settings.salaryPlan.allocations.find((item) => item.label === intent.label || item.category === intent.label);
       return current
@@ -370,11 +400,12 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
 }
 
 /** Textul propunerii, scris o singură dată ca să poată fi refăcut la schimbarea zilei. */
-function proposalText(intents: AssistantIntent[], data?: AppData, memory?: GuideMemory, headline?: string): string {
+function proposalText(intents: AssistantIntent[], data?: AppData, memory?: GuideMemory, headline?: string, warning?: string): string {
   // O propunere de împărțire nu e o înțelegere a mesajului, deci nu se anunță „am înțeles”.
   // Titlul propriu își aduce punctul lui; lista de dedesubt adaugă „:”, deci ar ieși „.:”.
   const head = (headline ? headline.replace(/\.$/, "") : undefined) || (intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`);
-  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}\n\nConfirmi să le trec în registru?`;
+  const avertisment = warning ? `\n\n${warning}` : "";
+  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}${avertisment}\n\nConfirmi să le trec în registru?`;
 }
 
 /** Ziua unei intenții care chiar are dată — cheltuială sau venit. */
@@ -594,7 +625,28 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       if (item.updates.some((update) => update.kind === "income")) setGuideStage("debts");
       const dated = item.updates.find((update) => update.kind === "expense" || update.kind === "income");
       const day = dated && (dated.kind === "expense" || dated.kind === "income") ? dated.date : "";
-      addMessage({ role: "assistant", text: `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`, action: { type: "journal", label: t("Vezi în Mișcări") } });
+      /**
+       * „Am trecut-o în registru” la o declarație de bani suna a mișcare adăugată, iar omul
+       * o căuta în Mișcări și nu o găsea. Soldul de pornire nu e o intrare de bani: se spune
+       * ce s-a schimbat și cum se scrie o intrare adevărată, dacă asta a vrut.
+       */
+      const doarBani = item.updates.every((update) => update.kind === "funds");
+      const plicuri = item.updates.filter((update) => update.kind === "allocation").length;
+      addMessage(doarBani
+        ? {
+            role: "assistant",
+            text: t("Gata, am pus soldul. Nu e o mișcare în registru — dacă banii au intrat acum (salariu, transfer), scrie-mi «am primit {amount} lei» și îi trec și în Mișcări.", {
+              amount: String(item.updates.reduce((sum, update) => update.kind === "funds" ? sum + update.amount : sum, 0)),
+            }),
+            action: { type: "plan", label: t("Vezi în Plan") },
+          }
+        : {
+            role: "assistant",
+            text: plicuri >= 2
+              ? t("Gata, am făcut cele {count} plicuri. Le vezi în Plan, cu tranșele pe săptămâni.", { count: String(plicuri) })
+              : `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`,
+            action: plicuri >= 2 ? { type: "plan", label: t("Vezi în Plan") } : { type: "journal", label: t("Vezi în Mișcări") },
+          });
       setHistoryOpen(false);
       resetSpendDraft();
       return;
@@ -725,7 +777,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       resetSpendDraft();
       addMessage({
         role: "assistant",
-        text: proposalText(intents, data, liveMemory, reading.headline),
+        text: proposalText(intents, data, liveMemory, reading.headline, planWarningFor(reading.intents, data)),
         updates: intents.map((item) => intentToUpdate(item, data, liveMemory)),
         intents,
         action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
@@ -918,7 +970,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
          * incompletă sau imposibilă, iar dacă nu rămâne nimic valid, mesajul cade
          * pe drumul dinainte. Un răspuns stricat nu poate scrie în registru.
          */
-        const modelIntents = sentPhotos ? [] : parseModelIntents(payload.readings, { asOf: isoToday() });
+        const modelIntents = sentPhotos ? [] : parseModelIntents(payload.readings, { asOf: isoToday(), message: requestText });
         if (modelIntents.length) {
           act({ kind: "intents", score: 100, why: "citit de model", intents: modelIntents });
           return;

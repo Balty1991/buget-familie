@@ -69,7 +69,16 @@ const InsightsView = lazy(() => loadSecondary().then((module) => ({ default: mod
 const MoreViewScreen = lazy(() => loadSecondary().then((module) => ({ default: module.MoreView })));
 const AICompanion = lazy(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion })));
 
-const initialMainView = (): MainView => { const requested = new URLSearchParams(window.location.search).get("view"); return requested === "journal" || requested === "plan" || requested === "obligations" || requested === "insights" || requested === "utilities" ? requested : "today"; };
+/**
+ * Link direct către un ecran. Lista era scrisă de mână și rămăsese în urmă: „goals”,
+ * „habits” și „calendar” cădeau tăcut înapoi pe Astăzi, deși ecranele există — un link
+ * dintr-o notificare sau o scurtătură ducea în altă parte decât spunea.
+ */
+const MAIN_VIEWS: MainView[] = ["today", "journal", "plan", "obligations", "goals", "habits", "calendar", "insights", "utilities"];
+const initialMainView = (): MainView => {
+  const requested = new URLSearchParams(window.location.search).get("view") as MainView | null;
+  return requested && MAIN_VIEWS.includes(requested) ? requested : "today";
+};
 type AdvisorAction = "plan" | "recurring" | "objectives" | "journal";
 type AdvisorSignal = { id: string; tone: "good" | "watch" | "risk"; eyebrow: string; title: string; detail: string; action: AdvisorAction; actionLabel: string };
 
@@ -789,6 +798,26 @@ export default function Home() {
      * în nerepartizat, fiindcă „liberul” se calculează din surse minus plicuri. Un nume care
      * nu se potrivește cu niciun plic nu șterge nimic — mai bine nimic decât altceva.
      */
+    /**
+     * „Am un buget de 1800.” Banii nu sunt un venit de azi și nu sunt o cheltuială: sunt
+     * soldul din care se face planul. Îl punem pe sursă astfel încât soldul curent să fie
+     * chiar suma spusă — dacă există deja mișcări, ele rămân la locul lor și se scade doar
+     * diferența, ca registrul să nu mintă în niciun sens.
+     */
+    if (change.kind === "funds") {
+      const sources = current.settings.paymentSources;
+      const target = (change.sourceHint ? sources.find((item) => item.kind === change.sourceHint) : undefined) || sources[0];
+      if (!target) return current;
+      const miscari = current.transactions.reduce((sum, item) => item.sourceId !== target.id ? sum : item.kind === "income" ? sum + item.amount : sum - item.amount, 0);
+      const opening = Math.max(0, Math.round((change.amount - miscari) * 100) / 100);
+      return {
+        ...current,
+        settings: {
+          ...current.settings,
+          paymentSources: sources.map((item) => item.id === target.id ? { ...item, openingBalance: opening } : item),
+        },
+      };
+    }
     if (change.kind === "allocation-delete") {
       const plan = current.settings.salaryPlan;
       const target = plan.allocations.find((item) => item.label === change.label || item.category === change.label);

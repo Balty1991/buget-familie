@@ -5,6 +5,7 @@
 import {
   buildPendingReviewMeta,
   normalizeAppData,
+  pruneTombstones,
   type AllocationAmountConflict,
   type AllocationHistoryEntry,
   type AppData,
@@ -283,12 +284,15 @@ function mergePendingReviewMeta(localMeta: PendingReviewMeta[], remoteMeta: Pend
 /** Unește două copii de familie fără a expedia imagini de bon și fără a reintroduce elemente șterse. */
 export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData {
   const local = normalizeAppData(localRaw); const remote = normalizeAppData(remoteRaw);
-  const deleted = [...remote.deleted, ...local.deleted].reduce<DeletedRecord[]>((all, item) => {
+  const deletedAll = [...remote.deleted, ...local.deleted].reduce<DeletedRecord[]>((all, item) => {
     const index = all.findIndex((entry) => deletionKey(entry) === deletionKey(item));
     if (index < 0) return [...all, item];
     if (Date.parse(item.deletedAt) > Date.parse(all[index].deletedAt)) all[index] = item;
     return all;
-  }, []).sort((a, b) => a.deletedAt.localeCompare(b.deletedAt)).slice(-500);
+  }, []).sort((a, b) => a.deletedAt.localeCompare(b.deletedAt));
+  // Aceeași regulă ca la normalizare: vârsta ține locul numărului, ca o curățenie mare să
+  // nu șteargă urmele ștergerilor dinainte și să le învie de pe celălalt telefon.
+  const deleted = pruneTombstones(deletedAll);
   const memberMap = new Map([...remote.settings.members, ...local.settings.members].map((item) => [item.id, item]));
   const sourceMap = new Map([...remote.settings.paymentSources, ...local.settings.paymentSources].map((item) => [item.id, item]));
   const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);

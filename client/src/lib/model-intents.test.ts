@@ -152,3 +152,24 @@ describe("ce NU trece — registrul omului nu se scrie din ghicite", () => {
     expect((out[0] as { title: string }).title.length).toBeLessThanOrEqual(80);
   });
 });
+
+/**
+ * Modelul întoarce uneori doar jumătate din ce a spus omul. Aplicația are mesajul original,
+ * deci poate completa ce e scris acolo negru pe alb — fără să ghicească nimic în plus.
+ */
+describe("reparația din cuvintele omului", () => {
+  const cu = (value: unknown, message: string) => parseModelIntents(value, { asOf: AZI, message }).map((item) => item.intent);
+
+  it("pune ritmul săptămânal când fraza îl cere, iar modelul l-a uitat", () => {
+    const mesaj = "Am un buget de 1800, îl pui în plic alimente și în părți pe săptămâni până iau salariul";
+    expect(cu([{ kind: "envelope", label: "Alimente", amount: 1800 }], mesaj)[0]).toMatchObject({ weeklyPace: true });
+  });
+
+  it("nu inventează ritm acolo unde nimeni nu l-a cerut", () => {
+    expect(cu([{ kind: "envelope", label: "Alimente", amount: 1800 }], "pune 1800 în plic alimente")[0]).toMatchObject({ weeklyPace: false });
+  });
+
+  it("nu atinge o ajustare de plic", () => {
+    expect(cu([{ kind: "envelope", label: "Alimente", amount: 200, delta: "increase" }], "mai pune 200 pe saptamani")[0]).toMatchObject({ delta: "increase" });
+  });
+});

@@ -72,6 +72,13 @@ export const CORPUS: Case[] = [
   { text: "repartizează 1500 pentru alimente", want: "envelope" },
   { text: "plic economii 1000 pe lună", want: "envelope" },
 
+  // --- împărțirea spusă pe nume, cum vorbește omul -------------------------
+  { text: "împarte-l pe săptămâni, alimente 800, transport 300, restul diverse", want: "envelope", note: "trei plicuri și un rest, nu un plic cu numele întregii fraze" },
+  { text: "imparte banii: alimente 900, transport 400", want: "envelope", note: "două puncte, nu virgulă" },
+  { text: "repartizează 1500: 800 alimente, 400 transport, 300 diverse", want: "envelope", note: "suma înaintea numelui" },
+  { text: "imparte pe saptamani alimente 800 transport 300", want: "envelope", note: "fără virgule" },
+  { text: "imparte-mi banii 600 alimente 400 transport restul economii", want: "envelope", note: "«banii» nu e nume de plic" },
+
   // --- datorii -------------------------------------------------------------
   { text: "datorie card 1800, rata 150", want: "debt" },
   { text: "am un credit la bancă cu sold restant 12000", want: "debt" },

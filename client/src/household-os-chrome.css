@@ -1395,10 +1395,24 @@ html.dark .bf-onboarding.bf-first-run {
   box-shadow: none !important;
 }
 
+/**
+ * Antetul primului ecran nu mai stă lipit peste conținut.
+ *
+ * Bara era `sticky` și își picta propria culoare peste fundalul dialogului — două alburi
+ * apropiate, dar diferite (#fafbfa peste #f7f8f6), deci se vedea ca un dreptunghi mai
+ * deschis, iar plicul aluneca pe sub ea la derulare. Acum derulează doar corpul, iar
+ * antetul rămâne deasupra lui, fără suprapunere și fără nicio culoare de potrivit.
+ */
+.bf-first-run {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
 .bf-first-run-chrome {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 9 !important;
+  position: static !important;
+  z-index: auto !important;
+  flex: 0 0 auto !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -1406,10 +1420,18 @@ html.dark .bf-onboarding.bf-first-run {
   min-height: 44px !important;
   margin: -8px -10px 4px !important;
   padding: 6px 6px 8px !important;
-  background: var(--cf-surface, #fffefa) !important;
+  background: transparent !important;
 }
-html.dark .bf-first-run-chrome {
-  background: var(--cf-surface, #161225) !important;
+
+.bf-first-run-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  display: grid !important;
+  gap: 16px !important;
+  /* Loc pentru umbra butoanelor de pe ultimul rând, ca să nu pară tăiate la derulare. */
+  padding-bottom: 2px !important;
 }
 
 .bf-first-run-chrome-spacer {

@@ -14,6 +14,7 @@ import {
   normalizeAppData,
   planAllocationMath,
   planForecast,
+  pruneTombstones,
   transferBetweenEnvelopes,
   type AppData,
 } from "./finance-data";
@@ -105,5 +106,52 @@ describe("marginile", () => {
     const odata = mergeFamilyData(local, remote);
     const dedoua = mergeFamilyData(odata, remote);
     expect(JSON.stringify(dedoua)).toBe(JSON.stringify(odata));
+  });
+});
+
+/**
+ * Pietrele de mormânt erau tăiate la ultimele 500. O curățenie mare de mișcări vechi
+ * împingea afară ștergerile dinainte, iar un telefon nesincronizat le învia la prima unire.
+ */
+describe("urmele ștergerilor", () => {
+  const stergeri = (count: number, zile: number): AppData["deleted"] =>
+    Array.from({ length: count }, (_, index) => {
+      const when = new Date("2026-09-21T12:00:00");
+      when.setDate(when.getDate() - zile);
+      return { entity: "transactions" as const, id: `tx-${zile}-${index}`, deletedAt: when.toISOString() };
+    });
+
+  it("ține tot ce s-a șters în ultimele șase luni, chiar și peste vechea limită de 500", () => {
+    const pastrate = pruneTombstones(stergeri(900, 10), "2026-09-21");
+    expect(pastrate).toHaveLength(900);
+  });
+
+  it("lasă în urmă doar ștergerile foarte vechi, când se atinge plafonul", () => {
+    const amestec = [...stergeri(1500, 400), ...stergeri(1800, 5)];
+    const pastrate = pruneTombstones(amestec, "2026-09-21");
+    expect(pastrate.length).toBeLessThanOrEqual(2000);
+    // Recentele au prioritate: nicio ștergere din ultimele zile nu se pierde.
+    expect(pastrate.filter((item) => item.id.startsWith("tx-5-"))).toHaveLength(1800);
+  });
+
+  it("un rând șters nu se întoarce de pe celălalt telefon", () => {
+    const local = base();
+    const remote = base();
+    const miscare = { id: "tx-1", title: "Lidl", amount: 100, kind: "expense" as const, category: "Alimente", source: "Card", sourceId: "card", person: "Eu", memberId: "member-me", date: "2026-09-10" };
+    remote.transactions = [miscare];
+    local.transactions = [];
+    local.deleted = [{ entity: "transactions", id: "tx-1", deletedAt: "2026-09-20T10:00:00.000Z" }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.transactions.some((item) => item.id === "tx-1")).toBe(false);
+  });
+
+  it("dar un rând scris din nou, după ștergere, rămâne", () => {
+    const local = base();
+    const remote = base();
+    remote.transactions = [{ id: "tx-1", title: "Lidl", amount: 100, kind: "expense", category: "Alimente", source: "Card", sourceId: "card", person: "Eu", memberId: "member-me", date: "2026-09-10", updatedAt: "2026-09-20T18:00:00.000Z" }];
+    local.transactions = [];
+    local.deleted = [{ entity: "transactions", id: "tx-1", deletedAt: "2026-09-20T10:00:00.000Z" }];
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.transactions.some((item) => item.id === "tx-1")).toBe(true);
   });
 });

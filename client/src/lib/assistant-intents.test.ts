@@ -246,3 +246,43 @@ describe("întrebările nu scriu în registru", () => {
     expect(at("imparte-mi 1800 in plicuri")).toEqual([]);
   });
 });
+
+/**
+ * Fraza reală de pe telefon, care a dat naștere la „PESTE LIMITA PLANULUI” și
+ * „NEREPARTIZAȚI −1.800 RON”: trei lucruri într-o propoziție, din care aplicația citea
+ * unul singur.
+ */
+describe("o frază, trei lucruri", () => {
+  const MESAJ = "Am un buget de 1800,il pui în plic alimente și în părți pe săptămâni pana iau următorul salariu pe 09-10-2026";
+
+  it("citește banii, plicul și data salariului", () => {
+    const kinds = at(MESAJ, "2026-09-21").map((item) => item.intent.kind).sort();
+    expect(kinds).toEqual(["envelope", "funds", "payday"]);
+  });
+
+  it("aceeași sumă are două roluri: banii avuți și plicul", () => {
+    const intents = at(MESAJ, "2026-09-21").map((item) => item.intent);
+    expect(intents.find((item) => item.kind === "funds")).toMatchObject({ amount: 1800 });
+    expect(intents.find((item) => item.kind === "envelope")).toMatchObject({ label: "Alimente", amount: 1800 });
+  });
+
+  it("„pe săptămâni” cere ritm, dar suma rămâne totalul perioadei", () => {
+    const envelope = at(MESAJ, "2026-09-21").map((item) => item.intent).find((item) => item.kind === "envelope");
+    expect(envelope).toMatchObject({ weeklyPace: true });
+    expect(envelope && "amountIsWeekly" in envelope ? envelope.amountIsWeekly : undefined).toBeFalsy();
+  });
+
+  it("numele plicului e categoria, nu restul frazei", () => {
+    expect(at("pune 1800 în plic alimente și în părți pe săptămâni", "2026-09-21")[0].intent).toMatchObject({ label: "Alimente" });
+  });
+
+  it("o cheltuială nu-și împrumută suma unui plic", () => {
+    const intents = at("am dat 50 de lei, scade din plicul de transport", "2026-09-21").map((item) => item.intent);
+    expect(intents.some((item) => item.kind === "envelope" && item.amount === 50 && !item.delta)).toBe(false);
+  });
+
+  it("banii declarați știu unde stau, când omul spune", () => {
+    expect(at("am 1800 in card", "2026-09-21")[0].intent).toMatchObject({ kind: "funds", amount: 1800, sourceHint: "card" });
+    expect(at("am cash 500", "2026-09-21")[0].intent).toMatchObject({ kind: "funds", sourceHint: "cash" });
+  });
+});

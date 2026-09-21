@@ -39,7 +39,7 @@ import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
 import { spendGroupOf } from "./product-catalog";
-import { extractAmounts, extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } from "./assistant-intents";
+import { explicitSplitLines, extractAmounts, extractDates, parseAssistantMessage, repeatFactor, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
 
 export type FinancialUpdate =
@@ -52,6 +52,8 @@ export type FinancialUpdate =
   | { kind: "goal"; name: string; target: number; current?: number; dueDate?: string }
   | { kind: "planned-event"; name: string; date: string; estimate: number; repeat: "once" | "yearly" }
   | { kind: "allocation-delete"; label: string }
+  /** Banii pe care omul spune că îi are: ajung sold de pornire pe o sursă, nu venit în registru. */
+  | { kind: "funds"; amount: number; sourceHint?: "cash" | "card" | "meal" }
   | { kind: "payday"; date: string; flexDays: number }
   | { kind: "transfer"; amount: number; fromId: string; toId: string; fromLabel: string; toLabel: string }
   | { kind: "delete-transaction"; id: string; title: string; amount: number }
@@ -579,21 +581,90 @@ const BASE = { confirm: 100, revise: 95, intents: 90, question: 80, due: 78, tra
  * scadențele scoase deoparte. Dacă nu știm nimic despre familie, nu propunem nimic — mesajul
  * pleacă la model, care poate întreba.
  */
-const WANTS_SPLIT = /\b(imparte|imparti|impart[ei]?|impartim|reparti|fa-?mi un plan|fa un plan|un plan (pentru|pe)|cum (sa )?impart)\b/;
+const WANTS_SPLIT = /\b(imparte|imparti|impart[ei]?|impartim|reparti\w*|fa-?mi un plan|fa un plan|un plan (pentru|pe)|cum (sa )?impart)\b/;
 
-function splitReading(raw: string, data: AppData, asOf: string, alreadyNamed: boolean): Reading | undefined {
+/**
+ * Câte săptămâni are ciclul curent. Aceeași socoteală ca pe ecranul planului, ca ritmul
+ * spus în propunere („~275 pe săptămână”) să fie chiar cel pe care îl va vedea omul.
+ */
+export function planWeeks(data: AppData): number {
+  const plan = data.settings.salaryPlan;
+  const end = planEndDate(plan);
+  if (!end || !plan.periodStart) return 1;
+  const days = Math.floor((new Date(`${end}T12:00:00`).valueOf() - new Date(`${plan.periodStart}T12:00:00`).valueOf()) / 86400000) + 1;
+  return Math.max(1, Math.ceil(Math.max(1, days) / 7));
+}
+
+/** Banii pe care aplicația îi vede acum, plus cei declarați în aceeași frază. */
+function visibleMoney(data: AppData, altele: ParsedIntent[]): number {
+  const declarati = altele.reduce((sum, item) => item.intent.kind === "funds" ? sum + item.intent.amount : sum, 0);
+  return Math.max(0, planAllocationMath(data).unrepartized) + declarati;
+}
+
+/**
+ * Împărțirea spusă pe nume bate orice propunere a noastră.
+ *
+ * „Împarte-l pe săptămâni: alimente 800, transport 300, restul diverse” ieșea ca un singur
+ * plic cu un nume făcut din toate cuvintele frazei. Omul spusese exact ce vrea; noi îi
+ * dădeam altceva și îi ceream să confirme. Aici fiecare nume devine plicul lui, „restul”
+ * primește ce rămâne din banii văzuți, iar „pe săptămâni” dă ritmul tuturor.
+ */
+function namedSplitReading(raw: string, folded: string, data: AppData, altele: ParsedIntent[]): Reading | undefined {
+  const lines = explicitSplitLines(raw, data.settings.merchantRules);
+  if (lines.length < 2) return undefined;
+  const weekly = /saptaman/.test(folded);
+  const spuse = lines.reduce((sum, line) => sum + (line.amount || 0), 0);
+  const libere = visibleMoney(data, altele);
+  const ramas = Math.round((libere - spuse) * 100) / 100;
+  const plicuri = lines
+    .map((line) => ({ ...line, amount: line.amount ?? (line.rest && ramas > 0 ? ramas : 0) }))
+    .filter((line) => line.amount > 0);
+  if (plicuri.length < 2) return undefined;
+  const intents: ParsedIntent[] = [
+    ...altele.filter((item) => item.intent.kind !== "envelope"),
+    ...plicuri.map((line) => ({
+      intent: { kind: "envelope" as const, label: line.label, amount: line.amount, category: line.category, weeklyPace: weekly },
+      segment: raw,
+    })),
+  ];
+  const rest = lines.find((line) => line.rest && line.amount === undefined);
+  const headline = rest && ramas > 0
+    ? t("Le fac pe rând, cum ai spus; restul de {amount} intră în „{label}”.", { amount: money(ramas), label: rest.label })
+    : t("Le fac pe rând, cum ai spus.");
+  return {
+    kind: "intents",
+    score: BASE.intents + 3,
+    why: "plicuri spuse pe nume, cu sume",
+    intents,
+    headline,
+  };
+}
+
+function splitReading(raw: string, data: AppData, asOf: string, alreadyNamed: boolean, altele: ParsedIntent[] = []): Reading | undefined {
   const folded = foldRo(raw);
-  if (alreadyNamed || !WANTS_SPLIT.test(folded)) return undefined;
+  if (!WANTS_SPLIT.test(folded)) return undefined;
+  const named = namedSplitReading(raw, folded, data, altele);
+  if (named) return named;
+  if (alreadyNamed) return undefined;
   const spoken = extractAmounts(extractDates(raw).masked).map((hit) => hit.value).sort((left, right) => right - left)[0];
   const free = Math.max(0, planAllocationMath(data).unrepartized);
   const total = spoken || free;
   if (total <= 0) return undefined;
   const split = proposeSplit(data, total, asOf);
   if (!split.lines.length) return undefined;
-  const intents: ParsedIntent[] = split.lines.map((line) => ({
-    intent: { kind: "envelope" as const, label: line.label, amount: line.amount, category: line.category, weeklyPace: true },
-    segment: raw,
-  }));
+  /**
+   * Ce a mai spus omul în aceeași frază merge cu propunerea, nu separat: „am 1800, împarte-i
+   * în plicuri până pe 9 octombrie” înseamnă și banii, și data, și plicurile. Confirmate pe
+   * bucăți, plicurile ar fi stat o clipă peste surse goale, iar ecranul ar fi strigat
+   * „peste limita planului” până la următoarea confirmare.
+   */
+  const intents: ParsedIntent[] = [
+    ...altele.filter((item) => item.intent.kind !== "envelope"),
+    ...split.lines.map((line) => ({
+      intent: { kind: "envelope" as const, label: line.label, amount: line.amount, category: line.category, weeklyPace: true },
+      segment: raw,
+    })),
+  ];
   const reserved = split.reserved > 0 ? t(" Scadențele rezervate ({amount}) rămân deoparte.", { amount: money(split.reserved) }) : "";
   const basis = split.basis === "envelopes" ? t("după cum ai împărțit și până acum") : t("după cheltuielile tale din ultimele 90 de zile");
   return {
@@ -605,10 +676,36 @@ function splitReading(raw: string, data: AppData, asOf: string, alreadyNamed: bo
   };
 }
 
+/**
+ * Ce s-ar întâmpla cu planul dacă omul confirmă — spus înainte, nu după.
+ *
+ * Cazul care a cerut funcția: „am un buget de 1800, pune-l în plic alimente” a creat un
+ * plic de 1.800 peste surse goale. Aplicația a tăcut la confirmare, iar omul a găsit pe
+ * ecrane „PESTE LIMITA PLANULUI” și „NEREPARTIZAȚI −1.800 RON”, fără să înțeleagă de ce.
+ * Cifra există dinainte: o arătăm în propunere, cu ieșirea din impas.
+ */
+export function planWarningFor(intents: ParsedIntent[], data: AppData): string | undefined {
+  const adaugate = intents.reduce((sum, item) => {
+    const intent = item.intent;
+    if (intent.kind !== "envelope" || intent.delta) return sum;
+    const existent = data.settings.salaryPlan.allocations.find((row) => row.label === intent.label || row.category === intent.label);
+    return sum + intent.amount - (existent?.amount ?? 0);
+  }, 0);
+  if (adaugate <= 0) return undefined;
+  const declarati = intents.reduce((sum, item) => item.intent.kind === "funds" ? sum + item.intent.amount : sum, 0);
+  const libere = Math.max(0, planAllocationMath(data).unrepartized) + declarati;
+  const lipsa = Math.round((adaugate - libere) * 100) / 100;
+  if (lipsa <= 0.005) return undefined;
+  return t("Atenție: plicurile cer {missing} peste banii pe care îi văd ({free}). Spune-mi unde sunt banii — „am {missing} în card” — sau scade plicul.", {
+    missing: money(lipsa),
+    free: money(libere),
+  });
+}
+
 /** Sumele pe care o intenție chiar le folosește; restul rămân necitite. */
 const intentAmounts = (intent: ParsedIntent["intent"]): number[] => {
   switch (intent.kind) {
-    case "expense": case "income": case "recurring": return [intent.amount];
+    case "expense": case "income": case "recurring": case "funds": return [intent.amount];
     case "envelope": return [intent.amount, ...(intent.weeklyLimit ? [intent.weeklyLimit] : [])];
     case "debt": return [intent.remaining, ...(intent.monthly ? [intent.monthly] : [])];
     case "goal": return [intent.target, ...(intent.current ? [intent.current] : [])];
@@ -667,8 +764,26 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
    * sumă pe care nimeni nu a folosit-o: acolo modelul are ce adăuga.
    */
   const guessy = soundsLikeCommand(raw) || (plansMoney(raw) && leavesMoneyUnread(raw, intents));
-  const split = splitReading(raw, data, ctx.asOf || isoToday(), intents.some((item) => item.intent.kind === "envelope"));
-  if (split) readings.push(split);
+  const split = splitReading(raw, data, ctx.asOf || isoToday(), intents.some((item) => item.intent.kind === "envelope"), intents);
+  if (split) {
+    /**
+     * Propunerea de împărțire cuprinde și celelalte intenții, deci ea trebuie să câștige —
+     * iar citirea simplă, din care s-a născut, iese din cursă. Lăsate amândouă, scorurile
+     * cădeau la două puncte una de alta, mesajul părea ambiguu și asistentul întreba în loc
+     * să propună, deși înțelesese perfect ce i s-a cerut.
+     */
+    const plain = readings.findIndex((item) => item.kind === "intents");
+    if (plain >= 0) readings.splice(plain, 1);
+    readings.push({ ...split, score: Math.max(split.score, BASE.intents + 2) });
+  } else if (WANTS_SPLIT.test(foldRo(raw)) && intents.length && !intents.some((item) => item.intent.kind === "envelope")) {
+    /**
+     * Omul a cerut o împărțire, iar noi știm doar banii și data: în ce plicuri să meargă
+     * nu avem de unde ghici. Citirea rămâne validă, dar marcată ca parțială, ca modelul
+     * să poată întreba în loc să tăcem pe jumătate de frază.
+     */
+    const partial = readings.find((item) => item.kind === "intents");
+    if (partial) partial.soft = true;
+  }
 
   const answer = analyze(raw, data, ctx.asOf);
   if (answer) readings.push({ kind: "question", score: BASE.question, why: "are formă de întrebare despre bani", answer, ...(guessy ? { soft: true as const } : {}) });
