@@ -12,7 +12,7 @@
  * acolo se rupe înțelegerea.
  */
 export type Outcome =
-  | "expense" | "income" | "envelope" | "envelope-delete" | "debt" | "recurring" | "goal" | "payday" | "planned-event"
+  | "expense" | "income" | "envelope" | "envelope-delete" | "debt" | "recurring" | "goal" | "payday" | "planned-event" | "funds" | "open"
   | "transfer" | "answer" | "confirm" | "revise" | "due" | "none";
 
 export type Case = {
@@ -78,6 +78,7 @@ export const CORPUS: Case[] = [
   { text: "repartizează 1500: 800 alimente, 400 transport, 300 diverse", want: "envelope", note: "suma înaintea numelui" },
   { text: "imparte pe saptamani alimente 800 transport 300", want: "envelope", note: "fără virgule" },
   { text: "imparte-mi banii 600 alimente 400 transport restul economii", want: "envelope", note: "«banii» nu e nume de plic" },
+  { text: "AM un buget de 1850, pana la următorul venit pe 09 - 10-2026, punei într-un alimente și împarte-i săptămânal pana la acea data", want: "funds", note: "trei lucruri: banii, ziua venitului și plicul Alimente pe săptămâni" },
 
   // --- datorii -------------------------------------------------------------
   { text: "datorie card 1800, rata 150", want: "debt" },

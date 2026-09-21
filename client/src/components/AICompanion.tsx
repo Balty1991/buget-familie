@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, ChevronUp, CircleCheck, FileText, Lightbulb, Paperclip, Send, Trash2, WalletCards, X } from "lucide-react";
-import { newId, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
+import { newId, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, parseNaturalSpendScenario, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
 import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
@@ -454,9 +454,16 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
     case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;
     case "funds": {
       const source = data ? pickFundsSource(data, intent.sourceHint) : undefined;
-      return source
-        ? `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” (sold de pornire, nu venit în registru)`
-        : `banii pe care îi ai acum: ${money(intent.amount)}`;
+      if (!source || !data) return `banii pe care îi ai acum: ${money(intent.amount)}`;
+      /**
+       * Se scrie cât intră, nu doar cât ai. Când sursa are deja bani, în Mișcări intră
+       * doar diferența — altfel omul ar vedea o intrare mai mare decât ce s-a schimbat.
+       */
+      const diferenta = Math.round((intent.amount - sourceBalance(data, source.id)) * 100) / 100;
+      if (Math.abs(diferenta) < 0.005) return `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — atât arată și acum, nu am ce schimba`;
+      return diferenta > 0
+        ? `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — trec ${money(diferenta)} ca intrare în Mișcări`
+        : `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — scad ${money(Math.abs(diferenta))} din registru, ca să iasă soldul`;
     }
     case "envelope-delete": {
       const current = data?.settings.salaryPlan.allocations.find((item) => item.label === intent.label || item.category === intent.label);
@@ -738,10 +745,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinanci
       addMessage(doarBani
         ? {
             role: "assistant",
-            text: t("Gata, am pus soldul. Nu e o mișcare în registru — dacă banii au intrat acum (salariu, transfer), scrie-mi «am primit {amount} lei» și îi trec și în Mișcări.", {
-              amount: String(item.updates.reduce((sum, update) => update.kind === "funds" ? sum + update.amount : sum, 0)),
-            }),
-            action: { type: "plan", label: t("Vezi în Plan") },
+            text: t("Gata. Banii sunt în Mișcări ca intrare, iar soldul arată acum cât ai spus."),
+            action: { type: "journal", label: t("Vezi în Mișcări") },
           }
         : {
             role: "assistant",

@@ -850,19 +850,39 @@ export default function Home() {
      * chiar suma spusă — dacă există deja mișcări, ele rămân la locul lor și se scade doar
      * diferența, ca registrul să nu mintă în niciun sens.
      */
+    /**
+     * „Am un buget de 1850.” Banii ajungeau doar în soldul de pornire al sursei, deci omul
+     * îi vedea în Plan, dar nu-i găsea nicăieri în Mișcări — iar o intrare de bani pe care
+     * n-o vezi în registru pare pierdută. Acum se scrie diferența dintre cât spune el că
+     * are și cât vede aplicația, ca mișcare adevărată, cu ziua ei.
+     *
+     * Soldul iese la fel ca înainte, fiindcă tot diferența se adaugă. Spus de două ori,
+     * al doilea mesaj nu mai scrie nimic: diferența e zero.
+     */
     if (change.kind === "funds") {
       const sources = current.settings.paymentSources;
       const target = (change.sourceHint ? sources.find((item) => item.kind === change.sourceHint) : undefined) || sources[0];
       if (!target) return current;
-      const miscari = current.transactions.reduce((sum, item) => item.sourceId !== target.id ? sum : item.kind === "income" ? sum + item.amount : sum - item.amount, 0);
-      const opening = Math.max(0, Math.round((change.amount - miscari) * 100) / 100);
-      return {
-        ...current,
-        settings: {
-          ...current.settings,
-          paymentSources: sources.map((item) => item.id === target.id ? { ...item, openingBalance: opening } : item),
-        },
+      const diferenta = Math.round((change.amount - sourceBalance(current, target.id)) * 100) / 100;
+      if (Math.abs(diferenta) < 0.005) return current;
+      const urcare = diferenta > 0;
+      const persoana = current.settings.members.find((item) => item.id === target.memberId) || member || current.settings.members[0];
+      const miscare: Transaction = {
+        id: newId("guided-funds"),
+        title: urcare ? t("Bani disponibili") : t("Corecție de sold"),
+        amount: Math.abs(diferenta),
+        kind: urcare ? "income" : "expense",
+        category: urcare ? "Venit" : "Altele",
+        sourceId: target.id,
+        source: target.name,
+        memberId: persoana?.id,
+        person: persoana?.name || "",
+        date: isoToday(),
+        allocationId: urcare ? undefined : "outside",
+        note: t("Bani declarați în ghid — soldul sursei ajunge la cât ai spus."),
+        createdAt: now,
       };
+      return { ...current, transactions: [miscare, ...current.transactions] };
     }
     if (change.kind === "allocation-delete") {
       const plan = current.settings.salaryPlan;

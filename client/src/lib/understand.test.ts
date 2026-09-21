@@ -462,3 +462,24 @@ describe("du-mă la ecranul cerut", () => {
     expect(ecran("arată-mi cât am cheltuit luna asta")).toBeUndefined();
   });
 });
+
+/**
+ * Fraza scrisă pe telefon, cu tot ce are ea: sumă declarată, dată cu spații în ea și
+ * plicul numit înaintea verbului. Până acum se citea doar suma, iar restul pleca la model.
+ */
+describe("fraza lungă, scrisă de mână", () => {
+  it("citește banii, ziua venitului și plicul dintr-o singură frază", () => {
+    const winner = decide(understand(
+      "AM un buget de 1850, pana la următorul venit pe 09 - 10-2026, punei într-un alimente și împarte-i săptămânal pana la acea data",
+      createEmptyAppData(),
+      { asOf: "2026-09-21" },
+    )).winner;
+    if (winner?.kind !== "intents") throw new Error("așteptam intenții");
+    expect(winner.soft).toBeUndefined();
+    expect(winner.intents.map((item) => item.intent)).toEqual([
+      { kind: "funds", amount: 1850 },
+      { kind: "payday", date: "2026-10-09", flexDays: 0 },
+      { kind: "envelope", label: "Alimente", amount: 1850, category: "Alimente", weeklyPace: true },
+    ]);
+  });
+});

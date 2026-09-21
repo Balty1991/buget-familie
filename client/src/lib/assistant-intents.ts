@@ -110,7 +110,9 @@ export function extractDates(raw: string, asOf = isoToday()): { hits: DateHit[];
     push({ start: iso(year, m1, d1), end: iso(year, m1, d2), index: m.index!, length: m[0].length, explicit: true });
   }
   // zi.lună.an
-  for (const m of Array.from(raw.matchAll(/\b(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\b/g))) {
+  // Scrisă de mână, data are spații: „09 - 10-2026”. Fără ele în tipar, ziua venitului
+  // rămânea necitită, iar restul frazei pleca la model pentru ceva ce știam deja.
+  for (const m of Array.from(raw.matchAll(/\b(\d{1,2})\s*[./-]\s*(\d{1,2})\s*[./-]\s*(\d{2,4})\b/g))) {
     const day = Number(m[1]);
     const month = Number(m[2]);
     const year = Number(m[3].length === 2 ? `20${m[3]}` : m[3]);
@@ -226,7 +228,7 @@ const MARKERS: Array<[AssistantIntent["kind"], RegExp]> = [
    * de zero, iar aplicația arăta „PESTE LIMITA PLANULUI” și „nerepartizați −1.800”.
    * Stă înaintea venitului, fiindcă „am un buget” conține și cuvinte de venit.
    */
-  ["funds", /\b(am un buget|avem un buget|bugetul (meu|nostru)|am disponibil|avem disponibil|dispun de|am in (card|cont|cash|banca)|am pe card|am cash|am in mana)\b|\bam\s+\d[\d.,\s]*(lei|ron)\b|\bam\s+\d[\d.,\s]*(lei|ron)?\s*(in|pe)\s+(card|cont|cash|banca)\b/g],
+  ["funds", /\b(am un buget|avem un buget|bugetul (meu|nostru)|am disponibil|avem disponibil|dispun de|am in (card|cont|cash|banca)|am pe card|am cash|am in mana)\b|\bam\s+\d[\d.,\s]*(de\s+)?(lei|ron)\b|\bam\s+\d[\d.,\s]*(de\s+)?(lei|ron)?\s*(in|pe)\s+(card|cont|cash|banca)\b/g],
   ["income", /\b(am primit|am incasat|mi-?a intrat|venit(uri)? (de|din)|salariu|leafa|bonus|prima de)\b/g],
   ["expense", /\b(am cheltuit|am dat|am platit|am luat|cheltuiala|plata de)\b/g],
 ];
@@ -247,7 +249,8 @@ function findMarkers(folded: string, categories: string[] = []): Marker[] {
       found.push({ kind, index, length: m[0].length });
     }
   }
-  const allocate = folded.match(/\b(pune|aloca|alocam)\b/);
+  // „Pune-i în alimente”, „punei”, „puneți”: același verb, cu pronumele lipit de el.
+  const allocate = folded.match(/\b(pune\w{0,3}|aloca\w{0,2})\b/);
   if (allocate && typeof allocate.index === "number" && !found.some((item) => item.kind === "envelope")) {
     const tail = folded.slice(allocate.index);
     // „Casă & facturi” se scrie cu «și» când o spune omul; comparăm pe litere.
@@ -464,7 +467,16 @@ function parseEnvelope(segment: string, masked: string, amounts: AmountHit[], ma
    */
   const firstWord = fold(named).split(/\s+/)[0] || "";
   const namedIsCategory = Boolean(category) && (named.split(/\s+/).length === 1 || firstWord === fold(category || ""));
-  const label = category && named && namedIsCategory ? category : (rawName || category || "");
+  /**
+   * „Pune-i într-un alimente și împarte-i săptămânal până la acea dată” dădea un plic numit
+   * „Intr-un alimente imparte-i acea”: tot ce urma după verb intra în etichetă. Când numele
+   * nu e spus limpede („plic X”), iar ce rămâne e o frază, nu un nume, categoria ghicită
+   * ține locul numelui — plicul se cheamă „Alimente”, cum s-ar aștepta omul.
+   */
+  const leftoverWords = leftover.split(/\s+/).filter(Boolean).length;
+  const label = category && ((named && namedIsCategory) || (!named && leftoverWords > 3))
+    ? category
+    : (rawName || category || "");
   if (!label) return undefined;
   /**
    * „Plic Alimente, 600 pe săptămână” spune un ritm, nu un total: singura sumă din mesaj stă
@@ -748,7 +760,17 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
       const segment = text.slice(marker.index, to).trim();
       const { masked } = extractDates(segment, asOf);
       const imprumutat: AmountHit[] = [{ value: candidat, index: 0, length: 0 }];
-      const intent = parseEnvelope(segment, masked, imprumutat, marker.length, rules, envelopeDelta(folded), true);
+      let intent = parseEnvelope(segment, masked, imprumutat, marker.length, rules, envelopeDelta(folded), true);
+      /**
+       * Categoria poate fi spusă înaintea verbului: „am un buget de 1850 … pune-i într-un
+       * alimente și împarte-i săptămânal”. Segmentul începe la „împarte”, deci „alimente”
+       * rămânea în afara lui și plicul se pierdea, deși omul îl numise. O căutăm atunci în
+       * mesajul întreg — tot o categorie cunoscută trebuie să iasă, altfel nu se creează nimic.
+       */
+      if (intent && intent.kind === "envelope" && !intent.category) {
+        const dinMesaj = guessCategoryFromText(text, expenseCategories, rules);
+        if (dinMesaj) intent = { ...intent, category: dinMesaj, label: dinMesaj };
+      }
       /**
        * O sumă împrumutată e deja o presupunere; un nume presupus peste ea ar fi două.
        * „Am 1800 lei pe care îi împart în plicuri săptămânale” producea un plic chiar
