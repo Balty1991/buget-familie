@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
+import { cycleClose } from "@/lib/cycle-close";
 import { recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
 import { getLocale, t } from "@/lib/i18n";
 
@@ -159,7 +160,13 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
         </button>
       )}
 
-      {brief.closeSoon && !simpleMode && (
+      {cycleClose(data) && (
+        <button type="button" className="bf-brief-close" onClick={() => onGo("plan")}>
+          {t("Ciclul s-a încheiat — vezi ce a rămas")}
+        </button>
+      )}
+
+      {brief.closeSoon && !simpleMode && !cycleClose(data) && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("insights")}>
           {t("Ciclu aproape gata — închide luna din Analiză → Gospodărie")}
         </button>

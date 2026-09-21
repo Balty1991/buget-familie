@@ -18,6 +18,7 @@ import { calendarBudget, remainingPace, startedWeekShare, totalFromWeeklyPace, w
 import { levelStartedWeek, spreadStartedWeekSurplus, startedWeekPlan } from "@/lib/started-week";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
 import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
+import { CycleClosePanel } from "@/components/CycleClosePanel";
 import { AllocationRecommendationsPanel } from "@/components/AllocationRecommendationsPanel";
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
@@ -380,6 +381,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   };
 
   return <div className="bf-page bf-plan-workspace bf-salary-cycle-plan">
+    {/* Un ciclu încheiat e cel mai important lucru de pe ecran: stă înaintea planului. */}
+    <CycleClosePanel data={data} onChange={onChange} />
     <EnvelopeConflictBanner data={data} onChange={onChange} />
     <header className="bf-plan-studio-header bf-plan-hero-glass">
       <div className="bf-plan-hero-copy"><p className="bf-kicker">{t("PLANUL FAMILIEI, PE CATEGORII")}</p><h1>{t("Fiecare leu")} <em>{t("are un loc.")}</em></h1><p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p></div>
