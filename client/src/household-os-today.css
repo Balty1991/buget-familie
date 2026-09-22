@@ -1289,3 +1289,26 @@ html:not(.dark) .bf-os-decide {
   margin-top: 8px;
 }
 .bf-today-below-gauge { margin: 8px 0 16px; }
+.bf-cycle-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.bf-cycle-flow span {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--os-surface, #fff) 72%, transparent);
+  border: 1px solid var(--os-line, rgba(13, 59, 50, 0.12));
+}
+.bf-cycle-flow small {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--os-muted, #5c6b64);
+}
+.bf-cycle-flow b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.bf-cycle-flow span:first-child b { color: #1f7a4d; }
+.bf-cycle-flow span:last-child b { color: #b5523c; }

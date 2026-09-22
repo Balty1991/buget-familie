@@ -2783,6 +2783,17 @@ const en: Record<string, string> = {
   "Le poți folosi pe cele pe care le ai. Altele noi vin cu Familia.": "You can keep using the ones you have. New ones come with Familia.",
   "{days} zile de probă": "{days} trial days",
   "Vezi planul Familia": "See the Familia plan",
+  "În ciclul ăsta": "This cycle",
+  "Intrat": "In",
+  "Ieșit": "Out",
+  "Categorii rapide": "Quick categories",
+  "Sau altă categorie": "Or another category",
+  "Tot plicul": "Whole envelope",
+  "ABONAMENTE": "SUBSCRIPTIONS",
+  "În fiecare lună": "Every month",
+  "în fiecare lună": "every month",
+  "Gestionează": "Manage",
+  "Chirie, telefon, Netflix — un nume și o sumă. Fără logo.": "Rent, phone, Netflix — a name and an amount. No logo.",
 };
 
 

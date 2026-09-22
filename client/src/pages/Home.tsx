@@ -226,6 +226,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   const monthlyEnvelopesRemaining = envelopes.filter((entry) => entry.scope === "cycle").reduce((sum, entry) => sum + entry.remaining, 0);
   const envelopeTotalRemaining = Math.max(0, weeklyEnvelopesRemaining + monthlyEnvelopesRemaining);
   const periodIncome = data.transactions.filter((item) => item.kind === "income" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
+  const periodExpense = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const activeTranche = math.planEnd ? currentCalendarBudgetWeek(math.weeklyPacedTotal, math.plan.periodStart, math.planEnd, isoToday()) : undefined;
   const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : "";
   const showTrancheNotice = Boolean(activeTranche && shownTrancheKey === activeTrancheKey);
@@ -419,6 +420,12 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
+            {(periodIncome > 0 || periodExpense > 0) && (
+              <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
+                <span><small>{t("Intrat")}</small><b>+{money(periodIncome)}</b></span>
+                <span><small>{t("Ieșit")}</small><b>−{money(periodExpense)}</b></span>
+              </div>
+            )}
             {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
           </>
         )}

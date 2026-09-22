@@ -324,3 +324,17 @@
 @media (max-width: 380px) {
   .bf-funding-row { grid-template-columns: minmax(0, 1fr) 72px 30px; }
 }
+
+.bf-envelope-meter {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  align-items: baseline;
+  margin: 8px 0 4px;
+}
+.bf-envelope-meter span { color: var(--cf-muted, #6d7c74); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.bf-envelope-meter b { justify-self: end; font-size: 13px; font-variant-numeric: tabular-nums; }
+.bf-envelope-meter b small { font-weight: 600; color: var(--cf-muted, #6d7c74); }
+.bf-envelope-meter i { grid-column: 1 / -1; display: block; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--cf-line, #dce6dd) 80%, #fff); overflow: hidden; }
+.bf-envelope-meter em { display: block; height: 100%; border-radius: inherit; background: var(--cf-primary, #256b5b); }
+.bf-envelope-meter.is-over em { background: var(--cf-danger, #c45b45); }

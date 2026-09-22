@@ -182,3 +182,28 @@
     letter-spacing: -.065em;
   }
 }
+
+.bf-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+.bf-cat-grid button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 8px 4px;
+  border: 1px solid var(--cf-line, #e3e2d9);
+  border-radius: 14px;
+  background: var(--cf-surface, #fff);
+  color: var(--cf-ink, #1b332c);
+  font: 700 11px/1.15 "IBM Plex Sans", system-ui, sans-serif;
+}
+.bf-cat-grid button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bf-cat-grid button.is-on {
+  border-color: transparent;
+  background: var(--cf-primary-strong, #174b3d);
+  color: var(--cf-on-primary, #fff);
+}

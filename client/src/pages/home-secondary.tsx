@@ -662,6 +662,26 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
           <button className="bf-goals-link" onClick={onOpenCalendar}><CalendarDays size={16} /> {t("Calendar de scadențe")}</button>
           <button className="bf-goals-link" onClick={onOpenEvents}><Gift size={16} /> {t("Evenimente viitoare")}</button>
         </div>
+        <section className="bf-sub-board" aria-label={t("Abonamente")}>
+          <div className="bf-section-heading">
+            <div>
+              <p className="bf-kicker">{t("ABONAMENTE")}</p>
+              <h2>{t("În fiecare lună")}</h2>
+            </div>
+            <button type="button" onClick={onOpenRecurring}>{data.recurring.some((item) => item.active) ? t("Gestionează") : t("Adaugă")}</button>
+          </div>
+          {data.recurring.some((item) => item.active) ? (
+            <ul>
+              {data.recurring.filter((item) => item.active).map((item) => (
+                <li key={item.id}>
+                  <b>{item.name}</b>
+                  <small>{t("în fiecare lună")} · {t("Ziua {day}", { day: item.dueDay })}</small>
+                  <strong>{money(item.amount)}</strong>
+                </li>
+              ))}
+            </ul>
+          ) : <p>{t("Chirie, telefon, Netflix — un nume și o sumă. Fără logo.")}</p>}
+        </section>
         {upcoming.length ? (
           <div className="bf-upcoming-list">
             {upcoming.map((entry, index) => (
