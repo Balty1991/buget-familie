@@ -1,14 +1,16 @@
 /**
  * Planuri Casa / Familia. Play Billing se lipește aici după listare.
- * Până atunci totul e deblocat — nu blocăm registrul familiei care testează.
  *
- * Purchase flow: STUB. Nu există apeluri Billing / IAP cât `BILLING_LIVE === false`.
- * SKU-urile din `PLAY_PRODUCT_IDS` sunt doar mapare pentru când activăm pluginul
- * (vezi docs/BILLING_PLAY_PREP.md). Nu simula plăți.
+ * Casa e registrul unui om. Familia se cere în trei locuri: al doilea membru,
+ * al doilea telefon, cota de ghid. Registrul nu se blochează niciodată.
+ *
+ * Purchase flow: STUB cât `BILLING_LIVE === false`. SKU-urile din
+ * `PLAY_PRODUCT_IDS` așteaptă Play Console (docs/BILLING_PLAY_PREP.md).
  */
 export const BILLING_LIVE = false;
 
 export type PlanId = "casa" | "familie";
+export type UpgradeReason = "member" | "sync" | "ai" | "envelope";
 
 export const PLANS: Record<PlanId, {
   id: PlanId;
@@ -23,7 +25,6 @@ export const PLANS: Record<PlanId, {
   familie: { id: "familie", envelopes: Number.POSITIVE_INFINITY, members: 6, devices: 6, aiOnlinePerDay: 100, priceMonth: 19.99, priceYear: 149 },
 };
 
-/** Product IDs sugerate în Play Console — stub până la Billing live. */
 export const PLAY_PRODUCT_IDS = {
   familieMonth: "familie_lunar",
   familieYear: "familie_anual",
@@ -31,12 +32,11 @@ export const PLAY_PRODUCT_IDS = {
 
 export type BillingSku = typeof PLAY_PRODUCT_IDS[keyof typeof PLAY_PRODUCT_IDS];
 
-/** Trial pe Familia când Billing e live (Play Console + copy UI). */
 export const TRIAL_DAYS = 14;
+export const FAMILIE_OPEN_EVENT = "buget-familie:open-familie";
 
 export const planLimits = (id: PlanId) => PLANS[id];
 
-/** Preț catalog pentru UI, ex. "19,99 lei/lună". Casa → "Gratuit". */
 export const formatPlanPriceRon = (plan: PlanId, period: "month" | "year"): string => {
   const row = PLANS[plan];
   const value = period === "month" ? row.priceMonth : row.priceYear;
@@ -48,7 +48,14 @@ export const formatPlanPriceRon = (plan: PlanId, period: "month" | "year"): stri
   return period === "month" ? `${amount} lei/lună` : `${amount} lei/an`;
 };
 
-/** Când Billing e live, unlock-ul vine din Play. Acum e mereu Familia. */
+/** Câte luni cadou are anualul față de 12 × luna. 149 vs 19,99 × 12 → 4 luni. */
+export const familieYearGiftMonths = (): number => {
+  const month = PLANS.familie.priceMonth;
+  if (month <= 0) return 0;
+  return Math.max(0, Math.floor((month * 12 - PLANS.familie.priceYear) / month));
+};
+
+/** Când Billing e live, unlock-ul vine din Play. Până atunci gospodăria de test rămâne Familia. */
 export const currentPlan = (): PlanId => (BILLING_LIVE ? "casa" : "familie");
 
 export const isFamilie = () => currentPlan() === "familie";
@@ -56,3 +63,11 @@ export const isFamilie = () => currentPlan() === "familie";
 export const canAddEnvelope = (count: number) => isFamilie() || count < PLANS.casa.envelopes;
 export const canAddMember = (count: number) => isFamilie() || count < PLANS.casa.members;
 export const canUseFamilySync = () => isFamilie();
+export const canUseSettleUp = () => isFamilie();
+export const canUseCycleClose = () => isFamilie();
+export const aiDailyLimit = () => planLimits(currentPlan()).aiOnlinePerDay;
+
+export function openFamilieCatalog() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(FAMILIE_OPEN_EVENT));
+}

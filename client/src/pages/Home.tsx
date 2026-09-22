@@ -46,6 +46,7 @@ import { usePersistAppData, readInitialAppData } from "@/hooks/usePersistAppData
 import { useSimpleMode } from "@/hooks/useSimpleMode";
 import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/EnvelopeConflictBanner";
 import { FirstRunSetup } from "@/components/FirstRunSetup";
+import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
 
 const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio })));
 const MovementsJournal = lazy(() => import("@/components/MovementsJournal").then((module) => ({ default: module.MovementsJournal })));
@@ -709,6 +710,15 @@ export default function Home() {
     };
     window.addEventListener("buget-familie:open-catalog", openCatalog);
     return () => window.removeEventListener("buget-familie:open-catalog", openCatalog);
+  }, []);
+  useEffect(() => {
+    const openFamilie = () => {
+      setMore("settings");
+      go("utilities");
+      window.setTimeout(() => document.getElementById("bf-familie-plan")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    };
+    window.addEventListener(FAMILIE_OPEN_EVENT, openFamilie);
+    return () => window.removeEventListener(FAMILIE_OPEN_EVENT, openFamilie);
   }, []);
   useEffect(() => {
     const onOpenGuide = () => setGuideOn(true);

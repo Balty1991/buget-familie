@@ -5,6 +5,8 @@ import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 import { getLocale, t } from "@/lib/i18n";
+import { aiDailyLimit } from "@/lib/entitlements";
+import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 import { parseModelIntents, type AppScreen, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText } from "@/lib/analyst";
@@ -82,7 +84,6 @@ function GuideText({ text }: { text: string }) {
 
 const QUOTA_KEY = "buget-familie:ai-quota-v2";
 const MEMORY_KEY = "buget-familie:ai-memory-v1";
-const DAILY_LIMIT = 100;
 
 
 
@@ -153,12 +154,13 @@ function nextLocalMidnight() {
 }
 
 function emptyQuota(): QuotaInfo {
-  return { remaining: DAILY_LIMIT, limit: DAILY_LIMIT, resetAt: nextLocalMidnight(), mode: "online" };
+  const limit = aiDailyLimit();
+  return { remaining: limit, limit, resetAt: nextLocalMidnight(), mode: "online" };
 }
 
 function consumeQuota(current: QuotaInfo, payload: { remaining?: number | null; limit?: number | null; resetAt?: string | null } | undefined, ok: boolean, exhausted: boolean): QuotaInfo {
   const resetAt = current.resetAt && Date.parse(current.resetAt) > Date.now() ? current.resetAt : nextLocalMidnight();
-  const limit = current.limit || DAILY_LIMIT;
+  const limit = aiDailyLimit();
   if (exhausted) return { remaining: 0, limit, resetAt: payload?.resetAt || resetAt, mode: "local" };
   if (!ok) return { remaining: current.remaining, limit, resetAt, mode: current.remaining > 0 ? current.mode : "local" };
   const remaining = Math.max(0, current.remaining - 1);
@@ -168,11 +170,12 @@ function consumeQuota(current: QuotaInfo, payload: { remaining?: number | null; 
 function loadQuota(): QuotaInfo {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(QUOTA_KEY) || "null") as Partial<QuotaInfo> | null;
+    const limit = aiDailyLimit();
     if (!parsed || (parsed.mode !== "online" && parsed.mode !== "local")) return emptyQuota();
     if (!parsed.resetAt || Date.parse(parsed.resetAt) <= Date.now()) return emptyQuota();
-    const used = Math.max(0, (Number(parsed.limit) || DAILY_LIMIT) - Number(parsed.remaining ?? DAILY_LIMIT));
-    const remaining = Math.max(0, DAILY_LIMIT - used);
-    return { remaining, limit: DAILY_LIMIT, resetAt: parsed.resetAt, mode: remaining <= 0 ? "local" : parsed.mode === "local" ? "local" : "online" };
+    const used = Math.max(0, (Number(parsed.limit) || limit) - Number(parsed.remaining ?? limit));
+    const remaining = Math.max(0, limit - used);
+    return { remaining, limit, resetAt: parsed.resetAt, mode: remaining <= 0 ? "local" : parsed.mode === "local" ? "local" : "online" };
   } catch {
     return emptyQuota();
   }
@@ -211,6 +214,7 @@ function GuideQuotaBar({ quota, habits }: { quota: QuotaInfo; habits: number }) 
       <div className="ai-quota-track" aria-hidden="true"><i style={{ width: `${quotaPercent(quota)}%` }} /></div>
       <p className="ai-quota-long">{longLabel}</p>
       <p className="ai-quota-short">{shortLabel}</p>
+      {local ? <FamilieUpgrade reason="ai" /> : null}
     </div>
   );
 }

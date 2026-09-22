@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  aiDailyLimit,
   BILLING_LIVE,
   canAddEnvelope,
   canAddMember,
+  canUseCycleClose,
   canUseFamilySync,
+  canUseSettleUp,
   currentPlan,
+  familieYearGiftMonths,
   formatPlanPriceRon,
   planLimits,
   PLAY_PRODUCT_IDS,
@@ -19,16 +23,25 @@ describe("planuri Casa / Familia", () => {
     expect(canAddEnvelope(20)).toBe(true);
     expect(canAddMember(4)).toBe(true);
     expect(canUseFamilySync()).toBe(true);
+    expect(canUseSettleUp()).toBe(true);
+    expect(canUseCycleClose()).toBe(true);
+    expect(aiDailyLimit()).toBe(100);
   });
 
   it("Casa e gratuită și mărginită; Familia e un abonament de familie, nu per persoană", () => {
     expect(PLANS.casa.priceMonth).toBe(0);
     expect(PLANS.casa.envelopes).toBe(10);
+    expect(PLANS.casa.members).toBe(1);
+    expect(PLANS.casa.aiOnlinePerDay).toBe(20);
     expect(PLANS.familie.priceYear).toBe(149);
     expect(PLANS.familie.priceMonth).toBe(19.99);
     expect(PLANS.familie.members).toBe(6);
     expect(planLimits("casa").envelopes).toBe(10);
     expect(planLimits("familie").members).toBe(6);
+  });
+
+  it("anualul e evidențiat: 4 luni cadou față de lună", () => {
+    expect(familieYearGiftMonths()).toBe(4);
   });
 
   it("SKU Play stub + trial + prețuri RO pentru catalog (fără plăți reale)", () => {
