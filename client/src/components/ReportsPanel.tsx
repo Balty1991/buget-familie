@@ -70,10 +70,16 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
   const plannedPayday = data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday;
   const awaitingIncome = current.income === 0 && current.expense > 0 && Boolean(plannedPayday) && plannedPayday! >= range.start && plannedPayday! <= range.end;
 
-  const snapshot = !selected.length && !previous.length
+  const windowEmpty = {
+    tone: "empty" as const,
+    eyebrow: compare.mode === "cycle" ? t("CICLUL ALES") : t("LUNA ALEASĂ"),
+    title: compare.mode === "cycle" ? t("Nu există mișcări în acest ciclu.") : t("Nu există mișcări în această lună."),
+    detail: t("Poți alege o altă lună din ritmul anual sau poți înregistra prima mișcare."),
+  };
+  const snapshot = !data.transactions.length
     ? { tone: "empty", eyebrow: t("PUNCT DE PLECARE"), title: t("Începe cu prima mișcare."), detail: t("După câteva înregistrări, aici vei vedea ce s-a schimbat și ce merită urmărit.") }
     : !selected.length
-      ? { tone: "empty", eyebrow: t("LUNA ALEASĂ"), title: t("Nu există mișcări în această lună."), detail: t("Poți alege o altă lună din ritmul anual sau poți înregistra prima mișcare.") }
+      ? windowEmpty
       : alerts.some((entry) => entry.state === "over")
         ? { tone: "risk", eyebrow: t("DECIZIE NECESARĂ"), title: t("Un plic a trecut peste limită."), detail: t("{count} {word} o revizuire înainte de următoarea plată.", { count: alerts.filter((entry) => entry.state === "over").length, word: alerts.filter((entry) => entry.state === "over").length === 1 ? t("limită cere") : t("limite cer") }) }
         : awaitingIncome

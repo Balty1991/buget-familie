@@ -195,6 +195,27 @@ function OpeningBalanceCard({ data, onChange }: { data: AppData; onChange: (next
   );
 }
 
+type ActivityRow = { id: string; date: string; updatedAt?: string; createdAt?: string };
+
+/**
+ * Pe o gospodărie, feedul ciclului lasă afară ce e notat azi după ce ciclul s-a închis
+ * (și cheltuiala personală de azi). Lista „Ultimele mișcări” e despre ce tocmai s-a întâmplat,
+ * nu doar despre intervalul planului — altfel starea goală spune „nicio mișcare azi”.
+ */
+export function recentActivityMoves<T extends ActivityRow>(transactions: T[], cycleRecentIds: string[], today: string, memberCount: number): T[] {
+  const byRecency = (left: T, right: T) =>
+    (right.updatedAt || right.createdAt || right.date).localeCompare(left.updatedAt || left.createdAt || left.date);
+  if (memberCount < 2) return [...transactions].sort(byRecency).slice(0, 5);
+  const byId = new Map(transactions.map((item) => [item.id, item]));
+  const seen = new Set(cycleRecentIds);
+  const todayIds = transactions.filter((item) => item.date === today && !seen.has(item.id)).map((item) => item.id);
+  return [...todayIds, ...cycleRecentIds]
+    .map((id) => byId.get(id))
+    .filter((item): item is T => Boolean(item))
+    .sort(byRecency)
+    .slice(0, 5);
+}
+
 function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings, onOpenRecurring }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void }) {
   const { simpleMode } = useSimpleMode();
   const math = useMemo(() => planMath(data), [data]);
@@ -211,15 +232,9 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
   const lastMoves = useMemo(() => {
-    const byRecency = (left: Transaction, right: Transaction) =>
-      (right.updatedAt || right.createdAt || right.date).localeCompare(left.updatedAt || left.createdAt || left.date);
-    if (data.settings.members.length < 2) {
-      return [...data.transactions].sort(byRecency).slice(0, 5);
-    }
-    const recentIds = householdActivityInCycle(data).recent.map((item) => item.id);
-    return recentIds
-      .map((id) => data.transactions.find((item) => item.id === id))
-      .filter((item): item is Transaction => Boolean(item));
+    const today = isoToday();
+    const cycleIds = data.settings.members.length < 2 ? [] : householdActivityInCycle(data, today).recent.map((item) => item.id);
+    return recentActivityMoves(data.transactions, cycleIds, today, data.settings.members.length);
   }, [data]);
   const overPlan = math.remaining < 0;
   const daily = math.plan.nextPayday ? forecast.safeDaily : 0;
@@ -524,7 +539,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           ) : (
             <button className="bf-today-empty-activity" onClick={onAdd}>
               <ReceiptText size={20} />
-              <span><b>{t("Nicio mișcare azi.")}</b><small>{t("Notează prima cheltuială sau încasare.")}</small></span>
+              <span><b>{data.transactions.length ? t("Nicio mișcare azi.") : t("Nicio mișcare încă")}</b><small>{data.transactions.length ? t("Zilele trecute sunt în Mișcări.") : t("Notează prima cheltuială sau încasare.")}</small></span>
               <Plus size={18} />
             </button>
           )}
