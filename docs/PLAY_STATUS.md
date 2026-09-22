@@ -1,6 +1,6 @@
 # Stare Play (sept 2026)
 
-Versiune țintă listing: **1.1.45** / `versionCode` **47**. Play Billing **oprit** (`BILLING_LIVE = false`) — catalog Casa/Familia e previzualizare, fără plăți.
+Versiune țintă listing: **1.1.67** / `versionCode` **69**. Play Billing **oprit** (`BILLING_LIVE = false`) — catalog Casa/Familia e previzualizare, fără plăți. Text de lipit: [`play-store-listing-ro.md`](./play-store-listing-ro.md). Capturi: [`play-store-assets/SCREENSHOTS.md`](./play-store-assets/SCREENSHOTS.md).
 
 | Doc | Rol |
 |---|---|

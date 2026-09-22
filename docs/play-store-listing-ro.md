@@ -2,7 +2,7 @@
 
 Text gata de lipit în Play Console. **Fără prețuri IAP** cât `BILLING_LIVE = false`. Plățile (Play Billing) se activează separat, după closed testing stabil.
 
-**Versiune listing (sept 2026):** `versionName` **1.1.45** / `versionCode` **47**.
+**Versiune listing (sept 2026):** `versionName` **1.1.67** / `versionCode` **69**.
 
 Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety detaliat: [`PLAY_CONSOLE_DATA_SAFETY.md`](./PLAY_CONSOLE_DATA_SAFETY.md).
 
@@ -12,8 +12,8 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 |---|---|
 | Nume (max 30) | Buget Familie |
 | Pachet | `ro.balty1991.bugetfamilie` |
-| versionName | `1.1.45` |
-| versionCode | `47` |
+| versionName | `1.1.67` |
+| versionCode | `69` |
 | Categorie | Finance |
 | Etichete | Buget, Familie, Cheltuieli, Plicuri, România, Ciclu salariu |
 | Contact | contact.vanzo@gmail.com |
@@ -32,27 +32,31 @@ Plicuri pe ciclu de salariu, sync familie criptat — fără login bancar.
 ## Descriere completă
 
 ```
-Buget Familie este registrul unei gospodării românești: fiecare leu are un loc până la următorul venit.
+Buget Familie îți spune câți lei poți folosi azi, din plic, până la salariu. Nu e un jurnal de magazin și nu se leagă de bancă.
 
-De ce e altfel
-• Plicuri pe categorie, membru și sursă — card, cash, bonuri de masă, transfer comun.
-• Fără login bancar și fără cont. Datele stau pe telefon.
-• Sincronizare opțională între telefoane: o parolă de familie, pachet AES-GCM; serverul nu vede lei în clar.
-• Astăzi: un număr de decizie — cât poți folosi fără să strici următoarea perioadă.
-• Scor de sănătate, ritm zilnic, recapitulare de lună.
-• El și ea: cine a mișcat banii, fără conturi separate.
-• Bonuri cu OCR local. Pozele nu pleacă de pe telefon.
-• De verificat: bonuri și CSV bancă (BCR, BT, ING, Revolut) confirmate înainte de registru.
-• PDF de bilanț și CSV, generate în aplicație.
-• Widget și dală: cheltuială sau bon, fără sume pe ecranul de start.
-• Teme: Alb Atelier, Noapte, Aurora, Navy, Cyber — contrast verificat pe controale.
-• Reamintiri locale pe orizont scurt (≤14 zile); la deschiderea aplicației se reprogramează.
+Pe Astăzi
+• Un singur număr: cât poți folosi azi.
+• Intrat și ieșit în ciclul ăsta, sub număr.
+• Zilele săptămânii în aceeași fișă — vezi cât mai ține fiecare zi, nu un al doilea ecran.
+• Ultimele trei mișcări. Scorul, bilanțul și graficul stau la „Mai mult din ziua asta”.
+• Buton + mereu jos: notezi suma fără să cauți meniul.
 
-Planuri (catalog în app; fără reclame pe ecranele cu bani)
-• Casa — gratuit: registrul de bază, până la 10 plicuri, un membru.
-• Familia — un plan pentru toată casa: sync criptat, plicuri nelimitate, până la 6 persoane. Disponibilitatea plății pe Google Play vine după activarea Billing — până atunci nu există unlock-uri plătite în magazin.
+Plicuri
+• Fiecare plic arată cât s-a cheltuit din limită, pe săptămână sau pe tot ciclul.
+• Poți muta lei între plicuri și între săptămâni.
 
-Aplicația nu plătește facturi, nu investește și nu înlocuiește un consultant. Este un atelier de decizii, în română, în lei.
+Casă
+• Până la 6 persoane, fără conturi separate. Sync opțional, o parolă, criptat; serverul nu vede sumele.
+• Obligații: chirie, rate, abonamente — nume și sumă, fără logo-uri.
+• Bonuri citite pe telefon. Pozele nu pleacă. Un extras CSV intră doar după ce confirmi.
+
+Din afara aplicației
+• Widget pe ecranul principal: Cheltuială, Bon și până la 3 obiceiuri. Doar nume, nicio sumă pe ecranul de start.
+• Dală în Setări rapide: o cheltuială din trasarea de sus. Dacă aplicația era în fundal, foaia se deschide după ce revine, nu se pierde apăsarea.
+
+Datele stau pe telefon. Fără reclame pe ecranele cu bani. Fără plată în magazin în versiunea asta — catalogul Casa / Familia se activează după testarea închisă.
+
+Nu plătește facturi, nu dă credite și nu ține loc de consultant.
 ```
 
 ## Feature bullets
@@ -95,7 +99,7 @@ App de finanțe personale, fără user-generated public, fără violență, făr
 ## Grafică de magazin
 
 - Grafic caracteristică: [play-feature.svg](https://balty1991.github.io/buget-familie/play-feature.svg) — exportă PNG 1024×500 (Play nu acceptă SVG).
-- Capturi: Astăzi (un număr + feed), Plan (plicuri), Mișcări, De verificat, Sync, Analiză, temă Noapte, Setări → Încredere.
+- Capturi: Astăzi (cifra, intrat/ieșit, săptămâna, trei mișcări, +), Notează (iconițe), Plan (bară cheltuit/limită), Mișcări (săptămâna), Obligații, Analiză (unde au mers banii). Widgetul nu e captură din app: pe telefon, fără sume.
 - Shot list detaliat: [`PLAY_LISTING.md`](./PLAY_LISTING.md).
 
 ## Ce NU s-a atins

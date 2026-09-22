@@ -43,6 +43,9 @@ public class MainActivity extends BridgeActivity {
    */
   private String pendingQuickAction;
   private boolean nativeBridgesAttached;
+  /** WebView-ul e pauzat în fundal; evenimentul JS se pierde dacă îl trimitem din onNewIntent. */
+  private boolean activityResumed;
+  private boolean quickActionNotifyPending;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -153,7 +156,8 @@ public class MainActivity extends BridgeActivity {
     final String action = readQuickAction(intent);
     if (action != null) {
       pendingQuickAction = action;
-      notifyWebQuickAction();
+      if (activityResumed) notifyWebQuickAction();
+      else quickActionNotifyPending = true;
     }
   }
 
@@ -168,6 +172,7 @@ public class MainActivity extends BridgeActivity {
       webView.onPause();
       webView.pauseTimers();
     }
+    activityResumed = false;
     super.onPause();
   }
 
@@ -178,6 +183,11 @@ public class MainActivity extends BridgeActivity {
     if (webView != null) {
       webView.resumeTimers();
       webView.onResume();
+    }
+    activityResumed = true;
+    if (quickActionNotifyPending && pendingQuickAction != null) {
+      quickActionNotifyPending = false;
+      notifyWebQuickAction();
     }
   }
 

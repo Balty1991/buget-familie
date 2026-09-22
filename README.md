@@ -4,7 +4,7 @@
 
 ## Stare Play (sept 2026)
 
-Versiune listing **1.1.45** / `versionCode` **47**. Billing **off** (`BILLING_LIVE=false`). Detalii + linkuri: [`docs/PLAY_STATUS.md`](docs/PLAY_STATUS.md), [`docs/ROADMAP_PLAY_2026.md`](docs/ROADMAP_PLAY_2026.md), [`docs/BILLING_PLAY_PREP.md`](docs/BILLING_PLAY_PREP.md), [`docs/AUDIT_AND_UPGRADE.md`](docs/AUDIT_AND_UPGRADE.md), [`docs/MARKET_RESEARCH.md`](docs/MARKET_RESEARCH.md).
+Versiune listing **1.1.67** / `versionCode` **69**. Billing **off** (`BILLING_LIVE=false`). Text de lipit: [`docs/play-store-listing-ro.md`](docs/play-store-listing-ro.md). Capturi: [`docs/play-store-assets/SCREENSHOTS.md`](docs/play-store-assets/SCREENSHOTS.md).
 
 ## Funcții implementate
 

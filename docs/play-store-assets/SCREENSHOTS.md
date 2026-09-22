@@ -1,25 +1,22 @@
 # Capturi Play Store — note de producție
 
-Temă recomandată: **Alb Atelier / ivory** (Premium), telefon 1080×1920 sau 1080×2340.
+Temă: **Alb Atelier**. Telefon 1080×2340. Date inventate, nu ale tale. Fără notificări pe bară.
+
+Versiune de listat: **1.1.67** / `versionCode` **69**.
 
 ## Ordine (8 cadre)
 
-1. **Astăzi** — cifra de decizie (Poți folosi azi) + dock + CTA captură.
-2. **Plan** — plicuri cu stare în plan / aproape / depășit.
-3. **Mișcări** — jurnal pe zile + filtru Tip.
-4. **De verificat** — coadă bon/CSV înainte de registru.
-5. **Sync** — sesiune familie + „ce nu se sincronizează”.
-6. **Analiză** — ritm sau scor sănătate.
-7. **Temă Noapte / Aurora** — același Astăzi, contrast umplut.
-8. **Obligații** — scadențe (opțional).
+1. **Astăzi** — „Poți folosi azi”, Intrat/Ieșit, zilele săptămânii în aceeași fișă, trei mișcări, **+** jos dreapta.
+2. **Notează** — foaia „Cât ai dat?” cu iconițele de categorie (coș, casă, autobuz).
+3. **Plan** — un plic cu bara „cheltuit din limită”, nu doar un procent.
+4. **Mișcări** — banda zilelor (luni–duminică) și iconiță pe rând.
+5. **Obligații** — un rând de abonament: nume, „în fiecare lună”, sumă. Fără logo Netflix.
+6. **Analiză** — gogoașa „Unde au mers banii”, cu procente, înaintea graficului pe an.
+7. **Sync** — o parolă de familie, „serverul nu vede sumele”.
+8. **Widget** (ecranul de start al telefonului) — Cheltuială / Bon / un obicei. Nicio sumă.
 
 ## Reguli
 
-- Date demo inventate (nu date reale).
-- Fără bare de status zgomotoase / notificări.
-- Asset-uri grafice: `feature-graphic.png` (1024×500), `icon-512.png` (512×512).
-- Surse vector: `feature-graphic.svg`, `icon-512.svg` (regenerare cu Chrome headless sau ImageMagick).
-
-## Brand
-
-Emerald / sage Premium: fundal `#0F3D34`–`#143c36`, accent plic `#3AA87C` / `#7CFFC4` / `#D8FFF0`.
+- Nu pune scorul, graficul de plicuri sau temele în primele două cadre. Astea stau la „Mai mult”.
+- Feature graphic 1024×500 și icon 512 deja în folderul ăsta.
+- Textul de lipit în Console: `docs/play-store-listing-ro.md`. Fără prețuri, cât Billing e oprit.

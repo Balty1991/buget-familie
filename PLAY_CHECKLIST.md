@@ -15,7 +15,7 @@ Nu putem testa widgetul / dala pe un dispozitiv fizic în mediul de build. Înai
 
 > **Hardware necesar:** widgetul, șabloanele pe widget și dala nu pot fi validate în CI — bifează pe un telefon Android real după `cap:sync` / APK debug.
 >
-> **Cod (2026-09):** `onNewIntent` păstrează acțiunea *și* semnalează JS (`buget-familie:quick-action`) când aplicația e deja vizibilă. Tot trebuie bifat pe telefon — nu din CI.
+> **Cod (1.1.67):** dacă aplicația e în fundal, WebView-ul e pauzat. Acțiunea se ține și JS e anunțat **după** `onResume`, nu din `onNewIntent` (evenimentul se pierdea). În prim-plan se anunță imediat. Tot trebuie bifat pe telefon.
 
 ## Dala Setări rapide
 
@@ -61,7 +61,7 @@ Abonamentele Casa (gratuit) / Familia (19,99 lei/lună sau 149 lei/an) se adaug�
 
 Play cere testers reali, nu doar CI.
 
-- [ ] AAB semnat, `versionCode` 47 / `versionName` 1.1.45, pachet `ro.balty1991.bugetfamilie`
+- [ ] AAB semnat, `versionCode` 69 / `versionName` 1.1.67, pachet `ro.balty1991.bugetfamilie`
 - [ ] Privacy, terms, delete-data publicate pe GitHub Pages
 - [ ] Data safety completat (financiare pe dispozitiv, sync opțional AES-GCM, fără ads)
 - [ ] Financial features: evidență, nu sfat de investiții / credit / plăți

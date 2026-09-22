@@ -4,7 +4,7 @@
 
 Text gata de lipit în Play Console. **Fără upload fals în store.** Plățile (Play Billing) și App Check Enforce rămân afară. **Nu lipi prețuri IAP cât timp `BILLING_LIVE = false`.**
 
-**Versiune pentru listing (sept 2026):** `1.1.45` / `versionCode` **47** (`package.json` + `android/app/build.gradle`).
+**Versiune pentru listing (sept 2026):** `1.1.67` / `versionCode` **69** (`package.json` + `android/app/build.gradle`). Textul lung de lipit e în `play-store-listing-ro.md`, nu aici.
 
 ## Identitate
 
