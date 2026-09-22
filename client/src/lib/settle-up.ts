@@ -47,18 +47,27 @@ export function settleUp(data: AppData, today = isoToday()): SettleUp | undefine
   const plan = data.settings.salaryPlan;
   if (!plan.periodStart) return undefined;
   const inCycle = (item: Transaction) => inPlanPeriod(item.date, plan) && item.date <= today;
-  const ultimaDecontare = data.transactions
+  const ultima = data.transactions
     .filter((item) => item.note === SETTLE_NOTE && inCycle(item))
-    .map((item) => item.date)
-    .sort()
-    .pop();
-  const since = ultimaDecontare && ultimaDecontare > plan.periodStart ? ultimaDecontare : plan.periodStart;
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || "").localeCompare(b.createdAt || ""))
+    .at(-1);
+  const since = ultima?.date || plan.periodStart;
+  // Ziua decontării e închisă. Cheltuielile dinainte, inclusiv cele din aceeași zi
+  // deja numărate, nu se mai cer a doua oară. O mișcare înregistrată după decontare,
+  // chiar în aceeași zi, intră în socoteala nouă.
+  const afterSettlement = (item: Transaction) => {
+    if (!ultima) return true;
+    if (item.date > ultima.date) return true;
+    if (item.date < ultima.date) return false;
+    if (!item.createdAt || !ultima.createdAt) return false;
+    return item.createdAt > ultima.createdAt;
+  };
   const comune = data.transactions.filter((item) =>
     item.kind === "expense"
     && item.note !== SETTLE_NOTE
     && transactionShareScope(item) === "shared"
-    && item.date >= since
-    && inCycle(item));
+    && inCycle(item)
+    && afterSettlement(item));
   const total = round(comune.reduce((sum, item) => sum + item.amount, 0));
   const perPerson = round(total / membri.length);
   const rows: SettleRow[] = membri.map((member) => {
@@ -70,7 +79,7 @@ export function settleUp(data: AppData, today = isoToday()): SettleUp | undefine
   const diferenta = round(creditor.balance);
   return {
     since,
-    settledAt: ultimaDecontare,
+    settledAt: ultima?.date,
     total,
     perPerson,
     rows,

@@ -2,7 +2,7 @@
  * Cine cui datorează. Aplicația avea toate cifrele și nu făcea niciodată scăderea.
  */
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, type AppData, type Transaction } from "./finance-data";
+import { adoptOutsideExpenses, allocationSpent, createEmptyAppData, type AppData, type Transaction } from "./finance-data";
 import { applySettlement, pickSettlementSources, settleUp, SETTLE_NOTE } from "./settle-up";
 
 const tx = (id: string, amount: number, memberId: string, extra: Partial<Transaction> = {}): Transaction => ({
@@ -88,5 +88,30 @@ describe("decontarea între doi oameni", () => {
     const intrare = next.transactions.find((item) => item.note === SETTLE_NOTE && item.kind === "income");
     expect(iesire?.sourceId).toBe("comun");
     expect(intrare?.sourceId).toBe("cash-ea");
+  });
+
+  it("cheltuielile din ziua decontării nu rămân de plătit a doua oară", () => {
+    const data = casa();
+    data.settings.salaryPlan.periodStart = "2026-09-21";
+    data.transactions = [
+      tx("t1", 800, "m1", { date: "2026-09-21", createdAt: "2026-09-21T08:00:00.000Z" }),
+      tx("t2", 200, "m2", { date: "2026-09-21", createdAt: "2026-09-21T09:00:00.000Z" }),
+    ];
+    const next = applySettlement(data, "2026-09-21");
+    expect(settleUp(next, "2026-09-21")!.debt).toBeUndefined();
+    next.transactions.push(tx("t3", 100, "m1", { date: "2026-09-21", createdAt: "2099-01-01T00:00:00.000Z" }));
+    expect(settleUp(next, "2026-09-21")!.debt).toMatchObject({ fromName: "Ea", toName: "Eu", amount: 50 });
+  });
+
+  it("decontarea nu intră în singurul plic și nu-i micșorează restul", () => {
+    const data = casa();
+    data.settings.salaryPlan.allocations = [{ id: "food", label: "Alimente", category: "Alimente", amount: 500, sourceId: "card-1", weeklyPace: true }];
+    data.transactions = [tx("t1", 800, "m1"), tx("t2", 200, "m2")];
+    const settled = applySettlement(data, "2026-09-21");
+    const adopted = adoptOutsideExpenses(settled);
+    const iesire = adopted.transactions.find((item) => item.note === SETTLE_NOTE && item.kind === "expense");
+    expect(iesire?.allocationId).toBe("outside");
+    // Cumpărăturile comune intră în plic; decontarea de 300 nu.
+    expect(allocationSpent(adopted, adopted.settings.salaryPlan.allocations[0])).toBe(1000);
   });
 });

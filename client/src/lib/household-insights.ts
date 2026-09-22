@@ -9,6 +9,7 @@ import {
   exchangeRateFor,
   toBaseAmount,
   allocationWeekStatus,
+  allocationWeeksStatus,
   envelopeDecisionStatus,
   financialBalance,
   formatDate,
@@ -606,33 +607,77 @@ const mondayOf = (asOf: string) => {
 };
 
 /**
- * Cât mai ține fiecare zi din săptămâna luni–duminică: restul plicurilor cu ritm
- * săptămânal, împărțit egal pe zilele rămase. Nu folosește reperul până la salariu.
+ * Cât mai ține fiecare zi din săptămâna desenată luni–duminică.
+ *
+ * Banii sunt ai tranșei de buget care conține ziua (șapte zile de la începutul
+ * perioadei, nu neapărat de luni). Restul ei se împarte pe zilele rămase din
+ * tranșă: o perioadă începută marți nu se termină duminică, iar ultima zi a
+ * tranșei poate folosi tot ce a mai rămas, nu o șeptime. Zilele din grilă care
+ * cad în altă tranșă arată partea acelei tranșe, nu banii de azi.
  */
 export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): WeeklyEnvelopeRhythm => {
   const weekly = data.settings.salaryPlan.allocations.filter((item) => item.weeklyPace !== false);
-  const remainingRaw = weekly.reduce((sum, allocation) => sum + (allocationWeekStatus(data, allocation, asOf)?.remaining ?? 0), 0);
-  const start = mondayOf(asOf);
+  const packs = weekly.map((allocation) => {
+    const weeks = allocationWeeksStatus(data, allocation);
+    const current = weeks.find((week) => asOf >= week.start && asOf <= week.end);
+    return { weeks, current };
+  });
+  const active = packs.flatMap((pack) => pack.current ? [pack.current] : []);
+  const remainingRaw = active.reduce((sum, week) => sum + week.remaining, 0);
+  const trancheStart = active.length ? active.reduce((min, week) => week.start < min ? week.start : min, active[0].start) : "";
+  const trancheEnd = active.length ? active.reduce((max, week) => week.end > max ? week.end : max, active[0].end) : "";
+  const hasTranche = Boolean(trancheStart && trancheEnd);
+  const gridStart = mondayOf(asOf);
+  const windowStart = hasTranche ? trancheStart : gridStart;
+  const windowEnd = hasTranche ? trancheEnd : addIsoDays(gridStart, 6);
+  const inside = (day: string) => day >= windowStart && day <= windowEnd;
   const spentByDay = Array.from({ length: 7 }, (_, index) => {
-    const day = addIsoDays(start, index);
+    const day = addIsoDays(gridStart, index);
     const out = data.transactions.filter((item) => item.date === day && weekly.some((allocation) => matchesAllocation(item, allocation))).reduce((sum, item) => sum + item.amount, 0);
     return { day, out };
   });
   const todayIndex = Math.max(0, spentByDay.findIndex((item) => item.day === asOf));
-  const remainingDays = 7 - todayIndex;
+  const calendarRemainingDays = 7 - todayIndex;
+  const todayIsInside = inside(asOf);
+  const remainingDays = todayIsInside ? daysBetween(asOf, windowEnd) + 1 : calendarRemainingDays;
   const todayOut = spentByDay[todayIndex]?.out ?? 0;
-  const startOfToday = remainingRaw + todayOut;
+  const countedToday = todayIsInside ? todayOut : 0;
+  const startOfToday = remainingRaw + countedToday;
   const todayShareRaw = remainingDays > 0 ? startOfToday / remainingDays : 0;
-  const todayLeftRaw = Math.max(0, todayShareRaw - todayOut);
-  const futureDays = remainingDays - 1;
+  const todayLeftRaw = Math.max(0, todayShareRaw - countedToday);
+  const futureDays = Math.max(0, remainingDays - 1);
   const futureShareRaw = futureDays > 0 ? Math.max(0, remainingRaw - todayLeftRaw) / futureDays : 0;
-  const weekOut = spentByDay.reduce((sum, item) => sum + item.out, 0);
-  const pastShareRaw = (remainingRaw + weekOut) / 7;
+  const trancheSpent = active.reduce((sum, week) => sum + week.spent, 0);
+  const trancheDays = Math.max(1, daysBetween(windowStart, windowEnd) + 1);
+  const pastShareRaw = hasTranche
+    ? (remainingRaw + trancheSpent) / trancheDays
+    : (remainingRaw + spentByDay.reduce((sum, item) => sum + item.out, 0)) / 7;
+  const otherWeek = (day: string) => {
+    let budget = 0;
+    let remaining = 0;
+    let days = 0;
+    for (const pack of packs) {
+      const week = pack.weeks.find((item) => day >= item.start && day <= item.end);
+      if (!week) continue;
+      budget += week.budget;
+      remaining += week.remaining;
+      days = week.days;
+    }
+    return { budget, remaining, days };
+  };
   const days = spentByDay.map((row, weekday) => {
     const isToday = row.day === asOf;
     const isFuture = row.day > asOf;
-    const shareRaw = isFuture ? futureShareRaw : isToday ? todayShareRaw : pastShareRaw;
-    const leftRaw = isFuture ? futureShareRaw : isToday ? todayLeftRaw : Math.max(0, pastShareRaw - row.out);
+    let shareRaw: number;
+    let leftRaw: number;
+    if (hasTranche && !inside(row.day)) {
+      const other = otherWeek(row.day);
+      shareRaw = other.days > 0 ? (isFuture ? other.remaining : other.budget) / other.days : 0;
+      leftRaw = isFuture ? shareRaw : Math.max(0, shareRaw - row.out);
+    } else {
+      shareRaw = isFuture ? futureShareRaw : isToday ? todayShareRaw : pastShareRaw;
+      leftRaw = isFuture ? futureShareRaw : isToday ? todayLeftRaw : Math.max(0, pastShareRaw - row.out);
+    }
     const over = !isFuture && shareRaw > 0 && row.out > shareRaw + 0.009;
     const fill = shareRaw <= 0
       ? (row.out > 0 ? 100 : 0)
@@ -699,11 +744,14 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
   const planDays = end ? Math.max(1, daysBetween(plan.periodStart, end) + 1) : 7;
   const weekTx = data.transactions.filter((item) => item.date >= summary.start && item.date <= summary.end && (!memberId || item.memberId === memberId));
   const envelopes = plan.allocations.map((allocation) => {
-    const spent = roundMoney(weekTx.filter((item) => matchesAllocation(item, allocation)).reduce((sum, item) => sum + item.amount, 0));
     const cycleBudget = allocationBudget(data, allocation);
     const weekStatus = allocation.weeklyPace === false ? undefined : allocationWeekStatus(data, allocation, asOf);
+    const calendarSpent = roundMoney(weekTx.filter((item) => matchesAllocation(item, allocation)).reduce((sum, item) => sum + item.amount, 0));
     const planned = roundMoney(weekStatus ? weekStatus.budget : cycleBudget * Math.min(7, planDays) / planDays);
-    const remaining = roundMoney(planned - spent);
+    // La plicurile cu ritm, cheltuiala din tranșă contează și dacă a căzut în săptămâna
+    // calendaristică anterioară. Altfel restul arătat luni uită ce s-a cheltuit marțea trecută.
+    const spent = roundMoney(weekStatus ? weekStatus.spent : calendarSpent);
+    const remaining = roundMoney(weekStatus ? weekStatus.remaining : planned - spent);
     const usage = planned > 0 ? spent / planned : spent > 0 ? 1 : 0;
     const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80));
     const state = remaining < 0 || (planned <= 0 && spent > 0) ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const;

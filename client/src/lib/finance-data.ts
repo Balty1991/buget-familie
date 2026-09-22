@@ -723,7 +723,9 @@ export const pruneTombstones = (deleted: DeletedRecord[], asOf = isoToday()): De
 };
 
 export const planExpired = (plan: SalaryPlan, asOf = isoToday()) => {
-  const end = planEndDate(plan);
+  // Data obișnuită a venitului nu închide ciclul cât timp fereastra de întârziere
+  // mai e deschisă: cheltuielile încă intră în plicuri, deci și cifra zilei trebuie să stea.
+  const end = plan.nextPayday ? planCoverEndDate(plan) : planEndDate(plan);
   return Boolean(end) && asOf > end;
 };
 
@@ -865,8 +867,10 @@ export const plannedEnvelopeReserved = (allocations: BudgetAllocation[], remaini
     const original = item.amount;
     const next = draft[item.id] ?? original;
     const remaining = remainingById[item.id] ?? original;
-    const spent = Math.max(0, original - remaining);
-    return sum + Math.max(0, next - spent);
+    // `remaining` e deja limita plus transferuri, minus cheltuieli. Diferența de limită
+    // se adaugă peste rest, nu peste suma scrisă — altfel transferul care a mărit plicul
+    // dispare din restul ghidului și apar „bani fără plic” care sunt deja într-un plic.
+    return sum + Math.max(0, remaining + next - original);
   }, 0);
 
 const roundSigned = money2;
@@ -1139,6 +1143,7 @@ export const adoptOutsideExpenses = (data: AppData): AppData => {
   let changed = false;
   const transactions = data.transactions.map((item) => {
     if (item.kind !== "expense") return item;
+    if (item.note === "decontare-intre-membri") return item;
     if (item.allocationId && item.allocationId !== "outside") return item;
     if (!inPlanPeriod(item.date, data.settings.salaryPlan)) return item;
     const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];

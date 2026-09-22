@@ -15,6 +15,7 @@ import {
   planAllocationMath,
   planForecast,
   planEndDate,
+  planExpired,
   inPlanPeriod,
   type AppData,
 } from "./finance-data";
@@ -88,5 +89,25 @@ describe("ciclul care a expirat", () => {
     const raspuns = analyze("cat mai pot cheltui azi?", data, AZI);
     expect(answerToText(raspuns!)).not.toContain("Ciclul s-a încheiat");
     expect(todayBrief(data, AZI).expired).toBe(false);
+  });
+
+  it("salariul întârziat în fereastră nu închide cifra zilei", () => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [{ id: "card", name: "Card", kind: "card", memberId: "member-me", openingBalance: 4000 }];
+    data.settings.salaryPlan.periodStart = "2026-09-15";
+    data.settings.salaryPlan.nextPayday = "2026-10-15";
+    data.settings.salaryPlan.paydayFlexDays = 3;
+    data.settings.salaryPlan.sourceIds = ["card"];
+    data.settings.salaryPlan.allocations = [
+      { id: "food", label: "Alimente", category: "Alimente", amount: 2100, sourceId: "card", weeklyPace: true },
+      { id: "house", label: "Casă", category: "Casă & facturi", amount: 1200, sourceId: "card", weeklyPace: false },
+    ];
+    expect(inPlanPeriod("2026-10-16", data.settings.salaryPlan)).toBe(true);
+    expect(planExpired(data.settings.salaryPlan, "2026-10-16")).toBe(false);
+    expect(planExpired(data.settings.salaryPlan, "2026-10-19")).toBe(true);
+    const brief = todayBrief(data, "2026-10-16");
+    expect(brief.expired).toBe(false);
+    expect(brief.spendable).toBeGreaterThan(0);
+    expect(brief.reason).not.toContain("Ciclul s-a încheiat");
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData } from "./finance-data";
+import { createEmptyAppData, allocationWeekStatus, allocationWeeksStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
 import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
 
@@ -249,6 +249,59 @@ describe("analize de gospodărie", () => {
     expect(brief.spendable).toBe(rhythm.todayLeft);
     expect(brief.spendable).toBeLessThan(90);
     expect(brief.reason).toContain("plicul săptămânii");
+  });
+
+  it("perioada începută marți nu împarte restul până duminică și nu uită cheltuiala din tranșă", () => {
+    const { data, source } = base();
+    source.openingBalance = 8000;
+    data.settings.salaryPlan.periodStart = "2026-09-15";
+    data.settings.salaryPlan.nextPayday = "2026-10-15";
+    data.settings.salaryPlan.sourceIds = [source.id];
+    data.settings.salaryPlan.allocations = [
+      { id: "food", label: "Alimente", category: "Alimente", amount: 2100, sourceId: source.id, weeklyPace: true },
+      { id: "house", label: "Casă", category: "Casă & facturi", amount: 1200, sourceId: source.id, weeklyPace: false },
+    ];
+    const spend = (id: string, amount: number, category: string, allocationId: string, date: string) => {
+      data.transactions.push({
+        id, title: id, amount, kind: "expense", category, sourceId: source.id, source: source.name,
+        memberId: "member-me", person: "Eu", date, allocationId,
+      });
+    };
+    spend("lidl", 80, "Alimente", "food", "2026-09-16");
+    spend("enel", 400, "Casă & facturi", "house", "2026-09-16");
+    const leveled = levelStartedWeek(data, "food", "2026-09-17");
+    const food = leveled.settings.salaryPlan.allocations[0];
+    const thursday = "2026-09-17";
+    const week = allocationWeekStatus(leveled, food, thursday)!;
+    expect(week.end).toBe("2026-09-21");
+    expect(week.spent).toBe(80);
+    const rhythm = weeklyEnvelopeDailyRhythm(leveled, thursday);
+    const brief = todayBrief(leveled, thursday);
+    expect(rhythm.remainingDays).toBe(5);
+    expect(rhythm.remaining).toBeCloseTo(Math.max(0, week.remaining), 2);
+    expect(rhythm.todayLeft).toBeCloseTo(Math.max(0, week.remaining) / 5, 2);
+    expect(rhythm.todayLeft).toBeLessThan(Math.max(0, week.remaining) / 4 - 1);
+    expect(brief.spendable).toBeCloseTo(rhythm.todayLeft, 2);
+    expect(rhythm.todayLeft + rhythm.futureShare * (rhythm.remainingDays - 1)).toBeCloseTo(rhythm.remaining, 1);
+
+    spend("lidl-2", 40, "Alimente", "food", "2026-09-21");
+    const monday = "2026-09-21";
+    const leveledMonday = levelStartedWeek(data, "food", monday);
+    const endWeek = allocationWeekStatus(leveledMonday, food, monday)!;
+    const endRhythm = weeklyEnvelopeDailyRhythm(leveledMonday, monday);
+    expect(endWeek.spent).toBe(120);
+    expect(endRhythm.remainingDays).toBe(1);
+    expect(endRhythm.todayLeft).toBeCloseTo(Math.max(0, endWeek.remaining), 2);
+    const next = allocationWeeksStatus(leveledMonday, food)[1];
+    const tuesday = endRhythm.days.find((row) => row.day === "2026-09-22")!;
+    expect(tuesday.left).toBeCloseTo(next.remaining / next.days, 1);
+    const check = weeklyCheckIn(leveledMonday, monday);
+    const row = check.envelopes.find((item) => item.id === "food")!;
+    expect(row.spent).toBeCloseTo(endWeek.spent, 2);
+    expect(row.remaining).toBeCloseTo(endWeek.remaining, 2);
+    const house = check.envelopes.find((item) => item.id === "house")!;
+    expect(house.spent).toBe(0);
+    expect(house.remaining).toBeGreaterThan(0);
   });
 });
 

@@ -18,6 +18,7 @@ import {
   plannedEnvelopeReserved,
   sourceBalance,
   sourceFreeBalance,
+  transferBetweenEnvelopes,
   transferBetweenWeeks,
   type AppData,
 } from "./finance-data";
@@ -176,6 +177,24 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     expect(weeks[0]).toMatchObject({ index: 1, budget: 270, spent: 20, remaining: 250 });
     expect(weeks[1]).toMatchObject({ index: 2, budget: 230, spent: 0, remaining: 230 });
     expect(planAllocationMath(moved).unrepartized).toBe(0);
+  });
+
+  it("restul din ghid urmărește plicul după transfer, nu doar suma scrisă", () => {
+    const data = house();
+    addIncome(data, 900);
+    data.settings.salaryPlan.allocations = [
+      { id: "env-food", label: "Alimente", category: "Alimente", amount: 500, sourceId: "card", memberId: me, weeklyPace: true },
+      { id: "env-house", label: "Casă", category: "Casă & facturi", amount: 400, sourceId: "card", memberId: me, weeklyPace: false },
+    ];
+    const moved = transferBetweenEnvelopes(data, { fromAllocationId: "env-house", toAllocationId: "env-food", amount: 100 })!;
+    const allocations = moved.settings.salaryPlan.allocations;
+    const remainingById = Object.fromEntries(allocations.map((item) => [item.id, Math.max(0, allocationStatus(moved, item).remaining)]));
+    const draft = Object.fromEntries(allocations.map((item) => [item.id, item.amount]));
+    const reserved = plannedEnvelopeReserved(allocations, remainingById, draft);
+    const math = planAllocationMath(moved);
+    expect(math.reservedInEnvelopes).toBe(900);
+    expect(reserved).toBe(900);
+    expect(math.availableSources - math.scheduled - reserved).toBeCloseTo(math.unrepartized, 2);
   });
 });
 
