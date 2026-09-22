@@ -1161,7 +1161,7 @@ function SourceRow({ data, source, settings, change }: { data: AppData; source: 
   useEffect(() => { setName(source.name); }, [source.name]);
   useEffect(() => { setBalance(String(source.openingBalance)); }, [source.openingBalance]);
   const own = sourceBalanceInCurrency(data, source.id);
-  const patchSource = (patch: Partial<typeof source>) => change({ paymentSources: settings.paymentSources.map((item) => item.id === source.id ? { ...item, ...patch } : item) });
+  const patchSource = (patch: Partial<typeof source>) => change({ paymentSources: settings.paymentSources.map((item) => item.id === source.id ? { ...item, ...patch, ...("openingBalance" in patch ? { updatedAt: new Date().toISOString() } : {}) } : item) });
   const used = data.transactions.filter((item) => item.sourceId === source.id).length;
   const remove = () => {
     if (settings.paymentSources.length <= 1) { window.alert(t("Păstrează cel puțin o sursă de plată.")); return; }
@@ -1176,7 +1176,7 @@ function SourceRow({ data, source, settings, change }: { data: AppData; source: 
   };
   return <div className="bf-source-edit rich">
     <label className="bf-source-name"><small>{t("Denumire")}</small><input value={name} onChange={(event) => setName(event.target.value)} onBlur={() => { const clean = name.trim(); if (clean && clean !== source.name) patchSource({ name: clean }); else setName(source.name); }} /></label>
-    <label><small>{t("Sold inițial")} ({source.currency || t("lei")})</small><input inputMode="decimal" value={balance} onChange={(event) => setBalance(event.target.value)} onBlur={() => patchSource({ openingBalance: Math.max(0, parseRomanianAmount(balance)) })} /></label>
+    <label><small>{t("Sold inițial")} ({source.currency || t("lei")})</small><input inputMode="decimal" value={balance} onChange={(event) => setBalance(event.target.value)} onBlur={() => { const next = Math.max(0, parseRomanianAmount(balance)); if (next !== source.openingBalance) patchSource({ openingBalance: next }); else setBalance(String(source.openingBalance)); }} /></label>
     <label><small>{t("Valută")}</small><select value={source.currency || BASE_CURRENCY} onChange={(event) => patchSource({ currency: event.target.value === BASE_CURRENCY ? undefined : event.target.value })}>{supportedCurrencies.map((code) => <option key={code} value={code}>{code}</option>)}</select></label>
     <label><small>{t("Aparține de")}</small><select value={source.memberId || ""} onChange={(event) => patchSource({ memberId: event.target.value || undefined })}><option value="">{t("Familie / comun")}</option>{settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
     <div className="bf-source-edit-foot">

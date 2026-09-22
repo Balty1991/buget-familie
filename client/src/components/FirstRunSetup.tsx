@@ -105,11 +105,15 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     if (opts.withPartner && partnerName.trim() && partnerName.trim().toLocaleLowerCase("ro-RO") !== yourName.toLocaleLowerCase("ro-RO")) {
       members.push({ id: newId("member"), name: partnerName.trim(), color: "#966E4A" });
     }
-    const paymentSources = data.settings.paymentSources.map((source) => ({
-      ...source,
-      openingBalance: Math.max(0, parseRomanianAmount(balances[source.id] || "0")),
-      memberId: source.kind === "transfer" ? undefined : "member-me",
-    }));
+    const paymentSources = data.settings.paymentSources.map((source) => {
+      const openingBalance = Math.max(0, parseRomanianAmount(balances[source.id] || "0"));
+      return {
+        ...source,
+        openingBalance,
+        memberId: source.kind === "transfer" ? undefined : "member-me",
+        ...(openingBalance !== source.openingBalance ? { updatedAt: now } : {}),
+      };
+    });
     const partner = members.find((member) => member.id !== "member-me");
     if (partner) {
       for (const item of PARTNER_KINDS) {

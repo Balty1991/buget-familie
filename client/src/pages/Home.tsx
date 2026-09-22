@@ -177,7 +177,7 @@ function OpeningBalanceCard({ data, onChange }: { data: AppData; onChange: (next
       ...data,
       settings: {
         ...data.settings,
-        paymentSources: data.settings.paymentSources.map((entry) => entry.id === source.id ? { ...entry, openingBalance: amount } : entry),
+        paymentSources: data.settings.paymentSources.map((entry) => entry.id === source.id ? { ...entry, openingBalance: amount, updatedAt: new Date().toISOString() } : entry),
       },
     });
   };

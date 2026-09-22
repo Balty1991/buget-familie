@@ -45,7 +45,10 @@ export function AIFinancialSetup({ data, onChange, onClose, onGoPlan, onAdd }: P
     const memberName = name.trim() || "Eu";
     const memberId = currentMember?.id || "member-me";
     const members = data.settings.members.length ? data.settings.members.map((member, index) => index === 0 ? { ...member, id: memberId, name: memberName } : member) : [{ id: memberId, name: memberName, color: "#256B5B" }];
-    const paymentSources = data.settings.paymentSources.map((source) => ({ ...source, openingBalance: Math.max(0, money(balances[source.id] || "0")), memberId: source.kind === "transfer" ? undefined : memberId }));
+    const paymentSources = data.settings.paymentSources.map((source) => {
+      const openingBalance = Math.max(0, money(balances[source.id] || "0"));
+      return { ...source, openingBalance, memberId: source.kind === "transfer" ? undefined : memberId, ...(openingBalance !== source.openingBalance ? { updatedAt: now } : {}) };
+    });
     const monthlyIncome = money(income);
     const newIncome = monthlyIncome > 0 && !data.transactions.some((item) => item.kind === "income" && item.title === "Venit lunar") ? [{ id: newId("income"), title: t("Venit lunar"), amount: monthlyIncome, kind: "income" as const, category: "Venit", sourceId: paymentSources[0]?.id, source: paymentSources[0]?.name || "Card debit", memberId, person: memberName, date: isoToday(), note: t("Adăugat în configurarea inițială"), createdAt: now }] : [];
     const newDebt: Debt | undefined = debtName.trim() && money(debtRemaining) > 0 ? { id: newId("debt"), name: debtName.trim(), remaining: money(debtRemaining), monthly: money(debtMonthly), due: "Nespecificat", memberId, tone: "coral", updatedAt: now } : undefined;

@@ -12,6 +12,7 @@ import {
   type BudgetAllocation,
   type DeletedRecord,
   type PendingReviewMeta,
+  type PaymentSource,
   type SyncDevice,
   type Transaction,
   type TransactionConflict,
@@ -140,6 +141,46 @@ function mergeSyncDevices(local: SyncDevice[], remote: SyncDevice[]): SyncDevice
     all.set(item.id, newer);
   });
   return Array.from(all.values()).sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt)).slice(0, 20);
+}
+
+const sourceEditedAt = (item: PaymentSource) => Date.parse(item.updatedAt || "") || 0;
+
+/**
+ * Sursele implicite au aceleași id-uri pe fiecare telefon nou (`source-debit` etc.).
+ * Un Map care lasă localul să scrie peste remote punea soldul 0 al telefonului
+ * al doilea în locul soldului real, apoi îl împingea înapoi în familie.
+ * Un 0 cu `updatedAt` mai nou rămâne: e o ștergere explicită, nu un default.
+ */
+function mergePaymentSource(local: PaymentSource, remote: PaymentSource): PaymentSource {
+  const localAt = sourceEditedAt(local);
+  const remoteAt = sourceEditedAt(remote);
+  if (localAt !== remoteAt) {
+    const newer = localAt > remoteAt ? local : remote;
+    const older = newer === local ? remote : local;
+    return { ...older, ...newer, currency: newer.currency ?? older.currency };
+  }
+  if (local.openingBalance === 0 && remote.openingBalance > 0) {
+    return { ...local, openingBalance: remote.openingBalance, currency: remote.currency || local.currency };
+  }
+  if (remote.openingBalance === 0 && local.openingBalance > 0) {
+    return { ...remote, ...local, currency: local.currency || remote.currency };
+  }
+  return { ...remote, ...local, currency: local.currency || remote.currency };
+}
+
+function mergePaymentSources(local: PaymentSource[], remote: PaymentSource[]): PaymentSource[] {
+  const localById = new Map(local.map((item) => [item.id, item]));
+  const seen = new Set<string>();
+  const merged: PaymentSource[] = [];
+  for (const item of remote) {
+    seen.add(item.id);
+    const mine = localById.get(item.id);
+    merged.push(mine ? mergePaymentSource(mine, item) : item);
+  }
+  for (const item of local) {
+    if (!seen.has(item.id)) merged.push(item);
+  }
+  return merged;
 }
 
 /**
@@ -294,7 +335,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
   // nu șteargă urmele ștergerilor dinainte și să le învie de pe celălalt telefon.
   const deleted = pruneTombstones(deletedAll);
   const memberMap = new Map([...remote.settings.members, ...local.settings.members].map((item) => [item.id, item]));
-  const sourceMap = new Map([...remote.settings.paymentSources, ...local.settings.paymentSources].map((item) => [item.id, item]));
+  const paymentSources = mergePaymentSources(local.settings.paymentSources, remote.settings.paymentSources);
   const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);
   // Plan scalars follow LWW on the plan stamp, but plicuri / transferuri / reguli
   // se unesc pe id — altfel o modificare pe un telefon șterge plicul creat pe celălalt.
@@ -375,7 +416,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       memberName: local.settings.memberName,
       familyCode: local.settings.familyCode || remote.settings.familyCode,
       members: Array.from(memberMap.values()),
-      paymentSources: Array.from(sourceMap.values()),
+      paymentSources,
       customCategories: Array.from(categorySet),
       quickTemplates: local.settings.quickTemplates,
       archivedQuickTemplates: local.settings.archivedQuickTemplates,

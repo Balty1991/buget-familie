@@ -97,7 +97,7 @@ export const BASE_CURRENCY = "RON";
 export const supportedCurrencies = ["RON", "EUR", "USD", "GBP", "CHF", "MDL", "HUF"];
 /** `rate` este câți lei face o unitate din valuta respectivă. */
 export type ExchangeRate = { currency: string; rate: number; updatedAt: string };
-export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei, în valuta sursei. */ openingBalance: number; /** Implicit RON. */ currency?: string };
+export type PaymentSource = { id: string; name: string; kind: PaymentKind; memberId?: string; /** Sold la momentul configurării sursei, în valuta sursei. */ openingBalance: number; /** Implicit RON. */ currency?: string; /** Ultima editare a soldului. Fără el, un telefon nou cu 0 implicit nu trebuie să șteargă soldul familiei. */ updatedAt?: string };
 /**
  * Completare dintr-o a doua sursă. O familie ține banii în mai multe locuri, iar un plic de
  * 1.900 poate să nu încapă în cei 1.800 din cash: restul vine din cashul partenerei, spus
@@ -321,6 +321,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     memberId: source.memberId,
     openingBalance: Math.max(0, parseRomanianAmount(source.openingBalance ?? (source as Partial<PaymentSource> & { balance?: number }).balance ?? 0)),
     currency: typeof source.currency === "string" && source.currency.trim() && source.currency.toUpperCase() !== BASE_CURRENCY ? source.currency.trim().toUpperCase().slice(0, 3) : undefined,
+    updatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(source.updatedAt || "")) ? String(source.updatedAt) : undefined,
   })) : fallback.settings.paymentSources;
   const sourceByName = new Map(sources.map((source) => [source.name.toLowerCase(), source]));
   const memberByName = new Map(members.map((member) => [member.name.toLowerCase(), member]));

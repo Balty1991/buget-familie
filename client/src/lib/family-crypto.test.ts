@@ -334,3 +334,31 @@ describe("unirea dispozitivelor de sync", () => {
     expect(merged.settings.syncDevices.find((item) => item.id === "dev-b")?.revokedAt).toBe("2026-09-13T12:00:00.000Z");
   });
 });
+
+describe("soldul inițial pe al doilea telefon", () => {
+  it("nu înlocuiește soldul familiei cu zero-ul implicit al telefonului nou", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    remote.settings.paymentSources = remote.settings.paymentSources.map((item) =>
+      item.id === "source-debit" ? { ...item, openingBalance: 4300, currency: "EUR" } : item,
+    );
+    const merged = mergeFamilyData(local, remote);
+    const debit = merged.settings.paymentSources.find((item) => item.id === "source-debit");
+    expect(debit?.openingBalance).toBe(4300);
+    expect(debit?.currency).toBe("EUR");
+  });
+
+  it("păstrează un zero scris explicit, mai nou decât soldul de pe celălalt telefon", () => {
+    const local = createEmptyAppData();
+    const remote = createEmptyAppData();
+    local.settings.paymentSources = local.settings.paymentSources.map((item) =>
+      item.id === "source-debit" ? { ...item, openingBalance: 0, updatedAt: "2026-09-20T12:00:00.000Z" } : item,
+    );
+    remote.settings.paymentSources = remote.settings.paymentSources.map((item) =>
+      item.id === "source-debit" ? { ...item, openingBalance: 4300, updatedAt: "2026-09-10T12:00:00.000Z" } : item,
+    );
+    const merged = mergeFamilyData(local, remote);
+    expect(merged.settings.paymentSources.find((item) => item.id === "source-debit")?.openingBalance).toBe(0);
+  });
+});
+
