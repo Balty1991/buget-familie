@@ -58,8 +58,8 @@ export function LearnedRulesPanel({ data, onChange }: { data: AppData; onChange:
                     : t("ales de {count} ori, ultima dată {when}", { count: String(item.count || 0), when: formatDate(String(item.lastAt || "").slice(0, 10)) })}
                 </em>
               </div>
-              <button type="button" onClick={() => uita(item.id, item.kind)} aria-label={t("Uită „{name}”", { name: item.match })}>
-                <Trash2 size={16} />
+              <button type="button" className="bf-learned-forget" onClick={() => uita(item.id, item.kind)} aria-label={t("Uită „{name}”", { name: item.match })}>
+                <Trash2 size={16} /> {t("Uită")}
               </button>
             </li>
           ))}

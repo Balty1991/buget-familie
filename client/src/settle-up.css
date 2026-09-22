@@ -27,4 +27,18 @@
 .bf-settle-rows em.down { color: #b4553f; }
 .bf-settle-verdict { margin: 8px 0 0; font-size: 15px; color: var(--cf-ink, #173f36); }
 .bf-settle-action { width: 100%; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.bf-settle-action:disabled { opacity: .45; }
 .bf-settle > small { color: var(--cf-muted, #6c7f77); font-size: 12px; }
+.bf-settle-wallets { display: grid; gap: 8px; margin: 4px 0 8px; }
+.bf-settle-wallets > p { margin: 0; color: var(--cf-muted, #6c7f77); font-size: 12px; line-height: 1.4; }
+.bf-settle-wallets label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--cf-ink, #173f36); }
+.bf-settle-wallets select {
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--cf-line, #e2dfd6);
+  border-radius: 10px;
+  background: var(--cf-surface, #fff);
+  color: var(--cf-ink, #173f36);
+  font-size: 14px;
+  font-weight: 600;
+}

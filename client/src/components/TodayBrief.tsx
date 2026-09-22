@@ -51,6 +51,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
   const [lastCheck, setLastCheck] = useState<string | null>(() => readLastBalanceCheck());
   const [checkedNow, setCheckedNow] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
+  const [confirmat, setConfirmat] = useState<{ name: string; amount: number } | null>(null);
   const check = balanceCheckDue(data, lastCheck);
   const deVerificat = check.rows.filter((item) => !checkedNow.includes(item.id));
   const acum = deVerificat[0];
@@ -61,8 +62,10 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
     setDraft("");
   };
   const raspunde = (row: BalanceCheckRow, spus: string) => {
-    const valoare = spus.trim() ? parseRomanianAmount(spus) : undefined;
-    if (valoare !== undefined && Number.isFinite(valoare) && valoare >= 0) onChange(applyDeclaredBalance(data, row.id, valoare));
+    const valoare = spus.trim() ? parseRomanianAmount(spus) : row.balance;
+    const amount = valoare !== undefined && Number.isFinite(valoare) && valoare >= 0 ? valoare : row.balance;
+    if (spus.trim() && Number.isFinite(valoare) && valoare >= 0) onChange(applyDeclaredBalance(data, row.id, valoare));
+    setConfirmat({ name: row.name, amount });
     setDraft("");
     if (deVerificat.length <= 1) inchideVerificarea();
     else setCheckedNow((current) => [...current, row.id]);
@@ -96,6 +99,9 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
 
       {check.due && acum && !simpleMode && (
         <div className="bf-brief-check">
+          {confirmat && (
+            <p className="bf-brief-check-ok" role="status">{t("{name} e acum {amount}, ca în portofel.", { name: confirmat.name, amount: money(confirmat.amount) })}</p>
+          )}
           <b>{t("Cât ai de fapt pe „{name}”?", { name: acum.name })}</b>
           <small>{t("Eu zic {amount}. {why}", { amount: money(acum.balance), why: check.why })}</small>
           <div className="bf-brief-check-row">
@@ -112,6 +118,10 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
           </div>
           <button type="button" className="bf-brief-check-later" onClick={inchideVerificarea}>{t("Mai târziu")}</button>
         </div>
+      )}
+
+      {confirmat && !(check.due && acum && !simpleMode) && (
+        <p className="bf-brief-check-ok" role="status">{t("{name} e acum {amount}, ca în portofel.", { name: confirmat.name, amount: money(confirmat.amount) })}</p>
       )}
 
       {brief.dues.length > 0 && (
@@ -167,8 +177,8 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
       )}
 
       {brief.closeSoon && !simpleMode && !cycleClose(data) && (
-        <button type="button" className="bf-brief-close" onClick={() => onGo("insights")}>
-          {t("Ciclu aproape gata — închide luna din Analiză → Gospodărie")}
+        <button type="button" className="bf-brief-close" onClick={() => onGo("plan")}>
+          {t("Ciclul se închide. Uită-te ce a rămas.")}
         </button>
       )}
     </section>

@@ -16,6 +16,7 @@ import {
   newId,
   transactionShareScope,
   type AppData,
+  type PaymentSource,
   type Transaction,
 } from "./finance-data";
 import { t } from "./i18n";
@@ -80,19 +81,45 @@ export function settleUp(data: AppData, today = isoToday()): SettleUp | undefine
   };
 }
 
+/** Portofelele unui om: cardul sau cash-ul lui, nu oala comună. */
+export function memberWallets(data: AppData, memberId: string): PaymentSource[] {
+  return data.settings.paymentSources.filter((item) => item.memberId === memberId && item.kind !== "transfer" && item.kind !== "meal");
+}
+
+export type SettlementWallets = {
+  from?: PaymentSource;
+  to?: PaymentSource;
+  ok: boolean;
+  same: boolean;
+};
+
 /**
- * Echilibrarea: bani adevărați care trec de la unul la altul, deci două mișcări — una
- * care iese, una care intră. Amândouă sunt personale, ca să nu intre în socoteala
- * următoare, și poartă aceeași urmă, ca socoteala să repornească de aici.
+ * Decontarea mută bani între portofele. Dacă amândoi cad pe același card, cele două
+ * mișcări se anulează și nimeni nu a plătit pe nimeni — deci nu se scrie nimic până
+ * când omul alege două locuri diferite.
  */
-export function applySettlement(data: AppData, today = isoToday()): AppData {
+export function pickSettlementSources(
+  data: AppData,
+  fromId: string,
+  toId: string,
+  chosen?: { fromSourceId?: string; toSourceId?: string },
+): SettlementWallets {
+  const all = data.settings.paymentSources.filter((item) => item.kind !== "transfer" && item.kind !== "meal");
+  const from = all.find((item) => item.id === chosen?.fromSourceId) || memberWallets(data, fromId)[0];
+  const toOwned = memberWallets(data, toId);
+  const to = all.find((item) => item.id === chosen?.toSourceId) || toOwned.find((item) => item.id !== from?.id) || toOwned[0];
+  const same = Boolean(from && to && from.id === to.id);
+  return { from, to, ok: Boolean(from && to && !same), same };
+}
+
+export function applySettlement(data: AppData, today = isoToday(), chosen?: { fromSourceId?: string; toSourceId?: string }): AppData {
   const socoteala = settleUp(data, today);
   if (!socoteala?.debt) return data;
   const { fromId, fromName, toId, toName, amount } = socoteala.debt;
-  const sursa = (memberId: string) => data.settings.paymentSources.find((item) => item.memberId === memberId) || data.settings.paymentSources[0];
-  const de_la = sursa(fromId);
-  const catre = sursa(toId);
-  if (!de_la || !catre) return data;
+  const wallets = pickSettlementSources(data, fromId, toId, chosen);
+  if (!wallets.ok || !wallets.from || !wallets.to) return data;
+  const de_la = wallets.from;
+  const catre = wallets.to;
   const now = new Date().toISOString();
   const iesire: Transaction = {
     id: newId("settle-out"),

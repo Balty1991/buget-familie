@@ -1181,6 +1181,16 @@ html:not(.dark) .bf-os-decide {
   font-size: 12px;
   text-decoration: underline;
 }
+.bf-brief-check-ok {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cf-primary, #185849) 28%, var(--cf-line, #e2dfd6));
+  background: color-mix(in srgb, var(--cf-primary, #185849) 8%, var(--cf-surface, #fffefa));
+  color: var(--cf-ink, #173f36);
+  font-size: 13px;
+  font-weight: 700;
+}
 
 /* Digest săptămânal */
 .bf-week-digest {

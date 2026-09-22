@@ -47,16 +47,16 @@ export function MonthlyAllocationWizard({ allocations, available, scheduled, rem
             <span>{t("rămași de pus în plicuri")}</span>
           </div>
           <div className="bf-wizard-footer" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="bf-primary" onClick={() => setDismissed(true)}>{t("Lasă-i liberi")}</button>
             {only ? (
-              <button type="button" className="bf-primary" onClick={() => apply([{ id: only.id, amount: round2(only.amount + remainder) }])}>
+              <button type="button" onClick={() => apply([{ id: only.id, amount: round2(only.amount + remainder) }])}>
                 <Sparkles size={16} /> {t("Pune {amount} în {label}", { amount: money(remainder), label: only.label })}
               </button>
             ) : scaled.length > 0 ? (
-              <button type="button" className="bf-primary" onClick={() => apply(scaled.map((item) => ({ id: item.id, amount: item.amount })))}>
+              <button type="button" onClick={() => apply(scaled.map((item) => ({ id: item.id, amount: item.amount })))}>
                 <Sparkles size={16} /> {t("Distribuie {amount} în plicurile existente", { amount: money(remainder) })}
               </button>
             ) : null}
-            <button type="button" onClick={() => setDismissed(true)}>{t("Lasă-i liberi")}</button>
           </div>
         </div>
       )}

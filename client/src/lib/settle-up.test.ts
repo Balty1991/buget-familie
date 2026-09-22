@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData, type Transaction } from "./finance-data";
-import { applySettlement, settleUp, SETTLE_NOTE } from "./settle-up";
+import { applySettlement, pickSettlementSources, settleUp, SETTLE_NOTE } from "./settle-up";
 
 const tx = (id: string, amount: number, memberId: string, extra: Partial<Transaction> = {}): Transaction => ({
   id, title: "Cumpărături", amount, kind: "expense", category: "Alimente", source: "Card",
@@ -74,5 +74,19 @@ describe("decontarea între doi oameni", () => {
     const data = casa();
     data.transactions = [tx("t1", 100, "m1"), tx("t2", 100, "m2")];
     expect(applySettlement(data, "2026-09-21")).toBe(data);
+  });
+
+  it("pe un card comun nu scrie nimic până alegi două portofele diferite", () => {
+    const data = casa();
+    data.settings.paymentSources = [{ id: "comun", name: "Card comun", kind: "card", openingBalance: 4000 }];
+    data.transactions = [tx("t1", 800, "m1", { sourceId: "comun" }), tx("t2", 200, "m2", { sourceId: "comun" })];
+    expect(pickSettlementSources(data, "m2", "m1").ok).toBe(false);
+    expect(applySettlement(data, "2026-09-21")).toBe(data);
+    data.settings.paymentSources.push({ id: "cash-ea", name: "Cash Ea", kind: "cash", memberId: "m1", openingBalance: 500 });
+    const next = applySettlement(data, "2026-09-21", { fromSourceId: "comun", toSourceId: "cash-ea" });
+    const iesire = next.transactions.find((item) => item.note === SETTLE_NOTE && item.kind === "expense");
+    const intrare = next.transactions.find((item) => item.note === SETTLE_NOTE && item.kind === "income");
+    expect(iesire?.sourceId).toBe("comun");
+    expect(intrare?.sourceId).toBe("cash-ea");
   });
 });

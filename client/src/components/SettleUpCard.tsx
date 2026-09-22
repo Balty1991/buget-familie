@@ -1,14 +1,6 @@
-/**
- * „Cine cui datorează.”
- *
- * Unul plătește cumpărăturile, celălalt facturile, iar la sfârșit de ciclu nimeni nu mai
- * știe cine a pus mai mult. Aplicația avea toate cifrele — persoana fiecărei mișcări și
- * deosebirea dintre comun și personal — dar nu făcea niciodată scăderea.
- *
- * Apare doar în casele cu doi adulți și doar când chiar e ceva de echilibrat.
- */
+import { useState } from "react";
 import { Scale } from "lucide-react";
-import { applySettlement, settleUp } from "@/lib/settle-up";
+import { applySettlement, pickSettlementSources, settleUp } from "@/lib/settle-up";
 import { formatDate, type AppData } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 import "../settle-up.css";
@@ -17,8 +9,16 @@ const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "cu
 
 export function SettleUpCard({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const socoteala = settleUp(data);
-  // Fără cheltuieli comune nu e nimic de arătat — decât dacă tocmai ați echilibrat.
+  const [fromSourceId, setFromSourceId] = useState("");
+  const [toSourceId, setToSourceId] = useState("");
   if (!socoteala || (socoteala.total <= 0 && !socoteala.settledAt)) return null;
+  const debt = socoteala.debt;
+  const wallets = debt ? pickSettlementSources(data, debt.fromId, debt.toId, { fromSourceId, toSourceId }) : undefined;
+  const alese = data.settings.paymentSources.filter((item) => item.kind !== "transfer" && item.kind !== "meal");
+  const echilibreaza = () => {
+    if (!debt) return;
+    onChange(applySettlement(data, undefined, { fromSourceId: wallets?.from?.id, toSourceId: wallets?.to?.id }));
+  };
 
   return (
     <section className="bf-settle" aria-labelledby="bf-settle-title">
@@ -38,15 +38,38 @@ export function SettleUpCard({ data, onChange }: { data: AppData; onChange: (nex
           </li>
         ))}
       </ul>
-      {socoteala.debt ? (
+      {debt ? (
         <>
           <p className="bf-settle-verdict">
-            {t("{from} dă {amount} către {to}.", { from: socoteala.debt.fromName, amount: money(socoteala.debt.amount), to: socoteala.debt.toName })}
+            {t("{from} dă {amount} către {to}.", { from: debt.fromName, amount: money(debt.amount), to: debt.toName })}
           </p>
-          <button type="button" className="bf-primary bf-settle-action" onClick={() => onChange(applySettlement(data))}>
+          {!wallets?.ok && (
+            <div className="bf-settle-wallets">
+              <p>{t("Alege portofelul fiecăruia — altfel banii se anulează pe același card.")}</p>
+              <label>
+                <span>{t("Din portofelul lui {name}", { name: debt.fromName })}</span>
+                <select value={fromSourceId || wallets?.from?.id || ""} onChange={(event) => setFromSourceId(event.target.value)} aria-label={t("Din portofelul lui {name}", { name: debt.fromName })}>
+                  <option value="">{t("Alege")}</option>
+                  {alese.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>{t("În portofelul lui {name}", { name: debt.toName })}</span>
+                <select value={toSourceId || wallets?.to?.id || ""} onChange={(event) => setToSourceId(event.target.value)} aria-label={t("În portofelul lui {name}", { name: debt.toName })}>
+                  <option value="">{t("Alege")}</option>
+                  {alese.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </label>
+            </div>
+          )}
+          <button type="button" className="bf-primary bf-settle-action" disabled={!wallets?.ok} onClick={echilibreaza}>
             <Scale size={16} aria-hidden="true" /> {t("Am echilibrat")}
           </button>
-          <small>{t("Se trec două mișcări personale — una care iese, una care intră — și socoteala repornește de azi.")}</small>
+          <small>
+            {wallets?.ok
+              ? t("Se trec două mișcări: iese din {from}, intră în {to}. Socoteala repornește de azi.", { from: wallets.from?.name || "", to: wallets.to?.name || "" })
+              : t("Alege două portofele diferite ca banii să treacă de la unul la altul.")}
+          </small>
         </>
       ) : (
         <p className="bf-settle-verdict">
