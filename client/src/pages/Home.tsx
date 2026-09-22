@@ -130,10 +130,13 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
   const goal = data.savings.filter((item) => item.target > item.current).sort((a, b) => (b.target - b.current) - (a.target - a.current))[0];
   if (goal && signals.length < 3) signals.push({ id: `goal-${goal.id}`, tone: "good", eyebrow: t("OBIECTIV COMUN"), title: t("{amount} până la {name}", { amount: money(goal.target - goal.current), name: goal.name }), detail: t("Progres actual: {current} din {target}.", { current: money(goal.current), target: money(goal.target) }), action: "objectives", actionLabel: t("Vezi obiectivul") });
   const unrepartized = math.availableSources - math.reservedInEnvelopes - math.scheduled;
-  if (unrepartized > 50 && data.settings.salaryPlan.allocations.length > 0) {
-    const assign = { id: "ready-to-assign", tone: "watch" as const, eyebrow: t("DE REPARTIZAT"), title: t("{amount} fără un plic", { amount: money(unrepartized) }), detail: t("Banii din surse care nu au încă un loc. Dă-le un plic — altfel cifra de azi poate părea mai mare decât e."), action: "plan" as AdvisorAction, actionLabel: t("Repartizează") };
-    if (signals.some((item) => item.tone === "risk")) signals.splice(1, 0, assign);
-    else signals.unshift(assign);
+  const weeklyRhythm = weeklyEnvelopeDailyRhythm(data);
+  /**
+   * Când plicurile săptămânii dau cifra de azi, banii liberi nu o umflă. Nu-i mai
+   * punem drept „următorul pas” — stau în Plan, liberi, până vrea omul.
+   */
+  if (unrepartized > 50 && data.settings.salaryPlan.allocations.length > 0 && !weeklyRhythm.hasWeekly) {
+    signals.push({ id: "ready-to-assign", tone: "watch", eyebrow: t("DE REPARTIZAT"), title: t("{amount} fără un plic", { amount: money(unrepartized) }), detail: t("Banii din surse care nu au încă un loc. Dă-le un plic ca cifra de azi să nu se umfle din cash împărțit pe zile."), action: "plan", actionLabel: t("Repartizează") });
   }
   return signals.slice(0, 3);
 }
@@ -300,7 +303,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
     ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
     : brief.hasPayday
       ? rhythm.hasWeekly
-        ? t("Este limita de azi din plicurile săptămânii. Banii fără plic nu măresc cifra — îi vezi jos, de repartizat.")
+        ? t("Este limita de azi din plicurile săptămânii. Ce n-are plic stă liber, nu mărește cifra.")
         : t("Reperul zilei este minimul dintre ritmul sigur ({daily}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt {envelopes}; în surse {sources}.", { daily: money(daily), envelopes: money(envelopeTotalRemaining), sources: money(math.availableSources) })
       : data.settings.salaryPlan.allocations.length
         ? t("Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.", { days: daysLabel(forecast.remainingDays) })
@@ -458,12 +461,12 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
       </section>
 
       <div className="bf-os-actions">
-        <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Înregistrează")}</button>
+        <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
       </div>
 
       <OpeningBalanceCard data={data} onChange={onChange} />
 
-      {!simpleMode && data.pendingReview.length === 0 && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
+      {!simpleMode && data.pendingReview.length === 0 && signals[0] && signals[0].id !== "daily-pace" && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
 
       {/* Acțiuni scurte (scadențe / abonamente) — fără al doilea număr de decizie */}
       <TodayBrief data={data} onGo={onGo} onChange={onChange} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
@@ -510,7 +513,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           <p className="bf-os-note">{rhythmNote}</p>
         </section>
 
-        <TodayLedger data={data} onGo={(view) => onGo(view)} compact />
+        {!rhythm.hasWeekly && <TodayLedger data={data} onGo={(view) => onGo(view)} compact />}
         {(data.transactions.length > 0 || data.settings.members.length > 1 || data.settings.salaryPlan.allocations.length > 0) && (
           <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim bilanțul săptămânii…")}</div>}>
             <WeeklySummaryPanel data={data} onChange={onChange} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
@@ -578,7 +581,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           ) : (
             <button className="bf-today-empty-activity" onClick={onAdd}>
               <ReceiptText size={20} />
-              <span><b>{t("Registrul zilei este pregătit.")}</b><small>{t("Înregistrează prima cheltuială sau încasare.")}</small></span>
+              <span><b>{t("Nicio mișcare azi.")}</b><small>{t("Notează prima cheltuială sau încasare.")}</small></span>
               <Plus size={18} />
             </button>
           )}
