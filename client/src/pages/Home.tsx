@@ -18,6 +18,7 @@ import { ChartEmpty, ChartTip } from "@/components/ChartFrame";
 import { leiLabel } from "@/lib/chart-ui";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { BrandMark } from "@/components/BrandMark";
+import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
@@ -564,7 +565,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                     : undefined;
                 return (
                 <article key={item.id} role="button" tabIndex={0} onClick={() => onEdit(item)} onKeyDown={(event) => { if (event.key === "Enter") onEdit(item); }}>
-                  <span className={`bf-tx-icon ${item.kind}`}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}</span>
+                  <span className={`bf-tx-icon ${item.kind}`}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <CategoryGlyph category={item.category} size={16} />}</span>
                   <div>
                     <b>{item.title}</b>
                     <small>{(() => {
@@ -1042,6 +1043,7 @@ export default function Home() {
     )}
 
     {data.pendingReview.length > 0 && <button type="button" className="bf-dock-review-badge" onClick={() => { setMore("review"); go("utilities"); }} aria-label={t("Deschide De verificat · {count}", { count: data.pendingReview.length })}><Inbox size={15} /> {t("De verificat")} · {data.pendingReview.length}</button>}
+    {!setupOpen && !onboardingOpen && !modal && <button type="button" className="bf-dock-plus" aria-label={t("Notează")} onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={() => openTx()}><Plus size={22} aria-hidden="true" /></button>}
     <div className="os-nav-fill" aria-hidden="true" />
     <nav className="os-dock" aria-label={t("Navigație mobilă")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={16} aria-hidden="true" /><span>{item.label}</span>{item.id === "journal" && data.pendingReview.length > 0 ? <i className="bf-dock-dot" aria-hidden="true" /> : null}</button>; })}</nav>
     {!simpleMode && guideOn && <Suspense fallback={null}><AICompanion initiallyOpen data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>}
