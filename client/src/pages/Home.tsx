@@ -14,7 +14,7 @@ import { queueReceiptForReview } from "@/lib/receipt-review";
 import { safeSetItem } from "@/lib/safe-storage";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { HealthScoreBadge } from "@/components/HealthScoreBadge";
-import { ChartEmpty, ChartTip } from "@/components/ChartFrame";
+import { ChartTip } from "@/components/ChartFrame";
 import { leiLabel } from "@/lib/chart-ui";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { BrandMark } from "@/components/BrandMark";
@@ -25,7 +25,6 @@ import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
 import { householdActivityInCycle, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import {
-  DeferBelowFold,
   WhatsNewSheet,
   dateText,
   fmtExact,
@@ -207,6 +206,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   const [openHint, setOpenHint] = useState(false);
   const [safeSheetOpen, setSafeSheetOpen] = useState(false);
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
+  const [dayMore, setDayMore] = useState(false);
   const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) })), [data]);
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
@@ -427,6 +427,33 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 <span><small>{t("Ieșit")}</small><b>−{money(periodExpense)}</b></span>
               </div>
             )}
+            {!rhythm.hasWeekly ? null : (
+              <div className="bf-hero-week" aria-label={t("Ritm zilnic")}>
+                <div className="bf-os-rhythm-grid">
+                  {rhythm.days.map((row) => (
+                    <button
+                      key={row.day}
+                      type="button"
+                      className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
+                      aria-pressed={rhythmTip === row.day}
+                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.left) })}
+                      onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
+                    >
+                      <span>{weekdayShort()[row.weekday]}</span>
+                      <b>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}<small> lei</small></b>
+                      <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
+                    </button>
+                  ))}
+                </div>
+                {(() => {
+                  const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
+                  if (!row) return null;
+                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(row.left) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} rămași", { amount: leiLabel(row.left) });
+                  return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiLabel(row.out) })}</span></ChartTip>;
+                })()}
+                <p className="bf-os-note">{rhythmNote}</p>
+              </div>
+            )}
             {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
           </>
         )}
@@ -436,34 +463,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
             <button type="button" className="os-explainer" onClick={() => setSafeSheetOpen(true)}>
               <Info size={16} aria-hidden="true" /> {t("Cum se citește?")}
             </button>
-            <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
-              <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}
-            </button>
-            {!simpleMode && <button type="button" className="os-explainer secondary" onClick={() => setOpenHint((value) => !value)}>
-              {t("Surse pe scurt")} <span>{openHint ? "−" : "+"}</span>
-            </button>}
             </div>
-            {!simpleMode && openHint ? (
-              <div className="os-explainer-body bf-today-read-more">
-                <p>{explainer}</p>
-                {sourceRows.length > 0 && (
-                  <ul className="bf-os-source-list compact">
-                    {sourceRows.map((source) => (
-                      <li key={source.id}>
-                        <span className="bf-os-source-icon"><SourceGlyph kind={source.kind} /></span>
-                        <div>
-                          <b>{source.name}</b>
-                          <small>{sourceKindName[source.kind]}</small>
-                        </div>
-                        <strong>{money(source.balance)}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="bf-os-note">{t("{available} disponibili după plicuri · {scheduled} în scadențe încă neconfirmate", { available: money(Math.max(0, math.remaining)), scheduled: money(math.scheduled) })}</p>
-                {topEnvelope && <p className="bf-os-note">{t("Plic urmărit")}: {topEnvelope.item.label} · {Math.round(topEnvelope.usage * 100)}%</p>}
-              </div>
-            ) : null}
           </>
         )}
       </section>
@@ -474,90 +474,18 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
 
       <OpeningBalanceCard data={data} onChange={onChange} />
 
-      {!simpleMode && data.pendingReview.length === 0 && signals[0] && signals[0].id !== "daily-pace" && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
+      <TodayBrief data={data} onGo={onGo} onChange={onChange} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => { setDayMore(true); window.setTimeout(() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }} />
 
-      {/* Acțiuni scurte (scadențe / abonamente) — fără al doilea număr de decizie */}
-      <TodayBrief data={data} onGo={onGo} onChange={onChange} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" })} />
-
-      {!simpleMode && <DeferBelowFold>
-        <section className="bf-os-rhythm" aria-label={t("Ritm zilnic")}>
-          <div className="bf-os-rhythm-head">
-            <div>
-              <p className="bf-os-kicker">{t("Ritm zilnic")}</p>
-              <h2 className="bf-os-title">{t("Cât mai ține ziua.")}</h2>
-            </div>
-            {!brief.hasPayday && (
-              <p className="bf-os-note" style={{ margin: 0 }}>{t("azi")} <b>{money(rhythm.todayLeft)}</b></p>
-            )}
-          </div>
-          {!rhythm.hasWeekly ? (
-            <ChartEmpty title={t("Ritmul apare după plicuri săptămânale")} detail={t("Pune un plic cu ritm săptămânal în Plan — atunci zilele arată câți lei mai țin.")} />
-          ) : (
-            <>
-              <div className="bf-os-rhythm-grid">
-                {rhythm.days.map((row) => (
-                  <button
-                    key={row.day}
-                    type="button"
-                    className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
-                    aria-pressed={rhythmTip === row.day}
-                    aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.left) })}
-                    onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
-                  >
-                    <span>{weekdayShort()[row.weekday]}</span>
-                    <b>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}<small> lei</small></b>
-                    <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
-                  </button>
-                ))}
-              </div>
-              {(() => {
-                const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
-                if (!row) return null;
-                const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(row.left) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} rămași", { amount: leiLabel(row.left) });
-                return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiLabel(row.out) })}</span></ChartTip>;
-              })()}
-            </>
-          )}
-          <p className="bf-os-note">{rhythmNote}</p>
-        </section>
-
-        {!rhythm.hasWeekly && <TodayLedger data={data} onGo={(view) => onGo(view)} compact />}
-        {(data.transactions.length > 0 || data.settings.members.length > 1 || data.settings.salaryPlan.allocations.length > 0) && (
-          <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim bilanțul săptămânii…")}</div>}>
-            <WeeklySummaryPanel data={data} onChange={onChange} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
-          </Suspense>
-        )}
-        <div className="os-gauge bf-today-below-gauge">
-          <HealthScoreBadge data={data} />
-        </div>
-        <section className="bf-today-activity">
+      <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
-              <p className="bf-kicker">{data.settings.members.length > 1 ? t("FEED FAMILIE") : t("ACTIVITATE RECENTĂ")}</p>
-              <h2>{data.settings.members.length > 1 ? t("Cine a mișcat banii") : t("Ce s-a înregistrat")}</h2>
+              <h2>{t("Ultimele mișcări")}</h2>
             </div>
             <button onClick={() => onGo("journal")}>{t("Toate mișcările")} <ChevronRight size={15} /></button>
           </div>
-
-            {data.settings.members.length > 1 && (() => {
-          const activity = householdActivityInCycle(data);
-          const sharers = activity.members.filter((item) => item.expense > 0 || item.income > 0);
-          if (!sharers.length) return null;
-          return (
-              <ul className="bf-today-family-share" aria-label={t("Cine a mișcat banii în ciclu")}>
-                {sharers.map((member) => (
-                  <li key={member.memberId}>
-                    <b>{member.name}</b>
-                    <i><em style={{ width: `${Math.round(member.share * 100)}%` }} /></i>
-                    <span>{Math.round(member.share * 100)}% · −{money(member.expense)}{member.income > 0 ? ` · +${money(member.income)}` : ""}</span>
-                  </li>
-                ))}
-              </ul>
-          );
-        })()}
           {lastMoves.length ? (
             <div className="bf-today-activity-list">
-              {lastMoves.map((item) => {
+              {lastMoves.slice(0, 3).map((item) => {
                 const envelope = item.allocationId && item.allocationId !== "outside"
                   ? data.settings.salaryPlan.allocations.find((entry) => entry.id === item.allocationId)?.label
                   : item.allocationId === "outside"
@@ -594,23 +522,88 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
             </button>
           )}
         </section>
-      </DeferBelowFold>}
-      {!simpleMode && data.settings.salaryPlan.allocations.length > 0 && (
-        <DeferBelowFold>
-          <section className="bf-today-envelope-evolution" aria-labelledby="today-envelope-evolution-title">
-            <div className="bf-section-heading">
-              <div>
-                <p className="bf-kicker">{t("RITMUL PLICURILOR")}</p>
-                <h2 id="today-envelope-evolution-title">{t("Evoluția în timp")}</h2>
+
+      {!simpleMode && (
+        <section className="bf-today-more">
+          <button type="button" className="bf-today-more-toggle" aria-expanded={dayMore} onClick={() => setDayMore((value) => !value)}>
+            {dayMore ? t("Mai puțin din ziua asta") : t("Mai mult din ziua asta")}
+          </button>
+          {dayMore && (
+            <>
+              {data.pendingReview.length === 0 && signals[0] && signals[0].id !== "daily-pace" && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
+              <div className="bf-today-explainers">
+                <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
+                  <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}
+                </button>
+                <button type="button" className="os-explainer secondary" onClick={() => setOpenHint((value) => !value)}>
+                  {t("Surse pe scurt")} <span>{openHint ? "−" : "+"}</span>
+                </button>
               </div>
-              <button onClick={() => onGo("plan")}>{t("Vezi istoricul")} <ChevronRight size={15} /></button>
-            </div>
-            <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim ritmul plicurilor…")}</div>}>
-              <AllocationHistoryChart entries={allocationHistorySnapshot(data)} />
-            </Suspense>
-          </section>
-        </DeferBelowFold>
+              {openHint ? (
+                <div className="os-explainer-body bf-today-read-more">
+                  <p>{explainer}</p>
+                  {sourceRows.length > 0 && (
+                    <ul className="bf-os-source-list compact">
+                      {sourceRows.map((source) => (
+                        <li key={source.id}>
+                          <span className="bf-os-source-icon"><SourceGlyph kind={source.kind} /></span>
+                          <div>
+                            <b>{source.name}</b>
+                            <small>{sourceKindName[source.kind]}</small>
+                          </div>
+                          <strong>{money(source.balance)}</strong>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="bf-os-note">{t("{available} disponibili după plicuri · {scheduled} în scadențe încă neconfirmate", { available: money(Math.max(0, math.remaining)), scheduled: money(math.scheduled) })}</p>
+                  {topEnvelope && <p className="bf-os-note">{t("Plic urmărit")}: {topEnvelope.item.label} · {Math.round(topEnvelope.usage * 100)}%</p>}
+                </div>
+              ) : null}
+              {!rhythm.hasWeekly && <TodayLedger data={data} onGo={(view) => onGo(view)} compact />}
+              {(data.transactions.length > 0 || data.settings.members.length > 1 || data.settings.salaryPlan.allocations.length > 0) && (
+                <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim bilanțul săptămânii…")}</div>}>
+                  <WeeklySummaryPanel data={data} onChange={onChange} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
+                </Suspense>
+              )}
+              <div className="os-gauge bf-today-below-gauge">
+                <HealthScoreBadge data={data} />
+              </div>
+              {data.settings.members.length > 1 && (() => {
+                const activity = householdActivityInCycle(data);
+                const sharers = activity.members.filter((item) => item.expense > 0 || item.income > 0);
+                if (!sharers.length) return null;
+                return (
+                  <ul className="bf-today-family-share" aria-label={t("Cine a mișcat banii în ciclu")}>
+                    {sharers.map((member) => (
+                      <li key={member.memberId}>
+                        <b>{member.name}</b>
+                        <i><em style={{ width: `${Math.round(member.share * 100)}%` }} /></i>
+                        <span>{Math.round(member.share * 100)}% · −{money(member.expense)}{member.income > 0 ? ` · +${money(member.income)}` : ""}</span>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
+              {data.settings.salaryPlan.allocations.length > 0 && (
+                <section className="bf-today-envelope-evolution" aria-labelledby="today-envelope-evolution-title">
+                  <div className="bf-section-heading">
+                    <div>
+                      <p className="bf-kicker">{t("RITMUL PLICURILOR")}</p>
+                      <h2 id="today-envelope-evolution-title">{t("Evoluția în timp")}</h2>
+                    </div>
+                    <button onClick={() => onGo("plan")}>{t("Vezi istoricul")} <ChevronRight size={15} /></button>
+                  </div>
+                  <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim ritmul plicurilor…")}</div>}>
+                    <AllocationHistoryChart entries={allocationHistorySnapshot(data)} />
+                  </Suspense>
+                </section>
+              )}
+            </>
+          )}
+        </section>
       )}
+
       {safeSheetOpen && (
         <Suspense fallback={null}>
           <SafeSpendSheet data={data} onClose={() => setSafeSheetOpen(false)} onGoPlan={() => { setSafeSheetOpen(false); onGo("plan"); }} />

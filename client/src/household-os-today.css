@@ -1312,3 +1312,22 @@ html:not(.dark) .bf-os-decide {
 .bf-cycle-flow b { font-size: 16px; font-variant-numeric: tabular-nums; }
 .bf-cycle-flow span:first-child b { color: #1f7a4d; }
 .bf-cycle-flow span:last-child b { color: #b5523c; }
+
+.os-hero .bf-hero-week {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--os-line, rgba(255, 255, 255, 0.12));
+}
+.os-hero .bf-hero-week .bf-os-rhythm-grid { margin-top: 0; }
+.os-hero .bf-hero-week .bf-os-note { margin: 10px 0 0; }
+
+.bf-today-more { display: grid; gap: 12px; }
+.bf-today-more-toggle {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--os-line, var(--cf-line, #d7ddd8));
+  background: transparent;
+  color: inherit;
+  font-weight: 750;
+}

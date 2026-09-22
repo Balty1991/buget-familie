@@ -2794,6 +2794,9 @@ const en: Record<string, string> = {
   "în fiecare lună": "every month",
   "Gestionează": "Manage",
   "Chirie, telefon, Netflix — un nume și o sumă. Fără logo.": "Rent, phone, Netflix — a name and an amount. No logo.",
+  "Ultimele mișcări": "Latest movements",
+  "Mai mult din ziua asta": "More from today",
+  "Mai puțin din ziua asta": "Less from today",
 };
 
 
