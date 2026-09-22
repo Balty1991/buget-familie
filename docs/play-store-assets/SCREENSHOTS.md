@@ -2,7 +2,7 @@
 
 Temă: **Alb Atelier**. Telefon 1080×2340. Date inventate, nu ale tale. Fără notificări pe bară.
 
-Versiune de listat: **1.1.67** / `versionCode` **69**.
+Versiune de listat: **1.1.68** / `versionCode` **70**.
 
 ## Ordine (8 cadre)
 
