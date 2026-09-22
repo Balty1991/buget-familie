@@ -3,7 +3,7 @@
  * iar căutarea, filtrele și exportul rămân un sertar secundar, accesibil.
  */
 import "../mobile-movements-pass.css";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownRight, Download, FileUp, Pencil, Plus, ReceiptText, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { formatDate, isoDate, isoToday, newId, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadJournalCsv } from "@/lib/journal-csv";
@@ -31,13 +31,38 @@ function weekAround(anchor: string) {
   });
 }
 
+/** O mișcare nouă (mereu cu data ei) nu trebuie să rămână în afara zilei sau a intervalului deja ales. */
+export function revealAddedMovement(filters: { focusDay: string; fromDate: string; toDate: string }, added: Array<{ date: string }>) {
+  if (!added.length) return filters;
+  const dropDay = Boolean(filters.focusDay) && added.some((item) => item.date !== filters.focusDay);
+  const dropRange = added.some((item) => (filters.fromDate && item.date < filters.fromDate) || (filters.toDate && item.date > filters.toDate));
+  if (!dropDay && !dropRange) return filters;
+  return { focusDay: dropDay ? "" : filters.focusDay, fromDate: dropRange ? "" : filters.fromDate, toDate: dropRange ? "" : filters.toDate };
+}
+
 export function MovementsJournal({ data, onEdit, onDelete, onAdd, onOpenReview, onChange }: { data: AppData; onEdit: (item: Transaction) => void; onDelete: (id: string) => void; onAdd: () => void; onOpenReview?: () => void; onChange?: (next: AppData) => void }) {
   const [kind, setKind] = useState<"all" | TransactionKind>("all"); const [member, setMember] = useState("all"); const [source, setSource] = useState("all"); const [shareScope, setShareScope] = useState<"all" | ShareScope>("all"); const [query, setQuery] = useState(() => (typeof window === "undefined" ? "" : takeJournalQuery(window.sessionStorage))); const [fromDate, setFromDate] = useState(""); const [toDate, setToDate] = useState(""); const [focusDay, setFocusDay] = useState(""); const [filtersOpen, setFiltersOpen] = useState(false); const [showSaved, setShowSaved] = useState(false); const [saveName, setSaveName] = useState(""); const [renamingId, setRenamingId] = useState<string | null>(null); const [renameValue, setRenameValue] = useState("");
   const normalizedQuery = query.trim().toLocaleLowerCase("ro-RO"); const invalidRange = Boolean(fromDate && toDate && fromDate > toDate);
+  const matchesQuery = (item: Transaction) => !normalizedQuery || [item.title, item.category, item.source, item.person, String(item.amount), item.note || ""].join(" ").toLocaleLowerCase("ro-RO").includes(normalizedQuery);
   const clearFilters = () => { setKind("all"); setMember("all"); setSource("all"); setShareScope("all"); setQuery(""); setFromDate(""); setToDate(""); setFocusDay(""); };
   const filtersActive = [kind !== "all", member !== "all", source !== "all", shareScope !== "all", Boolean(query), Boolean(fromDate), Boolean(toDate), Boolean(focusDay)].filter(Boolean).length;
-  const list = useMemo(() => data.transactions.filter((item) => (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && (!fromDate || item.date >= fromDate) && (!toDate || item.date <= toDate) && (!focusDay || item.date === focusDay)).filter((item) => !normalizedQuery || [item.title, item.category, item.source, item.person, String(item.amount), item.note || ""].join(" ").toLocaleLowerCase("ro-RO").includes(normalizedQuery)).sort((a, b) => b.date.localeCompare(a.date) || String(b.createdAt || "").localeCompare(String(a.createdAt || ""))), [data.transactions, focusDay, fromDate, kind, member, normalizedQuery, shareScope, source, toDate]);
-  const today = isoToday(); const todayMoves = list.filter((item) => item.date === today); const todayIncome = todayMoves.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const todayExpense = todayMoves.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+  const narrowed = useMemo(() => data.transactions.filter((item) => (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && (!fromDate || item.date >= fromDate) && (!toDate || item.date <= toDate) && matchesQuery(item)).sort((a, b) => b.date.localeCompare(a.date) || String(b.createdAt || "").localeCompare(String(a.createdAt || ""))), [data.transactions, fromDate, kind, member, normalizedQuery, shareScope, source, toDate]);
+  const list = useMemo(() => focusDay ? narrowed.filter((item) => item.date === focusDay) : narrowed, [focusDay, narrowed]);
+  const today = isoToday(); const todayMoves = data.transactions.filter((item) => item.date === today && (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && matchesQuery(item)); const todayIncome = todayMoves.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const todayExpense = todayMoves.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+  const knownIds = useRef("");
+  useEffect(() => {
+    const signature = data.transactions.map((item) => item.id).join("\n");
+    const previous = knownIds.current;
+    knownIds.current = signature;
+    if (!previous) return;
+    const seen = new Set(previous.split("\n").filter(Boolean));
+    const added = data.transactions.filter((item) => !seen.has(item.id));
+    if (!added.length) return;
+    const next = revealAddedMovement({ focusDay, fromDate, toDate }, added);
+    if (next.focusDay !== focusDay) setFocusDay(next.focusDay);
+    if (next.fromDate !== fromDate) setFromDate(next.fromDate);
+    if (next.toDate !== toDate) setToDate(next.toDate);
+  }, [data.transactions, focusDay, fromDate, toDate]);
 
   /**
    * Gruparea pe zile era scrisă cu `reduce` și `{ ...all }`, deci copia un obiect

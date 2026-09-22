@@ -281,17 +281,23 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
             : trackHero.kind === "spent"
               ? t("Cheltuit astăzi")
               : t("Plicuri neconfigurate");
+  const heroTracksWeek = !overPlan && brief.hasPayday && !brief.expired && rhythm.hasWeekly;
+  // Cifra mare și căsuța de azi sunt aceeași limită. 107,92 lângă 108 par doi bani.
   const heroValue = overPlan
     ? Math.abs(math.remaining)
-    : brief.hasPayday
-      ? brief.spendable
-      : data.settings.salaryPlan.allocations.length
-        ? envelopeTotalRemaining
-        : trackHero.value;
+    : heroTracksWeek
+      ? Math.round(brief.spendable)
+      : brief.hasPayday
+        ? brief.spendable
+        : data.settings.salaryPlan.allocations.length
+          ? envelopeTotalRemaining
+          : trackHero.value;
   const heroHint = overPlan
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
-    : brief.hasPayday
-      ? brief.reason
+    : heroTracksWeek
+      ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: Math.round(brief.spendable), available: Math.round(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
+      : brief.hasPayday
+        ? brief.reason
       : data.settings.salaryPlan.allocations.length
         ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: money(Math.max(0, weeklyEnvelopesRemaining)), monthly: money(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · reper {daily}/zi", { daily: money(daily) }) : "" })
         : trackHero.kind === "income"
@@ -417,7 +423,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           <>
             <p className="os-kicker-lg">{heroLabel}</p>
             <h1 className="os-amount">
-              <span>{(Number.isFinite(heroValue) ? heroValue : 0).toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>{(Number.isFinite(heroValue) ? heroValue : 0).toLocaleString(getLocale(), heroTracksWeek ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
@@ -427,7 +433,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 <span><small>{t("Ieșit")}</small><b>−{money(periodExpense)}</b></span>
               </div>
             )}
-            {!rhythm.hasWeekly ? null : (
+            {!rhythm.hasWeekly || brief.expired ? null : (
               <div className="bf-hero-week" aria-label={t("Ritm zilnic")}>
                 <div className="bf-os-rhythm-grid">
                   {rhythm.days.map((row) => (
@@ -436,11 +442,11 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                       type="button"
                       className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
                       aria-pressed={rhythmTip === row.day}
-                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.left) })}
+                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.isToday && heroTracksWeek ? brief.spendable : row.left) })}
                       onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
                     >
                       <span>{weekdayShort()[row.weekday]}</span>
-                      <b>{row.left >= 1000 ? `${Math.round(row.left / 1000)}k` : Math.round(row.left)}<small> lei</small></b>
+                      <b>{Math.round(row.isToday && heroTracksWeek ? brief.spendable : row.left)}<small> lei</small></b>
                       <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
                     </button>
                   ))}
@@ -448,7 +454,8 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 {(() => {
                   const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
                   if (!row) return null;
-                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(row.left) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} rămași", { amount: leiLabel(row.left) });
+                  const shown = row.isToday && heroTracksWeek ? brief.spendable : row.left;
+                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} rămași", { amount: leiLabel(row.left) });
                   return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiLabel(row.out) })}</span></ChartTip>;
                 })()}
                 <p className="bf-os-note">{rhythmNote}</p>

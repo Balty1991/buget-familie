@@ -129,6 +129,14 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     return Math.round(totalFromWeeklyPace(typed, plan.periodStart, planEnd, paceToday));
   };
   const allocationTotal = allocationTotalFromInput();
+  const previewPrevious = editingAllocationId ? plan.allocations.find((item) => item.id === editingAllocationId) : undefined;
+  const previewOldRemaining = previewPrevious ? Math.max(0, allocationStatus(data, previewPrevious).remaining) : 0;
+  const previewNextRemaining = allocationTotal > 0
+    ? Math.max(0, allocationStatus(data, previewPrevious
+      ? { ...previewPrevious, amount: allocationTotal }
+      : { id: "preview", label: allocationLabel || allocationCategory, amount: allocationTotal, category: allocationCategory, sourceId: allocationSourceId || undefined, memberId: allocationMemberId || undefined, weeklyPace: allocationWeeklyPace ? undefined : false }).remaining)
+    : 0;
+  const previewAfter = unrepartized - previewNextRemaining + previewOldRemaining;
   const allocationPreview = planEnd ? calendarBudget(allocationTotal, plan.periodStart, planEnd) : undefined;
   /** Câți bani i-ar reveni tranșei începute din suma scrisă, ca să se vadă înainte de salvare. */
   const allocationStartedShare = (() => {
@@ -636,7 +644,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       </div>
       {/* Randat prin portal în <body>: `.bf-app` are `overflow: clip`, care limitează un element
           `position: fixed` la pagină, așa că dialogul apărea sus, nu peste ecran. */}
-      {allocationPreviewOpen && createPortal(<div className="bf-allocation-preview" role="dialog" aria-modal="true" aria-labelledby="allocation-preview-title"><div><p className="bf-kicker">{t("PREVIZUALIZARE")}</p><h3 id="allocation-preview-title">{t("Verifică înainte de aplicare")}</h3><p>Vei {editingAllocationId ? "actualiza" : t("adăuga")} plicul <b>{allocationLabel.trim() || allocationCategory}</b> cu <strong>{money(parseRomanianAmount(allocationAmount))}</strong> {t("pentru perioada aleasă.")}</p><div><span>{t("Rămas acum")}<strong>{money(unrepartized)}</strong></span><span>{t("Rămas după")}<strong>{money(unrepartized - parseRomanianAmount(allocationAmount))}</strong></span></div><small>{t("Previzualizarea nu schimbă nimic până când nu confirmi.")}</small><footer><button onClick={() => setAllocationPreviewOpen(false)}>{t("Înapoi la editare")}</button><button className="bf-primary" onClick={() => { setAllocationPreviewOpen(false); saveAllocation(); }}><Check size={16} /> {t("Confirmă repartizarea")}</button></footer></div></div>, document.body)}
+      {allocationPreviewOpen && createPortal(<div className="bf-allocation-preview" role="dialog" aria-modal="true" aria-labelledby="allocation-preview-title"><div><p className="bf-kicker">{t("PREVIZUALIZARE")}</p><h3 id="allocation-preview-title">{t("Verifică înainte de aplicare")}</h3><p>Vei {editingAllocationId ? "actualiza" : t("adăuga")} plicul <b>{allocationLabel.trim() || allocationCategory}</b> cu <strong>{money(allocationTotal)}</strong> {t("pentru perioada aleasă.")}</p><div><span>{t("Rămas acum")}<strong>{money(unrepartized)}</strong></span><span>{t("Rămas după")}<strong>{money(previewAfter)}</strong></span></div><small>{t("Previzualizarea nu schimbă nimic până când nu confirmi.")}</small><footer><button onClick={() => setAllocationPreviewOpen(false)}>{t("Înapoi la editare")}</button><button className="bf-primary" onClick={() => { setAllocationPreviewOpen(false); saveAllocation(); }}><Check size={16} /> {t("Confirmă repartizarea")}</button></footer></div></div>, document.body)}
       {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}
       <div className="bf-allocation-list bf-envelope-desk" aria-live="polite">
         {envelopes.map(({ item, budget, remaining, spent, usage, state, week, weeks }) => <article key={item.id} className={state}>
