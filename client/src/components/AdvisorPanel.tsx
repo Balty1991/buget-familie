@@ -5,7 +5,7 @@ import "../smart-scenario.css";
 import "../advisor-personalized.css";
 import { useState } from "react";
 import { Bot, CheckCircle2, ChevronRight, RotateCcw, Send, Sparkles } from "lucide-react";
-import { allocationStatus, answerBudgetQuestion, appendAllocationHistory, commitLedgerEntry, createEmptyAppData, expenseCategories, financialBalance, formatDate, inPlanPeriod, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, resolveExpenseAllocationId, savingSuggestions, sourceBalance, type AppData } from "@/lib/finance-data";
+import { allocationStatus, answerBudgetQuestion, appendAllocationHistory, commitLedgerEntry, expenseCategories, financialBalance, formatDate, inPlanPeriod, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseNaturalSpendScenario, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, resolveExpenseAllocationId, savingSuggestions, sourceBalance, type AppData } from "@/lib/finance-data";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { coachGoalLabel, coachPromptForGoal, type CoachGoal } from "@/lib/coach-flow";
 import { analyze, answerToText } from "@/lib/analyst";

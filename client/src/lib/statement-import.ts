@@ -89,7 +89,7 @@ function detectDelimiter(text: string) {
  * întâlnit este cel zecimal; cel repetat înaintea lui separă miile.
  */
 export function parseStatementAmount(raw: string): number | undefined {
-  const cleaned = raw.replace(/[\s ]/g, "").replace(/(RON|LEI|EUR|USD)/gi, "");
+  const cleaned = raw.replace(/[\s\u00a0]/g, "").replace(/(RON|LEI|EUR|USD)/gi, "");
   if (!/\d/.test(cleaned)) return undefined;
   const negative = /^-/.test(cleaned) || /-$/.test(cleaned) || /^\(.*\)$/.test(cleaned);
   const digits = cleaned.replace(/[^0-9.,]/g, "");
@@ -118,8 +118,8 @@ export function parseStatementAmount(raw: string): number | undefined {
 /** Acceptă zi-lună-an (formatul bancar românesc) și an-lună-zi, cu validarea zilei reale. */
 export function parseStatementDate(raw: string): string | undefined {
   const value = raw.trim();
-  const iso = value.match(/\b(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})\b/);
-  const local = value.match(/\b(\d{1,2})[-.\/](\d{1,2})[-.\/](\d{2,4})\b/);
+  const iso = value.match(/\b(\d{4})[-./](\d{1,2})[-./](\d{1,2})\b/);
+  const local = value.match(/\b(\d{1,2})[-./](\d{1,2})[-./](\d{2,4})\b/);
   const parts = iso
     ? { year: Number(iso[1]), month: Number(iso[2]), day: Number(iso[3]) }
     : local
@@ -215,7 +215,7 @@ function inferColumns(rows: string[][]): StatementColumns | undefined {
 }
 
 export function parseStatementCsv(text: string): StatementParse {
-  const trimmed = text.replace(/^﻿/, "").trim();
+  const trimmed = text.replace(/^\uFEFF/, "").trim();
   if (!trimmed) throw new Error(t("Fișierul este gol."));
   const delimiter = detectDelimiter(trimmed);
   const all = splitCsv(trimmed, delimiter).filter((row) => row.some((cell) => cell));

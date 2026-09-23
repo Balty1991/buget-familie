@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowRight, Check, CircleDollarSign, CreditCard, HandCoins, Plus, ShieldCheck, Sparkles, Target, X } from "lucide-react";
+import { ArrowRight, CircleDollarSign, CreditCard, HandCoins, Plus, ShieldCheck, Sparkles, Target, X } from "lucide-react";
 import { isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type Debt } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import "../ai-financial-setup.css";

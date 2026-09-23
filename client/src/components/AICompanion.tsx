@@ -20,11 +20,9 @@ import {
   expenseProposal,
   foldRo,
   habitKey,
-  incomeProposal,
   isConfirm,
   isCorrection,
   isQuestion,
-  localInsight,
   householdIsSetUp,
   memberIdFor,
   planWarningFor,
@@ -41,9 +39,7 @@ import {
   readingLabel,
   shouldAskWhichReading,
   sourceTextSafe,
-  spendAmount,
   spendDate,
-  transferProposal,
   understand,
   buildExpenseOffer,
   canCommitGuideSpend,
@@ -52,7 +48,6 @@ import {
   type ExtractedGuide,
   type FinancialUpdate,
   type GuideMemory,
-  type PhraseHabit,
   type Reading,
 } from "@/lib/understand";
 import { planIncome } from "@/lib/suggest-source";
@@ -527,13 +522,6 @@ function proposalText(intents: AssistantIntent[], data?: AppData, memory?: Guide
   return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}${avertisment}\n\nConfirmi să le trec în registru?`;
 }
 
-/** Ziua unei intenții care chiar are dată — cheltuială sau venit. */
-const intentDay = (intent: AssistantIntent) => (intent.kind === "expense" || intent.kind === "income" ? intent.date : undefined);
-
-/**
- * Alternativele la propunere: celelalte surse, fiecare cu soldul ei, gata de
- * atins. Fără ele, „schimbă sursa” ar însemna să anulezi și să reiei în formular.
- */
 /** Alternativele se arată doar când mesajul conține exact o cheltuială; altfel ar fi ambiguu ce schimbă atingerea. */
 function spendAlternatives(data: AppData, parsed: ParsedIntent[], memory?: GuideMemory): ChatChoice[] | undefined {
   if (parsed.length !== 1) return undefined;
@@ -543,7 +531,7 @@ function spendAlternatives(data: AppData, parsed: ParsedIntent[], memory?: Guide
   return choices.length ? choices : undefined;
 }
 
-export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry, onFinancialUpdate, onRevert, initiallyOpen = false }: Props) {
+export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNaturalEntry, onFinancialUpdate, onRevert, initiallyOpen = false }: Props) {
   const [open, setOpen] = useState(initiallyOpen);
   const historyRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState("");

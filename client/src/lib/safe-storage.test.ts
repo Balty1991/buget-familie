@@ -5,7 +5,7 @@ import {
   isQuotaExceededError,
   safeSetItem,
 } from "./safe-storage";
-import { writeLocalStorageSnapshot, APP_STORAGE_KEY, APP_STORAGE_META_KEY } from "./app-storage";
+import { writeLocalStorageSnapshot, APP_STORAGE_KEY } from "./app-storage";
 
 const memory = (opts?: { failKeys?: Set<string>; failAlways?: boolean }) => {
   const map = new Map<string, string>();
@@ -70,7 +70,7 @@ describe("safe-storage", () => {
 
 describe("writeLocalStorageSnapshot pe quota", () => {
   it("nu aruncă și marchează wroteFull=false", () => {
-    const setItem = vi.fn((key: string, value: string) => {
+    const setItem = vi.fn((key: string, _value: string) => {
       if (key === APP_STORAGE_KEY) {
         const err = new Error("Setting the value of app-data exceeded the quota.");
         err.name = "QuotaExceededError";

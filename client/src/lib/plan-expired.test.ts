@@ -9,12 +9,10 @@
  */
 import { describe, expect, it } from "vitest";
 import {
-  allocationWeeksStatus,
   envelopeDecisionStatus,
   createEmptyAppData,
   planAllocationMath,
   planForecast,
-  planEndDate,
   planExpired,
   inPlanPeriod,
   type AppData,

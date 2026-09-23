@@ -83,7 +83,7 @@ export function PlannedEventsPanel({ data, onChange }: { data: AppData; onChange
     resetForm();
   };
 
-  const useSuggestion = (suggestion: ReturnType<typeof plannedEventSuggestions>[number]) => {
+  const applySuggestion = (suggestion: ReturnType<typeof plannedEventSuggestions>[number]) => {
     setEditingId(null);
     setName(suggestion.name);
     setDate(suggestion.date);
@@ -145,7 +145,7 @@ export function PlannedEventsPanel({ data, onChange }: { data: AppData; onChange
         {!editingId && (
           <div className="bf-planned-suggestions" role="group" aria-label={t("Sărbători gata de adăugat")}>
             {suggestions.map((suggestion) => (
-              <button type="button" key={suggestion.id} onClick={() => useSuggestion(suggestion)}>
+              <button type="button" key={suggestion.id} onClick={() => applySuggestion(suggestion)}>
                 {kindIcon(suggestion.kind, 14)} {suggestion.name} <small>{dateText(suggestion.date)}</small>
               </button>
             ))}

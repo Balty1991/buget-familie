@@ -78,7 +78,6 @@ type GuideAnswer = {
   };
 };
 type Quota = { remaining: number | null; limit: number | null; resetAt: string | null };
-type ProviderResult = { answer: GuideAnswer; source: "gemini" | "groq"; quota: Quota };
 
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-flash-latest"];
 const GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"];

@@ -633,7 +633,7 @@ function parseEnvelopeDelete(_segment: string, _masked: string, fullText: string
   const folded = fold(fullText);
   if (!/\bplic/.test(folded)) return undefined;
   // Numele se caută o singură dată, în mesajul întreg: lipite, segmentul și mesajul dădeau „Transport sterge transport”.
-  const named = fullText.match(/\bplic(?:ul|uri)?(?:\s+(?:de|pentru|din))?\s+([A-Za-zăâîșțĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ\-]{1,30}(?:\s+[A-Za-zăâîșțĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ\-]{1,30})?)/i);
+  const named = fullText.match(/\bplic(?:ul|uri)?(?:\s+(?:de|pentru|din))?\s+([A-Za-zăâîșțĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ-]{1,30}(?:\s+[A-Za-zăâîșțĂÂÎȘȚ][\wăâîșțĂÂÎȘȚ-]{1,30})?)/i);
   const label = titleCase(cleanLabel(named?.[1] || ""));
   return label ? { kind: "envelope-delete", label } : undefined;
 }

@@ -238,7 +238,6 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     && sourceAvailable(source.id).free > 0.5);
   /** Câți bani mai stau liberi în toată casa, dacă surplusul se caută în altă parte. */
   const freeElsewhere = Math.round(fundingCandidates.reduce((sum, source) => sum + sourceAvailable(source.id).free, 0) * 100) / 100;
-  const overBudget = shortfall > 0.5 || fundingOverdrawn.length > 0 || fundingExcess;
   const sourceFreeHint = !selectedSourceAvailable
     ? undefined
     : Math.round(selectedSourceAvailable.reserved) <= 0

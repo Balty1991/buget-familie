@@ -111,8 +111,8 @@ export async function storeReceiptImages(receiptId: string, images: string[]): P
     return full.map((entry) => entry.key);
   } catch (reason) {
     const message = reason instanceof Error ? reason.message : "Fotografiile bonului nu au putut fi păstrate pe telefon.";
-    if (/quota|space|storage/i.test(message)) throw new Error("Telefonul nu mai are spațiu local pentru fotografii. Eliberează spațiu sau salvează bonul fără poze.");
-    throw new Error(message);
+    if (/quota|space|storage/i.test(message)) throw new Error("Telefonul nu mai are spațiu local pentru fotografii. Eliberează spațiu sau salvează bonul fără poze.", { cause: reason });
+    throw new Error(message, { cause: reason });
   }
 }
 

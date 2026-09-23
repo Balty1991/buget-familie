@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildUndo } from "./undo-delete";
-import { createEmptyAppData, newId, type AppData, type Transaction } from "./finance-data";
+import { createEmptyAppData, type AppData, type Transaction } from "./finance-data";
 
 const tx = (id: string, title: string): Transaction => ({
   id, title, amount: 100, kind: "expense", category: "Alimente",

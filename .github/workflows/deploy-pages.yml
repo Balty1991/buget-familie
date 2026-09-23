@@ -34,6 +34,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Type check
         run: pnpm check
+      - name: Lint
+        run: pnpm lint
       - name: Teste
         run: pnpm test
       - name: Build GitHub Pages bundle

@@ -22,8 +22,6 @@ import {
 
 export type Suggestion = { text: string; why: string; urgency: number };
 
-const money = (value: number) => `${Math.round(value).toLocaleString("ro-RO")} RON`;
-
 const daysBetween = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T12:00:00`) - Date.parse(`${from}T12:00:00`)) / 86_400_000);
 

@@ -68,7 +68,7 @@ async function decodeReceiptImage(file: File) {
     };
   } catch (reason) {
     if (HEIC_PATTERN.test(`${file.type} ${file.name}`)) {
-      throw new Error("Poza e în format HEIC. Alege JPEG din galerie sau fotografiază din nou din aplicație.");
+      throw new Error("Poza e în format HEIC. Alege JPEG din galerie sau fotografiază din nou din aplicație.", { cause: reason });
     }
     throw reason instanceof Error ? reason : new Error("Fișierul nu pare a fi o imagine validă.");
   }
@@ -369,7 +369,7 @@ function civilDate(year: number, month: number, day: number) {
 
 /** Bonurile românești scriu ziua prima. Verificăm că ziua chiar există în luna citită, altfel data este ignorată. */
 function inferDate(text: string) {
-  for (const match of Array.from(text.matchAll(/\b(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{2,4})\b/g))) {
+  for (const match of Array.from(text.matchAll(/\b(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\b/g))) {
     const found = civilDate(Number(match[3].length === 2 ? `20${match[3]}` : match[3]), Number(match[2]), Number(match[1]));
     if (found) return found;
   }
