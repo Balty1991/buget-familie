@@ -2,7 +2,7 @@
 
 Text gata de lipit în Play Console. **Fără prețuri IAP** cât `BILLING_LIVE = false`. Plățile (Play Billing) se activează separat, după closed testing stabil.
 
-**Versiune listing (sept 2026):** `versionName` **1.1.69** / `versionCode` **71**.
+**Versiune listing (sept 2026):** `versionName` **1.1.70** / `versionCode` **72**.
 
 Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety detaliat: [`PLAY_CONSOLE_DATA_SAFETY.md`](./PLAY_CONSOLE_DATA_SAFETY.md).
 
@@ -12,8 +12,8 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 |---|---|
 | Nume (max 30) | Buget Familie |
 | Pachet | `ro.balty1991.bugetfamilie` |
-| versionName | `1.1.69` |
-| versionCode | `71` |
+| versionName | `1.1.70` |
+| versionCode | `72` |
 | Categorie | Finance |
 | Etichete | Buget, Familie, Cheltuieli, Plicuri, România, Ciclu salariu |
 | Contact | contact.vanzo@gmail.com |
@@ -39,7 +39,7 @@ Pe Astăzi
 • Intrat și ieșit în ciclul ăsta, sub număr.
 • Zilele săptămânii în aceeași fișă — vezi cât mai ține fiecare zi, nu un al doilea ecran.
 • Ultimele trei mișcări. Scorul, bilanțul și graficul stau la „Mai mult din ziua asta”.
-• Buton + mereu jos: notezi suma fără să cauți meniul.
+• Pe Astăzi, „Notează” deschide suma. Nu mai e un plus plutitor peste bară.
 
 Plicuri
 • Fiecare plic arată cât s-a cheltuit din limită, pe săptămână sau pe tot ciclul.

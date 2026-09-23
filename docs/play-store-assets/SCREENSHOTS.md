@@ -6,7 +6,7 @@ Versiune de listat: **1.1.69** / `versionCode` **71**.
 
 ## Ordine (8 cadre)
 
-1. **Astăzi** — „Poți folosi azi”, Intrat/Ieșit, zilele săptămânii în aceeași fișă, trei mișcări, **+** jos dreapta.
+1. **Astăzi** — „Poți folosi azi”, Intrat/Ieșit, zilele săptămânii în aceeași fișă, trei mișcări, butonul **Notează**. Fără plus plutitor peste bară.
 2. **Notează** — foaia „Cât ai dat?” cu iconițele de categorie (coș, casă, autobuz).
 3. **Plan** — un plic cu bara „cheltuit din limită”, nu doar un procent.
 4. **Mișcări** — banda zilelor (luni–duminică) și iconiță pe rând.
