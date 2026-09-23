@@ -17,13 +17,13 @@ html.theme-white {
   --lu-coral: #c2473c;
 }
 html.theme-dark {
-  --lu-paper: #0e1012;
-  --lu-card: #171a1d;
-  --lu-ink: #eef1f4;
+  --lu-paper: #0c0d0f;
+  --lu-card: #16181c;
+  --lu-ink: #eceff3;
   --lu-muted: #9aa3ad;
-  --lu-line: #2c3138;
-  --lu-accent: #c5ccd6;
-  --lu-accent-fg: #111214;
+  --lu-line: #2a2e35;
+  --lu-accent: #7dcfab;
+  --lu-accent-fg: #062018;
   --lu-honey: #e8c38a;
   --lu-coral: #ff8a7a;
 }
@@ -39,11 +39,11 @@ html.theme-aurora {
   --lu-coral: #ff939e;
 }
 html.theme-navy {
-  --lu-paper: #080e1a;
-  --lu-card: #121a2c;
+  --lu-paper: #071428;
+  --lu-card: #102646;
   --lu-ink: #eef2f8;
   --lu-muted: #9aa8be;
-  --lu-line: #2a3854;
+  --lu-line: #2c4d7a;
   --lu-accent: #d4b06a;
   --lu-accent-fg: #14100a;
   --lu-honey: #e0c07a;

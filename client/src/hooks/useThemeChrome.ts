@@ -116,6 +116,7 @@ export function useThemeChrome() {
     themePickerOpen,
     setThemePickerOpen,
     theme,
+    activeTheme,
     setTheme,
     themeSchedule,
     setThemeSchedule,

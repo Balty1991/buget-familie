@@ -12,7 +12,13 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
   const previewOption = themeOptions.find((option) => option.id === preview) || themeOptions[0];
   const shownThemes = visibleThemeOptions.some((option) => option.id === preview) ? visibleThemeOptions : [...visibleThemeOptions, previewOption];
   const scheduleIsValid = timeToMinutes(scheduleTimes.dayStart, -1) < timeToMinutes(scheduleTimes.eveningStart, -1) && timeToMinutes(scheduleTimes.eveningStart, -1) < timeToMinutes(scheduleTimes.nightStart, -1);
-  const applyPreview = () => { onChange(preview); onBackgroundChange(previewBackground); onScheduleChange(schedule); onClose(); };
+  const applyPreview = () => {
+    onChange(preview);
+    onBackgroundChange(previewBackground);
+    const autoNow = automaticTheme(currentLocalMinutes(), scheduleTimes);
+    onScheduleChange(schedule === "auto" && preview === autoNow ? "auto" : "manual");
+    onClose();
+  };
   const selectBackground = (id: BackgroundId) => {
     setPreviewBackground(id);
     onBackgroundChange(id);

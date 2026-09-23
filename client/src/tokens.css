@@ -79,12 +79,12 @@ html.theme-aurora {
 }
 
 html.theme-navy {
-  --cf-bg: #080e1a !important;
-  --cf-surface: #10182a !important;
-  --cf-surface-alt: #172238 !important;
+  --cf-bg: #071428 !important;
+  --cf-surface: #102646 !important;
+  --cf-surface-alt: #173258 !important;
   --cf-ink: #eef2f8 !important;
   --cf-muted: #9aa8be !important;
-  --cf-line: #243350 !important;
+  --cf-line: #2c4d7a !important;
   --cf-primary: #d4b06a !important;
   --cf-primary-strong: #c49a4a !important;
   --cf-on-forest: #12100a !important;
