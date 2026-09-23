@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -34,6 +35,25 @@ describe("tokenii de temă", () => {
     expect(imports.at(-3)).toBe("plan.css");
     expect(imports.at(-2)).toBe("obligations.css");
     expect(imports.at(-1)).toBe("analysis.css");
+  });
+});
+
+describe("plafonul de !important", () => {
+  it("nu crește peste valoarea din re-audit", () => {
+    const root = fileURLToPath(new URL("..", import.meta.url));
+    const walk = (dir: string, out: string[] = []): string[] => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name);
+        if (statSync(full).isDirectory()) walk(full, out);
+        else out.push(full);
+      }
+      return out;
+    };
+    const count = walk(root)
+      .filter((file) => file.endsWith(".css"))
+      .reduce((sum, file) => sum + (readFileSync(file, "utf8").split("!important").length - 1), 0);
+    // 8.344 la re-audit. Curățenia poate scădea numărul; o foaie nouă nu are voie să-l urce.
+    expect(count).toBeLessThanOrEqual(8344);
   });
 });
 

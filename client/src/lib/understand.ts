@@ -749,7 +749,7 @@ export function planWeeks(data: AppData): number {
   const plan = data.settings.salaryPlan;
   const end = planEndDate(plan);
   if (!end || !plan.periodStart) return 1;
-  const days = Math.floor((new Date(`${end}T12:00:00`).valueOf() - new Date(`${plan.periodStart}T12:00:00`).valueOf()) / 86400000) + 1;
+  const days = periodDays(plan.periodStart, end);
   return Math.max(1, Math.ceil(Math.max(1, days) / 7));
 }
 

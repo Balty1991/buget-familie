@@ -59,7 +59,7 @@ Checklist-ul menționează acum `versionCode` **47** / `versionName` **1.1.45** 
 
 - **Acum:** `BILLING_LIVE=false` — totul deblocat pentru testeri; **nu** activa plățile până după listare stabilă.
 - **În cod (`entitlements.ts`):** Familia **19,99 RON/lună** / **149 RON/an**; Casa gratuită, **10 plicuri**, 1 membru, 1 device.
-- **Cercetare piață:** opțional, mai târziu, un tier Family mai sus (~**29,99** / **229** RON) dacă ARPU o cere — vezi `docs/MARKET_RESEARCH.md`. Nu schimba prețurile din entitlements fără decizie de produs.
+- **Cercetare piață:** opțional, mai târziu, un tier Family mai sus (~**29,99** / **229** RON) dacă ARPU o cere — vezi `docs/archive/MARKET_RESEARCH.md`. Nu schimba prețurile din entitlements fără decizie de produs.
 - Freemium fără ads pe ecranele financiare; la anulare, registrul rămâne pe telefon.
 
 ---
@@ -76,5 +76,5 @@ Checklist-ul menționează acum `versionCode` **47** / `versionName` **1.1.45** 
 ## Referințe interne
 
 - `PLAY_CHECKLIST.md`, `PRODUCT_STRATEGY.md`, `client/src/lib/entitlements.ts`
-- `docs/app-check-enforce-prep.md`, `docs/PLAY_LISTING.md`, `docs/MARKET_RESEARCH.md`
+- `docs/app-check-enforce-prep.md`, `docs/PLAY_LISTING.md`, `docs/archive/MARKET_RESEARCH.md`
 - Highlight-uri din audit local (box): commit `a552181`, v1.1.45, P0/P1/P2 de mai sus

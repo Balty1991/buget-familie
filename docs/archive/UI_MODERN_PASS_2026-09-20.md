@@ -14,7 +14,7 @@
 3. `ui-screens-modern-2026.css`
 4. **`ui-themes-modern-2026.css`** ← absolut ultimul
 
-Vezi și `docs/UI_MAX_PASS_2026-09-20.md` + `docs/THEMES_MODERN_2026.md`.
+Vezi și `docs/archive/UI_MAX_PASS_2026-09-20.md` + `docs/archive/THEMES_MODERN_2026.md`.
 
 ## Aggressive — ce rezolvă
 

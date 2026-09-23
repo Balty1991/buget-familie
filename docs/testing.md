@@ -15,7 +15,7 @@ Acoperă `client/src/lib/**/*.test.ts`, inclusiv `critical-flows.test.ts` (hydra
 pnpm lighthouse
 ```
 
-Raport: `reports/lighthouse-mobile-summary.json`. Note: `docs/lighthouse-2026-09-12.md`.
+Raport: `reports/lighthouse-mobile-summary.json`. Note: `docs/archive/lighthouse-2026-09-12.md`.
 
 ## Playwright
 

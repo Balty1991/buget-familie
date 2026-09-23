@@ -1,7 +1,7 @@
 # Analiza concurenței din Google Play și direcții de dezvoltare
 
 **Data:** 10 septembrie 2026
-**Continuă:** `docs/analiza-concurenta-roadmap-2026-09.md`, care compară produsele de buget la nivel de funcții. Documentul de față privește aceleași produse din perspectiva **magazinului Play**: ce așteaptă un utilizator Android, ce apare în recenzii și ce se poate împrumuta fără a pierde poziționarea de confidențialitate.
+**Continuă:** `docs/archive/analiza-concurenta-roadmap-2026-09.md`, care compară produsele de buget la nivel de funcții. Documentul de față privește aceleași produse din perspectiva **magazinului Play**: ce așteaptă un utilizator Android, ce apare în recenzii și ce se poate împrumuta fără a pierde poziționarea de confidențialitate.
 
 ## Metodă și limite
 

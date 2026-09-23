@@ -14,7 +14,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
-import { calendarBudget, remainingPace, startedWeekShare, totalFromWeeklyPace, weeklyPaceFromTotal } from "@/lib/calendar-budget";
+import { calendarBudget, periodDays as daysBetween, remainingPace, startedWeekShare, totalFromWeeklyPace, weeklyPaceFromTotal } from "@/lib/calendar-budget";
 import { levelStartedWeek, spreadStartedWeekSurplus, startedWeekPlan } from "@/lib/started-week";
 import { downloadCalendarPlanPdf } from "@/lib/calendar-plan-pdf";
 import { AllocationHistoryPanel } from "@/components/AllocationHistoryPanel";
@@ -33,7 +33,6 @@ import { canAddEnvelope, PLANS } from "@/lib/entitlements";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
-const daysBetween = (start: string, end: string) => Math.floor((new Date(`${end}T12:00:00`).valueOf() - new Date(`${start}T12:00:00`).valueOf()) / 86_400_000) + 1;
 
 const QUICK_ENVELOPE_PRESETS = [
   { category: "Alimente", amount: "1500", weekly: true },

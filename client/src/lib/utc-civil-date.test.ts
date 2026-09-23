@@ -16,8 +16,10 @@ describe("date civile locale, nu UTC", () => {
     expect(isoDate(evening)).toBe(
       `${evening.getFullYear()}-${String(evening.getMonth() + 1).padStart(2, "0")}-${String(evening.getDate()).padStart(2, "0")}`,
     );
-    // Când există un offset față de UTC, felia ISO diferă de ziua civilă locală.
-    if (evening.getTimezoneOffset() !== 0) {
+    // Seara locală cade în ziua UTC următoare doar la vest de Greenwich.
+    // La est (Auckland, România) 23:30 e încă aceeași zi UTC, deci comparația
+    // nu poate fi „mereu diferit” doar pentru că offset-ul nu e zero.
+    if (evening.getTimezoneOffset() > 30) {
       expect(evening.toISOString().slice(0, 10)).not.toBe(isoDate(evening));
     }
   });

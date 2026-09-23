@@ -6,24 +6,33 @@ export type CalendarBudgetWeek = { index: number; start: string; end: string; da
 export type CalendarBudget = { total: number; start: string; end: string; days: number; exactWeeks: number; weeklyAmount: number; weeks: CalendarBudgetWeek[] };
 
 const dayMs = 86_400_000;
-const atNoon = (value: string) => new Date(`${value}T12:00:00`);
-const toIso = (value: Date) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+/**
+ * Amiaza UTC, nu a telefonului. Două date civile (YYYY-MM-DD) trebuie să fie
+ * la un număr întreg de zile una de alta. La amiază locală, ora de vară
+ * scurtează intervalul cu o oră, iar Math.floor pierde o zi din tranșă —
+ * în Auckland pe 27 septembrie, în România pe ultima duminică din octombrie.
+ */
+const atNoon = (value: string) => Date.parse(`${value}T12:00:00Z`);
+const toIso = (ms: number) => {
+  const value = new Date(ms);
+  return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`;
+};
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 export function calendarBudget(total: number, start: string, end: string): CalendarBudget | undefined {
   const first = atNoon(start); const last = atNoon(end); const safeTotal = Number.isFinite(total) ? Math.max(0, total) : 0;
-  if (!start || !end || Number.isNaN(first.valueOf()) || Number.isNaN(last.valueOf()) || last < first || safeTotal <= 0) return undefined;
-  const days = Math.floor((last.valueOf() - first.valueOf()) / dayMs) + 1;
+  if (!start || !end || Number.isNaN(first) || Number.isNaN(last) || last < first || safeTotal <= 0) return undefined;
+  const days = Math.round((last - first) / dayMs) + 1;
   const weeklyAmount = roundMoney(safeTotal * 7 / days);
   const weeks: CalendarBudgetWeek[] = [];
-  let cursor = new Date(first);
+  let cursor = first;
   let distributed = 0;
   while (cursor <= last) {
-    const sliceEnd = new Date(Math.min(cursor.valueOf() + 6 * dayMs, last.valueOf()));
-    const sliceDays = Math.floor((sliceEnd.valueOf() - cursor.valueOf()) / dayMs) + 1;
-    const amount = sliceEnd.valueOf() === last.valueOf() ? roundMoney(safeTotal - distributed) : roundMoney(safeTotal * sliceDays / days);
+    const sliceEnd = Math.min(cursor + 6 * dayMs, last);
+    const sliceDays = Math.round((sliceEnd - cursor) / dayMs) + 1;
+    const amount = sliceEnd === last ? roundMoney(safeTotal - distributed) : roundMoney(safeTotal * sliceDays / days);
     weeks.push({ index: weeks.length + 1, start: toIso(cursor), end: toIso(sliceEnd), days: sliceDays, amount });
-    distributed = roundMoney(distributed + amount); cursor = new Date(sliceEnd.valueOf() + dayMs);
+    distributed = roundMoney(distributed + amount); cursor = sliceEnd + dayMs;
   }
   return { total: roundMoney(safeTotal), start, end, days, exactWeeks: days / 7, weeklyAmount, weeks };
 }
@@ -37,8 +46,8 @@ export function calendarBudget(total: number, start: string, end: string): Calen
  */
 export const periodDays = (start: string, end: string) => {
   const first = atNoon(start); const last = atNoon(end);
-  if (!start || !end || Number.isNaN(first.valueOf()) || Number.isNaN(last.valueOf()) || last < first) return 0;
-  return Math.floor((last.valueOf() - first.valueOf()) / dayMs) + 1;
+  if (!start || !end || Number.isNaN(first) || Number.isNaN(last) || last < first) return 0;
+  return Math.round((last - first) / dayMs) + 1;
 };
 
 /**

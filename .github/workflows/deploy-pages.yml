@@ -38,6 +38,10 @@ jobs:
         run: pnpm lint
       - name: Teste
         run: pnpm test
+      - name: Teste pe fusul Pacific/Auckland
+        run: pnpm test
+        env:
+          TZ: Pacific/Auckland
       - name: Build GitHub Pages bundle
         run: pnpm run build:pages
       - name: Configure Pages

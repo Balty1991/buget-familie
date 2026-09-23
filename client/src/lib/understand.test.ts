@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, isoToday, type AppData } from "./finance-data";
+import { createEmptyAppData, addIsoDays, isoToday, type AppData } from "./finance-data";
 import { decide, understand, compactGuideContext, householdIsSetUp, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, canCommitGuideSpend, isDatedSpendChoice, type Reading } from "./understand";
 import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
@@ -261,11 +261,7 @@ describe("ce pleacă către model", () => {
      */
     const spare = house();
     spare.settings.paymentSources[0].openingBalance = 9000;
-    const shift = (days: number) => {
-      const date = new Date(`${isoToday()}T12:00:00`);
-      date.setDate(date.getDate() + days);
-      return date.toISOString().slice(0, 10);
-    };
+    const shift = (days: number) => addIsoDays(isoToday(), days);
     spare.settings.salaryPlan.periodStart = shift(-3);
     spare.settings.salaryPlan.nextPayday = shift(18);
     const rich = compactGuideContext(spare, { view: "plan" });
@@ -280,11 +276,7 @@ describe("ce pleacă către model", () => {
    * telefonului, la fel ca în aplicație, ca testul să nu pice într-un decembrie.
    */
   it("duce evenimentele viitoare și fondul lor până la model", () => {
-    const shift = (days: number) => {
-      const date = new Date(`${isoToday()}T12:00:00`);
-      date.setDate(date.getDate() + days);
-      return date.toISOString().slice(0, 10);
-    };
+    const shift = (days: number) => addIsoDays(isoToday(), days);
     const plain = compactGuideContext(house(), { view: "today" });
     // Fără evenimente notate, câmpul lipsește — modelul nu are ce să inventeze.
     expect(plain.events).toBeNull();

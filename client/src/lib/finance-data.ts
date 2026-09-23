@@ -910,7 +910,7 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
       return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || !item.sourceId || allocationSourceIds(allocation).includes(item.sourceId));
     }).reduce((sum, item) => sum + item.amount, 0);
     const remaining = roundSigned(weekBudget - spent);
-    const days = weekEnd === week.end ? week.days : Math.round((new Date(`${weekEnd}T12:00:00`).valueOf() - new Date(`${week.start}T12:00:00`).valueOf()) / 86400000) + 1;
+    const days = weekEnd === week.end ? week.days : periodDays(week.start, weekEnd);
     return { ...week, end: weekEnd, days, budget: weekBudget, spent: roundedMoney(spent), remaining, usage: weekBudget > 0 ? spent / weekBudget : 0, state: remaining < 0 ? "over" as const : "healthy" as const };
   });
 };
@@ -1334,11 +1334,11 @@ export const planForecast = (data: AppData, asOf = isoToday()) => {
   const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
   const availableSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
   const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
-  const start = new Date(`${plan.periodStart}T12:00:00`).valueOf();
-  const prudentEnd = prudentPlanEndDate(plan); const end = prudentEnd ? new Date(`${prudentEnd}T12:00:00`).valueOf() : start + 6 * 86400000;
-  const current = Math.min(Math.max(new Date(`${asOf}T12:00:00`).valueOf(), start), end);
-  const elapsedDays = Math.max(1, Math.floor((current - start) / 86400000) + 1);
-  const remainingDays = Math.max(1, Math.floor((end - current) / 86400000) + 1);
+  const prudentEnd = prudentPlanEndDate(plan);
+  const endIso = prudentEnd || addIsoDays(plan.periodStart, 6);
+  const clamped = asOf < plan.periodStart ? plan.periodStart : asOf > endIso ? endIso : asOf;
+  const elapsedDays = Math.max(1, periodDays(plan.periodStart, clamped));
+  const remainingDays = Math.max(1, periodDays(clamped, endIso));
   const spentToDate = data.transactions.filter((item) => item.kind === "expense" && item.date >= plan.periodStart && item.date <= asOf && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
   /** Reface soldul de la începutul perioadei: cheltuielile deja înregistrate nu trebuie scăzute de două ori, o dată din sold și o dată din proiecție. */
   const budget = Math.max(0, availableSources + spentToDate);

@@ -102,7 +102,7 @@ Ordonat după cât cred că ar folosi, nu după cât e de greu.
    este să arate cum s-a mișcat în ultimele cicluri și ce anume l-a mișcat.
 4. **Regula de securitate rămasă deschisă din auditul precedent:** oricine
    cunoaște identificatorul camerei poate suprascrie datele de familie în
-   Firestore. Propunerile stau în `docs/audit-erori-2026-09-10.md` — o lungime
+   Firestore. Propunerile stau în `docs/archive/audit-erori-2026-09-10.md` — o lungime
    minimă impusă parolei și App Check.
 
 ## Ce n-am putut proba aici

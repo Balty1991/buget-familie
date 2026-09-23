@@ -289,7 +289,7 @@ Scor relativ din overlap persona-uri + dual-lens + cod la `d33bacf` (nu din surv
 | Rules / App Check | `firestore.rules`, `client/src/lib/firebase-config.ts`, `docs/app-check-enforce-prep.md` |
 | Ledger | `client/src/lib/finance-data.ts` |
 | Android | `MainActivity.java`, `QuickAddWidgetProvider.java`, `ReminderScheduler.java`, `PLAY_CHECKLIST.md` |
-| Continuity | `docs/user-multi-perspective-2026-09-12.md`, `docs/audit-dual-lens-2026-09-12.md` |
+| Continuity | `docs/archive/user-multi-perspective-2026-09-12.md`, `docs/archive/audit-dual-lens-2026-09-12.md` |
 
 ---
 
