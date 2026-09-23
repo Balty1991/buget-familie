@@ -28,10 +28,11 @@ describe("tokenii de temă", () => {
   it("câștigă la finalul foilor amânate", () => {
     const deferred = read("deferred-styles.ts");
     const imports = [...deferred.matchAll(/import "\.\/([^"]+)";/g)].map((match) => match[1]);
-    expect(imports.at(-4)).toBe("tokens.css");
-    expect(imports.at(-3)).toBe("today.css");
-    expect(imports.at(-2)).toBe("movements.css");
-    expect(imports.at(-1)).toBe("plan.css");
+    expect(imports.at(-5)).toBe("tokens.css");
+    expect(imports.at(-4)).toBe("today.css");
+    expect(imports.at(-3)).toBe("movements.css");
+    expect(imports.at(-2)).toBe("plan.css");
+    expect(imports.at(-1)).toBe("obligations.css");
   });
 });
 
@@ -71,6 +72,22 @@ describe("ecranul Plan", () => {
     expect(css).not.toContain(".bf-plan-header-stat b");
     expect(css).not.toContain(".bf-plan-resource-band strong");
     expect(css).not.toContain(".bf-envelope-seal");
+    expect(css).not.toMatch(/position:\s*sticky/);
+  });
+});
+
+describe("ecranul Obligații", () => {
+  const css = read("obligations.css");
+
+  it("ridică etichetele și ratele, fără să micșoreze soldul mare", () => {
+    expect(css).toContain("--bf-text-min");
+    expect(css).toContain("--bf-text-money");
+    expect(css).toContain("--bf-hit");
+    expect(css).toContain(".bf-goals-link");
+    expect(css).not.toContain(".bf-obligation-ledger article b");
+    expect(css).not.toContain(".bf-debt-plan-total strong");
+    expect(css).not.toContain(".bf-debt-simulator-result strong");
+    expect(css).not.toContain(".bf-snowball-next strong");
     expect(css).not.toMatch(/position:\s*sticky/);
   });
 });

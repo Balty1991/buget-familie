@@ -2,7 +2,7 @@
 
 Text gata de lipit în Play Console. **Fără prețuri IAP** cât `BILLING_LIVE = false`. Plățile (Play Billing) se activează separat, după closed testing stabil.
 
-**Versiune listing (sept 2026):** `versionName` **1.1.79** / `versionCode` **81**.
+**Versiune listing (sept 2026):** `versionName` **1.1.80** / `versionCode` **82**.
 
 Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety detaliat: [`PLAY_CONSOLE_DATA_SAFETY.md`](./PLAY_CONSOLE_DATA_SAFETY.md).
 
@@ -12,8 +12,8 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 |---|---|
 | Nume (max 30) | Buget Familie |
 | Pachet | `ro.balty1991.bugetfamilie` |
-| versionName | `1.1.79` |
-| versionCode | `81` |
+| versionName | `1.1.80` |
+| versionCode | `82` |
 | Categorie | Finance |
 | Etichete | Buget, Familie, Cheltuieli, Plicuri, România, Ciclu salariu |
 | Contact | contact.vanzo@gmail.com |

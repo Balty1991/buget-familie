@@ -1,0 +1,69 @@
+/**
+ * Ecranul Obligații. Al patrulea din migrarea ecran-cu-ecran.
+ * Etichetele nu coboară sub 12px. Sumele din rânduri, istoric și grafic
+ * nu coboară sub 14px. Soldul mare din registru, totalul planului și
+ * bulgărele de zăpadă rămân mari.
+ */
+.os-shell .bf-obligations-workspace .bf-kicker,
+.os-shell .bf-obligations-workspace .bf-goals-link,
+.os-shell .bf-obligations-workspace .bf-obligation-ledger article span,
+.os-shell .bf-obligations-workspace .bf-obligation-ledger > button span,
+.os-shell .bf-obligations-workspace .bf-obligation-ledger article small,
+.os-shell .bf-obligations-workspace .bf-obligation-actions button,
+.os-shell .bf-obligations-workspace .bf-obligation-empty button,
+.os-shell .bf-obligations-workspace .bf-obligation-empty small,
+.os-shell .bf-obligations-workspace .bf-obligation-entry-main small,
+.os-shell .bf-obligations-workspace .bf-obligation-entry-actions button,
+.os-shell .bf-obligations-workspace .bf-obligation-progress small,
+.os-shell .bf-obligations-workspace .bf-upcoming-item-main small,
+.os-shell .bf-obligations-workspace .bf-snowball-tag,
+.os-shell .bf-obligations-workspace .bf-snowball-next span,
+.os-shell .bf-obligations-workspace .bf-snowball-list li span,
+.os-shell .bf-obligations-workspace .bf-debt-history > p,
+.os-shell .bf-obligations-workspace .bf-debt-history small,
+.os-shell .bf-obligations-workspace .bf-debt-history.empty,
+.os-shell .bf-obligations-workspace .bf-debt-plan-stats small,
+.os-shell .bf-obligations-workspace .bf-debt-plan-total small,
+.os-shell .bf-obligations-workspace .bf-debt-plan-progress > div,
+.os-shell .bf-obligations-workspace .bf-debt-schedule-head p,
+.os-shell .bf-obligations-workspace .bf-debt-schedule-head > span,
+.os-shell .bf-obligations-workspace .bf-debt-schedule-row small,
+.os-shell .bf-obligations-workspace .bf-debt-simulator-summary small,
+.os-shell .bf-obligations-workspace .bf-debt-simulator-result small,
+.os-shell .bf-obligations-workspace .bf-debt-slider-labels,
+.os-shell .bf-obligations-workspace .bf-debt-slider > div {
+  font-size: var(--bf-text-min, 12px) !important;
+}
+
+@media (max-width: 760px) {
+  .os-shell .bf-obligations-workspace .bf-obligations-header > div:first-child > p:last-child,
+  .os-shell .bf-obligations-workspace .bf-upcoming-hero > div > p:not(.bf-kicker) {
+    font-size: var(--bf-text-min, 12px) !important;
+  }
+}
+
+.os-shell .bf-obligations-workspace .bf-obligation-entry-main strong,
+.os-shell .bf-obligations-workspace .bf-debt-schedule-row b,
+.os-shell .bf-obligations-workspace .bf-debt-schedule-row strong,
+.os-shell .bf-obligations-workspace .bf-debt-simulator-summary b,
+.os-shell .bf-obligations-workspace .bf-debt-plan-stats b,
+.os-shell .bf-obligations-workspace .bf-debt-history b,
+.os-shell .bf-obligations-workspace .bf-debt-history strong {
+  font-size: var(--bf-text-money, 14px) !important;
+}
+
+.os-shell .bf-obligations-workspace .bf-goals-link,
+.os-shell .bf-obligations-workspace .bf-sub-board button,
+.os-shell .bf-obligations-workspace .bf-upcoming-actions button,
+.os-shell .bf-obligations-workspace .bf-obligation-actions button,
+.os-shell .bf-obligations-workspace .bf-obligation-entry-actions button,
+.os-shell .bf-obligations-workspace .bf-obligation-empty button {
+  min-height: var(--bf-hit, 44px) !important;
+}
+
+.os-shell .bf-obligations-workspace .bf-obligation-entry-actions button.delete {
+  width: var(--bf-hit, 44px) !important;
+  min-width: var(--bf-hit, 44px) !important;
+  height: var(--bf-hit, 44px) !important;
+  padding-inline: 0 !important;
+}
