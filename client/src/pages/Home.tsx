@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, isWeeklyPaced, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationWeekStatus, adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, isWeeklyPaced, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
@@ -222,6 +222,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   const forecast = useMemo(() => planForecast(data), [data]);
   const signals = useMemo(() => advisorSignals(data), [data]);
   const brief = useMemo(() => todayBrief(data), [data]);
+  const showHealthGauge = useMemo(() => calculateHealthScore(data).score !== null, [data]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [shownTrancheKey, setShownTrancheKey] = useState("");
   const [openHint, setOpenHint] = useState(false);
@@ -596,11 +597,13 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                   <WeeklySummaryPanel data={data} onChange={onChange} onOpenJournal={() => onGo("journal")} onOpenPlan={() => onGo("plan")} />
                 </Suspense>
               )}
+              {showHealthGauge && (
               <div className="os-gauge bf-today-below-gauge">
                 <Suspense fallback={null}>
                   <HealthScoreBadge data={data} />
                 </Suspense>
               </div>
+              )}
               {data.settings.members.length > 1 && (() => {
                 const activity = householdActivityInCycle(data);
                 const sharers = activity.members.filter((item) => item.expense > 0 || item.income > 0);
