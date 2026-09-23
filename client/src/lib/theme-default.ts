@@ -163,7 +163,11 @@ export function resolveInitialTheme(storage: StorageLike): ThemeId {
 
 export function shouldShowWhatsNew(storage: StorageLike, blocked = false): boolean {
   if (blocked) return false;
-  return !storage.getItem(WHATS_NEW_KEY);
+  if (storage.getItem(WHATS_NEW_KEY)) return false;
+  // Instalare goală: nu există încă un utilizator căruia să-i spui ce s-a schimbat.
+  const existed = storage.getItem("buget-familie:setup-complete") === "true"
+    || Boolean(storage.getItem("buget-familie:setup-completed-at"));
+  return existed;
 }
 
 export function markWhatsNewSeen(storage: StorageLike) {

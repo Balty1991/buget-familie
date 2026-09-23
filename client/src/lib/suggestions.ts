@@ -15,6 +15,7 @@ import {
   allocationWeekStatus,
   isoDate,
   isoToday,
+  isWeeklyPaced,
   sourceBalance,
   type AppData,
 } from "./finance-data";
@@ -55,7 +56,7 @@ export function buildSuggestions(data: AppData, asOf = isoToday()): Suggestion[]
   }
 
   for (const allocation of plan.allocations) {
-    const week = allocation.weeklyPace !== false ? allocationWeekStatus(data, allocation) : undefined;
+    const week = isWeeklyPaced(allocation, plan) ? allocationWeekStatus(data, allocation) : undefined;
     const status = allocationStatus(data, allocation);
     const left = week ? week.remaining : status.remaining;
     const budget = week ? week.budget : status.budget;

@@ -11,7 +11,7 @@
  * cifre despre aceeași săptămână.
  */
 import { periodDays, remainingPace, startedWeekShare, totalFromWeeklyPace, type StartedWeekShare } from "./calendar-budget";
-import { allocationWeeksStatus, appendAllocationHistory, isoToday, planEndDate, transferBetweenWeeks, type AppData, type BudgetAllocation } from "./finance-data";
+import { allocationWeeksStatus, appendAllocationHistory, isoToday, isWeeklyPaced, planEndDate, transferBetweenWeeks, type AppData, type BudgetAllocation } from "./finance-data";
 import { t } from "./i18n";
 
 const round = (value: number) => Math.round(value * 100) / 100;
@@ -28,7 +28,7 @@ export type StartedWeekPlan = { weekIndex: number; budget: number; remaining: nu
 
 /** Câți bani revin zilelor rămase din tranșa curentă a unui plic, la ritmul egal al perioadei. */
 export function startedWeekPlan(data: AppData, allocation: BudgetAllocation, today = isoToday()): StartedWeekPlan | undefined {
-  if (allocation.weeklyPace === false) return undefined;
+  if (!isWeeklyPaced(allocation, data.settings.salaryPlan)) return undefined;
   const weeks = allocationWeeksStatus(data, allocation);
   if (weeks.length < 2) return undefined;
   const index = weeks.findIndex((week) => today >= week.start && today <= week.end);

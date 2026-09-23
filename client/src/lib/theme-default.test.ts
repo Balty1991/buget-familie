@@ -154,8 +154,11 @@ describe("catalog teme White/Dark/extras", () => {
 });
 
 describe("afișul Ce e nou", () => {
-  it("apare o dată, apoi dispare după dismiss", () => {
+  it("nu apare la instalare goală și dispare după dismiss", () => {
+    const fresh = memory();
+    expect(shouldShowWhatsNew(fresh)).toBe(false);
     const storage = memory();
+    storage.setItem("buget-familie:setup-complete", "true");
     expect(shouldShowWhatsNew(storage)).toBe(true);
     expect(shouldShowWhatsNew(storage, true)).toBe(false);
     markWhatsNewSeen(storage);

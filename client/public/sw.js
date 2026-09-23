@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v67";
+const CACHE = "buget-familie-shell-v68";
 
 const SHELL = ["./manifest.webmanifest", "./bf-favicon.svg", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/notify-badge.png"];
 
@@ -31,7 +31,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.includes("/api/") || url.pathname.includes("github")) return;
 
-  const hashed = /\/assets\/.+\.[A-Za-z0-9_-]{8,}\.(js|css)$/.test(url.pathname) || /\.woff2?$/.test(url.pathname);
+  const hashed = /\/assets\/.+-[A-Za-z0-9_-]{8,}\.(js|css)$/.test(url.pathname) || /\.woff2?$/.test(url.pathname);
   if (hashed) {
     event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
       if (response.ok) {

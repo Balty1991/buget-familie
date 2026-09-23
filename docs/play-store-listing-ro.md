@@ -2,7 +2,7 @@
 
 Text gata de lipit în Play Console. **Fără prețuri IAP** cât `BILLING_LIVE = false`. Plățile (Play Billing) se activează separat, după closed testing stabil.
 
-**Versiune listing (sept 2026):** `versionName` **1.1.72** / `versionCode` **74**.
+**Versiune listing (sept 2026):** `versionName` **1.1.73** / `versionCode` **75**.
 
 Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety detaliat: [`PLAY_CONSOLE_DATA_SAFETY.md`](./PLAY_CONSOLE_DATA_SAFETY.md).
 

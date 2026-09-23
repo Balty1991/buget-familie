@@ -8,6 +8,7 @@ import {
   allocationStatus,
   formatDate,
   isoToday,
+  isWeeklyPaced,
   pendingRecurringInPlan,
   planEndDate,
   planForecast,
@@ -391,7 +392,7 @@ function buildAlerts(data: AppData): PlannedAlert[] {
 
   // Tranșă săptămânală: reamintire în dimineața zilei de start (WorkManager pe Android).
   const planEnd = planEndDate(plan);
-  const weeklyPacedTotal = (plan.allocations || []).filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
+  const weeklyPacedTotal = (plan.allocations || []).filter((item) => isWeeklyPaced(item, plan)).reduce((sum, item) => sum + item.amount, 0);
   if (plan.periodStart && planEnd && weeklyPacedTotal > 0) {
     const weeks = calendarBudget(weeklyPacedTotal, plan.periodStart, planEnd)?.weeks || [];
     for (const week of weeks) {

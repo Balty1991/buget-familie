@@ -14,6 +14,7 @@ import {
   financialBalance,
   formatDate,
   isoToday,
+  isWeeklyPaced,
   newId,
   pendingRecurringInPlan,
   planEndDate,
@@ -616,7 +617,8 @@ const mondayOf = (asOf: string) => {
  * cad în altă tranșă arată partea acelei tranșe, nu banii de azi.
  */
 export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): WeeklyEnvelopeRhythm => {
-  const weekly = data.settings.salaryPlan.allocations.filter((item) => item.weeklyPace !== false);
+  const plan = data.settings.salaryPlan;
+  const weekly = plan.allocations.filter((item) => isWeeklyPaced(item, plan));
   const packs = weekly.map((allocation) => {
     const weeks = allocationWeeksStatus(data, allocation);
     const current = weeks.find((week) => asOf >= week.start && asOf <= week.end);
@@ -693,7 +695,7 @@ export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): Wee
     todayLeft: roundMoney(todayLeftRaw),
     todayShare: roundMoney(todayShareRaw),
     futureShare: roundMoney(futureShareRaw),
-    hasWeekly: weekly.length > 0,
+    hasWeekly: weekly.length > 0 && hasTranche,
     todayOut: roundMoney(todayOut),
   };
 };
@@ -745,7 +747,7 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
   const weekTx = data.transactions.filter((item) => item.date >= summary.start && item.date <= summary.end && (!memberId || item.memberId === memberId));
   const envelopes = plan.allocations.map((allocation) => {
     const cycleBudget = allocationBudget(data, allocation);
-    const weekStatus = allocation.weeklyPace === false ? undefined : allocationWeekStatus(data, allocation, asOf);
+    const weekStatus = isWeeklyPaced(allocation, plan) ? allocationWeekStatus(data, allocation, asOf) : undefined;
     const calendarSpent = roundMoney(weekTx.filter((item) => matchesAllocation(item, allocation)).reduce((sum, item) => sum + item.amount, 0));
     const planned = roundMoney(weekStatus ? weekStatus.budget : cycleBudget * Math.min(7, planDays) / planDays);
     // La plicurile cu ritm, cheltuiala din tranșă contează și dacă a căzut în săptămâna

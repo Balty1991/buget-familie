@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, isWeeklyPaced, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
@@ -99,7 +99,7 @@ function planMath(data: AppData) {
   const periodExpenses = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
   const days = planEnd ? Math.max(1, Math.floor((new Date(`${planEnd}T12:00:00`).valueOf() - new Date(`${plan.periodStart}T12:00:00`).valueOf()) / 86400000) + 1) : 7;
   const weeks = Math.max(1, Math.ceil(days / 7));
-  const weeklyPacedTotal = plan.allocations.filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
+  const weeklyPacedTotal = plan.allocations.filter((item) => isWeeklyPaced(item, plan)).reduce((sum, item) => sum + item.amount, 0);
   const weekly = plan.weeklyLimit || weeklyPacedTotal / weeks;
   return { plan, planEnd, selected, periodExpenses, days, weeks, weekly, weeklyPacedTotal, remaining: alloc.unrepartized, ...alloc };
 }
@@ -444,8 +444,8 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
             <p className="os-hint">{heroHint}</p>
             {(periodIncome > 0 || periodExpense > 0) && (
               <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
-                <span><small>{t("Intrat")}</small><b>+{money(periodIncome)}</b></span>
-                <span><small>{t("Ieșit")}</small><b>−{money(periodExpense)}</b></span>
+                <span><small>{t("Intrat")}</small><b>+{fmtExact.format(periodIncome)}</b></span>
+                <span><small>{t("Ieșit")}</small><b>−{fmtExact.format(periodExpense)}</b></span>
               </div>
             )}
             {!rhythm.hasWeekly || brief.expired ? null : (
@@ -457,11 +457,11 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                       type="button"
                       className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
                       aria-pressed={rhythmTip === row.day}
-                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.isToday && heroTracksWeek ? brief.spendable : row.left) })}
+                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.isToday ? (heroTracksWeek ? brief.spendable : row.left) : row.isFuture ? row.left : row.out) })}
                       onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
                     >
                       <span>{weekdayShort()[row.weekday]}</span>
-                      <b>{Math.round(row.isToday && heroTracksWeek ? brief.spendable : row.left)}<small> lei</small></b>
+                      <b>{Math.round(row.isToday ? (heroTracksWeek ? brief.spendable : row.left) : row.isFuture ? row.left : row.out)}<small> lei</small></b>
                       <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
                     </button>
                   ))}
@@ -469,8 +469,8 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 {(() => {
                   const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
                   if (!row) return null;
-                  const shown = row.isToday && heroTracksWeek ? brief.spendable : row.left;
-                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} rămași", { amount: leiLabel(row.left) });
+                  const shown = row.isToday ? (heroTracksWeek ? brief.spendable : row.left) : row.isFuture ? row.left : row.out;
+                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiLabel(row.out) });
                   return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiLabel(row.out) })}</span></ChartTip>;
                 })()}
                 <p className="bf-os-note">{rhythmNote}</p>
@@ -528,7 +528,9 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                           : Number.isFinite(ms) && ms < 86_400_000 && item.date === isoToday()
                             ? t("astăzi")
                             : dateText(item.date);
-                      return `${when} · ${item.person} · ${t(item.category)}${envelope ? ` · ${envelope}` : ""}`;
+                      const categoryLabel = t(item.category);
+                      const envelopeLabel = envelope && envelope !== item.category && envelope !== categoryLabel ? envelope : "";
+                      return `${when} · ${item.person} · ${categoryLabel}${envelopeLabel ? ` · ${envelopeLabel}` : ""}`;
                     })()}</small>
                   </div>
                   <strong className={item.kind}>{item.kind === "income" ? "+" : "−"}{fmtExact.format(item.amount)}</strong>

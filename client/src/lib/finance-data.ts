@@ -672,6 +672,15 @@ export const currenciesMissingRate = (data: AppData) =>
   activeCurrencies(data).filter((currency) => !exchangeRateFor(data, currency));
 
 export const planEndDate = (plan: SalaryPlan) => paydayWindow(plan).typical || plan.nextPayday || plan.earliestPayday || "";
+
+/**
+ * Plicul are ritm săptămânal doar dacă nu e marcat lunar și există o dată de venit.
+ * `weeklyPace` lipsă rămâne „implicit săptămânal” când data există — așa îl salvează Planul.
+ * Fără salariu nu există tranșe, iar ecranul nu trebuie să inventeze „rămas pe zi”.
+ */
+export const isWeeklyPaced = (allocation: Pick<BudgetAllocation, "weeklyPace">, plan: SalaryPlan) =>
+  allocation.weeklyPace !== false && Boolean(planEndDate(plan));
+
 export const planCoverEndDate = (plan: SalaryPlan) => paydayWindow(plan).latest || planEndDate(plan) || addIsoDays(plan.periodStart, 31);
 export const prudentPlanEndDate = (plan: SalaryPlan) => paydayWindow(plan).earliest || planEndDate(plan);
 export const addIsoDays = (iso: string, days: number) => {
@@ -913,7 +922,7 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
 export const planWeeklyCycle = (data: AppData): CalendarBudget | undefined => {
   const plan = data.settings.salaryPlan;
   const end = planEndDate(plan);
-  const paced = plan.allocations.filter((item) => item.weeklyPace !== false);
+  const paced = plan.allocations.filter((item) => isWeeklyPaced(item, plan));
   if (!end || !plan.periodStart || !paced.length) return undefined;
   const byIndex = new Map<number, CalendarBudget["weeks"][number]>();
   for (const item of paced) {
@@ -956,7 +965,7 @@ export const allocationWeekStatus = (data: AppData, allocation: BudgetAllocation
  */
 export const envelopeDecisionStatus = (data: AppData, allocation: BudgetAllocation, date = isoToday()) => {
   const cycle = allocationStatus(data, allocation);
-  const week = allocation.weeklyPace === false ? undefined : allocationWeekStatus(data, allocation, date);
+  const week = isWeeklyPaced(allocation, data.settings.salaryPlan) ? allocationWeekStatus(data, allocation, date) : undefined;
   if (!week) return { ...cycle, scope: "cycle" as const, weekIndex: undefined as number | undefined };
   const usage = week.budget > 0 ? week.spent / week.budget : 0;
   const remaining = week.remaining;
@@ -1101,7 +1110,7 @@ export const commitLedgerEntry = (data: AppData, entry: Transaction, fromWeekInd
   let ledger = data;
   if (entry.kind === "expense" && entry.allocationId && entry.allocationId !== "outside" && fromWeekIndex) {
     const allocation = data.settings.salaryPlan.allocations.find((item) => item.id === entry.allocationId);
-    const currentWeek = allocation && allocation.weeklyPace !== false ? allocationWeekStatus(data, allocation, entry.date) : undefined;
+    const currentWeek = allocation && isWeeklyPaced(allocation, data.settings.salaryPlan) ? allocationWeekStatus(data, allocation, entry.date) : undefined;
     if (allocation && currentWeek && fromWeekIndex !== currentWeek.index) {
       const transferred = transferBetweenWeeks(data, {
         allocationId: allocation.id,

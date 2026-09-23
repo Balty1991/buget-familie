@@ -12,6 +12,7 @@
 import {
   allocationStatus,
   allocationWeekStatus,
+  isWeeklyPaced,
   sourceBalance,
   type AppData,
   type BudgetAllocation,
@@ -80,7 +81,7 @@ const ownerName = (data: AppData, source: PaymentSource) =>
 
 /** Cât mai are un plic, în unitatea în care îl citește omul. */
 const envelopeRemaining = (data: AppData, allocation: BudgetAllocation, date?: string): { remaining: number; weekLabel?: string } => {
-  if (allocation.weeklyPace === false) return { remaining: allocationStatus(data, allocation).remaining };
+  if (!isWeeklyPaced(allocation, data.settings.salaryPlan)) return { remaining: allocationStatus(data, allocation).remaining };
   const week = allocationWeekStatus(data, allocation, date);
   if (!week) return { remaining: allocationStatus(data, allocation).remaining };
   return { remaining: week.remaining, weekLabel: `S${week.index}` };

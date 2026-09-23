@@ -65,7 +65,7 @@ export const FIRST_WEEK_TIPS: Array<{ id: FirstWeekTipId; kicker: string; title:
     id: "capture",
     kicker: "1 · CAPTURĂ",
     title: "Notează o mișcare când se întâmplă.",
-    detail: "Plusul de pe Astăzi sau un bon în De verificat. Nu trebuie să fie perfect — trebuie să fie pe telefon.",
+    detail: "Notează, pe Astăzi, sau un bon în De verificat. Nu trebuie să fie perfect — trebuie să fie pe telefon.",
   },
   {
     id: "envelopes",

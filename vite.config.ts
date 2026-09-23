@@ -98,6 +98,12 @@ function vitePluginManusDebugCollector(): Plugin {
     },
 
     configureServer(server: ViteDevServer) {
+      server.middlewares.use("/__manus__/debug-collector.js", (_req, res) => {
+        const file = path.resolve(PROJECT_ROOT, "client/dev/debug-collector.js");
+        res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+        res.setHeader("Cache-Control", "no-store");
+        res.end(fs.readFileSync(file));
+      });
       // POST /__manus__/logs: Browser sends logs (written directly to files)
       server.middlewares.use("/__manus__/logs", (req, res, next) => {
         if (req.method !== "POST") {

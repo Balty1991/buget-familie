@@ -4,7 +4,22 @@ import cors from "cors";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const groqApiKey = defineSecret("GROQ_API_KEY");
-const allowCors = cors({ origin: true });
+function originAllowed(origin: string | undefined) {
+  if (!origin) return true;
+  let host = "";
+  try { host = new URL(origin).hostname; } catch { return false; }
+  return origin === "https://balty1991.github.io"
+    || origin === "capacitor://localhost"
+    || origin === "ionic://localhost"
+    || host === "localhost"
+    || host === "127.0.0.1";
+}
+
+const allowCors = cors({
+  origin(origin, callback) {
+    callback(null, originAllowed(origin));
+  },
+});
 
 type ChatAttachment = { name?: string; mimeType: string; data: string };
 type ChatMessage = { role: "user" | "assistant"; text: string; attachments?: ChatAttachment[] };
@@ -72,7 +87,7 @@ Ce poți face, adică ce ajunge efectiv în aplicație, sunt elementele din read
 
 Contextul îți dă numele exacte pe care le are familia: sources (unde stau banii, cu sold), categories (categoriile acceptate), envelopes (plicurile, cu sumă și rest), recurring și dues (scadențele), goals (obiectivele), debts, events (evenimentele din calendar) și today (ziua de azi). Când omul numește un plic, o scadență sau un eveniment, folosește numele din context, nu o variantă a ta: aplicația leagă readingul de lucrul real după nume, iar un nume inventat face cererea să cadă. La category alege dintre categories; dacă niciuna nu se potrivește, lasă categoria pe care o spune omul, dar nu inventa un nume de plic care nu e în envelopes.
 
- Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Regula de prioritate: dacă mesajul conține credit, împrumut, datorie, sold restant, rată lunară sau scadență, intenția este debt, nu expense; suma mare este soldul rămas, rata este monthlyPayment, iar ziua scadenței este dueDay ca număr între 1 și 31. Nu crea o cheltuială pentru soldul creditului și nu cere alegerea unui plic. Dacă utilizatorul oferă clar numele creditului și valorile sale, tratează mesajul ca pe o comandă de înregistrare: returnează intent debt, extracted complet și needsConfirmation false; răspunde că ai înregistrat datele, fără să ceri „Da”. Dacă utilizatorul spune că a plătit efectiv rata, abia atunci înregistrează plata ca expense separat, cu suma ratei. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Păstrează întotdeauna zecimalele exacte: 15,50 lei înseamnă 15.50, nu 16; nu rotunji niciodată sumele de pe bon. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. Dacă primești un atașament cu un bon românesc, analizează imaginea/PDF-ul direct, de sus în jos și apoi verifică zona de total: identifică magazinul, produsele lizibile, cantitatea și prețul fiecărui produs, data și categoria probabilă. Uneori primești și un bloc [OCR local de verificare]; folosește-l ca indiciu suplimentar, compară-l cu imaginea și preferă valoarea tipărită clar în imagine atunci când diferă. Totalul cheltuielii trebuie să fie suma de la TOTAL, TOTAL LEI, TOTAL DE PLATĂ, SUMA DE PLATĂ sau ECRAN/AMOUNT PAID; nu folosi subtotalul, TVA, Total Economisit, punctele, numerarul primit, restul, numărul bonului sau un preț de produs. Garanția SGR / PET (0,50 lei) este parte din totalul plătit, nu o ignora. REDUCERE de sub un produs scade din acel produs; o reducere-rezumat lângă Total Economisit nu se mai scade o dată. Dacă există mai multe totaluri, alege suma asociată explicit plății finale și verifică dacă este aproximativ egală cu suma produselor. Pentru un bon cu total identificabil, răspunde direct cu propunerea de cheltuială și completează extracted.amount, extracted.title, extracted.vendor, extracted.date, extracted.category, extracted.totalLabel, extracted.confidence și extracted.receiptLines; nu cere utilizatorului să transcrie bonul. Dacă imaginea este puțin neclară, dar OCR-ul local și eticheta TOTAL indică aceeași sumă, folosește suma și marchează confidence medium, nu spune automat că bonul este imposibil de citit. Dacă totalul nu este lizibil nici în imagine, nici în OCR, spune clar că nu îl poți confirma și cere o fotografie mai clară, fără să inventezi suma. needsConfirmation este true doar la prima propunere de cheltuială ambiguă. Pentru datorii, venituri și repartizări pe care utilizatorul le-a formulat clar, needsConfirmation trebuie să fie false. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
+ Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Regula de prioritate: dacă mesajul conține credit, împrumut, datorie, sold restant, rată lunară sau scadență, intenția este debt, nu expense; suma mare este soldul rămas, rata este monthlyPayment, iar ziua scadenței este dueDay ca număr între 1 și 31. Nu crea o cheltuială pentru soldul creditului și nu cere alegerea unui plic. Dacă utilizatorul oferă clar numele creditului și valorile sale, tratează mesajul ca pe o comandă de înregistrare: returnează intent debt, extracted complet și needsConfirmation false; răspunde că ai înregistrat datele, fără să ceri „Da”. Dacă utilizatorul spune că a plătit efectiv rata, abia atunci înregistrează plata ca expense separat, cu suma ratei. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Păstrează întotdeauna zecimalele exacte: 15,50 lei înseamnă 15.50, nu 16; nu rotunji niciodată sumele de pe bon. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. Nu primești imagini sau PDF-uri de bon: atașamentele sunt ignorate, bonul se citește pe telefon. Dacă omul vorbește despre un bon, spune-i să îl noteze din Mișcări sau De verificat și nu pretinde că ai văzut o poză. needsConfirmation este true doar la prima propunere de cheltuială ambiguă. Pentru datorii, venituri și repartizări pe care utilizatorul le-a formulat clar, needsConfirmation trebuie să fie false. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
 
 Repartizarea banilor se face de azi înainte, nu pe zilele care au trecut. Contextul îți dă period cu: start, end (data venitului), today, daysTotal, daysLeft, free (banii nerepartizați), paceWeekly (ritmul pe săptămână întreagă pe care îl susțin banii liberi pe zilele rămase), pacePerDay și startedWeek (index, daysLeft, share) când săptămâna curentă e deja începută. Folosește aceste cifre, nu împărți tu venitul la 4 săptămâni.
 
@@ -234,7 +249,7 @@ function isInvalidKey(detail: string) {
 function buildContents(messages: ChatMessage[], context: Record<string, unknown>): GeminiContent[] {
   const contents: GeminiContent[] = [];
   for (const message of messages) {
-    const text = (message.text || "").trim();
+    const text = String(message.text || "").slice(0, 2000).trim();
     // Pozele de bon rămân pe telefon (Play Data safety). Ignorăm orice attachments din clienți vechi.
     if (!text) continue;
     const role = message.role === "assistant" ? "model" : "user";
@@ -473,6 +488,7 @@ export const aiGuide = onRequest(
     secrets: [geminiApiKey, groqApiKey],
     timeoutSeconds: 60,
     memory: "256MiB",
+    maxInstances: 8,
   },
   (request, response) => {
     allowCors(request, response, async () => {
@@ -485,12 +501,23 @@ export const aiGuide = onRequest(
         return;
       }
 
+      const origin = request.get("origin");
+      if (origin && !originAllowed(origin)) {
+        response.status(403).json({ error: "Origin not allowed" });
+        return;
+      }
       const body = (request.body || {}) as RequestBody;
-      const messages = Array.isArray(body.messages) ? body.messages.slice(-20).map((message) => ({
-        role: message.role,
-        text: message.text,
-      })) : [];
-      const context = body.context || {};
+      const messages = Array.isArray(body.messages) ? body.messages.slice(-12).map((message) => ({
+        role: message.role === "assistant" ? "assistant" as const : "user" as const,
+        text: String(message.text || "").slice(0, 2000),
+      })).filter((message) => message.text.trim()) : [];
+      const context = body.context && typeof body.context === "object" ? body.context : {};
+      let contextSize = 0;
+      try { contextSize = JSON.stringify(context).length; } catch { contextSize = 12001; }
+      if (contextSize > 12000) {
+        response.status(413).json({ error: "Context too large" });
+        return;
+      }
       if (!messages.length) {
         response.status(400).json({ error: "Conversation is required" });
         return;

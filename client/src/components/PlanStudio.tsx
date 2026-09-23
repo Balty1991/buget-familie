@@ -23,7 +23,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace } from "@/lib/household-insights";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
@@ -106,10 +106,10 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const [cashflowDraft, setCashflowDraft] = useState<Record<string, string>>({});
 
   const periodValid = Boolean(cycleStart && cycleEnd && cycleEnd >= cycleStart);
-  const weeklyPacedTotal = plan.allocations.filter((item) => item.weeklyPace !== false).reduce((sum, item) => sum + item.amount, 0);
+  const weeklyPacedTotal = plan.allocations.filter((item) => isWeeklyPaced(item, plan)).reduce((sum, item) => sum + item.amount, 0);
   const activeCycle = planWeeklyCycle(data) || (planEnd && weeklyPacedTotal > 0 ? calendarBudget(weeklyPacedTotal, plan.periodStart, planEnd) : undefined);
   const activeWeek = activeCycle?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end);
-  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: item.weeklyPace === false ? undefined : allocationWeekStatus(data, item), weeks: item.weeklyPace === false ? [] : allocationWeeksStatus(data, item) }));
+  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: isWeeklyPaced(item, plan) ? allocationWeekStatus(data, item) : undefined, weeks: isWeeklyPaced(item, plan) ? allocationWeeksStatus(data, item) : [] }));
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const weekSpentByIndex = envelopes.reduce((all, envelope) => { envelope.weeks.forEach((week) => all.set(week.index, (all.get(week.index) || 0) + week.spent)); return all; }, new Map<number, number>());
   const { availableSources, scheduled, reservedInEnvelopes, unrepartized } = planAllocationMath(data);

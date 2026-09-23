@@ -11,6 +11,7 @@ import { generateFamilyPassword } from "@/lib/family-password";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
+import { markWhatsNewSeen } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
 import { hideNativeSplash } from "@/lib/native-splash";
 
@@ -94,6 +95,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const complete = () => {
     safeSetItem(window.localStorage, "buget-familie:setup-complete", "true");
     markSetupCompletedAt(window.localStorage);
+    markWhatsNewSeen(window.localStorage);
     safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true");
     onClose();
   };
@@ -132,6 +134,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     const horizon = midHorizon(payday);
     const funded = [...paymentSources].sort((a, b) => b.openingBalance - a.openingBalance)[0] || paymentSources[0];
     const presets = PRESETS.filter((preset) => selected.includes(preset.category));
+    const paydayReady = /^\d{4}-\d{2}-\d{2}$/.test(payday);
     const allocations: BudgetAllocation[] = opts.withEnvelopes
       ? [
           ...data.settings.salaryPlan.allocations,
@@ -140,7 +143,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             label: preset.category,
             amount: preset.amount,
             category: preset.category,
-            weeklyPace: preset.weekly ? undefined : false,
+            weeklyPace: preset.weekly && paydayReady ? undefined : false,
             memberId: "member-me",
             sourceId: funded?.id,
           })),
@@ -157,7 +160,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
         salaryPlan: {
           ...data.settings.salaryPlan,
           periodStart: opts.moneyFirst ? horizon.start : data.settings.salaryPlan.periodStart || isoToday(),
-          nextPayday: opts.withPayday ? (payday || data.settings.salaryPlan.nextPayday) : data.settings.salaryPlan.nextPayday,
+          nextPayday: opts.withPayday && paydayReady ? payday : data.settings.salaryPlan.nextPayday,
           allocations,
           joinedMidCycle: opts.moneyFirst ? true : data.settings.salaryPlan.joinedMidCycle,
           updatedAt: now,
@@ -277,7 +280,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p>{t("Card, cash, bonuri — ale tale și ale partenerului, dacă e cazul. Plicurile le pui mai târziu, în Plan, doar dacă ai nevoie.")}</p>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
-            <label className="bf-field"><span>{t("Următorul venit (opțional)")}</span><input type="date" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Următorul venit (opțional)")}</span><input type="date" lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-sources">
               <p><b>{t("Banii tăi")}</b></p>
               {moneySources.map((source) => (
@@ -314,19 +317,20 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p className="bf-kicker">{t("ORGANIZEAZĂ LUNA")}</p>
             <h2 id="bf-setup-title">{t("Până când vrei să ajungă")} <em>{t("banii?")}</em></h2>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
-            <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
                 const active = selected.includes(preset.category);
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(preset.amount)}{preset.weekly ? t(" · ritm săptămânal până la venit") : t(" · pentru perioada aleasă")}</small>
+                    <small>{money(preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );
               })}
             </div>
+            {!/^\d{4}-\d{2}-\d{2}$/.test(payday) && <p className="bf-helper">{t("Fără data venitului, plicurile rămân pe toată perioada, nu pe săptămâni.")}</p>}
             <div className="bf-setup-sources">
               {data.settings.paymentSources.slice(0, 2).map((source) => (
                 <label className="bf-field" key={source.id}>
@@ -348,19 +352,20 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <label className="bf-field"><span>{t("Numele familiei")}</span><input value={familyName} onChange={(event) => setFamilyName(event.target.value)} placeholder="ex. Familia Popescu" /></label>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
-            <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
                 const active = selected.includes(preset.category);
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(preset.amount)}{preset.weekly ? t(" · ritm săptămânal până la venit") : t(" · pentru perioada aleasă")}</small>
+                    <small>{money(preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );
               })}
             </div>
+            {!/^\d{4}-\d{2}-\d{2}$/.test(payday) && <p className="bf-helper">{t("Fără data venitului, plicurile rămân pe toată perioada, nu pe săptămâni.")}</p>}
             <div className="bf-onboarding-actions">
               <button className="bf-primary" onClick={finishFamily}><PiggyBank size={17} /> {t("Creează planul familiei")}</button>
             </div>

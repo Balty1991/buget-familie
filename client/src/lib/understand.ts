@@ -24,6 +24,7 @@ import {
   expenseCategories,
   inPlanPeriod,
   isoToday,
+  isWeeklyPaced,
   matchingAllocationsForExpense,
   parseNaturalSpendScenario,
   pendingRecurringInPlan,
@@ -318,7 +319,7 @@ export function buildExpenseOffer(
   const habit = findHabit(memory, title, title);
   const funded: Array<{ envelope: (typeof data.settings.salaryPlan.allocations)[number]; weekIndex?: number; left: number }> = [];
   for (const envelope of data.settings.salaryPlan.allocations) {
-    if (envelope.weeklyPace === false) {
+    if (!isWeeklyPaced(envelope, data.settings.salaryPlan)) {
       const left = allocationStatus(data, envelope).remaining;
       if (left >= amount) funded.push({ envelope, left });
       continue;
@@ -338,7 +339,7 @@ export function buildExpenseOffer(
       return 1;
     };
     const weekOfSpend = (item: (typeof funded)[number]) => {
-      if (item.envelope.weeklyPace === false || !item.weekIndex) return 1;
+      if (!isWeeklyPaced(item.envelope, data.settings.salaryPlan) || !item.weekIndex) return 1;
       if (!spendWeekByEnvelope.has(item.envelope.id)) {
         spendWeekByEnvelope.set(item.envelope.id, allocationWeekStatus(data, item.envelope, date)?.index);
       }
@@ -572,7 +573,7 @@ export function localInsight(raw: string, data: AppData, memory: GuideMemory): s
   // „cum funcționează plicurile?” cere o explicație, nu soldurile.
   if (/cum (functioneaza|merge|folosesc)|ce inseamna|la ce (foloseste|serveste)/.test(folded)) return undefined;
   const envelopes = data.settings.salaryPlan.allocations.map((envelope) => {
-    const week = envelope.weeklyPace !== false ? allocationWeekStatus(data, envelope) : undefined;
+    const week = isWeeklyPaced(envelope, data.settings.salaryPlan) ? allocationWeekStatus(data, envelope) : undefined;
     const left = week ? week.remaining : allocationStatus(data, envelope).remaining;
     return `• ${envelope.label}${week ? ` · S${week.index}` : ""}: ${money(left)}`;
   });
@@ -1100,7 +1101,7 @@ export function compactGuideContext(data: AppData, extras: { view?: string; inco
     categories: [...expenseCategories, ...data.settings.customCategories].slice(0, 26),
     envelopes: data.settings.salaryPlan.allocations.slice(0, 12).map((item) => {
       const status = envelopeDecisionStatus(data, item);
-      return { label: item.label, amount: round(item.amount), remaining: round(status.remaining), state: status.state, weekly: item.weeklyPace !== false };
+      return { label: item.label, amount: round(item.amount), remaining: round(status.remaining), state: status.state, weekly: isWeeklyPaced(item, data.settings.salaryPlan) };
     }),
     dues: pendingRecurringInPlan(data).slice(0, 6).map((item) => ({ name: item.name, amount: round(item.amount), due: item.dueDate })),
     recurring: data.recurring.filter((item) => item.active !== false).slice(0, 8).map((item) => ({ name: item.name, amount: round(item.amount), dueDay: item.dueDay })),

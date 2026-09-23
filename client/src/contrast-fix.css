@@ -1280,3 +1280,34 @@ html.theme-cyber .bf-obligation-entry-actions > button.delete,
   border-color: color-mix(in srgb, var(--cf-danger) 45%, var(--cf-line)) !important;
   background-color: color-mix(in srgb, var(--cf-danger) 12%, var(--cf-surface)) !important;
 }
+
+/* Plicurile bifate din primul ecran: textul mic și bifă rămâneau verde pe verde. */
+html body .bf-setup-presets button.active,
+html body .bf-setup-presets button[aria-pressed="true"] {
+  color: var(--cf-on-primary, #ffffff) !important;
+  background: var(--cf-primary-strong, #1f5240) !important;
+  border-color: transparent !important;
+}
+html body .bf-setup-presets button.active small,
+html body .bf-setup-presets button[aria-pressed="true"] small,
+html body .bf-setup-presets button.active b,
+html body .bf-setup-presets button[aria-pressed="true"] b,
+html body .bf-setup-presets button.active svg,
+html body .bf-setup-presets button[aria-pressed="true"] svg {
+  color: inherit !important;
+}
+
+/* Notează nu stă sub dock pe ecranele scurte. */
+@media (max-width: 760px) {
+  .os-shell .bf-today-workspace .bf-os-actions {
+    position: sticky;
+    bottom: calc(84px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)));
+    z-index: 4;
+    margin-top: 4px;
+    padding: 8px 0 6px;
+    background: linear-gradient(to top, var(--os-bg, var(--cf-bg, #f7f8f6)) 72%, transparent);
+  }
+}
+.bf-first-run-body {
+  padding-bottom: 28px !important;
+}

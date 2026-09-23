@@ -206,6 +206,17 @@ describe("analize de gospodărie", () => {
     expect(rhythm.days.every((item) => item.fill === 0)).toBe(true);
   });
 
+  it("fără data venitului nu inventează un ritm săptămânal", () => {
+    const { data } = base();
+    data.settings.salaryPlan.nextPayday = "";
+    data.settings.salaryPlan.allocations = [
+      { id: "food", label: "Alimente", amount: 1500, category: "Alimente" },
+    ];
+    const rhythm = weeklyEnvelopeDailyRhythm(data, "2026-09-09");
+    expect(rhythm.hasWeekly).toBe(false);
+    expect(rhythm.days.every((item) => item.left === 0 && item.fill === 0)).toBe(true);
+  });
+
   it("nu consumă ritmul zilnic din plicuri lunare sau din plăți în afara plicurilor", () => {
     const { data, source } = base();
     data.settings.salaryPlan = {
