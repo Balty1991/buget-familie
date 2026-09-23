@@ -11,7 +11,7 @@
   --os-ink: #f3f6f4;
   --os-muted: #9aa8a1;
   --os-warn: #ffb087;
-  font-family: Outfit, "IBM Plex Sans", system-ui, sans-serif;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
 }
 
 html:not(.dark) .bf-today-workspace {
@@ -82,8 +82,8 @@ html:not(.dark) .bf-today-situation.risk {
   justify-content: space-between !important;
   gap: 12px !important;
   color: var(--os-muted) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 11px !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
   font-weight: 600 !important;
   letter-spacing: .16em !important;
   text-transform: uppercase !important;
@@ -112,8 +112,8 @@ html:not(.dark) .bf-today-situation.risk {
 .bf-today-situation-number > p {
   margin: 0 !important;
   color: var(--os-muted) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 11px !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
   font-weight: 600 !important;
   letter-spacing: .2em !important;
   text-transform: uppercase !important;
@@ -122,7 +122,7 @@ html:not(.dark) .bf-today-situation.risk {
 .bf-today-situation-number strong,
 .bf-today-situation-number > strong {
   color: var(--os-ink) !important;
-  font-family: Fraunces, "IBM Plex Serif", Georgia, serif !important;
+  font-family: Fraunces, "IBM Plex Sans", Georgia, serif !important;
   font-size: clamp(44px, 12vw, 72px) !important;
   font-weight: 560 !important;
   letter-spacing: -.06em !important;
@@ -135,7 +135,7 @@ html:not(.dark) .bf-today-situation.risk {
 .bf-today-situation-number > span {
   max-width: 36rem !important;
   color: var(--os-muted) !important;
-  font-size: 13px !important;
+  font-size:14px !important;
   line-height: 1.5 !important;
 }
 
@@ -153,7 +153,7 @@ html:not(.dark) .bf-today-situation.risk {
   color: var(--os-ink) !important;
   background: color-mix(in srgb, var(--os-bg) 70%, transparent) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
-  font-size: 13px !important;
+  font-size:14px !important;
   cursor: pointer;
 }
 
@@ -161,7 +161,7 @@ html:not(.dark) .bf-today-situation.risk {
   max-width: 36rem;
   margin: 10px 0 0 !important;
   color: var(--os-muted) !important;
-  font-size: 13px !important;
+  font-size:14px !important;
   line-height: 1.5 !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
@@ -196,7 +196,7 @@ html:not(.dark) .bf-today-situation.risk {
 
 .bf-today-situation .bf-health-score small {
   color: var(--os-muted) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   letter-spacing: .16em !important;
 }
 
@@ -218,9 +218,9 @@ html:not(.dark) .bf-today-situation.risk {
   padding: 0 18px !important;
   border: 0 !important;
   border-radius: 999px !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 15px !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
 }
 
 .bf-today-add {
@@ -271,7 +271,7 @@ html:not(.dark) .bf-os-decide {
 .bf-os-kicker {
   margin: 0;
   color: var(--os-muted);
-  font-size: 11px;
+  font-size:12px;
   font-weight: 600;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -280,7 +280,7 @@ html:not(.dark) .bf-os-decide {
 .bf-os-title {
   margin: 4px 0 0;
   color: var(--os-ink);
-  font-family: Fraunces, "IBM Plex Serif", Georgia, serif;
+  font-family: Fraunces, "IBM Plex Sans", Georgia, serif;
   font-size: 1.55rem;
   font-weight: 560;
   letter-spacing: -.03em;
@@ -317,8 +317,8 @@ html:not(.dark) .bf-os-decide {
 }
 
 .bf-os-day span {
-  font-size: 10px;
-  font-weight: 650;
+  font-size:12px;
+  font-weight: 600;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--os-muted);
@@ -396,7 +396,7 @@ html:not(.dark) .bf-os-decide {
 .bf-os-source-list b {
   display: block;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .bf-os-source-list small {
@@ -438,7 +438,7 @@ html:not(.dark) .bf-os-decide {
   border-radius: 999px;
   color: #062016;
   background: #7cffc4;
-  font-size: 10px;
+  font-size:12px;
   font-weight: 750;
   letter-spacing: .02em;
   white-space: nowrap;
@@ -474,14 +474,14 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-app {
-  font-family: Outfit, "IBM Plex Sans", system-ui, sans-serif !important;
+  font-family: "IBM Plex Sans", system-ui, sans-serif !important;
 }
 
 .dark .bf-app h1,
 .dark .bf-app h2,
 .dark .bf-page h1,
 .dark .bf-page h2 {
-  font-family: Fraunces, "IBM Plex Serif", Georgia, serif !important;
+  font-family: Fraunces, "IBM Plex Sans", Georgia, serif !important;
   font-weight: 560 !important;
   letter-spacing: -.04em !important;
 }
@@ -496,7 +496,7 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-kicker,
 .dark .bf-page .bf-kicker {
   color: #9aa8a1 !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-weight: 600 !important;
   letter-spacing: .18em !important;
   text-transform: uppercase !important;
@@ -539,7 +539,7 @@ html:not(.dark) .bf-os-decide {
   border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
   border-radius: 1.6rem !important;
   background: #10141a !important;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, .45) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 .dark .bf-mobile-nav button {
@@ -635,7 +635,7 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-plan-studio-header h1,
 .dark .bf-movements-header h1 {
   color: #f3f6f4 !important;
-  font-family: Fraunces, "IBM Plex Serif", Georgia, serif !important;
+  font-family: Fraunces, "IBM Plex Sans", Georgia, serif !important;
 }
 
 .dark .bf-movements-header h1 em,
@@ -679,7 +679,7 @@ html:not(.dark) .bf-os-decide {
   color: #9aa8a1 !important;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
-  font-size: 10px !important;
+  font-size:12px !important;
 }
 
 .dark .bf-journal-day-pulse .income { color: #7cffc4 !important; }
@@ -823,7 +823,7 @@ html:not(.dark) .bf-os-decide {
   height: 44px !important;
   overflow: hidden !important;
   border: 1px solid color-mix(in srgb, #7cffc4 18%, transparent) !important;
-  border-radius: 16px !important;
+  border-radius:20px !important;
   color: #7cffc4 !important;
   background: #161d24 !important;
   box-shadow: none !important;
@@ -847,8 +847,8 @@ html:not(.dark) .bf-os-decide {
 
 .dark .bf-brand-copy b {
   color: #f3f6f4 !important;
-  font-family: Fraunces, "IBM Plex Serif", Georgia, serif !important;
-  font-size: 18px !important;
+  font-family: Fraunces, "IBM Plex Sans", Georgia, serif !important;
+  font-size:17px !important;
   font-weight: 560 !important;
   letter-spacing: -.03em !important;
 }
@@ -868,7 +868,7 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-command-trigger {
   width: 44px !important;
   height: 44px !important;
-  border-radius: 16px !important;
+  border-radius:20px !important;
 }
 
 .dark .bf-os-date {
@@ -888,13 +888,13 @@ html:not(.dark) .bf-os-decide {
   color: #c5d0c9;
 }
 
-.dark .bf-os-date span { font-size: 10px; }
+.dark .bf-os-date span { font-size:12px; }
 
 .dark .bf-today-situation-number > strong small {
   margin-left: 10px;
   color: #9aa8a1 !important;
-  font-family: Outfit, "IBM Plex Sans", sans-serif !important;
-  font-size: 16px !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:15px !important;
   font-weight: 500 !important;
   letter-spacing: .28em !important;
   vertical-align: 8px;
@@ -935,8 +935,8 @@ html:not(.dark) .bf-os-decide {
 }
 .bf-calm-label {
   fill: #9aa8a1;
-  font-family: Outfit, sans-serif;
-  font-size: 7px;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size:12px;
   font-weight: 600;
   letter-spacing: .22em;
 }
@@ -958,7 +958,7 @@ html:not(.dark) .bf-os-decide {
   color: #f3f6f4 !important;
   box-shadow: none !important;
   backdrop-filter: blur(16px);
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 14px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
@@ -972,8 +972,8 @@ html:not(.dark) .bf-os-decide {
   border-radius: 999px;
   color: #7cffc4;
   background: #14352b;
-  font-size: 9px;
-  font-weight: 700;
+  font-size:12px;
+  font-weight:600;
   letter-spacing: .04em;
 }
 
@@ -982,7 +982,7 @@ html:not(.dark) .bf-os-decide {
   padding: 0;
   color: #7cffc4;
   background: transparent;
-  font-size: 10px;
+  font-size:12px;
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -1013,8 +1013,8 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-mobile-nav button span {
-  font-family: Outfit, sans-serif !important;
-  font-size: 10px !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
   font-weight: 600 !important;
 }
 
@@ -1043,10 +1043,10 @@ html:not(.dark) .bf-os-decide {
 .bf-review-today-banner {
   margin: 0 0 12px;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius:20px;
 }
 .bf-review-today-banner > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.bf-review-today-banner p { margin: 0; font: 800 0.62rem/1.2 "IBM Plex Sans", sans-serif; letter-spacing: 0.08em; color: var(--cf-warning, #8b630e); }
+.bf-review-today-banner p { margin: 0; font: 600 0.62rem/1.2 "IBM Plex Sans", sans-serif; letter-spacing: 0.08em; color: var(--cf-warning, #8b630e); }
 .bf-review-today-banner strong { font-size: 0.95rem; }
 .bf-review-today-banner span { font-size: 0.78rem; color: var(--cf-muted, #5a675f); }
 .bf-review-today-banner > button {
@@ -1067,7 +1067,7 @@ html:not(.dark) .bf-os-decide {
   max-width: min(420px, calc(100% - 24px));
   padding: 10px 14px;
   border-radius: 999px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  box-shadow:var(--bf-shadow-rest);
   font: 750 0.82rem/1 "IBM Plex Sans", sans-serif;
   justify-content: center;
 }
@@ -1090,7 +1090,7 @@ html:not(.dark) .bf-os-decide {
   margin: 0 0 14px;
   padding: 12px 14px;
   border: 1px dashed var(--cf-line, #d5d2c8);
-  border-radius: 14px;
+  border-radius:12px;
   background: var(--cf-surface-alt, #f4f2eb);
   color: var(--cf-ink, #1a2420);
   font: 750 0.9rem/1.2 "IBM Plex Sans", sans-serif;
@@ -1111,7 +1111,7 @@ html:not(.dark) .bf-os-decide {
   margin-top: 6px;
   padding: 3px 8px;
   border-radius: 999px;
-  font: 800 10px/1.2 "IBM Plex Sans", sans-serif;
+  font: 600 10px/1.2 "IBM Plex Sans", sans-serif;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -1166,7 +1166,7 @@ html:not(.dark) .bf-os-decide {
   min-height: 42px;
   padding: 0 12px;
   font-size: 15px;
-  border-radius: 10px;
+  border-radius:12px;
   border: 1px solid var(--cf-line, #e2dfd6);
   background: var(--cf-surface, #fff);
   color: var(--cf-ink, #173f36);
@@ -1184,12 +1184,12 @@ html:not(.dark) .bf-os-decide {
 .bf-brief-check-ok {
   margin: 8px 0 0;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius:12px;
   border: 1px solid color-mix(in srgb, var(--cf-primary, #185849) 28%, var(--cf-line, #e2dfd6));
   background: color-mix(in srgb, var(--cf-primary, #185849) 8%, var(--cf-surface, #fffefa));
   color: var(--cf-ink, #173f36);
-  font-size: 13px;
-  font-weight: 700;
+  font-size:14px;
+  font-weight:600;
 }
 
 /* Digest săptămânal */
@@ -1198,14 +1198,14 @@ html:not(.dark) .bf-os-decide {
   gap: 4px;
   margin: 0 0 10px;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius:12px;
   border: 1px solid var(--cf-line, #e2dfd6);
   background: color-mix(in srgb, var(--cf-surface-alt, #edf3ec), var(--cf-surface, #fff) 50%);
 }
 .bf-week-digest.good { border-left: 3px solid #28705a; }
 .bf-week-digest.watch { border-left: 3px solid #dba72b; }
 .bf-week-digest.risk { border-left: 3px solid #cc664f; }
-.bf-week-digest b { font: 700 15px/1.2 "IBM Plex Serif", Georgia, serif; }
+.bf-week-digest b { font: 600 15px/1.2 "IBM Plex Sans", Georgia, serif; }
 .bf-week-digest small { color: var(--cf-muted, #6c7f77); font-size: 12px; line-height: 1.4; }
 
 /* Feed familie pe Astăzi */
@@ -1238,7 +1238,7 @@ html:not(.dark) .bf-os-decide {
 }
 .bf-os-day b small {
   margin-left: 2px;
-  font: 700 9px/1 "IBM Plex Sans", sans-serif;
+  font: 600 9px/1 "IBM Plex Sans", sans-serif;
   letter-spacing: 0;
   opacity: .7;
 }
@@ -1255,12 +1255,12 @@ html:not(.dark) .bf-os-decide {
   margin: 0 0 14px;
   padding: 14px 14px 12px;
   border: 1px solid color-mix(in srgb, var(--cf-line, #e2dfd6) 90%, transparent);
-  border-radius: 14px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--cf-surface, #fffefa) 92%, var(--cf-primary, #eec64d) 8%);
 }
 .bf-today-family-feed h3 {
   margin: 0;
-  font: 800 16px/1.15 "IBM Plex Serif", Georgia, serif;
+  font: 600 16px/1.15 "IBM Plex Sans", Georgia, serif;
   color: var(--cf-ink, #172d28);
 }
 .bf-envelope-glossary-tip {
@@ -1281,7 +1281,7 @@ html:not(.dark) .bf-os-decide {
 .bf-simple-mode-banner {
   margin: 0 0 12px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--cf-surface-alt, #edf0ea) 80%, transparent);
 }
 .bf-simple-mode-exit {
@@ -1304,12 +1304,12 @@ html:not(.dark) .bf-os-decide {
   border: 1px solid var(--os-line, rgba(13, 59, 50, 0.12));
 }
 .bf-cycle-flow small {
-  font-size: 11px;
+  font-size:12px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--os-muted, #5c6b64);
 }
-.bf-cycle-flow b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.bf-cycle-flow b { font-size:15px; font-variant-numeric: tabular-nums; }
 .bf-cycle-flow span:first-child b { color: #1f7a4d; }
 .bf-cycle-flow span:last-child b { color: #b5523c; }
 
@@ -1325,7 +1325,7 @@ html:not(.dark) .bf-os-decide {
 .bf-today-more-toggle {
   width: 100%;
   min-height: 48px;
-  border-radius: 14px;
+  border-radius:12px;
   border: 1px solid var(--os-line, var(--cf-line, #d7ddd8));
   background: transparent;
   color: inherit;

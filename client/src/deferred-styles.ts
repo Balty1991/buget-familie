@@ -18,3 +18,4 @@ import "./movements.css";
 import "./plan.css";
 import "./obligations.css";
 import "./analysis.css";
+import "./design-system-37.css";

@@ -67,7 +67,7 @@
   z-index: 1;
   color: var(--cf-ink);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight:600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -87,7 +87,7 @@
 
 .bf-health-score small {
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight:600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--cf-ink);
@@ -136,13 +136,13 @@
 
 .bf-health-factor-top b {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight:600;
   color: var(--cf-ink);
 }
 
 .bf-health-factor-top span {
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight:600;
   font-variant-numeric: tabular-nums;
   color: var(--cf-muted);
   white-space: nowrap;
@@ -173,7 +173,7 @@
 .bf-health-sheet-note {
   margin: 1.1rem 0 0;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight:600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--cf-muted);
@@ -225,7 +225,7 @@
 .bf-health-story-bar i {
   width: 100%;
   max-width: 2.4rem;
-  border-radius: 10px 10px 6px 6px;
+  border-radius:12px 12px 6px 6px;
   background: color-mix(in srgb, var(--bf-accent, #256B5B) 70%, #fff);
   display: block;
 }

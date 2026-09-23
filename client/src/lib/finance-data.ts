@@ -194,7 +194,7 @@ export type SyncDevice = {
 export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
 export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Timp liber", "Rate produse", "Altele"];
-export const categoryColors: Record<string, string> = { Alimente: "#256B5B", "Consumabile copil": "#55877D", Abonamente: "#5D7283", "Casă & facturi": "#5D7283", Transport: "#D49A2A", "Timp liber": "#D56852", Sănătate: "#4987AA", "Rate produse": "#966E4A", Altele: "#7D8581" };
+export const categoryColors: Record<string, string> = { Alimente: "#176B54", "Consumabile copil": "#3E8F74", Abonamente: "#C4A15A", "Casă & facturi": "#2F6F5E", Transport: "#8C6A3D", "Timp liber": "#4F8F9A", Sănătate: "#1F6B62", "Rate produse": "#A68445", Altele: "#6E7C76" };
 
 /**
  * Data calendaristică a telefonului, nu cea UTC. `toISOString()` ar întoarce ziua

@@ -67,7 +67,7 @@ html.theme-cyber {
   display: grid;
   gap: 10px;
   padding: 22px 20px 20px;
-  border-radius: 28px;
+  border-radius:20px;
   border: 1px solid color-mix(in srgb, var(--lu-line, var(--os-line, #c9d2cc)) 80%, transparent);
   background:
     radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--lu-accent, #143c36) 14%, transparent), transparent 56%),
@@ -83,7 +83,7 @@ html.theme-cyber {
 .os-shell .os-hero .os-kicker-lg {
   margin: 0;
   color: var(--lu-muted, var(--os-muted, #4a5852));
-  font: 700 11px/1.2 Outfit, system-ui, sans-serif;
+  font: 600 11px/1.2 "IBM Plex Sans", system-ui, sans-serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -92,7 +92,7 @@ html.theme-cyber {
   align-items: baseline;
   gap: 8px;
   margin: 0;
-  font-family: "IBM Plex Serif", Fraunces, Georgia, serif;
+  font-family: "IBM Plex Sans", Fraunces, Georgia, serif;
   font-weight: 560;
   font-size: clamp(2.4rem, 9vw, 3.4rem);
   letter-spacing: -0.04em;
@@ -100,7 +100,7 @@ html.theme-cyber {
   color: var(--lu-ink, var(--os-fg, #0c1612));
 }
 .os-shell .os-hero .os-amount small {
-  font: 600 0.9rem/1 Outfit, system-ui, sans-serif;
+  font: 600 0.9rem/1 "IBM Plex Sans", system-ui, sans-serif;
   letter-spacing: 0.08em;
   color: var(--lu-muted, var(--os-muted, #4a5852));
 }
@@ -109,7 +109,7 @@ html.theme-cyber {
   margin: 0;
   max-width: 36ch;
   color: var(--lu-muted, var(--os-muted, #4a5852));
-  font: 500 13px/1.45 Outfit, system-ui, sans-serif;
+  font: 500 13px/1.45 "IBM Plex Sans", system-ui, sans-serif;
 }
 .os-shell .os-hero .os-next-line {
   color: var(--lu-ink, var(--os-fg, #0c1612));
@@ -131,7 +131,7 @@ html.theme-cyber {
 .os-shell .bf-today-add.bf-os-decide {
   min-height: 52px;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight:600;
   letter-spacing: 0.01em;
   color: var(--lu-accent-fg, #fff);
   background: var(--lu-accent, #143c36);
@@ -173,9 +173,9 @@ html.theme-cyber {
 }
 .os-shell .os-dock button {
   min-height: 52px;
-  border-radius: 16px;
+  border-radius:20px;
   color: var(--lu-muted, #4a5852);
-  font: 650 10px/1.1 Outfit, system-ui, sans-serif;
+  font: 600 10px/1.1 "IBM Plex Sans", system-ui, sans-serif;
 }
 .os-shell .os-dock button.is-on {
   color: var(--lu-accent-fg, #fff);
@@ -201,23 +201,23 @@ html.theme-cyber .os-shell .os-dock button.is-on {
 .bf-theme-option {
   min-height: 92px !important;
   padding: 12px !important;
-  border-radius: 18px !important;
+  border-radius:20px !important;
   grid-template-columns: 54px minmax(0, 1fr) 18px !important;
 }
 .bf-theme-swatch {
   width: 54px !important;
   height: 62px !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
 }
 .bf-theme-option em {
   display: block;
-  font: 700 9px/1 Outfit, system-ui, sans-serif;
+  font: 600 9px/1 "IBM Plex Sans", system-ui, sans-serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--lu-muted, #6d7f75);
 }
 .bf-theme-preview {
-  border-radius: 22px;
+  border-radius:20px;
   overflow: hidden;
   padding: 16px;
   background: var(--preview-bg, #e8ece8);
@@ -245,7 +245,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   max-height: min(760px, calc(100dvh - 24px));
   overflow: auto;
   padding: 28px 22px 22px;
-  border-radius: 28px;
+  border-radius:20px;
   background: var(--lu-card, #f7f8f6);
   color: var(--lu-ink, #0c1612);
   border: 1px solid var(--lu-line, #c9d2cc);
@@ -263,7 +263,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   min-height: 72px;
   padding: 14px 16px;
   text-align: left;
-  border-radius: 18px;
+  border-radius:20px;
   border: 1px solid var(--lu-line, #c9d2cc);
   background: color-mix(in srgb, var(--lu-card, #fff) 88%, var(--lu-accent, #143c36));
   color: inherit;
@@ -275,11 +275,11 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   color: var(--lu-accent, #143c36);
 }
 .bf-first-run-intents button b {
-  font: 650 15px/1.25 "IBM Plex Serif", Fraunces, Georgia, serif;
+  font: 600 15px/1.25 "IBM Plex Sans", Fraunces, Georgia, serif;
 }
 .bf-first-run-intents button small {
   color: var(--lu-muted, #5d7283);
-  font: 500 12px/1.4 Outfit, system-ui, sans-serif;
+  font: 500 12px/1.4 "IBM Plex Sans", system-ui, sans-serif;
 }
 .bf-first-run-intents button:hover,
 .bf-first-run-intents button:focus-visible {
@@ -307,7 +307,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   gap: 14px;
   margin: 0 0 18px;
   padding: 20px 18px 16px;
-  border-radius: 24px;
+  border-radius:20px;
   border: 1px solid var(--lu-line, #c9d2cc);
   background:
     radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, var(--lu-coral, #c2473c) 12%, transparent), transparent 55%),
@@ -315,7 +315,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
 }
 .bf-upcoming-hero h1 {
   margin: 4px 0 0;
-  font: 560 clamp(1.6rem, 6vw, 2rem)/1.1 "IBM Plex Serif", Fraunces, Georgia, serif;
+  font: 560 clamp(1.6rem, 6vw, 2rem)/1.1 "IBM Plex Sans", Fraunces, Georgia, serif;
   letter-spacing: -0.03em;
 }
 .bf-upcoming-hero h1 em {
@@ -330,7 +330,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   display: grid;
   gap: 10px;
   padding: 12px 12px 12px 14px;
-  border-radius: 16px;
+  border-radius:20px;
   border: 1px solid var(--lu-line, #c9d2cc);
   background: color-mix(in srgb, var(--lu-paper, #e8ece8) 55%, var(--lu-card, #fff));
 }
@@ -367,15 +367,15 @@ html.theme-cyber .os-shell .os-dock button.is-on {
 }
 .bf-upcoming-item-main b {
   display: block;
-  font: 650 14px/1.25 Outfit, system-ui, sans-serif;
+  font: 600 14px/1.25 "IBM Plex Sans", system-ui, sans-serif;
 }
 .bf-upcoming-item-main small {
   display: block;
   color: var(--lu-muted, #5d7283);
-  font-size: 11px;
+  font-size:12px;
 }
 .bf-upcoming-item-main strong {
-  font: 650 14px/1 Outfit, system-ui, sans-serif;
+  font: 600 14px/1 "IBM Plex Sans", system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
 }
 .bf-upcoming-actions {
@@ -390,7 +390,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   border: 1px solid var(--lu-line, #c9d2cc);
   background: transparent;
   color: inherit;
-  font: 650 12px Outfit, system-ui, sans-serif;
+  font: 600 12px "IBM Plex Sans", system-ui, sans-serif;
   cursor: pointer;
 }
 .bf-upcoming-actions button.pay {
@@ -401,7 +401,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
 .bf-upcoming-empty {
   padding: 8px 2px 4px;
   color: var(--lu-muted, #5d7283);
-  font-size: 13px;
+  font-size:14px;
 }
 
 .bf-opening-prompt {
@@ -415,12 +415,12 @@ html.theme-cyber .os-shell .os-dock button.is-on {
 }
 .bf-opening-prompt h2 {
   margin: 0;
-  font: 560 1.15rem/1.2 "IBM Plex Serif", Fraunces, Georgia, serif;
+  font: 560 1.15rem/1.2 "IBM Plex Sans", Fraunces, Georgia, serif;
 }
 .bf-opening-prompt p {
   margin: 0;
   color: var(--lu-muted, #5d7283);
-  font-size: 13px;
+  font-size:14px;
 }
 .bf-opening-actions {
   display: flex;
@@ -461,7 +461,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   cursor: pointer;
 }
 .bf-more-list-main span { display: grid; gap: 2px; min-width: 0; }
-.bf-more-list-main em { grid-column: 1; font-style: normal; font-size: 11px; }
+.bf-more-list-main em { grid-column: 1; font-style: normal; font-size:12px; }
 .bf-more-list-main strong { grid-column: 2; grid-row: 1 / span 2; color: #205a47; font-variant-numeric: tabular-nums; }
 .dark .bf-more-list-main strong { color: #edf6ef; }
 .bf-more-list-pay {
@@ -471,7 +471,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   border: 1px solid var(--lu-line, #c9d2cc);
   background: var(--lu-accent, #143c36);
   color: var(--lu-accent-fg, #fff);
-  font: 650 12px Outfit, system-ui, sans-serif;
+  font: 600 12px "IBM Plex Sans", system-ui, sans-serif;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -482,7 +482,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
   min-height: 40px;
   width: 100%;
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius:12px;
   border: 1px solid var(--lu-line, #c9d2cc);
   background: var(--lu-card, #fff);
   color: inherit;

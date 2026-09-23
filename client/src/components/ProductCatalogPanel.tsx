@@ -17,6 +17,7 @@ import {
 import { isOfflineOnly } from "@/lib/ui-prefs";
 import { fmtExact, money } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
+import { RoDateInput } from "@/components/RoDateInput";
 
 type Props = {
   data: AppData;
@@ -186,7 +187,7 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
         <p className="bf-kicker">{t("BONUL ÎN LUCRU")}</p>
         <div className="bf-form-grid">
           <label>{t("Magazin")}<input value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder={t("ex. Lidl")} /></label>
-          <label>{t("Data")}<input type="date" value={date} onChange={(event) => event.target.value && setDate(event.target.value)} /></label>
+          <label>{t("Data")}<RoDateInput value={date} onChange={(event) => event.target.value && setDate(event.target.value)} /></label>
           <label>{t("Membru")}<select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
           <label>{t("Plătit din")}<select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></label>
         </div>

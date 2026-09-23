@@ -1,24 +1,24 @@
-.ai-companion-trigger{position:fixed;right:22px;bottom:22px;z-index:60;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:11px 14px 11px 12px;color:#fff;background:linear-gradient(135deg,#163f39,#286b5b);box-shadow:0 14px 34px rgba(18,54,47,.28),0 0 0 5px rgba(199,164,91,.09);font:800 11px/1 Manrope,sans-serif;letter-spacing:.02em;cursor:pointer;transition:transform .18s cubic-bezier(.23,1,.32,1),box-shadow .18s ease}.ai-companion-trigger:hover{transform:translateY(-2px);box-shadow:0 18px 38px rgba(18,54,47,.34),0 0 0 6px rgba(199,164,91,.12)}.ai-companion-trigger:active{transform:scale(.97)}.ai-companion-trigger.is-open{background:#f7f1e6;color:#17463c;border-color:#d9cdbb}.ai-trigger-pulse{width:8px;height:8px;border-radius:50%;background:#e9c67b;box-shadow:0 0 0 5px rgba(233,198,123,.15)}.ai-live{font-size:8px;color:#d9f0d7;letter-spacing:.12em}.ai-companion-panel{position:fixed;right:22px;bottom:78px;z-index:59;width:min(380px,calc(100vw - 32px));padding:18px;border:1px solid rgba(205,191,165,.7);border-radius:22px;background:rgba(255,252,246,.98);box-shadow:0 24px 65px rgba(50,45,35,.18);color:#193b34;animation:ai-in .2s cubic-bezier(.23,1,.32,1)}@keyframes ai-in{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}.ai-companion-head{display:flex;align-items:center;gap:10px;margin-bottom:15px}.ai-avatar{display:grid;place-items:center;width:35px;height:35px;border-radius:12px;color:#fff;background:#1d594c}.ai-eyebrow{margin:0 0 4px;color:#9a7a40;font-size:9px;font-weight:900;letter-spacing:.15em}.ai-companion-head h2{margin:0;font:800 20px/1.1 Georgia,serif}.ai-close{display:grid;place-items:center;margin-left:auto;width:30px;height:30px;border:0;border-radius:9px;background:transparent;color:#6d7b72;cursor:pointer}.ai-close:hover{background:#eee6d9}.ai-context{display:flex;gap:10px;padding:13px;border-radius:15px;background:#eff4ed}.ai-context.ai-gold{background:#fbf4df}.ai-context.ai-coral{background:#fff0eb}.ai-context-icon{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#dbead9;color:#276653}.ai-gold .ai-context-icon{background:#f1dfac;color:#967034}.ai-coral .ai-context-icon{background:#f4cfc2;color:#ae5743}.ai-context strong{display:block;margin-bottom:4px;font:800 13px/1.2 Manrope,sans-serif}.ai-context p{margin:0;color:#63716a;font-size:11px;line-height:1.45}.ai-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 17px}.ai-actions button,.ai-answer button{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid #d9cfbf;border-radius:10px;padding:10px 8px;background:#fff;color:#1a5144;font:800 10px Manrope,sans-serif;cursor:pointer}.ai-actions button:first-child{border-color:#1d594c;background:#1d594c;color:#fff}.ai-actions button:hover,.ai-answer button:hover{transform:translateY(-1px)}.ai-prompts{border-top:1px solid #eee6da;padding-top:14px}.ai-prompts button{display:flex;align-items:center;gap:8px;width:100%;padding:9px 3px;border:0;border-bottom:1px solid #f0ebe3;background:transparent;color:#315249;text-align:left;font:700 11px Manrope,sans-serif;cursor:pointer}.ai-prompts button:last-child{border-bottom:0}.ai-prompts button svg:last-child{margin-left:auto;color:#9d8b69}.ai-prompts button.selected{color:#9a7134}.ai-answer{display:flex;gap:9px;margin-top:12px;padding:12px;border-radius:13px;background:#f4efe6;color:#425a50}.ai-answer>svg{flex:none;margin-top:2px;color:#9a7134}.ai-answer p{margin:0 0 8px;font-size:11px;line-height:1.45}.ai-answer button{display:inline-flex;padding:6px 9px;border:0;background:transparent;justify-content:flex-start;color:#8b672d}.ai-privacy{display:flex;align-items:center;gap:5px;margin:14px 0 0;color:#95a097;font-size:9px}.ai-privacy svg{color:#729184}@media(max-width:600px){.ai-companion-trigger{right:14px;bottom:76px}.ai-companion-panel{right:14px;bottom:130px;width:calc(100vw - 28px)}}@media(prefers-reduced-motion:reduce){.ai-companion-panel,.ai-companion-trigger{animation:none;transition:none}}
-.ai-natural-form{margin-bottom:14px}.ai-natural-form label{display:block;margin-bottom:6px;color:#496157;font:800 10px Manrope,sans-serif}.ai-natural-form>div{display:flex;gap:7px}.ai-natural-form input{min-width:0;flex:1;border:1px solid #d9cfbf;border-radius:10px;padding:10px 11px;background:#fff;color:#29483e;font:500 11px Manrope,sans-serif;outline:none}.ai-natural-form input:focus{border-color:#6f9c86;box-shadow:0 0 0 3px rgba(111,156,134,.13)}.ai-natural-form button{display:grid;place-items:center;width:38px;border:0;border-radius:10px;background:#c69a52;color:#fff;cursor:pointer}.ai-natural-form button:hover{background:#ae823d}.ai-natural-form small{display:block;margin-top:6px;color:#ae5743;font-size:10px}.ai-natural-form p{margin:6px 0 0;color:#8a978f;font-size:9px}
-.ai-chat-panel{width:min(410px,calc(100vw - 32px));padding:16px}.ai-chat-panel .ai-companion-head{margin-bottom:12px}.ai-status{display:flex;align-items:center;gap:5px;margin-top:4px;color:#819089;font-size:9px}.ai-status i{width:6px;height:6px;border-radius:50%;background:#5da276;box-shadow:0 0 0 3px rgba(93,162,118,.12)}.ai-chat-history{display:grid;gap:10px;max-height:330px;overflow:auto;padding:4px 2px 12px;scrollbar-width:thin}.ai-chat-row{display:flex;flex-direction:column;align-items:flex-start;gap:5px}.ai-chat-row.user{align-items:flex-end}.ai-chat-bubble{display:flex;align-items:flex-start;gap:7px;max-width:91%;padding:10px 12px;border-radius:15px 15px 15px 4px;background:#eff4ed;color:#3c584c;font-size:11px;line-height:1.45}.ai-chat-bubble svg{flex:none;margin-top:1px;color:#2b6a58}.ai-chat-row.user .ai-chat-bubble{border-radius:15px 15px 4px 15px;background:#1d594c;color:#fff}.ai-chat-action{display:flex;align-items:center;gap:5px;margin-left:22px;border:0;border-radius:9px;padding:6px 9px;background:#f4efe6;color:#956f31;font:800 10px Manrope,sans-serif;cursor:pointer}
-.ai-chat-row .ai-chat-action + .ai-chat-action{margin-top:0}.ai-chat-action:hover{background:#eadfcd}.ai-typing{padding:12px 14px}.ai-typing i{width:5px;height:5px;border-radius:50%;background:#7a9889;animation:ai-blink 1s infinite}.ai-typing i:nth-child(2){animation-delay:.15s}.ai-typing i:nth-child(3){animation-delay:.3s}@keyframes ai-blink{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}.ai-chat-suggestions{display:flex;gap:6px;overflow:auto;padding:2px 0 12px}.ai-chat-suggestions button{flex:none;border:1px solid #ded4c4;border-radius:999px;padding:7px 9px;background:#fff;color:#5a6d62;font:700 9px Manrope,sans-serif;cursor:pointer}.ai-chat-suggestions button:hover{border-color:#b99a67;color:#916b31}.ai-chat-input{margin:0;border-top:1px solid #eee6da;padding-top:11px}.ai-chat-input label{color:#63766b}.ai-chat-input p{display:flex;align-items:flex-start;gap:6px;white-space:normal;overflow-wrap:anywhere;line-height:1.4}.ai-chat-input p svg{color:#b18b4e}.ai-chat-panel .ai-privacy{margin-top:10px}
-.ai-chat-panel{z-index:1000;display:flex;flex-direction:column;max-height:min(720px,calc(100dvh - 150px));overflow:hidden}.ai-chat-history{flex:1;min-height:90px;max-height:none;overscroll-behavior:contain}.ai-chat-input{flex:none}.ai-chat-suggestions{flex:none}@media(max-width:600px){.ai-chat-panel{right:8px;bottom:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:18px}.ai-chat-panel .ai-chat-history{min-height:80px}.ai-companion-trigger{z-index:1001}}@media(max-width:600px) and (max-height:620px){.ai-chat-panel{padding:12px}.ai-chat-panel .ai-companion-head{margin-bottom:7px}.ai-chat-history{padding-bottom:6px}.ai-chat-suggestions{padding-bottom:7px}.ai-chat-input{padding-top:7px}}
+.ai-companion-trigger{position:fixed;right:22px;bottom:22px;z-index:60;display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:11px 14px 11px 12px;color:#fff;background:linear-gradient(135deg,#163f39,#286b5b);box-shadow:0 14px 34px rgba(18,54,47,.28),0 0 0 5px rgba(199,164,91,.09);font:600 11px/1 "IBM Plex Sans",sans-serif;letter-spacing:.02em;cursor:pointer;transition:transform .18s cubic-bezier(.23,1,.32,1),box-shadow .18s ease}.ai-companion-trigger:hover{transform:translateY(-2px);box-shadow:0 18px 38px rgba(18,54,47,.34),0 0 0 6px rgba(199,164,91,.12)}.ai-companion-trigger:active{transform:scale(.97)}.ai-companion-trigger.is-open{background:#f7f1e6;color:#17463c;border-color:#d9cdbb}.ai-trigger-pulse{width:8px;height:8px;border-radius:50%;background:#e9c67b;box-shadow:0 0 0 5px rgba(233,198,123,.15)}.ai-live{font-size:12px;color:#d9f0d7;letter-spacing:.12em}.ai-companion-panel{position:fixed;right:22px;bottom:78px;z-index:59;width:min(380px,calc(100vw - 32px));padding:18px;border:1px solid rgba(205,191,165,.7);border-radius:20px;background:rgba(255,252,246,.98);box-shadow:var(--bf-shadow-raise);color:#193b34;animation:ai-in .2s cubic-bezier(.23,1,.32,1)}@keyframes ai-in{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}.ai-companion-head{display:flex;align-items:center;gap:10px;margin-bottom:15px}.ai-avatar{display:grid;place-items:center;width:35px;height:35px;border-radius:12px;color:#fff;background:#1d594c}.ai-eyebrow{margin:0 0 4px;color:#9a7a40;font-size:12px;font-weight:600;letter-spacing:.15em}.ai-companion-head h2{margin:0;font:600 20px/1.1 Georgia,serif}.ai-close{display:grid;place-items:center;margin-left:auto;width:30px;height:30px;border:0;border-radius:12px;background:transparent;color:#6d7b72;cursor:pointer}.ai-close:hover{background:#eee6d9}.ai-context{display:flex;gap:10px;padding:13px;border-radius:20px;background:#eff4ed}.ai-context.ai-gold{background:#fbf4df}.ai-context.ai-coral{background:#fff0eb}.ai-context-icon{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:12px;background:#dbead9;color:#276653}.ai-gold .ai-context-icon{background:#f1dfac;color:#967034}.ai-coral .ai-context-icon{background:#f4cfc2;color:#ae5743}.ai-context strong{display:block;margin-bottom:4px;font:600 13px/1.2 "IBM Plex Sans",sans-serif}.ai-context p{margin:0;color:#63716a;font-size:12px;line-height:1.45}.ai-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 17px}.ai-actions button,.ai-answer button{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid #d9cfbf;border-radius:12px;padding:10px 8px;background:#fff;color:#1a5144;font:600 10px "IBM Plex Sans",sans-serif;cursor:pointer}.ai-actions button:first-child{border-color:#1d594c;background:#1d594c;color:#fff}.ai-actions button:hover,.ai-answer button:hover{transform:translateY(-1px)}.ai-prompts{border-top:1px solid #eee6da;padding-top:14px}.ai-prompts button{display:flex;align-items:center;gap:8px;width:100%;padding:9px 3px;border:0;border-bottom:1px solid #f0ebe3;background:transparent;color:#315249;text-align:left;font:600 11px "IBM Plex Sans",sans-serif;cursor:pointer}.ai-prompts button:last-child{border-bottom:0}.ai-prompts button svg:last-child{margin-left:auto;color:#9d8b69}.ai-prompts button.selected{color:#9a7134}.ai-answer{display:flex;gap:9px;margin-top:12px;padding:12px;border-radius:12px;background:#f4efe6;color:#425a50}.ai-answer>svg{flex:none;margin-top:2px;color:#9a7134}.ai-answer p{margin:0 0 8px;font-size:12px;line-height:1.45}.ai-answer button{display:inline-flex;padding:6px 9px;border:0;background:transparent;justify-content:flex-start;color:#8b672d}.ai-privacy{display:flex;align-items:center;gap:5px;margin:14px 0 0;color:#95a097;font-size:12px}.ai-privacy svg{color:#729184}@media(max-width:600px){.ai-companion-trigger{right:14px;bottom:76px}.ai-companion-panel{right:14px;bottom:130px;width:calc(100vw - 28px)}}@media(prefers-reduced-motion:reduce){.ai-companion-panel,.ai-companion-trigger{animation:none;transition:none}}
+.ai-natural-form{margin-bottom:14px}.ai-natural-form label{display:block;margin-bottom:6px;color:#496157;font:600 10px "IBM Plex Sans",sans-serif}.ai-natural-form>div{display:flex;gap:7px}.ai-natural-form input{min-width:0;flex:1;border:1px solid #d9cfbf;border-radius:12px;padding:10px 11px;background:#fff;color:#29483e;font:500 11px "IBM Plex Sans",sans-serif;outline:none}.ai-natural-form input:focus{border-color:#6f9c86;box-shadow:0 0 0 3px rgba(111,156,134,.13)}.ai-natural-form button{display:grid;place-items:center;width:38px;border:0;border-radius:12px;background:#c69a52;color:#fff;cursor:pointer}.ai-natural-form button:hover{background:#ae823d}.ai-natural-form small{display:block;margin-top:6px;color:#ae5743;font-size:12px}.ai-natural-form p{margin:6px 0 0;color:#8a978f;font-size:12px}
+.ai-chat-panel{width:min(410px,calc(100vw - 32px));padding:16px}.ai-chat-panel .ai-companion-head{margin-bottom:12px}.ai-status{display:flex;align-items:center;gap:5px;margin-top:4px;color:#819089;font-size:12px}.ai-status i{width:6px;height:6px;border-radius:50%;background:#5da276;box-shadow:0 0 0 3px rgba(93,162,118,.12)}.ai-chat-history{display:grid;gap:10px;max-height:330px;overflow:auto;padding:4px 2px 12px;scrollbar-width:thin}.ai-chat-row{display:flex;flex-direction:column;align-items:flex-start;gap:5px}.ai-chat-row.user{align-items:flex-end}.ai-chat-bubble{display:flex;align-items:flex-start;gap:7px;max-width:91%;padding:10px 12px;border-radius:20px 20px 20px 4px;background:#eff4ed;color:#3c584c;font-size:12px;line-height:1.45}.ai-chat-bubble svg{flex:none;margin-top:1px;color:#2b6a58}.ai-chat-row.user .ai-chat-bubble{border-radius:20px 20px 4px 20px;background:#1d594c;color:#fff}.ai-chat-action{display:flex;align-items:center;gap:5px;margin-left:22px;border:0;border-radius:12px;padding:6px 9px;background:#f4efe6;color:#956f31;font:600 10px "IBM Plex Sans",sans-serif;cursor:pointer}
+.ai-chat-row .ai-chat-action + .ai-chat-action{margin-top:0}.ai-chat-action:hover{background:#eadfcd}.ai-typing{padding:12px 14px}.ai-typing i{width:5px;height:5px;border-radius:50%;background:#7a9889;animation:ai-blink 1s infinite}.ai-typing i:nth-child(2){animation-delay:.15s}.ai-typing i:nth-child(3){animation-delay:.3s}@keyframes ai-blink{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-2px)}}.ai-chat-suggestions{display:flex;gap:6px;overflow:auto;padding:2px 0 12px}.ai-chat-suggestions button{flex:none;border:1px solid #ded4c4;border-radius:999px;padding:7px 9px;background:#fff;color:#5a6d62;font:600 9px "IBM Plex Sans",sans-serif;cursor:pointer}.ai-chat-suggestions button:hover{border-color:#b99a67;color:#916b31}.ai-chat-input{margin:0;border-top:1px solid #eee6da;padding-top:11px}.ai-chat-input label{color:#63766b}.ai-chat-input p{display:flex;align-items:flex-start;gap:6px;white-space:normal;overflow-wrap:anywhere;line-height:1.4}.ai-chat-input p svg{color:#b18b4e}.ai-chat-panel .ai-privacy{margin-top:10px}
+.ai-chat-panel{z-index:1000;display:flex;flex-direction:column;max-height:min(720px,calc(100dvh - 150px));overflow:hidden}.ai-chat-history{flex:1;min-height:90px;max-height:none;overscroll-behavior:contain}.ai-chat-input{flex:none}.ai-chat-suggestions{flex:none}@media(max-width:600px){.ai-chat-panel{right:8px;bottom:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:20px}.ai-chat-panel .ai-chat-history{min-height:80px}.ai-companion-trigger{z-index:1001}}@media(max-width:600px) and (max-height:620px){.ai-chat-panel{padding:12px}.ai-chat-panel .ai-companion-head{margin-bottom:7px}.ai-chat-history{padding-bottom:6px}.ai-chat-suggestions{padding-bottom:7px}.ai-chat-input{padding-top:7px}}
 @media(max-width:600px){.ai-chat-panel{bottom:136px;z-index:2000}.ai-companion-trigger{z-index:2001}}@media(max-width:600px) and (max-height:620px){.ai-chat-panel:has(input:focus){bottom:8px;max-height:calc(100dvh - 16px)}}
 /* Mobile chat: bottom sheet stabil, cu mesajele scrollabile și composerul mereu vizibil */
 @media(max-width:600px){
-  .ai-chat-panel{top:12px;right:8px;bottom:118px;width:calc(100vw - 16px);height:calc(100dvh - 142px);max-height:none;min-height:0;padding:14px;border-radius:22px;overflow:hidden}
+  .ai-chat-panel{top:12px;right:8px;bottom:118px;width:calc(100vw - 16px);height:calc(100dvh - 142px);max-height:none;min-height:0;padding:14px;border-radius:20px;overflow:hidden}
   .ai-chat-panel .ai-companion-head{flex:none;margin-bottom:10px}
-  .ai-chat-panel .ai-companion-head h2{font-size:23px}
+  .ai-chat-panel .ai-companion-head h2{font-size:22px}
   .ai-chat-history{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;max-height:none;overflow-y:auto;padding:4px 2px 10px}
   .ai-chat-row{flex:none}
   .ai-chat-bubble{max-width:94%;font-size:12px;line-height:1.42}
   .ai-chat-suggestions{flex:none;min-height:36px;padding:7px 0 9px;overflow-x:auto}
   .ai-chat-input{flex:none;display:block;margin:0;padding-top:10px;background:inherit}
-  .ai-chat-input label{font-size:11px}
+  .ai-chat-input label{font-size:12px}
   .ai-chat-input>div{height:50px}
-  .ai-chat-input input{height:50px;padding:12px;font-size:13px;border-radius:13px}
-  .ai-chat-input button{width:50px;border-radius:13px}
-  .ai-chat-input p{font-size:9px;margin:6px 0 0}
+  .ai-chat-input input{height:50px;padding:12px;font-size:14px;border-radius:12px}
+  .ai-chat-input button{width:50px;border-radius:12px}
+  .ai-chat-input p{font-size:12px;margin:6px 0 0}
   .ai-chat-panel .ai-privacy{display:flex;flex:none;margin-top:7px}
 }
 @media(max-width:600px) and (max-height:620px){
@@ -57,7 +57,7 @@
   }
 
   .ai-chat-panel .ai-companion-head h2 {
-    font-size: 20px;
+    font-size:22px;
   }
 
   .ai-chat-history {
@@ -69,7 +69,7 @@
   }
 
   .ai-chat-bubble {
-    font-size: 11px;
+    font-size:12px;
     line-height: 1.38;
     padding: 9px 10px;
   }
@@ -129,7 +129,7 @@
 }
 
 .ai-quota{flex:none;margin:0 0 10px;padding:8px 9px 7px;border-radius:12px;background:#eff4ed}
-.ai-quota p{margin:5px 0 0;color:#5d7168;font:700 9px/1.35 Manrope,sans-serif}
+.ai-quota p{margin:5px 0 0;color:#5d7168;font:600 9px/1.35 "IBM Plex Sans",sans-serif}
 .ai-quota-short{display:none}
 .ai-quota-track{height:6px;overflow:hidden;border-radius:999px;background:#d5e3d6}
 .ai-quota-track i{display:block;height:100%;border-radius:inherit;background:#3f8f6c;transition:width .35s ease}
@@ -144,7 +144,7 @@
 .ai-status.is-local i{background:#c4922f;box-shadow:0 0 0 3px rgba(196,146,47,.16)}
 .ai-companion-trigger.is-local .ai-live{color:#f3e2b5}
 .ai-chat-text{white-space:pre-wrap}
-.ai-chat-text strong{font-weight:800;color:#1d4a3e}
+.ai-chat-text strong{font-weight:600;color:#1d4a3e}
 .ai-head-copy{min-width:0;flex:1}
 .ai-head-copy h2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ai-head-actions{display:flex;flex:none;align-items:center;gap:6px;margin-left:auto;z-index:2}
@@ -158,7 +158,7 @@
     min-height:0 !important;
   }
 }
-.ai-tool{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 9px;border:1px solid #d9cfbf;border-radius:10px;background:#fff;color:#1a5144;font:800 10px Manrope,sans-serif;cursor:pointer}
+.ai-tool{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 9px;border:1px solid #d9cfbf;border-radius:12px;background:#fff;color:#1a5144;font:600 10px "IBM Plex Sans",sans-serif;cursor:pointer}
 .ai-tool-close{width:32px;padding:0;justify-content:center}
 .ai-tool span{line-height:1}
 @media(max-width:380px){
@@ -185,27 +185,27 @@
 .ai-chat-choices{display:flex;flex-wrap:wrap;gap:6px;margin-left:22px;max-width:100%}
 .ai-chat-choices .ai-chat-action{margin-left:0}
 .ai-date-row{display:flex;flex-wrap:wrap;gap:6px;width:100%;margin:0 0 2px}
-.ai-date-chip{appearance:none;border:1px solid #d5e0d4;background:#f4f7f2;color:#3e5348;border-radius:999px;padding:6px 10px;font:700 11px/1 Manrope,sans-serif}
+.ai-date-chip{appearance:none;border:1px solid #d5e0d4;background:#f4f7f2;color:#3e5348;border-radius:999px;padding:6px 10px;font:600 11px/1 "IBM Plex Sans",sans-serif}
 .ai-date-chip.is-on{background:#e7f1e4;border-color:#9cbf9a;color:#215c3b}
 .ai-chat-action.is-on{background:#e7f1e4;border-color:#9cbf9a;color:#215c3b}
 /* Rândul cu locurile unde pot fi banii declarați: aceleași chipsuri ca la zile. */
 .ai-source-bar{margin-bottom:6px}
 .ai-source-bar .ai-date-chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ai-date-bar{flex:none;margin:0 12px 8px;padding:8px 10px 9px;border:1px solid var(--os-line, #d5e3d4);border-radius:14px;background:var(--os-surface-2, #eef4ec);color:var(--os-fg, #355246)}
-.ai-date-bar p{margin:0 0 7px;color:var(--os-fg, #355246);font:700 11px/1.3 Manrope,sans-serif}
-.ai-date-bar small{display:block;margin:0 0 8px;color:var(--os-muted, #5a6d62);font-size:11px;line-height:1.4}
-.ai-date-field{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid #c5d6c4;border-radius:999px;background:#fff;color:#215c3b;font:700 11px/1 Manrope,sans-serif}
+.ai-date-bar{flex:none;margin:0 12px 8px;padding:8px 10px 9px;border:1px solid var(--os-line, #d5e3d4);border-radius:12px;background:var(--os-surface-2, #eef4ec);color:var(--os-fg, #355246)}
+.ai-date-bar p{margin:0 0 7px;color:var(--os-fg, #355246);font:600 11px/1.3 "IBM Plex Sans",sans-serif}
+.ai-date-bar small{display:block;margin:0 0 8px;color:var(--os-muted, #5a6d62);font-size:12px;line-height:1.4}
+.ai-date-field{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid #c5d6c4;border-radius:999px;background:#fff;color:#215c3b;font:600 11px/1 "IBM Plex Sans",sans-serif}
 
-.ai-history-toggle{display:flex;flex:none;align-items:center;justify-content:center;gap:6px;width:100%;margin:0 0 4px;padding:6px 8px;border:0;border-radius:999px;background:transparent;color:#6e8077;font:700 11px Manrope,sans-serif;cursor:pointer}
+.ai-history-toggle{display:flex;flex:none;align-items:center;justify-content:center;gap:6px;width:100%;margin:0 0 4px;padding:6px 8px;border:0;border-radius:999px;background:transparent;color:#6e8077;font:600 11px "IBM Plex Sans",sans-serif;cursor:pointer}
 .ai-chat-history.is-empty{display:flex!important;flex:1 1 auto!important;align-items:center;justify-content:center;min-height:120px!important;max-height:none!important;padding:8px 2px!important}
-.ai-chat-empty{margin:0 12px;padding:18px 8px;color:#7d8d84;font:600 12px/1.45 Manrope,sans-serif;text-align:center}
+.ai-chat-empty{margin:0 12px;padding:18px 8px;color:#7d8d84;font:600 12px/1.45 "IBM Plex Sans",sans-serif;text-align:center}
 .ai-date-field input{border:0;background:transparent;color:#215c3b;font:inherit;min-width:8.8rem}
-.ai-undo-bar{flex:none;margin:0 12px 8px;padding:8px 10px;border:1px solid #e4d4b8;border-radius:14px;background:#fbf6ea;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.ai-undo-bar p{margin:0;color:#6a542b;font:700 11px/1.3 Manrope,sans-serif}
-.ai-undo-bar button{appearance:none;border:1px solid #d7b56a;background:#fff8e8;color:#6a4b12;border-radius:999px;padding:6px 10px;font:700 11px/1 Manrope,sans-serif}
+.ai-undo-bar{flex:none;margin:0 12px 8px;padding:8px 10px;border:1px solid #e4d4b8;border-radius:12px;background:#fbf6ea;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ai-undo-bar p{margin:0;color:#6a542b;font:600 11px/1.3 "IBM Plex Sans",sans-serif}
+.ai-undo-bar button{appearance:none;border:1px solid #d7b56a;background:#fff8e8;color:#6a4b12;border-radius:999px;padding:6px 10px;font:600 11px/1 "IBM Plex Sans",sans-serif}
 
 .ai-attachment-list{display:grid;gap:6px;margin:0 0 8px}
-.ai-attachment-chip{display:flex;align-items:center;gap:7px;margin:0;padding:7px 10px;border:1px solid #c9ddd0;border-radius:10px;background:#f1f7f2;color:#245c49;font:700 11px Manrope,sans-serif}.ai-attachment-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.ai-attachment-chip button{border:0;background:transparent;color:#587467;font-size:18px;line-height:1;cursor:pointer}.ai-attachment-hint{margin:0;color:#5a6d62;font:600 11px/1.35 Manrope,sans-serif}.ai-attach-button{display:inline-flex;align-items:center;justify-content:center;width:38px;color:#2d6754;cursor:pointer}.ai-attach-button input{display:none}.ai-chat-input>div{display:flex;align-items:center}.ai-chat-input>div>input{flex:1;min-width:0}.ai-chat-input button:disabled{opacity:.45;cursor:not-allowed}
+.ai-attachment-chip{display:flex;align-items:center;gap:7px;margin:0;padding:7px 10px;border:1px solid #c9ddd0;border-radius:12px;background:#f1f7f2;color:#245c49;font:600 11px "IBM Plex Sans",sans-serif}.ai-attachment-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.ai-attachment-chip button{border:0;background:transparent;color:#587467;font-size:17px;line-height:1;cursor:pointer}.ai-attachment-hint{margin:0;color:#5a6d62;font:600 11px/1.35 "IBM Plex Sans",sans-serif}.ai-attach-button{display:inline-flex;align-items:center;justify-content:center;width:38px;color:#2d6754;cursor:pointer}.ai-attach-button input{display:none}.ai-chat-input>div{display:flex;align-items:center}.ai-chat-input>div>input{flex:1;min-width:0}.ai-chat-input button:disabled{opacity:.45;cursor:not-allowed}
 
 /* Ghid pe telefon: între antet și dock, chrome scurt, conversația are loc. */
 @media (max-width: 760px) {
@@ -230,15 +230,15 @@
   .os-shell .ai-companion-panel.ai-chat-panel .ai-avatar {
     width: 28px !important;
     height: 28px !important;
-    border-radius: 9px !important;
+    border-radius:12px !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-eyebrow {
     margin: 0 0 1px !important;
-    font-size: 8px !important;
+    font-size:12px !important;
     letter-spacing: .12em !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-companion-head h2 {
-    font-size: 16px !important;
+    font-size:15px !important;
     line-height: 1.1 !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-status {
@@ -252,7 +252,7 @@
   .os-shell .ai-companion-panel.ai-chat-panel .ai-quota {
     margin: 0 0 6px !important;
     padding: 5px 8px 4px !important;
-    border-radius: 10px !important;
+    border-radius:12px !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-quota-track {
     height: 3px !important;
@@ -263,7 +263,7 @@
   .os-shell .ai-companion-panel.ai-chat-panel .ai-quota-short {
     display: block !important;
     margin: 4px 0 0 !important;
-    font-size: 10px !important;
+    font-size:12px !important;
     line-height: 1.2 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -290,7 +290,7 @@
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-chat-input label {
     margin-bottom: 4px !important;
-    font-size: 9px !important;
+    font-size:12px !important;
   }
   .os-shell .ai-companion-panel.ai-chat-panel .ai-chat-input p,
   .os-shell .ai-companion-panel.ai-chat-panel .ai-privacy {

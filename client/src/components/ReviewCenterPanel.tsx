@@ -26,6 +26,7 @@ import { parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type Stateme
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
 import { countLabel, t } from "@/lib/i18n";
 import { partnerPendingReviewMeta } from "@/lib/family-crypto";
+import { RoDateInput } from "@/components/RoDateInput";
 
 const originCopy = (origin: ReviewOrigin) => {
   if (origin === "import") return t("Extras de cont");
@@ -194,7 +195,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                         <input value={transaction.title} onChange={(event) => patch(draft, { title: event.target.value })} />
                       </Field>
                       <Field label={t("Data")}>
-                        <input type="date" value={transaction.date} onChange={(event) => patch(draft, { date: event.target.value })} />
+                        <RoDateInput value={transaction.date} onChange={(event) => patch(draft, { date: event.target.value })} />
                       </Field>
                       {transaction.kind === "expense" && (
                         <Field label={t("Categorie")}>

@@ -11,7 +11,7 @@
 .bf-file-button {
   color: var(--cf-ink) !important;
   border-color: color-mix(in srgb, var(--cf-ink), transparent 55%) !important;
-  font-weight: 800 !important;
+  font-weight:600 !important;
 }
 /* Butoanele Editează/Șterge se comprimau sub lățimea textului lor (flex-shrink implicit), tăind cuvintele. */
 .bf-allocation-actions button {

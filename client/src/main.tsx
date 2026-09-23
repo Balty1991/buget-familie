@@ -23,6 +23,7 @@ import "./movements.css";
 import "./plan.css";
 import "./obligations.css";
 import "./analysis.css";
+import "./design-system-37.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
 import { hideNativeSplash, onAppRevealed } from "./lib/native-splash";

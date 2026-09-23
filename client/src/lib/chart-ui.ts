@@ -14,7 +14,8 @@ export function leiLabel(value: number, compact = false): string {
   if (compact && Math.abs(n) >= 1000) {
     const k = n / 1000;
     const shown = Math.abs(k) >= 10 ? Math.round(k) : Math.round(k * 10) / 10;
-    return `${shown}k lei`;
+    const text = String(shown).replace(".", ",");
+    return `${n < 0 ? "−" : ""}${text} mii lei`;
   }
   return `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 0 }).format(Math.round(n))} lei`;
 }

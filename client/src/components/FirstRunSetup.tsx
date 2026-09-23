@@ -14,6 +14,7 @@ import { markSetupCompletedAt } from "@/lib/first-week-tour";
 import { markWhatsNewSeen } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
 import { hideNativeSplash } from "@/lib/native-splash";
+import { RoDateInput } from "@/components/RoDateInput";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -280,7 +281,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p>{t("Card, cash, bonuri — ale tale și ale partenerului, dacă e cazul. Plicurile le pui mai târziu, în Plan, doar dacă ai nevoie.")}</p>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
-            <label className="bf-field"><span>{t("Următorul venit (opțional)")}</span><input type="date" lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Următorul venit (opțional)")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-sources">
               <p><b>{t("Banii tăi")}</b></p>
               {moneySources.map((source) => (
@@ -317,7 +318,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p className="bf-kicker">{t("ORGANIZEAZĂ LUNA")}</p>
             <h2 id="bf-setup-title">{t("Până când vrei să ajungă")} <em>{t("banii?")}</em></h2>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
-            <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Următorul venit")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
                 const active = selected.includes(preset.category);
@@ -352,7 +353,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <label className="bf-field"><span>{t("Numele familiei")}</span><input value={familyName} onChange={(event) => setFamilyName(event.target.value)} placeholder="ex. Familia Popescu" /></label>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
-            <label className="bf-field"><span>{t("Următorul venit")}</span><input type="date" lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Următorul venit")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
                 const active = selected.includes(preset.category);

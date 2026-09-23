@@ -24,19 +24,7 @@ html.theme-cyber {
 html.capacitor-android,
 html.is-android-standalone {
   --os-nav-overlay: 0px;
-}
-
-.os-dock,
-.os-shell .os-dock,
-.os-shell.bf-app > .os-dock,
-html.capacitor-android .os-shell .os-dock,
-html.theme-white .os-shell .os-dock,
-html.theme-ink .os-shell .os-dock,
-html.theme-dark .os-shell .os-dock,
-html.theme-aurora .os-shell .os-dock,
-html.theme-navy .os-shell .os-dock,
-html.theme-cyber .os-shell .os-dock,
-:is(html.theme-ink, html.theme-white) .os-shell .os-dock {
+}.os-dock, .os-shell .os-dock, .os-shell.bf-app > .os-dock, html.capacitor-android .os-shell .os-dock, html.theme-white .os-shell .os-dock, html.theme-dark .os-shell .os-dock, html.theme-aurora .os-shell .os-dock, html.theme-navy .os-shell .os-dock, html.theme-cyber .os-shell .os-dock, :is(html.theme-ink, html.theme-white) .os-shell .os-dock{
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;

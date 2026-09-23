@@ -38,7 +38,7 @@ html {
   display: grid;
   place-items: center;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--cf-honey, #efc94d) 28%, var(--cf-surface, #fffefa));
   contain: strict;
   position: relative;
@@ -80,9 +80,9 @@ html {
   border-radius: 999px;
   color: #fffefa;
   background: color-mix(in srgb, var(--cf-ink, #10251f) 78%, #000);
-  font-size: 9px;
+  font-size:12px;
   font-style: normal;
-  font-weight: 800;
+  font-weight:600;
   line-height: 1;
   pointer-events: none;
 }
@@ -120,7 +120,7 @@ html {
   .bf-app input,
   .bf-app select,
   .bf-app textarea {
-    font-size: 16px !important;
+    font-size:15px !important;
     line-height: 1.25 !important;
   }
 
@@ -145,10 +145,10 @@ html {
     margin: 12px 0 0;
     padding: 24px 16px;
     border: 1px solid var(--cf-line);
-    border-radius: 18px;
+    border-radius:20px;
     color: var(--cf-muted);
     background: var(--cf-surface);
-    font-size: 13px;
+    font-size:14px;
   }
 
   .bf-receipt-thumb,
@@ -254,8 +254,8 @@ html {
     display: block !important;
     margin: 0 16px 6px !important;
     color: var(--cf-muted) !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
+    font-size:12px !important;
+    font-weight:600 !important;
     text-align: right !important;
   }
 }
@@ -281,11 +281,11 @@ html {
   left: 8px;
   transform: translateY(-140%);
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius:12px;
   color: #fffefa;
   background: var(--cf-ink, #10251f);
   font-size: 12px;
-  font-weight: 800;
+  font-weight:600;
   text-decoration: none;
   transition: transform 160ms var(--bf-ease, cubic-bezier(.23, 1, .32, 1));
 }
@@ -298,7 +298,7 @@ html {
   width: min(100%, 430px);
   margin-top: 12px;
   color: color-mix(in srgb, currentColor 88%, transparent);
-  font-size: 11px;
+  font-size:12px;
   line-height: 1.5;
 }
 
@@ -311,7 +311,7 @@ html {
   border: 1px solid color-mix(in srgb, currentColor 34%, transparent);
   border-radius: 999px;
   cursor: pointer;
-  font-weight: 800;
+  font-weight:600;
   list-style: none;
 }
 
@@ -335,7 +335,7 @@ html {
   padding: 10px 12px;
   border-left: 2px solid color-mix(in srgb, currentColor 45%, transparent);
   color: inherit;
-  font-size: 11px;
+  font-size:12px;
 }
 
 @media (max-width: 760px) {

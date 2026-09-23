@@ -7,6 +7,7 @@ import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, pars
 import { storeReceiptImages } from "@/lib/receipt-storage";
 import { Field, Modal, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
+import { RoDateInput } from "@/components/RoDateInput";
 
 const RECEIPT_DRAFT_KEY = "buget-familie:receipt-draft";
 type ReceiptFormDraft = {
@@ -185,7 +186,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
         <div className="bf-form-grid">
           <Field label={t("Magazin")}><input autoFocus value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder="ex. Lidl" /></Field>
           <Field label={t("Total (lei)")}><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" /></Field>
-          <Field label={t("Data")}><input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></Field>
+          <Field label={t("Data")}><RoDateInput value={date} onChange={(event) => setDate(event.target.value)} /></Field>
           <Field label={t("Membru")}><select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field>
           <Field label={t("Plătit din")}><select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></Field>
         </div>

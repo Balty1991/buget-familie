@@ -19,7 +19,7 @@
   --os-out: var(--cf-danger, #b93d36);
   color: var(--os-fg) !important;
   background: var(--os-bg) !important;
-  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif !important;
 }
 html.dark .os-shell.bf-app {
   --os-bg: var(--cf-bg, #07090c);
@@ -112,7 +112,7 @@ html.capacitor-android {
   overflow: hidden !important;
   padding: 0 !important;
   border: 0 !important;
-  border-radius: 16px !important;
+  border-radius:20px !important;
   color: #1B4F42 !important;
   background: #FBF4E9 !important;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, #d5ddd8) 70%, transparent) !important;
@@ -136,7 +136,7 @@ html.capacitor-android {
   width: 44px !important;
   height: 44px !important;
   object-fit: cover !important;
-  border-radius: 16px !important;
+  border-radius:20px !important;
 }
 
 @media (max-width: 760px) {
@@ -147,7 +147,7 @@ html.capacitor-android {
   }
   .os-mark {
     flex-basis: 40px !important;
-    border-radius: 14px !important;
+    border-radius:12px !important;
   }
 }
 
@@ -159,7 +159,7 @@ html.capacitor-android {
 .os-brand-copy b {
   color: var(--os-fg) !important;
   font-family: Fraunces, Georgia, serif !important;
-  font-size: 18px !important;
+  font-size:17px !important;
   font-weight: 560 !important;
   letter-spacing: -.03em !important;
   text-decoration: none !important;
@@ -167,7 +167,7 @@ html.capacitor-android {
 
 .os-brand-copy i {
   color: var(--os-mint) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 12px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -193,7 +193,7 @@ html.capacitor-android {
   min-height: 44px !important;
   padding: 0 !important;
   border: 0 !important;
-  border-radius: 16px !important;
+  border-radius:20px !important;
   color: var(--os-fg) !important;
   background: var(--os-surface, #f7f8f6) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
@@ -260,9 +260,9 @@ html.capacitor-android {
   color: var(--os-muted) !important;
   background: var(--os-surface-2) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
+  font-weight: 600;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
 }
@@ -294,7 +294,7 @@ html.capacitor-android {
 
 .os-date span {
   color: var(--os-muted) !important;
-  font-size: 11px !important;
+  font-size:12px !important;
   font-weight: 500 !important;
   letter-spacing: .18em !important;
 }
@@ -304,8 +304,8 @@ html.capacitor-android {
   z-index: 1;
   margin: 32px 0 0 !important;
   color: var(--os-muted) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 11px !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
   font-weight: 500 !important;
   letter-spacing: .22em !important;
   text-transform: uppercase !important;
@@ -331,7 +331,7 @@ html.capacitor-android {
 
 .os-amount small {
   color: var(--os-muted) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 17px !important;
   font-weight: 500 !important;
   letter-spacing: .28em !important;
@@ -366,7 +366,7 @@ html.capacitor-android {
   color: var(--os-fg) !important;
   background: color-mix(in srgb, var(--os-bg) 40%, transparent) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 14px !important;
   font-weight: 500 !important;
 }
@@ -436,8 +436,8 @@ html.capacitor-android {
 }
 .bf-calm-label {
   fill: var(--os-muted);
-  font-family: Outfit, sans-serif;
-  font-size: 7px;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size:12px;
   font-weight: 500;
   letter-spacing: .22em;
 }
@@ -463,7 +463,7 @@ html.capacitor-android {
   background: color-mix(in srgb, var(--os-surface) 95%, transparent) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
   backdrop-filter: blur(16px) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 14px !important;
   font-weight: 500 !important;
   letter-spacing: 0 !important;
@@ -484,8 +484,8 @@ html.capacitor-android {
   border-radius: 999px !important;
   color: var(--os-mint) !important;
   background: var(--os-mint-dim) !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
+  font-size:12px !important;
+  font-weight:600 !important;
   letter-spacing: .02em !important;
 }
 
@@ -500,7 +500,7 @@ html.capacitor-android {
   border: 0 !important;
   color: var(--os-mint) !important;
   background: transparent !important;
-  font-size: 11px !important;
+  font-size:12px !important;
   font-weight: 600 !important;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
@@ -545,8 +545,8 @@ html.capacitor-android {
   color: var(--os-muted) !important;
   background: transparent !important;
   box-shadow: none !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 10px !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
   font-weight: 600 !important;
   letter-spacing: 0 !important;
 }
@@ -599,7 +599,7 @@ html.capacitor-android {
     border-radius: 12px !important;
     color: var(--os-muted) !important;
     background: transparent !important;
-    font-size: 13px !important;
+    font-size:14px !important;
   }
   .os-desktop-nav button.active,
   .os-desktop-nav button.is-on {
@@ -668,7 +668,7 @@ html.ai-guide-open .os-tools .os-tool:last-child {
   min-height: 48px !important;
   overflow: hidden !important;
   border: 1px solid var(--os-line, var(--cf-line)) !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   background: color-mix(in srgb, var(--os-bg, #07090c) 70%, var(--os-surface, #10151a)) !important;
   box-shadow: none !important;
   outline: none !important;
@@ -707,7 +707,7 @@ html.bf-high-contrast .bf-command-search input:focus-visible,
   margin: 0 !important;
   padding: 0 14px 0 42px !important;
   border: 0 none transparent !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   outline: 0 none transparent !important;
   outline-offset: 0 !important;
   box-shadow: none !important;
@@ -718,7 +718,7 @@ html.bf-high-contrast .bf-command-search input:focus-visible,
   -webkit-appearance: none !important;
   color: var(--os-fg, var(--cf-ink)) !important;
   caret-color: var(--os-mint, var(--cf-primary)) !important;
-  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif !important;
   font-size: 15px !important;
   font-weight: 500 !important;
   line-height: 48px !important;
@@ -757,7 +757,7 @@ html body .bf-command-search input::placeholder {
   color: var(--os-fg) !important;
   background: var(--os-surface, #f7f8f6) !important;
   box-shadow: 0 0 0 1px var(--os-line), 0 24px 60px rgba(0, 0, 0, .35) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
 }
 
 @media (max-width: 760px) {
@@ -790,9 +790,9 @@ html body .bf-command-search input::placeholder {
 
 .os-shell .ai-eyebrow {
   color: var(--os-muted) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 10px !important;
-  font-weight: 650 !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
+  font-weight: 600 !important;
   letter-spacing: .16em !important;
 }
 
@@ -804,7 +804,7 @@ html body .bf-command-search input::placeholder {
   letter-spacing: -.03em !important;
 }
 
-.os-shell .ai-status { color: var(--os-muted) !important; font-size: 11px !important; }
+.os-shell .ai-status { color: var(--os-muted) !important; font-size:12px !important; }
 .os-shell .ai-status i { background: var(--os-mint) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--os-mint) 22%, transparent) !important; }
 
 .os-shell .ai-tool,
@@ -822,7 +822,7 @@ html body .bf-command-search input::placeholder {
   background: var(--os-surface-2) !important;
   border-radius: 12px !important;
 }
-.os-shell .ai-quota p { color: var(--os-muted) !important; font-family: Outfit, sans-serif !important; font-weight: 500 !important; }
+.os-shell .ai-quota p { color: var(--os-muted) !important; font-family: "IBM Plex Sans", sans-serif !important; font-weight: 500 !important; }
 .os-shell .ai-quota-track { background: color-mix(in srgb, var(--os-fg) 10%, transparent) !important; }
 .os-shell .ai-quota-track i { background: var(--os-mint) !important; }
 .os-shell .ai-quota.is-low,
@@ -834,21 +834,21 @@ html body .bf-command-search input::placeholder {
 .os-shell .ai-chat-bubble {
   background: var(--os-surface-2) !important;
   color: var(--os-fg) !important;
-  border-radius: 16px 16px 16px 6px !important;
-  font-size: 13px !important;
+  border-radius:20px 20px 20px 6px !important;
+  font-size:14px !important;
   line-height: 1.45 !important;
 }
 .os-shell .ai-chat-bubble svg { color: var(--os-mint) !important; }
 .os-shell .ai-chat-row.user .ai-chat-bubble {
   background: var(--os-mint-dim) !important;
   color: var(--os-fg) !important;
-  border-radius: 16px 16px 6px 16px !important;
+  border-radius:20px 20px 6px 20px !important;
 }
 html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   background: var(--os-mint) !important;
   color: var(--os-mint-fg) !important;
 }
-.os-shell .ai-chat-text strong { color: var(--os-mint) !important; font-weight: 650 !important; }
+.os-shell .ai-chat-text strong { color: var(--os-mint) !important; font-weight: 600 !important; }
 
 .os-shell .ai-chat-action {
   margin-left: 0 !important;
@@ -858,7 +858,7 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   color: var(--os-fg) !important;
   background: var(--os-surface-2) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 12px !important;
   font-weight: 600 !important;
 }
@@ -875,21 +875,21 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   color: var(--os-fg) !important;
   background: var(--os-surface-2) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 12px !important;
   font-weight: 500 !important;
 }
 
 .os-shell .ai-chat-input { border-top: 1px solid var(--os-line) !important; }
-.os-shell .ai-chat-input label { color: var(--os-muted) !important; font-family: Outfit, sans-serif !important; font-weight: 600 !important; letter-spacing: .08em !important; text-transform: uppercase !important; }
+.os-shell .ai-chat-input label { color: var(--os-muted) !important; font-family: "IBM Plex Sans", sans-serif !important; font-weight: 600 !important; letter-spacing: .08em !important; text-transform: uppercase !important; }
 .os-shell .ai-natural-form input,
 .os-shell .ai-chat-input input {
   border: 0 !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   color: var(--os-fg) !important;
   background: var(--os-bg) !important;
   box-shadow: 0 0 0 1px var(--os-line) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 14px !important;
 }
 .os-shell .ai-natural-form input:focus,
@@ -901,7 +901,7 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   width: 46px !important;
   height: 46px !important;
   border: 0 !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   color: var(--os-mint-fg) !important;
   background: var(--os-mint) !important;
 }
@@ -911,7 +911,7 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   align-items: flex-start !important;
   gap: 6px !important;
   color: var(--os-muted) !important;
-  font-size: 11px !important;
+  font-size:12px !important;
   line-height: 1.4 !important;
   white-space: normal !important;
   overflow-wrap: anywhere !important;
@@ -951,7 +951,7 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
   display: block;
   margin: 0 0 8px;
   color: var(--os-muted) !important;
-  font-size: 11px;
+  font-size:12px;
   line-height: 1.4;
 }
 .os-shell .ai-date-bar p {
@@ -993,8 +993,8 @@ body .bf-command-palette {
   color: var(--os-fg) !important;
   background: var(--os-surface, #f7f8f6) !important;
   border: 1px solid var(--os-line) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .38) !important;
-  font-family: Outfit, ui-sans-serif, system-ui, sans-serif !important;
+  box-shadow:var(--bf-shadow-raise) !important;
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif !important;
 }
 
 body .bf-command-palette h2 {
@@ -1017,7 +1017,7 @@ body .bf-command-list button {
   min-height: 56px !important;
   padding: 8px 10px !important;
   border: 0 !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   color: var(--os-fg) !important;
   background: transparent !important;
   text-align: left !important;
@@ -1039,7 +1039,7 @@ body .bf-command-list button.is-primary {
 
 body .bf-command-list button b {
   color: var(--os-fg) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 15px !important;
   font-weight: 600 !important;
   letter-spacing: -.01em !important;
@@ -1108,21 +1108,21 @@ body .bf-command-palette .bf-icon-button,
 .os-shell .bf-primary.full {
   min-height: 48px !important;
   border: 0 !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   color: var(--os-mint-fg, #04140e) !important;
   background: var(--os-mint, var(--cf-primary)) !important;
   box-shadow: none !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 15px !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
   transform: none !important;
 }
 
 .os-shell .bf-field > span {
   color: var(--os-muted) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 11px !important;
-  font-weight: 650 !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:12px !important;
+  font-weight: 600 !important;
   letter-spacing: .08em !important;
 }
 
@@ -1135,7 +1135,7 @@ body .bf-command-palette .bf-icon-button,
   color: var(--os-fg) !important;
   background: var(--os-bg) !important;
   box-shadow: none !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 15px !important;
   font-weight: 500 !important;
   appearance: none !important;
@@ -1158,7 +1158,7 @@ body .bf-command-palette .bf-icon-button,
   color: var(--os-fg) !important;
   background: var(--os-surface, #f7f8f6) !important;
   border: 1px solid var(--os-line) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .35) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 .os-shell .bf-modal h2,
@@ -1261,7 +1261,7 @@ body .bf-command-palette .bf-icon-button,
   clip: auto !important;
   clip-path: none !important;
   white-space: nowrap !important;
-  border-radius: 10px !important;
+  border-radius:12px !important;
   color: var(--os-mint-fg, #04140e) !important;
   background: var(--os-mint, #7cffc4) !important;
   transform: none !important;
@@ -1320,7 +1320,7 @@ html.dark .bf-onboarding-backdrop {
   width: min(520px, calc(100vw - 20px)) !important;
   max-height: calc(100svh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - var(--bf-keyboard, 0px) - 16px) !important;
   padding: 22px 20px 22px !important;
-  border-radius: 28px 28px 20px 20px !important;
+  border-radius:20px 20px 20px 20px !important;
   background: var(--lu-card, #f7f8f6) !important;
   color: var(--lu-ink, #0c1612) !important;
   border: 1px solid var(--lu-line, #c9d2cc) !important;
@@ -1346,7 +1346,7 @@ html.dark .bf-onboarding.bf-first-run {
   min-height: 64px !important;
   padding: 12px 14px !important;
   text-align: left !important;
-  border-radius: 18px !important;
+  border-radius:20px !important;
   border: 1px solid var(--lu-line, #c9d2cc) !important;
   background: color-mix(in srgb, var(--lu-card, #fff) 88%, var(--lu-accent, #143c36)) !important;
   color: inherit !important;
@@ -1455,9 +1455,9 @@ html.dark .bf-onboarding.bf-first-run {
   border-radius: 12px !important;
   color: var(--cf-ink, #1a322a) !important;
   background: color-mix(in srgb, var(--cf-surface, #fffefa) 88%, transparent) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 650 !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:14px !important;
+  font-weight: 600 !important;
   pointer-events: auto !important;
 }
 
@@ -1477,7 +1477,7 @@ html.dark .bf-onboarding.bf-first-run {
 .bf-setup h2 {
   margin: 6px 0 0 !important;
   color: var(--lu-ink, var(--cf-ink, #0c1612)) !important;
-  font-family: "IBM Plex Serif", Georgia, serif !important;
+  font-family: "IBM Plex Sans", Georgia, serif !important;
   font-size: 28px !important;
   font-weight: 560 !important;
   line-height: 1.15 !important;
@@ -1488,7 +1488,7 @@ html.dark .bf-onboarding.bf-first-run {
 .bf-first-run .bf-kicker {
   margin: 0 !important;
   color: var(--os-mint, #176b54) !important;
-  font-size: 10px !important;
+  font-size:12px !important;
   font-weight: 750 !important;
   letter-spacing: .14em !important;
   text-transform: uppercase !important;
@@ -1538,9 +1538,9 @@ html.dark .bf-onboarding.bf-first-run {
   border-radius: 12px !important;
   color: var(--cf-ink, #1a322a) !important;
   background: color-mix(in srgb, var(--cf-surface, #fffefa) 88%, transparent) !important;
-  font-family: Outfit, sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 650 !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
+  font-size:14px !important;
+  font-weight: 600 !important;
   pointer-events: auto !important;
 }
 
@@ -1617,7 +1617,7 @@ html.dark .bf-onboarding.bf-first-run {
 
   .os-hint {
     margin-top: 12px !important;
-    font-size: 13px !important;
+    font-size:14px !important;
   }
 
   .bf-decision-row,
@@ -1674,7 +1674,7 @@ html[data-simple-mode="1"] .bf-today-workspace {
 }
 html[data-simple-mode="1"] .bf-today-workspace .os-hero {
   border: 2px solid var(--bf-simple-accent, #1f6b4a);
-  box-shadow: 0 8px 28px rgba(31, 107, 74, 0.18);
+  box-shadow:var(--bf-shadow-raise);
 }
 html[data-simple-mode="1"] .os-dock {
   gap: 4px;
@@ -1735,7 +1735,7 @@ html[data-simple-mode="1"] .bf-utilities-workspace .bf-more-tabs button {
   border-radius: 12px !important;
   color: var(--os-fg, inherit) !important;
   background: color-mix(in srgb, var(--os-surface, #fff) 80%, transparent) !important;
-  font-family: Outfit, sans-serif !important;
+  font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 14px !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
 }

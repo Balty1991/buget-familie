@@ -442,13 +442,12 @@ function answerPace(data: AppData, asOf: string): AnalystAnswer {
     : "Ești peste ritmul de azi.";
   return {
     kind: "pace",
-    headline: summary.heroTracksWeek
-      ? `Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi.`
-      : sentences(`Poți cheltui ${money(Math.max(0, spendable))} pe zi până pe ${formatDate(payday)}`),
+    headline: `Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi.`,
     detail: sentences(summary.heroHint, verdict, `Ritmul tău actual este ${money(Math.max(0, pace))} pe zi`),
     rows: [
       { label: "Azi", value: `${money(Math.max(0, spendable))}` },
       { label: "Ritmul tău", value: `${money(Math.max(0, pace))}/zi` },
+      ...(Math.abs(round(forecast.safeDaily) - spendable) > 1 ? [{ label: "Ritm sigur până la venit", value: `${money(Math.max(0, round(forecast.safeDaily)))}/zi` }] : []),
       { label: "Nerepartizat", value: money(free) },
     ],
     followUps: ["Unde se duc banii?", "Îmi permit 200 de lei?"],
@@ -624,9 +623,7 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
     return {
       kind: "next",
       headline: payday
-        ? summary.heroTracksWeek
-          ? sentences(`Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi`, free > 0 ? `nerepartizat ${money(free)}` : "nu mai e marjă în plan")
-          : sentences(`Poți cheltui ${money(Math.max(0, spendable))} pe zi până pe ${formatDate(payday)}`, free > 0 ? `nerepartizat ${money(free)}` : "nu mai e marjă în plan")
+        ? sentences(`Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi`, free > 0 ? `nerepartizat ${money(free)}` : "nu mai e marjă în plan")
         : "Setează data următorului venit ca să-ți spun ce merită azi.",
       detail: sentences(
         envelopes.length ? `${plural(envelopes.filter((entry) => entry.state === "healthy").length, "plic în ritm", "plicuri în ritm")}` : "Nu ai încă plicuri",

@@ -23,6 +23,7 @@ import {
 } from "@/lib/planned-events";
 import { daysLabel, moneyFormat, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
+import { RoDateInput } from "@/components/RoDateInput";
 
 const money = (value: number) => moneyFormat(value, { maximumFractionDigits: 0 });
 const kindIcon = (kind: PlannedEventKind, size = 17) => kind === "anniversary" ? <CalendarHeart size={size} /> : kind === "holiday" ? <Gift size={size} /> : kind === "trip" ? <Plane size={size} /> : kind === "school" ? <GraduationCap size={size} /> : <PartyPopper size={size} />;
@@ -153,7 +154,7 @@ export function PlannedEventsPanel({ data, onChange }: { data: AppData; onChange
         )}
         <div className="bf-planned-form">
           <label>{t("Ce se întâmplă")}<input value={name} onChange={(event) => setName(event.target.value)} placeholder={t("ex. Ziua Anei")} /></label>
-          <label>{t("Data")}<input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>
+          <label>{t("Data")}<RoDateInput value={date} onChange={(event) => setDate(event.target.value)} /></label>
           <label>{t("Cost estimat (lei)")}<input inputMode="decimal" value={estimate} onChange={(event) => setEstimate(event.target.value)} placeholder="0" /></label>
           <label>{t("Fel")}<select value={kind} onChange={(event) => setKind(event.target.value as PlannedEventKind)}>{kinds.map((item) => <option key={item} value={item}>{kindName(item)}</option>)}</select></label>
           <label>{t("Se repetă")}<select value={repeat} onChange={(event) => setRepeat(event.target.value as PlannedEventRepeat)}><option value="yearly">{t("În fiecare an")}</option><option value="once">{t("O singură dată")}</option></select></label>

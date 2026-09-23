@@ -28,7 +28,7 @@ describe("bare și etichete lei", () => {
   it("etichete compacte în lei", () => {
     expect(leiLabel(0)).toMatch(/0/);
     expect(leiLabel(1480)).toMatch(/lei/);
-    expect(leiLabel(4200, true)).toBe("4.2k lei");
-    expect(leiLabel(12000, true)).toBe("12k lei");
+    expect(leiLabel(4200, true)).toBe("4,2 mii lei");
+    expect(leiLabel(12000, true)).toBe("12 mii lei");
   });
 });

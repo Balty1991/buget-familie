@@ -6,10 +6,8 @@ import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
 import { debtPaymentHistory, debtSnowball, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
-import { DebtSnowballCard } from "@/components/DebtSnowballCard";
-import { DebtMonitor } from "@/components/DebtMonitor";
 import { BudgetBar, dateText, money } from "@/pages/home-kit";
-import { getLocale, monthsLabel, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import { upcomingPlannedEvents } from "@/lib/planned-events";
 
 export function DebtPaymentHistory({ data, debt }: { data: AppData; debt: Debt }) { const history = debtPaymentHistory(data, debt.id); if (!history.length) return <p className="bf-debt-history empty">{t("Nu există încă plăți confirmate pentru această datorie.")}</p>; return <div className="bf-debt-history"><p>{t("PLĂȚI ÎNREGISTRATE")}</p>{history.slice(0, 4).map((payment) => <div key={payment.id}><span><b>{payment.title.includes("achitată integral") ? t("Achitată integral") : t("Plată parțială")}</b><small>{dateText(payment.date, true)} · {payment.source}</small></span><span><strong>{money(payment.amount)}</strong><small>{t("rămân {amount}", { amount: money(payment.debtRemainingAfter ?? debt.remaining) })}</small></span></div>)}</div>; }
@@ -37,20 +35,6 @@ function DebtSchedule({ data, debt, onPay }: { data: AppData; debt: Debt; onPay:
   const visible = expanded ? rows : rows.slice(0, 6);
   const paidCount = rows.filter((row) => row.paid).length;
   return <div className="bf-debt-schedule"><div className="bf-debt-schedule-head"><div><p>{t("SCADENȚAR COMPLET")}</p><b>{paidCount} din {rows.length} rate bifate</b></div><span>{money(debt.remaining)} rămas</span></div><div className="bf-debt-schedule-list">{visible.map((row) => <div className={"bf-debt-schedule-row " + (row.paid ? "paid" : "")} key={row.date}><button type="button" className="bf-schedule-check" aria-label={row.paid ? "Rata " + row.index + t(" achitată") : t("Confirmă rata ") + row.index} onClick={row.paid ? undefined : onPay}>{row.paid ? <Check size={15} /> : <span />}</button><span><b>Rata {String(row.index).padStart(2, "0")}</b><small>{dateText(row.date, true)}{row.paid ? t(" · plătită la ") + dateText(row.paid.date, true) : t(" · neplătită")}</small></span><strong>{money(row.paid?.amount || row.amount)}</strong></div>)}</div>{rows.length > 6 && <button type="button" className="bf-schedule-more" onClick={() => setExpanded((value) => !value)}>{expanded ? t("Arată mai puține") : t("Arată toate cele ") + rows.length + " rate"}</button>}</div>;
-}
-function DebtPayoffPlan({ data }: { data: AppData }) {
-  const openDebts = data.debts.filter((debt) => debt.remaining > 0);
-  if (!openDebts.length) return <section className="bf-debt-plan complete"><div className="bf-debt-plan-mark"><Check size={22} /></div><div><p className="bf-kicker">{t("PLANUL DE IEȘIRE")}</p><h2>{t("Nu mai ai datorii active.")}</h2><span>{t("Ai închis toate obligațiile înregistrate. Următorul pas poate fi un fond de siguranță.")}</span></div></section>;
-  const total = openDebts.reduce((sum, debt) => sum + debt.remaining, 0);
-  const monthly = openDebts.reduce((sum, debt) => sum + Math.max(0, debt.monthly), 0);
-  const months = monthly > 0 ? Math.max(1, Math.ceil(total / monthly)) : undefined;
-  const payments = data.transactions.filter((item) => item.debtId && item.kind === "expense");
-  const paidTotal = payments.reduce((sum, item) => sum + item.amount, 0);
-  const originalTotal = total + paidTotal;
-  const progress = originalTotal > 0 ? Math.min(100, Math.round((paidTotal / originalTotal) * 100)) : 0;
-  const finish = months ? new Date(new Date().getFullYear(), new Date().getMonth() + months, 1) : undefined;
-  const finishText = finish ? finish.toLocaleDateString(getLocale(), { month: "long", year: "numeric" }) : t("adaugă rate lunare");
-  return <section className="bf-debt-plan"><div className="bf-debt-plan-top"><div><p className="bf-kicker">{t("PLANUL DE IEȘIRE")}</p><h2>{t("Mai sunt aproximativ")} <em>{months === undefined ? "— luni" : monthsLabel(months)}</em>.</h2><span>{t("La ritmul minim actual, datoriile pot fi închise până în")} <b>{finishText}</b>.</span></div><div className="bf-debt-plan-total"><strong>{money(total)}</strong><small>{t("sold total")}</small></div></div><div className="bf-debt-plan-progress"><div><span>{t("Progres real")}</span><b>{progress}%</b></div><i><em style={{ width: progress + "%" }} /></i></div><div className="bf-debt-plan-stats"><span><b>{money(monthly)}</b><small>{t("rate / lună")}</small></span><span><b>{openDebts.length}</b><small>{openDebts.length === 1 ? t("datorie activă") : t("datorii active")}</small></span><span><b>{money(paidTotal)}</b><small>{t("achitat până acum")}</small></span></div></section>;
 }
 function DebtPayoffSimulator({ data }: { data: AppData }) {
   const [extra, setExtra] = useState(0);
@@ -191,10 +175,10 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
           </div>
         )}
       </section>
-      <DebtSnowballCard data={data} onPay={onPayDebt} />
-      <DebtPayoffPlan data={data} />
-      <DebtMonitor data={data} />
-      <DebtPayoffSimulator data={data} />
+      <details className="bf-debt-tools">
+        <summary>{t("Simulează o plată în plus")}</summary>
+        <DebtPayoffSimulator data={data} />
+      </details>
       <section className="bf-obligation-ai">
         <div className="bf-obligation-ai-icon"><Bot size={22} /></div>
         <div>

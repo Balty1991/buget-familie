@@ -65,7 +65,7 @@
   height: 100% !important;
   margin: 0 !important;
   opacity: 0 !important;
-  font-size: 24px;
+  font-size:22px;
   cursor: pointer;
   pointer-events: auto !important;
 }
@@ -110,7 +110,7 @@ html[class*="theme-"] .bf-receipt-photo-hint,
 .bf-receipt-envelope-preview {
   margin-top: 0.75rem;
   padding: 0.75rem 0.85rem;
-  border-radius: 14px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--bf-surface, #fff) 88%, var(--bf-accent, #256B5B));
 }
 .bf-receipt-envelope-preview ul {

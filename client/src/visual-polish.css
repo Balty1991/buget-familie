@@ -24,7 +24,7 @@
   min-width: 3.4rem;
   padding: 2px 0 22px;
   color: var(--os-muted, var(--cf-muted));
-  font-size: 10px;
+  font-size:12px;
   font-weight: 680;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -42,7 +42,7 @@
   border-radius: 12px;
   background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 92%, transparent);
   color: var(--os-ink, var(--cf-ink));
-  font-size: 13px;
+  font-size:14px;
   line-height: 1.35;
 }
 
@@ -62,7 +62,7 @@
   place-content: center;
   padding: 18px 14px;
   border: 1px dashed color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent);
-  border-radius: 14px;
+  border-radius:12px;
   text-align: center;
 }
 
@@ -77,7 +77,7 @@
   max-width: 36ch;
   justify-self: center;
   color: var(--os-muted, var(--cf-muted));
-  font-size: 13px;
+  font-size:14px;
   line-height: 1.45;
 }
 
@@ -180,7 +180,7 @@
   justify-content: space-between;
   margin-top: 6px;
   color: var(--os-muted, var(--cf-muted));
-  font-size: 11px;
+  font-size:12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -206,8 +206,8 @@
   min-height: var(--bf-chrome-btn-h, 48px) !important;
   padding: 0 18px !important;
   border-radius: var(--bf-chrome-radius, 16px) !important;
-  font-family: var(--font-ui, Outfit, sans-serif) !important;
-  font-size: 14.5px !important;
+  font-family: var(--font-ui, "IBM Plex Sans", sans-serif) !important;
+  font-size:14px !important;
   font-weight: 680 !important;
   letter-spacing: -.015em !important;
 }
@@ -403,7 +403,7 @@ html.theme-cyber .os-shell .os-dock button.is-on {
     padding: 16px !important;
   }
   .bf-theme-preview-value strong { font-size: 32px !important; }
-  .bf-chart-y { min-width: 2.8rem; font-size: 9px; }
+  .bf-chart-y { min-width: 2.8rem; font-size:12px; }
 }
 
 /* ============================================================
@@ -415,51 +415,12 @@ html,
 body {
   background: var(--cf-bg, #07090c) !important;
   color: var(--cf-ink, inherit);
-}
-
-html.theme-ink,
-html.theme-white,
-html.theme-dark,
-html.theme-aurora,
-html.theme-navy,
-html.theme-cyber,
-html.theme-snow,
-html.theme-sand,
-html.theme-sage,
-html.theme-forest,
-html.theme-graphite {
+}html.theme-white, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber{
   background: var(--cf-bg) !important;
-}
-
-html.theme-ink body,
-html.theme-white body,
-html.theme-dark body,
-html.theme-aurora body,
-html.theme-navy body,
-html.theme-cyber body,
-html.theme-snow body,
-html.theme-sand body,
-html.theme-sage body,
-html.theme-forest body,
-html.theme-graphite body {
+}html.theme-white body, html.theme-dark body, html.theme-aurora body, html.theme-navy body, html.theme-cyber body{
   background: var(--cf-bg) !important;
   color: var(--cf-ink) !important;
-}
-
-.bf-app,
-.os-shell.bf-app,
-html.theme-ink .bf-app,
-html.theme-white .bf-app,
-html.theme-dark .bf-app,
-html.theme-aurora .bf-app,
-html.theme-navy .bf-app,
-html.theme-cyber .bf-app,
-html.theme-snow .bf-app,
-html.theme-sand .bf-app,
-html.theme-sage .bf-app,
-html.theme-forest .bf-app,
-html.theme-graphite .bf-app,
-html.dark .bf-app {
+}.bf-app, .os-shell.bf-app, html.theme-white .bf-app, html.theme-dark .bf-app, html.theme-aurora .bf-app, html.theme-navy .bf-app, html.theme-cyber .bf-app, html.dark .bf-app{
   color: var(--cf-ink) !important;
   background-color: var(--cf-bg) !important;
 }
@@ -479,7 +440,7 @@ html.dark .bf-app {
   margin: 0 0 4px !important;
   padding: 22px 18px 20px !important;
   border: 1px solid color-mix(in srgb, var(--cf-line) 88%, transparent) !important;
-  border-radius: 24px !important;
+  border-radius:20px !important;
   background:
     radial-gradient(120% 90% at 100% -10%, color-mix(in srgb, var(--cf-primary) 28%, transparent), transparent 55%),
     radial-gradient(80% 70% at -10% 110%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 50%),
@@ -524,7 +485,7 @@ html.dark .bf-app {
 .bf-plan-workspace > .bf-plan-studio-header p:not(.bf-kicker) {
   max-width: 34ch !important;
   color: var(--cf-muted) !important;
-  font-size: 13px !important;
+  font-size:14px !important;
   line-height: 1.45 !important;
 }
 
@@ -574,7 +535,7 @@ html.dark .bf-app {
 
 .bf-plan-workspace .bf-cycle-setup,
 .bf-plan-workspace .bf-cycle-tools {
-  border-radius: 22px !important;
+  border-radius:20px !important;
   overflow: hidden;
 }
 
@@ -699,8 +660,8 @@ html.dark .bf-app {
   background: color-mix(in srgb, var(--cf-surface-alt) 80%, transparent);
   border: 1px solid color-mix(in srgb, var(--cf-line) 70%, transparent);
   color: var(--cf-ink) !important;
-  font-size: 11px !important;
-  font-weight: 650;
+  font-size:12px !important;
+  font-weight: 600;
   line-height: 1.2;
 }
 
@@ -826,7 +787,7 @@ html.theme-dark .os-shell.bf-app::before {
 .bf-plan-workspace > .bf-plan-studio-header,
 .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass {
   padding: 26px 20px 24px !important;
-  border-radius: 28px !important;
+  border-radius:20px !important;
   border: 1px solid color-mix(in srgb, var(--cf-line) 75%, transparent) !important;
   background:
     radial-gradient(120% 100% at 108% -18%, color-mix(in srgb, var(--cf-primary) 38%, transparent), transparent 52%),
@@ -877,7 +838,7 @@ html.theme-dark .os-shell.bf-app::before {
   font-size: clamp(36px, 9.5vw, 54px) !important;
   line-height: .98 !important;
   letter-spacing: -.06em !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
   text-wrap: balance;
 }
 
@@ -894,22 +855,22 @@ html.theme-dark .os-shell.bf-app::before {
 }
 
 .bf-plan-workspace > .bf-plan-studio-header p:not(.bf-kicker) {
-  font-size: 13.5px !important;
+  font-size:14px !important;
   line-height: 1.5 !important;
   max-width: 36ch !important;
 }
 
 .bf-plan-workspace > .bf-plan-studio-header .bf-kicker {
-  font-size: 10px !important;
+  font-size:12px !important;
   letter-spacing: .18em !important;
-  font-weight: 800 !important;
+  font-weight:600;
 }
 
 .bf-plan-workspace .bf-plan-header-stat {
   position: relative;
   z-index: 1;
   padding: 12px 14px !important;
-  border-radius: 18px !important;
+  border-radius:20px !important;
   border: 1px solid color-mix(in srgb, var(--cf-line) 70%, transparent);
   background: color-mix(in srgb, var(--cf-surface) 55%, transparent);
   box-shadow:
@@ -1011,13 +972,13 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
   font-size: clamp(1.15rem, 3.6vw, 1.45rem) !important;
   letter-spacing: -.035em !important;
   line-height: 1.12 !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
 }
 
 .bf-plan-workspace .bf-kicker {
-  font-size: 10px !important;
+  font-size:12px !important;
   letter-spacing: .14em !important;
-  font-weight: 800 !important;
+  font-weight:600;
 }
 
 .bf-plan-workspace .bf-allocation-progress-top strong {
@@ -1064,7 +1025,7 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
   gap: 0.55rem !important;
   margin: 0.4rem 0 0.2rem;
   padding: 1.6rem 1.1rem 1.4rem !important;
-  border-radius: 22px;
+  border-radius:20px;
   border: 1px dashed color-mix(in srgb, var(--cf-primary) 42%, var(--cf-line));
   background:
     radial-gradient(90% 80% at 50% 0%, color-mix(in srgb, var(--cf-primary) 14%, transparent), transparent 65%),
@@ -1080,7 +1041,7 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
   content: "";
   position: absolute;
   inset: 10px;
-  border-radius: 16px;
+  border-radius:20px;
   border: 1px solid color-mix(in srgb, var(--cf-line) 55%, transparent);
   pointer-events: none;
   opacity: .55;
@@ -1246,7 +1207,7 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
   .bf-plan-workspace > .bf-plan-studio-header,
   .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass {
     padding: 20px 16px 18px !important;
-    border-radius: 22px !important;
+    border-radius:20px !important;
   }
   .bf-plan-workspace > .bf-plan-studio-header h1 {
     font-size: clamp(32px, 9vw, 42px) !important;
@@ -1266,7 +1227,7 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
   overflow: hidden;
   isolation: isolate;
   padding: 26px 20px 24px !important;
-  border-radius: 28px !important;
+  border-radius:20px !important;
   border: 1px solid color-mix(in srgb, var(--cf-line) 75%, transparent) !important;
   background:
     radial-gradient(120% 100% at 108% -18%, color-mix(in srgb, var(--cf-danger) 28%, transparent), transparent 52%),
@@ -1310,7 +1271,7 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
   font-size: clamp(34px, 9vw, 50px) !important;
   line-height: .98 !important;
   letter-spacing: -.055em !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
   text-wrap: balance;
   color: var(--cf-ink) !important;
 }
@@ -1329,7 +1290,7 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
 
 .bf-obligations-workspace > .bf-obligations-header p:not(.bf-kicker) {
   color: var(--cf-muted) !important;
-  font-size: 13.5px !important;
+  font-size:14px !important;
   line-height: 1.5 !important;
   max-width: 38ch !important;
 }
@@ -1405,10 +1366,7 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
 .bf-obligations-workspace .bf-obligation-cta.savings {
   border-color: color-mix(in srgb, var(--cf-primary) 40%, var(--cf-line)) !important;
   color: var(--cf-ink) !important;
-}
-
-html.theme-white .bf-obligations-workspace > .bf-obligations-header,
-html.theme-ink .bf-obligations-workspace > .bf-obligations-header {
+}html.theme-white .bf-obligations-workspace > .bf-obligations-header{
   background:
     radial-gradient(120% 100% at 108% -18%, rgba(182, 67, 56, .16), transparent 52%),
     radial-gradient(90% 80% at -18% 120%, rgba(139, 99, 14, .1), transparent 48%),
@@ -1417,10 +1375,7 @@ html.theme-ink .bf-obligations-workspace > .bf-obligations-header {
     0 24px 48px rgba(18, 32, 28, .09),
     0 6px 14px rgba(18, 32, 28, .04),
     inset 0 1px 0 rgba(255, 255, 255, .9) !important;
-}
-
-html.theme-white .bf-obligations-workspace > .bf-obligations-header h1 em,
-html.theme-ink .bf-obligations-workspace > .bf-obligations-header h1 em {
+}html.theme-white .bf-obligations-workspace > .bf-obligations-header h1 em{
   background: linear-gradient(120deg, #b64338, #8b630e);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1436,7 +1391,7 @@ html.theme-ink .bf-obligations-workspace > .bf-obligations-header h1 em {
 @media (max-width: 640px) {
   .bf-obligations-workspace > .bf-obligations-header {
     padding: 20px 16px 18px !important;
-    border-radius: 22px !important;
+    border-radius:20px !important;
   }
   .bf-obligations-workspace > .bf-obligations-header h1 {
     font-size: clamp(30px, 9vw, 40px) !important;

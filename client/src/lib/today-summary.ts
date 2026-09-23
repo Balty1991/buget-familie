@@ -82,13 +82,14 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
     if (!end) return t("duminică");
     return new Date(`${end}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" });
   })();
+  const noteDaily = heroTracksWeek ? brief.spendable : rhythm.days.some((row) => row.isToday && row.over) ? rhythm.futureShare : rhythm.todayShare;
   const rhythmNote = !rhythm.hasWeekly
     ? t("Nu sunt plicuri cu ritm săptămânal de împărțit pe zile.")
     : rhythm.remaining <= 0 && rhythm.todayLeft <= 0
       ? t("Plicul săptămânii e gol până {until}.", { until: untilName })
       : rhythm.days.some((row) => row.isToday && row.over)
-        ? t("Azi a trecut peste partea de {share}. Mai rămân {remaining}, cam {daily} pe zi până {until}.", { share: exact(rhythm.todayShare), remaining: exact(rhythm.remaining), daily: exact(rhythm.futureShare), until: untilName })
-        : t("Mai rămân {remaining} în plicul săptămânii, cam {daily} pe zi până {until}.", { remaining: exact(rhythm.remaining), daily: exact(rhythm.todayShare), until: untilName });
+        ? t("Azi a trecut peste partea de {share}. Mai rămân {remaining}, cam {daily} pe zi până {until}.", { share: exact(rhythm.todayShare), remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName })
+        : t("Mai rămân {remaining} în plicul săptămânii, cam {daily} pe zi până {until}.", { remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName });
 
   const todayRow = rhythm.days.find((row) => row.isToday);
   const todayStrip = todayRow ? dayStripFigure(todayRow, heroTracksWeek ? brief.spendable : todayRow.left, heroTracksWeek) : 0;

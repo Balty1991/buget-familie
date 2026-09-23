@@ -3,13 +3,14 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
-import { automaticTheme, backgroundOptions, currentLocalMinutes, themeOptions, timeToMinutes, type BackgroundId, type ThemeId, type ThemeSchedule, type ThemeScheduleTimes } from "@/pages/home-kit";
+import { automaticTheme, backgroundOptions, currentLocalMinutes, themeOptions, timeToMinutes, visibleThemeOptions, type BackgroundId, type ThemeId, type ThemeSchedule, type ThemeScheduleTimes } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 
 export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, background, onChange, onScheduleChange, onScheduleTimesChange, onContrastChange, onBackgroundChange, onClose }: { theme: ThemeId; schedule: ThemeSchedule; scheduleTimes: ThemeScheduleTimes; highContrast: boolean; background: BackgroundId; onChange: (theme: ThemeId) => void; onScheduleChange: (schedule: ThemeSchedule) => void; onScheduleTimesChange: (times: ThemeScheduleTimes) => void; onContrastChange: (active: boolean) => void; onBackgroundChange: (background: BackgroundId) => void; onClose: () => void }) {
   const [preview, setPreview] = useState<ThemeId>(theme);
   const [previewBackground, setPreviewBackground] = useState<BackgroundId>(background);
   const previewOption = themeOptions.find((option) => option.id === preview) || themeOptions[0];
+  const shownThemes = visibleThemeOptions.some((option) => option.id === preview) ? visibleThemeOptions : [...visibleThemeOptions, previewOption];
   const scheduleIsValid = timeToMinutes(scheduleTimes.dayStart, -1) < timeToMinutes(scheduleTimes.eveningStart, -1) && timeToMinutes(scheduleTimes.eveningStart, -1) < timeToMinutes(scheduleTimes.nightStart, -1);
   const applyPreview = () => { onChange(preview); onBackgroundChange(previewBackground); onScheduleChange(schedule); onClose(); };
   const selectBackground = (id: BackgroundId) => {
@@ -41,7 +42,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
         </section>
         <p className="bf-theme-preview-note">{t("Tema se aplică din butonul de jos. Textura suprafeței se schimbă imediat, la atingere.")}</p>
         <div className="bf-theme-grid">
-          {themeOptions.map((option) => (
+          {shownThemes.map((option) => (
             <button key={option.id} type="button" className={`bf-theme-option ${option.id} ${preview === option.id ? "selected" : ""}`} aria-pressed={preview === option.id} onClick={() => setPreview(option.id)}>
               <span className="bf-theme-swatch" aria-hidden="true"><span /></span>
               <span><em>{option.mood}</em><b>{option.name}</b><small>{option.detail}</small></span>
@@ -90,7 +91,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
           <button type="button" className={schedule === "auto" ? "active" : ""} role="switch" aria-checked={schedule === "auto"} onClick={() => onScheduleChange(schedule === "auto" ? "manual" : "auto")}>
             <span>
               <b>{t("Comută automat zi/noapte")}</b>
-              <small>{schedule === "auto" ? `Activ acum: ${themeOptions.find((item) => item.id === automaticTheme(currentLocalMinutes(), scheduleTimes))?.name || "tema automată"}. Zi ${scheduleTimes.dayStart}–${scheduleTimes.eveningStart} · seară ${scheduleTimes.eveningStart}–${scheduleTimes.nightStart} · noapte ${scheduleTimes.nightStart}–${scheduleTimes.dayStart}.` : t("Folosește Alb ziua, Cyber Teal seara și Întunecat noaptea.")}</small>
+              <small>{schedule === "auto" ? `Activ acum: ${themeOptions.find((item) => item.id === automaticTheme(currentLocalMinutes(), scheduleTimes))?.name || "tema automată"}. Zi ${scheduleTimes.dayStart}–${scheduleTimes.eveningStart} · seară ${scheduleTimes.eveningStart}–${scheduleTimes.nightStart} · noapte ${scheduleTimes.nightStart}–${scheduleTimes.dayStart}.` : t("Folosește Alb ziua, Navy seara și Întunecat cu verde noaptea.")}</small>
             </span>
             <i aria-hidden="true" />
           </button>

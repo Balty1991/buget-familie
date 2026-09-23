@@ -44,7 +44,7 @@
 .bf-today-pulse-copy h2 {
   margin: 4px 0 6px;
   color: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
+  font-family: "IBM Plex Sans", Georgia, serif;
   font-size: 28px;
   line-height: 1.05;
   letter-spacing: -.04em;
@@ -82,8 +82,8 @@
 
 .bf-today-pulse-chart b {
   color: var(--cf-muted);
-  font-size: 9px;
-  font-weight: 800;
+  font-size:12px;
+  font-weight:600;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -96,8 +96,8 @@
 }
 
 .bf-payday-track span { display: grid; gap: 2px; }
-.bf-payday-track small { color: var(--cf-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
-.bf-payday-track b { color: var(--cf-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 22px; line-height: 1; }
+.bf-payday-track small { color: var(--cf-muted); font-size:12px; font-weight:600; letter-spacing: .08em; }
+.bf-payday-track b { color: var(--cf-ink); font-family: "IBM Plex Sans", Georgia, serif; font-size: 22px; line-height: 1; }
 .bf-payday-rail {
   height: 8px;
   overflow: hidden;
@@ -122,7 +122,7 @@
 .bf-today-envelopes-heading h2 {
   margin: 4px 0 0;
   color: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
+  font-family: "IBM Plex Sans", Georgia, serif;
   font-size: 22px;
   line-height: 1.15;
 }
@@ -131,11 +131,11 @@
   min-height: 40px;
   padding: 0 12px;
   border: 1px solid var(--cf-line);
-  border-radius: 10px;
+  border-radius:12px;
   color: var(--cf-ink);
   background: var(--cf-surface-alt);
   font-size: 12px;
-  font-weight: 800;
+  font-weight:600;
 }
 
 .bf-today-envelopes ul {
@@ -155,8 +155,8 @@
 
 .bf-today-envelopes li:first-child { border-top: 0; }
 .bf-today-envelopes li b { display: block; font-size: 14px; }
-.bf-today-envelopes li small { color: var(--cf-muted); font-size: 11px; }
-.bf-today-envelopes li strong { font-variant-numeric: tabular-nums; font-size: 13px; }
+.bf-today-envelopes li small { color: var(--cf-muted); font-size:12px; }
+.bf-today-envelopes li strong { font-variant-numeric: tabular-nums; font-size:14px; }
 
 .bf-today-envelopes-empty {
   display: grid;
@@ -166,7 +166,7 @@
   width: 100%;
   padding: 12px;
   border: 1px dashed var(--cf-line);
-  border-radius: 16px;
+  border-radius:20px;
   color: var(--cf-ink);
   background: color-mix(in srgb, var(--cf-primary) 7%, var(--cf-surface));
   text-align: left;

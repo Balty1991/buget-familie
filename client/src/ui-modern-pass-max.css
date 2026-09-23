@@ -10,7 +10,7 @@ html body .bf-onboarding-actions { gap: 12px !important; margin-top: 10px !impor
 html body .bf-app .bf-more-tabs,
 html body .os-shell .bf-more-tabs {
   border: 0 !important; box-shadow: none !important; outline: none !important;
-  gap: 6px !important; padding: 4px !important; border-radius: 14px !important;
+  gap: 6px !important; padding: 4px !important; border-radius:12px !important;
   background: color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt, var(--cf-surface))) 92%, transparent) !important;
 }
 html body .bf-app .bf-more-tabs button.active,
@@ -18,7 +18,7 @@ html body .bf-app .bf-more-tabs button[aria-selected="true"] {
   border: 1px solid transparent !important;
   color: var(--os-mint-fg, var(--cf-on-forest, #04140e)) !important;
   background: var(--os-mint, var(--cf-primary, #7cffc4)) !important;
-  font-weight: 700 !important;
+  font-weight:600;
 }
 html body .bf-app .bf-sync,
 html body .os-shell .bf-sync,

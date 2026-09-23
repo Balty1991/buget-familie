@@ -25,7 +25,7 @@ export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: 
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
   { id: "white", name: t("Alb"), detail: t("Atelier Platinum — hârtie caldă, pin, citire de zi. Implicit."), mood: "ZI · PLATINUM" },
-  { id: "dark", name: t("Întunecat"), detail: t("Forest Night — grafit pe OLED, fără mint strident."), mood: "NOAPTE · GRAFIT" },
+  { id: "dark", name: t("Întunecat"), detail: t("Noapte cu accent verde de pădure."), mood: "NOAPTE · VERDE" },
   { id: "aurora", name: t("Aurora"), detail: t("Sticlă ultravioletă, cyan controlat — clar nocturn."), mood: "NOAPTE · STICLĂ" },
   { id: "navy", name: t("Navy"), detail: t("Bleumarin profund, auriu discret. Cabinet modern."), mood: "NOAPTE · OLED" },
   { id: "cyber", name: t("Cyber"), detail: t("Mint neon pe negru — cifre clare, distinct."), mood: "NOAPTE · CYBER" },
@@ -33,7 +33,8 @@ export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mo
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };
 export const currentLocalMinutes = () => { const now = new Date(); return now.getHours() * 60 + now.getMinutes(); };
-export const automaticTheme = (minutes: number, times: ThemeScheduleTimes): ThemeId => { const dayStart = timeToMinutes(times.dayStart, 360); const eveningStart = timeToMinutes(times.eveningStart, 1020); const nightStart = timeToMinutes(times.nightStart, 1260); if (dayStart < eveningStart && eveningStart < nightStart) return minutes >= dayStart && minutes < eveningStart ? "white" : minutes >= eveningStart && minutes < nightStart ? "cyber" : "dark"; return minutes >= 6 * 60 && minutes < 17 * 60 ? "white" : minutes >= 17 * 60 && minutes < 21 * 60 ? "cyber" : "dark"; };
+export const visibleThemeOptions = themeOptions.filter((option) => option.id === "white" || option.id === "dark" || option.id === "navy");
+export const automaticTheme = (minutes: number, times: ThemeScheduleTimes): ThemeId => { const dayStart = timeToMinutes(times.dayStart, 360); const eveningStart = timeToMinutes(times.eveningStart, 1020); const nightStart = timeToMinutes(times.nightStart, 1260); if (dayStart < eveningStart && eveningStart < nightStart) return minutes >= dayStart && minutes < eveningStart ? "white" : minutes >= eveningStart && minutes < nightStart ? "navy" : "dark"; return minutes >= 6 * 60 && minutes < 17 * 60 ? "white" : minutes >= 17 * 60 && minutes < 21 * 60 ? "navy" : "dark"; };
 /**
  * Formatarea se face la fiecare apel, nu o dată la încărcarea modulului: altfel
  * schimbarea limbii nu s-ar vedea până la reîncărcarea aplicației. `.format()` rămâne

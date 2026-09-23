@@ -5,7 +5,7 @@
 
 :root {
   --font-display: "Fraunces", Georgia, serif;
-  --font-ui: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
   --bf-display: var(--font-display);
   --bf-ui: var(--font-ui);
   --bf-motion: 180ms cubic-bezier(.22, 1, .36, 1);
@@ -25,7 +25,7 @@
 .bf-today-workspace > header h1,
 .bf-movements-header h1 {
   font-family: var(--bf-display);
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.08;
   text-wrap: balance;
@@ -33,7 +33,7 @@
 
 .bf-kicker {
   font-family: var(--bf-ui);
-  font-weight: 800;
+  font-weight:600;
   letter-spacing: 0.12em;
   font-size: 0.62rem;
 }
@@ -42,22 +42,22 @@
 .bf-primary,
 .bf-os-decide,
 .bf-movement-add {
-  border-radius: 14px;
+  border-radius:12px;
   font-weight: 750;
   letter-spacing: -0.01em;
   transition: transform var(--bf-press), filter var(--bf-press), box-shadow var(--bf-motion);
 }
 .bf-secondary,
 .bf-os-secondary {
-  border-radius: 14px;
-  font-weight: 700;
+  border-radius:12px;
+  font-weight:600;
   transition: transform var(--bf-press), background-color var(--bf-motion), border-color var(--bf-motion);
 }
 .bf-link-button,
 .bf-ghost {
   background: transparent;
   border: 0;
-  font-weight: 700;
+  font-weight:600;
   color: var(--cf-primary-strong, var(--primary));
   min-height: 44px;
   padding: 0 8px;
@@ -74,7 +74,7 @@
 /* Mai mult — card rhythm, less noise */
 .bf-more-grid > button,
 .bf-utilities-grid > button {
-  border-radius: 18px;
+  border-radius:20px;
   box-shadow: 0 1px 0 color-mix(in srgb, var(--cf-ink, #1a2420) 4%, transparent);
   transition: transform var(--bf-press), box-shadow var(--bf-motion), border-color var(--bf-motion);
 }
@@ -101,7 +101,7 @@
 .bf-journal-filter-sheet,
 .ai-financial-setup {
   animation: bf-elevate-sheet var(--bf-motion) both;
-  border-radius: 22px;
+  border-radius:20px;
 }
 @keyframes bf-elevate-fade {
   from { opacity: 0; }
@@ -114,7 +114,7 @@
 
 /* Dock + chips micro */
 .os-dock button {
-  border-radius: 16px;
+  border-radius:20px;
   transition: background-color var(--bf-motion), color var(--bf-motion), transform var(--bf-press);
 }
 .os-dock button:active { transform: scale(0.96); }
@@ -152,7 +152,7 @@
 }
 @media (max-width: 430px) {
   .os-dock button span {
-    font-size: 10px;
+    font-size:12px;
     font-weight: 750;
     letter-spacing: 0;
     line-height: 1.15;
@@ -169,7 +169,7 @@ html.theme-dark .bf-modal,
 html.theme-aurora .bf-modal,
 html.theme-navy .bf-modal,
 html.theme-cyber .bf-modal {
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  box-shadow:var(--bf-shadow-raise);
 }
 html.theme-aurora .os-dock button.is-on,
 html.theme-navy .os-dock button.is-on,

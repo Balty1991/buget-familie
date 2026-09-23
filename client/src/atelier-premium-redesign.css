@@ -77,7 +77,7 @@
 }
 :is(html.theme-ink, html.theme-white) .os-brand-copy i {
   color: #176b54 !important;
-  font-weight: 700 !important;
+  font-weight:600;
 }
 
 :is(html.theme-ink, html.theme-white) .os-tool {
@@ -88,7 +88,7 @@
 :is(html.theme-ink, html.theme-white) .os-tool.is-on {
   background: #0e4f3e !important;
   color: #ffffff !important;
-  box-shadow: 0 8px 18px rgba(14, 79, 62, .28) !important;
+  box-shadow:var(--bf-shadow-rest) !important;
 }
 
 .bf-theme-option.white .bf-theme-swatch {
@@ -159,7 +159,7 @@
 
 .os-shell .bf-today-situation-number > p,
 .os-shell .bf-today-situation-number p {
-  font-size: 11px !important;
+  font-size:12px !important;
   font-weight: 750 !important;
   letter-spacing: .18em !important;
   color: var(--os-muted, var(--cf-muted)) !important;
@@ -188,7 +188,7 @@
 .os-shell .bf-os-decide {
   min-height: 56px !important;
   border-radius: 999px !important;
-  font-size: 16px !important;
+  font-size:15px !important;
   font-weight: 780 !important;
   letter-spacing: -.01em !important;
   color: #ffffff !important;
@@ -220,7 +220,7 @@
 .os-shell .bf-os-secondary {
   min-height: 56px !important;
   border-radius: 999px !important;
-  font-weight: 700 !important;
+  font-weight:600;
   background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 70%, transparent) !important;
   box-shadow: 0 0 0 1.5px var(--os-line, var(--cf-line)) !important;
 }
@@ -250,7 +250,7 @@
   color: var(--os-muted, var(--cf-muted)) !important;
   background: transparent !important;
   box-shadow: none !important;
-  font-size: 10px !important;
+  font-size:12px !important;
   font-weight: 720 !important;
   letter-spacing: 0 !important;
   line-height: 1.1 !important;
@@ -292,7 +292,7 @@
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
   color: #ffffff !important;
   background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
-  box-shadow: 0 10px 22px rgba(14, 79, 62, .32) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 @media (max-width: 430px) {
@@ -301,12 +301,12 @@
     right: 0 !important;
   }
   .os-shell .os-dock button span {
-    font-size: 9.5px !important;
+    font-size:12px !important;
     font-weight: 750 !important;
     line-height: 1.12 !important;
   }
   .os-shell .bf-today-situation {
-    border-radius: 24px !important;
+    border-radius:20px !important;
     padding: 18px 16px 16px !important;
   }
 }
@@ -333,8 +333,8 @@
 .os-shell .bf-more-group > .bf-kicker {
   margin: 0 2px 2px !important;
   color: var(--os-mint, var(--cf-primary)) !important;
-  font-size: 10px !important;
-  font-weight: 800 !important;
+  font-size:12px !important;
+  font-weight:600;
   letter-spacing: .16em !important;
   opacity: 1 !important;
 }
@@ -380,7 +380,7 @@
   align-items: center !important;
   gap: 6px !important;
   margin-top: 2px !important;
-  font-size: 13px !important;
+  font-size:14px !important;
   font-weight: 780 !important;
   color: var(--os-ink, var(--cf-ink)) !important;
   line-height: 1.25 !important;
@@ -390,7 +390,7 @@
 .os-shell .bf-more-grid > button span,
 .os-shell .bf-utilities-grid > button span {
   color: var(--os-muted, var(--cf-muted)) !important;
-  font-size: 11px !important;
+  font-size:12px !important;
   line-height: 1.35 !important;
   overflow-wrap: anywhere !important;
 }
@@ -461,7 +461,7 @@
 :is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
   color: #ffffff !important;
   background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
-  box-shadow: 0 10px 22px rgba(14, 79, 62, .28) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 /* ---------- Sheets / modals ---------- */
@@ -551,7 +551,7 @@ html.theme-dark .os-shell .os-dock button.is-on,
 html.theme-dark .os-shell .os-dock button.active {
   color: #0c0e11 !important;
   background: linear-gradient(180deg, #e2e6ec, #c5cbd4) !important;
-  box-shadow: 0 10px 22px rgba(197, 203, 212, .22) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 html.theme-dark .os-shell .bf-today-situation {
   background:
@@ -563,7 +563,7 @@ html.theme-dark .os-shell .bf-today-add,
 html.theme-dark .os-shell .bf-os-decide {
   color: #0c0e11 !important;
   background: linear-gradient(180deg, #e8ecf2, #c5cbd4) !important;
-  box-shadow: 0 14px 30px rgba(197, 203, 212, .22) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 html.theme-aurora .os-shell.bf-app {
@@ -581,7 +581,7 @@ html.theme-aurora .os-shell .os-dock button.is-on,
 html.theme-aurora .os-shell .os-dock button.active {
   color: #0d0b1c !important;
   background: linear-gradient(180deg, #7ae0b4, #319e7b) !important;
-  box-shadow: 0 10px 24px rgba(101, 211, 166, .28) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 html.theme-aurora .os-shell .bf-today-situation {
   background:
@@ -593,7 +593,7 @@ html.theme-aurora .os-shell .bf-today-add,
 html.theme-aurora .os-shell .bf-os-decide {
   color: #0d0b1c !important;
   background: linear-gradient(180deg, #7ae0b4, #319e7b) !important;
-  box-shadow: 0 14px 30px rgba(101, 211, 166, .3) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 html.theme-navy .os-shell.bf-app {
@@ -611,7 +611,7 @@ html.theme-navy .os-shell .os-dock button.is-on,
 html.theme-navy .os-shell .os-dock button.active {
   color: #14100a !important;
   background: linear-gradient(180deg, #e0c07a, #c49a4a) !important;
-  box-shadow: 0 10px 24px rgba(212, 176, 106, .28) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 html.theme-navy .os-shell .bf-today-situation {
   background:
@@ -623,7 +623,7 @@ html.theme-navy .os-shell .bf-today-add,
 html.theme-navy .os-shell .bf-os-decide {
   color: #14100a !important;
   background: linear-gradient(180deg, #e0c07a, #c49a4a) !important;
-  box-shadow: 0 14px 30px rgba(212, 176, 106, .28) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 html.theme-cyber .os-shell.bf-app {
@@ -641,7 +641,7 @@ html.theme-cyber .os-shell .os-dock button.is-on,
 html.theme-cyber .os-shell .os-dock button.active {
   color: #04140e !important;
   background: linear-gradient(180deg, #9dffd4, #5ee0aa) !important;
-  box-shadow: 0 10px 24px rgba(124, 255, 196, .28) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 html.theme-cyber .os-shell .bf-today-situation {
   background:
@@ -653,7 +653,7 @@ html.theme-cyber .os-shell .bf-today-add,
 html.theme-cyber .os-shell .bf-os-decide {
   color: #04140e !important;
   background: linear-gradient(180deg, #9dffd4, #5ee0aa) !important;
-  box-shadow: 0 14px 30px rgba(124, 255, 196, .28) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 html.theme-dark .bf-modal,
@@ -664,7 +664,7 @@ html.theme-dark .bf-whats-new,
 html.theme-aurora .bf-whats-new,
 html.theme-navy .bf-whats-new,
 html.theme-cyber .bf-whats-new {
-  box-shadow: 0 28px 70px rgba(0, 0, 0, .55) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 /* Romanian labels never clip on chrome */

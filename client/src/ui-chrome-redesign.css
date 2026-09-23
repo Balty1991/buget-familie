@@ -6,7 +6,7 @@
 
 :root {
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-ui: "Outfit", "IBM Plex Sans", system-ui, sans-serif;
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
   --bf-chrome-radius: 16px;
   --bf-chrome-radius-sm: 12px;
   --bf-chrome-radius-lg: 22px;
@@ -33,7 +33,7 @@
 
 .os-shell,
 .bf-app {
-  font-size: 15.5px;
+  font-size:15px;
   line-height: 1.45;
   letter-spacing: -.011em;
 }
@@ -119,7 +119,7 @@
   padding: 0 18px !important;
   border-radius: var(--bf-chrome-radius) !important;
   font-family: var(--font-ui) !important;
-  font-size: 14.5px !important;
+  font-size:14px !important;
   font-weight: 680 !important;
   letter-spacing: -.015em !important;
   white-space: nowrap !important;
@@ -196,7 +196,7 @@
   color: var(--os-mint, var(--cf-primary-strong, var(--cf-primary))) !important;
   min-height: 44px !important;
   padding: 0 10px !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
 }
 
 .os-shell .bf-danger > button,
@@ -229,7 +229,7 @@
 .os-shell .bf-today-add.bf-os-decide {
   border-radius: 999px !important;
   min-height: 56px !important;
-  font-size: 16px !important;
+  font-size:15px !important;
   font-weight: 740 !important;
   gap: 12px !important;
 }
@@ -259,8 +259,8 @@
   border-radius: var(--bf-chrome-radius-sm) !important;
   padding: 0 14px !important;
   font-family: var(--font-ui) !important;
-  font-size: 13px !important;
-  font-weight: 650 !important;
+  font-size:14px !important;
+  font-weight: 600 !important;
   border: 0 !important;
   color: var(--os-muted, var(--cf-muted)) !important;
   background: transparent !important;
@@ -316,7 +316,7 @@
 .os-shell .bf-field label,
 .os-shell label.bf-field {
   font-family: var(--font-ui) !important;
-  font-size: 11px !important;
+  font-size:12px !important;
   font-weight: 680 !important;
   letter-spacing: .06em !important;
   color: var(--os-muted, var(--cf-muted)) !important;
@@ -350,7 +350,7 @@
 
 /* ---------- Dock polish ---------- */
 .os-shell .os-dock button {
-  font-size: 10.5px !important;
+  font-size:12px !important;
   font-weight: 680 !important;
   gap: 4px !important;
 }
@@ -405,7 +405,7 @@
   margin: 0 4px 2px !important;
   padding: 6px 4px !important;
   color: var(--os-muted, var(--cf-muted)) !important;
-  font-size: 11px !important;
+  font-size:12px !important;
   font-weight: 720 !important;
   letter-spacing: .12em !important;
   background: color-mix(in srgb, var(--os-bg, var(--cf-bg)) 88%, transparent) !important;
@@ -463,7 +463,7 @@
   width: 36px !important;
   height: 36px !important;
   padding: 0 !important;
-  border-radius: 11px !important;
+  border-radius:12px !important;
   color: var(--os-mint, var(--cf-primary)) !important;
   background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
   box-sizing: border-box !important;
@@ -474,7 +474,7 @@
   display: block !important;
   margin: 0 !important;
   font-size: 15px !important;
-  font-weight: 650 !important;
+  font-weight: 600 !important;
   line-height: 1.25 !important;
   color: var(--os-ink, var(--cf-ink)) !important;
   overflow: visible !important;
@@ -499,7 +499,7 @@
   display: block !important;
   margin: 2px 0 0 !important;
   color: var(--os-muted, var(--cf-muted)) !important;
-  font-size: 12.5px !important;
+  font-size:12px !important;
   font-weight: 500 !important;
   line-height: 1.35 !important;
   overflow: visible !important;
@@ -531,7 +531,7 @@
 .os-shell .bf-command-icon {
   width: 36px !important;
   height: 36px !important;
-  border-radius: 11px !important;
+  border-radius:12px !important;
   background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
 }
 
@@ -562,7 +562,7 @@
 .os-shell .bf-obligation-ai-icon {
   width: 44px !important;
   height: 44px !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   color: var(--os-mint-fg, #fff) !important;
   background: var(--os-mint, var(--cf-primary)) !important;
   box-shadow: 0 8px 16px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
@@ -586,7 +586,7 @@
 .os-shell .bf-obligation-ai p:not(.bf-kicker) {
   margin: 6px 0 0 !important;
   color: var(--os-muted, var(--cf-muted)) !important;
-  font-size: 13.5px !important;
+  font-size:14px !important;
   line-height: 1.45 !important;
 }
 
@@ -661,7 +661,7 @@
 
 .os-shell .bf-obligation-ledger > article span,
 .os-shell .bf-obligation-ledger > button span {
-  font-size: 10.5px !important;
+  font-size:12px !important;
   font-weight: 720 !important;
   letter-spacing: .1em !important;
   text-transform: uppercase !important;
@@ -806,7 +806,7 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 .os-shell .bf-insights-switch button {
   min-height: 44px !important;
   padding: 0 8px !important;
-  font-size: 13px !important;
+  font-size:14px !important;
   gap: 6px !important;
 }
 .os-shell .bf-insights-switch button svg {
@@ -856,7 +856,7 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
   width: 44px !important;
   height: 44px !important;
   margin: 0 0 10px !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
   border: 0 !important;
   color: var(--os-mint-fg, #fff) !important;
   background: var(--os-mint, var(--cf-primary)) !important;
@@ -914,7 +914,7 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 }
 .os-shell .bf-advisor-metrics small {
   color: var(--os-muted, var(--cf-muted)) !important;
-  font-size: 10px !important;
+  font-size:12px !important;
   font-weight: 720 !important;
   letter-spacing: .08em !important;
   text-transform: uppercase !important;
@@ -984,7 +984,7 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
   max-width: 38ch !important;
   margin: 0 !important;
   color: var(--os-muted, var(--cf-muted)) !important;
-  font-size: 13.5px !important;
+  font-size:14px !important;
   line-height: 1.45 !important;
 }
 .os-shell .bf-empty-mark {
@@ -1043,7 +1043,7 @@ html.theme-cyber .os-shell .bf-advisor-metrics b {
 @media (max-width: 370px) {
   .os-shell .bf-insights-switch button span,
   .os-shell .bf-insights-switch button {
-    font-size: 11.5px !important;
+    font-size:12px !important;
   }
   .os-shell .bf-advisor-metrics {
     grid-template-columns: 1fr !important;
@@ -1053,7 +1053,7 @@ html.theme-cyber .os-shell .bf-advisor-metrics b {
 .os-shell .bf-command-section {
   margin: 10px 4px 4px !important;
   color: var(--os-muted, var(--cf-muted)) !important;
-  font-size: 11px !important;
+  font-size:12px !important;
   font-weight: 720 !important;
   letter-spacing: .1em !important;
   text-transform: uppercase !important;

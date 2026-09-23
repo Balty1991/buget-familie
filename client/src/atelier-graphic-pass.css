@@ -31,8 +31,8 @@
   box-shadow: 0 22px 44px color-mix(in srgb, var(--cf-primary-strong) 28%, transparent) !important;
 }
 
-.bf-today-situation { border-radius: 6px 28px 6px 28px !important; }
-.bf-plan-resource-band { border-radius: 22px 6px 22px 6px !important; }
+.bf-today-situation { border-radius:6px 20px 6px 20px !important; }
+.bf-plan-resource-band { border-radius:20px 6px 20px 6px !important; }
 
 .bf-today-situation.risk,
 .bf-plan-resource-band.risk {
@@ -133,7 +133,7 @@
   gap: .35rem;
   margin: 0 !important;
   padding: .55rem .7rem .5rem !important;
-  border-radius: 22px !important;
+  border-radius:20px !important;
   border-color: rgba(255,255,255,.28) !important;
   background: rgba(255,255,255,.12) !important;
   color: var(--bf-on-hero) !important;
@@ -178,7 +178,7 @@
   background: #f7f4ea !important;
   border: 0 !important;
   border-radius: var(--bf-radius-control) !important;
-  box-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
+  box-shadow:var(--bf-shadow-raise) !important;
 }
 
 .bf-today-situation .bf-today-plan-link {
@@ -206,7 +206,7 @@
   border: 1px solid var(--cf-line) !important;
   border-top-width: 1px !important;
   border-right: 1px solid var(--cf-line) !important;
-  border-radius: 18px !important;
+  border-radius:20px !important;
   background: var(--cf-surface) !important;
   color: var(--cf-ink) !important;
   box-shadow: 0 10px 24px color-mix(in srgb, var(--cf-ink) 6%, transparent);
@@ -236,7 +236,7 @@
 }
 
 .bf-today-hub-links button > span {
-  border-radius: 11px !important;
+  border-radius:12px !important;
   background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) !important;
   color: var(--cf-primary-strong) !important;
 }
@@ -249,7 +249,7 @@
   border-radius: 50%;
   color: var(--cf-primary-strong) !important;
   background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) !important;
-  font-size: 11px !important;
+  font-size:12px !important;
 }
 
 .bf-decision-row.primary .bf-decision-index {
@@ -264,7 +264,7 @@
 
 .bf-tx-icon,
 .bf-household-feed span {
-  border-radius: 10px !important;
+  border-radius:12px !important;
 }
 
 /* —— Plicuri ca hârtie îndoită —— */
@@ -329,7 +329,7 @@
   box-shadow: inset 0 0 0 14px var(--cf-surface), 0 12px 28px color-mix(in srgb, var(--cf-ink) 10%, transparent);
 }
 
-.bf-allocation-chart svg text { fill: var(--cf-muted); font-size: 11px; }
+.bf-allocation-chart svg text { fill: var(--cf-muted); font-size:12px; }
 .bf-allocation-chart .bf-chart-zero { stroke: var(--cf-line); }
 .bf-allocation-chart .bf-chart-grid { stroke: color-mix(in srgb, var(--cf-line) 70%, transparent); }
 .bf-allocation-chart-empty {
@@ -343,11 +343,11 @@
     radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--cf-primary) 12%, transparent), transparent 46%),
     var(--cf-surface);
   border: 1px dashed var(--cf-line);
-  border-radius: 18px;
+  border-radius:20px;
 }
 
 .bf-today-empty-activity {
-  border-radius: 16px !important;
+  border-radius:20px !important;
   background:
     radial-gradient(circle at 12% 20%, color-mix(in srgb, var(--cf-primary) 14%, transparent), transparent 42%),
     var(--cf-surface) !important;
@@ -359,7 +359,7 @@
 }
 
 .bf-brand b {
-  font-family: "IBM Plex Serif", Georgia, serif;
+  font-family: "IBM Plex Sans", Georgia, serif;
   letter-spacing: -.04em;
 }
 
@@ -368,7 +368,7 @@
 .bf-brand-mark.bf-logo-3d {
   width: 36px;
   height: 36px;
-  border-radius: 11px 11px 14px 11px !important;
+  border-radius:12px 12px 12px 12px !important;
   background: linear-gradient(160deg, var(--cf-primary), var(--cf-primary-strong)) !important;
   border: 1px solid color-mix(in srgb, #fff 28%, var(--cf-primary-strong)) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 6px 14px color-mix(in srgb, var(--cf-primary-strong) 30%, transparent) !important;
@@ -385,7 +385,7 @@
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     gap: 4px !important;
     padding: 6px !important;
-    border-radius: 24px !important;
+    border-radius:20px !important;
     border: 1px solid var(--cf-line) !important;
     background: color-mix(in srgb, var(--cf-surface) 88%, transparent) !important;
     box-shadow: 0 16px 40px color-mix(in srgb, var(--cf-ink) 18%, transparent) !important;
@@ -393,7 +393,7 @@
 
   .bf-mobile-nav button {
     min-height: 56px !important;
-    border-radius: 18px !important;
+    border-radius:20px !important;
     color: var(--cf-muted) !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -415,7 +415,7 @@
     padding-bottom: calc(122px + env(safe-area-inset-bottom)) !important;
   }
 
-  .bf-today-situation { border-radius: 6px 22px 6px 22px !important; }
+  .bf-today-situation { border-radius:6px 20px 6px 20px !important; }
 
   .bf-today-situation-number {
     grid-template-columns: minmax(0, 1fr) auto !important;

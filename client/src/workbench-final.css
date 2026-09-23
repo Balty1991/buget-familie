@@ -1,5 +1,5 @@
 /* Atelierul Financiar: suprafețe de registru pentru decizii, nu carduri fintech generice. */
-.bf-topline .bf-primary { color: #fffdf8; background: var(--bf-forest, #123e35); box-shadow: 0 10px 22px rgba(18,62,53,.17); }
+.bf-topline .bf-primary { color: #fffdf8; background: var(--bf-forest, #123e35); box-shadow:var(--bf-shadow-raise); }
 .bf-topline .bf-primary::after { display: inline-block; width: 14px; height: 1px; margin-left: .35rem; vertical-align: middle; background: #efc94d; content: ""; }
 .bf-brand-mark { position: relative; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(18,62,53,.24), 0 3px 0 rgba(18,62,53,.1); }
 .bf-brand-mark::after { position: absolute; inset: auto .22rem .24rem; height: 2px; background: var(--bf-forest, #123e35); content: ""; opacity: .8; }

@@ -4,7 +4,7 @@
 .bf-receipt-images, .bf-receipt-split { display: grid; gap: .75rem; margin: 1rem 0; padding: 1rem; background: color-mix(in srgb, var(--bf-paper, #fffdf8) 92%, #e4f0e9); border: 1px solid color-mix(in srgb, var(--bf-forest, #123e35) 14%, transparent); border-radius: 1rem; }
 .bf-receipt-images > div, .bf-split-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .bf-receipt-images strong { color: var(--bf-forest, #123e35); font-size: .84rem; }
-.bf-upload-control, .bf-ocr-button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px; padding: .75rem 1rem; color: var(--bf-forest, #123e35); background: #fffdf8; border: 1px dashed color-mix(in srgb, var(--bf-forest, #123e35) 40%, transparent); border-radius: .85rem; font: inherit; font-size: .85rem; font-weight: 800; cursor: pointer; }
+.bf-upload-control, .bf-ocr-button { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 48px; padding: .75rem 1rem; color: var(--bf-forest, #123e35); background: #fffdf8; border: 1px dashed color-mix(in srgb, var(--bf-forest, #123e35) 40%, transparent); border-radius: .85rem; font: inherit; font-size: .85rem; font-weight:600; cursor: pointer; }
 .bf-upload-control input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .bf-ocr-button { color: #fffdf8; background: var(--bf-forest, #123e35); border-style: solid; }
 .bf-ocr-button:disabled, .bf-upload-control:has(input:disabled) { cursor: not-allowed; opacity: .55; }
@@ -30,10 +30,10 @@
 .bf-receipt-photo-card header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .bf-receipt-photo-card h2 { margin: .15rem 0 0; font-size: 1.15rem; line-height: 1.2; }
 .bf-receipt-photo-card > p { margin: 0; color: var(--cf-muted, #64716c); font-size: .78rem; line-height: 1.4; }
-.bf-receipt-photo-frame { min-height: 220px; display: grid; place-items: center; overflow: hidden; border-radius: 14px; background: color-mix(in srgb, var(--cf-ink, #10251f) 8%, var(--cf-surface, #fffefa)); color: var(--cf-muted, #64716c); font-size: .84rem; }
+.bf-receipt-photo-frame { min-height: 220px; display: grid; place-items: center; overflow: hidden; border-radius:12px; background: color-mix(in srgb, var(--cf-ink, #10251f) 8%, var(--cf-surface, #fffefa)); color: var(--cf-muted, #64716c); font-size: .84rem; }
 .bf-receipt-photo-frame img { width: 100%; max-height: min(68vh, 560px); object-fit: contain; display: block; }
 .bf-receipt-photo-switch { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.bf-receipt-photo-switch button { min-height: 40px; padding: 0 12px; border: 1px solid var(--cf-line, #e1ded5); border-radius: 12px; color: var(--cf-ink, #172d28); background: var(--cf-surface, #fffefa); font: inherit; font-size: .78rem; font-weight: 800; }
+.bf-receipt-photo-switch button { min-height: 40px; padding: 0 12px; border: 1px solid var(--cf-line, #e1ded5); border-radius: 12px; color: var(--cf-ink, #172d28); background: var(--cf-surface, #fffefa); font: inherit; font-size: .78rem; font-weight:600; }
 .bf-receipt-photo-switch button.active { color: var(--cf-primary-ink, #1e513f); border-color: color-mix(in srgb, var(--cf-primary, #1e513f) 40%, var(--cf-line)); background: color-mix(in srgb, var(--cf-primary, #1e513f) 12%, var(--cf-surface)); }
 .bf-receipt-photo-switch button:disabled { opacity: .4; }
 .dark .bf-receipt-photo-card { background: var(--cf-surface, #16352c); border-color: rgba(232, 245, 236, .14); }

@@ -13,7 +13,7 @@
 .dark .bf-modal { color: #edf7ef; }
 .dark .bf-modal .bf-field label, .dark .bf-modal .bf-field { color: #c5d8cc; }
 .dark .bf-modal .bf-field input, .dark .bf-modal .bf-field textarea, .dark .bf-modal .bf-field select { color: #f3faf5; border-color: #486a5a; background: #102b23; }
-.bf-ocr-info { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; padding: 10px 11px; border: 1px solid #d7bd69; border-radius: 11px; color: #695012; background: #fff7d9; font-size: 11px; font-weight: 700; line-height: 1.45; }
+.bf-ocr-info { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; padding: 10px 11px; border: 1px solid #d7bd69; border-radius:12px; color: #695012; background: #fff7d9; font-size:12px; font-weight:600; line-height: 1.45; }
 .bf-ocr-info svg { flex: 0 0 auto; margin-top: 1px; color: #a47714; }
 .dark .bf-ocr-info { border-color: #826a25; color: #f5df8c; background: #3b351d; }
 .dark .bf-ocr-info svg { color: #f2cd52; }

@@ -25,14 +25,14 @@
   --cf-primary-strong: #125643 !important;
   --cf-on-forest: #fff !important;
   --cf-glow: transparent !important;
-  --os-bg: #e8ece9 !important;
-  --os-surface: #fafbfa !important;
-  --os-surface-2: #e4ebe6 !important;
-  --os-fg: #0c1612 !important;
-  --os-muted: #4a5852 !important;
-  --os-mint: #176b54 !important;
-  --os-mint-fg: #fff !important;
-  --os-line: #c5cec8 !important;
+  --os-bg: var(--cf-bg) !important;
+  --os-surface: var(--cf-surface) !important;
+  --os-surface-2: var(--cf-surface-alt) !important;
+  --os-fg: var(--cf-ink) !important;
+  --os-muted: var(--cf-muted) !important;
+  --os-mint: var(--cf-primary) !important;
+  --os-mint-fg: var(--cf-on-forest) !important;
+  --os-line: var(--cf-line) !important;
 }
 
 html.theme-dark {
@@ -42,19 +42,19 @@ html.theme-dark {
   --cf-ink: #eceff3 !important;
   --cf-muted: #9aa3ad !important;
   --cf-line: #2a2e35 !important;
-  --cf-primary: #b8bec8 !important;
-  --cf-primary-strong: #d4d8e0 !important;
-  --cf-on-forest: #0c0d0f !important;
-  --cf-on-primary: #0c0d0f !important;
+  --cf-primary: #7dcfab !important;
+  --cf-primary-strong: #a5e0c4 !important;
+  --cf-on-forest: #062018 !important;
+  --cf-on-primary: #062018 !important;
   --cf-glow: transparent !important;
-  --os-bg: #0c0d0f !important;
-  --os-surface: #16181c !important;
-  --os-surface-2: #1e2126 !important;
-  --os-fg: #eceff3 !important;
-  --os-muted: #9aa3ad !important;
-  --os-mint: #b8bec8 !important;
-  --os-mint-fg: #0c0d0f !important;
-  --os-line: #2a2e35 !important;
+  --os-bg: var(--cf-bg) !important;
+  --os-surface: var(--cf-surface) !important;
+  --os-surface-2: var(--cf-surface-alt) !important;
+  --os-fg: var(--cf-ink) !important;
+  --os-muted: var(--cf-muted) !important;
+  --os-mint: var(--cf-primary) !important;
+  --os-mint-fg: var(--cf-on-forest) !important;
+  --os-line: var(--cf-line) !important;
 }
 
 html.theme-aurora {
@@ -68,14 +68,14 @@ html.theme-aurora {
   --cf-primary-strong: #3fb88a !important;
   --cf-on-forest: #0c0b16 !important;
   --cf-glow: transparent !important;
-  --os-bg: #0c0b16 !important;
-  --os-surface: #15132a !important;
-  --os-surface-2: #1e1b38 !important;
-  --os-fg: #f4f1ff !important;
-  --os-muted: #b8b0cc !important;
-  --os-mint: #65d3a6 !important;
-  --os-mint-fg: #0c0b16 !important;
-  --os-line: #35305a !important;
+  --os-bg: var(--cf-bg) !important;
+  --os-surface: var(--cf-surface) !important;
+  --os-surface-2: var(--cf-surface-alt) !important;
+  --os-fg: var(--cf-ink) !important;
+  --os-muted: var(--cf-muted) !important;
+  --os-mint: var(--cf-primary) !important;
+  --os-mint-fg: var(--cf-on-forest) !important;
+  --os-line: var(--cf-line) !important;
 }
 
 html.theme-navy {
@@ -89,14 +89,14 @@ html.theme-navy {
   --cf-primary-strong: #c49a4a !important;
   --cf-on-forest: #12100a !important;
   --cf-glow: transparent !important;
-  --os-bg: #080e1a !important;
-  --os-surface: #10182a !important;
-  --os-surface-2: #172238 !important;
-  --os-fg: #eef2f8 !important;
-  --os-muted: #9aa8be !important;
-  --os-mint: #d4b06a !important;
-  --os-mint-fg: #12100a !important;
-  --os-line: #243350 !important;
+  --os-bg: var(--cf-bg) !important;
+  --os-surface: var(--cf-surface) !important;
+  --os-surface-2: var(--cf-surface-alt) !important;
+  --os-fg: var(--cf-ink) !important;
+  --os-muted: var(--cf-muted) !important;
+  --os-mint: var(--cf-primary) !important;
+  --os-mint-fg: var(--cf-on-forest) !important;
+  --os-line: var(--cf-line) !important;
 }
 
 html.theme-cyber {
@@ -110,12 +110,12 @@ html.theme-cyber {
   --cf-primary-strong: #5ee0aa !important;
   --cf-on-forest: #04140e !important;
   --cf-glow: transparent !important;
-  --os-bg: #050708 !important;
-  --os-surface: #0e1318 !important;
-  --os-surface-2: #141c22 !important;
-  --os-fg: #e8eeea !important;
-  --os-muted: #8a968f !important;
+  --os-bg: var(--cf-bg) !important;
+  --os-surface: var(--cf-surface) !important;
+  --os-surface-2: var(--cf-surface-alt) !important;
+  --os-fg: var(--cf-ink) !important;
+  --os-muted: var(--cf-muted) !important;
   --os-mint: #7cffc4 !important;
-  --os-mint-fg: #04140e !important;
-  --os-line: #1e2c26 !important;
+  --os-mint-fg: var(--cf-on-forest) !important;
+  --os-line: var(--cf-line) !important;
 }

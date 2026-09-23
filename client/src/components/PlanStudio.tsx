@@ -10,7 +10,7 @@ import "../plan-studio.css";
 import "../envelope-source.css";
 import "../envelope-transfer.css";
 import "../envelope-insights.css";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
@@ -30,6 +30,7 @@ import { leiLabel } from "@/lib/chart-ui";
 import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-prefs";
 import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/EnvelopeConflictBanner";
 import { canAddEnvelope, PLANS } from "@/lib/entitlements";
+import { RoDateInput } from "@/components/RoDateInput";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -61,6 +62,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const categories = [...expenseCategories, ...data.settings.customCategories.filter((category) => !expenseCategories.includes(category))];
   const [cycleStart, setCycleStart] = useState(plan.periodStart);
   const [cycleEnd, setCycleEnd] = useState(plan.nextPayday || "");
+  const cycleRef = useRef({ start: cycleStart, end: cycleEnd });
+  cycleRef.current.start = cycleStart;
+  cycleRef.current.end = cycleEnd;
   const [cycleFlex, setCycleFlex] = useState(plan.paydayFlexDays ?? 3);
   const [cycleError, setCycleError] = useState("");
   const [cycleTemplateLabel, setCycleTemplateLabel] = useState("");
@@ -259,7 +263,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     setCycleError("");
   };
   const autoApplyPeriod = () => {
-    persistCycle(cycleStart, cycleEnd, cycleFlex);
+    persistCycle(cycleRef.current.start, cycleRef.current.end, cycleFlex);
   };
   const saveCycleTemplate = () => {
     if (!periodValid) return setCycleError(t("Alege perioada înainte de a salva șablonul."));
@@ -447,9 +451,14 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       )}
     </section>
 
+    <details className="bf-plan-tools">
+      <summary>{t("Alege ritmul casei.")}</summary>
     <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">{t("REPARTIZARE PE PERIOADĂ")}</p><h2 id="allocation-period-title">{t("Alege ritmul casei.")}</h2><p>{t("Vezi banii disponibili pentru intervalul în care iei decizia.")}</p></div><span>{money(Math.max(0, unrepartized))}<small>{t("rămași de repartizat")}</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label={t("Perioada repartizării")}>{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>{t("disponibil în surse")}</small></span><span><b>{money(reservedInEnvelopes)}</b><small>{t("în plicuri")}</small></span><span><b>{money(scheduled)}</b><small>{t("scadențe rezervate")}</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>{t("de repartizat")}</small></span></div></section>
+    </details>
 
 
+    <details className="bf-plan-tools">
+      <summary>{t("Unelte: propunere, simulare, ghid")}</summary>
     <section className="bf-plan-cashflow-suggest" aria-labelledby="bf-cashflow-suggest-title">
       <div>
         <p className="bf-kicker">{t("DIN FLUXUL REAL")}</p>
@@ -508,15 +517,18 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         <li className={activeCycle ? "complete" : "upcoming"}><span>03</span><div><b>{t("Ritmul")}</b><small>{activeCycle ? t("Gata de urmărit") : t("Se activează cu perioada")}</small></div></li>
       </ol>
     </section>
+    </details>
 
     {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">{t("ACUM · TRANȘA S{index}", { index: activeWeek.index })}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>{t("Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.")}</span></div><strong>{money(activeWeek.amount)}<small>{t("ritm total")}</small></strong></section>}
 
     <section className="bf-cycle-setup" aria-labelledby="cycle-setup-title">
       <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">{t("CATEGORII")}</p><h2 id="cycle-setup-title">{t("Unde merge fiecare leu")}</h2></div><span>{envelopesLabel(envelopes.length)} · {money(allocated)}</span></div>
       <p>{t("Perioada e opțională — o folosesc doar categoriile cu ritm săptămânal. Data salariului poate varia; alege o fereastră, nu o zi exactă.")}</p>
+      <details className="bf-plan-period">
+        <summary>{t("Perioada salariului, dacă vrei ritm săptămânal")}</summary>
       <div className="bf-cycle-setup-fields">
-        <PlanField label={t("Prima zi a perioadei (opțional)")}><input type="date" value={cycleStart} onChange={(event) => { setCycleStart(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
-        <PlanField label={t("Data obișnuită a salariului")} hint={t("Alege ziua la care vine de obicei, nu trebuie să fie exactă.")}><input type="date" min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { setCycleEnd(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
+        <PlanField label={t("Prima zi a perioadei (opțional)")}><RoDateInput value={cycleStart} onChange={(event) => { cycleRef.current.start = event.target.value; setCycleStart(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
+        <PlanField label={t("Data obișnuită a salariului")} hint={t("Alege ziua la care vine de obicei, nu trebuie să fie exactă.")}><RoDateInput min={cycleStart || undefined} value={cycleEnd} onChange={(event) => { cycleRef.current.end = event.target.value; setCycleEnd(event.target.value); setCycleError(""); }} onBlur={autoApplyPeriod} /></PlanField>
         <PlanField label={t("Poate varia cu")} hint={t("Dacă salariul întârzie sau vine mai devreme.")}>
           <select value={cycleFlex} onChange={(event) => { const flex = Number(event.target.value); setCycleFlex(flex); persistCycle(cycleStart, cycleEnd, flex); }}>
             <option value={0}>{t("Nu variază")}</option>
@@ -531,7 +543,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       {windowPayday.typical && windowPayday.flex > 0 && <p className="bf-payday-window">Tranșele țin până pe {formatDate(windowPayday.typical)}. Dacă salariul întârzie, plicurile rămân active până pe {formatDate(windowPayday.latest)}; ritmul zilnic e calculat ca și cum ar veni pe {formatDate(windowPayday.earliest)}.</p>}
       {activeCycle && <div className="bf-cycle-tranches"><div><span>{t("RITM ORIENTATIV, DOAR CATEGORIILE CU RITM SĂPTĂMÂNAL")}</span><b>{money(activeCycle.weeklyAmount)} / {t("săptămână")}</b></div><details className="bf-cycle-tools"><summary><span>{t("Vezi cele {count} tranșe", { count: activeCycle.weeks.length })}</span><ChevronDown size={17} /></summary><ol>{activeCycle.weeks.map((week) => { const spent = weekSpentByIndex.get(week.index) || 0; return <li key={week.index}><span>S{week.index}</span><b>{formatDate(week.start)} – {formatDate(week.end)}</b><small>{t("{spent} cheltuiți din {amount}", { spent: money(spent), amount: money(week.amount) })}</small><strong>{money(Math.max(0, week.amount - spent))}</strong></li>; })}</ol></details></div>}
       {cycleError && <p className="bf-form-error" role="alert">{cycleError}</p>}
-      <div className="bf-cycle-setup-actions"><button disabled={!activeCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> {t("PDF plan")}</button></div>
+      <div className="bf-cycle-setup-actions"><button disabled={!activeCycle} onClick={() => void exportCyclePdf()}><FileDown size={17} /> {t("Descarcă planul")}</button></div>
+      </details>
 
       <section className={`bf-allocation-guidance ${allocationHealth}`} aria-labelledby="bf-allocation-guidance-title"><div className="bf-allocation-guidance-heading"><div><p className="bf-kicker">{t("REPARTIZARE GHIDATĂ")}</p><h2 id="bf-allocation-guidance-title">{unrepartized > 0 ? <>{t("Înainte să adaugi un plic, vezi")} <em>{t("ce mai trebuie acoperit.")}</em></> : unrepartized < 0 ? t("Plicurile depășesc disponibilul") : t("Banii disponibili sunt repartizați")}</h2><p>{allocationHealthLabel}. {t("Plicurile sunt limite de planificare; nu mută bani din card sau cash.")}</p></div><WalletCards size={23} aria-hidden="true" /></div><div className="bf-allocation-guidance-stats"><span><small>{t("Disponibil în surse")}</small><b>{money(Math.max(0, availableSources))}</b></span><span><small>{t("În plicuri")}</small><b>{money(Math.max(0, reservedInEnvelopes))}</b></span><span><small>{t("Scadențe")}</small><b>{money(Math.max(0, scheduled))}</b></span><span><small>{t("De repartizat")}</small><b>{money(Math.max(0, unrepartized))}</b></span></div>{unrepartized > 0 && <button type="button" className="bf-allocation-guidance-action" onClick={() => { setAllocationAmount(String(Math.round(unrepartized))); setAllocationError(""); document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>{t("Folosește suma nealocată pentru următorul plic")} <ChevronDown size={15} /></button>}{unrepartized < 0 && <p className="bf-form-error" role="alert">{t("Limitele plicurilor și scadențele depășesc soldul disponibil. Redu un plic sau verifică sursele înainte de a continua.")}</p>}</section><p className="bf-allocation-intro">{t("Adaugă o categorie pentru fiecare parte a banilor: alimente, taxi, abonamente, consumabile copil. La o cheltuială reală, alegi categoria și aplicația scade automat din plicul potrivit.")}</p>
       <div id="bf-allocation-builder" className="bf-allocation-builder">
@@ -661,7 +674,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
                 : <small>{t("Nu prisosește nimic de mutat în săptămânile următoare.")}</small>}
             </div>;
           })()}
-          <p className="bf-allocation-why"><b>{state === "over" ? t("De ce cere atenție") : state === "watch" ? t("De ce apare aici") : t("Cum se citește")}:</b> {state === "over" ? `Ai depășit limita cu ${money(Math.abs(remaining))}. Redu suma planificată sau revizuiește cheltuielile înainte de următorul venit.` : state === "watch" ? `${Math.round(usage * 100)}% din plic este consumat; mai ai ${money(Math.max(0, remaining))} pentru perioada aleasă.` : week ? `Mai ai ${money(Math.max(0, remaining))} în plic, iar ritmul săptămânal este ${money(week.budget)}.` : `Ai planificat ${money(budget)} pentru această categorie, fără presiune pe o tranșă săptămânală.`}</p>
+          {(state === "over" || state === "watch") && <p className="bf-allocation-why"><b>{state === "over" ? t("De ce cere atenție") : t("De ce apare aici")}:</b> {state === "over" ? `Ai depășit limita cu ${money(Math.abs(remaining))}. Redu suma planificată sau revizuiește cheltuielile înainte de următorul venit.` : `${Math.round(usage * 100)}% din plic este consumat; mai ai ${money(Math.max(0, remaining))} pentru perioada aleasă.`}</p>}
           {week && weeks.length > 1 && <div className="bf-week-transfer">
             {weekTransferAllocationId === item.id ? <div className="bf-week-transfer-form">
               <div className="bf-week-transfer-direction" role="group" aria-label={t("Sensul mutării")}>
@@ -683,8 +696,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.")}</span></div>}
             </div>
       <EnvelopeTransferPanel data={data} onChange={onChange} />
-      {!simpleMode && <SalaryRitualPanel data={data} onChange={onChange} />}
-      {!simpleMode && <AllocationHistoryPanel data={data} />}
+      {!simpleMode && <details className="bf-plan-tools"><summary>{t("Ritual de salariu și istoric")}</summary><SalaryRitualPanel data={data} onChange={onChange} /><AllocationHistoryPanel data={data} /></details>}
     </section>
     {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} remainingById={Object.fromEntries(envelopes.map((envelope) => [envelope.item.id, Math.max(0, envelope.remaining)]))} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
     <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> {t("Instrumente pentru perioade repetate")}</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>{t("Un șablon reține doar durata perioadei; începi mereu următorul ciclu cu data aleasă de tine.")}</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={periodValid ? `ex. Salariu ${daysBetween(cycleStart, cycleEnd)} zile` : t("Completează mai întâi perioada")} disabled={!periodValid} /><button disabled={!periodValid} onClick={saveCycleTemplate}>{t("Salvează șablonul")}</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>{t("Salvează")}</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>{t("Anulează")}</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>{t("Nu ai șabloane salvate încă.")}</span>}</div></div></details>

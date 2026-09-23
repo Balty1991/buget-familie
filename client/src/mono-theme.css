@@ -2,9 +2,7 @@
  * Temă Alb — Atelier Platinum (default).
  * Suprafețe moi, pin cald, ierarhie clară. Fără blocuri ink stark, fără neon.
  * --cf-on-primary este obligatoriu pe umplutura de accent.
- */
-html.theme-ink,
-html.theme-white {
+ */html.theme-white{
   --cf-bg: #f1f0ec;
   --cf-surface: #fbfaf7;
   --cf-surface-alt: #e7e4dc;
@@ -22,45 +20,28 @@ html.theme-white {
   --cf-nav: rgba(251, 250, 247, .94);
   --cf-shadow: 0 14px 34px rgba(26, 36, 32, .08);
   --cf-glow: rgba(47, 107, 85, .1);
-}
-
-.theme-ink .bf-app,
-.theme-white .bf-app {
+}.theme-white .bf-app{
   background:
     radial-gradient(720px 420px at 100% -8%, rgba(47, 107, 85, .08), transparent 58%),
     radial-gradient(520px 360px at -8% 88%, rgba(212, 176, 106, .06), transparent 55%),
     var(--cf-bg) !important;
-}
-.theme-ink .bf-app::before,
-.theme-white .bf-app::before {
+}.theme-white .bf-app::before{
   opacity: .09;
   background-image:
     linear-gradient(rgba(26, 36, 32, .035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(26, 36, 32, .035) 1px, transparent 1px);
   background-size: 24px 24px;
-}
-.theme-ink .bf-appbar::after,
-.theme-white .bf-appbar::after {
+}.theme-white .bf-appbar::after{
   width: 64px;
   background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong));
-}
-.theme-ink .bf-mobile-nav button.active,
-.theme-white .bf-mobile-nav button.active {
+}.theme-white .bf-mobile-nav button.active{
   background: linear-gradient(135deg, var(--cf-primary), var(--cf-primary-strong)) !important;
   color: #ffffff !important;
-}
-.theme-ink .bf-primary,
-.theme-white .bf-primary {
+}.theme-white .bf-primary{
   color: #ffffff !important;
   background: var(--cf-primary-strong) !important;
-  box-shadow: 0 8px 18px rgba(31, 82, 64, .22) !important;
-}
-.theme-ink .bf-theme-picker,
-.theme-white .bf-theme-picker { background: #fbfaf7; }
-.theme-ink .bf-theme-option,
-.theme-white .bf-theme-option { border-color: #d5d2c8; background: #fff; }
-.theme-ink .bf-theme-option.selected,
-.theme-white .bf-theme-option.selected { border-color: #2f6b55; box-shadow: 0 0 0 2px rgba(47, 107, 85, .16); }
+  box-shadow:var(--bf-shadow-rest) !important;
+}.theme-white .bf-theme-picker{ background: #fbfaf7; }.theme-white .bf-theme-option{ border-color: #d5d2c8; background: #fff; }.theme-white .bf-theme-option.selected{ border-color: #2f6b55; box-shadow: 0 0 0 2px rgba(47, 107, 85, .16); }
 
 .bf-theme-preview.ink,
 .bf-theme-preview.white {
@@ -82,11 +63,8 @@ html.theme-white {
   background-image: linear-gradient(rgba(47, 107, 85, .12) 1px, transparent 1px),
     linear-gradient(90deg, rgba(47, 107, 85, .12) 1px, transparent 1px);
   background-size: 8px 8px;
-}
-
-/* Dark / Grafit — argintiu cald, lizibil pe OLED */
-html.theme-graphite,
-html.theme-dark {
+}/* Dark / Grafit — argintiu cald, lizibil pe OLED */
+html.theme-dark{
   --cf-primary: #b8bec8;
   --cf-primary-strong: #d4d8e0;
   --cf-info: #aeb6c2;
@@ -96,17 +74,9 @@ html.theme-dark {
   --cf-glow: rgba(184, 190, 200, .12);
 }
 
-@media (max-width: 480px) {
-  .theme-ink .bf-appbar,
-  .theme-white .bf-appbar,
-  .theme-graphite .bf-appbar,
-  .theme-dark .bf-appbar {
+@media (max-width: 480px) {.theme-white .bf-appbar, .theme-dark .bf-appbar{
     backdrop-filter: blur(12px);
-  }
-  .theme-ink .bf-mobile-nav button,
-  .theme-white .bf-mobile-nav button,
-  .theme-graphite .bf-mobile-nav button,
-  .theme-dark .bf-mobile-nav button {
+  }.theme-white .bf-mobile-nav button, .theme-dark .bf-mobile-nav button{
     min-height: 48px;
   }
 }

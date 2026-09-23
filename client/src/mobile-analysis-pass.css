@@ -4,7 +4,7 @@
 }
 
 .bf-analysis .bf-analysis-control {
-  border-radius: 16px;
+  border-radius:20px;
   border: 1px solid var(--cf-line);
   background: var(--cf-surface);
 }
@@ -13,7 +13,7 @@
   position: relative;
   overflow: hidden;
   border: 0;
-  border-radius: 18px;
+  border-radius:20px;
   box-shadow: 0 12px 28px color-mix(in srgb, var(--cf-ink), transparent 93%);
 }
 
@@ -51,18 +51,18 @@
 .bf-analysis .bf-analysis-snapshot-stats span {
   min-width: 0;
   padding: 10px;
-  border-radius: 11px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--cf-surface), transparent 70%);
 }
 
 .bf-analysis .bf-analysis-next-step {
   border-left: 3px solid var(--analysis-accent);
-  border-radius: 13px;
+  border-radius:12px;
 }
 
 .bf-analysis .bf-analysis-next-step button {
   min-height: 42px;
-  border-radius: 10px;
+  border-radius:12px;
   white-space: nowrap;
 }
 
@@ -71,7 +71,7 @@
 .bf-analysis .bf-spend-compass,
 .bf-analysis .bf-analysis-watch,
 .bf-analysis .bf-analysis-balance {
-  border-radius: 16px;
+  border-radius:20px;
 }
 
 .bf-analysis .bf-analysis-section-heading h2 {
@@ -80,7 +80,7 @@
 
 .bf-analysis .bf-analysis-chart button {
   min-height: 110px;
-  border-radius: 11px;
+  border-radius:12px;
 }
 
 .bf-analysis .bf-spend-category-pills button,
@@ -88,7 +88,7 @@
 .bf-analysis .bf-analysis-watch article,
 .bf-analysis .bf-analysis-balance article {
   min-height: 54px;
-  border-radius: 11px;
+  border-radius:12px;
 }
 
 @media (max-width: 640px) {
@@ -105,7 +105,7 @@
 
   .bf-analysis .bf-analysis-control h2 {
     max-width: 15ch;
-    font-size: 26px;
+    font-size:22px;
   }
 
   .bf-analysis .bf-analysis-control label {
@@ -162,7 +162,7 @@
   }
 
   .bf-analysis .bf-analysis-snapshot-stats small {
-    font-size: 8px;
+    font-size:12px;
   }
 
   .bf-analysis .bf-analysis-snapshot-stats b {
@@ -176,7 +176,7 @@
   }
 
   .bf-analysis .bf-analysis-next-step h2 {
-    font-size: 20px;
+    font-size:22px;
   }
 
   .bf-analysis .bf-analysis-next-step button {
@@ -200,7 +200,7 @@
   }
 
   .bf-analysis .bf-analysis-month-heading > span {
-    font-size: 18px;
+    font-size:17px;
   }
 
   .bf-analysis .bf-analysis-flow {
@@ -215,7 +215,7 @@
 
   .bf-analysis .bf-analysis-flow article em {
     max-width: none;
-    font-size: 10px;
+    font-size:12px;
   }
 
   .bf-analysis .bf-analysis-year,
@@ -231,13 +231,13 @@
   }
 
   .bf-analysis .bf-analysis-section-heading h2 {
-    font-size: 23px;
+    font-size:22px;
   }
 
   .bf-analysis .bf-analysis-section-heading > span {
     max-width: 11ch;
     text-align: right;
-    font-size: 9px;
+    font-size:12px;
   }
 
   .bf-analysis .bf-analysis-chart {
@@ -252,7 +252,7 @@
   }
 
   .bf-analysis .bf-analysis-chart button b {
-    font-size: 9px;
+    font-size:12px;
   }
 
   .bf-analysis .bf-analysis-legend {

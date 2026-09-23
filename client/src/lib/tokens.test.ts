@@ -29,12 +29,13 @@ describe("tokenii de temă", () => {
   it("câștigă la finalul foilor amânate", () => {
     const deferred = read("deferred-styles.ts");
     const imports = [...deferred.matchAll(/import "\.\/([^"]+)";/g)].map((match) => match[1]);
-    expect(imports.at(-6)).toBe("tokens.css");
-    expect(imports.at(-5)).toBe("today.css");
-    expect(imports.at(-4)).toBe("movements.css");
-    expect(imports.at(-3)).toBe("plan.css");
-    expect(imports.at(-2)).toBe("obligations.css");
-    expect(imports.at(-1)).toBe("analysis.css");
+    expect(imports.at(-7)).toBe("tokens.css");
+    expect(imports.at(-6)).toBe("today.css");
+    expect(imports.at(-5)).toBe("movements.css");
+    expect(imports.at(-4)).toBe("plan.css");
+    expect(imports.at(-3)).toBe("obligations.css");
+    expect(imports.at(-2)).toBe("analysis.css");
+    expect(imports.at(-1)).toBe("design-system-37.css");
   });
 });
 

@@ -24,8 +24,8 @@
   height: 48px !important;
   gap: 1px !important;
   border-radius: 999px !important;
-  font-size: 10px !important;
-  font-weight: 650 !important;
+  font-size:12px !important;
+  font-weight: 600 !important;
 }
 
 .os-shell .os-dock button svg {
@@ -38,7 +38,7 @@
   height: var(--os-tap) !important;
   min-width: var(--os-tap) !important;
   min-height: var(--os-tap) !important;
-  border-radius: 14px !important;
+  border-radius:12px !important;
 }
 
 /* App bar mai aerisit */
@@ -68,7 +68,7 @@
 }
 
 .os-shell .bf-kicker {
-  font-size: 10px !important;
+  font-size:12px !important;
   letter-spacing: 0.14em !important;
   opacity: 0.85 !important;
 }
@@ -88,8 +88,8 @@
   min-height: var(--os-tap) !important;
   padding-left: 16px !important;
   padding-right: 16px !important;
-  border-radius: 14px !important;
-  font-weight: 650 !important;
+  border-radius:12px !important;
+  font-weight: 600 !important;
 }
 
 .os-shell .bf-link-button {
@@ -109,7 +109,7 @@
 .os-shell .bf-more-grid > button,
 .os-shell .bf-more-nav button {
   min-height: 72px !important;
-  border-radius: 16px !important;
+  border-radius:20px !important;
   padding: 14px 12px !important;
   text-align: left !important;
 }
@@ -121,10 +121,10 @@
   align-items: flex-start;
   margin: 0 0 14px;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--os-warn, #e8c38a) 14%, var(--os-surface));
   color: var(--os-fg);
-  font-size: 13px;
+  font-size:14px;
   line-height: 1.4;
 }
 
@@ -138,9 +138,9 @@
   display: inline-block;
   margin-top: 4px;
   padding: 6px 8px;
-  border-radius: 8px;
+  border-radius:12px;
   background: var(--os-surface-2);
-  font-size: 13px;
+  font-size:14px;
   letter-spacing: 0.08em;
   word-break: break-all;
   user-select: all;
@@ -175,7 +175,7 @@
   gap: 10px;
   margin-top: 14px;
   padding: 14px;
-  border-radius: 14px;
+  border-radius:12px;
   border: 1px solid var(--os-line);
   background: var(--os-surface-2);
 }
@@ -194,7 +194,7 @@
   gap: 10px;
   align-items: center;
   padding: 12px;
-  border-radius: 14px;
+  border-radius:12px;
   background: var(--os-surface-2);
   border: 1px solid var(--os-line);
 }
@@ -245,7 +245,7 @@
   display: grid;
   gap: 10px;
   padding: 12px;
-  border-radius: 14px;
+  border-radius:12px;
   background: var(--os-surface);
   border: 1px solid var(--os-line);
 }
@@ -263,8 +263,8 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--os-warn, #e8c38a) 22%, transparent);
   color: var(--os-warn, #e8c38a);
-  font-size: 10px;
-  font-weight: 700;
+  font-size:12px;
+  font-weight:600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   vertical-align: middle;
@@ -276,7 +276,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 10px;
-  font-size: 13px;
+  font-size:14px;
 }
 
 @media (min-width: 400px) {
@@ -345,7 +345,7 @@
   border-radius: 999px;
   background: var(--os-fg, var(--cf-ink));
   color: var(--os-bg, var(--cf-bg));
-  font-size: 10px;
+  font-size:12px;
   font-weight: 750;
   letter-spacing: 0;
   line-height: 1;
@@ -382,7 +382,7 @@
   background: var(--os-surface, var(--cf-surface));
   color: var(--os-muted, var(--cf-muted));
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .bf-movement-scope button.active {
   background: var(--os-fg, var(--cf-ink));
@@ -400,7 +400,7 @@
   margin: 0 0 14px;
   padding: 14px 15px;
   border: 1px dashed color-mix(in srgb, var(--cf-line), transparent 10%);
-  border-radius: 14px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--cf-surface-alt), transparent 30%);
 }
 .bf-sync-local-only ul {

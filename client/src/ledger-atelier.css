@@ -16,7 +16,7 @@
 .bf-envelope-lip { fill: color-mix(in srgb, var(--cf-surface) 55%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.1; }
 .bf-envelope-grain { fill: var(--cf-ink); opacity: .28; pointer-events: none; }
 .bf-envelope-seal { fill: var(--cf-warning); stroke: color-mix(in srgb, var(--cf-ink) 35%, var(--cf-warning)); stroke-width: 1; }
-.bf-envelope-seal-text { fill: #3a2410; font-size: 7px; font-weight: 800; font-family: "IBM Plex Sans", system-ui, sans-serif; }
+.bf-envelope-seal-text { fill: #3a2410; font-size:12px; font-weight:600; font-family: "IBM Plex Sans", system-ui, sans-serif; }
 .bf-envelope-mark.watch .bf-envelope-fill,
 .bf-envelope-mark.watch .bf-envelope-window-fill { fill: var(--cf-warning); }
 .bf-envelope-mark.watch .bf-envelope-seal { fill: var(--cf-warning); }
@@ -44,12 +44,12 @@
 .bf-health-gauge-track { stroke: color-mix(in srgb, var(--cf-ink) 16%, var(--cf-surface)); stroke-width: 12; stroke-linecap: round; }
 .bf-health-gauge-arc { stroke-width: 12; stroke-linecap: round; }
 .bf-health-gauge-tick { stroke: color-mix(in srgb, var(--cf-ink) 35%, transparent); stroke-width: 1.4; }
-.bf-health-gauge-end { fill: var(--cf-muted); font-size: 9px; font-weight: 800; }
+.bf-health-gauge-end { fill: var(--cf-muted); font-size:12px; font-weight:600; }
 .bf-health-gauge-score {
   fill: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
+  font-family: "IBM Plex Sans", Georgia, serif;
   font-size: 28px;
-  font-weight: 700;
+  font-weight:600;
 }
 .bf-health-needle { fill: var(--cf-ink); }
 .bf-health-needle-hub { fill: var(--cf-ink); stroke: var(--cf-surface); stroke-width: 2; }
@@ -104,8 +104,8 @@
 .bf-today-envelopes-heading h2 {
   margin: 4px 0 0;
   color: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
-  font-size: 24px;
+  font-family: "IBM Plex Sans", Georgia, serif;
+  font-size:22px;
   line-height: 1.12;
   letter-spacing: -.03em;
 }
@@ -114,11 +114,11 @@
   min-height: 40px;
   padding: 0 12px;
   border: 1px solid var(--cf-line);
-  border-radius: 10px;
+  border-radius:12px;
   color: var(--cf-ink);
   background: var(--cf-surface-alt);
   font-size: 12px;
-  font-weight: 800;
+  font-weight:600;
 }
 .bf-desk-top {
   display: grid;
@@ -155,7 +155,7 @@
   background-image:
     linear-gradient(color-mix(in srgb, var(--cf-ink) 8%, transparent) 1px, transparent 1px);
   background-size: 100% 14px;
-  border-radius: 10px;
+  border-radius:12px;
 }
 .bf-today-pulse-chart span { display: grid; grid-template-rows: 72px auto; justify-items: center; gap: 6px; }
 .bf-today-pulse-chart i {
@@ -171,8 +171,8 @@
 }
 .bf-today-pulse-chart b {
   color: var(--cf-muted);
-  font-size: 9px;
-  font-weight: 800;
+  font-size:12px;
+  font-weight:600;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -192,13 +192,13 @@
 .bf-cash-note-body { fill: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)); stroke: var(--cf-line); }
 .bf-cash-note-frame { fill: none; stroke: color-mix(in srgb, var(--cf-primary-strong) 45%, var(--cf-line)); stroke-dasharray: 5 4; }
 .bf-cash-note-rosette { fill: none; stroke: color-mix(in srgb, var(--cf-primary-strong) 55%, transparent); stroke-width: 1.4; }
-.bf-cash-note-mark { fill: color-mix(in srgb, var(--cf-primary-strong) 35%, transparent); font-size: 18px; font-weight: 800; letter-spacing: .2em; }
+.bf-cash-note-mark { fill: color-mix(in srgb, var(--cf-primary-strong) 35%, transparent); font-size:17px; font-weight:600; letter-spacing: .2em; }
 .bf-cash-note small, .bf-cash-note b { position: relative; z-index: 1; }
-.bf-cash-note small { color: var(--cf-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.bf-cash-note small { color: var(--cf-muted); font-size:12px; font-weight:600; letter-spacing: .08em; }
 .bf-cash-note b {
   color: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
-  font-size: 26px;
+  font-family: "IBM Plex Sans", Georgia, serif;
+  font-size:22px;
   line-height: 1;
   letter-spacing: -.03em;
 }
@@ -207,8 +207,8 @@
   display: grid;
   gap: 12px;
 }
-.bf-payday-strip small { color: var(--cf-muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
-.bf-payday-strip b { color: var(--cf-ink); font-family: "IBM Plex Serif", Georgia, serif; font-size: 22px; line-height: 1; }
+.bf-payday-strip small { color: var(--cf-muted); font-size:12px; font-weight:600; letter-spacing: .08em; }
+.bf-payday-strip b { color: var(--cf-ink); font-family: "IBM Plex Sans", Georgia, serif; font-size: 22px; line-height: 1; }
 .bf-payday-strip ol {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(18px, 1fr));
@@ -232,7 +232,7 @@
   background: var(--cf-warning);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--cf-warning) 28%, transparent);
 }
-.bf-payday-strip span { color: var(--cf-muted); font-size: 8px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase; }
+.bf-payday-strip span { color: var(--cf-muted); font-size:12px; font-weight:600; letter-spacing: .02em; text-transform: uppercase; }
 .bf-payday-strip li.payday span { color: var(--cf-ink); }
 
 .bf-envelope-fan {
@@ -256,16 +256,16 @@
   min-height: 168px;
   padding: 12px 10px 14px;
   border: 1px solid var(--cf-line);
-  border-radius: 8px 8px 18px 18px;
+  border-radius:12px 12px 20px 20px;
   color: var(--cf-ink);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px);
   text-align: center;
   box-shadow: 0 10px 22px color-mix(in srgb, var(--cf-ink) 8%, transparent);
 }
-.bf-envelope-fan b { font-size: 13px; line-height: 1.25; }
+.bf-envelope-fan b { font-size:14px; line-height: 1.25; }
 .bf-envelope-fan strong { font-variant-numeric: tabular-nums; font-size: 14px; }
-.bf-envelope-fan small { color: var(--cf-muted); font-size: 10px; line-height: 1.35; }
+.bf-envelope-fan small { color: var(--cf-muted); font-size:12px; line-height: 1.35; }
 .bf-envelope-fan li.watch button { background: linear-gradient(180deg, color-mix(in srgb, var(--cf-warning) 22%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px); }
 .bf-envelope-fan li.over button { background: linear-gradient(180deg, color-mix(in srgb, var(--cf-danger) 22%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px); }
 
@@ -276,7 +276,7 @@
   width: 100%;
   padding: 16px;
   border: 1px dashed var(--cf-line);
-  border-radius: 18px;
+  border-radius:20px;
   color: var(--cf-ink);
   background: color-mix(in srgb, var(--cf-primary) 7%, var(--cf-surface));
   text-align: center;
@@ -306,7 +306,7 @@
   gap: 8px !important;
   padding: 14px 14px 12px !important;
   border: 1px solid var(--cf-line) !important;
-  border-radius: 8px 8px 20px 20px !important;
+  border-radius:12px 12px 20px 20px !important;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
   color: var(--cf-ink) !important;
@@ -381,8 +381,8 @@
   border-radius: 50%;
   color: var(--cf-primary-strong);
   transform: rotate(12deg);
-  font-size: 10px;
-  font-weight: 800;
+  font-size:12px;
+  font-weight:600;
   letter-spacing: .08em;
   text-transform: uppercase;
   opacity: .78;
@@ -448,7 +448,7 @@
   height: auto !important;
   padding: 14px 12px 16px !important;
   border: 1px solid var(--cf-line);
-  border-radius: 18px !important;
+  border-radius:20px !important;
   color: var(--cf-ink);
   background: var(--cf-surface) !important;
   text-align: center;
@@ -468,7 +468,7 @@
 .bf-envelope-fan b {
   max-width: 100%;
   overflow: visible;
-  font-size: 13px;
+  font-size:14px;
   line-height: 1.25;
   white-space: normal;
 }
@@ -477,7 +477,7 @@
   max-width: none;
   overflow: visible;
   color: var(--cf-muted);
-  font-size: 11px;
+  font-size:12px;
   line-height: 1.35;
   white-space: normal;
   text-overflow: unset;
@@ -538,7 +538,7 @@
   min-height: 0 !important;
   padding: 16px !important;
   border: 1px solid var(--cf-line) !important;
-  border-radius: 16px !important;
+  border-radius:20px !important;
   background: var(--cf-surface) !important;
 }
 .bf-obligation-empty b { color: var(--cf-ink); font-size: 15px; }
@@ -571,7 +571,7 @@
 }
 .bf-spend-stamp strong {
   color: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
+  font-family: "IBM Plex Sans", Georgia, serif;
   font-size: clamp(28px, 8vw, 40px);
   line-height: 1.05;
   letter-spacing: -.04em;
@@ -585,7 +585,7 @@
   padding: 0 4px;
   list-style: none;
   border: 1px solid var(--cf-line);
-  border-radius: 16px;
+  border-radius:20px;
   background: var(--cf-surface);
   overflow: hidden;
 }
@@ -600,18 +600,18 @@
 }
 .bf-brief-dues li:first-child { border-top: 0; }
 .bf-brief-dues b { display: block; font-size: 14px; line-height: 1.25; }
-.bf-brief-dues small { color: var(--cf-muted); font-size: 11px; }
+.bf-brief-dues small { color: var(--cf-muted); font-size:12px; }
 .bf-brief-dues button,
 .bf-brief-hunt,
 .bf-brief-close {
   min-height: 40px;
   padding: 0 12px;
   border: 1px solid var(--cf-line);
-  border-radius: 10px;
+  border-radius:12px;
   color: var(--cf-ink);
   background: var(--cf-surface-alt);
   font-size: 12px;
-  font-weight: 800;
+  font-weight:600;
 }
 .bf-brief-hunt,
 .bf-brief-close {
@@ -634,7 +634,7 @@
   width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--cf-line);
-  border-radius: 16px;
+  border-radius:20px;
   color: var(--cf-ink);
   background: color-mix(in srgb, var(--cf-primary) 12%, var(--cf-surface));
   text-align: left;
@@ -650,7 +650,7 @@
   gap: 12px;
   padding: 16px;
   border: 1px solid var(--cf-line);
-  border-radius: 16px;
+  border-radius:20px;
   background: var(--cf-surface);
   color: var(--cf-ink);
 }
@@ -667,7 +667,7 @@
 .bf-snowball h2 {
   margin: 2px 0 6px;
   color: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
+  font-family: "IBM Plex Sans", Georgia, serif;
   font-size: 22px;
   line-height: 1.12;
 }
@@ -687,8 +687,8 @@
   gap: 5px;
   min-width: 0;
   color: var(--cf-muted);
-  font-size: 10px;
-  font-weight: 800;
+  font-size:12px;
+  font-weight:600;
   letter-spacing: .07em;
   text-transform: uppercase;
 }
@@ -700,10 +700,10 @@
   min-height: 42px;
   padding: 0 10px;
   border: 1px solid var(--cf-line);
-  border-radius: 8px;
+  border-radius:12px;
   background: var(--cf-surface-alt);
   color: var(--cf-ink);
-  font: 700 13px/1 "IBM Plex Sans", sans-serif;
+  font: 600 13px/1 "IBM Plex Sans", sans-serif;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -719,11 +719,11 @@
   min-height: 44px;
   padding: 0 14px;
   border: 1px solid var(--cf-primary-strong);
-  border-radius: 10px;
+  border-radius:12px;
   background: var(--cf-primary-strong);
   color: var(--cf-on-forest, #f4faf6);
-  font-size: 13px;
-  font-weight: 800;
+  font-size:14px;
+  font-weight:600;
 }
 .bf-transfer-history,
 .bf-salary-rules,
@@ -753,21 +753,21 @@
 .bf-salary-applied article { display: flex; gap: 8px; align-items: center; }
 .bf-salary-rules article b,
 .bf-salary-pending b,
-.bf-salary-applied b { display: block; font-size: 13px; }
+.bf-salary-applied b { display: block; font-size:14px; }
 .bf-salary-rules small,
 .bf-salary-pending small,
-.bf-salary-applied small { color: var(--cf-muted); font-size: 11px; }
-.bf-salary-empty { margin: 0; color: var(--cf-muted); font-size: 13px; line-height: 1.45; }
+.bf-salary-applied small { color: var(--cf-muted); font-size:12px; }
+.bf-salary-empty { margin: 0; color: var(--cf-muted); font-size:14px; line-height: 1.45; }
 .bf-salary-rules button,
 .bf-salary-applied button {
   min-height: 36px;
   padding: 0 10px;
   border: 1px solid var(--cf-line);
-  border-radius: 8px;
+  border-radius:12px;
   background: var(--cf-surface);
   color: var(--cf-ink);
   font-size: 12px;
-  font-weight: 700;
+  font-weight:600;
 }
 .bf-salary-rules button.delete { color: var(--cf-danger); }
 
@@ -776,19 +776,19 @@
   gap: 4px;
   padding: 14px 16px;
   border: 1px dashed var(--cf-line);
-  border-radius: 14px;
+  border-radius:12px;
   background: color-mix(in srgb, var(--cf-primary) 10%, var(--cf-surface));
 }
 .bf-snowball-next span {
   color: var(--cf-muted);
-  font-size: 10px;
-  font-weight: 800;
+  font-size:12px;
+  font-weight:600;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 .bf-snowball-next strong {
   color: var(--cf-ink);
-  font-family: "IBM Plex Serif", Georgia, serif;
+  font-family: "IBM Plex Sans", Georgia, serif;
   font-size: 28px;
   line-height: 1.05;
   letter-spacing: -.04em;
@@ -810,14 +810,14 @@
   border-top: 1px solid var(--cf-line);
   color: var(--cf-ink);
 }
-.bf-snowball-list li span { color: var(--cf-muted); font-size: 11px; font-weight: 800; }
+.bf-snowball-list li span { color: var(--cf-muted); font-size:12px; font-weight:600; }
 .bf-snowball-tag {
   display: inline-block;
   margin: 2px 0 4px;
   color: var(--cf-primary-strong);
-  font-size: 10px;
+  font-size:12px;
   font-style: normal;
-  font-weight: 800;
+  font-weight:600;
   letter-spacing: .08em;
   text-transform: uppercase;
 }

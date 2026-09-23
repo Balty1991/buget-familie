@@ -3,7 +3,7 @@
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
@@ -21,7 +21,7 @@ import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "@/lib/household-insights";
+import { householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
 import { planCycle } from "@/lib/plan-cycle";
 import {
   WhatsNewSheet,
@@ -108,8 +108,10 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
   } else if (forecast.spentToDate > 0 && forecast.projectedRemaining < 0) {
     signals.push({ id: "pace-risk", tone: "risk", eyebrow: t("RITM DE REVIZUIT"), title: t("La ritmul actual lipsesc {amount}", { amount: money(Math.abs(forecast.projectedRemaining)) }), detail: t("Cheltuielile sunt în medie {pace} pe zi; ritmul sigur este {safe} pe zi până la venit.", { pace: money(forecast.paceDaily), safe: money(forecast.safeDaily) }), action: "plan", actionLabel: t("Ajustează planul") });
   } else {
-    const daily = math.remaining / Math.max(1, math.days);
-    signals.push({ id: "daily-pace", tone: "good", eyebrow: t("RITM SIGUR"), title: t("{amount} pe zi până la venit", { amount: money(daily) }), detail: t("{amount} rămân după cheltuielile înregistrate și rezervele deja planificate.", { amount: money(math.remaining) }), action: "plan", actionLabel: t("Vezi calculele") });
+    const briefNow = todayBrief(data);
+    const average = math.remaining / Math.max(1, math.days);
+    const differs = Math.abs(average - briefNow.spendable) > 1;
+    signals.push({ id: "daily-pace", tone: "good", eyebrow: t("RITM SIGUR"), title: t("Poți folosi azi {amount}", { amount: money(briefNow.spendable) }), detail: differs ? t("Aceeași cifră ca sus. Până la venit, media ar fi {average} pe zi — nu e limita de azi.", { average: money(average) }) : t("{amount} rămân după cheltuielile înregistrate și rezervele deja planificate.", { amount: money(math.remaining) }), action: "plan", actionLabel: t("Vezi calculele") });
   }
   if (pending[0]) {
     signals.push({ id: "next-recurring", tone: "watch", eyebrow: t("SCADENȚĂ REZERVATĂ"), title: t("{name} · {amount}", { name: pending[0].name, amount: money(pending[0].amount) }), detail: t("Este programată pentru {date} și este deja exclusă din suma disponibilă.", { date: dateText(pending[0].dueDate, true) }), action: "recurring", actionLabel: t("Deschide scadențele") });
@@ -121,7 +123,7 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
   }
   const goal = data.savings.filter((item) => item.target > item.current).sort((a, b) => (b.target - b.current) - (a.target - a.current))[0];
   if (goal && signals.length < 3) signals.push({ id: `goal-${goal.id}`, tone: "good", eyebrow: t("OBIECTIV COMUN"), title: t("{amount} până la {name}", { amount: money(goal.target - goal.current), name: goal.name }), detail: t("Progres actual: {current} din {target}.", { current: money(goal.current), target: money(goal.target) }), action: "objectives", actionLabel: t("Vezi obiectivul") });
-  const unrepartized = math.availableSources - math.reservedInEnvelopes - math.scheduled;
+  const unrepartized = math.unrepartized;
   const weeklyRhythm = weeklyEnvelopeDailyRhythm(data);
   /**
    * Când plicurile săptămânii dau cifra de azi, banii liberi nu o umflă. Nu-i mai
@@ -353,9 +355,6 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 </button>
               </li>
             </ol>
-            <div className="bf-os-actions">
-              <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
-            </div>
             <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
               <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}
             </button>
@@ -393,7 +392,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                       onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
                     >
                       <span>{weekdayShort()[row.weekday]}</span>
-                      <b>{stripLei(figure, getLocale())}<small> lei</small></b>
+                      <b>{Math.round(figure).toLocaleString(getLocale())}</b>
                       <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
                     </button>
                     );
@@ -472,7 +471,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           ) : (
             <button className="bf-today-empty-activity" onClick={onAdd}>
               <ReceiptText size={20} />
-              <span><b>{data.transactions.length ? t("Nicio mișcare azi.") : t("Nicio mișcare încă")}</b><small>{data.transactions.length ? t("Zilele trecute sunt în Mișcări.") : t("Notează prima cheltuială sau încasare.")}</small></span>
+              <span><b>{data.transactions.length ? t("Nicio mișcare azi.") : t("Nicio mișcare încă")}</b><small>{data.transactions.length ? t("Zilele trecute sunt în Mișcări.") : t("Prima cheltuială sau încasare apare aici.")}</small></span>
               <Plus size={18} />
             </button>
           )}
@@ -969,7 +968,7 @@ export default function Home() {
     const expense = data.settings.quickTemplates.filter((item) => item.kind !== "income").slice(0, 3);
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));
   }, [data.settings.quickTemplates]);
-  const allNav = [{ id: "today" as MainView, label: t("Astăzi"), icon: LayoutGrid }, { id: "journal" as MainView, label: t("Mișcări"), icon: ListFilter }, { id: "plan" as MainView, label: t("Plan"), icon: PlayCircle }, { id: "obligations" as MainView, label: t("Obligații"), icon: Bell }, { id: "insights" as MainView, label: t("Analiză"), icon: BarChart3 }];
+  const allNav = [{ id: "today" as MainView, label: t("Astăzi"), icon: LayoutGrid }, { id: "journal" as MainView, label: t("Mișcări"), icon: ReceiptText }, { id: "plan" as MainView, label: t("Plan"), icon: Wallet }, { id: "obligations" as MainView, label: t("Obligații"), icon: Bell }, { id: "insights" as MainView, label: t("Analiză"), icon: BarChart3 }];
   const nav = simpleMode ? allNav.filter((item) => item.id === "today" || item.id === "journal" || item.id === "plan" || item.id === "obligations") : allNav;
   useEffect(() => {
     if (!simpleMode) return;

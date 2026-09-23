@@ -141,7 +141,7 @@ describe("ritmul", () => {
   it("spune cât se poate cheltui pe zi până la salariu", () => {
     const answer = ask("cât pot cheltui pe zi")!;
     expect(answer.kind).toBe("pace");
-    expect(answer.headline).toMatch(/pe zi până pe/);
+    expect(answer.headline).toMatch(/la fel ca pe Astăzi/);
   });
 
   it("nu inventează un ritm fără data salariului", () => {
@@ -286,7 +286,7 @@ describe("briefingul zilei", () => {
   it("răspunde la «ce fac azi» cu o acțiune, nu cu un raport generic", () => {
     const answer = ask("ce fac azi?")!;
     expect(answer.kind).toBe("next");
-    expect(answer.headline).toMatch(/Azi:|Poți cheltui|Setează/);
+    expect(answer.headline).toMatch(/Azi:|Poți folosi|Setează/);
   });
 
   it("înțelege și «ce-mi recomanzi» și «ce părere ai»", () => {

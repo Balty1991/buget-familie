@@ -4,12 +4,7 @@
  * Problema: --card / --muted-foreground / --bf-major-* rămâneau pe paleta ivory
  * (crem + gri) și pe temele închise produceau text deschis pe card deschis
  * sau text gri pe verde închis. Aici toate token-urile urmează --cf-*.
- */
-
-html.theme-ivory, html.theme-forest, html.theme-midnight, html.theme-copper,
-html.theme-slate, html.theme-plum, html.theme-lagoon, html.theme-rosewood,
-html.theme-ink, html.theme-white, html.theme-dark, html.theme-aurora, html.theme-cyber, html.theme-navy,
-html.dark {
+ */html.theme-white, html.theme-dark, html.theme-aurora, html.theme-cyber, html.theme-navy, html.dark{
   --background: var(--cf-bg);
   --foreground: var(--cf-ink);
   --card: var(--cf-surface);
@@ -24,24 +19,7 @@ html.dark {
   --bf-green: var(--cf-primary);
   --bf-honey: var(--cf-warning);
   --bf-coral: var(--cf-danger);
-}
-
-.bf-app,
-.theme-ivory .bf-app,
-.theme-forest .bf-app,
-.theme-midnight .bf-app,
-.theme-copper .bf-app,
-.theme-slate .bf-app,
-.theme-plum .bf-app,
-.theme-lagoon .bf-app,
-.theme-rosewood .bf-app,
-.theme-ink .bf-app,
-.theme-white .bf-app,
-.theme-dark .bf-app,
-.theme-aurora .bf-app,
-.theme-cyber .bf-app,
-.theme-navy .bf-app,
-.dark .bf-app {
+}.bf-app, .theme-white .bf-app, .theme-dark .bf-app, .theme-aurora .bf-app, .theme-cyber .bf-app, .theme-navy .bf-app, .dark .bf-app{
   --bf-major-bg: var(--cf-bg);
   --bf-major-sheet: var(--cf-surface);
   --bf-major-ink: var(--cf-ink);
@@ -66,23 +44,7 @@ html.bf-high-contrast {
   position: fixed !important;
   inset: 0 !important;
   z-index: 120 !important;
-}
-.bf-modal,
-.dark .bf-modal,
-.theme-forest .bf-modal,
-.theme-midnight .bf-modal,
-.theme-copper .bf-modal,
-.theme-plum .bf-modal,
-.theme-rosewood .bf-modal,
-.theme-slate .bf-modal,
-.theme-lagoon .bf-modal,
-.theme-ivory .bf-modal,
-.theme-ink .bf-modal,
-.theme-white .bf-modal,
-.theme-dark .bf-modal,
-.theme-aurora .bf-modal,
-.theme-cyber .bf-modal,
-.theme-navy .bf-modal {
+}.bf-modal, .dark .bf-modal, .theme-white .bf-modal, .theme-dark .bf-modal, .theme-aurora .bf-modal, .theme-cyber .bf-modal, .theme-navy .bf-modal{
   color: var(--cf-ink) !important;
   background: var(--cf-surface) !important;
   border-color: var(--cf-line) !important;

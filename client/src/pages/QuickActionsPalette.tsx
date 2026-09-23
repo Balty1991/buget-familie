@@ -25,8 +25,11 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
     { id: "calendar", label: "Deschide calendarul", detail: t("Vezi veniturile, scadențele și obiectivele"), icon: CalendarDays, run: () => onGo("calendar") },
     { id: "guide", label: t("Tutorial de folosire"), detail: t("Cum notezi, cum citești plicul și cifra de azi"), icon: BookOpen, run: () => { window.dispatchEvent(new Event("buget-familie:open-usage-tutorial")); } },
   ];
-  const visible = actions.filter((action) => matchCommandQuery(`${action.label} ${action.detail}`, query));
-  const ledgerHits = searchLedgerHits(data?.transactions || [], query, 6);
+  const dockDuplicates = new Set(["plan", "goals", "journal", "obligations", "insights", "habits", "calendar"]);
+  const visible = actions.filter((action) => matchCommandQuery(`${action.label} ${action.detail}`, query) && (query.trim() || !dockDuplicates.has(action.id)));
+  const ledgerHits = query.trim()
+    ? searchLedgerHits(data?.transactions || [], query, 6)
+    : (data?.transactions || []).slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5).map((item) => ({ id: item.id, title: item.title, category: item.category, person: item.person }));
   const openLedger = (term: string) => {
     writeJournalQuery(window.sessionStorage, term);
     onGo("journal");
@@ -45,8 +48,8 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
       <section ref={dialogRef} tabIndex={-1} className="bf-command-palette" role="dialog" aria-modal="true" aria-labelledby="bf-command-title" onPointerDown={(event) => event.stopPropagation()}>
         <header>
           <div>
-            <p className="bf-kicker">{t("NAVIGARE RAPIDĂ")}</p>
-            <h2 id="bf-command-title">{t("Ce vrei să faci?")}</h2>
+            <p className="bf-kicker">{t("CĂUTARE")}</p>
+            <h2 id="bf-command-title">{query.trim() ? t("Ce vrei să faci?") : t("Caută o mișcare")}</h2>
           </div>
           <button type="button" className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button>
         </header>
@@ -65,7 +68,7 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
               </button>
             );
           })}
-          {ledgerHits.length > 0 && <p className="bf-command-section">{t("Mișcări din registru")}</p>}
+          {ledgerHits.length > 0 && <p className="bf-command-section">{query.trim() ? t("Mișcări din registru") : t("Mișcări recente")}</p>}
           {ledgerHits.map((item) => (
             <button key={item.id} type="button" role="option" onClick={() => openLedger(item.title)}>
               <span className="bf-command-icon"><ReceiptText size={17} /></span>
