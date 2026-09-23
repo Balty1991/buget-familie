@@ -28,11 +28,12 @@ describe("tokenii de temă", () => {
   it("câștigă la finalul foilor amânate", () => {
     const deferred = read("deferred-styles.ts");
     const imports = [...deferred.matchAll(/import "\.\/([^"]+)";/g)].map((match) => match[1]);
-    expect(imports.at(-5)).toBe("tokens.css");
-    expect(imports.at(-4)).toBe("today.css");
-    expect(imports.at(-3)).toBe("movements.css");
-    expect(imports.at(-2)).toBe("plan.css");
-    expect(imports.at(-1)).toBe("obligations.css");
+    expect(imports.at(-6)).toBe("tokens.css");
+    expect(imports.at(-5)).toBe("today.css");
+    expect(imports.at(-4)).toBe("movements.css");
+    expect(imports.at(-3)).toBe("plan.css");
+    expect(imports.at(-2)).toBe("obligations.css");
+    expect(imports.at(-1)).toBe("analysis.css");
   });
 });
 
@@ -88,6 +89,22 @@ describe("ecranul Obligații", () => {
     expect(css).not.toContain(".bf-debt-plan-total strong");
     expect(css).not.toContain(".bf-debt-simulator-result strong");
     expect(css).not.toContain(".bf-snowball-next strong");
+    expect(css).not.toMatch(/position:\s*sticky/);
+  });
+});
+
+describe("ecranul Analiză", () => {
+  const css = read("analysis.css");
+
+  it("ridică etichetele, fără să lățească lunile din grafic sau cifra mare", () => {
+    expect(css).toContain("--bf-text-min");
+    expect(css).toContain("--bf-text-money");
+    expect(css).toContain("--bf-hit");
+    expect(css).toContain(".bf-analysis-snapshot-stats small");
+    expect(css).not.toContain(".bf-analysis-snapshot-stats b");
+    expect(css).not.toContain(".bf-analysis-month-heading");
+    expect(css).not.toContain(".bf-spend-donut b");
+    expect(css).not.toMatch(/min-width:\s*var\(--bf-hit/);
     expect(css).not.toMatch(/position:\s*sticky/);
   });
 });

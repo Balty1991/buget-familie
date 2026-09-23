@@ -17,3 +17,4 @@ import "./today.css";
 import "./movements.css";
 import "./plan.css";
 import "./obligations.css";
+import "./analysis.css";

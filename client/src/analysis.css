@@ -1,0 +1,46 @@
+/**
+ * Ecranul Analiză. Ultimul din migrarea ecran-cu-ecran.
+ * Etichetele nu coboară sub 12px. Soldurile din „poziție” și bugetele
+ * de revizuit nu coboară sub 14px. Fluxul lunii, gogoașa și lunile din
+ * graficul de 12 coloane rămân la mărimea lor — o lățime minimă de 44px
+ * pe fiecare lună ar ieși din ecran.
+ */
+.os-shell .bf-insights-workspace .bf-kicker,
+.os-shell .bf-insights-workspace .bf-analysis-control label,
+.os-shell .bf-insights-workspace .bf-analysis-snapshot-stats small,
+.os-shell .bf-insights-workspace .bf-analysis-flow small,
+.os-shell .bf-insights-workspace .bf-analysis-flow em,
+.os-shell .bf-insights-workspace .bf-analysis-section-heading > span,
+.os-shell .bf-insights-workspace .bf-analysis-balance article small,
+.os-shell .bf-insights-workspace .bf-analysis-balance p:not(.bf-kicker),
+.os-shell .bf-insights-workspace .bf-analysis-balance > button,
+.os-shell .bf-insights-workspace .bf-analysis-watch small,
+.os-shell .bf-insights-workspace .bf-analysis-legend,
+.os-shell .bf-insights-workspace .bf-analysis-legend strong,
+.os-shell .bf-insights-workspace .bf-analysis-next-step p,
+.os-shell .bf-insights-workspace .bf-analysis-next-step button,
+.os-shell .bf-insights-workspace .bf-chart-y,
+.os-shell .bf-insights-workspace .bf-spend-donut small,
+.os-shell .bf-insights-workspace .bf-spend-donut span,
+.os-shell .bf-insights-workspace .bf-analysis-chart button b {
+  font-size: var(--bf-text-min, 12px) !important;
+  letter-spacing: 0.01em !important;
+}
+
+.os-shell .bf-insights-workspace .bf-analysis-snapshot-stats small {
+  white-space: normal !important;
+  line-height: 1.15 !important;
+}
+
+.os-shell .bf-insights-workspace .bf-analysis-balance article b,
+.os-shell .bf-insights-workspace .bf-analysis-watch strong,
+.os-shell .bf-insights-workspace .bf-analysis-control input {
+  font-size: var(--bf-text-money, 14px) !important;
+}
+
+.os-shell .bf-insights-workspace .bf-analysis-scope button,
+.os-shell .bf-insights-workspace .bf-analysis-next-step button,
+.os-shell .bf-insights-workspace .bf-analysis-balance > button,
+.os-shell .bf-insights-workspace .bf-analysis-control input {
+  min-height: var(--bf-hit, 44px) !important;
+}
