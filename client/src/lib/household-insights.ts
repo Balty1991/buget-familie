@@ -455,8 +455,8 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
       : spendable <= 0
       ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
       : fromWeek != null
-        ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: Math.round(fromWeek), available: Math.round(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
-        : t("Ritm {pace} lei/zi, din {available} disponibili pe {days}.", { pace: Math.round(fromPace), available: Math.round(safe.available), days: daysLabel(remainingDays) });
+        ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: stripLei(fromWeek, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(rhythm.remainingDays) })
+        : t("Ritm {pace} lei/zi, din {available} disponibili pe {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) });
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);
@@ -602,10 +602,9 @@ export type WeeklyEnvelopeRhythm = {
   todayOut: number;
 };
 
-const mondayOf = (asOf: string) => {
-  const weekday = (new Date(`${asOf}T12:00:00`).getDay() + 6) % 7;
-  return addIsoDays(asOf, -weekday);
-};
+const weekdayIndex = (day: string) => (new Date(`${day}T12:00:00`).getDay() + 6) % 7;
+
+const mondayOf = (asOf: string) => addIsoDays(asOf, -weekdayIndex(asOf));
 
 export type DayStripRow = { isToday: boolean; isFuture: boolean; left: number; out: number };
 
@@ -627,13 +626,11 @@ export function stripLei(value: number, locale: string): string {
 }
 
 /**
- * Cât mai ține fiecare zi din săptămâna desenată luni–duminică.
+ * Cât mai ține fiecare zi din tranșa activă.
  *
- * Banii sunt ai tranșei de buget care conține ziua (șapte zile de la începutul
- * perioadei, nu neapărat de luni). Restul ei se împarte pe zilele rămase din
- * tranșă: o perioadă începută marți nu se termină duminică, iar ultima zi a
- * tranșei poate folosi tot ce a mai rămas, nu o șeptime. Zilele din grilă care
- * cad în altă tranșă arată partea acelei tranșe, nu banii de azi.
+ * Banda urmează exact cele șapte zile ale tranșei (de exemplu miercuri–marți),
+ * nu săptămâna calendaristică luni–duminică. Restul se împarte pe zilele rămase
+ * din aceeași tranșă, ca suma căsuțelor de azi și de mâine să fie plicul rămas.
  */
 export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): WeeklyEnvelopeRhythm => {
   const plan = data.settings.salaryPlan;
@@ -652,8 +649,11 @@ export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): Wee
   const windowStart = hasTranche ? trancheStart : gridStart;
   const windowEnd = hasTranche ? trancheEnd : addIsoDays(gridStart, 6);
   const inside = (day: string) => day >= windowStart && day <= windowEnd;
-  const spentByDay = Array.from({ length: 7 }, (_, index) => {
-    const day = addIsoDays(gridStart, index);
+  const listed: string[] = [];
+  const cursor = hasTranche ? asOf : windowStart;
+  const cursorEnd = hasTranche ? windowEnd : windowEnd;
+  for (let day = cursor; day && day <= cursorEnd && listed.length < 14; day = addIsoDays(day, 1)) listed.push(day);
+  const spentByDay = listed.map((day) => {
     const out = data.transactions.filter((item) => item.date === day && weekly.some((allocation) => matchesAllocation(item, allocation))).reduce((sum, item) => sum + item.amount, 0);
     return { day, out };
   });
@@ -686,7 +686,8 @@ export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): Wee
     }
     return { budget, remaining, days };
   };
-  const days = spentByDay.map((row, weekday) => {
+  const days = spentByDay.map((row) => {
+    const weekday = weekdayIndex(row.day);
     const isToday = row.day === asOf;
     const isFuture = row.day > asOf;
     let shareRaw: number;

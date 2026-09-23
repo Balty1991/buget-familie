@@ -379,7 +379,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
             </div>
             {!rhythm.hasWeekly || brief.expired ? null : (
               <div className="bf-hero-week" aria-label={t("Ritm zilnic")}>
-                <div className="bf-os-rhythm-grid">
+                <div className="bf-os-rhythm-grid" style={{ ["--bf-rhythm-days" as string]: String(Math.max(1, rhythm.days.length)) }}>
                   {rhythm.days.map((row) => {
                     const figure = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
                     const figureLabel = `${stripLei(figure, getLocale())} lei`;

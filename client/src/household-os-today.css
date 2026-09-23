@@ -297,7 +297,7 @@ html:not(.dark) .bf-os-decide {
 
 .bf-os-rhythm-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--bf-rhythm-days, 7), minmax(0, 1fr));
   gap: 6px;
   margin-top: 14px;
 }

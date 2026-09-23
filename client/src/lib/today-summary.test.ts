@@ -28,7 +28,7 @@ describe("rezumatul de azi", () => {
     const today = summary.rhythm.days.find((row) => row.isToday);
     expect(summary.heroTracksWeek).toBe(true);
     expect(summary.heroLabel).toBe("Poți folosi azi");
-    expect(summary.heroValue).toBe(Math.round(summary.brief.spendable));
+    expect(summary.heroValue).toBe(summary.brief.spendable);
     expect(today && dayStripFigure(today, summary.brief.spendable, summary.heroTracksWeek)).toBe(summary.todayStrip);
     expect(summary.todayStrip).toBe(summary.brief.spendable);
   });

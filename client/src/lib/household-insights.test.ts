@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationWeekStatus, allocationWeeksStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
 import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
+import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -194,8 +195,7 @@ describe("analize de gospodărie", () => {
     expect(wednesday.todayShare).toBe(75);
     expect(wednesday.todayLeft).toBe(75);
     expect(wednesday.futureShare).toBe(75);
-    expect(wednesday.days[0]).toMatchObject({ over: true, left: 0, isToday: false });
-    expect(wednesday.days[2]).toMatchObject({ day: "2026-09-09", left: 75, isToday: true, over: false });
+    expect(wednesday.days[0]).toMatchObject({ day: "2026-09-09", left: 75, isToday: true, over: false });
   });
 
   it("nu desenează bare false când nu există plic săptămânal", () => {
@@ -307,9 +307,10 @@ describe("analize de gospodărie", () => {
     expect(endWeek.spent).toBe(120);
     expect(endRhythm.remainingDays).toBe(1);
     expect(endRhythm.todayLeft).toBeCloseTo(Math.max(0, endWeek.remaining), 2);
-    const next = allocationWeeksStatus(leveledMonday, food)[1];
-    const tuesday = endRhythm.days.find((row) => row.day === "2026-09-22")!;
-    expect(tuesday.left).toBeCloseTo(next.remaining / next.days, 1);
+    expect(endRhythm.days.every((row) => row.day >= "2026-09-15" && row.day <= "2026-09-21")).toBe(true);
+    expect(endRhythm.days.find((row) => row.day === "2026-09-22")).toBeUndefined();
+    const shown = endRhythm.days.reduce((sum, row) => sum + (row.isToday || row.isFuture ? row.left : 0), 0);
+    expect(shown).toBeCloseTo(endRhythm.remaining, 1);
     const check = weeklyCheckIn(leveledMonday, monday);
     const row = check.envelopes.find((item) => item.id === "food")!;
     expect(row.spent).toBeCloseTo(endWeek.spent, 2);
@@ -317,6 +318,40 @@ describe("analize de gospodărie", () => {
     const house = check.envelopes.find((item) => item.id === "house")!;
     expect(house.spent).toBe(0);
     expect(house.remaining).toBeGreaterThan(0);
+  });
+
+  it("banda urmează tranșa miercuri–marți, nu săptămâna până duminică", () => {
+    const { data, source } = base();
+    source.openingBalance = 5000;
+    data.settings.salaryPlan.periodStart = "2026-09-23";
+    data.settings.salaryPlan.nextPayday = "2026-10-15";
+    data.settings.salaryPlan.sourceIds = [source.id];
+    data.settings.salaryPlan.allocations = [
+      { id: "food", label: "Alimente", category: "Alimente", amount: 1500, sourceId: source.id, weeklyPace: true },
+    ];
+    const asOf = "2026-09-23";
+    const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
+    expect(rhythm.days.map((row) => row.day)).toEqual([
+      "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27", "2026-09-28", "2026-09-29",
+    ]);
+    expect(rhythm.remainingDays).toBe(7);
+    const summary = buildTodaySummary(data, asOf);
+    expect(summary.rhythmNote).toMatch(/marți/i);
+    expect(summary.rhythmNote).not.toMatch(/duminică/i);
+
+    data.transactions.push({
+      id: "lidl", title: "Lidl", amount: 250.5, kind: "expense", category: "Alimente",
+      sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: asOf, allocationId: "food",
+    });
+    const after = weeklyEnvelopeDailyRhythm(data, asOf);
+    const afterSummary = buildTodaySummary(data, asOf);
+    const boxes = after.days.reduce((sum, row) => sum + (row.isToday || row.isFuture ? row.left : 0), 0);
+    expect(boxes).toBeCloseTo(after.remaining, 1);
+    expect(after.days.filter((row) => row.day > asOf)).toHaveLength(6);
+    expect(after.days.some((row) => row.day === "2026-09-28" || row.day === "2026-09-29")).toBe(true);
+    expect(afterSummary.heroValue).toBeCloseTo(afterSummary.brief.spendable, 2);
+    expect(afterSummary.heroHint).toContain(stripLei(after.remaining, "ro-RO"));
+    expect(afterSummary.rhythmNote).toMatch(/marți/i);
   });
 });
 

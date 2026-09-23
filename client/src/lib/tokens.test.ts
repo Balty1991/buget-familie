@@ -44,7 +44,7 @@ describe("ecranul Astăzi", () => {
     expect(css).toContain("position: static");
     expect(css).not.toMatch(/position:\s*sticky/);
     expect(css).not.toMatch(/min-width:\s*44px/);
-    expect(css).toContain("repeat(7, minmax(0, 1fr))");
+    expect(css).toContain("repeat(var(--bf-rhythm-days, 7), minmax(0, 1fr))");
     expect(css).toContain("--bf-text-min");
   });
 });
