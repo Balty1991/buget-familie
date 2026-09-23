@@ -19,6 +19,7 @@ import {
   isoDate,
   isoToday,
   pendingRecurringInPlan,
+  planAllocationMath,
   planEndDate,
   planExpired,
   planForecast,
@@ -26,6 +27,7 @@ import {
   type AppData,
   type Transaction,
 } from "./finance-data";
+import { buildTodaySummary } from "./today-summary";
 
 export type AnalystRow = { label: string; value: string; hint?: string; share?: number };
 
@@ -349,8 +351,7 @@ function answerBiggest(data: AppData, folded: string, asOf: string): AnalystAnsw
 function answerAfford(data: AppData, folded: string, asOf: string): AnalystAnswer {
   if (planExpired(data.settings.salaryPlan, asOf)) return answerCycleEnded(data, "afford");
   const amount = firstAmount(folded);
-  const forecast = planForecast(data, asOf);
-  const free = round(forecast.projectedRemaining);
+  const free = round(planAllocationMath(data).unrepartized);
 
   if (amount === undefined) {
     return {
@@ -422,7 +423,6 @@ function answerCycleEnded(data: AppData, kind: string): AnalystAnswer {
 
 function answerPace(data: AppData, asOf: string): AnalystAnswer {
   if (planExpired(data.settings.salaryPlan, asOf)) return answerCycleEnded(data, "pace");
-  const forecast = planForecast(data, asOf);
   const payday = nextPaydayOf(data);
   if (!payday) {
     return {
@@ -431,20 +431,25 @@ function answerPace(data: AppData, asOf: string): AnalystAnswer {
       detail: "Spune-mi când vine salariul („salariul vine pe 25”) și îți spun cât poți cheltui pe zi.",
     };
   }
-  const safe = round(forecast.safeDaily);
+  const summary = buildTodaySummary(data, asOf);
+  const spendable = round(summary.heroValue);
+  const forecast = planForecast(data, asOf);
   const pace = round(forecast.paceDaily);
+  const free = round(planAllocationMath(data).unrepartized);
   const verdict = pace <= 0 ? "Încă nu ai cheltuit nimic în perioada asta."
-    : pace <= safe * 0.85 ? "Ești sub ritmul sigur."
-    : pace <= safe * 1.05 ? "Ești fix pe ritmul sigur."
-    : "Ești peste ritmul sigur.";
+    : pace <= spendable * 0.85 ? "Ești sub ritmul de azi."
+    : pace <= spendable * 1.05 ? "Ești fix pe ritmul de azi."
+    : "Ești peste ritmul de azi.";
   return {
     kind: "pace",
-    headline: sentences(`Poți cheltui ${money(Math.max(0, safe))} pe zi până pe ${formatDate(payday)}`),
-    detail: sentences(verdict, `Ritmul tău actual este ${money(Math.max(0, pace))} pe zi`),
+    headline: summary.heroTracksWeek
+      ? `Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi.`
+      : sentences(`Poți cheltui ${money(Math.max(0, spendable))} pe zi până pe ${formatDate(payday)}`),
+    detail: sentences(summary.heroHint, verdict, `Ritmul tău actual este ${money(Math.max(0, pace))} pe zi`),
     rows: [
-      { label: "Ritm sigur", value: `${money(Math.max(0, safe))}/zi` },
+      { label: "Azi", value: `${money(Math.max(0, spendable))}` },
       { label: "Ritmul tău", value: `${money(Math.max(0, pace))}/zi` },
-      { label: "Rămas nerepartizat", value: money(round(forecast.projectedRemaining)) },
+      { label: "Nerepartizat", value: money(free) },
     ],
     followUps: ["Unde se duc banii?", "Îmi permit 200 de lei?"],
   };
@@ -527,7 +532,7 @@ function answerPayday(data: AppData, asOf: string): AnalystAnswer {
   return {
     kind: "payday",
     headline: sentences(days <= 0 ? `Salariul era așteptat pe ${formatDate(payday)}` : `Mai sunt ${plural(days, "zi", "zile")} până pe ${formatDate(payday)}`),
-    detail: sentences(`Nerepartizat până atunci: ${money(round(planForecast(data, asOf).projectedRemaining))}`),
+    detail: sentences(`Nerepartizat, la fel ca în Plan: ${money(round(planAllocationMath(data).unrepartized))}`),
     followUps: ["Cât pot cheltui pe zi?"],
   };
 }
@@ -580,9 +585,11 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
   const watch = envelopes.filter((entry) => entry.state === "watch");
   const horizon = addIsoDays(asOf, 7);
   const dues = pendingRecurringInPlan(data).filter((item) => item.dueDate <= horizon).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const summary = buildTodaySummary(data, asOf);
+  const spendable = round(summary.heroValue);
+  const free = round(planAllocationMath(data).unrepartized);
   const pace = round(forecast.paceDaily);
   const safe = round(forecast.safeDaily);
-  const free = round(forecast.projectedRemaining);
 
   const rows: AnalystRow[] = [];
   const actions: string[] = [];
@@ -617,7 +624,9 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
     return {
       kind: "next",
       headline: payday
-        ? sentences(`Poți cheltui ${money(Math.max(0, safe))} pe zi până pe ${formatDate(payday)}`, free > 0 ? `nerepartizat ${money(free)}` : "nu mai e marjă în plan")
+        ? summary.heroTracksWeek
+          ? sentences(`Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi`, free > 0 ? `nerepartizat ${money(free)}` : "nu mai e marjă în plan")
+          : sentences(`Poți cheltui ${money(Math.max(0, spendable))} pe zi până pe ${formatDate(payday)}`, free > 0 ? `nerepartizat ${money(free)}` : "nu mai e marjă în plan")
         : "Setează data următorului venit ca să-ți spun ce merită azi.",
       detail: sentences(
         envelopes.length ? `${plural(envelopes.filter((entry) => entry.state === "healthy").length, "plic în ritm", "plicuri în ritm")}` : "Nu ai încă plicuri",

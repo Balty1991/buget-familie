@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, allocationWeekStatus, allocationWeeksStatus } from "./finance-data";
+import { createEmptyAppData, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
 import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";

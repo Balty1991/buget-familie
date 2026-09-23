@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, addIsoDays, isoToday, type AppData } from "./finance-data";
+import { createEmptyAppData, addIsoDays, isoToday, planAllocationMath, type AppData } from "./finance-data";
 import { decide, understand, compactGuideContext, householdIsSetUp, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, canCommitGuideSpend, isDatedSpendChoice, type Reading } from "./understand";
+import { buildTodaySummary } from "./today-summary";
 import { CORPUS, CORPUS_EXTRA, CORPUS_PARTIAL, type Outcome } from "./understand.corpus";
 
 /** O gospodărie obișnuită: două persoane, patru locuri cu bani, trei plicuri. */
@@ -293,6 +294,15 @@ describe("ce pleacă către model", () => {
     expect(craciun).toMatchObject({ estimate: 1200, saved: 300, remaining: 900, daysLeft: 60, passed: false });
     // Ediția trecută rămâne vizibilă ca atare, ca modelul să nu o dea drept viitoare.
     expect(ctx.events!.next.find((item) => item.name === "Ziua Anei")!.passed).toBe(true);
+  });
+
+  it("cât pot folosi azi și nerepartizat sunt aceleași cifre ca pe Astăzi și în Plan", () => {
+    const data = house();
+    const ctx = compactGuideContext(data, { view: "today" });
+    const card = buildTodaySummary(data);
+    const round = (value: number) => Math.round(value * 100) / 100;
+    expect(ctx.todayCanUse).toBe(round(card.heroValue));
+    expect(ctx.period!.free).toBe(round(Math.max(0, planAllocationMath(data).unrepartized)));
   });
 
   it("când e nesigur, trebuie întrebat — nu scris tăcut", () => {

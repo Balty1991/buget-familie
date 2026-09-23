@@ -34,6 +34,7 @@ import {
   type AppData,
 } from "./finance-data";
 import { calendarBudget, periodDays, remainingPace, startedWeekShare } from "./calendar-budget";
+import { buildTodaySummary } from "./today-summary";
 import { plannedEventsPressure, upcomingPlannedEvents } from "./planned-events";
 import { proposeSplit } from "./split-proposal";
 import { t } from "./i18n";
@@ -1084,8 +1085,11 @@ function plannedEventsContext(data: AppData) {
  */
 export function compactGuideContext(data: AppData, extras: { view?: string; income?: number; expense?: number } = {}) {
   const round = (value: number) => Math.round(value * 100) / 100;
+  const todayCard = buildTodaySummary(data);
   return {
     today: isoToday(),
+    /** Aceeași cifră mare ca pe Astăzi. „Cât pot cheltui azi” pleacă de aici, nu din solduri împărțite la zile. */
+    todayCanUse: round(todayCard.heroValue),
     view: extras.view,
     period: planPeriodContext(data),
     month: { income: round(extras.income || 0), expense: round(extras.expense || 0) },

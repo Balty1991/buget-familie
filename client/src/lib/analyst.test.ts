@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { analyze, answerToText, readPeriod } from "./analyst";
-import { createEmptyAppData, envelopeDecisionStatus, newId, type AppData } from "./finance-data";
+import { createEmptyAppData, envelopeDecisionStatus, newId, planAllocationMath, planForecast, type AppData } from "./finance-data";
+import { buildTodaySummary } from "./today-summary";
 
 const ASOF = "2026-09-11"; // vineri
 
@@ -149,6 +150,43 @@ describe("ritmul", () => {
     data.settings.salaryPlan.earliestPayday = undefined;
     const answer = analyze("cât pot cheltui pe zi", data, ASOF)!;
     expect(answer.headline).toMatch(/Nu pot calcula/);
+  });
+
+  it("cu plic săptămânal, cifra de azi e cea de pe Astăzi, iar nerepartizat e cel din Plan", () => {
+    const data = createEmptyAppData();
+    const source = data.settings.paymentSources[0];
+    const member = data.settings.members[0];
+    source.openingBalance = 12000;
+    data.settings.salaryPlan.periodStart = "2026-09-23";
+    data.settings.salaryPlan.nextPayday = "2026-10-15";
+    data.settings.salaryPlan.sourceIds = [source.id];
+    data.settings.salaryPlan.allocations = [
+      { id: "food", label: "Alimente", category: "Alimente", amount: 1500, sourceId: source.id, weeklyPace: true },
+    ];
+    const asOf = "2026-09-23";
+    data.transactions = [{
+      id: "lidl", title: "Lidl", amount: 250.5, kind: "expense", category: "Alimente",
+      sourceId: source.id, source: source.name, person: member.name, memberId: member.id, date: asOf, allocationId: "food",
+    }];
+    const summary = buildTodaySummary(data, asOf);
+    const free = planAllocationMath(data).unrepartized;
+    const forecast = planForecast(data, asOf);
+    expect(summary.heroTracksWeek).toBe(true);
+    expect(Math.abs(summary.heroValue - forecast.safeDaily)).toBeGreaterThan(10);
+    expect(Math.abs(free - forecast.projectedRemaining)).toBeGreaterThan(10);
+    const ron = (value: number) => {
+      const rounded = Math.round(value * 100) / 100;
+      return `${Number(rounded.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(rounded) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
+    };
+    const answer = analyze("cât pot cheltui pe zi", data, asOf)!;
+    expect(answer.headline).toContain("la fel ca pe Astăzi");
+    expect(answer.headline).toContain(ron(summary.heroValue));
+    expect(answer.headline).not.toContain(ron(forecast.safeDaily));
+    expect(answer.rows!.find((row) => row.label === "Azi")!.value).toBe(ron(summary.heroValue));
+    expect(answer.rows!.find((row) => row.label === "Nerepartizat")!.value).toBe(ron(free));
+    const payday = analyze("câte zile până la salariu", data, asOf)!;
+    expect(payday.detail).toContain(ron(free));
+    expect(payday.detail).not.toContain(ron(forecast.projectedRemaining));
   });
 });
 
