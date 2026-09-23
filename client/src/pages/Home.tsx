@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
@@ -21,7 +21,8 @@ import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { householdActivityInCycle, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "@/lib/household-insights";
+import { householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "@/lib/household-insights";
+import { planCycle } from "@/lib/plan-cycle";
 import {
   WhatsNewSheet,
   dateText,
@@ -33,7 +34,7 @@ import {
 } from "@/pages/home-kit";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/theme-default";
 import { markFirstWeekTourSeen, shouldOfferFirstWeekTour } from "@/lib/first-week-tour";
-import { daysLabel, getLocale, t } from "@/lib/i18n";
+import { getLocale, t } from "@/lib/i18n";
 import { weekdayShortLabels } from "@/lib/civil-weekday";
 import { hideNativeSplash, syncAndroidChrome } from "@/lib/native-splash";
 import { ensureDeferredStyles } from "@/lib/ram-hygiene";
@@ -43,6 +44,8 @@ import { useThemeChrome } from "@/hooks/useThemeChrome";
 import { useFamilySync } from "@/hooks/useFamilySync";
 import { usePersistAppData, readInitialAppData } from "@/hooks/usePersistAppData";
 import { useSimpleMode } from "@/hooks/useSimpleMode";
+import { usePlanCycle } from "@/hooks/usePlanCycle";
+import { useTodaySummary } from "@/hooks/useTodaySummary";
 import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/EnvelopeConflictBanner";
 import { FirstRunSetup } from "@/components/FirstRunSetup";
 import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
@@ -91,21 +94,8 @@ const preloadView = (id: MainView) => {
   else if (id === "insights" || id === "obligations" || id === "goals" || id === "habits" || id === "utilities") void loadSecondary();
 };
 
-function planMath(data: AppData) {
-  const plan = data.settings.salaryPlan;
-  const planEnd = planEndDate(plan);
-  const alloc = planAllocationMath(data);
-  const selected = data.settings.paymentSources.filter((source) => alloc.sourceIds.includes(source.id));
-  const periodExpenses = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
-  const days = planEnd ? Math.max(1, Math.floor((new Date(`${planEnd}T12:00:00`).valueOf() - new Date(`${plan.periodStart}T12:00:00`).valueOf()) / 86400000) + 1) : 7;
-  const weeks = Math.max(1, Math.ceil(days / 7));
-  const weeklyPacedTotal = plan.allocations.filter((item) => isWeeklyPaced(item, plan)).reduce((sum, item) => sum + item.amount, 0);
-  const weekly = plan.weeklyLimit || weeklyPacedTotal / weeks;
-  return { plan, planEnd, selected, periodExpenses, days, weeks, weekly, weeklyPacedTotal, remaining: alloc.unrepartized, ...alloc };
-}
-
 function advisorSignals(data: AppData): AdvisorSignal[] {
-  const math = planMath(data);
+  const math = planCycle(data);
   const forecast = planForecast(data);
   const signals: AdvisorSignal[] = [];
   const pending = pendingRecurringInPlan(data).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
@@ -218,10 +208,10 @@ export function recentActivityMoves<T extends ActivityRow>(transactions: T[], cy
 
 function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings, onOpenRecurring, coach }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void; coach?: ReactNode }) {
   const { simpleMode } = useSimpleMode();
-  const math = useMemo(() => planMath(data), [data]);
-  const forecast = useMemo(() => planForecast(data), [data]);
+  const math = usePlanCycle(data);
+  const summary = useTodaySummary(data);
+  const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief } = summary;
   const signals = useMemo(() => advisorSignals(data), [data]);
-  const brief = useMemo(() => todayBrief(data), [data]);
   const showHealthGauge = useMemo(() => calculateHealthScore(data).score !== null, [data]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [shownTrancheKey, setShownTrancheKey] = useState("");
@@ -237,11 +227,6 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
     const cycleIds = data.settings.members.length < 2 ? [] : householdActivityInCycle(data, today).recent.map((item) => item.id);
     return recentActivityMoves(data.transactions, cycleIds, today, data.settings.members.length);
   }, [data]);
-  const overPlan = math.remaining < 0;
-  const daily = math.plan.nextPayday ? forecast.safeDaily : 0;
-  const weeklyEnvelopesRemaining = envelopes.filter((entry) => entry.scope === "week").reduce((sum, entry) => sum + entry.remaining, 0);
-  const monthlyEnvelopesRemaining = envelopes.filter((entry) => entry.scope === "cycle").reduce((sum, entry) => sum + entry.remaining, 0);
-  const envelopeTotalRemaining = Math.max(0, weeklyEnvelopesRemaining + monthlyEnvelopesRemaining);
   const periodIncome = data.transactions.filter((item) => item.kind === "income" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const periodExpense = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const activeTranche = math.planEnd ? currentCalendarBudgetWeek(math.weeklyPacedTotal, math.plan.periodStart, math.planEnd, isoToday()) : undefined;
@@ -260,14 +245,6 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   };
 
   const todayIso = isoToday();
-  const rhythm = useMemo(() => weeklyEnvelopeDailyRhythm(data, todayIso), [data, todayIso]);
-  const rhythmNote = !rhythm.hasWeekly
-    ? t("Nu sunt plicuri cu ritm săptămânal de împărțit pe zile.")
-    : rhythm.remaining <= 0 && rhythm.todayLeft <= 0
-      ? t("Plicul săptămânii e gol până duminică.")
-      : rhythm.days.some((row) => row.isToday && row.over)
-        ? t("Azi a trecut peste partea de {share}. Mai rămân {remaining}, cam {daily} pe zi până duminică.", { share: money(rhythm.todayShare), remaining: money(rhythm.remaining), daily: money(rhythm.futureShare) })
-        : t("Mai rămân {remaining} în plicul săptămânii, cam {daily} pe zi până duminică.", { remaining: money(rhythm.remaining), daily: money(rhythm.todayShare) });
 
   const sourceRows = useMemo(
     () => data.settings.paymentSources.map((source) => ({ ...source, balance: sourceBalance(data, source.id) })),
@@ -277,63 +254,6 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   const fresh = !data.transactions.length
     && !data.settings.salaryPlan.allocations.length
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
-
-  const liquidNow = sourceRows.reduce((sum, row) => sum + Math.max(0, row.balance), 0);
-  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === todayIso).reduce((sum, item) => sum + item.amount, 0);
-  const trackHero = trackModeHero({ periodIncome, liquidNow, spentToday });
-
-  // Un singur număr de decizie: reperul zilnic (spendable), nu soldul plicurilor.
-  // Fără payday, Ana cu 1.200 pe card nu trebuie să vadă „Plicuri neconfigurate · 0,00”.
-  const heroLabel = overPlan
-    ? t("Peste limita planului")
-    : brief.hasPayday
-      ? t("Poți folosi azi")
-      : data.settings.salaryPlan.allocations.length
-        ? t("Rămas în plicuri")
-        : trackHero.kind === "income"
-          ? t("Venit înregistrat în ciclu")
-          : trackHero.kind === "liquid"
-            ? t("Ai acum")
-            : trackHero.kind === "spent"
-              ? t("Cheltuit astăzi")
-              : t("Plicuri neconfigurate");
-  const heroTracksWeek = !overPlan && brief.hasPayday && !brief.expired && rhythm.hasWeekly;
-  // Cifra mare și căsuța de azi sunt aceeași limită. 107,92 lângă 108 par doi bani.
-  const heroValue = overPlan
-    ? Math.abs(math.remaining)
-    : heroTracksWeek
-      ? Math.round(brief.spendable)
-      : brief.hasPayday
-        ? brief.spendable
-        : data.settings.salaryPlan.allocations.length
-          ? envelopeTotalRemaining
-          : trackHero.value;
-  const heroHint = overPlan
-    ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
-    : heroTracksWeek
-      ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: Math.round(brief.spendable), available: Math.round(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
-      : brief.hasPayday
-        ? brief.reason
-      : data.settings.salaryPlan.allocations.length
-        ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: money(Math.max(0, weeklyEnvelopesRemaining)), monthly: money(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · reper {daily}/zi", { daily: money(daily) }) : "" })
-        : trackHero.kind === "income"
-          ? t("Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii.")
-          : trackHero.kind === "liquid"
-            ? t("Soldul surselor, după mișcările de azi. Pune data venitului în Plan ca să vezi cât poți folosi pe zi.")
-            : trackHero.kind === "spent"
-              ? t("Nu e un sold. E suma ieșită azi, până pui un venit sau un plic.")
-              : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
-  const explainer = overPlan
-    ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
-    : brief.hasPayday
-      ? rhythm.hasWeekly
-        ? t("Este limita de azi din plicurile săptămânii. Ce n-are plic stă liber, nu mărește cifra.")
-        : t("Reperul zilei este minimul dintre ritmul sigur ({daily}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt {envelopes}; în surse {sources}.", { daily: money(daily), envelopes: money(envelopeTotalRemaining), sources: money(math.availableSources) })
-      : data.settings.salaryPlan.allocations.length
-        ? t("Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.", { days: daysLabel(forecast.remainingDays) })
-        : trackHero.kind === "liquid"
-          ? t("Este soldul de pe card, cash sau bonuri, după ce ai înregistrat. Fără data venitului nu calculăm un ritm zilnic.")
-          : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");
 
   return (
     <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "")}>
