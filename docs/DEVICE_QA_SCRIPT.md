@@ -1,7 +1,7 @@
 # Script QA pe telefon — 20–30 minute
 
 Validare practică înainte de closed testing / producție.  
-**Build:** `versionName` **1.1.68** · `versionCode` **70** · pachet `ro.balty1991.bugetfamilie`  
+**Build:** `versionName` **1.1.69** · `versionCode` **71** · pachet `ro.balty1991.bugetfamilie`  
 **Billing:** `BILLING_LIVE = false` — nu testa plăți IAP.  
 Derivat din [`PLAY_CHECKLIST.md`](../PLAY_CHECKLIST.md). Ordinea economisește timp (setup → captura → sync → backup → conflict).
 
@@ -11,7 +11,7 @@ Derivat din [`PLAY_CHECKLIST.md`](../PLAY_CHECKLIST.md). Ordinea economisește t
 
 ## 0. Instalare și first-run (2 min)
 
-- [ ] Instalează build-ul 1.1.68 / 70; deschide aplicația
+- [ ] Instalează build-ul 1.1.69 / 71; deschide aplicația
 - [ ] First-run: treci ecranul de valoare (plicuri / ciclu / fără bancă) fără crash
 - [ ] Creează un ciclu scurt (ex. 7–14 zile) + 2–3 plicuri cu sume mici de test
 - [ ] Adaugă un membru „Eu” (și, dacă ai timp, un al doilea membru pe Familia de test — acum totul e deblocat)
@@ -102,7 +102,7 @@ Derivat din [`PLAY_CHECKLIST.md`](../PLAY_CHECKLIST.md). Ordinea economisește t
 | Câmp | Valoare |
 |---|---|
 | Dispozitiv / Android | _…_ |
-| Build | 1.1.68 / 70 |
+| Build | 1.1.69 / 71 |
 | Data (Europe/Bucharest) | _…_ |
 | Pass / Fail | _…_ |
 | Note (widget / sync / conflict) | _…_ |
