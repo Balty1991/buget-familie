@@ -14,3 +14,4 @@ import "./ui-fix-analysis-line.css";
 import "./ui-fix-more-space.css";
 import "./tokens.css";
 import "./today.css";
+import "./movements.css";

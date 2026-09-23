@@ -28,8 +28,9 @@ describe("tokenii de temă", () => {
   it("câștigă la finalul foilor amânate", () => {
     const deferred = read("deferred-styles.ts");
     const imports = [...deferred.matchAll(/import "\.\/([^"]+)";/g)].map((match) => match[1]);
-    expect(imports.at(-2)).toBe("tokens.css");
-    expect(imports.at(-1)).toBe("today.css");
+    expect(imports.at(-3)).toBe("tokens.css");
+    expect(imports.at(-2)).toBe("today.css");
+    expect(imports.at(-1)).toBe("movements.css");
   });
 });
 
@@ -42,5 +43,18 @@ describe("ecranul Astăzi", () => {
     expect(css).not.toMatch(/min-width:\s*44px/);
     expect(css).toContain("repeat(7, minmax(0, 1fr))");
     expect(css).toContain("--bf-text-min");
+  });
+});
+
+describe("ecranul Mișcări", () => {
+  const css = read("movements.css");
+
+  it("ridică etichetele și sumele, fără să atingă butonul plus", () => {
+    expect(css).toContain("--bf-text-min");
+    expect(css).toContain("--bf-text-money");
+    expect(css).toContain("--bf-hit");
+    expect(css).toContain(".bf-movement-actions button");
+    expect(css).not.toContain(".bf-movement-add");
+    expect(css).not.toMatch(/position:\s*sticky/);
   });
 });

@@ -1,0 +1,33 @@
+/**
+ * Ecranul Mișcări. Al doilea din migrarea ecran-cu-ecran.
+ * Etichetele nu coboară sub 12px, sumele de pe puls și din rânduri sub 14px.
+ * Butonul + rămâne doar icon — nu e restilizat aici.
+ * Acțiunile de pe rând (modifică / șterge) au țintă de 44px.
+ */
+.os-shell .bf-movements-ledger .bf-movements-header > div::before,
+.os-shell .bf-movements-ledger .bf-empty-state::before,
+.os-shell .bf-movements-ledger .bf-journal-day-pulse p,
+.os-shell .bf-movements-ledger .bf-journal-day-pulse small,
+.os-shell .bf-movements-ledger .bf-movement-kind button,
+.os-shell .bf-movements-ledger .bf-journal-filter-toggle,
+.os-shell .bf-movements-ledger .bf-journal-search small,
+.os-shell .bf-movements-ledger .bf-journal-bank-import small,
+.os-shell .bf-movements-ledger .bf-movement-filter-selects label,
+.os-shell .bf-movements-ledger .bf-movement-day article small,
+.os-shell .bf-movements-ledger .bf-movement-day article em {
+  font-size: var(--bf-text-min, 12px) !important;
+}
+
+.os-shell .bf-movements-ledger .bf-journal-day-pulse > span > b,
+.os-shell .bf-movements-ledger .bf-movement-day > header > span,
+.os-shell .bf-movements-ledger .bf-movement-day > header > span b,
+.os-shell .bf-movements-ledger .bf-movement-day article strong {
+  font-size: var(--bf-text-money, 14px) !important;
+}
+
+.os-shell .bf-movements-ledger .bf-movement-actions button {
+  width: var(--bf-hit, 44px) !important;
+  height: var(--bf-hit, 44px) !important;
+  min-width: var(--bf-hit, 44px) !important;
+  min-height: var(--bf-hit, 44px) !important;
+}
