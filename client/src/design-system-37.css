@@ -252,18 +252,6 @@ button.danger,
   border-radius: 99px;
 }
 
-html:is(.theme-dark, .theme-navy, .theme-aurora, .theme-cyber) .os-mark {
-  background: var(--cf-primary);
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-html:is(.theme-dark, .theme-navy, .theme-aurora, .theme-cyber) .os-mark img {
-  filter: grayscale(1) contrast(1.35) brightness(0.2);
-  mix-blend-mode: multiply;
-}
-
 .bf-modal,
 .bf-command-palette,
 .bf-theme-picker {

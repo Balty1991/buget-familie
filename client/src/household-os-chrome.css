@@ -113,8 +113,8 @@ html.capacitor-android {
   padding: 0 !important;
   border: 0 !important;
   border-radius:20px !important;
-  color: #1B4F42 !important;
-  background: #FBF4E9 !important;
+  color: #1b4f42 !important;
+  background: #fbf4e9 !important;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, #d5ddd8) 70%, transparent) !important;
 }
 
@@ -136,7 +136,7 @@ html.capacitor-android {
   width: 44px !important;
   height: 44px !important;
   object-fit: cover !important;
-  border-radius:20px !important;
+  border-radius: 20px !important;
 }
 
 @media (max-width: 760px) {
