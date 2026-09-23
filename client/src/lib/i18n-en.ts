@@ -34,6 +34,7 @@ export const en: Record<string, string> = {
   "CASĂ ȘI TELEFOANE": "HOME & PHONES",
   "Sincronizare": "Sync",
   "MAI MULT": "MORE",
+  "Mai mult": "More",
   "Tot ce nu e zilnic,": "Everything that is not daily,",
   "la un loc.": "in one place.",
   "Sync, setări, bonuri și scadențe — fără să înghesuim bara de jos.": "Sync, settings, receipts and due dates — without crowding the bottom bar.",
