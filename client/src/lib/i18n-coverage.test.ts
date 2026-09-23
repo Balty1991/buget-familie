@@ -21,7 +21,7 @@ const walk = (dir: string, out: string[] = []): string[] => {
 };
 
 const sourceFiles = walk(SRC).filter((file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file));
-const dictionary = readFileSync(join(SRC, "lib/i18n.ts"), "utf8");
+const dictionary = readFileSync(join(SRC, "lib/i18n-en.ts"), "utf8");
 const keys = new Set(Array.from(dictionary.matchAll(/^\s*"((?:[^"\\]|\\.)*)":\s*"/gm)).map((match) => match[1]));
 
 describe("acoperirea traducerilor", () => {

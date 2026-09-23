@@ -13,11 +13,10 @@ import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-s
 import { queueReceiptForReview } from "@/lib/receipt-review";
 import { safeSetItem } from "@/lib/safe-storage";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
-import { HealthScoreBadge } from "@/components/HealthScoreBadge";
+import { BrandMark } from "@/components/BrandMark";
 import { ChartTip } from "@/components/ChartFrame";
 import { leiLabel } from "@/lib/chart-ui";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
-import { BrandMark } from "@/components/BrandMark";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
@@ -48,6 +47,7 @@ import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/Env
 import { FirstRunSetup } from "@/components/FirstRunSetup";
 import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
 
+const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
 const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio })));
 const MovementsJournal = lazy(() => import("@/components/MovementsJournal").then((module) => ({ default: module.MovementsJournal })));
 const QuickEntryPanel = lazy(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel })));
@@ -589,7 +589,9 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 </Suspense>
               )}
               <div className="os-gauge bf-today-below-gauge">
-                <HealthScoreBadge data={data} />
+                <Suspense fallback={null}>
+                  <HealthScoreBadge data={data} />
+                </Suspense>
               </div>
               {data.settings.members.length > 1 && (() => {
                 const activity = householdActivityInCycle(data);
