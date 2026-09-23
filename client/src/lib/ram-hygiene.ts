@@ -21,9 +21,10 @@ export function shouldRegisterServiceWorker(isProd: boolean, platform: string): 
   return platform !== "android" && platform !== "ios";
 }
 
-/** După first paint: destul de târziu ca First Run / Astăzi să nu lupte cu CSSOM. */
+/** După first paint: pe web, foile atelier (~600 KiB) așteaptă 5 s,
+ * ca să nu se bată cu prima pictare. La schimbarea ecranului vin imediat. */
 export function deferredStylesDelayMs(platform: string): number {
-  return platform === "android" || platform === "ios" ? 10000 : 1600;
+  return platform === "android" || platform === "ios" ? 10000 : 5000;
 }
 
 export function ensureDeferredStyles(): Promise<void> {
