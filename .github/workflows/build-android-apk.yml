@@ -5,10 +5,12 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 jobs:
-  debug-apk:
-    name: APK de test instalabil
+  release-apk:
+    name: APK semnat, aceeași cheie ca Play
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,12 +31,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-      # Numele fișierului urmează versiunea din pachet. Scris de mână, rămânea în urmă:
-      # un APK cu 1.1.44 înăuntru se descărca numit „1.1.39”, deci nu se știa ce s-a instalat.
-      # Descărcarea distribuției Gradle a picat cu 504 de la GitHub, iar buildul s-a oprit
-      # acolo: nimic din aplicație nu era greșit, doar rețeaua altcuiva. Încercăm de trei
-      # ori, ștergând arhiva pe jumătate descărcată între încercări — altfel a doua
-      # încercare ar reciti exact fișierul stricat.
       - name: Pregătește Gradle cu reîncercări
         run: |
           cat >> "$GITHUB_ENV" <<'MEDIU'
@@ -53,21 +49,45 @@ jobs:
           }
           SCRIPT
           echo "BASH_ENV=$HOME/gradle-cu-reincercari.sh" >> "$GITHUB_ENV"
+      - name: Scrie keystore-ul de release din secrete
+        working-directory: android/app
+        run: |
+          if [ -z "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" ]; then
+            echo "::error::Lipsesc secretele ANDROID_RELEASE_*. APK-ul de debug nu e autentificat."
+            exit 1
+          fi
+          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          cat > release-keystore.properties <<EOF
+          storeFile=release.keystore
+          storePassword=${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+          EOF
       - name: Află versiunea aplicației
         id: versiune
         run: echo "value=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-      - name: Construiește APK-ul debug
+      - name: Construiește APK-ul semnat
         working-directory: android
         env:
           VERSIUNE: ${{ steps.versiune.outputs.value }}
         run: |
-          gradle_cu_reincercari assembleDebug
-          ls -la app/build/outputs/apk/debug
-          apk="$(find app/build/outputs/apk/debug -name '*.apk' | head -n 1)"
-          cp "$apk" "app/build/outputs/apk/debug/Buget-Familie-$VERSIUNE.apk"
+          gradle_cu_reincercari assembleRelease
+          apk="$(find app/build/outputs/apk/release -name '*.apk' | head -n 1)"
+          test -n "$apk"
+          cp "$apk" "app/build/outputs/apk/release/Buget-Familie-$VERSIUNE.apk"
+          signer="$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}/build-tools" -name apksigner | sort | tail -n 1)"
+          "$signer" verify --verbose --print-certs "app/build/outputs/apk/release/Buget-Familie-$VERSIUNE.apk"
+      - name: Șterge keystore-ul de pe runner
+        if: always()
+        working-directory: android/app
+        run: rm -f release.keystore release-keystore.properties
       - name: Publică APK-ul ca artefact GitHub
         uses: actions/upload-artifact@v4
         with:
           name: Buget-Familie-${{ steps.versiune.outputs.value }}
-          path: android/app/build/outputs/apk/debug/Buget-Familie-${{ steps.versiune.outputs.value }}.apk
+          path: android/app/build/outputs/apk/release/Buget-Familie-${{ steps.versiune.outputs.value }}.apk
           retention-days: 14
+      - name: Dovadă că APK-ul a ieșit din acest workflow
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: android/app/build/outputs/apk/release/Buget-Familie-${{ steps.versiune.outputs.value }}.apk

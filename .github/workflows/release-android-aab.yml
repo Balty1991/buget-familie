@@ -5,6 +5,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 jobs:
   release-aab:
@@ -72,3 +74,7 @@ jobs:
           name: buget-familie-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 14
+      - name: Dovadă că AAB-ul a ieșit din acest workflow
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: android/app/build/outputs/bundle/release/app-release.aab

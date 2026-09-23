@@ -34,6 +34,11 @@ android {
                 storePassword releaseKeystoreProperties.getProperty('storePassword')
                 keyAlias releaseKeystoreProperties.getProperty('keyAlias')
                 keyPassword releaseKeystoreProperties.getProperty('keyPassword')
+                // v1 pentru telefoane vechi, v2 și v3 ca Android să poată verifica
+                // că APK-ul nu a fost modificat după semnare.
+                v1SigningEnabled true
+                v2SigningEnabled true
+                v3SigningEnabled true
             }
         }
     }
