@@ -57,14 +57,16 @@ onAppRevealed(() => {
 });
 
 if (shouldRegisterServiceWorker(import.meta.env.PROD, platform) && "serviceWorker" in navigator) {
+  const hadController = Boolean(navigator.serviceWorker.controller);
   window.addEventListener("load", () => {
     void navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=${APP_VERSION}`).then((registration) => {
       void registration.update();
-      if (registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
+      if (hadController && registration.waiting) registration.waiting.postMessage("SKIP_WAITING");
     }).catch(() => undefined);
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (refreshing) return;
+      // Prima instalare nu reîncarcă pagina: HTML-ul tocmai a venit din rețea.
+      if (!hadController || refreshing) return;
       refreshing = true;
       window.location.reload();
     });

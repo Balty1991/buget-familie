@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v66";
+const CACHE = "buget-familie-shell-v67";
 
 const SHELL = ["./manifest.webmanifest", "./bf-favicon.svg", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/notify-badge.png"];
 
@@ -31,20 +31,33 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.includes("/api/") || url.pathname.includes("github")) return;
 
-  if (request.mode === "navigate" || request.destination === "document" || url.pathname.endsWith("/") || url.pathname.endsWith(".html")) {
-    event.respondWith(fetch(request, { cache: "reload" }).catch(() => caches.match("./")));
-    return;
-  }
-
-  const hashed = /\/assets\/.+\.[A-Za-z0-9_-]{8,}\.(js|css)$/.test(url.pathname) || /\.(woff2?|png|svg|webp|jpg)$/.test(url.pathname);
+  const hashed = /\/assets\/.+\.[A-Za-z0-9_-]{8,}\.(js|css)$/.test(url.pathname) || /\.woff2?$/.test(url.pathname);
   if (hashed) {
-    event.respondWith(fetch(request).then((response) => {
+    event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
       if (response.ok) {
         const copy = response.clone();
         void caches.open(CACHE).then((cache) => cache.put(request, copy));
       }
       return response;
-    }).catch(() => caches.match(request)));
+    })));
+    return;
+  }
+
+  if (request.mode === "navigate" || request.destination === "document" || url.pathname.endsWith("/") || url.pathname.endsWith(".html")) {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(request);
+      const network = fetch(request).then((response) => {
+        if (!response.ok) throw new Error("offline-shell");
+        void cache.put(request, response.clone());
+        return response;
+      });
+      if (!cached) return network.catch(() => caches.match("./"));
+      return Promise.race([
+        network.catch(() => cached),
+        new Promise((resolve) => setTimeout(() => resolve(cached), 500)),
+      ]);
+    })());
     return;
   }
 

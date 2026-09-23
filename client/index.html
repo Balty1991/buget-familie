@@ -16,7 +16,6 @@
     <link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png?v=42" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=42" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="preload" as="image" href="icons/icon-192.png?v=42" />
     <style>
       html, body, #root { margin: 0; background: #E4E9E6; min-height: 100%; }
       html.dark, html.dark body, html.dark #root { background: #0B0F0E; }
@@ -292,7 +291,7 @@
 
   <body>
     <div id="bf-boot" aria-hidden="true">
-      <img src="icons/icon-192.png?v=42" alt="" width="240" height="240" decoding="sync" fetchpriority="high" />
+      <img src="icons/icon-192.png?v=42" alt="" width="240" height="240" decoding="async" fetchpriority="low" />
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

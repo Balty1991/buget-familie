@@ -12,22 +12,7 @@ let loadStyles: () => Promise<void> = loadDeferredStyleSheets;
 let hygieneBound = false;
 
 async function loadDeferredStyleSheets() {
-  await import("../deferred-atelier.css");
-  await import("../contrast-fix.css");
-  await import("../visual-polish.css");
-  await import("../apk-safe-area.css");
-  await import("../display-fixes-pass.css");
-  // Modern pass MUST load after atelier/clarity (~1MB) or overrides vanish.
-  await import("../ui-modern-pass.css");
-  await import("../ui-modern-pass-aggressive.css");
-  await import("../ui-modern-pass-max.css");
-  await import("../ui-screens-modern-2026.css");
-  // Themes absolute LAST so atelier/clarity cannot override palettes.
-  await import("../ui-themes-modern-2026.css");
-  // Bugfix Analiză: linia mint — după themes.
-  await import("../ui-fix-analysis-line.css");
-  // Bugfix Mai mult: carduri fără gol uriaș — ultima în lanțul deferred.
-  await import("../ui-fix-more-space.css");
+  await import("../deferred-styles");
 }
 
 /** PWA pe web; pe Capacitor Android/iOS fișierele sunt deja în pachet. */
@@ -38,7 +23,7 @@ export function shouldRegisterServiceWorker(isProd: boolean, platform: string): 
 
 /** După first paint: destul de târziu ca First Run / Astăzi să nu lupte cu CSSOM. */
 export function deferredStylesDelayMs(platform: string): number {
-  return platform === "android" || platform === "ios" ? 10000 : 6000;
+  return platform === "android" || platform === "ios" ? 10000 : 1600;
 }
 
 export function ensureDeferredStyles(): Promise<void> {

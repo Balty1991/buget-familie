@@ -215,8 +215,6 @@ function vitePluginPreloadCriticalFonts(): Plugin {
         const allWoff = Object.values(bundle).filter((item) => "fileName" in item && typeof item.fileName === "string" && /\.woff2$/.test(item.fileName)) as Array<{ fileName: string }>;
         const pick = (re: RegExp) => allWoff.find((item) => re.test(item.fileName));
         const fonts = [
-          pick(/outfit-\d+-latin(?!-ext)/i),
-          pick(/fraunces-\d+-latin(?!-ext)/i),
           pick(/ibm-plex-sans-latin(?!-ext)/i),
         ].filter(Boolean) as Array<{ fileName: string }>;
         const tags = fonts.slice(0, 4).map((asset) => ({
