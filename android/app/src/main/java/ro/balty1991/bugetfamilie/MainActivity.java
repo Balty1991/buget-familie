@@ -27,6 +27,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import com.getcapacitor.BridgeActivity;
+import java.io.File;
 
 public class MainActivity extends BridgeActivity {
   private static final int REQ_POST_NOTIFICATIONS = 4101;
@@ -94,6 +95,9 @@ public class MainActivity extends BridgeActivity {
     webView.setBackgroundColor(Color.parseColor(launchDark ? "#0B0F0E" : "#E4E9E6"));
     final WebSettings settings = webView.getSettings();
     settings.setGeolocationEnabled(false);
+    /* Pagina e în APK. Cache-ul HTTP al WebView-ului era o a doua copie, vizibilă
+       la Stocare → Cache. Nu-l mai umplem; copia veche se șterge după prima pictare. */
+    settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
     if (Build.VERSION.SDK_INT >= 23) {
       settings.setOffscreenPreRaster(false);
     }
@@ -110,6 +114,10 @@ public class MainActivity extends BridgeActivity {
     ViewCompat.requestApplyInsets(webView);
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
     attachSplashOverlay(webView);
+    webView.postDelayed(() -> {
+      webView.clearCache(true);
+      pruneStaleBackupCache();
+    }, 2500);
   }
 
   /**
@@ -199,15 +207,37 @@ public class MainActivity extends BridgeActivity {
     if (!tight) return;
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
-    /* Cache RAM doar când sistemul e la limită — nu la fiecare ieșire în recents. */
-    if (level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
+    /* În fundal eliberăm cache-ul din RAM. Nu atingem discul cât ecranul e deschis:
+       clearCache(true) e o dată, la pornire, ca să nu clipească pagina. */
+    if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
       || level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
-      webView.clearCache(false);
+      webView.post(() -> webView.clearCache(false));
+      pruneStaleBackupCache();
     }
     webView.post(() -> webView.evaluateJavascript(
       "try{window.dispatchEvent(new CustomEvent('buget-familie:trim-memory'))}catch(e){}",
       null
     ));
+  }
+
+  /**
+   * Backup-urile de partajare stau în cache ca să le vadă foaia de share.
+   * După o zi nu mai sunt necesare și umflau „Cache” din setările Android.
+   */
+  private void pruneStaleBackupCache() {
+    final File cache = getCacheDir();
+    if (cache == null) return;
+    new Thread(() -> {
+      final File[] files = cache.listFiles();
+      if (files == null) return;
+      final long cutoff = System.currentTimeMillis() - 24L * 60L * 60L * 1000L;
+      for (File file : files) {
+        if (file == null || !file.isFile()) continue;
+        final String name = file.getName();
+        if (!name.startsWith("buget-familie-backup-") || !name.endsWith(".json")) continue;
+        if (file.lastModified() < cutoff) file.delete();
+      }
+    }, "bf-cache-prune").start();
   }
 
   /**
