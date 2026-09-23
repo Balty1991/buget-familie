@@ -431,6 +431,9 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 </button>
               </li>
             </ol>
+            <div className="bf-os-actions">
+              <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
+            </div>
             <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
               <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}
             </button>
@@ -449,6 +452,9 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
                 <span><small>{t("Ieșit")}</small><b>−{fmtExact.format(periodExpense)}</b></span>
               </div>
             )}
+            <div className="bf-os-actions">
+              <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
+            </div>
             {!rhythm.hasWeekly || brief.expired ? null : (
               <div className="bf-hero-week" aria-label={t("Ritm zilnic")}>
                 <div className="bf-os-rhythm-grid">
@@ -495,10 +501,6 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           </>
         )}
       </section>
-
-      <div className="bf-os-actions">
-        <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
-      </div>
       {coach}
 
       <OpeningBalanceCard data={data} onChange={onChange} />

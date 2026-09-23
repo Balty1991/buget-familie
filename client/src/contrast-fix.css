@@ -1297,12 +1297,19 @@ html body .bf-setup-presets button[aria-pressed="true"] svg {
   color: inherit !important;
 }
 
-/* Notează rămâne în pagină, sub pași. Nu se lipește de dock și nu acoperă textul. */
-.os-shell .bf-today-workspace .bf-os-actions,
-.os-shell .bf-today-add.bf-os-decide {
+/* Notează stă în card, sub pași. Nu se lipește de dock și nu rămâne transparent. */
+html body .os-shell .bf-today-workspace .bf-os-actions,
+html body .os-shell .bf-today-add.bf-os-decide {
   position: static !important;
   bottom: auto !important;
   z-index: auto !important;
+}
+html body .os-shell .bf-today-add.bf-os-decide {
+  display: inline-flex !important;
+  width: 100% !important;
+  color: var(--cf-on-primary, #f4fff9) !important;
+  background-color: var(--cf-primary-strong, #1f6b4a) !important;
+  background-image: none !important;
 }
 .bf-first-run-body {
   padding-bottom: 28px !important;
