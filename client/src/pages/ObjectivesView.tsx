@@ -1,7 +1,8 @@
 /**
- * Ecranul Obligații. Scos din home-secondary ca să nu stea lângă Setări și Sync.
- * Comportamentul e același; home-secondary îl reexportă.
+ * Ecranul Obligații. Se încarcă singur, fără Setări, Sync sau bon.
  */
+import "../objective-edit.css";
+import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
 import { debtPaymentHistory, debtSnowball, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";

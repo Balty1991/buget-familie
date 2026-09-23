@@ -1,18 +1,9 @@
 /**
- * Ecrane și formulare încărcate după Astăzi — nu intra în first paint.
+ * Doar „Mai mult”. Obligații, Analiză, formularele și tema se încarcă fiecare separat.
  */
 import "../receipt-mobile.css";
 import "../receipt-form-fix.css";
-import "../family-guide.css";
-import "../objective-edit.css";
-import "../currency.css";
-import "../transaction-envelope-picker.css";
-import "../mobile-capture-pass.css";
-import "../mobile-obligations-pass.css";
 import "../mobile-settings-pass.css";
-/* Rândurile de membri din Setări își iau aspectul din pocket.css, care până acum venea
-   doar cu panoul „Buzunar”: fără el, numele, bifa „Copil” și coșul se îngrămădeau. */
-import "../pocket.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { BellRing, BrainCircuit, BookOpen, Bot, CalendarClock, CalendarDays, Check, Gift, Inbox, ChevronLeft, ChevronRight, Cloud, Download, LayoutDashboard, Search, Palette, PiggyBank, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
@@ -33,20 +24,9 @@ import { ReceiptsStudio } from "@/components/ReceiptsStudio";
 import { LearnedRulesPanel } from "@/components/LearnedRulesPanel";
 import { ProductCatalogPanel } from "@/components/ProductCatalogPanel";
 import { SettingsPanel } from "./SettingsPanel";
-export { SettingsPanel };
 import { SyncPanel } from "./SyncPanel";
-export { SyncPanel };
-export { TransactionForm } from "./TransactionForm";
-export { ThemePicker } from "./ThemePicker";
-export { QuickActionsPalette, CalmOnboarding } from "./QuickActionsPalette";
-export { ReceiptThumbnail } from "./ReceiptMedia";
 import { ReceiptThumbnail } from "./ReceiptMedia";
-export { GoalForm, DebtPaymentForm } from "./GoalForms";
-export { SpendingHabitsView, LongTermGoalsView, SavingsScenarioSimulator } from "./HabitsGoals";
-export { ReceiptForm } from "./ReceiptForm";
-export { FamilyGuide } from "./FamilyGuide";
 import { FamilyGuide } from "./FamilyGuide";
-export { InsightsView } from "./InsightsView";
 
 const ReportsPanel = lazy(() => import("@/components/ReportsPanel").then((module) => ({ default: module.ReportsPanel })));
 const RecurringPanel = lazy(() => import("@/components/RecurringPanel").then((module) => ({ default: module.RecurringPanel })));
@@ -55,8 +35,6 @@ const PriceWatchPanel = lazy(() => import("@/components/PriceWatchPanel").then((
 const PocketPanel = lazy(() => import("@/components/PocketPanel").then((module) => ({ default: module.PocketPanel })));
 const PlannedEventsPanel = lazy(() => import("@/components/PlannedEventsPanel").then((module) => ({ default: module.PlannedEventsPanel })));
 const AdvisorPanel = lazy(() => import("@/components/AdvisorPanel").then((module) => ({ default: module.AdvisorPanel })));
-
-export { DebtPaymentHistory, ObjectivesView } from "./ObjectivesView";
 
 export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveReceipt, onDeleteReceipt, onOpenDebt, onOpenSaving, onOpenCalendar, onEditDebt, onEditSaving, onPayDebt, onGo, receiptStorageNotice, sync }: { tab: MoreView; setTab: (value: MoreView) => void; data: AppData; onChange: (value: AppData) => void; onAddReceipt: () => void; onSaveReceipt: (item: Receipt) => void; onDeleteReceipt: (id: string) => void; onOpenDebt: () => void; onOpenSaving: () => void; onOpenCalendar: () => void; onEditDebt?: (item: Debt) => void; onEditSaving?: (item: SavingsGoal) => void; onPayDebt?: (item: Debt) => void; onGo?: (view: MainView) => void; receiptStorageNotice?: string; sync: SyncPanelProps }) {
   const [simpleMode, setSimpleModeState] = useState(() => {

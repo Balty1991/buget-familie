@@ -1,6 +1,7 @@
 /**
  * Ecranul Setări. Scos din home-secondary. Comportamentul e același.
  */
+import "../pocket.css";
 import { lazy, Suspense, useEffect, useState, type ChangeEvent } from "react";
 import { Check, ChevronRight, ClipboardPaste, Download, LockKeyhole, RotateCcw, Share2, Trash2, Upload, X } from "lucide-react";
 import { BASE_CURRENCY, activeCurrencies, createFamilyCode, currenciesMissingRate, expenseCategories, newId, normalizeAppData, parseRomanianAmount, sourceBalance, sourceBalanceInCurrency, supportedCurrencies, type AppData, type PaymentKind } from "@/lib/finance-data";

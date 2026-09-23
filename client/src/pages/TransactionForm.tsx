@@ -1,6 +1,8 @@
 /**
  * Formularul de mișcare. Scos din home-secondary. Salvarea rămâne aceeași.
  */
+import "../currency.css";
+import "../transaction-envelope-picker.css";
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { BASE_CURRENCY, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, exchangeRateFor, expenseCategories, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseRomanianAmount, pickerAllocationsForExpense, planAllocationMath, resolveReceiptLines, sourceBalance, sourceCurrency, toBaseAmount, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";

@@ -59,19 +59,18 @@ const WeeklySummaryPanel = lazy(() => import("@/components/WeeklySummaryPanel").
 const SafeSpendSheet = lazy(() => import("@/components/SafeSpendSheet").then((module) => ({ default: module.SafeSpendSheet })));
 const AllocationHistoryChart = lazy(() => import("@/components/AllocationHistoryChart").then((module) => ({ default: module.AllocationHistoryChart })));
 const FinancialCalendarView = lazy(() => import("@/components/FinancialCalendarView").then((module) => ({ default: module.FinancialCalendarView })));
-const loadSecondary = () => import("@/pages/home-secondary");
-const ThemePicker = lazy(() => loadSecondary().then((module) => ({ default: module.ThemePicker })));
-const QuickActionsPalette = lazy(() => loadSecondary().then((module) => ({ default: module.QuickActionsPalette })));
-const CalmOnboarding = lazy(() => loadSecondary().then((module) => ({ default: module.CalmOnboarding })));
-const TransactionForm = lazy(() => loadSecondary().then((module) => ({ default: module.TransactionForm })));
-const GoalForm = lazy(() => loadSecondary().then((module) => ({ default: module.GoalForm })));
-const DebtPaymentForm = lazy(() => loadSecondary().then((module) => ({ default: module.DebtPaymentForm })));
-const ReceiptForm = lazy(() => loadSecondary().then((module) => ({ default: module.ReceiptForm })));
-const SpendingHabitsView = lazy(() => loadSecondary().then((module) => ({ default: module.SpendingHabitsView })));
-const LongTermGoalsView = lazy(() => loadSecondary().then((module) => ({ default: module.LongTermGoalsView })));
-const ObjectivesView = lazy(() => loadSecondary().then((module) => ({ default: module.ObjectivesView })));
-const InsightsView = lazy(() => loadSecondary().then((module) => ({ default: module.InsightsView })));
-const MoreViewScreen = lazy(() => loadSecondary().then((module) => ({ default: module.MoreView })));
+const ThemePicker = lazy(() => import("@/pages/ThemePicker").then((module) => ({ default: module.ThemePicker })));
+const QuickActionsPalette = lazy(() => import("@/pages/QuickActionsPalette").then((module) => ({ default: module.QuickActionsPalette })));
+const CalmOnboarding = lazy(() => import("@/pages/QuickActionsPalette").then((module) => ({ default: module.CalmOnboarding })));
+const TransactionForm = lazy(() => import("@/pages/TransactionForm").then((module) => ({ default: module.TransactionForm })));
+const GoalForm = lazy(() => import("@/pages/GoalForms").then((module) => ({ default: module.GoalForm })));
+const DebtPaymentForm = lazy(() => import("@/pages/GoalForms").then((module) => ({ default: module.DebtPaymentForm })));
+const ReceiptForm = lazy(() => import("@/pages/ReceiptForm").then((module) => ({ default: module.ReceiptForm })));
+const SpendingHabitsView = lazy(() => import("@/pages/HabitsGoals").then((module) => ({ default: module.SpendingHabitsView })));
+const LongTermGoalsView = lazy(() => import("@/pages/HabitsGoals").then((module) => ({ default: module.LongTermGoalsView })));
+const ObjectivesView = lazy(() => import("@/pages/ObjectivesView").then((module) => ({ default: module.ObjectivesView })));
+const InsightsView = lazy(() => import("@/pages/InsightsView").then((module) => ({ default: module.InsightsView })));
+const MoreViewScreen = lazy(() => import("@/pages/home-secondary").then((module) => ({ default: module.MoreView })));
 const AICompanion = lazy(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion })));
 
 /**
@@ -91,7 +90,10 @@ const preloadView = (id: MainView) => {
   if (id === "journal") void import("@/components/MovementsJournal");
   else if (id === "plan") void import("@/components/PlanStudio");
   else if (id === "calendar") void import("@/components/FinancialCalendarView");
-  else if (id === "insights" || id === "obligations" || id === "goals" || id === "habits" || id === "utilities") void loadSecondary();
+  else if (id === "insights") void import("@/pages/InsightsView");
+  else if (id === "obligations") void import("@/pages/ObjectivesView");
+  else if (id === "goals" || id === "habits") void import("@/pages/HabitsGoals");
+  else if (id === "utilities") void import("@/pages/home-secondary");
 };
 
 function advisorSignals(data: AppData): AdvisorSignal[] {
@@ -982,7 +984,7 @@ export default function Home() {
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
     {!online && <div className="bf-offline-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{syncPanelProps.connected ? t("Fără conexiune — modificările rămân pe telefon și se trimit la reconectare.") : t("Fără conexiune — lucrezi local pe acest telefon.")}</span></div>}
     {simpleMode && view !== "today" && <div className="bf-simple-mode-top-banner" role="status"><span>{t("Mod simplu activ — Dezactivează în Setări")}</span><button type="button" onClick={() => { setSimpleModePref(false); setMore("settings"); go("utilities"); }}>{t("Dezactivează")}</button></div>}
-    <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void loadSecondary()} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label={data.pendingReview.length ? t("Deschide instrumentele · {count} de verificat", { count: data.pendingReview.length }) : t("Deschide instrumentele")} onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} />{data.pendingReview.length > 0 && <span className="bf-nav-count" aria-hidden="true">{data.pendingReview.length}</span>}</button><button className="os-tool" aria-label={t("Deschide ghidul")} onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>
+    <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void import("@/pages/QuickActionsPalette")} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label={data.pendingReview.length ? t("Deschide instrumentele · {count} de verificat", { count: data.pendingReview.length }) : t("Deschide instrumentele")} onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} />{data.pendingReview.length > 0 && <span className="bf-nav-count" aria-hidden="true">{data.pendingReview.length}</span>}</button><button className="os-tool" aria-label={t("Deschide ghidul")} onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>
     <main id="main-content" key={view} className={setupOpen || onboardingOpen || view === initialViewRef.current ? undefined : "bf-screen-transition"}>{setupOpen ? null : current()}</main>
     {undo && (
       <div className="bf-undo-bar" role="status" aria-live="polite">

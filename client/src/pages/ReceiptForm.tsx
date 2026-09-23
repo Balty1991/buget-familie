@@ -1,4 +1,6 @@
 /** Formularul de bon. Scos din home-secondary. */
+import "../receipt-mobile.css";
+import "../receipt-form-fix.css";
 import { useEffect, useRef, useState } from "react";
 import { Bot, Camera, Check, Images, Plus, Trash2, X } from "lucide-react";
 import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, guessCategoryFromText, resolveReceiptLines, type AppData, type Receipt } from "@/lib/finance-data";

@@ -1,4 +1,5 @@
 /** Ghidul. Scos din home-secondary. */
+import "../family-guide.css";
 import { type MainView } from "@/pages/home-kit";
 import { UsageTutorial } from "@/components/UsageTutorial";
 
