@@ -53,6 +53,20 @@ function db(): Firestore {
   return firestore;
 }
 
+export async function appCheckHeader(): Promise<string | undefined> {
+  if (isOfflineOnly() || !isFirebaseConfigured || !recaptchaSiteKey) return undefined;
+  try {
+    const firebaseApp = app || initializeApp(firebaseConfig);
+    app = firebaseApp;
+    ensureAppCheck(firebaseApp);
+    if (!appCheck) return undefined;
+    const { getToken } = await import("firebase/app-check");
+    const result = await getToken(appCheck, false);
+    return result.token || undefined;
+  } catch {
+    return undefined;
+  }
+}
 const roomRef = (roomId: string) => doc(db(), "familySync", roomId);
 const recoveryRef = (recoveryId: string) => doc(db(), "familyRecovery", recoveryId);
 

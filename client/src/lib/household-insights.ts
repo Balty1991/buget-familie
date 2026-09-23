@@ -607,6 +607,25 @@ const mondayOf = (asOf: string) => {
   return addIsoDays(asOf, -weekday);
 };
 
+export type DayStripRow = { isToday: boolean; isFuture: boolean; left: number; out: number };
+
+/**
+ * Aceeași cifră pe banda de zile și pe cardul mare.
+ * Azi arată ce mai poți folosi; viitorul, reperul; trecutul, cheltuiala reală.
+ */
+export function dayStripFigure(row: DayStripRow, todaySpendable: number, heroTracksWeek: boolean): number {
+  if (row.isToday) return heroTracksWeek ? todaySpendable : row.left;
+  if (row.isFuture) return row.left;
+  return row.out;
+}
+
+/** Fără rotunjire la leu: 250,50 rămâne 250,50, nu 251. */
+export function stripLei(value: number, locale: string): string {
+  const n = Math.round((Number.isFinite(value) ? value : 0) * 100) / 100;
+  const whole = Math.abs(n - Math.round(n)) < 0.001;
+  return n.toLocaleString(locale, { minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 });
+}
+
 /**
  * Cât mai ține fiecare zi din săptămâna desenată luni–duminică.
  *

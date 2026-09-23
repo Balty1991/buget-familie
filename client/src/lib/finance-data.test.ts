@@ -165,6 +165,9 @@ describe("registrul financiar Buget Familie", () => {
     expect(allocationStatus(data, transport)).toMatchObject({ state: "watch", alertThreshold: 70 });
     const migrated = normalizeAppData({ settings: { salaryPlan: { periodStart: "2026-08-01", nextPayday: "2026-08-31", sourceIds: [], totalLimit: 0, weeklyLimit: 0, allocations: [{ id: "low", label: "Mic", amount: 20, alertThreshold: 20 }, { id: "high", label: "Mare", amount: 20, alertThreshold: 99 }, { id: "default", label: "Implicit", amount: 20 }] } } });
     expect(migrated.settings.salaryPlan.allocations.map((item) => item.alertThreshold)).toEqual([50, 95, 80]);
+    expect(migrated.settings.salaryPlan.allocations.every((item) => item.weeklyPace === true)).toBe(true);
+    const withoutPayday = normalizeAppData({ settings: { salaryPlan: { periodStart: "2026-09-01", nextPayday: "", allocations: [{ id: "month", label: "Casă", amount: 20, weeklyPace: false }, { id: "open", label: "Alimente", amount: 20 }] } } });
+    expect(withoutPayday.settings.salaryPlan.allocations.map((item) => item.weeklyPace)).toEqual([false, undefined]);
   });
 
   it("consumă numai plicul selectat expres și lasă plata din afara plicurilor în soldul sursei", () => {

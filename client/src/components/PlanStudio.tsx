@@ -134,7 +134,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const previewNextRemaining = allocationTotal > 0
     ? Math.max(0, allocationStatus(data, previewPrevious
       ? { ...previewPrevious, amount: allocationTotal }
-      : { id: "preview", label: allocationLabel || allocationCategory, amount: allocationTotal, category: allocationCategory, sourceId: allocationSourceId || undefined, memberId: allocationMemberId || undefined, weeklyPace: allocationWeeklyPace ? undefined : false }).remaining)
+      : { id: "preview", label: allocationLabel || allocationCategory, amount: allocationTotal, category: allocationCategory, sourceId: allocationSourceId || undefined, memberId: allocationMemberId || undefined, weeklyPace: allocationWeeklyPace ? true : false }).remaining)
     : 0;
   const previewAfter = unrepartized - previewNextRemaining + previewOldRemaining;
   const allocationPreview = planEnd ? calendarBudget(allocationTotal, plan.periodStart, planEnd) : undefined;
@@ -302,7 +302,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       return setAllocationError(t("Casa include până la {n} plicuri. Planul Familia deblochează plicuri nelimitate.", { n: String(PLANS.casa.envelopes) }));
     }
     const label = allocationLabel.trim() || `${allocationCategory}${member ? ` · ${member.name}` : ""}`;
-    const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, funding: fundingEntries.length ? fundingEntries : undefined, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold, weeklyPace: allocationWeeklyPace ? undefined : false };
+    const next: BudgetAllocation = { id: editingAllocationId || newId("allocation"), label, amount, category: allocationCategory, memberId: member?.id, sourceId: source.id, funding: fundingEntries.length ? fundingEntries : undefined, note: allocationNote.trim() || undefined, alertThreshold: allocationThreshold, weeklyPace: allocationWeeklyPace ? true : false };
     const previous = editingAllocationId ? plan.allocations.find((item) => item.id === editingAllocationId) : undefined;
     const nextAllocations = editingAllocationId ? plan.allocations.map((item) => item.id === editingAllocationId ? next : item) : [...plan.allocations, next];
     const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), updatedAt: new Date().toISOString() } } };

@@ -143,7 +143,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             label: preset.category,
             amount: preset.amount,
             category: preset.category,
-            weeklyPace: preset.weekly && paydayReady ? undefined : false,
+            weeklyPace: preset.weekly && paydayReady ? true : false,
             memberId: "member-me",
             sourceId: funded?.id,
           })),

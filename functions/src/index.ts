@@ -1,5 +1,9 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
+import { createHash } from "node:crypto";
+import { getApps, initializeApp } from "firebase-admin/app";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { getAppCheck } from "firebase-admin/app-check";
 import cors from "cors";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
@@ -466,6 +470,44 @@ async function callGroq(apiKey: string, contents: GeminiContent[]) {
   throw new GuideCallError(lastDetail.slice(0, 300) || "GROQ_UPSTREAM_ERROR", lastStatus, lastQuota);
 }
 
+function ensureAdmin() {
+  if (!getApps().length) initializeApp();
+}
+
+/** Token prezent dar invalid = cerere respinsă. Lipsa tokenului nu taie ghidul. */
+async function appCheckTrusted(token: string): Promise<"ok" | "invalid" | "absent"> {
+  if (!token) return "absent";
+  try {
+    ensureAdmin();
+    await getAppCheck().verifyToken(token);
+    return "ok";
+  } catch {
+    return "invalid";
+  }
+}
+
+/** Plafon pe oră și IP. Cu token valid, 60. Fără token, 12 — un proxy anonim se oprește repede. */
+async function allowGuideCall(ip: string, trusted: boolean): Promise<boolean> {
+  const limit = trusted ? 60 : 12;
+  const bucket = new Date().toISOString().slice(0, 13);
+  const id = createHash("sha256").update(`${bucket}|${ip}`).digest("hex").slice(0, 40);
+  try {
+    ensureAdmin();
+    const db = getFirestore();
+    const ref = db.collection("aiGuideQuota").doc(id);
+    return await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const count = snap.exists ? Number(snap.get("n") || 0) : 0;
+      if (count >= limit) return false;
+      tx.set(ref, { n: count + 1, bucket, trusted, at: FieldValue.serverTimestamp() }, { merge: true });
+      return true;
+    });
+  } catch (error) {
+    console.error("aiGuide quota", error instanceof Error ? error.message.slice(0, 180) : "unknown");
+    return true;
+  }
+}
+
 async function generateGuide(contents: GeminiContent[], geminiKey: string, groqKey: string) {
   if (geminiKey) {
     try {
@@ -504,6 +546,17 @@ export const aiGuide = onRequest(
       const origin = request.get("origin");
       if (origin && !originAllowed(origin)) {
         response.status(403).json({ error: "Origin not allowed" });
+        return;
+      }
+      const presented = String(request.get("x-firebase-appcheck") || "");
+      const trust = await appCheckTrusted(presented);
+      if (trust === "invalid") {
+        response.status(401).json({ error: "App Check invalid", code: "app_check" });
+        return;
+      }
+      const ip = String(request.ip || request.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 64);
+      if (!(await allowGuideCall(ip, trust === "ok"))) {
+        response.status(429).json({ error: "Too many requests", code: "quota" });
         return;
       }
       const body = (request.body || {}) as RequestBody;

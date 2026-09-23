@@ -44,5 +44,10 @@ service cloud.firestore {
       allow get: if recoveryId.size() == 64;
       allow create, update: if recoveryId.size() == 64 && envelopeWriteOk();
     }
+
+    // Contor de abuz pentru ghidul online. Doar Admin SDK scrie aici.
+    match /aiGuideQuota/{id} {
+      allow read, write: if false;
+    }
   }
 }

@@ -1297,17 +1297,52 @@ html body .bf-setup-presets button[aria-pressed="true"] svg {
   color: inherit !important;
 }
 
-/* Notează nu stă sub dock pe ecranele scurte. */
-@media (max-width: 760px) {
-  .os-shell .bf-today-workspace .bf-os-actions {
-    position: sticky;
-    bottom: calc(84px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)));
-    z-index: 4;
-    margin-top: 4px;
-    padding: 8px 0 6px;
-    background: linear-gradient(to top, var(--os-bg, var(--cf-bg, #f7f8f6)) 72%, transparent);
-  }
+/* Notează rămâne în pagină, sub pași. Nu se lipește de dock și nu acoperă textul. */
+.os-shell .bf-today-workspace .bf-os-actions,
+.os-shell .bf-today-add.bf-os-decide {
+  position: static !important;
+  bottom: auto !important;
+  z-index: auto !important;
 }
 .bf-first-run-body {
   padding-bottom: 28px !important;
 }
+
+/* Banda de zile: eticheta se citește, ținta de atingere are cel puțin 44px înălțime. */
+html body .bf-os-day {
+  min-height: 44px !important;
+}
+html body .bf-os-day > span:first-child {
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* Turul primei săptămâni stă lângă Notează, nu peste tot ecranul. */
+.bf-coach-note {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--cf-line, #c5cec8);
+  border-radius: 16px;
+  background: var(--cf-surface, #fff);
+  color: var(--cf-ink, #14241e);
+  box-shadow: 0 10px 28px color-mix(in srgb, #000 12%, transparent);
+}
+.bf-coach-note h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.bf-coach-note p {
+  margin: 0;
+}
+.bf-coach-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.bf-coach-actions .bf-primary {
+  min-height: 44px;
+}
+

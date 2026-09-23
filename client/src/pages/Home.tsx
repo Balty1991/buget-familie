@@ -2,7 +2,7 @@
  * Atelierul Financiar — tablou mobil pentru o persoană sau o gospodărie, cu decizia următoare în prim-plan.
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
-import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, ListFilter, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { allocationWeekStatus, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, financialBalance, formatDate, inPlanPeriod, isoDate, isoToday, isWeeklyPaced, newId, normalizeAppData, parseRomanianAmount, pendingRecurringInPlan, planAllocationMath, planEndDate, planForecast, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
@@ -15,14 +15,13 @@ import { safeSetItem } from "@/lib/safe-storage";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { BrandMark } from "@/components/BrandMark";
 import { ChartTip } from "@/components/ChartFrame";
-import { leiLabel } from "@/lib/chart-ui";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { householdActivityInCycle, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
+import { householdActivityInCycle, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "@/lib/household-insights";
 import {
   WhatsNewSheet,
   dateText,
@@ -35,6 +34,7 @@ import {
 import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/theme-default";
 import { markFirstWeekTourSeen, shouldOfferFirstWeekTour } from "@/lib/first-week-tour";
 import { daysLabel, getLocale, t } from "@/lib/i18n";
+import { weekdayShortLabels } from "@/lib/civil-weekday";
 import { hideNativeSplash, syncAndroidChrome } from "@/lib/native-splash";
 import { ensureDeferredStyles } from "@/lib/ram-hygiene";
 import { useLanguage } from "@/hooks/use-language";
@@ -141,8 +141,8 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
   return signals.slice(0, 3);
 }
 
-/** Inițialele zilelor urmează limba activă, nu o listă fixă în română. */
-const weekdayShort = () => Array.from({ length: 7 }, (_v, index) => new Intl.DateTimeFormat(getLocale(), { weekday: "short" }).format(new Date(Date.UTC(2024, 0, 1 + index))).replace(".", ""));
+/** Luni → duminică, aceeași ordine în orice fus orar. */
+const weekdayShort = () => weekdayShortLabels(getLocale());
 
 function openHouseholdGuide() {
   window.dispatchEvent(new CustomEvent("buget-familie:open-guide"));
@@ -216,7 +216,7 @@ export function recentActivityMoves<T extends ActivityRow>(transactions: T[], cy
     .slice(0, 5);
 }
 
-function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings, onOpenRecurring }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void }) {
+function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings, onOpenRecurring, coach }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void; coach?: ReactNode }) {
   const { simpleMode } = useSimpleMode();
   const math = useMemo(() => planMath(data), [data]);
   const forecast = useMemo(() => planForecast(data), [data]);
@@ -438,7 +438,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
           <>
             <p className="os-kicker-lg">{heroLabel}</p>
             <h1 className="os-amount">
-              <span>{(Number.isFinite(heroValue) ? heroValue : 0).toLocaleString(getLocale(), heroTracksWeek ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>{(Number.isFinite(heroValue) ? heroValue : 0).toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
@@ -451,27 +451,32 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
             {!rhythm.hasWeekly || brief.expired ? null : (
               <div className="bf-hero-week" aria-label={t("Ritm zilnic")}>
                 <div className="bf-os-rhythm-grid">
-                  {rhythm.days.map((row) => (
+                  {rhythm.days.map((row) => {
+                    const figure = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
+                    const figureLabel = `${stripLei(figure, getLocale())} lei`;
+                    return (
                     <button
                       key={row.day}
                       type="button"
                       className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
                       aria-pressed={rhythmTip === row.day}
-                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: leiLabel(row.isToday ? (heroTracksWeek ? brief.spendable : row.left) : row.isFuture ? row.left : row.out) })}
+                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: figureLabel })}
                       onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
                     >
                       <span>{weekdayShort()[row.weekday]}</span>
-                      <b>{Math.round(row.isToday ? (heroTracksWeek ? brief.spendable : row.left) : row.isFuture ? row.left : row.out)}<small> lei</small></b>
+                      <b>{stripLei(figure, getLocale())}<small> lei</small></b>
                       <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
                 {(() => {
                   const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
                   if (!row) return null;
-                  const shown = row.isToday ? (heroTracksWeek ? brief.spendable : row.left) : row.isFuture ? row.left : row.out;
-                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiLabel(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiLabel(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiLabel(row.out) });
-                  return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiLabel(row.out) })}</span></ChartTip>;
+                  const shown = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
+                  const leiExact = (value: number) => `${stripLei(value, getLocale())} lei`;
+                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiExact(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiExact(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiExact(row.out) });
+                  return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiExact(row.out) })}</span></ChartTip>;
                 })()}
                 <p className="bf-os-note">{rhythmNote}</p>
               </div>
@@ -493,6 +498,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
       <div className="bf-os-actions">
         <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
       </div>
+      {coach}
 
       <OpeningBalanceCard data={data} onChange={onChange} />
 
@@ -936,7 +942,7 @@ export default function Home() {
     const labels: Record<string, string> = { Alimente: "Alimente", Facturi: "Casă & facturi", Transport: "Transport", Economii: "Economii", Datorii: "Rate produse" };
     const label = change.label || labels[change.category] || change.category;
     const existing = current.settings.salaryPlan.allocations.find((item) => item.label === label || item.category === label || (change.category && item.category === change.category));
-    const weeklyPace = change.weekly ? undefined : false;
+    const weeklyPace = change.weekly ? true : false;
     const plan = current.settings.salaryPlan;
     const start = plan.periodStart || isoToday();
     const weeks = change.weeks && change.weeks >= 2 ? change.weeks : 4;
@@ -1045,7 +1051,7 @@ export default function Home() {
     }))} onDeleteSaving={(id) => deleteWithUndo(t("Obiectivul a fost șters."), (currentData) => ({
       next: { ...currentData, savings: currentData.savings.filter((item) => item.id !== id), deleted: [...currentData.deleted, { entity: "savings" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
       removed: { savings: currentData.savings.filter((item) => item.id === id) },
-    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenEvents={() => { setMore("events"); go("utilities"); }} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} onPayRecurring={(id) => update((currentData) => confirmRecurringPayment(currentData, id) || currentData)} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={applyData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={setMore} data={data} onChange={applyData} onAddReceipt={() => setModal("receipt")} onSaveReceipt={saveReceipt} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onEditDebt={(item) => { setEditGoal(item); setModal("debt"); }} onEditSaving={(item) => { setEditGoal(item); setModal("saving"); }} onPayDebt={(item) => { setEditGoal(item); setModal("debt-payment"); }} onOpenCalendar={() => go("calendar")} onGo={go} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onEdit={openTx} onGo={go} onChange={applyData} onOpenReview={() => { setMore("review"); go("utilities"); }} onOpenSettings={() => { setMore("settings"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} />; };
+    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenEvents={() => { setMore("events"); go("utilities"); }} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} onPayRecurring={(id) => update((currentData) => confirmRecurringPayment(currentData, id) || currentData)} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={applyData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={setMore} data={data} onChange={applyData} onAddReceipt={() => setModal("receipt")} onSaveReceipt={saveReceipt} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onEditDebt={(item) => { setEditGoal(item); setModal("debt"); }} onEditSaving={(item) => { setEditGoal(item); setModal("saving"); }} onPayDebt={(item) => { setEditGoal(item); setModal("debt-payment"); }} onOpenCalendar={() => go("calendar")} onGo={go} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onEdit={openTx} onGo={go} onChange={applyData} onOpenReview={() => { setMore("review"); go("utilities"); }} onOpenSettings={() => { setMore("settings"); go("utilities"); }} onOpenRecurring={() => { setMore("recurring"); go("utilities"); }} coach={view === "today" && firstWeekTourOpen && !onboardingOpen && !setupOpen && !modal && more !== "sync" ? <Suspense fallback={null}><FirstWeekTour onClose={dismissFirstWeekTour} onCapture={() => { dismissFirstWeekTour(); openTx(); }} onPlan={() => { dismissFirstWeekTour(); go("plan"); }} onSync={() => { dismissFirstWeekTour(); setMore("sync"); go("utilities"); }} /></Suspense> : null} />; };
   return <div className={"bf-app os-shell" + (setupOpen || onboardingOpen ? " is-setup" : "")}>
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
@@ -1072,7 +1078,6 @@ export default function Home() {
     {modal === "debt" && <Suspense fallback={null}><GoalForm data={data} type="debt" item={editGoal} onSave={saveDebt} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "saving" && <Suspense fallback={null}><GoalForm data={data} type="saving" item={editGoal} onSave={saveSaving} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
-    {firstWeekTourOpen && !onboardingOpen && !setupOpen && !modal && more !== "sync" && <Suspense fallback={null}><FirstWeekTour onClose={dismissFirstWeekTour} onCapture={() => { dismissFirstWeekTour(); openTx(); }} onPlan={() => { dismissFirstWeekTour(); go("plan"); }} onSync={() => { dismissFirstWeekTour(); setMore("sync"); go("utilities"); }} /></Suspense>}
     {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTheme={() => { dismissWhatsNew(); setThemePickerOpen(true); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationWeekStatus, allocationWeeksStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
 
 const base = () => {
   const data = createEmptyAppData();
@@ -204,6 +204,10 @@ describe("analize de gospodărie", () => {
     const rhythm = weeklyEnvelopeDailyRhythm(data, "2026-09-09");
     expect(rhythm.hasWeekly).toBe(false);
     expect(rhythm.days.every((item) => item.fill === 0)).toBe(true);
+    expect(dayStripFigure({ isToday: false, isFuture: false, left: 36, out: 0 }, 0, false)).toBe(0);
+    expect(dayStripFigure({ isToday: true, isFuture: false, left: 0, out: 250.5 }, 77.4, true)).toBe(77.4);
+    expect(stripLei(250.5, "ro-RO")).toBe("250,50");
+    expect(stripLei(251, "ro-RO")).toBe("251");
   });
 
   it("fără data venitului nu inventează un ritm săptămânal", () => {
