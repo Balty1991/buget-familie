@@ -28,9 +28,10 @@ describe("tokenii de temă", () => {
   it("câștigă la finalul foilor amânate", () => {
     const deferred = read("deferred-styles.ts");
     const imports = [...deferred.matchAll(/import "\.\/([^"]+)";/g)].map((match) => match[1]);
-    expect(imports.at(-3)).toBe("tokens.css");
-    expect(imports.at(-2)).toBe("today.css");
-    expect(imports.at(-1)).toBe("movements.css");
+    expect(imports.at(-4)).toBe("tokens.css");
+    expect(imports.at(-3)).toBe("today.css");
+    expect(imports.at(-2)).toBe("movements.css");
+    expect(imports.at(-1)).toBe("plan.css");
   });
 });
 
@@ -55,6 +56,21 @@ describe("ecranul Mișcări", () => {
     expect(css).toContain("--bf-hit");
     expect(css).toContain(".bf-movement-actions button");
     expect(css).not.toContain(".bf-movement-add");
+    expect(css).not.toMatch(/position:\s*sticky/);
+  });
+});
+
+describe("ecranul Plan", () => {
+  const css = read("plan.css");
+
+  it("ridică etichetele și sumele mici, fără să micșoreze cifra mare", () => {
+    expect(css).toContain("--bf-text-min");
+    expect(css).toContain("--bf-text-money");
+    expect(css).toContain("--bf-hit");
+    expect(css).toContain(".bf-plan-header-stat small");
+    expect(css).not.toContain(".bf-plan-header-stat b");
+    expect(css).not.toContain(".bf-plan-resource-band strong");
+    expect(css).not.toContain(".bf-envelope-seal");
     expect(css).not.toMatch(/position:\s*sticky/);
   });
 });

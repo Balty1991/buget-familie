@@ -1,0 +1,102 @@
+/**
+ * Ecranul Plan. Al treilea din migrarea ecran-cu-ecran.
+ * Etichetele nu coboară sub 12px. Sumele mici (plic, sursă, rezumat de perioadă)
+ * nu coboară sub 14px. Cifrele mari — nerepartizați, banda de resurse — rămân mari.
+ * Ștampila desenată de pe plic nu e text de interfață și nu e atinsă.
+ */
+.os-shell .bf-plan-workspace .bf-kicker,
+.os-shell .bf-plan-workspace .bf-plan-header-stat small,
+.os-shell .bf-plan-workspace .bf-plan-studio-header p:not(.bf-kicker),
+.os-shell .bf-plan-workspace .bf-plan-field,
+.os-shell .bf-plan-workspace .bf-plan-field small,
+.os-shell .bf-plan-workspace .bf-plan-sources label small,
+.os-shell .bf-plan-workspace .bf-plan-envelope-state,
+.os-shell .bf-plan-workspace .bf-plan-envelope-list article small,
+.os-shell .bf-plan-workspace .bf-plan-sheet-heading > span,
+.os-shell .bf-plan-workspace .bf-plan-flow-toggle,
+.os-shell .bf-plan-workspace .bf-plan-flow li small,
+.os-shell .bf-plan-workspace .bf-plan-flow-summary strong small,
+.os-shell .bf-plan-workspace .bf-allocation-period-tabs button,
+.os-shell .bf-plan-workspace .bf-allocation-period-summary small,
+.os-shell .bf-plan-workspace .bf-allocation-period-heading p,
+.os-shell .bf-plan-workspace .bf-allocation-progress-meta,
+.os-shell .bf-plan-workspace .bf-quick-envelope-chips > p,
+.os-shell .bf-plan-workspace .bf-pace-switch > button,
+.os-shell .bf-plan-workspace .bf-pace-advice span,
+.os-shell .bf-plan-workspace .bf-pace-advice li small,
+.os-shell .bf-plan-workspace .bf-week-started > small,
+.os-shell .bf-plan-workspace .bf-funding > p,
+.os-shell .bf-plan-workspace .bf-funding-over,
+.os-shell .bf-plan-workspace .bf-funding-none,
+.os-shell .bf-plan-workspace .bf-envelope-meter span,
+.os-shell .bf-plan-workspace .bf-active-week > strong small,
+.os-shell .bf-plan-workspace .bf-active-week span,
+.os-shell .bf-plan-workspace .bf-plan-resource-band > div:last-child > span,
+.os-shell .bf-plan-workspace .bf-cycle-tranches small,
+.os-shell .bf-plan-workspace .bf-plan-simulation p,
+.os-shell .bf-plan-workspace .bf-plan-simulation-list small,
+.os-shell .bf-plan-workspace .bf-plan-simulation-result small,
+.os-shell .bf-plan-workspace .bf-plan-simulator p,
+.os-shell .bf-plan-workspace .bf-allocation-why,
+.os-shell .bf-plan-workspace .bf-allocation-chart-footnote,
+.os-shell .bf-plan-workspace .bf-allocation-guidance-stats small,
+.os-shell .bf-plan-workspace .bf-allocation-history-entry small,
+.os-shell .bf-plan-workspace .bf-allocation-history-entry time,
+.os-shell .bf-plan-workspace .bf-allocation-history-toolbar label {
+  font-size: var(--bf-text-min, 12px) !important;
+}
+
+.os-shell .bf-plan-workspace .bf-plan-header-stat small {
+  white-space: normal !important;
+  line-height: 1.15 !important;
+}
+
+.os-shell .bf-plan-workspace .bf-plan-envelope-list article strong,
+.os-shell .bf-plan-workspace .bf-plan-sources label strong,
+.os-shell .bf-plan-workspace .bf-allocation-period-summary b,
+.os-shell .bf-plan-workspace .bf-plan-resource-band > div:last-child > span > b,
+.os-shell .bf-plan-workspace .bf-plan-field input,
+.os-shell .bf-plan-workspace .bf-plan-field select,
+.os-shell .bf-plan-workspace .bf-funding-row select,
+.os-shell .bf-plan-workspace .bf-funding-row input {
+  font-size: var(--bf-text-money, 14px) !important;
+}
+
+.os-shell .bf-plan-workspace .bf-plan-envelope-list article > button,
+.os-shell .bf-plan-workspace .bf-pace-switch > button,
+.os-shell .bf-plan-workspace .bf-pace-advice li > button,
+.os-shell .bf-plan-workspace .bf-pace-advice > button,
+.os-shell .bf-plan-workspace .bf-week-started > button,
+.os-shell .bf-plan-workspace .bf-funding-row > button,
+.os-shell .bf-plan-workspace .bf-funding-add,
+.os-shell .bf-plan-workspace .bf-plan-flow-toggle,
+.os-shell .bf-plan-workspace .bf-allocation-period-tabs button,
+.os-shell .bf-plan-workspace .bf-quick-envelope-chips button,
+.os-shell .bf-plan-workspace .bf-plan-field input,
+.os-shell .bf-plan-workspace .bf-plan-field select,
+.os-shell .bf-plan-workspace .bf-funding-row select,
+.os-shell .bf-plan-workspace .bf-funding-row input,
+.os-shell .bf-plan-workspace .bf-plan-envelope-builder > button {
+  min-height: var(--bf-hit, 44px) !important;
+}
+
+.os-shell .bf-plan-workspace .bf-plan-envelope-list article > button,
+.os-shell .bf-plan-workspace .bf-funding-row > button {
+  width: var(--bf-hit, 44px) !important;
+  min-width: var(--bf-hit, 44px) !important;
+  height: var(--bf-hit, 44px) !important;
+}
+
+.os-shell .bf-plan-workspace .bf-funding-row {
+  grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 6rem) var(--bf-hit, 44px) !important;
+}
+
+.os-shell .bf-plan-workspace .bf-plan-envelope-list article {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 9.5rem) var(--bf-hit, 44px) !important;
+}
+
+@media (max-width: 640px) {
+  .os-shell .bf-plan-workspace .bf-plan-envelope-list article {
+    grid-template-columns: minmax(0, 1fr) auto var(--bf-hit, 44px) !important;
+  }
+}

@@ -15,3 +15,4 @@ import "./ui-fix-more-space.css";
 import "./tokens.css";
 import "./today.css";
 import "./movements.css";
+import "./plan.css";
