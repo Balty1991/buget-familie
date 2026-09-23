@@ -1,5 +1,8 @@
 name: Build and deploy Buget Familie
 
+# Push pe main: tipuri, teste, apoi GitHub Pages.
+# Dacă testele pică, deploy-ul nu pornește și site-ul rămâne pe versiunea anterioară.
+
 on:
   push:
     branches: [main]
@@ -31,6 +34,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Type check
         run: pnpm check
+      - name: Teste
+        run: pnpm test
       - name: Build GitHub Pages bundle
         run: pnpm run build:pages
       - name: Configure Pages
