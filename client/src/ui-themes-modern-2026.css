@@ -68,13 +68,7 @@ scroll-padding-bottom:calc(88px + env(safe-area-inset-bottom,0px) + 24px)!import
 font-family:Outfit,"IBM Plex Sans",system-ui,sans-serif!important;font-weight:600!important;
 font-size:clamp(1.12rem,4.6vw,1.38rem)!important;letter-spacing:-.02em!important}
 }
-:is(html.theme-white,html.theme-ink){
---cf-bg:#e8ece9!important;--cf-surface:#fafbfa!important;--cf-surface-alt:#eef1ef!important;
---cf-ink:#0c1612!important;--cf-muted:#4a5852!important;--cf-line:#c9d2cc!important;
---cf-primary:#176b54!important;--cf-primary-strong:#125643!important;--cf-on-forest:#fff!important;
---cf-glow:transparent!important;--os-bg:#e8ece9!important;--os-surface:#fafbfa!important;
---os-surface-2:#e4ebe6!important;--os-fg:#0c1612!important;--os-muted:#4a5852!important;
---os-mint:#176b54!important;--os-mint-fg:#fff!important;--os-line:#c5cec8!important}
+/* Paletele white/dark/aurora/navy/cyber stau în tokens.css, încărcat imediat după. */
 :is(html.theme-white,html.theme-ink) body,:is(html.theme-white,html.theme-ink) body .os-shell.bf-app{
 background:radial-gradient(640px 360px at 100% -6%,rgba(23,107,84,.1),transparent 55%),linear-gradient(180deg,#dfe6e1 0,#e8ece9 140px),#e8ece9!important;color:#0c1612!important}
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-today-situation,
@@ -87,26 +81,14 @@ box-shadow:0 10px 24px rgba(20,36,28,.06)!important}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock{background:#eef1ef!important;box-shadow:0 -8px 22px rgba(26,36,32,.12)!important;filter:none!important}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.is-on,
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#fff!important;background:#176b54!important}
-html.theme-dark{
---cf-bg:#0c0d0f!important;--cf-surface:#16181c!important;--cf-surface-alt:#1e2126!important;
---cf-ink:#eceff3!important;--cf-muted:#9aa3ad!important;--cf-line:#2a2e35!important;
---cf-primary:#b8bec8!important;--cf-primary-strong:#d4d8e0!important;--cf-on-forest:#0c0d0f!important;
---cf-on-primary:#0c0d0f!important;--cf-glow:transparent!important;
---os-bg:#0c0d0f!important;--os-surface:#16181c!important;--os-surface-2:#1e2126!important;
---os-fg:#eceff3!important;--os-muted:#9aa3ad!important;--os-mint:#b8bec8!important;--os-mint-fg:#0c0d0f!important;--os-line:#2a2e35!important}
+/* tokens.css */
 html.theme-dark body,html.theme-dark body .os-shell.bf-app{background:#0c0d0f!important;color:#eceff3!important}
 html.theme-dark body .bf-app .bf-today-situation,html.theme-dark body .bf-app .bf-plan-simulator,
 html.theme-dark body .bf-app .bf-allocation-period,html.theme-dark body .bf-app .bf-movement-day,
 html.theme-dark body .bf-app .bf-analysis-snapshot{background:#16181c!important;border:1px solid #2a2e35!important;box-shadow:0 12px 28px rgba(0,0,0,.4)!important}
 html.theme-dark body .os-shell .os-dock{background:#121418!important;box-shadow:0 -6px 20px rgba(0,0,0,.45)!important;filter:none!important;border-top:1px solid #2a2e35!important}
 html.theme-dark body .os-shell .os-dock button.is-on,html.theme-dark body .os-shell .os-dock button.active{color:#0c0d0f!important;background:#b8bec8!important}
-html.theme-aurora{
---cf-bg:#0c0b16!important;--cf-surface:#15132a!important;--cf-surface-alt:#1e1b38!important;
---cf-ink:#f4f1ff!important;--cf-muted:#b8b0cc!important;--cf-line:#35305a!important;
---cf-primary:#65d3a6!important;--cf-primary-strong:#3fb88a!important;--cf-on-forest:#0c0b16!important;
---cf-glow:transparent!important;--os-bg:#0c0b16!important;--os-surface:#15132a!important;
---os-surface-2:#1e1b38!important;--os-fg:#f4f1ff!important;--os-muted:#b8b0cc!important;
---os-mint:#65d3a6!important;--os-mint-fg:#0c0b16!important;--os-line:#35305a!important}
+/* tokens.css */
 html.theme-aurora body,html.theme-aurora body .os-shell.bf-app{
 background:radial-gradient(520px 300px at 92% -4%,rgba(101,211,166,.08),transparent 50%),radial-gradient(400px 280px at -8% 40%,rgba(116,208,255,.05),transparent 48%),#0c0b16!important;color:#f4f1ff!important}
 html.theme-aurora body .bf-app .bf-today-situation,html.theme-aurora body .bf-app .bf-plan-simulator,
@@ -114,13 +96,7 @@ html.theme-aurora body .bf-app .bf-allocation-period,html.theme-aurora body .bf-
 html.theme-aurora body .bf-app .bf-analysis-snapshot{background:#15132a!important;border:1px solid color-mix(in srgb,#65d3a6 16%,#35305a)!important;box-shadow:0 12px 28px rgba(0,0,0,.4)!important;filter:none!important}
 html.theme-aurora body .os-shell .os-dock{background:#12101f!important;box-shadow:0 -6px 20px rgba(0,0,0,.4)!important;filter:none!important}
 html.theme-aurora body .os-shell .os-dock button.is-on,html.theme-aurora body .os-shell .os-dock button.active{color:#0c0b16!important;background:#65d3a6!important}
-html.theme-navy{
---cf-bg:#080e1a!important;--cf-surface:#10182a!important;--cf-surface-alt:#172238!important;
---cf-ink:#eef2f8!important;--cf-muted:#9aa8be!important;--cf-line:#243350!important;
---cf-primary:#d4b06a!important;--cf-primary-strong:#c49a4a!important;--cf-on-forest:#12100a!important;
---cf-glow:transparent!important;--os-bg:#080e1a!important;--os-surface:#10182a!important;
---os-surface-2:#172238!important;--os-fg:#eef2f8!important;--os-muted:#9aa8be!important;
---os-mint:#d4b06a!important;--os-mint-fg:#12100a!important;--os-line:#243350!important}
+/* tokens.css */
 html.theme-navy body,html.theme-navy body .os-shell.bf-app{
 background:radial-gradient(480px 280px at 100% 0%,rgba(212,176,106,.07),transparent 50%),#080e1a!important;color:#eef2f8!important}
 html.theme-navy body .bf-app .bf-today-situation,html.theme-navy body .bf-app .bf-plan-simulator,
@@ -128,13 +104,7 @@ html.theme-navy body .bf-app .bf-allocation-period,html.theme-navy body .bf-app 
 html.theme-navy body .bf-app .bf-analysis-snapshot{background:#10182a!important;border:1px solid #243350!important;box-shadow:0 12px 28px rgba(0,0,0,.42)!important}
 html.theme-navy body .os-shell .os-dock{background:#0c1322!important;box-shadow:0 -6px 20px rgba(0,0,0,.42)!important;filter:none!important}
 html.theme-navy body .os-shell .os-dock button.is-on,html.theme-navy body .os-shell .os-dock button.active{color:#12100a!important;background:#d4b06a!important}
-html.theme-cyber{
---cf-bg:#050708!important;--cf-surface:#0e1318!important;--cf-surface-alt:#141c22!important;
---cf-ink:#e8eeea!important;--cf-muted:#8a968f!important;--cf-line:#1e2c26!important;
---cf-primary:#7cffc4!important;--cf-primary-strong:#5ee0aa!important;--cf-on-forest:#04140e!important;
---cf-glow:transparent!important;--os-bg:#050708!important;--os-surface:#0e1318!important;
---os-surface-2:#141c22!important;--os-fg:#e8eeea!important;--os-muted:#8a968f!important;
---os-mint:#7cffc4!important;--os-mint-fg:#04140e!important;--os-line:#1e2c26!important}
+/* tokens.css */
 html.theme-cyber body,html.theme-cyber body .os-shell.bf-app{
 background:radial-gradient(420px 260px at 96% -2%,rgba(124,255,196,.07),transparent 48%),#050708!important;color:#e8eeea!important}
 html.theme-cyber body .bf-app .bf-today-situation,html.theme-cyber body .bf-app .bf-plan-simulator,

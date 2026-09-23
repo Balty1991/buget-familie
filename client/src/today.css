@@ -1,0 +1,33 @@
+/**
+ * Ecranul Astăzi. Primul din migrarea ecran-cu-ecran.
+ * Etichetele nu coboară sub 12px, sumele de pe zile sub 14px.
+ * Cele 7 zile rămân într-o grilă flexibilă: o lățime minimă de 44px pe fiecare
+ * ar ieși din ecranul telefonului. Înălțimea de atingere rămâne 44px.
+ * Notează nu e lipicios.
+ */
+.os-shell .bf-today-workspace .os-chip,
+.os-shell .bf-today-workspace .os-kicker-lg,
+.os-shell .bf-today-workspace .bf-os-note,
+.os-shell .bf-today-workspace .os-start-steps small,
+.os-shell .bf-today-workspace .bf-os-day > span:first-child {
+  font-size: var(--bf-text-min, 12px) !important;
+}
+
+.os-shell .bf-today-workspace .bf-os-rhythm-grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+}
+
+.os-shell .bf-today-workspace .bf-os-day {
+  min-width: 0 !important;
+  min-height: var(--bf-hit, 44px) !important;
+}
+
+.os-shell .bf-today-workspace .bf-os-day b {
+  font-size: var(--bf-text-money, 14px) !important;
+}
+
+.os-shell .bf-today-workspace .bf-os-actions,
+.os-shell .bf-today-workspace .bf-today-add.bf-os-decide {
+  position: static !important;
+  bottom: auto !important;
+}

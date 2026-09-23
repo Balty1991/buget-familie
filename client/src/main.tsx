@@ -17,6 +17,8 @@ import "./ledger-unify-2026.css";
 import "./apk-safe-area.css";
 import "./display-fixes-pass.css";
 import "./ui-modern-pass.css";
+import "./tokens.css";
+import "./today.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
 import { APP_VERSION } from "./lib/app-version";
 import { hideNativeSplash, onAppRevealed } from "./lib/native-splash";

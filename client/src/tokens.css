@@ -1,0 +1,121 @@
+/**
+ * Tokenii aplicației. O singură sursă pentru scară și pentru cele 5 teme
+ * (white, dark, aurora, navy, cyber). Valorile sunt cele care câștigau deja
+ * în foaia de teme; mutarea nu schimbă culorile, doar locul unde stau.
+ */
+:root {
+  --bf-space-2: 8px;
+  --bf-space-3: 12px;
+  --bf-space-4: 16px;
+  --bf-radius-card: 1.15rem;
+  --bf-radius-pill: 999px;
+  --bf-text-min: 12px;
+  --bf-text-money: 14px;
+  --bf-hit: 44px;
+}
+
+:is(html.theme-white, html.theme-ink) {
+  --cf-bg: #e8ece9 !important;
+  --cf-surface: #fafbfa !important;
+  --cf-surface-alt: #eef1ef !important;
+  --cf-ink: #0c1612 !important;
+  --cf-muted: #4a5852 !important;
+  --cf-line: #c9d2cc !important;
+  --cf-primary: #176b54 !important;
+  --cf-primary-strong: #125643 !important;
+  --cf-on-forest: #fff !important;
+  --cf-glow: transparent !important;
+  --os-bg: #e8ece9 !important;
+  --os-surface: #fafbfa !important;
+  --os-surface-2: #e4ebe6 !important;
+  --os-fg: #0c1612 !important;
+  --os-muted: #4a5852 !important;
+  --os-mint: #176b54 !important;
+  --os-mint-fg: #fff !important;
+  --os-line: #c5cec8 !important;
+}
+
+html.theme-dark {
+  --cf-bg: #0c0d0f !important;
+  --cf-surface: #16181c !important;
+  --cf-surface-alt: #1e2126 !important;
+  --cf-ink: #eceff3 !important;
+  --cf-muted: #9aa3ad !important;
+  --cf-line: #2a2e35 !important;
+  --cf-primary: #b8bec8 !important;
+  --cf-primary-strong: #d4d8e0 !important;
+  --cf-on-forest: #0c0d0f !important;
+  --cf-on-primary: #0c0d0f !important;
+  --cf-glow: transparent !important;
+  --os-bg: #0c0d0f !important;
+  --os-surface: #16181c !important;
+  --os-surface-2: #1e2126 !important;
+  --os-fg: #eceff3 !important;
+  --os-muted: #9aa3ad !important;
+  --os-mint: #b8bec8 !important;
+  --os-mint-fg: #0c0d0f !important;
+  --os-line: #2a2e35 !important;
+}
+
+html.theme-aurora {
+  --cf-bg: #0c0b16 !important;
+  --cf-surface: #15132a !important;
+  --cf-surface-alt: #1e1b38 !important;
+  --cf-ink: #f4f1ff !important;
+  --cf-muted: #b8b0cc !important;
+  --cf-line: #35305a !important;
+  --cf-primary: #65d3a6 !important;
+  --cf-primary-strong: #3fb88a !important;
+  --cf-on-forest: #0c0b16 !important;
+  --cf-glow: transparent !important;
+  --os-bg: #0c0b16 !important;
+  --os-surface: #15132a !important;
+  --os-surface-2: #1e1b38 !important;
+  --os-fg: #f4f1ff !important;
+  --os-muted: #b8b0cc !important;
+  --os-mint: #65d3a6 !important;
+  --os-mint-fg: #0c0b16 !important;
+  --os-line: #35305a !important;
+}
+
+html.theme-navy {
+  --cf-bg: #080e1a !important;
+  --cf-surface: #10182a !important;
+  --cf-surface-alt: #172238 !important;
+  --cf-ink: #eef2f8 !important;
+  --cf-muted: #9aa8be !important;
+  --cf-line: #243350 !important;
+  --cf-primary: #d4b06a !important;
+  --cf-primary-strong: #c49a4a !important;
+  --cf-on-forest: #12100a !important;
+  --cf-glow: transparent !important;
+  --os-bg: #080e1a !important;
+  --os-surface: #10182a !important;
+  --os-surface-2: #172238 !important;
+  --os-fg: #eef2f8 !important;
+  --os-muted: #9aa8be !important;
+  --os-mint: #d4b06a !important;
+  --os-mint-fg: #12100a !important;
+  --os-line: #243350 !important;
+}
+
+html.theme-cyber {
+  --cf-bg: #050708 !important;
+  --cf-surface: #0e1318 !important;
+  --cf-surface-alt: #141c22 !important;
+  --cf-ink: #e8eeea !important;
+  --cf-muted: #8a968f !important;
+  --cf-line: #1e2c26 !important;
+  --cf-primary: #7cffc4 !important;
+  --cf-primary-strong: #5ee0aa !important;
+  --cf-on-forest: #04140e !important;
+  --cf-glow: transparent !important;
+  --os-bg: #050708 !important;
+  --os-surface: #0e1318 !important;
+  --os-surface-2: #141c22 !important;
+  --os-fg: #e8eeea !important;
+  --os-muted: #8a968f !important;
+  --os-mint: #7cffc4 !important;
+  --os-mint-fg: #04140e !important;
+  --os-line: #1e2c26 !important;
+}
