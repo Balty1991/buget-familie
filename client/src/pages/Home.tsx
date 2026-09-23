@@ -678,7 +678,17 @@ export default function Home() {
     const openFamilie = () => {
       setMore("settings");
       go("utilities");
-      window.setTimeout(() => document.getElementById("bf-familie-plan")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      void import("@/pages/SettingsPanel");
+      const started = Date.now();
+      const tick = () => {
+        const node = document.getElementById("bf-familie-plan");
+        if (node) {
+          node.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+        if (Date.now() - started < 2500) window.setTimeout(tick, 50);
+      };
+      window.setTimeout(tick, 80);
     };
     window.addEventListener(FAMILIE_OPEN_EVENT, openFamilie);
     return () => window.removeEventListener(FAMILIE_OPEN_EVENT, openFamilie);

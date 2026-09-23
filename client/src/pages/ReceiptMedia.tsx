@@ -1,4 +1,6 @@
 /** Miniatura bonului. Scos din home-secondary. */
+import "../receipt-mobile.css";
+import "../receipt-form-fix.css";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, ReceiptText, X } from "lucide-react";
