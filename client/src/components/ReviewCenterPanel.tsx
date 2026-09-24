@@ -101,6 +101,8 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           type="file"
           accept=".csv,.xlsx,.xls,.htm,.html,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/html"
           className="bf-visually-hidden"
+          tabIndex={-1}
+          aria-label={t("Alege extrasul (CSV sau Excel)")}
           onChange={(event) => { const file = event.target.files?.[0]; if (file) void readFile(file); }}
         />
         <button className="bf-primary full" disabled={busy || !sourceId || !memberId} onClick={() => fileRef.current?.click()}>

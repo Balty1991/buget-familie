@@ -404,6 +404,19 @@ html.theme-navy {
     color: var(--cf-primary) !important;
     letter-spacing: .14em !important;
   }
+  /*
+   * Culorile etichetelor și ale „RON” de lângă suma mare sunt deja alese pentru 4,5:1; o opacitate
+   * de .72–.85 pusă peste ele le cobora la 4,1–4,4 (axe, și testul de interfață cu opacitate).
+   */
+  html body .bf-kicker,
+  html body .os-shell .os-amount small {
+    opacity: 1 !important;
+  }
+  /* Descrierea temei („NOAPTE · OLED”): 9 px și 4,3:1 pe opțiunea aleasă din Navy. */
+  html body .bf-theme-option em {
+    font-size: 11px !important;
+    color: inherit !important;
+  }
   /* Pe bannerul verde al scadențelor, verdele temei nu se vede (1,1:1 pe Alb). */
   html body .os-shell .bf-page .bf-recurring-hero .bf-kicker {
     color: #e3efe7 !important;

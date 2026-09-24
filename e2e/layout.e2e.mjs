@@ -117,7 +117,7 @@ function inspect() {
   };
   for (const el of document.querySelectorAll("body *")) {
     const text = [...el.childNodes].filter((node) => node.nodeType === 3).map((node) => node.textContent.trim()).join(" ").trim();
-    if (!text || el.closest(".bf-skip-link, [aria-hidden='true']")) continue;
+    if (!text || el.closest(".bf-skip-link, [aria-hidden='true'], :disabled, [aria-disabled='true']")) continue;
     const style = getComputedStyle(el);
     const rect = el.getBoundingClientRect();
     // Un text vizibil cu înălțime, dar fără lățime, e strivit (așa arăta titlul din Mișcări), nu ascuns.
@@ -127,7 +127,11 @@ function inspect() {
     if (!inScroller && (rect.right > docWidth + 1 || rect.left < -1)) problems.push(`„${text.slice(0, 30)}” iese din ecran`);
     if (rect.width < 2 || (rect.width < 24 && el.scrollWidth > el.clientWidth + 4)) problems.push(`„${text.slice(0, 30)}” strivit în ${Math.round(rect.width)}px`);
     if (rect.bottom < 0 || rect.top > innerHeight) continue;
-    const fg = parse(style.color), under = backgrounds(el);
+    // Opacitatea elementului și a părinților lui deschide culoarea textului spre fundal.
+    let opacity = 1;
+    for (let node = el; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+    const color = parse(style.color);
+    const fg = color && { ...color, a: color.a * opacity }, under = backgrounds(el);
     if (!fg || !under.length || style.backgroundClip === "text") continue;
     const ratio = Math.min(...under.map((bg) => {
       const front = fg.a < 1 ? blend(fg, bg) : fg;

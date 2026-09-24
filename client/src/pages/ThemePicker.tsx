@@ -83,7 +83,6 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
                   type="button"
                   role="option"
                   className={selected ? "selected" : ""}
-                  aria-pressed={selected}
                   aria-selected={selected}
                   onPointerDown={(event) => {
                     event.stopPropagation();
