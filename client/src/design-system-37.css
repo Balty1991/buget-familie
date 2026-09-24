@@ -348,3 +348,43 @@ html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-chevro
 .bf-analysis-window button.is-unavailable { opacity: .62; }
 .bf-analysis-cycle-hint { margin: 8px 0 0; }
 .bf-analysis-cycle-hint .bf-link-button { display: inline; padding: 0; min-height: 0; }
+
+/*
+ * Un singur set de suprafețe și titluri (auditul din septembrie 2026 a găsit 6 raze de colț,
+ * 8 umbre, 4 mărimi de titlu și 2 fonturi pentru același tip de card, de la un ecran la altul).
+ * Cardurile principale: aceeași rază și aceeași umbră; titlul ecranului: același font și mărime;
+ * eticheta mică de deasupra: aceeași culoare și spațiere.
+ *
+ * Stau în @layer ds cu !important: o declarație importantă dintr-un strat câștigă în fața oricărei
+ * declarații importante din afara straturilor, deci straturile vechi de redesign nu le mai pot bate.
+ */
+:root {
+  --ds-radius-card: 20px;
+  --ds-shadow-card: 0 1px 2px rgba(8, 18, 14, .06), 0 10px 26px rgba(8, 18, 14, .07);
+}
+html.theme-dark,
+html.theme-navy {
+  --ds-shadow-card: 0 1px 2px rgba(0, 0, 0, .32), 0 10px 26px rgba(0, 0, 0, .26);
+}
+@layer ds {
+  html body .os-shell :is(.os-hero, .bf-today-brief, .bf-today-activity, .bf-movements-header, .bf-journal-quickbar, .bf-movement-day,
+    .bf-plan-studio-header, .bf-cycle-setup, .bf-allocation-progress-card, .bf-allocation-guidance, .bf-envelope-glossary-tip, .bf-active-week,
+    .bf-insights-header, .bf-analysis-control, .bf-analysis-snapshot, .bf-analysis-month, .bf-analysis-next-step,
+    .bf-upcoming-hero, .bf-obligation-lane, .bf-obligation-ledger, .bf-obligation-ai, .bf-sync-hero, .bf-sync-session,
+    .bf-spend-compass, .bf-analysis-year, .bf-analysis-watch, .bf-analysis-balance, .bf-allocation-builder, .bf-monthly-wizard,
+    .bf-topline, .bf-more-grid, .bf-settings > section, .bf-merchant-rules) {
+    border-radius: var(--ds-radius-card) !important;
+    box-shadow: var(--ds-shadow-card) !important;
+  }
+  html body .os-shell .bf-page :is(.bf-movements-header, .bf-plan-studio-header, .bf-insights-header, .bf-upcoming-hero, .bf-topline) h1:not(.os-amount) {
+    font-family: var(--bf-font-display, Fraunces, Georgia, serif) !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -.02em !important;
+  }
+  html body .os-shell .bf-page .bf-kicker {
+    color: var(--cf-primary) !important;
+    letter-spacing: .14em !important;
+  }
+}
