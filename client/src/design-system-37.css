@@ -404,6 +404,10 @@ html.theme-navy {
     color: var(--cf-primary) !important;
     letter-spacing: .14em !important;
   }
+  /* Pe bannerul verde al scadențelor, verdele temei nu se vede (1,1:1 pe Alb). */
+  html body .os-shell .bf-page .bf-recurring-hero .bf-kicker {
+    color: #e3efe7 !important;
+  }
   /* Butonul „Ciclu salariu” apăsat fără data venitului: contur, ca să se vadă că a răspuns. */
   html body .os-shell .bf-analysis-window button.is-asking {
     outline: 2px solid var(--cf-primary) !important;

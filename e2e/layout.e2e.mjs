@@ -6,7 +6,7 @@
  *   - pagina iese din ecran pe orizontală;
  *   - un text iese din ecran (în afara zonelor cu scroll orizontal);
  *   - un text nu încape într-o cutie îngustă sau are lățime zero (rândul din Mișcări avea butonul strâns la 32 px);
- *   - un text vizibil are contrast sub pragul WCAG AA (4,5:1; 3:1 pentru text mare);
+ *   - un text vizibil are contrast sub pragul WCAG AA (4,5:1; 3:1 pentru text mare), și pe bannere cu gradient;
  *   - pagina aruncă o eroare.
  *
  * Rulare: pnpm test:layout  (pornește Vite și Chromium).
@@ -37,16 +37,19 @@ async function startVite() {
 const click = (label) => async (page) => { await page.getByRole("button", { name: label }).first().click(); await page.waitForTimeout(1000); };
 const seq = (...steps) => async (page) => { for (const step of steps) await step(page); };
 const more = (label) => seq(click(/Deschide instrumentele/), click(label));
+const tab = (label) => async (page) => { await page.getByRole("tab", { name: label }).first().click(); await page.waitForTimeout(1000); };
 const SCREENS = {
   "Astăzi": null,
   "Mișcări": click(/^Mișcări$/),
   "Plan": click(/^Plan$/),
   "Obligații": click(/^Obligații$/),
   "Analiză": click(/^Analiză$/),
+  "Gospodărie": seq(click(/^Analiză$/), tab(/Gospodărie/)),
   "Scadențe": seq(click(/^Obligații$/), click(/Scadențe programate/)),
   "Mai mult": click(/Deschide instrumentele/),
   "Setări": more(/^Setări/),
   "Sincronizare": more(/^Sincronizare/),
+  "De verificat": more(/De verificat/),
   "Notează": click(/^Notează$/),
   "Ghid": click(/Deschide ghidul/),
 };
@@ -94,16 +97,23 @@ function inspect() {
   const channel = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
   const lum = ({ r, g, b }) => 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
   const blend = (top, bottom) => ({ r: top.r * top.a + bottom.r * (1 - top.a), g: top.g * top.a + bottom.g * (1 - top.a), b: top.b * top.a + bottom.b * (1 - top.a), a: 1 });
-  const background = (el) => {
+  /** Fundalurile posibile sub text: o culoare, sau fiecare culoare opacă a unui gradient (se ia cea mai rea). */
+  const backgrounds = (el) => {
     const layers = [];
     for (let node = el; node; node = node.parentElement) {
       const style = getComputedStyle(node);
       const color = parse(style.backgroundColor);
-      if (style.backgroundImage !== "none" && !(color && color.a >= 1)) return null; // gradient/imagine: nu se poate calcula sigur
+      if (style.backgroundImage !== "none" && !(color && color.a >= 1)) {
+        // Textul pictat cu gradient (background-clip: text) își are culoarea în gradient, nu dedesubt.
+        if (style.backgroundClip === "text" || !/gradient/.test(style.backgroundImage)) return [];
+        const stops = (style.backgroundImage.match(/rgba?\([^)]+\)/g) || []).map(parse).filter((stop) => stop && stop.a >= 0.9);
+        // Doar gradientele pline (bannere); cele decorative, transparente, nu decid fundalul.
+        return stops.length >= 2 ? stops.map((stop) => layers.reduceRight((acc, layer) => blend(layer, acc), stop)) : [];
+      }
       if (color && color.a > 0) { layers.push(color); if (color.a >= 1) break; }
     }
-    if (!layers.length) return null;
-    return layers.reverse().reduce((acc, layer) => blend(layer, acc), { r: 255, g: 255, b: 255, a: 1 });
+    if (!layers.length) return [];
+    return [layers.reverse().reduce((acc, layer) => blend(layer, acc), { r: 255, g: 255, b: 255, a: 1 })];
   };
   for (const el of document.querySelectorAll("body *")) {
     const text = [...el.childNodes].filter((node) => node.nodeType === 3).map((node) => node.textContent.trim()).join(" ").trim();
@@ -117,11 +127,13 @@ function inspect() {
     if (!inScroller && (rect.right > docWidth + 1 || rect.left < -1)) problems.push(`„${text.slice(0, 30)}” iese din ecran`);
     if (rect.width < 2 || (rect.width < 24 && el.scrollWidth > el.clientWidth + 4)) problems.push(`„${text.slice(0, 30)}” strivit în ${Math.round(rect.width)}px`);
     if (rect.bottom < 0 || rect.top > innerHeight) continue;
-    const fg = parse(style.color), bg = background(el);
-    if (!fg || !bg) continue;
-    const front = fg.a < 1 ? blend(fg, bg) : fg;
-    const [light, dark] = [lum(front), lum(bg)].sort((a, b) => b - a);
-    const ratio = (light + 0.05) / (dark + 0.05);
+    const fg = parse(style.color), under = backgrounds(el);
+    if (!fg || !under.length || style.backgroundClip === "text") continue;
+    const ratio = Math.min(...under.map((bg) => {
+      const front = fg.a < 1 ? blend(fg, bg) : fg;
+      const [light, dark] = [lum(front), lum(bg)].sort((a, b) => b - a);
+      return (light + 0.05) / (dark + 0.05);
+    }));
     const size = parseFloat(style.fontSize), bold = Number(style.fontWeight) >= 700;
     const needed = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5;
     if (ratio < needed) problems.push(`contrast ${ratio.toFixed(2)}:1 la „${text.slice(0, 30)}” (${size}px)`);
