@@ -251,6 +251,7 @@ describe("numele comerciantului", () => {
     expect(statementMerchant("PAYPAL *NETFLIX.COM 4029357733 LU")).toBe("Netflix.com");
     expect(statementMerchant("Plata OP inter - canal electronic; ENEL ENERGIE MUNTENIA SA; factura 123456")).toBe("Enel Energie Muntenia");
     expect(statementMerchant("Retragere numerar ATM BT 1234 CLUJ NAPOCA RO")).toBe("Retragere numerar");
+    expect(statementMerchant("Incasare salariu ACME SOFTWARE SRL")).toBe("Salariu Acme Software");
   });
 
   it("preferă terminalul la ING și lasă neatinse numele deja curate", () => {

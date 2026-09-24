@@ -22,7 +22,8 @@ import {
   type ShareScope,
   transactionShareScope,
 } from "@/lib/finance-data";
-import { decodeStatement, parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
+import { readStatementFile } from "@/lib/statement-file";
+import { statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
 import { countLabel, t } from "@/lib/i18n";
 import { partnerPendingReviewMeta } from "@/lib/family-crypto";
@@ -57,8 +58,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
     setError("");
     setSummary(undefined);
     try {
-      const text = decodeStatement(await file.arrayBuffer());
-      const parsed = parseStatementCsv(text);
+      const parsed = await readStatementFile(await file.arrayBuffer());
       const { drafts: fresh, duplicates } = statementDrafts(data, parsed.rows, { sourceId, memberId, fileName: file.name });
       if (fresh.length) onChange(addReviewDrafts(data, fresh));
       setSummary({ added: fresh.length, duplicates, skipped: parsed.skipped, fileName: file.name, bank: parsed.bank, rowCount: parsed.rows.length });
@@ -82,7 +82,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           </div>
           <FileUp size={19} />
         </div>
-        <p className="bf-review-intro">{t("Alege fișierul CSV exportat din aplicația băncii. Este citit pe telefon, nu se trimite nicăieri, iar fiecare rând ajunge aici ca propunere de confirmat. Mișcările deja existente sunt recunoscute și nu se dublează.")}</p>
+        <p className="bf-review-intro">{t("Alege extrasul exportat din aplicația băncii (CSV sau Excel). Este citit pe telefon, nu se trimite nicăieri, iar fiecare rând ajunge aici ca propunere de confirmat. Mișcările deja existente sunt recunoscute și nu se dublează.")}</p>
         <p className="bf-review-banks">{t("Formate verificate:")} <b>BCR · Banca Transilvania · ING · Raiffeisen · Revolut</b>. {t("Alte CSV-uri cu dată, descriere și sumă (sau debit/credit) sunt citite automat.")} {t("Titlul devine numele magazinului, iar categoria e cea aleasă data trecută la același magazin.")}</p>
         <div className="bf-form-grid">
           <Field label={t("În ce sursă intră")}>
@@ -99,12 +99,12 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
         <input
           ref={fileRef}
           type="file"
-          accept=".csv,text/csv,text/plain"
+          accept=".csv,.xlsx,.xls,.htm,.html,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/html"
           className="bf-visually-hidden"
           onChange={(event) => { const file = event.target.files?.[0]; if (file) void readFile(file); }}
         />
         <button className="bf-primary full" disabled={busy || !sourceId || !memberId} onClick={() => fileRef.current?.click()}>
-          <FileUp size={17} /> {busy ? t("Citim fișierul…") : t("Alege fișierul CSV")}
+          <FileUp size={17} /> {busy ? t("Citim fișierul…") : t("Alege extrasul (CSV sau Excel)")}
         </button>
         {error && <p className="bf-form-error" role="alert">{error}</p>}
         {summary && (

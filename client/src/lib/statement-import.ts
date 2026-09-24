@@ -177,7 +177,7 @@ export const STATEMENT_BANK_LABELS: Record<StatementBank, string> = {
   ing: "ING",
   raiffeisen: "Raiffeisen",
   revolut: "Revolut",
-  generic: "Extras CSV",
+  generic: "Extras de cont",
 };
 
 /**
@@ -261,8 +261,14 @@ export function parseStatementCsv(text: string): StatementParse {
   const trimmed = text.replace(/^\uFEFF/, "").trim();
   if (!trimmed) throw new Error(t("Fișierul este gol."));
   const delimiter = detectDelimiter(trimmed);
-  const all = splitCsv(trimmed, delimiter).filter((row) => row.some((cell) => cell));
-  if (all.length < 2) throw new Error(t("Fișierul nu conține rânduri de citit. Verifică dacă este un export CSV al băncii."));
+  return parseStatementTable(splitCsv(trimmed, delimiter), delimiter);
+}
+
+/** Același cititor pentru CSV, Excel și tabelele HTML: primește rândurile deja despărțite în celule. */
+export function parseStatementTable(table: string[][], delimiter = ""): StatementParse {
+  // Rândurile goale rămân: „rândul 5” trebuie să fie rândul 5 și în Excel, nu al cincilea plin.
+  const all = table.map((row) => row.map((cell) => (cell || "").replace(/\s+/g, " ").trim()));
+  if (all.filter((row) => row.some((cell) => cell)).length < 2) throw new Error(t("Fișierul nu conține rânduri de citit. Verifică dacă este un export CSV al băncii."));
   const header = findColumns(all);
   const columns = header?.columns || inferColumns(all);
   if (!columns) throw new Error(t("Nu am recunoscut coloanele de dată și sumă. Deschide fișierul și verifică dacă este extrasul de cont exportat în CSV."));
@@ -368,7 +374,8 @@ export function statementMerchant(description: string): string {
   for (const segment of segments) {
     const cleaned = cleanMerchantSegment(segment);
     if (/[A-Za-zĂÂÎȘȚŞŢăâîșțşţ]{2,}/.test(cleaned) && !/^(op|transfer|ordin de plata|canal electronic|instant|intrabancar|interbancar)$/i.test(foldRomanian(cleaned))) {
-      return titleCase(cleaned).slice(0, 60);
+      const title = titleCase(cleaned).slice(0, 60);
+      return title.charAt(0).toLocaleUpperCase("ro-RO") + title.slice(1);
     }
   }
   return raw.slice(0, 80);
