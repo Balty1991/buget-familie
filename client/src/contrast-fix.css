@@ -1141,8 +1141,10 @@ html body .os-shell .bf-today-add.bf-os-decide {
   background-color: var(--cf-primary-strong, #1f6b4a) !important;
   background-image: none !important;
 }
+/* Configurarea la 320 px: spațiu egal stânga-dreapta, ca bara de derulare să nu cadă peste
+   câmpuri (testare cu utilizatori, problema medie #13). */
 .bf-first-run-body {
-  padding-bottom: 28px !important;
+  padding: 0 6px 28px !important;
 }
 
 /* Banda de zile: eticheta se citește, ținta de atingere are cel puțin 44px înălțime. */

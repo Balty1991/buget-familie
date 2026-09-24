@@ -3,7 +3,7 @@
  * Banii de azi întâi; plicurile rămân opționale, în Plan.
  */
 import { useLayoutEffect, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Home, PiggyBank, ReceiptText, Users, Wallet, WalletCards } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Eye, Home, PiggyBank, ReceiptText, Users, Wallet, WalletCards } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { isoDate, isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type PaymentKind } from "@/lib/finance-data";
@@ -14,10 +14,11 @@ import { markWhatsNewSeen } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
 import { hideNativeSplash } from "@/lib/native-splash";
 import { RoDateInput } from "@/components/RoDateInput";
+import { setSimpleMode } from "@/lib/ui-prefs";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
-type Intent = "track" | "money" | "organize" | "family";
+type Intent = "track" | "money" | "organize" | "family" | "simple";
 
 const PRESETS = [
   { category: "Alimente", amount: 1500, weekly: true, weeklyRate: 600 },
@@ -192,6 +193,13 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     onGoPlan();
   };
 
+  /** Modul simplu, oferit de la început (testare cu utilizatori, #14): notezi și vezi cât mai ai. */
+  const finishSimple = () => {
+    applyBase({ withEnvelopes: false, withPayday: true, moneyFirst: true });
+    setSimpleMode(true);
+    complete();
+  };
+
   const finishMoney = () => {
     applyBase({ withPartner: Boolean(partnerName.trim()), withEnvelopes: false, withPayday: true, moneyFirst: true });
     complete();
@@ -243,6 +251,11 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p>{t("Plicuri pe ciclul de salariu, fără bancă. Alege o intenție — poți schimba totul mai târziu, sau Mai târziu fără nicio pierdere.")}</p>
             <p className="bf-helper bf-first-run-legal">{t("Datele stau pe telefon. Sync-ul e opțional și criptat — fără login bancar.")}</p>
             <div className="bf-first-run-intents" role="group" aria-label={t("Intenții de start")}>
+              <button type="button" onClick={() => setIntent("simple")}>
+                <Eye size={20} />
+                <b>{t("Vreau doar să notez și să văd cât mai am.")}</b>
+                <small>{t("Ecran simplu, text mare. Fără plicuri; le poți porni oricând din Setări.")}</small>
+              </button>
               <button type="button" onClick={() => setIntent("track")}>
                 <ReceiptText size={20} />
                 <b>{t("Vreau doar să văd pe ce se duc banii.")}</b>
@@ -281,6 +294,27 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             ))}
             <div className="bf-onboarding-actions">
               <button className="bf-primary" onClick={finishTrack}>{t("Adaugă prima cheltuială")} <ChevronRight size={17} /></button>
+            </div>
+          </div>
+        )}
+
+        {intent === "simple" && (
+          <div className="bf-setup-copy">
+            <p className="bf-kicker">{t("MOD SIMPLU")}</p>
+            <h2 id="bf-setup-title">{t("Cât ai")} <em>{t("acum?")}</em></h2>
+            <p>{t("Scrie banii de azi și când vine următorul venit (salariu sau pensie). Pe Astăzi vei vedea doar cât mai ai și butonul de notat.")}</p>
+            <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Doina" /></label>
+            <div className="bf-setup-sources">
+              {moneySources.slice(0, 2).map((source) => (
+                <label className="bf-field" key={source.id}>
+                  <span>{source.name}</span>
+                  <input inputMode="decimal" value={balances[source.id] || ""} onChange={(event) => setBalances((current) => ({ ...current, [source.id]: event.target.value }))} placeholder="0" />
+                </label>
+              ))}
+            </div>
+            <label className="bf-field"><span>{t("Următorul venit")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <div className="bf-onboarding-actions">
+              <button className="bf-primary" onClick={finishSimple}><Check size={17} /> {t("Gata")}</button>
             </div>
           </div>
         )}

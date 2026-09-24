@@ -2804,4 +2804,8 @@ export const en: Record<string, string> = {
   "De știut": "Good to know",
   "Ești sigur?": "Are you sure?",
   "Da": "Yes",
+  "Vreau doar să notez și să văd cât mai am.": "I just want to jot things down and see what's left.",
+  "Ecran simplu, text mare. Fără plicuri; le poți porni oricând din Setări.": "A simple screen with large text. No envelopes; you can turn them on any time in Settings.",
+  "Cât ai": "How much do you have",
+  "Scrie banii de azi și când vine următorul venit (salariu sau pensie). Pe Astăzi vei vedea doar cât mai ai și butonul de notat.": "Enter today's money and when your next income arrives (salary or pension). Today will show only what's left and the button to jot things down.",
 };
