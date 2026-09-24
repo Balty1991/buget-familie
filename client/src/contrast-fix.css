@@ -1269,3 +1269,14 @@ html body .bf-os-day > span:first-child {
 /* Fond lunar pentru o scadență anuală / trimestrială */
 .bf-recurring-fund { display: block; grid-column: 1 / -1; margin: 2px 0 0; font-size: 13px; line-height: 1.45; white-space: normal; }
 .bf-recurring-fund .bf-link-button { display: inline; min-height: 0; padding: 0; font-size: inherit; }
+
+/* Feedback pentru testarea închisă */
+.bf-feedback { display: grid; gap: .7rem; padding: 1rem; border: 1px solid color-mix(in srgb, var(--cf-ink, #1a2420) 14%, transparent); border-radius: 1rem; background: var(--cf-surface, #fffdf7); color: var(--cf-ink, #1a2420); }
+.bf-feedback h2 { display: flex; align-items: center; gap: .4rem; margin: 0; font-size: 1.15rem; }
+.bf-feedback p { margin: 0; }
+.bf-feedback textarea { width: 100%; min-height: 6rem; resize: vertical; font: inherit; }
+.bf-feedback-kinds { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bf-feedback-kinds button { min-height: 40px; padding: 8px 14px; border: 1px solid color-mix(in srgb, var(--cf-ink, #1a2420) 22%, transparent); border-radius: 999px; background: transparent; color: inherit; font: inherit; font-weight: 600; }
+.bf-feedback-kinds button.active { border-color: var(--cf-primary-strong, #1f5240); background: var(--cf-primary-strong, #1f5240); color: #fff; }
+.bf-feedback-details { display: flex; gap: .5rem; align-items: flex-start; font-size: 13px; line-height: 1.45; }
+.bf-feedback-details input { margin-top: 3px; flex: 0 0 auto; }

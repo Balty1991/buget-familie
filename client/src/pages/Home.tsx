@@ -581,6 +581,8 @@ export default function Home() {
   const { storageNotice, setStorageNotice, storageReady, applyData } = usePersistAppData(data, setData);
   /** „Azi” al familiei: se setează înainte de orice calcul din randare (testare, #10). */
   setFamilyTimeZone(data.settings.familyTimeZone);
+  /** Mesajele de feedback trimise fără internet pleacă la prima deschidere cu rețea. */
+  useEffect(() => { void import("@/lib/feedback").then(({ flushFeedbackQueue }) => flushFeedbackQueue()).catch(() => undefined); }, []);
   /** Venit neregulat: perioada „banii să-mi ajungă N zile” pornește din ziua de azi (M6). */
   const todayIso = isoToday();
   useEffect(() => {

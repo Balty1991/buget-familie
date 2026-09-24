@@ -738,3 +738,89 @@ export const playRtdn = onRequest(
     response.status(204).send("");
   },
 );
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Feedback din aplicație, pentru testarea închisă: „Spune-ne ce nu merge”.
+ * Se păstrează doar ce scrie omul, contactul dacă îl dă și câteva detalii tehnice
+ * (versiune, ecran, telefon). Nu intră sume, nume sau date din registru.
+ * Mesajele se citesc în Firebase Console → Firestore → appFeedback.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+const FEEDBACK_KINDS = new Set(["problem", "idea", "other"]);
+const clip = (value: unknown, max: number) => (typeof value === "string" ? value.trim().slice(0, max) : "");
+
+async function allowFeedback(ip: string): Promise<boolean> {
+  const bucket = new Date().toISOString().slice(0, 13);
+  const id = createHash("sha256").update(`feedback|${bucket}|${ip}`).digest("hex").slice(0, 40);
+  try {
+    ensureAdmin();
+    const db = getFirestore();
+    const ref = db.collection("appFeedbackQuota").doc(id);
+    return await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const count = snap.exists ? Number(snap.get("n") || 0) : 0;
+      if (count >= 10) return false;
+      tx.set(ref, { n: count + 1, bucket, at: FieldValue.serverTimestamp() }, { merge: true });
+      return true;
+    });
+  } catch {
+    return true;
+  }
+}
+
+export const appFeedback = onRequest(
+  { region: "europe-central2", invoker: "public", timeoutSeconds: 15, memory: "256MiB", maxInstances: 4 },
+  (request, response) => {
+    allowCors(request, response, async () => {
+      if (request.method === "OPTIONS") {
+        response.status(204).send("");
+        return;
+      }
+      if (request.method !== "POST") {
+        response.status(405).json({ error: "Method not allowed" });
+        return;
+      }
+      const origin = request.get("origin");
+      if (origin && !originAllowed(origin)) {
+        response.status(403).json({ error: "Origin not allowed" });
+        return;
+      }
+      const body = (request.body || {}) as Record<string, unknown>;
+      const message = clip(body.message, 2000);
+      const kind = typeof body.kind === "string" && FEEDBACK_KINDS.has(body.kind) ? body.kind : "other";
+      if (message.length < 3) {
+        response.status(400).json({ error: "Scrie câteva cuvinte despre ce s-a întâmplat." });
+        return;
+      }
+      const ip = String(request.ip || request.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 64);
+      if (!(await allowFeedback(ip))) {
+        response.status(429).json({ error: "Ai trimis multe mesaje într-o oră. Mulțumim! Încearcă puțin mai târziu." });
+        return;
+      }
+      const details = body.details && typeof body.details === "object" ? body.details as Record<string, unknown> : undefined;
+      try {
+        ensureAdmin();
+        await getFirestore().collection("appFeedback").add({
+          kind,
+          message,
+          contact: clip(body.contact, 120) || null,
+          details: details ? {
+            version: clip(details.version, 20),
+            screen: clip(details.screen, 40),
+            platform: clip(details.platform, 20),
+            device: clip(details.device, 160),
+            language: clip(details.language, 10),
+            theme: clip(details.theme, 20),
+            viewport: clip(details.viewport, 20),
+            synced: details.synced === true,
+          } : null,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+        response.json({ ok: true });
+      } catch (error) {
+        console.error("appFeedback", error instanceof Error ? error.message.slice(0, 180) : "unknown");
+        response.status(502).json({ error: "Mesajul nu a putut fi salvat acum." });
+      }
+    });
+  },
+);

@@ -4,7 +4,7 @@
 import "../mobile-settings-pass.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { BellRing, BrainCircuit, BookOpen, CalendarClock, Check, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Search, Palette, PiggyBank, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
+import { MessageSquareWarning, BellRing, BrainCircuit, BookOpen, CalendarClock, Check, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Search, Palette, PiggyBank, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
 import { createEmptyAppData, type AppData, type Debt, type Receipt, type SavingsGoal } from "@/lib/finance-data";
 import { clearReceiptImageStorage } from "@/lib/receipt-storage";
 import { setSimpleMode } from "@/lib/ui-prefs";
@@ -16,6 +16,7 @@ import {
   type MoreView,
   type SyncPanelProps,
 } from "@/pages/home-kit";
+import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { t } from "@/lib/i18n";
 import { askConfirm } from "@/lib/confirm-dialog";
 const ReportsPanel = lazy(() => import("@/components/ReportsPanel").then((module) => ({ default: module.ReportsPanel })));
@@ -47,7 +48,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
   }, []);
   useEffect(() => {
     if (!simpleMode) return;
-    const allowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring", "catalog"]);
+    const allowed = new Set(["overview", "settings", "sync", "guide", "review", "recurring", "catalog", "feedback"]);
     if (!allowed.has(tab)) setTab("overview");
   }, [simpleMode, tab, setTab]);
   const isCollaborative = data.settings.members.length > 1;
@@ -82,6 +83,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
               <button type="button" className="bf-settings-row" onClick={() => setTab("sync")}><Cloud size={20} /><span className="bf-settings-copy"><b>{t("Sincronizare")}</b><small>{t("opțională între telefoane")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
               <button type="button" className="bf-settings-row" onClick={() => setTab("settings")}><Download size={20} /><span className="bf-settings-copy"><b>{t("Backup / Export")}</b><small>{t("în Setări, pe acest telefon")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
               <button type="button" className="bf-settings-row" onClick={() => setTab("guide")}><BookOpen size={20} /><span className="bf-settings-copy"><b>{t("Tutorial")}</b><small>{t("tutorial de folosire")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+              <button type="button" className="bf-settings-row" onClick={() => setTab("feedback")}><MessageSquareWarning size={20} /><span className="bf-settings-copy"><b>{t("Spune-ne ce nu merge")}</b><small>{t("o problemă sau o idee, direct la noi")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
             </div>
           </section>
           <button type="button" className="bf-primary bf-simple-mode-exit" onClick={() => { setSimpleMode(false); setSimpleModeState(false); }}>{t("Arată instrumentele avansate")}</button>
@@ -116,7 +118,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
       <section className="bf-more-group" aria-labelledby="more-help-title">
         <p className="bf-kicker bf-more-section-label" id="more-help-title">{t("AJUTOR")}</p>
         <div className="bf-more-grid bf-settings-group">
-          <button type="button" className="bf-settings-row" onClick={() => setTab("guide")}><BookOpen size={20} /><span className="bf-settings-copy"><b>{t("Tutorial")}</b><small>{t("cum notezi, cum citești cifra")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("guide")}><BookOpen size={20} /><span className="bf-settings-copy"><b>{t("Tutorial")}</b><small>{t("cum notezi, cum citești cifra")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button><button type="button" className="bf-settings-row" onClick={() => setTab("feedback")}><MessageSquareWarning size={20} /><span className="bf-settings-copy"><b>{t("Spune-ne ce nu merge")}</b><small>{t("o problemă sau o idee, direct la noi")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
         </div>
       </section>
         </>
@@ -135,6 +137,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
     if (tab === "assistant") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim asistentul…")}</div>}><AdvisorPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "learned") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim regulile…")}</div>}><LearnedRulesPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "settings") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim setările…")}</div>}><SettingsPanel data={data} onChange={onChange} onReset={async () => { if (!await askConfirm(t("Ștergi toate datele locale de pe acest dispozitiv?"))) return; void clearReceiptImageStorage(); onChange(createEmptyAppData()); }} /></Suspense>;
+    if (tab === "feedback") return <FeedbackPanel screen={`utilities`} synced={Boolean(sync.connected)} />;
     if (tab === "guide") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim ghidul…")}</div>}><FamilyGuide onGo={onGo} onOpenReview={() => setTab("review")} onOpenSync={() => setTab("sync")} /></Suspense>;
     return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim sincronizarea…")}</div>}><SyncPanel {...sync} /></Suspense>;
   };
