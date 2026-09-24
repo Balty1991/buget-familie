@@ -2913,4 +2913,7 @@ export const en: Record<string, string> = {
   "Mulțumim! Am primit mesajul.": "Thanks! We got your message.",
   "Nu e internet acum. Mesajul pleacă singur la următoarea deschidere a aplicației.": "No internet right now. The message will be sent automatically next time you open the app.",
   "Mesajul nu a putut fi trimis.": "The message couldn't be sent.",
+  "Plicul săptămânii s-a terminat până {until}. În Plan mai ai {free} nerepartizați: poți pune o parte în plic.": "This week's envelope is used up until {until}. Plan still has {free} unassigned: you can move some into the envelope.",
+  "Plicul săptămânii s-a terminat până {until}. Tranșa următoare pornește atunci.": "This week's envelope is used up until {until}. The next tranche starts then.",
+  "Pune bani în plic": "Add money to the envelope",
 };

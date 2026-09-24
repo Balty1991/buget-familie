@@ -57,10 +57,26 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
         : data.settings.salaryPlan.allocations.length
           ? envelopeTotalRemaining
           : trackHero.value;
+  const untilName = (() => {
+    const end = rhythm.days[rhythm.days.length - 1]?.day;
+    if (!end) return t("duminică");
+    return new Date(`${end}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" });
+  })();
+  /**
+   * Plicul săptămânii e gol, dar în Plan sunt bani nerepartizați: fără o frază, „0,00” lângă
+   * „Nerepartizați 6.606” arăta ca o contradicție (auditul pe ecran).
+   */
+  const weekEmpty = heroTracksWeek && rhythm.remaining <= 0.009 && rhythm.todayLeft <= 0.009;
+  const freeInPlan = Math.max(0, math.remaining);
+  const planHelp = weekEmpty && freeInPlan > 0.009;
   const heroHint = noMoneyYet
     ? t("Scrie cât ai acum pe card și în numerar (Setări → Surse și sold inițial). Apoi îți spunem cât poți folosi pe zi.")
     : overPlan
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
+    : weekEmpty
+      ? planHelp
+        ? t("Plicul săptămânii s-a terminat până {until}. În Plan mai ai {free} nerepartizați: poți pune o parte în plic.", { until: untilName, free: exact(freeInPlan) })
+        : t("Plicul săptămânii s-a terminat până {until}. Tranșa următoare pornește atunci.", { until: untilName })
     : heroTracksWeek
       ? todayUsedUp
         ? t("Azi ai folosit partea zilei. De mâine: {daily} lei/zi ({available} pe {days}).", { daily: exact(rhythm.futureShare), available: exact(rhythm.remaining), days: daysLabel(rhythm.remainingDays - 1) })
@@ -88,11 +104,6 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
           ? t("Este soldul de pe card, cash sau bonuri, după ce ai înregistrat. Fără data venitului nu calculăm un ritm zilnic.")
           : t("Plicurile sunt sume puse deoparte pentru un scop, cum ar fi mâncare, transport sau facturi.");
 
-  const untilName = (() => {
-    const end = rhythm.days[rhythm.days.length - 1]?.day;
-    if (!end) return t("duminică");
-    return new Date(`${end}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" });
-  })();
   /** Partea de azi s-a dus, dar în plic mai sunt bani pentru zilele următoare (cumpărăturile săptămânii). */
   const noteDaily = todayUsedUp || rhythm.days.some((row) => row.isToday && row.over) ? rhythm.futureShare : heroTracksWeek ? brief.spendable : rhythm.todayShare;
   const rhythmNote = noMoneyYet
@@ -110,5 +121,5 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const todayRow = rhythm.days.find((row) => row.isToday);
   const todayStrip = todayRow ? dayStripFigure(todayRow, heroTracksWeek ? brief.spendable : todayRow.left, heroTracksWeek) : 0;
 
-  return { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip };
+  return { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
 }

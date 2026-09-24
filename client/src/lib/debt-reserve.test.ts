@@ -104,3 +104,18 @@ describe("ghidul și Astăzi spun aceeași cifră", () => {
     expect(answer.detail).toMatch(/Poți folosi azi .* la fel ca pe Astăzi/);
   });
 });
+
+describe("Astăzi: plicul săptămânii gol, bani nerepartizați în Plan", () => {
+  it("explică „0,00” și trimite spre Plan, în loc de „Ritm 0 lei/zi, din 0 rămași”", async () => {
+    const { buildTodaySummary } = await import("./today-summary");
+    const data = createEmptyAppData();
+    data.settings.paymentSources = data.settings.paymentSources.map((source) => ({ ...source, openingBalance: source.id === "source-debit" ? 4200 : 0 }));
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-14", nextPayday: "2026-10-14", earliestPayday: undefined, paydayFlexDays: 0, allocations: [{ id: "food", label: "Mâncare", amount: 600, category: "Mâncare" }] };
+    data.transactions = [{ id: "t1", title: "Lidl", amount: 400, kind: "expense", category: "Mâncare", source: "Card", person: "Eu", date: ASOF, sourceId: "source-debit", memberId: "member-me" }];
+    const summary = buildTodaySummary(data, ASOF);
+    expect(summary.heroTracksWeek).toBe(true);
+    expect(summary.heroValue).toBe(0);
+    expect(summary.planHelp).toBe(true);
+    expect(summary.heroHint).toMatch(/^Plicul săptămânii s-a terminat până .+ În Plan mai ai .+ nerepartizați/);
+  });
+});

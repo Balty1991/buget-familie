@@ -31,3 +31,31 @@
   min-width: var(--bf-hit, 44px);
   min-height: var(--bf-hit, 44px);
 }
+
+/*
+ * Rândul unei mișcări are doi copii: butonul (iconiță, titlu, sumă) și acțiunile. Regulile vechi
+ * îl împărțeau ca pe structura de dinainte (iconiță | text | sumă), iar butonul rămânea în coloana
+ * de 32–38 px: titlul dispărea și coșul acoperea suma.
+ */
+.bf-movements-ledger .bf-movement-day > div > article.bf-movement-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+.bf-movements-ledger .bf-movement-day > div > article.bf-movement-row > .bf-movement-open {
+  grid-column: 1;
+  min-width: 0;
+}
+.bf-movements-ledger .bf-movement-day > div > article.bf-movement-row > .bf-movement-actions {
+  grid-column: 2;
+}
+
+/* Antet scurt: titlul și ziua pe două rânduri, lista începe imediat. */
+.bf-movements-ledger .bf-movements-header.is-compact h1 {
+  margin: 0;
+}
+.bf-movements-ledger .bf-movements-today-line {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cf-muted, #4a5852);
+}

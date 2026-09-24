@@ -218,7 +218,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
   const { simpleMode } = useSimpleMode();
   const math = usePlanCycle(data);
   const summary = useTodaySummary(data);
-  const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief } = summary;
+  const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
   const signals = useMemo(() => advisorSignals(data), [data]);
   const showHealthGauge = useMemo(() => calculateHealthScore(data).score !== null, [data]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
@@ -371,6 +371,7 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
+            {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
             {(periodIncome > 0 || periodExpense > 0) && (
               <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
                 <span><small>{t("Intrat")}</small><b>+{fmtExact.format(periodIncome)}</b></span>
