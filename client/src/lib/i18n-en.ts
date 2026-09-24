@@ -2921,4 +2921,7 @@ export const en: Record<string, string> = {
   "Ciclul de salariu are nevoie de data venitului": "The pay cycle needs your payday",
   "Spune în Plan când vine salariul; apoi comparația merge de la un salariu la altul, nu pe luna calendaristică.": "Set your payday in Plan; then the comparison runs from one payday to the next instead of the calendar month.",
   "Setează data salariului": "Set payday",
+  "Aplică · automat (acum {name})": "Apply · automatic (now {name})",
+  "Aplică {name} · oprește automat": "Apply {name} · turns off automatic",
+  "tema automată": "automatic theme",
 };

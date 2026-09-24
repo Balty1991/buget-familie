@@ -42,7 +42,22 @@ export function useThemeChrome() {
       return defaultScheduleTimes;
     }
   });
-  const activeTheme = themeSchedule === "auto" ? automaticTheme(currentLocalMinutes(), scheduleTimes) : theme;
+  /**
+   * Cu „Comută automat”, tema depinde de oră: fără un semnal, aplicația lăsată deschisă peste 21:00
+   * rămânea pe Alb până la următoarea redesenare. Verificăm la fiecare minut și la revenirea în aplicație.
+   */
+  const [clockMinutes, setClockMinutes] = useState(() => currentLocalMinutes());
+  useEffect(() => {
+    if (themeSchedule !== "auto") return;
+    const tick = () => setClockMinutes(currentLocalMinutes());
+    const timer = window.setInterval(tick, 60_000);
+    const onVisible = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", tick);
+    tick();
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("focus", tick); };
+  }, [themeSchedule]);
+  const activeTheme = themeSchedule === "auto" ? automaticTheme(clockMinutes, scheduleTimes) : theme;
   const previousThemeRef = useRef<ThemeId>(activeTheme);
   const themeTransitionReady = useRef(false);
 

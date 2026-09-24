@@ -12,12 +12,24 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
   const previewOption = themeOptions.find((option) => option.id === preview) || themeOptions[0];
   const shownThemes = visibleThemeOptions.some((option) => option.id === preview) ? visibleThemeOptions : [...visibleThemeOptions, previewOption];
   const scheduleIsValid = timeToMinutes(scheduleTimes.dayStart, -1) < timeToMinutes(scheduleTimes.eveningStart, -1) && timeToMinutes(scheduleTimes.eveningStart, -1) < timeToMinutes(scheduleTimes.nightStart, -1);
+  /**
+   * Cu „Comută automat” pornit, tema o dă ora. Înainte, „Aplică” lua tema din listă (de ex. Alb) și,
+   * dacă nu era cea a orei, oprea tăcut automatul: noaptea rămâneai pe Alb. Acum butonul spune ce face.
+   */
+  const autoNow = automaticTheme(currentLocalMinutes(), scheduleTimes);
+  const autoNowName = themeOptions.find((item) => item.id === autoNow)?.name || t("tema automată");
+  const keepsAuto = schedule === "auto" && preview === autoNow;
+  const stopsAuto = schedule === "auto" && preview !== autoNow;
   const applyPreview = () => {
     onChange(preview);
     onBackgroundChange(previewBackground);
-    const autoNow = automaticTheme(currentLocalMinutes(), scheduleTimes);
-    onScheduleChange(schedule === "auto" && preview === autoNow ? "auto" : "manual");
+    onScheduleChange(keepsAuto ? "auto" : "manual");
     onClose();
+  };
+  const toggleSchedule = () => {
+    if (schedule === "auto") { onScheduleChange("manual"); return; }
+    onScheduleChange("auto");
+    setPreview(autoNow);
   };
   const selectBackground = (id: BackgroundId) => {
     setPreviewBackground(id);
@@ -94,7 +106,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
           </div>
         </section>
         <section className="bf-theme-preferences" aria-label={t("Preferințe temă")}>
-          <button type="button" className={schedule === "auto" ? "active" : ""} role="switch" aria-checked={schedule === "auto"} onClick={() => onScheduleChange(schedule === "auto" ? "manual" : "auto")}>
+          <button type="button" className={schedule === "auto" ? "active" : ""} role="switch" aria-checked={schedule === "auto"} onClick={toggleSchedule}>
             <span>
               <b>{t("Comută automat zi/noapte")}</b>
               <small>{schedule === "auto" ? `Activ acum: ${themeOptions.find((item) => item.id === automaticTheme(currentLocalMinutes(), scheduleTimes))?.name || "tema automată"}. Zi ${scheduleTimes.dayStart}–${scheduleTimes.eveningStart} · seară ${scheduleTimes.eveningStart}–${scheduleTimes.nightStart} · noapte ${scheduleTimes.nightStart}–${scheduleTimes.dayStart}.` : t("Folosește Alb ziua, Navy seara și Întunecat cu verde noaptea.")}</small>
@@ -117,7 +129,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
         </section>
         </div>
         <div className="bf-theme-picker-footer">
-        <button type="button" className="bf-primary bf-theme-apply" onClick={applyPreview}><Check size={17} /> {t("Aplică {name}", { name: previewOption.name })}</button>
+        <button type="button" className="bf-primary bf-theme-apply" onClick={applyPreview}><Check size={17} /> {keepsAuto ? t("Aplică · automat (acum {name})", { name: autoNowName }) : stopsAuto ? t("Aplică {name} · oprește automat", { name: previewOption.name }) : t("Aplică {name}", { name: previewOption.name })}</button>
         </div>
       </section>
     </div>,

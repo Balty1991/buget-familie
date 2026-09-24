@@ -13,6 +13,7 @@
 - Analiză: „Ciclu salariu” spune ce lipsește și duce la setarea datei salariului.
 - Aspect unitar: aceleași carduri, titluri și etichete pe toate ecranele; 1.685 de reguli CSS moarte scoase (CSS 1.153 → 927 KB).
 - Ghidul online nu mai așteaptă un minut după un Gemini lent: trece la rezervă în cel mult ~33 s.
+- Aspect: „Comută automat zi/noapte” nu mai e oprit tăcut de butonul „Aplică” (noaptea rămâneai pe Alb); butonul spune ce face, iar tema se schimbă singură la oră și cu aplicația deschisă.
 - Test automat nou pentru interfață (11 ecrane × 3 teme × 2 lățimi: layout și contrast).
 
 ## 1.1.94
