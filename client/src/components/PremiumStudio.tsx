@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Check, Sparkles } from "lucide-react";
-import { BILLING_LIVE, familieYearGiftMonths, formatPlanPriceRon, PLANS, TRIAL_DAYS } from "@/lib/entitlements";
+import { BILLING_LIVE, isFamilie, familieYearGiftMonths, formatPlanPriceRon, PLANS, TRIAL_DAYS } from "@/lib/entitlements";
 import { t } from "@/lib/i18n";
 
 export function PremiumStudio() {
@@ -40,6 +41,7 @@ export function PremiumStudio() {
           </ul>
         </article>
       </div>
+      <BillingActions />
       <p className="bf-premium-promise"><Sparkles size={14} /> {t("Dacă anulezi, registrul rămâne pe telefon. Nu luăm ostatic datele.")}</p>
       <small className="bf-helper">
         {BILLING_LIVE
@@ -49,5 +51,36 @@ export function PremiumStudio() {
         {t("Buget Familie nu e sfat financiar, credit sau investiție. Este un registru de familie.")}
       </small>
     </section>
+  );
+}
+
+/** Cumpărare lunar/anual și „Restaurează abonamentul” (obligatoriu pentru Google Play). */
+function BillingActions() {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [, refresh] = useState(0);
+  const run = async (work: () => Promise<{ ok: boolean; message: string }>) => {
+    setBusy(true);
+    try {
+      const result = await work();
+      setMessage(result.message);
+      refresh((value) => value + 1);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const active = BILLING_LIVE && isFamilie();
+  return (
+    <div className="bf-billing-actions">
+      {BILLING_LIVE && !active && (
+        <div className="bf-billing-buy">
+          <button type="button" className="bf-primary" disabled={busy} onClick={() => void run(async () => (await import("@/lib/billing")).buyFamilie("year"))}>{t("Familia anual · {price}", { price: formatPlanPriceRon("familie", "year") })}</button>
+          <button type="button" className="bf-secondary" disabled={busy} onClick={() => void run(async () => (await import("@/lib/billing")).buyFamilie("month"))}>{t("Familia lunar · {price}", { price: formatPlanPriceRon("familie", "month") })}</button>
+        </div>
+      )}
+      {active && <p className="bf-billing-active"><Check size={14} /> {t("Familia e activă pe acest telefon.")}</p>}
+      <button type="button" className="bf-link-button" disabled={busy} onClick={() => void run(async () => (await import("@/lib/billing")).restoreFamilie())}>{t("Restaurează abonamentul")}</button>
+      {message && <p className="bf-notice" role="status">{message}</p>}
+    </div>
   );
 }

@@ -1,8 +1,25 @@
-# Prep tehnic Play Billing — fără activare
+# Play Billing — implementat, oprit până la activare
 
-**Stare:** documentație + stub-uri în `entitlements.ts`.  
-**`BILLING_LIVE` trebuie să rămână `false`** până la checklist-ul de jos.  
-**Nu** s-au adăugat pachete npm Billing în acest pas (fără clone/`pnpm install` fiabil pe agent); le adaugi local la implementare.
+**Stare (1.1.94):** codul e gata, dar oprit: `BILLING_LIVE = false` în `client/src/lib/entitlements.ts`.
+Cât e `false`, toată lumea are Familia (perioada de testare), iar butoanele de cumpărare nu apar.
+
+| Parte | Unde |
+|---|---|
+| Cumpărare / restaurare pe telefon | `client/src/lib/billing.ts` (plugin `@capgo/native-purchases`) |
+| Dreptul la Familia, cu 3 zile de grație offline | `client/src/lib/billing-store.ts` |
+| Butoane „Familia anual / lunar” și „Restaurează abonamentul” | `client/src/components/PremiumStudio.tsx` |
+| Verificare pe server + confirmare (acknowledge) | funcția `verifyPlayPurchase` (`functions/src/index.ts`) |
+| Anulări, rambursări, reînnoiri (RTDN) | funcția `playRtdn` |
+| Familia pentru partener, prin camera familiei | `familyEntitlements/{roomId}`, scris doar de server |
+
+## Pași de activare (în ordine)
+
+1. **Play Console → Monetizare → Abonamente:** creează `familie_lunar` (plan de bază `lunar`, 19,99 lei/lună) și `familie_anual` (plan de bază `anual`, 149 lei/an). ID-urile planurilor de bază trebuie să fie exact acestea (`PLAY_BASE_PLANS`). Oferta de probă de 14 zile se pune pe planuri.
+2. **Play Console → Utilizatori și permisiuni:** invită contul de serviciu al funcțiilor (`<număr-proiect>-compute@developer.gserviceaccount.com` sau cel afișat la funcția `verifyPlayPurchase` în Google Cloud Console) cu dreptul „Vizualizează date financiare, comenzi și răspunsuri la anulări” și „Gestionează comenzi și abonamente”.
+3. **Google Cloud Console:** activează **Google Play Android Developer API** pe proiectul `buget-familie-a6a0d`.
+4. **Firestore → Rules:** lipește din nou `firestore.rules` (au apărut `familyEntitlements` și `playPurchases`).
+5. **RTDN:** în Pub/Sub creează un topic (ex. `play-rtdn`), dă-i `google-play-developer-notifications@system.gserviceaccount.com` rolul Publisher, apoi un abonament **push** către `https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/playRtdn`. În Play Console → Monetizare → Setări: numele topicului.
+6. **Test închis:** adaugă testerii ca „license testers”, pune `BILLING_LIVE = true`, publică pe testare internă și verifică: cumpărare, restaurare pe alt telefon, partenerul din aceeași cameră primește Familia, anulare (RTDN o scoate).
 
 ---
 

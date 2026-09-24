@@ -117,3 +117,18 @@ export function subscribeFamilyRoom(roomId: string, onEnvelope: (envelope: Encry
     if (envelope) onEnvelope(envelope);
   }, (error) => onError(error instanceof RealtimeSyncError ? error : new RealtimeSyncError("unavailable", "Conexiunea live cu serviciul de sincronizare a fost întreruptă.")));
 }
+
+/**
+ * Abonamentul Familia legat de cameră, scris doar de server (funcția verifyPlayPurchase),
+ * ca partenerul să primească beneficiul fără să cumpere separat.
+ */
+export async function fetchFamilyEntitlement(roomId: string): Promise<{ expiresAt: string } | null> {
+  try {
+    const snapshot = await getDoc(doc(db(), "familyEntitlements", roomId));
+    const expiresAt = snapshot.exists() ? snapshot.data().expiresAt : undefined;
+    return typeof expiresAt === "string" ? { expiresAt } : null;
+  } catch (error) {
+    if (error instanceof RealtimeSyncError) throw error;
+    return null;
+  }
+}

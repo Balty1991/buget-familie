@@ -3,13 +3,37 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.aiGuide = void 0;
+exports.playRtdn = exports.verifyPlayPurchase = exports.aiGuide = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
+const node_crypto_1 = require("node:crypto");
+const app_1 = require("firebase-admin/app");
+const firestore_1 = require("firebase-admin/firestore");
+const app_check_1 = require("firebase-admin/app-check");
 const cors_1 = __importDefault(require("cors"));
 const geminiApiKey = (0, params_1.defineSecret)("GEMINI_API_KEY");
 const groqApiKey = (0, params_1.defineSecret)("GROQ_API_KEY");
-const allowCors = (0, cors_1.default)({ origin: true });
+function originAllowed(origin) {
+    if (!origin)
+        return true;
+    let host = "";
+    try {
+        host = new URL(origin).hostname;
+    }
+    catch {
+        return false;
+    }
+    return origin === "https://balty1991.github.io"
+        || origin === "capacitor://localhost"
+        || origin === "ionic://localhost"
+        || host === "localhost"
+        || host === "127.0.0.1";
+}
+const allowCors = (0, cors_1.default)({
+    origin(origin, callback) {
+        callback(null, originAllowed(origin));
+    },
+});
 const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-flash-latest"];
 const GROQ_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b", "openai/gpt-oss-20b"];
 const systemInstruction = `Ești Copilotul Financiar al aplicației Buget Familie. Ești un ghid calm, empatic și foarte practic, care rămâne activ pe tot parcursul folosirii aplicației. Nu răspunde generic și nu redirecționa utilizatorul către meniuri fără explicație.
@@ -20,7 +44,7 @@ Ce poți face, adică ce ajunge efectiv în aplicație, sunt elementele din read
 
 Contextul îți dă numele exacte pe care le are familia: sources (unde stau banii, cu sold), categories (categoriile acceptate), envelopes (plicurile, cu sumă și rest), recurring și dues (scadențele), goals (obiectivele), debts, events (evenimentele din calendar) și today (ziua de azi). Când omul numește un plic, o scadență sau un eveniment, folosește numele din context, nu o variantă a ta: aplicația leagă readingul de lucrul real după nume, iar un nume inventat face cererea să cadă. La category alege dintre categories; dacă niciuna nu se potrivește, lasă categoria pe care o spune omul, dar nu inventa un nume de plic care nu e în envelopes.
 
- Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Regula de prioritate: dacă mesajul conține credit, împrumut, datorie, sold restant, rată lunară sau scadență, intenția este debt, nu expense; suma mare este soldul rămas, rata este monthlyPayment, iar ziua scadenței este dueDay ca număr între 1 și 31. Nu crea o cheltuială pentru soldul creditului și nu cere alegerea unui plic. Dacă utilizatorul oferă clar numele creditului și valorile sale, tratează mesajul ca pe o comandă de înregistrare: returnează intent debt, extracted complet și needsConfirmation false; răspunde că ai înregistrat datele, fără să ceri „Da”. Dacă utilizatorul spune că a plătit efectiv rata, abia atunci înregistrează plata ca expense separat, cu suma ratei. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Păstrează întotdeauna zecimalele exacte: 15,50 lei înseamnă 15.50, nu 16; nu rotunji niciodată sumele de pe bon. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. Dacă primești un atașament cu un bon românesc, analizează imaginea/PDF-ul direct, de sus în jos și apoi verifică zona de total: identifică magazinul, produsele lizibile, cantitatea și prețul fiecărui produs, data și categoria probabilă. Uneori primești și un bloc [OCR local de verificare]; folosește-l ca indiciu suplimentar, compară-l cu imaginea și preferă valoarea tipărită clar în imagine atunci când diferă. Totalul cheltuielii trebuie să fie suma de la TOTAL, TOTAL LEI, TOTAL DE PLATĂ, SUMA DE PLATĂ sau ECRAN/AMOUNT PAID; nu folosi subtotalul, TVA, Total Economisit, punctele, numerarul primit, restul, numărul bonului sau un preț de produs. Garanția SGR / PET (0,50 lei) este parte din totalul plătit, nu o ignora. REDUCERE de sub un produs scade din acel produs; o reducere-rezumat lângă Total Economisit nu se mai scade o dată. Dacă există mai multe totaluri, alege suma asociată explicit plății finale și verifică dacă este aproximativ egală cu suma produselor. Pentru un bon cu total identificabil, răspunde direct cu propunerea de cheltuială și completează extracted.amount, extracted.title, extracted.vendor, extracted.date, extracted.category, extracted.totalLabel, extracted.confidence și extracted.receiptLines; nu cere utilizatorului să transcrie bonul. Dacă imaginea este puțin neclară, dar OCR-ul local și eticheta TOTAL indică aceeași sumă, folosește suma și marchează confidence medium, nu spune automat că bonul este imposibil de citit. Dacă totalul nu este lizibil nici în imagine, nici în OCR, spune clar că nu îl poți confirma și cere o fotografie mai clară, fără să inventezi suma. needsConfirmation este true doar la prima propunere de cheltuială ambiguă. Pentru datorii, venituri și repartizări pe care utilizatorul le-a formulat clar, needsConfirmation trebuie să fie false. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
+ Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Regula de prioritate: dacă mesajul conține credit, împrumut, datorie, sold restant, rată lunară sau scadență, intenția este debt, nu expense; suma mare este soldul rămas, rata este monthlyPayment, iar ziua scadenței este dueDay ca număr între 1 și 31. Nu crea o cheltuială pentru soldul creditului și nu cere alegerea unui plic. Dacă utilizatorul oferă clar numele creditului și valorile sale, tratează mesajul ca pe o comandă de înregistrare: returnează intent debt, extracted complet și needsConfirmation false; răspunde că ai înregistrat datele, fără să ceri „Da”. Dacă utilizatorul spune că a plătit efectiv rata, abia atunci înregistrează plata ca expense separat, cu suma ratei. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Păstrează întotdeauna zecimalele exacte: 15,50 lei înseamnă 15.50, nu 16; nu rotunji niciodată sumele de pe bon. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. Nu primești imagini sau PDF-uri de bon: atașamentele sunt ignorate, bonul se citește pe telefon. Dacă omul vorbește despre un bon, spune-i să îl noteze din Mișcări sau De verificat și nu pretinde că ai văzut o poză. needsConfirmation este true doar la prima propunere de cheltuială ambiguă. Pentru datorii, venituri și repartizări pe care utilizatorul le-a formulat clar, needsConfirmation trebuie să fie false. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
 
 Repartizarea banilor se face de azi înainte, nu pe zilele care au trecut. Contextul îți dă period cu: start, end (data venitului), today, daysTotal, daysLeft, free (banii nerepartizați, aceeași cifră ca „Nerepartizați” din Plan: sold minus ce a rămas în plicuri minus scadențe), paceWeekly (ritmul pe săptămână întreagă pe care îl susțin banii liberi pe zilele rămase), pacePerDay și startedWeek (index, daysLeft, share) când săptămâna curentă e deja începută. Folosește aceste cifre, nu împărți tu venitul la 4 săptămâni. period.free nu se recalculează din soldurile surselor. La „cât pot cheltui azi” răspunzi cu todayCanUse, cifra mare de pe Astăzi — nu cu pacePerDay și nu împărțind soldurile la zilele până la salariu. pacePerDay spune doar cum încap banii încă nerepartizați într-un plic nou.
 
@@ -178,7 +202,7 @@ function isInvalidKey(detail) {
 function buildContents(messages, context) {
     const contents = [];
     for (const message of messages) {
-        const text = (message.text || "").trim();
+        const text = String(message.text || "").slice(0, 2000).trim();
         // Pozele de bon rămân pe telefon (Play Data safety). Ignorăm orice attachments din clienți vechi.
         if (!text)
             continue;
@@ -394,6 +418,46 @@ async function callGroq(apiKey, contents) {
     }
     throw new GuideCallError(lastDetail.slice(0, 300) || "GROQ_UPSTREAM_ERROR", lastStatus, lastQuota);
 }
+function ensureAdmin() {
+    if (!(0, app_1.getApps)().length)
+        (0, app_1.initializeApp)();
+}
+/** Token prezent dar invalid = cerere respinsă. Lipsa tokenului nu taie ghidul. */
+async function appCheckTrusted(token) {
+    if (!token)
+        return "absent";
+    try {
+        ensureAdmin();
+        await (0, app_check_1.getAppCheck)().verifyToken(token);
+        return "ok";
+    }
+    catch {
+        return "invalid";
+    }
+}
+/** Plafon pe oră și IP. Cu token valid, 60. Fără token, 12 — un proxy anonim se oprește repede. */
+async function allowGuideCall(ip, trusted) {
+    const limit = trusted ? 60 : 12;
+    const bucket = new Date().toISOString().slice(0, 13);
+    const id = (0, node_crypto_1.createHash)("sha256").update(`${bucket}|${ip}`).digest("hex").slice(0, 40);
+    try {
+        ensureAdmin();
+        const db = (0, firestore_1.getFirestore)();
+        const ref = db.collection("aiGuideQuota").doc(id);
+        return await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            const count = snap.exists ? Number(snap.get("n") || 0) : 0;
+            if (count >= limit)
+                return false;
+            tx.set(ref, { n: count + 1, bucket, trusted, at: firestore_1.FieldValue.serverTimestamp() }, { merge: true });
+            return true;
+        });
+    }
+    catch (error) {
+        console.error("aiGuide quota", error instanceof Error ? error.message.slice(0, 180) : "unknown");
+        return true;
+    }
+}
 async function generateGuide(contents, geminiKey, groqKey) {
     if (geminiKey) {
         try {
@@ -416,6 +480,7 @@ exports.aiGuide = (0, https_1.onRequest)({
     secrets: [geminiApiKey, groqApiKey],
     timeoutSeconds: 60,
     memory: "256MiB",
+    maxInstances: 8,
 }, (request, response) => {
     allowCors(request, response, async () => {
         if (request.method === "OPTIONS") {
@@ -426,12 +491,39 @@ exports.aiGuide = (0, https_1.onRequest)({
             response.status(405).json({ error: "Method not allowed" });
             return;
         }
+        const origin = request.get("origin");
+        if (origin && !originAllowed(origin)) {
+            response.status(403).json({ error: "Origin not allowed" });
+            return;
+        }
+        const presented = String(request.get("x-firebase-appcheck") || "");
+        const trust = await appCheckTrusted(presented);
+        if (trust === "invalid") {
+            response.status(401).json({ error: "App Check invalid", code: "app_check" });
+            return;
+        }
+        const ip = String(request.ip || request.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 64);
+        if (!(await allowGuideCall(ip, trust === "ok"))) {
+            response.status(429).json({ error: "Too many requests", code: "quota" });
+            return;
+        }
         const body = (request.body || {});
-        const messages = Array.isArray(body.messages) ? body.messages.slice(-20).map((message) => ({
-            role: message.role,
-            text: message.text,
-        })) : [];
-        const context = body.context || {};
+        const messages = Array.isArray(body.messages) ? body.messages.slice(-12).map((message) => ({
+            role: message.role === "assistant" ? "assistant" : "user",
+            text: String(message.text || "").slice(0, 2000),
+        })).filter((message) => message.text.trim()) : [];
+        const context = body.context && typeof body.context === "object" ? body.context : {};
+        let contextSize = 0;
+        try {
+            contextSize = JSON.stringify(context).length;
+        }
+        catch {
+            contextSize = 12001;
+        }
+        if (contextSize > 12000) {
+            response.status(413).json({ error: "Context too large" });
+            return;
+        }
         if (!messages.length) {
             response.status(400).json({ error: "Conversation is required" });
             return;
@@ -470,4 +562,111 @@ exports.aiGuide = (0, https_1.onRequest)({
             });
         }
     });
+});
+/* ────────────────────────────────────────────────────────────────────────────
+ * Abonamentul Familia prin Google Play (testarea cu utilizatori: validare pe server).
+ *
+ * Telefonul trimite tokenul achiziției; funcția întreabă Google Play (Android Publisher
+ * API), confirmă achiziția dacă n-a fost confirmată și, dacă telefonul e într-o cameră de
+ * familie, scrie `familyEntitlements/{roomId}` ca partenerul să primească Familia.
+ * Tokenul Google vine din serverul de metadate al funcției: fără chei în cod și fără
+ * secrete noi. Contul de serviciu al funcției trebuie invitat în Play Console
+ * (docs/BILLING_PLAY_PREP.md), altfel Google răspunde 401/403 și nu se dă nimic.
+ * ──────────────────────────────────────────────────────────────────────────── */
+const PLAY_PACKAGE = "ro.balty1991.bugetfamilie";
+const PLAY_SKUS = new Set(["familie_lunar", "familie_anual"]);
+const ACTIVE_STATES = new Set(["SUBSCRIPTION_STATE_ACTIVE", "SUBSCRIPTION_STATE_IN_GRACE_PERIOD"]);
+async function playAccessToken() {
+    const response = await fetch("http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/androidpublisher", { headers: { "Metadata-Flavor": "Google" } });
+    if (!response.ok)
+        throw new Error(`metadata token ${response.status}`);
+    const body = await response.json();
+    if (!body.access_token)
+        throw new Error("metadata token missing");
+    return body.access_token;
+}
+async function readPlaySubscription(purchaseToken) {
+    const token = await playAccessToken();
+    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PLAY_PACKAGE}/purchases/subscriptionsv2/tokens/${encodeURIComponent(purchaseToken)}`;
+    const response = await fetch(url, { headers: { authorization: `Bearer ${token}` } });
+    if (!response.ok)
+        throw new Error(`play ${response.status}`);
+    return await response.json();
+}
+async function acknowledgePlaySubscription(productId, purchaseToken) {
+    const token = await playAccessToken();
+    const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PLAY_PACKAGE}/purchases/subscriptions/${encodeURIComponent(productId)}/tokens/${encodeURIComponent(purchaseToken)}:acknowledge`;
+    await fetch(url, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: "{}" });
+}
+const tokenKey = (purchaseToken) => (0, node_crypto_1.createHash)("sha256").update(`buget-familie-play:${purchaseToken}`).digest("hex");
+/** Verifică tokenul la Google și scrie starea; întoarce ce vede și telefonul. */
+async function syncPlayPurchase(purchaseToken, roomIdHint) {
+    if (!(0, app_1.getApps)().length)
+        (0, app_1.initializeApp)();
+    const db = (0, firestore_1.getFirestore)();
+    const subscription = await readPlaySubscription(purchaseToken);
+    const line = (subscription.lineItems || []).find((item) => item.productId && PLAY_SKUS.has(item.productId));
+    const productId = line?.productId;
+    const expiresAt = line?.expiryTime;
+    const active = Boolean(productId && expiresAt && ACTIVE_STATES.has(subscription.subscriptionState || "") && Date.parse(expiresAt) > Date.now());
+    if (active && productId && subscription.acknowledgementState === "ACKNOWLEDGEMENT_STATE_PENDING") {
+        await acknowledgePlaySubscription(productId, purchaseToken).catch(() => undefined);
+    }
+    const purchaseRef = db.collection("playPurchases").doc(tokenKey(purchaseToken));
+    const previous = (await purchaseRef.get()).data();
+    const roomId = roomIdHint && /^[0-9a-f]{64}$/.test(roomIdHint) ? roomIdHint : previous?.roomId;
+    await purchaseRef.set({ productId: productId || null, expiresAt: expiresAt || null, state: subscription.subscriptionState || null, roomId: roomId || null, updatedAt: firestore_1.FieldValue.serverTimestamp() }, { merge: true });
+    if (roomId) {
+        const roomRef = db.collection("familyEntitlements").doc(roomId);
+        if (active)
+            await roomRef.set({ expiresAt, productId, updatedAt: new Date().toISOString() });
+        else
+            await roomRef.delete().catch(() => undefined);
+    }
+    return { active, productId, expiresAt };
+}
+exports.verifyPlayPurchase = (0, https_1.onRequest)({ region: "europe-central2", invoker: "public", timeoutSeconds: 30, memory: "256MiB", maxInstances: 4 }, (request, response) => {
+    allowCors(request, response, async () => {
+        if (request.method === "OPTIONS") {
+            response.status(204).send("");
+            return;
+        }
+        if (request.method !== "POST") {
+            response.status(405).json({ error: "Method not allowed" });
+            return;
+        }
+        const body = (request.body || {});
+        const purchaseToken = typeof body.purchaseToken === "string" ? body.purchaseToken : "";
+        if (!purchaseToken || purchaseToken.length > 4096 || (typeof body.productId === "string" && !PLAY_SKUS.has(body.productId))) {
+            response.status(400).json({ error: "Achiziție necunoscută." });
+            return;
+        }
+        try {
+            const result = await syncPlayPurchase(purchaseToken, typeof body.roomId === "string" ? body.roomId : undefined);
+            response.json(result);
+        }
+        catch (error) {
+            console.error("verifyPlayPurchase", error instanceof Error ? error.message : error);
+            response.status(502).json({ error: "Google Play nu a putut confirma abonamentul acum. Încearcă din nou." });
+        }
+    });
+});
+/**
+ * Notificări în timp real de la Google Play (RTDN): anulare, rambursare, reînnoire.
+ * Se leagă ca abonament „push” Pub/Sub către acest URL. Nu are încredere în conținut:
+ * reverifică tokenul direct la Google, deci un apel fals nu poate da sau lua Familia.
+ */
+exports.playRtdn = (0, https_1.onRequest)({ region: "europe-central2", invoker: "public", timeoutSeconds: 30, memory: "256MiB", maxInstances: 4 }, async (request, response) => {
+    try {
+        const data = request.body?.message?.data;
+        const decoded = data ? JSON.parse(Buffer.from(data, "base64").toString("utf8")) : undefined;
+        const purchaseToken = decoded?.subscriptionNotification?.purchaseToken;
+        if (decoded?.packageName === PLAY_PACKAGE && purchaseToken)
+            await syncPlayPurchase(purchaseToken);
+    }
+    catch (error) {
+        console.error("playRtdn", error instanceof Error ? error.message : error);
+    }
+    // 204 și la erori: Pub/Sub nu trebuie să reîncerce la nesfârșit un mesaj stricat.
+    response.status(204).send("");
 });

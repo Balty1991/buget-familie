@@ -7,6 +7,8 @@
  * Purchase flow: STUB cât `BILLING_LIVE === false`. SKU-urile din
  * `PLAY_PRODUCT_IDS` așteaptă Play Console (docs/BILLING_PLAY_PREP.md).
  */
+import { hasActiveFamilie } from "@/lib/billing-store";
+
 export const BILLING_LIVE = false;
 
 export type PlanId = "casa" | "familie";
@@ -55,8 +57,20 @@ export const familieYearGiftMonths = (): number => {
   return Math.max(0, Math.floor((month * 12 - PLANS.familie.priceYear) / month));
 };
 
-/** Când Billing e live, unlock-ul vine din Play. Până atunci gospodăria de test rămâne Familia. */
-export const currentPlan = (): PlanId => (BILLING_LIVE ? "casa" : "familie");
+/**
+ * Planurile de bază din Play Console, câte unul pe abonament. Android le cere la cumpărare.
+ * Trebuie create cu exact aceste ID-uri (docs/BILLING_PLAY_PREP.md).
+ */
+export const PLAY_BASE_PLANS: Record<BillingSku, string> = {
+  familie_lunar: "lunar",
+  familie_anual: "anual",
+};
+
+/**
+ * Când Billing e live, Familia vine din abonamentul verificat pe server (al acestui telefon sau
+ * al camerei familiei). Până atunci gospodăria de test rămâne Familia.
+ */
+export const currentPlan = (): PlanId => (!BILLING_LIVE || hasActiveFamilie() ? "familie" : "casa");
 
 export const isFamilie = () => currentPlan() === "familie";
 

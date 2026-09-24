@@ -1,5 +1,5 @@
 /** Versiunea afișată în aplicație, pe Play Console și în politica de confidențialitate. */
-export const APP_VERSION = "1.1.93";
+export const APP_VERSION = "1.1.94";
 export const APP_VERSION_CODE = 95;
 export const APP_ID = "ro.balty1991.bugetfamilie";
 export const APP_SUPPORT_EMAIL = "contact.vanzo@gmail.com";

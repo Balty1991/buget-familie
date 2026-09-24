@@ -1253,3 +1253,9 @@ html body .bf-os-day > span:first-child {
 .bf-debt-order li { display: grid; gap: 1px; }
 .bf-debt-order small { font-size: 12px; opacity: .8; }
 .bf-debt-schedule-head small { display: block; margin-top: 2px; font-size: 12px; opacity: .85; }
+
+/* Abonament Familia: cumpărare și restaurare */
+.bf-billing-actions { display: grid; gap: .5rem; margin: .75rem 0; }
+.bf-billing-buy { display: grid; gap: .5rem; }
+.bf-billing-buy > button { white-space: normal; }
+.bf-billing-active { display: flex; align-items: center; gap: .35rem; margin: 0; font-weight: 700; }

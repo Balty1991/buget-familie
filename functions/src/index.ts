@@ -611,3 +611,125 @@ export const aiGuide = onRequest(
     });
   },
 );
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Abonamentul Familia prin Google Play (testarea cu utilizatori: validare pe server).
+ *
+ * Telefonul trimite tokenul achiziției; funcția întreabă Google Play (Android Publisher
+ * API), confirmă achiziția dacă n-a fost confirmată și, dacă telefonul e într-o cameră de
+ * familie, scrie `familyEntitlements/{roomId}` ca partenerul să primească Familia.
+ * Tokenul Google vine din serverul de metadate al funcției: fără chei în cod și fără
+ * secrete noi. Contul de serviciu al funcției trebuie invitat în Play Console
+ * (docs/BILLING_PLAY_PREP.md), altfel Google răspunde 401/403 și nu se dă nimic.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+const PLAY_PACKAGE = "ro.balty1991.bugetfamilie";
+const PLAY_SKUS = new Set(["familie_lunar", "familie_anual"]);
+const ACTIVE_STATES = new Set(["SUBSCRIPTION_STATE_ACTIVE", "SUBSCRIPTION_STATE_IN_GRACE_PERIOD"]);
+
+type PlaySubscription = {
+  subscriptionState?: string;
+  acknowledgementState?: string;
+  lineItems?: Array<{ productId?: string; expiryTime?: string }>;
+};
+
+async function playAccessToken(): Promise<string> {
+  const response = await fetch(
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/androidpublisher",
+    { headers: { "Metadata-Flavor": "Google" } },
+  );
+  if (!response.ok) throw new Error(`metadata token ${response.status}`);
+  const body = await response.json() as { access_token?: string };
+  if (!body.access_token) throw new Error("metadata token missing");
+  return body.access_token;
+}
+
+async function readPlaySubscription(purchaseToken: string): Promise<PlaySubscription> {
+  const token = await playAccessToken();
+  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PLAY_PACKAGE}/purchases/subscriptionsv2/tokens/${encodeURIComponent(purchaseToken)}`;
+  const response = await fetch(url, { headers: { authorization: `Bearer ${token}` } });
+  if (!response.ok) throw new Error(`play ${response.status}`);
+  return await response.json() as PlaySubscription;
+}
+
+async function acknowledgePlaySubscription(productId: string, purchaseToken: string) {
+  const token = await playAccessToken();
+  const url = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PLAY_PACKAGE}/purchases/subscriptions/${encodeURIComponent(productId)}/tokens/${encodeURIComponent(purchaseToken)}:acknowledge`;
+  await fetch(url, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: "{}" });
+}
+
+const tokenKey = (purchaseToken: string) => createHash("sha256").update(`buget-familie-play:${purchaseToken}`).digest("hex");
+
+/** Verifică tokenul la Google și scrie starea; întoarce ce vede și telefonul. */
+async function syncPlayPurchase(purchaseToken: string, roomIdHint?: string) {
+  if (!getApps().length) initializeApp();
+  const db = getFirestore();
+  const subscription = await readPlaySubscription(purchaseToken);
+  const line = (subscription.lineItems || []).find((item) => item.productId && PLAY_SKUS.has(item.productId));
+  const productId = line?.productId;
+  const expiresAt = line?.expiryTime;
+  const active = Boolean(productId && expiresAt && ACTIVE_STATES.has(subscription.subscriptionState || "") && Date.parse(expiresAt) > Date.now());
+  if (active && productId && subscription.acknowledgementState === "ACKNOWLEDGEMENT_STATE_PENDING") {
+    await acknowledgePlaySubscription(productId, purchaseToken).catch(() => undefined);
+  }
+  const purchaseRef = db.collection("playPurchases").doc(tokenKey(purchaseToken));
+  const previous = (await purchaseRef.get()).data() as { roomId?: string } | undefined;
+  const roomId = roomIdHint && /^[0-9a-f]{64}$/.test(roomIdHint) ? roomIdHint : previous?.roomId;
+  await purchaseRef.set({ productId: productId || null, expiresAt: expiresAt || null, state: subscription.subscriptionState || null, roomId: roomId || null, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  if (roomId) {
+    const roomRef = db.collection("familyEntitlements").doc(roomId);
+    if (active) await roomRef.set({ expiresAt, productId, updatedAt: new Date().toISOString() });
+    else await roomRef.delete().catch(() => undefined);
+  }
+  return { active, productId, expiresAt };
+}
+
+export const verifyPlayPurchase = onRequest(
+  { region: "europe-central2", invoker: "public", timeoutSeconds: 30, memory: "256MiB", maxInstances: 4 },
+  (request, response) => {
+    allowCors(request, response, async () => {
+      if (request.method === "OPTIONS") {
+        response.status(204).send("");
+        return;
+      }
+      if (request.method !== "POST") {
+        response.status(405).json({ error: "Method not allowed" });
+        return;
+      }
+      const body = (request.body || {}) as { purchaseToken?: unknown; productId?: unknown; roomId?: unknown };
+      const purchaseToken = typeof body.purchaseToken === "string" ? body.purchaseToken : "";
+      if (!purchaseToken || purchaseToken.length > 4096 || (typeof body.productId === "string" && !PLAY_SKUS.has(body.productId))) {
+        response.status(400).json({ error: "Achiziție necunoscută." });
+        return;
+      }
+      try {
+        const result = await syncPlayPurchase(purchaseToken, typeof body.roomId === "string" ? body.roomId : undefined);
+        response.json(result);
+      } catch (error) {
+        console.error("verifyPlayPurchase", error instanceof Error ? error.message : error);
+        response.status(502).json({ error: "Google Play nu a putut confirma abonamentul acum. Încearcă din nou." });
+      }
+    });
+  },
+);
+
+/**
+ * Notificări în timp real de la Google Play (RTDN): anulare, rambursare, reînnoire.
+ * Se leagă ca abonament „push” Pub/Sub către acest URL. Nu are încredere în conținut:
+ * reverifică tokenul direct la Google, deci un apel fals nu poate da sau lua Familia.
+ */
+export const playRtdn = onRequest(
+  { region: "europe-central2", invoker: "public", timeoutSeconds: 30, memory: "256MiB", maxInstances: 4 },
+  async (request, response) => {
+    try {
+      const data = (request.body as { message?: { data?: string } } | undefined)?.message?.data;
+      const decoded = data ? JSON.parse(Buffer.from(data, "base64").toString("utf8")) as { packageName?: string; subscriptionNotification?: { purchaseToken?: string } } : undefined;
+      const purchaseToken = decoded?.subscriptionNotification?.purchaseToken;
+      if (decoded?.packageName === PLAY_PACKAGE && purchaseToken) await syncPlayPurchase(purchaseToken);
+    } catch (error) {
+      console.error("playRtdn", error instanceof Error ? error.message : error);
+    }
+    // 204 și la erori: Pub/Sub nu trebuie să reîncerce la nesfârșit un mesaj stricat.
+    response.status(204).send("");
+  },
+);

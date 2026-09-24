@@ -45,6 +45,17 @@ service cloud.firestore {
       allow create, update: if recoveryId.size() == 64 && envelopeWriteOk();
     }
 
+    // Abonamentul Familia legat de o cameră. Îl scrie doar funcția verifyPlayPurchase
+    // (Admin SDK), după verificarea la Google Play; telefoanele din cameră doar îl citesc.
+    match /familyEntitlements/{roomId} {
+      allow get: if roomId.size() == 64;
+    }
+
+    // Achizițiile Play verificate. Doar serverul le vede.
+    match /playPurchases/{id} {
+      allow read, write: if false;
+    }
+
     // Contor de abuz pentru ghidul online. Doar Admin SDK scrie aici.
     match /aiGuideQuota/{id} {
       allow read, write: if false;

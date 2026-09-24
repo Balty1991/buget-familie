@@ -10,6 +10,7 @@ import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevok
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope, FamilySecret } from "@/lib/family-crypto";
 import { clearFamilySession, loadFamilySession, saveFamilySession } from "@/lib/family-session";
+import { refreshRoomEntitlement, setActiveFamilyRoom } from "@/lib/billing";
 import { createFamilyInvite, formatInvite, parseInvite, type FamilyInvite } from "@/lib/family-invite";
 import { addSelfMember, chooseSelfMember, claimOwnMember, needsSelfChoice, selfMemberIdOf } from "@/lib/member-identity";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -156,6 +157,7 @@ export function useFamilySync(
   };
 
   const syncDisconnect = () => {
+    setActiveFamilyRoom(undefined);
     syncUnsubscribeRef.current?.();
     syncUnsubscribeRef.current = undefined;
     syncRoomIdRef.current = undefined;
@@ -172,6 +174,7 @@ export function useFamilySync(
 
   /** Camera veche, cu parolă, a fost golită după mutarea familiei pe invitație. */
   const syncStopMovedRoom = () => {
+    setActiveFamilyRoom(undefined);
     syncUnsubscribeRef.current?.();
     syncUnsubscribeRef.current = undefined;
     syncRoomIdRef.current = undefined;
@@ -275,6 +278,8 @@ export function useFamilySync(
       (error) => setSyncNotice(error.message),
     );
     setSyncConnected(true);
+    setActiveFamilyRoom(roomId);
+    void refreshRoomEntitlement(roomId);
     setSyncInvite(options.invite || "");
     setSyncLastSync(new Date().toISOString());
     writeClosed(false);

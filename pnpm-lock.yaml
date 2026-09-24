@@ -31,6 +31,9 @@ importers:
       '@capacitor/share':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.5.0)
+      '@capgo/native-purchases':
+        specifier: ^8.8.1
+        version: 8.8.1(@capacitor/core@8.5.0)
       '@radix-ui/react-slot':
         specifier: ^1.2.3
         version: 1.2.3(@types/react@19.2.1)(react@19.2.1)
@@ -278,6 +281,11 @@ packages:
 
   '@capacitor/synapse@1.0.4':
     resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
+
+  '@capgo/native-purchases@8.8.1':
+    resolution: {integrity: sha512-FE78+ZK7ZhGKER5cAz+FMfoHBcJ2356HY+p3xuCDw2+78QHG1lx3Y5SSvK3z6rR+wEfrlq/QPrywxexe6bZmNg==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -3687,6 +3695,10 @@ snapshots:
       '@capacitor/core': 8.5.0
 
   '@capacitor/synapse@1.0.4': {}
+
+  '@capgo/native-purchases@8.8.1(@capacitor/core@8.5.0)':
+    dependencies:
+      '@capacitor/core': 8.5.0
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
