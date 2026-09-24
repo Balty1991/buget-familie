@@ -1,0 +1,203 @@
+/**
+ * Test cap-coadă al sincronizării familiei, pe emulatorul Firestore (fără date reale).
+ *
+ * Refă scenariul lui Radu și al Ioanei din testarea cu utilizatori: două „telefoane”
+ * (profiluri de browser izolate) pe aplicația reală, legată de emulator.
+ *   - Radu creează camera, Ioana intră cu invitația (C4);
+ *   - cheltuiala Ioanei ajunge la Radu pe numele ei, nu ca „Eu” (C3);
+ *   - Ioana redeschide aplicația: sync-ul se reia singur și cheltuiala ajunge (C2);
+ *   - cheltuiala lui Radu ajunge la Ioana pe numele lui.
+ *
+ * Rulare: pnpm test:sync  (pornește emulatorul, serverul Vite și Chromium).
+ */
+import { spawn } from "node:child_process";
+import { chromium } from "playwright-core";
+
+const PORT = 5199;
+const BASE = `http://127.0.0.1:${PORT}/`;
+const EMULATOR = process.env.FIRESTORE_EMULATOR_HOST || "127.0.0.1:8080";
+
+const fail = (message) => { throw new Error(message); };
+const step = (message) => console.log(`• ${message}`);
+
+async function waitFor(check, what, timeout = 30_000) {
+  const started = Date.now();
+  let last;
+  while (Date.now() - started < timeout) {
+    last = await check().catch((error) => error);
+    if (last === true) return;
+    await new Promise((resolve) => setTimeout(resolve, 400));
+  }
+  fail(`Timp depășit: ${what}${last instanceof Error ? ` (${last.message})` : ""}`);
+}
+
+async function startVite() {
+  const vite = spawn("pnpm", ["exec", "vite", "--port", String(PORT), "--strictPort", "--host", "127.0.0.1"], {
+    env: { ...process.env, VITE_FIRESTORE_EMULATOR: EMULATOR },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let output = "";
+  vite.stdout.on("data", (chunk) => { output += chunk; });
+  vite.stderr.on("data", (chunk) => { output += chunk; });
+  await waitFor(async () => (await fetch(BASE)).ok, `Vite pe ${BASE}\n${output}`, 60_000);
+  return vite;
+}
+
+/** Un telefon nou: onboarding închis, un nume și 2.500 lei pe card, scrise prin stocarea aplicației. */
+async function phone(browser, { name, partner }) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem("buget-familie:setup-complete", "true");
+      localStorage.setItem("buget-familie:onboarding-complete", "true");
+    } catch {
+      // about:blank nu are stocare; pagina aplicației o are.
+    }
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(BASE);
+  await page.waitForTimeout(1500);
+  await page.evaluate(async ({ name, partner }) => {
+    const storage = await import("/src/lib/app-storage.ts");
+    const data = await storage.readAppData() ?? (await import("/src/lib/finance-data.ts")).createEmptyAppData();
+    data.settings.memberName = name;
+    data.settings.members = [{ id: "member-me", name }, ...(partner ? [{ id: "member-partner", name: partner }] : [])];
+    data.settings.paymentSources = data.settings.paymentSources.map((source) => ({ ...source, openingBalance: source.id === "source-debit" ? 2500 : 0 }));
+    const later = new Date(Date.now() + 60_000).toISOString();
+    await storage.writeAppData(data, later);
+    storage.writeLocalStorageSnapshot(JSON.stringify(data), later);
+  }, { name, partner });
+  await page.reload();
+  await page.waitForTimeout(1500);
+  return { page, context, errors };
+}
+
+const ledger = (page) => page.evaluate(async () => {
+  const data = await (await import("/src/lib/app-storage.ts")).readAppData();
+  return { transactions: data.transactions.map((item) => ({ amount: item.amount, person: item.person, memberId: item.memberId })), members: data.settings.members.map((item) => item.name) };
+});
+
+async function openSync(page) {
+  if (await page.locator(".bf-sync-session").count()) return;
+  await page.getByRole("button", { name: /Deschide instrumentele/ }).first().click();
+  // „Mai mult” se redeschide pe ultimul instrument; din lista de instrumente se alege Sync.
+  await page.waitForTimeout(400);
+  if (!(await page.locator(".bf-sync-session").count())) await page.getByRole("button", { name: /Sincroniz/ }).first().click();
+  await page.locator(".bf-sync-session").waitFor();
+}
+
+async function addExpense(page, amount) {
+  await page.getByRole("button", { name: "Mișcări" }).first().click();
+  await page.getByRole("button", { name: "Adaugă mișcare" }).first().click();
+  await page.locator(".bf-modal input[inputmode=\"decimal\"]").first().fill(String(amount));
+  await page.getByRole("button", { name: "Gata" }).last().click();
+  await page.locator(".bf-undo-bar").waitFor();
+}
+
+const connected = (page) => page.locator(".bf-sync-state.connected").count().then((count) => count > 0);
+
+async function main() {
+  const vite = await startVite();
+  const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
+  try {
+    step("Radu creează camera familiei");
+    const radu = await phone(browser, { name: "Radu", partner: "Ioana" });
+    await openSync(radu.page);
+    await radu.page.getByRole("button", { name: "Creează camera" }).click();
+    await waitFor(() => connected(radu.page), "Radu conectat");
+    const invite = await radu.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite);
+    if (!invite?.startsWith("bf1.")) fail(`Invitația nu a fost păstrată: ${invite}`);
+
+    step("Ioana intră cu invitația, de pe alt telefon");
+    const ioana = await phone(browser, { name: "Ioana" });
+    // Linkul deschis de la zero, ca din camera telefonului (doar schimbarea `#` n-ar reîncărca pagina).
+    await ioana.page.goto("about:blank");
+    await ioana.page.goto(`${BASE}#alatura=${invite}`);
+    await ioana.page.getByRole("button", { name: "Intră în familie" }).click();
+    await waitFor(() => connected(ioana.page), "Ioana conectată");
+
+    step("Cheltuiala Ioanei ajunge la Radu pe numele ei");
+    await addExpense(ioana.page, 38);
+    await waitFor(async () => (await ledger(radu.page)).transactions.some((item) => item.amount === 38 && item.person === "Ioana"), "38 lei pe numele Ioanei la Radu");
+    const raduMembers = (await ledger(radu.page)).members.sort();
+    if (JSON.stringify(raduMembers) !== JSON.stringify(["Ioana", "Radu"])) fail(`Membrii la Radu: ${raduMembers}`);
+
+    step("Ioana redeschide aplicația: sync-ul se reia singur");
+    await ioana.page.reload();
+    await waitFor(() => connected(ioana.page).catch(() => false).then(async (ok) => ok || (await openSync(ioana.page).then(() => connected(ioana.page)))), "Ioana reconectată după redeschidere");
+    if (await ioana.page.locator(".bf-sync-off-banner").count()) fail("Bannerul „sync oprit” apare după reconectare");
+    await addExpense(ioana.page, 12.5);
+    await waitFor(async () => (await ledger(radu.page)).transactions.some((item) => item.amount === 12.5 && item.person === "Ioana"), "12,50 lei după redeschidere ajung la Radu");
+
+    step("Cheltuiala lui Radu ajunge la Ioana pe numele lui");
+    await addExpense(radu.page, 245.3);
+    await waitFor(async () => (await ledger(ioana.page)).transactions.some((item) => item.amount === 245.3 && item.person === "Radu"), "245,30 lei pe numele lui Radu la Ioana");
+    const ioanaMembers = (await ledger(ioana.page)).members.sort();
+    if (JSON.stringify(ioanaMembers) !== JSON.stringify(["Ioana", "Radu"])) fail(`Membrii la Ioana: ${ioanaMembers}`);
+
+    step("Camera veche, cu parolă: doi părinți conectați cu parola");
+    const password = "pisicaVerdeSareGardul7";
+    const ana = await phone(browser, { name: "Ana", partner: "Mihai" });
+    // O cameră veche nu se mai poate crea din aplicație; o punem direct, cum ar fi rămas din versiunile trecute.
+    await ana.page.evaluate(async (password) => {
+      const crypto = await import("/src/lib/family-crypto.ts");
+      const sync = await import("/src/lib/realtime-sync.ts");
+      const data = await (await import("/src/lib/app-storage.ts")).readAppData();
+      await sync.pushFamilyEnvelope(await crypto.deriveFamilyRoomId(password), await crypto.encryptFamilyData(data, password));
+    }, password);
+    const connectWithPassword = async (page) => {
+      await openSync(page);
+      await page.getByRole("button", { name: "Am o parolă de familie" }).click();
+      await page.getByLabel("Parola familiei").fill(password);
+      await page.getByRole("button", { name: "Conectează cu parola" }).click();
+      await waitFor(() => connected(page), "conectat cu parola");
+    };
+    await connectWithPassword(ana.page);
+    const mihai = await phone(browser, { name: "Mihai" });
+    await connectWithPassword(mihai.page);
+    await addExpense(mihai.page, 99);
+    await waitFor(async () => (await ledger(ana.page)).transactions.some((item) => item.amount === 99 && item.person === "Mihai"), "99 lei ai lui Mihai la Ana, prin camera veche");
+
+    step("Ana mută familia pe invitație; Mihai se oprește și intră cu invitația nouă");
+    await openSync(ana.page);
+    await ana.page.getByRole("button", { name: "Mută familia" }).click();
+    await ana.page.getByRole("button", { name: "Da, mută familia" }).click();
+    await waitFor(async () => Boolean(await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite)), "Ana în camera nouă");
+    const moved = await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite);
+    await waitFor(async () => !(await mihai.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.roomId)), "Mihai iese din camera veche");
+    await waitFor(async () => (await mihai.page.locator(".bf-sync-off-banner").count()) > 0, "bannerul „sync oprit” la Mihai");
+    // Exact ce face omul: „Reconectează” din banner duce la Sync, unde scrie ce s-a întâmplat.
+    await mihai.page.locator(".bf-sync-off-banner button").first().click();
+    await mihai.page.locator(".bf-sync-session").waitFor();
+    await waitFor(async () => (await mihai.page.locator(".bf-notice").allInnerTexts()).some((text) => text.includes("Familia s-a mutat")), "Mihai află că familia s-a mutat");
+    const oldRoom = await ana.page.evaluate(async (password) => {
+      const crypto = await import("/src/lib/family-crypto.ts");
+      const sync = await import("/src/lib/realtime-sync.ts");
+      const envelope = await sync.fetchFamilyEnvelope(await crypto.deriveFamilyRoomId(password));
+      const data = await crypto.decryptFamilyData(envelope, password);
+      return { movedAt: data.settings.syncRoomMovedAt, transactions: data.transactions.length, hasInvite: JSON.stringify(data).includes("bf1.") };
+    }, password);
+    if (!oldRoom.movedAt || oldRoom.transactions || oldRoom.hasInvite) fail(`Camera veche nu a fost golită corect: ${JSON.stringify(oldRoom)}`);
+    await mihai.page.goto("about:blank");
+    await mihai.page.goto(`${BASE}#alatura=${moved}`);
+    await mihai.page.getByRole("button", { name: "Intră în familie" }).click();
+    await waitFor(() => connected(mihai.page), "Mihai în camera nouă");
+    await addExpense(mihai.page, 7);
+    await waitFor(async () => (await ledger(ana.page)).transactions.some((item) => item.amount === 7 && item.person === "Mihai"), "7 lei ai lui Mihai la Ana, prin camera nouă");
+    if (!(await ledger(mihai.page)).transactions.some((item) => item.amount === 99)) fail("Mihai a pierdut cheltuiala din camera veche");
+
+    const errors = [...radu.errors, ...ioana.errors, ...ana.errors, ...mihai.errors];
+    if (errors.length) fail(`Erori în pagină: ${errors.join(" | ")}`);
+    console.log("✓ Sincronizarea familiei merge cap-coadă (C2, C3, C4 și mutarea de pe parolă).");
+  } finally {
+    await browser.close();
+    vite.kill();
+  }
+}
+
+main().catch((error) => {
+  console.error(`✗ ${error.message}`);
+  process.exit(1);
+});

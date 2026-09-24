@@ -15,7 +15,8 @@
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
     "lighthouse": "pnpm build && node scripts/lighthouse.mjs",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:sync": "firebase emulators:exec --only firestore --project buget-familie-a6a0d \"node e2e/sync.e2e.mjs\""
   },
   "dependencies": {
     "@capacitor/android": "8",
@@ -56,8 +57,10 @@
     "esbuild": "^0.25.0",
     "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "firebase-tools": "^15.31.0",
     "globals": "^17.12.0",
     "lighthouse": "^12.8.2",
+    "playwright-core": "^1.63.0",
     "pnpm": "^10.15.1",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",

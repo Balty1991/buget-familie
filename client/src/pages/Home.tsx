@@ -655,16 +655,16 @@ export default function Home() {
     const started = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0;
     if (shouldOfferFirstWeekTour({
       storage: window.localStorage,
-      blocked: Boolean(modal) || more === "sync",
+      blocked: Boolean(modal) || (view === "utilities" && more === "sync"),
       hasModal: Boolean(modal),
-      onSyncScreen: more === "sync",
+      onSyncScreen: view === "utilities" && more === "sync",
       hasStarted: started,
     })) {
       setFirstWeekTourOpen(true);
       return;
     }
-    if (shouldShowWhatsNew(window.localStorage) && !modal && more !== "sync" && started) setWhatsNewOpen(true);
-  }, [storageReady, onboardingOpen, setupOpen, modal, more, data.transactions.length, data.settings.salaryPlan.allocations.length]);
+    if (shouldShowWhatsNew(window.localStorage) && !modal && !(view === "utilities" && more === "sync") && started) setWhatsNewOpen(true);
+  }, [storageReady, onboardingOpen, setupOpen, modal, more, view, data.transactions.length, data.settings.salaryPlan.allocations.length]);
   const dismissWhatsNew = () => { markWhatsNewSeen(window.localStorage); setWhatsNewOpen(false); };
   const dismissFirstWeekTour = () => { markFirstWeekTourSeen(window.localStorage); setFirstWeekTourOpen(false); };
 
@@ -1035,6 +1035,8 @@ export default function Home() {
     if (!simpleMode) return;
     if (view === "insights" || view === "habits" || view === "goals" || view === "calendar") go("today");
   }, [simpleMode, view]);
+  /** Bannerele de sync se ascund doar când ecranul Sync e chiar deschis, nu când a fost ultimul instrument. */
+  const onSyncScreen = view === "utilities" && more === "sync";
   const current = () => { if (view === "journal") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim mișcările…")}</div>}><MovementsJournal data={data} onChange={applyData} onAdd={() => openTx()} onEdit={openTx} onOpenReview={() => { setMore("review"); go("utilities"); }} onDelete={(id) => deleteWithUndo(t("Mișcarea a fost ștearsă."), (currentData) => ({
       next: { ...currentData, transactions: currentData.transactions.filter((item) => item.id !== id), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId !== id), deleted: [...currentData.deleted, { entity: "transactions" as const, id, deletedAt: new Date().toISOString() }].slice(-500) },
       removed: { transactions: currentData.transactions.filter((item) => item.id === id), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId === id) },
@@ -1053,8 +1055,8 @@ export default function Home() {
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
     {!online && <div className="bf-offline-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{syncPanelProps.connected ? t("Fără conexiune — modificările rămân pe telefon și se trimit la reconectare.") : t("Fără conexiune — lucrezi local pe acest telefon.")}</span></div>}
-    {syncPanelProps.stopped && more !== "sync" && <div className="bf-offline-banner bf-sync-off-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{t("Sincronizarea familiei e oprită pe acest telefon. Ce notezi nu ajunge la ceilalți.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Reconectează")}</button></div>}
-    {syncPanelProps.needsSelfChoice && syncPanelProps.connected && more !== "sync" && <div className="bf-offline-banner bf-sync-off-banner" role="status"><Users size={15} aria-hidden="true" /><span>{t("Spune-ne cine ești pe acest telefon, ca cheltuielile tale să nu apară pe altcineva.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Alege")}</button></div>}
+    {syncPanelProps.stopped && !onSyncScreen && <div className="bf-offline-banner bf-sync-off-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{t("Sincronizarea familiei e oprită pe acest telefon. Ce notezi nu ajunge la ceilalți.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Reconectează")}</button></div>}
+    {syncPanelProps.needsSelfChoice && syncPanelProps.connected && !onSyncScreen && <div className="bf-offline-banner bf-sync-off-banner" role="status"><Users size={15} aria-hidden="true" /><span>{t("Spune-ne cine ești pe acest telefon, ca cheltuielile tale să nu apară pe altcineva.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Alege")}</button></div>}
     {simpleMode && view !== "today" && <div className="bf-simple-mode-top-banner" role="status"><span>{t("Mod simplu activ — Dezactivează în Setări")}</span><button type="button" onClick={() => { setSimpleModePref(false); setMore("settings"); go("utilities"); }}>{t("Dezactivează")}</button></div>}
     <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void import("@/pages/QuickActionsPalette")} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label={data.pendingReview.length ? t("Deschide instrumentele · {count} de verificat", { count: data.pendingReview.length }) : t("Deschide instrumentele")} onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} />{data.pendingReview.length > 0 && <span className="bf-nav-count" aria-hidden="true">{data.pendingReview.length}</span>}</button><button className="os-tool" aria-label={t("Deschide ghidul")} onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>
     <main id="main-content" key={view} className={setupOpen || onboardingOpen || view === initialViewRef.current ? undefined : "bf-screen-transition"}>{setupOpen ? null : current()}</main>

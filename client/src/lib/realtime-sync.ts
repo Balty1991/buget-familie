@@ -10,7 +10,7 @@
  */
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
-import { doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
+import { connectFirestoreEmulator, doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
 import { appCheckDebug, firebaseConfig, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { deriveFamilyRoomId } from "@/lib/family-crypto";
@@ -41,6 +41,12 @@ function ensureAppCheck(firebaseApp: FirebaseApp) {
   });
 }
 
+/**
+ * Doar pentru testul cap-coadă al sincronizării (e2e/sync.e2e.mjs): `VITE_FIRESTORE_EMULATOR=127.0.0.1:8080`
+ * leagă aplicația de emulatorul local. În build-urile publicate variabila lipsește.
+ */
+const emulatorHost = typeof import.meta !== "undefined" ? String(import.meta.env?.VITE_FIRESTORE_EMULATOR || "").trim() : "";
+
 function db(): Firestore {
   if (isOfflineOnly()) {
     throw new RealtimeSyncError("offline-only", "Modul „doar offline” este activ — sincronizarea cloud este oprită pe acest telefon.");
@@ -48,6 +54,12 @@ function db(): Firestore {
   if (!isFirebaseConfigured) throw new RealtimeSyncError("not-configured", "Sincronizarea nu a fost încă configurată de administratorul aplicației.");
   if (!firestore) {
     app = app || initializeApp(firebaseConfig);
+    if (emulatorHost) {
+      firestore = getFirestore(app);
+      const [host, port] = emulatorHost.split(":");
+      connectFirestoreEmulator(firestore, host, Number(port) || 8080);
+      return firestore;
+    }
     ensureAppCheck(app);
     firestore = getFirestore(app);
   }

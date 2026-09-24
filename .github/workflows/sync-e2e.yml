@@ -1,0 +1,57 @@
+name: Sync familie cap-coadă
+
+# Două „telefoane” pe aplicația reală și un Firestore local (emulator, fără date reale):
+# invitație, cine a cheltuit, reconectare după redeschidere, mutare de pe parolă.
+# Nu oprește publicarea site-ului; arată dacă sincronizarea s-a stricat.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "client/src/**"
+      - "e2e/**"
+      - "firestore.rules"
+      - "firebase.json"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/sync-e2e.yml"
+  pull_request:
+    paths:
+      - "client/src/**"
+      - "e2e/**"
+      - "firestore.rules"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Setup Java (emulatorul Firestore)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Cache emulator Firestore
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium
+        run: pnpm exec playwright-core install --with-deps chromium
+      - name: Test sync cap-coadă
+        run: pnpm test:sync
