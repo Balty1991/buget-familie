@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
@@ -513,5 +513,94 @@ describe("householdActivityInCycle", () => {
     const cycle = householdActivityInCycle(data, "2026-09-22");
     expect(cycle.familyExpense).toBe(120);
     expect(cycle.recent.map((item) => item.id)).toContain("flex");
+  });
+});
+
+describe("abonamente: scumpiri și cost", () => {
+  const tx = (id: string, title: string, amount: number, date: string, category = "Abonamente") => ({ id, title, amount, kind: "expense" as const, category, sourceId: "source-debit", source: "Card", memberId: "member-me", person: "Eu", date });
+
+  it("recunoaște abonamentul în titlurile brute ale băncii și vede scumpirea", () => {
+    const { data } = base();
+    data.transactions = [
+      tx("n1", "Plata la POS non-BT cu card VISA; NETFLIX.COM 4029357733 LU; RRN:111", 49.99, "2026-06-08", "Altele"),
+      tx("n2", "Plata la POS non-BT cu card VISA; NETFLIX.COM 4029357733 LU; RRN:222", 49.99, "2026-07-08", "Altele"),
+      tx("n3", "Plata la POS non-BT cu card VISA; NETFLIX.COM 4029357733 LU; RRN:333", 59.99, "2026-08-08", "Altele"),
+      tx("k1", "Plata la POS non-BT cu card VISA; KAUFLAND 5920 CLUJ NAPOCA RO; RRN:444", 50, "2026-07-10", "Altele"),
+    ];
+    const hits = detectSubscriptions(data, "2026-08-20");
+    expect(hits).toHaveLength(1);
+    expect(hits[0]).toMatchObject({ name: "Netflix.com", amount: 59.99, priceChange: { from: 49.99, to: 59.99 } });
+    expect(hits[0].reason).toContain("S-a scumpit");
+  });
+
+  it("nu ia o plată de alt fel drept scumpire", () => {
+    const { data } = base();
+    data.transactions = [tx("a", "Spotify", 25, "2026-06-01"), tx("b", "Spotify", 25, "2026-07-01"), tx("c", "Spotify", 25.5, "2026-08-01")];
+    expect(detectSubscriptions(data, "2026-08-20")[0].priceChange).toBeUndefined();
+  });
+
+  it("semnalează scadențele urmărite care s-au scumpit, nu și pe cele variabile", () => {
+    const { data } = base();
+    data.recurring = [
+      { id: "r1", name: "Netflix", amount: 49.99, category: "Abonamente", sourceId: "source-debit", memberId: "member-me", dueDay: 8, active: true },
+      { id: "r2", name: "Enel", amount: 200, category: "Casă & facturi", sourceId: "source-debit", memberId: "member-me", dueDay: 12, active: true, variable: true },
+      { id: "r3", name: "Digi", amount: 60, category: "Casă & facturi", sourceId: "source-debit", memberId: "member-me", dueDay: 15, active: true },
+    ];
+    data.transactions = [tx("n", "NETFLIX.COM LU", 59.99, "2026-08-08"), tx("e", "Enel", 260, "2026-08-12"), tx("d", "Digi", 600, "2026-08-15")];
+    expect(recurringPriceChanges(data, "2026-08-20")).toEqual([{ recurringId: "r1", name: "Netflix", from: 49.99, to: 59.99, date: "2026-08-08" }]);
+  });
+
+  it("adună abonamentele pe lună și pe an", () => {
+    const { data } = base();
+    data.recurring = [
+      { id: "r1", name: "Netflix", amount: 60, category: "Abonamente", sourceId: "source-debit", memberId: "member-me", dueDay: 8, active: true },
+      { id: "r2", name: "iCloud anual", amount: 120, category: "Abonamente", sourceId: "source-debit", memberId: "member-me", dueDay: 1, active: true, frequency: "yearly", month: 3 },
+      { id: "r3", name: "Sală", amount: 150, category: "Abonamente", sourceId: "source-debit", memberId: "member-me", dueDay: 1, active: false },
+      { id: "r4", name: "Chirie", amount: 2000, category: "Casă & facturi", sourceId: "source-debit", memberId: "member-me", dueDay: 1, active: true },
+    ];
+    expect(subscriptionSpend(data)).toEqual({ count: 2, monthly: 70, yearly: 840 });
+  });
+});
+
+describe("raportul lunii pentru familie", () => {
+  const tx = (id: string, title: string, amount: number, kind: "income" | "expense", category: string, date: string, memberId = "member-me") => ({ id, title, amount, kind, category, sourceId: "source-debit", source: "Card", memberId, person: "", date });
+  const family = () => {
+    const { data } = base();
+    data.settings.familyName = "Familia Pop";
+    data.transactions = [
+      tx("i1", "Salariu", 9000, "income", "Venit", "2026-08-10"), tx("i2", "Salariu", 9000, "income", "Venit", "2026-09-10"),
+      tx("a1", "Lidl", 1600, "expense", "Alimente", "2026-08-12"), tx("a2", "Kaufland", 1900.5, "expense", "Alimente", "2026-09-12", "member-partner"),
+      tx("c1", "Enel", 250, "expense", "Casă & facturi", "2026-08-14"), tx("c2", "Enel", 210, "expense", "Casă & facturi", "2026-09-14"),
+    ];
+    return data;
+  };
+
+  it("compară categoriile cu luna trecută și găsește ce a crescut", () => {
+    const report = monthlyFamilyReport(family(), "2026-09");
+    expect(report).toMatchObject({ income: 9000, expense: 2110.5, cashflow: 6889.5, priorExpense: 1850 });
+    expect(report.categories).toEqual([
+      { name: "Alimente", amount: 1900.5, prior: 1600, delta: 300.5 },
+      { name: "Casă & facturi", amount: 210, prior: 250, delta: -40 },
+    ]);
+    expect(report.biggestRise).toEqual({ name: "Alimente", delta: 300.5 });
+    expect(report.members).toEqual([{ name: "Soția", expense: 1900.5 }, { name: "Eu", expense: 210 }]);
+    expect(report.keptShare).toBeCloseTo(0.7655, 3);
+  });
+
+  it("scrie un text scurt, de trimis familiei", () => {
+    const text = formatMonthlyReportShare(monthlyFamilyReport(family(), "2026-09")).replace(/[^\S\n]/g, " ");
+    expect(text).toContain("Familia Pop · raportul lunii septembrie 2026");
+    expect(text).toContain("Au rămas 6.889,50 RON (77% din venit)");
+    expect(text).toContain("• Alimente 1.900,50 RON (+300,50 RON)");
+    expect(text).toContain("Cine a cheltuit: Soția 1.900,50 RON · Eu 210 RON");
+    expect(text).not.toContain("undefined");
+  });
+
+  it("prima lună nu inventează comparații", () => {
+    const report = monthlyFamilyReport(family(), "2026-08");
+    expect(report.biggestRise).toBeUndefined();
+    const text = formatMonthlyReportShare(report).replace(/[^\S\n]/g, " ");
+    expect(text).not.toContain("Față de");
+    expect(text).toContain("• Alimente 1.600 RON\n");
   });
 });

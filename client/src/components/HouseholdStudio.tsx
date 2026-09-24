@@ -3,11 +3,11 @@
  * Confirmarea unei detecții creează o scadență în registrul deja sincronizat.
  */
 import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, PiggyBank, Repeat, Shield, Users } from "lucide-react";
-import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-data";
+import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, PiggyBank, Repeat, Share2, Shield, Users } from "lucide-react";
+import { addIsoDays, autoPostDueRecurring, formatDate, isoToday, type AppData } from "@/lib/finance-data";
 import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
-import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection, type SubscriptionDetection } from "@/lib/household-insights";
+import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, formatMonthlyReportShare, householdActivity, liquidSafeToSpend, monthlyFamilyReport, monthlyRecap, readClosedMonths, recurringFromDetection, subscriptionSpend, type SubscriptionDetection } from "@/lib/household-insights";
 import { countLabel, envelopesLabel, t } from "@/lib/i18n";
 import { SettleUpCard } from "@/components/SettleUpCard";
 import { lei } from "@/lib/money-format";
@@ -15,11 +15,35 @@ import { lei } from "@/lib/money-format";
 const money = lei;
 
 export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
-  const month = currentMonthKey();
+  // În prima săptămână, raportul care contează e al lunii abia încheiate.
+  const thisMonth = currentMonthKey();
+  const lastMonth = currentMonthKey(addIsoDays(`${thisMonth}-01`, -1));
+  const [month, setMonth] = useState(() => (Number(isoToday().slice(8, 10)) <= 7 ? lastMonth : thisMonth));
+  const report = useMemo(() => monthlyFamilyReport(data, month), [data, month]);
+  const [shareState, setShareState] = useState<"idle" | "shared" | "copied">("idle");
+  const shareReport = async () => {
+    const text = formatMonthlyReportShare(report);
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: t("{family} · raportul lunii {month}", { family: report.familyName, month: report.title }), text });
+        setShareState("shared");
+        return;
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareState("copied");
+    } catch {
+      setShareState("idle");
+    }
+  };
   const recap = useMemo(() => monthlyRecap(data, month), [data, month]);
   const age = useMemo(() => ageOfMoney(data), [data]);
   const activity = useMemo(() => householdActivity(data, month), [data, month]);
   const hunts = useMemo(() => detectSubscriptions(data), [data]);
+  const spend = useMemo(() => subscriptionSpend(data), [data]);
   const safe = useMemo(() => liquidSafeToSpend(data), [data]);
   const [closed, setClosed] = useState(() => readClosedMonths());
   const [exporting, setExporting] = useState(false);
@@ -48,6 +72,10 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
       <section className={`bf-household-recap bf-statement ${recap.tone}`}>
         <div>
           <p className="bf-kicker">{t("RITUALUL LUNII")}</p>
+          <div className="bf-household-months" role="group" aria-label={t("Luna raportului")}>
+            <button type="button" aria-pressed={month === lastMonth} onClick={() => { setMonth(lastMonth); setShareState("idle"); }}>{t("Luna trecută")}</button>
+            <button type="button" aria-pressed={month === thisMonth} onClick={() => { setMonth(thisMonth); setShareState("idle"); }}>{t("Luna aceasta")}</button>
+          </div>
           <h2>{recap.title}</h2>
           <p>{recap.nextStep}</p>
         </div>
@@ -57,7 +85,24 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           <article><small>{t("Cheltuieli")}</small><b>{money(recap.expense)}</b><em>{recap.topCategory ? `${recap.topCategory.name} ${money(recap.topCategory.amount)}` : t("fără categorie dominantă")}</em></article>
           <article><small>{t("Bilanț")}</small><b className={recap.cashflow < 0 ? "negative" : ""}>{money(recap.cashflow)}</b><em>{recap.envelopesOver ? t("{envelopes} depășite", { envelopes: envelopesLabel(recap.envelopesOver) }) : recap.envelopesWatch ? t("{envelopes} de urmărit", { envelopes: envelopesLabel(recap.envelopesWatch) }) : t("plicuri în ritm")}</em></article>
         </div>
+        {report.categories.length > 0 && (
+          <div className="bf-household-cats">
+            <small>{report.priorExpense > 0 ? t("Unde s-au dus banii · față de {month}", { month: report.priorTitle }) : t("Unde s-au dus banii")}</small>
+            <ul>
+              {report.categories.map((item) => (
+                <li key={item.name}>
+                  <span>{t(item.name)}</span>
+                  <b>{money(item.amount)}</b>
+                  {report.priorExpense > 0 && <em className={item.delta > 0 ? "up" : item.delta < 0 ? "down" : ""}>{item.delta === 0 ? "=" : `${item.delta > 0 ? "+" : "−"}${money(Math.abs(item.delta))}`}</em>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="bf-household-actions">
+          <button type="button" className="bf-secondary" disabled={report.empty} onClick={() => void shareReport()}>
+            <Share2 size={16} /> {shareState === "copied" ? t("Copiat — lipește-l în WhatsApp") : shareState === "shared" ? t("Trimis") : t("Trimite raportul familiei")}
+          </button>
           <button className="bf-primary" disabled={exporting} onClick={() => void close()}>
             <CalendarCheck size={16} /> {closedThis ? t("Reînchide și descarcă PDF") : exporting ? t("Generăm PDF-ul…") : t("Închide luna · PDF local")}
           </button>
@@ -108,6 +153,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           <div><p className="bf-kicker">{t("VÂNĂTOR DE ABONAMENTE")}</p><h2>{t("Ce se repetă, fără să fie încă o scadență")}</h2></div>
           <Repeat size={18} />
         </div>
+        {spend.count > 0 && <p className="bf-household-subs">{t("Abonamente: {monthly} pe lună · {yearly} pe an.", { monthly: money(spend.monthly), yearly: money(spend.yearly) })}</p>}
         {hunts.length ? hunts.map((item) => (
           <article className="bf-household-hunt" key={item.key}>
             <div>

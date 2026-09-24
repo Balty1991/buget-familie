@@ -32,6 +32,8 @@ import {
   type Transaction,
   isoDate,
 } from "./finance-data";
+import { statementMerchant } from "./statement-import";
+import { lei as leiExact } from "./money-format";
 import { daysLabel, getLocale, t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
 import { selfMemberIdOf } from "./member-identity";
@@ -203,6 +205,14 @@ export const householdActivityInCycle = (data: AppData, asOf = isoToday()): Hous
 };
 
 const merchantKey = (title: string) => fold(title).replace(/[^a-z0-9\s]/g, " ").replace(/\d+/g, " ").replace(/\s+/g, " ").trim().split(" ").slice(0, 4).join(" ");
+/**
+ * Mișcările importate înainte de curățarea numelor au titlul băncii („Plata la POS non-BT cu card
+ * VISA; NETFLIX.COM …”): fără curățare, toate plățile cu cardul ar avea aceeași cheie.
+ */
+const subscriptionName = (title: string) => statementMerchant(title).replace(/\s+\d+[.,]?\d*\s*(lei|ron)?$/i, "").trim() || title;
+const subscriptionKey = (title: string) => merchantKey(subscriptionName(title));
+/** Scadența „Netflix” și plata „NETFLIX.COM LU” sunt același lucru: se potrivesc după primul cuvânt. */
+const brandOf = (key: string) => { const word = key.split(" ")[0] || ""; return word.length >= 3 ? word : key; };
 
 export type SubscriptionDetection = {
   key: string;
@@ -216,7 +226,12 @@ export type SubscriptionDetection = {
   lastDate: string;
   confidence: "high" | "medium";
   reason: string;
+  /** Ultima plată a sărit peste prețul obișnuit (abonament scumpit). */
+  priceChange?: { from: number; to: number };
 };
+
+/** Un preț nou, nu o variație de curs: cel puțin 4% și 2 lei în plus. */
+const isPriceRise = (from: number, to: number) => to - from >= Math.max(2, from * 0.04);
 
 const groceryCategories = new Set(["Alimente", "Consumabile copil", "Dulciuri", "Băuturi", "Apă"]);
 
@@ -225,10 +240,10 @@ export const detectSubscriptions = (data: AppData, asOf = isoToday()): Subscript
   const from = new Date(`${asOf}T12:00:00`);
   from.setDate(from.getDate() - 180);
   const start = isoDate(from);
-  const tracked = new Set(data.recurring.map((item) => merchantKey(item.name)).filter(Boolean));
+  const tracked = new Set(data.recurring.map((item) => brandOf(subscriptionKey(item.name))).filter(Boolean));
   const groups = new Map<string, Transaction[]>();
   data.transactions.filter((item) => item.kind === "expense" && item.date >= start && item.date <= asOf).forEach((item) => {
-    const key = merchantKey(item.title);
+    const key = subscriptionKey(item.title);
     if (!key || key.length < 3) return;
     const list = groups.get(key) || [];
     list.push(item);
@@ -236,14 +251,19 @@ export const detectSubscriptions = (data: AppData, asOf = isoToday()): Subscript
   });
   const detections: SubscriptionDetection[] = [];
   groups.forEach((entries, key) => {
-    if (tracked.has(key) || entries.length < 2) return;
+    if (tracked.has(brandOf(key)) || entries.length < 2) return;
     const dates = Array.from(new Set(entries.map((item) => item.date))).sort();
     if (dates.length < 2) return;
     const intervals = dates.slice(1).map((date, index) => daysBetween(dates[index], date)).filter((value) => value > 0);
     const intervalDays = Math.round(median(intervals));
-    const amounts = entries.map((item) => item.amount);
-    const typical = median(amounts);
-    const similar = amounts.every((value) => Math.abs(value - typical) <= Math.max(4, typical * 0.22));
+    const byDate = [...entries].sort((a, b) => a.date.localeCompare(b.date));
+    const latest = byDate[byDate.length - 1].amount;
+    // Cu trei plăți sau mai multe, ultima poate fi un preț nou: comparăm istoricul fără ea.
+    const history = byDate.length >= 3 ? byDate.slice(0, -1).map((item) => item.amount) : byDate.map((item) => item.amount);
+    const typical = median(history);
+    const similar = history.every((value) => Math.abs(value - typical) <= Math.max(4, typical * 0.22));
+    const priceChange = byDate.length >= 3 && isPriceRise(typical, latest) ? { from: Math.round(typical * 100) / 100, to: latest } : undefined;
+    if (byDate.length >= 3 && !priceChange && Math.abs(latest - typical) > Math.max(4, typical * 0.22)) return;
     const monthly = intervalDays >= 25 && intervalDays <= 40;
     const weekly = intervalDays >= 6 && intervalDays <= 9;
     const category = entries[0].category;
@@ -256,8 +276,8 @@ export const detectSubscriptions = (data: AppData, asOf = isoToday()): Subscript
     const last = entries.sort((a, b) => b.date.localeCompare(a.date))[0];
     detections.push({
       key,
-      name: last.title.replace(/\s+\d+[.,]?\d*\s*(lei|ron)?$/i, "").trim() || last.title,
-      amount: Math.round(typical * 100) / 100,
+      name: subscriptionName(last.title),
+      amount: priceChange ? priceChange.to : Math.round(typical * 100) / 100,
       count: dates.length,
       intervalDays: intervalDays || 30,
       category: labeled ? "Abonamente" : category,
@@ -265,14 +285,135 @@ export const detectSubscriptions = (data: AppData, asOf = isoToday()): Subscript
       memberId: last.memberId,
       lastDate: last.date,
       confidence: labeled || (monthly && dates.length >= 3) ? "high" : "medium",
-      reason: labeled
+      reason: priceChange
+        ? t("S-a scumpit: {from} → {to}.", { from: leiExact(priceChange.from), to: leiExact(priceChange.to) })
+        : labeled
         ? t("Categoria Abonamente, cu sumă stabilă.")
         : monthly
           ? t("Apare cam la {days} zile, cu sumă aproape identică.", { days: intervalDays })
           : t("Se repetă săptămânal de {count} ori.", { count: dates.length }),
+      priceChange,
     });
   });
   return detections.sort((a, b) => b.amount - a.amount).slice(0, 8);
+};
+
+export type RecurringPriceChange = { recurringId: string; name: string; from: number; to: number; date: string };
+
+/**
+ * Scadențele urmărite care s-au scumpit: ultima plată la același comerciant (din ultimele 45 de
+ * zile) e peste suma salvată. Plățile variabile (curent, gaz) nu intră: acolo suma chiar variază.
+ */
+export const recurringPriceChanges = (data: AppData, asOf = isoToday()): RecurringPriceChange[] => {
+  const since = addIsoDays(asOf, -45);
+  const changes: RecurringPriceChange[] = [];
+  for (const item of data.recurring) {
+    if (!item.active || item.variable || item.amount <= 0) continue;
+    const brand = brandOf(subscriptionKey(item.name));
+    if (!brand || brand.length < 3) continue;
+    const latest = data.transactions
+      .filter((entry) => entry.kind === "expense" && entry.date >= since && entry.date <= asOf && brandOf(subscriptionKey(entry.title)) === brand)
+      .sort((a, b) => b.date.localeCompare(a.date))[0];
+    // O plată de peste două ori suma nu e un preț nou, e altceva la același comerciant.
+    if (latest && isPriceRise(item.amount, latest.amount) && latest.amount <= item.amount * 2) {
+      changes.push({ recurringId: item.id, name: item.name, from: item.amount, to: latest.amount, date: latest.date });
+    }
+  }
+  return changes.sort((a, b) => (b.to - b.from) - (a.to - a.from));
+};
+
+/** Cât costă abonamentele urmărite, adus la o lună și la un an (trimestrialele și anualele împărțite). */
+export const subscriptionSpend = (data: AppData) => {
+  const active = data.recurring.filter((item) => item.active && item.category === "Abonamente");
+  const monthly = active.reduce((sum, item) => sum + (item.frequency === "yearly" ? item.amount / 12 : item.frequency === "quarterly" ? item.amount / 3 : item.amount), 0);
+  return { count: active.length, monthly: Math.round(monthly * 100) / 100, yearly: Math.round(monthly * 12 * 100) / 100 };
+};
+
+export type MonthlyFamilyReport = {
+  month: string;
+  title: string;
+  priorTitle: string;
+  familyName: string;
+  income: number;
+  expense: number;
+  cashflow: number;
+  priorExpense: number;
+  /** Cât din venit a rămas în casă (0–1); lipsește fără venit. */
+  keptShare?: number;
+  categories: Array<{ name: string; amount: number; prior: number; delta: number }>;
+  /** Categoria care a crescut cel mai mult față de luna trecută (măcar 50 de lei). */
+  biggestRise?: { name: string; delta: number };
+  members: Array<{ name: string; expense: number }>;
+  subscriptions: { monthly: number; yearly: number; count: number; rises: RecurringPriceChange[] };
+  nextStep: string;
+  empty: boolean;
+};
+
+/** Raportul lunii pentru toată familia: ce a intrat, unde s-a dus, ce s-a schimbat față de luna trecută. */
+export const monthlyFamilyReport = (data: AppData, month = currentMonthKey()): MonthlyFamilyReport => {
+  const recap = monthlyRecap(data, month);
+  const range = monthRange(month);
+  const prior = monthRange(previousMonth(month));
+  const spendBy = (start: string, end: string) => data.transactions
+    .filter((item) => item.kind === "expense" && item.date >= start && item.date <= end)
+    .reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {});
+  const now = spendBy(range.start, range.end);
+  const before = spendBy(prior.start, prior.end);
+  const round = (value: number) => Math.round(value * 100) / 100;
+  const categories = Object.keys(now)
+    .map((name) => ({ name, amount: round(now[name]), prior: round(before[name] || 0), delta: round(now[name] - (before[name] || 0)) }))
+    .sort((a, b) => b.amount - a.amount);
+  const rise = recap.priorExpense > 0 ? [...categories].sort((a, b) => b.delta - a.delta)[0] : undefined;
+  const members = data.settings.members.length > 1
+    ? data.settings.members
+      .map((member) => ({ name: member.name, expense: round(data.transactions.filter((item) => item.kind === "expense" && item.memberId === member.id && item.date >= range.start && item.date <= range.end).reduce((sum, item) => sum + item.amount, 0)) }))
+      .filter((item) => item.expense > 0)
+      .sort((a, b) => b.expense - a.expense)
+    : [];
+  const spend = subscriptionSpend(data);
+  return {
+    month,
+    title: recap.title,
+    priorTitle: monthTitle(previousMonth(month)),
+    familyName: data.settings.familyName || t("Familie"),
+    income: round(recap.income),
+    expense: round(recap.expense),
+    cashflow: round(recap.cashflow),
+    priorExpense: round(recap.priorExpense),
+    keptShare: recap.income > 0 ? Math.max(0, recap.cashflow) / recap.income : undefined,
+    categories: categories.slice(0, 5),
+    biggestRise: rise && rise.delta >= 50 ? { name: rise.name, delta: rise.delta } : undefined,
+    members,
+    subscriptions: { ...spend, rises: recurringPriceChanges(data, range.end < isoToday() ? range.end : isoToday()) },
+    nextStep: recap.nextStep,
+    empty: recap.tone === "empty",
+  };
+};
+
+const signed = (value: number) => `${value >= 0 ? "+" : "−"}${leiExact(Math.abs(value))}`;
+
+/** Textul de trimis pe WhatsApp sau oriunde: scurt, fără tabele, cu cifrele care contează. */
+export const formatMonthlyReportShare = (report: MonthlyFamilyReport) => {
+  const lines = [
+    t("{family} · raportul lunii {month}", { family: report.familyName, month: report.title }),
+    t("Venituri {income} · Cheltuieli {expense}", { income: leiExact(report.income), expense: leiExact(report.expense) }),
+    report.cashflow >= 0
+      ? report.keptShare !== undefined
+        ? t("Au rămas {amount} ({share}% din venit)", { amount: leiExact(report.cashflow), share: Math.round(report.keptShare * 100) })
+        : t("Au rămas {amount}", { amount: leiExact(report.cashflow) })
+      : t("S-a cheltuit cu {amount} peste venit", { amount: leiExact(-report.cashflow) }),
+  ];
+  if (report.priorExpense > 0) lines.push(t("Față de {month}: cheltuieli {delta}", { month: report.priorTitle, delta: signed(report.expense - report.priorExpense) }));
+  if (report.categories.length) {
+    lines.push("", t("Unde s-au dus banii"));
+    report.categories.forEach((item) => lines.push(`• ${t(item.name)} ${leiExact(item.amount)}${report.priorExpense > 0 && Math.abs(item.delta) >= 1 ? ` (${signed(item.delta)})` : ""}`));
+  }
+  if (report.biggestRise) lines.push(t("A crescut cel mai mult: {name}, {delta}", { name: t(report.biggestRise.name), delta: signed(report.biggestRise.delta) }));
+  if (report.members.length > 1) lines.push("", t("Cine a cheltuit: {list}", { list: report.members.map((item) => `${item.name} ${leiExact(item.expense)}`).join(" · ") }));
+  if (report.subscriptions.count) lines.push("", t("Abonamente: {monthly} pe lună · {yearly} pe an.", { monthly: leiExact(report.subscriptions.monthly), yearly: leiExact(report.subscriptions.yearly) }));
+  report.subscriptions.rises.forEach((item) => lines.push(t("S-a scumpit {name}: {from} → {to}", { name: item.name, from: leiExact(item.from), to: leiExact(item.to) })));
+  lines.push("", t("Următorul pas: {step}", { step: report.nextStep }));
+  return lines.join("\n");
 };
 
 export const recurringFromDetection = (data: AppData, detection: SubscriptionDetection): RecurringPayment | undefined => {

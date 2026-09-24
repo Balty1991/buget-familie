@@ -1,6 +1,6 @@
 /** Atelierul Financiar 2.0 — plăți recurente rezervate în planul până la salariu. */
 import "../recurring.css";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarClock, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { recurringNextDue, isoToday, autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringFrequency, type RecurringPayment } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
@@ -8,6 +8,7 @@ import { dateText } from "@/pages/home-kit";
 import { selfMemberIdOf } from "@/lib/member-identity";
 import { askConfirm } from "@/lib/confirm-dialog";
 import { lei } from "@/lib/money-format";
+import { recurringPriceChanges, subscriptionSpend } from "@/lib/household-insights";
 
 const monthName = (month: number) => new Intl.DateTimeFormat(getLocale(), { month: "long" }).format(new Date(2026, month - 1, 1));
 
@@ -25,6 +26,8 @@ export function recurringScheduleLabel(item: Pick<RecurringPayment, "dueDay" | "
 const money = lei;
 
 export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
+  const rises = useMemo(() => recurringPriceChanges(data), [data]);
+  const spend = useMemo(() => subscriptionSpend(data), [data]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Casă & facturi");
@@ -132,9 +135,26 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
         <div>
           <p className="bf-kicker">{t("SCADENȚE CONTROLATE")}</p>
           <h2>{t("Chirie și abonamente, fără uitare")}</h2>
-          <p>{t("La deschiderea aplicației, plățile automate scadente din luna curentă intră în registru o singură dată. Poți păstra orice scadență pe confirmare manuală.")}</p>
+          <p>{spend.count > 0 && <><strong>{t("Abonamente: {monthly} pe lună · {yearly} pe an.", { monthly: money(spend.monthly), yearly: money(spend.yearly) })}</strong>{" "}</>}{t("La deschiderea aplicației, plățile automate scadente din luna curentă intră în registru o singură dată. Poți păstra orice scadență pe confirmare manuală.")}</p>
         </div>
       </section>
+      {rises.length > 0 && (
+        <section className="bf-recurring-card" aria-labelledby="bf-recurring-rises">
+          <p className="bf-kicker" id="bf-recurring-rises">{t("S-AU SCUMPIT")}</p>
+          <div className="bf-recurring-list">
+            {rises.map((item) => (
+              <article key={item.recurringId}>
+                <div>
+                  <b>{item.name}</b>
+                  <small>{t("Ultima plată, pe {date}: {to} în loc de {from}.", { date: dateText(item.date), to: money(item.to), from: money(item.from) })}</small>
+                </div>
+                <strong>+{money(item.to - item.from)}</strong>
+                <button type="button" className="bf-secondary" onClick={() => onChange({ ...data, recurring: data.recurring.map((entry) => entry.id === item.recurringId ? { ...entry, amount: item.to, updatedAt: new Date().toISOString() } : entry) })}>{t("Folosește {amount}", { amount: money(item.to) })}</button>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       <section className="bf-recurring-card">
         <p className="bf-kicker">{editingId ? t("MODIFICĂ SCADENȚA") : t("ADĂUGĂ O SCADENȚĂ")}</p>
         <div className="bf-recurring-form">
