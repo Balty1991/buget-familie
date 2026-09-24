@@ -3,11 +3,11 @@ rules_version = '2';
 // Reguli Firestore pentru Buget Familie — de lipit în Firebase Console →
 // Firestore Database → Rules, exact așa cum sunt aici.
 //
-// Fiecare familie are propriul document, ale cărui ID este un hash SHA-256
-// al parolei ei de familie (client-ul îl calculează, nu-l trimite niciodată
-// pe cel în clar). Oricine nu cunoaște parola nu poate ghici sau enumera
-// ID-ul; conținutul propriu-zis este oricum criptat AES-GCM înainte să
-// ajungă aici, așa că Firestore nu vede niciodată date financiare în clar.
+// Fiecare familie are propriul document cu ID de 64 de caractere hex. Camerele
+// noi au ID aleator de 256 de biți, creat pe telefon și trimis partenerului prin
+// invitație; camerele vechi au ca ID hash-ul SHA-256 al parolei de familie.
+// Un ID aleator nu se poate ghici sau enumera; conținutul e oricum criptat
+// AES-GCM înainte să ajungă aici, așa că Firestore nu vede date financiare în clar.
 // App Check: poți activa pe proiect pentru anti-abuz, dar NU pune Enforce pe Firestore
 // până confirmi că build-ul publicat trimite token (altfel blochezi familiile existente).
 // Regulile de mai jos rămân pe get/create/update — fără list/delete.

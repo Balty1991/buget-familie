@@ -2,7 +2,8 @@
  * Sincronizare în timp real a familiei, fără token generat de fiecare utilizator.
  * Toate telefoanele care instalează aplicația împart același proiect Firebase
  * (configurat o singură dată de administrator în firebase-config.ts); fiecare
- * familie primește propria "cameră" izolată, dedusă din parola ei de familie.
+ * familie primește propria "cameră" izolată: cu ID aleator și invitație (family-invite.ts),
+ * sau, la camerele vechi, dedusă din parola ei de familie.
  * Firestore nu vede niciodată datele în clar — doar pachetul AES-GCM criptat local.
  *
  * Mod „doar offline” (ui-prefs): nu inițializează Firebase — sync rămâne local.

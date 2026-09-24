@@ -448,6 +448,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       syncRecoveryIssuedAt: local.settings.syncRecoveryIssuedAt || remote.settings.syncRecoveryIssuedAt,
       // Cine folosește telefonul e o alegere locală; pachetul altui telefon nu o schimbă.
       selfMemberId: local.settings.selfMemberId,
+      syncRoomMovedAt: undefined,
     },
   });
 }

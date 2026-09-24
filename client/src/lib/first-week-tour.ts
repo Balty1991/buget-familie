@@ -76,7 +76,7 @@ export const FIRST_WEEK_TIPS: Array<{ id: FirstWeekTipId; kicker: string; title:
   {
     id: "sync",
     kicker: "3 · SYNC (OPȚIONAL)",
-    title: "Două telefoane, o parolă de familie.",
+    title: "Două telefoane, o cameră a familiei.",
     detail: "Sincronizarea e criptată și rămâne opțională. Poți folosi aplicația doar pe un telefon.",
   },
 ];

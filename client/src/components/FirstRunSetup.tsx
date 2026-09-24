@@ -7,7 +7,6 @@ import { Check, ChevronLeft, ChevronRight, Home, PiggyBank, ReceiptText, Users, 
 import { BrandMark } from "@/components/BrandMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { isoDate, isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type PaymentKind } from "@/lib/finance-data";
-import { generateFamilyPassword } from "@/lib/family-password";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
@@ -51,7 +50,7 @@ function midHorizon(paydayISO: string) {
   };
 }
 
-export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpenSync }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void; onOpenSync?: (password: string) => void }) {
+export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpenSync }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void; onOpenSync?: () => void }) {
   const [intent, setIntent] = useState<Intent | null>(null);
   useLayoutEffect(() => { hideNativeSplash(); }, []);
   useLayoutEffect(() => {
@@ -189,9 +188,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
 
   const finishFamily = () => {
     applyBase({ withPartner: true, withEnvelopes: true, withPayday: true });
-    const password = generateFamilyPassword();
     complete();
-    if (onOpenSync) onOpenSync(password);
+    if (onOpenSync) onOpenSync();
     else onGoPlan();
   };
 
@@ -250,7 +248,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
               <button type="button" onClick={() => setIntent("family")}>
                 <Users size={20} />
                 <b>{t("Vreau un buget pentru familie.")}</b>
-                <small>{t("Persoane, surse, plan comun — apoi Sync cu o parolă arătată o dată.")}</small>
+                <small>{t("Persoane, surse, plan comun — apoi inviți partenerul în Sync.")}</small>
               </button>
             </div>
           </div>

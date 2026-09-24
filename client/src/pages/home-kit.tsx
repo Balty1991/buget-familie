@@ -52,6 +52,13 @@ export type SyncPanelProps = {
   stopped: boolean;
   /** Cheia sesiunii e păstrată pe telefon; conectarea se reia singură. */
   sessionRemembered: boolean;
+  /** Codul invitației camerei curente; gol la camerele vechi, cu parolă. */
+  invite: string;
+  inviteDraft: string;
+  setInviteDraft: (value: string) => void;
+  onCreateRoom: () => void;
+  onJoinInvite: (raw: string) => void;
+  onMoveToInvite: () => void;
   members: import("@/lib/finance-data").FamilyMember[];
   selfMemberId: string;
   /** Telefonul are încă un membru provizoriu („Eu”) și trebuie întrebat cine e. */

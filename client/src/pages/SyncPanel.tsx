@@ -3,8 +3,10 @@
  * Starea live trăiește în Home, ca să reziste la schimbarea de tab.
  */
 import { useEffect, useState } from "react";
-import { Check, Cloud, Copy, KeyRound, RotateCcw, ShieldAlert, Smartphone, UserRound, Users, X } from "lucide-react";
-import { checkFamilyPassword, generateFamilyPassword } from "@/lib/family-password";
+import { Check, Cloud, Copy, KeyRound, RotateCcw, Send, ShieldAlert, Smartphone, UserRound, Users, X } from "lucide-react";
+import { checkFamilyPassword } from "@/lib/family-password";
+import { inviteMessage, parseInvite } from "@/lib/family-invite";
+import { isNativeApp } from "@/lib/app-storage";
 import { Field, type SyncPanelProps } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
 import { canUseFamilySync } from "@/lib/entitlements";
@@ -26,6 +28,27 @@ function PasswordMeter({ value }: { value: string }) {
       {verdict.advice.length > 0 && <small>{verdict.advice[0]}</small>}
     </div>
   );
+}
+
+/** Trimite invitația prin foaia de partajare a telefonului (WhatsApp, SMS…); fără ea, doar copiem. */
+async function shareInvite(code: string): Promise<boolean> {
+  const invite = parseInvite(code);
+  if (!invite) return false;
+  const text = inviteMessage(invite);
+  try {
+    if (isNativeApp()) {
+      const { Share } = await import("@capacitor/share");
+      await Share.share({ title: t("Invitație Buget Familie"), text });
+      return true;
+    }
+    if (typeof navigator.share === "function") {
+      await navigator.share({ title: t("Invitație Buget Familie"), text });
+      return true;
+    }
+  } catch {
+    // Anulat sau indisponibil: rămâne butonul de copiere.
+  }
+  return false;
 }
 
 /**
@@ -68,10 +91,12 @@ function SelfMemberPicker({ members, selfMemberId, needsChoice, onChoose, onAdd 
   );
 }
 
-export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, invite, inviteDraft, setInviteDraft, onCreateRoom, onJoinInvite, onMoveToInvite, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [legacyOpen, setLegacyOpen] = useState(Boolean(passwordRevealOnce));
+  const [moveConfirm, setMoveConfirm] = useState(false);
   const [recoveryInput, setRecoveryInput] = useState("");
   const [recoveryShown, setRecoveryShown] = useState(recoveryRevealOnce || "");
   const [showSessionPassword, setShowSessionPassword] = useState(false);
@@ -81,6 +106,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
     setPassword(passwordRevealOnce);
     setGeneratedOnce(passwordRevealOnce);
     setShowGenerated(true);
+    setLegacyOpen(true);
     clearPasswordReveal?.();
   }, [passwordRevealOnce, setPassword, clearPasswordReveal]);
   useEffect(() => {
@@ -113,13 +139,6 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       ? t("Așteptăm prima confirmare de la spațiul familiei.")
       : t("Conectează acest telefon pentru a vedea actualizările celorlalte dispozitive.");
 
-  const generateOnce = () => {
-    const next = generateFamilyPassword();
-    setPassword(next);
-    setGeneratedOnce(next);
-    setShowGenerated(true);
-  };
-
   const copySecret = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
@@ -147,7 +166,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
 
   return <div className="bf-sync">
     {!canUseFamilySync() ? <FamilieUpgrade reason="sync" /> : null}
-    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Serverul de sincronizare vede doar un pachet AES-GCM. Pozele bonurilor și parola rămân pe telefon.")}</p></div>
+    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Datele se criptează pe telefon; serverul vede doar un pachet pe care nu-l poate citi. Pozele bonurilor rămân pe telefon.")}</p></div>
     <aside className="bf-sync-local-only" role="note">
       <p className="bf-kicker">{t("CE SE SINCRONIZEAZĂ")}</p>
       <ul>
@@ -172,7 +191,32 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       <p className="bf-kicker">{connected ? t("CONECTAT") : t("CONECTEAZĂ FAMILIA")}</p>
       {connected ? <>
         <p><b>{t("Actualizare live, fără reîmprospătare manuală")}</b><br />{t("Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.")}</p>
-        {sessionRemembered && <p className="bf-helper">{t("Telefonul se reconectează singur când redeschizi aplicația. Parola nu e păstrată, doar o cheie făcută din ea.")}</p>}
+        {sessionRemembered && <p className="bf-helper">{invite ? t("Telefonul se reconectează singur când redeschizi aplicația.") : t("Telefonul se reconectează singur când redeschizi aplicația. Parola nu e păstrată, doar o cheie făcută din ea.")}</p>}
+        {invite ? (
+          <div className="bf-sync-invite">
+            <p className="bf-kicker">{t("INVITĂ UN TELEFON")}</p>
+            <p>{t("Trimite invitația partenerului. Pe telefonul lui: Sync → „Am primit o invitație” → lipește mesajul.")}</p>
+            <div className="bf-sync-invite-actions">
+              <button type="button" className="bf-primary" onClick={() => void shareInvite(invite).then((shared) => { if (!shared) void copySecret(inviteMessage(parseInvite(invite)!)); })}><Send size={16} /> {t("Trimite invitația")}</button>
+              <button type="button" className="bf-secondary" onClick={() => void copySecret(inviteMessage(parseInvite(invite)!))}><Copy size={16} /> {copiedSecret === inviteMessage(parseInvite(invite)!) ? t("Copiat în clipboard") : t("Copiază invitația")}</button>
+            </div>
+            <p className="bf-helper">{t("Cine are invitația intră în familie. Trimite-o doar oamenilor din casă.")}</p>
+          </div>
+        ) : (
+          <div className="bf-sync-move" role="note">
+            <p className="bf-kicker">{t("CAMERĂ CU PAROLĂ")}</p>
+            <p>{t("Familia folosește încă o cameră făcută din parolă. Două familii cu aceeași parolă ajung în aceeași cameră, iar o parolă ghicită deschide datele. Mută familia într-o cameră nouă, cu invitație.")}</p>
+            {moveConfirm ? (
+              <div className="bf-sync-invite-actions">
+                <button type="button" className="bf-primary" disabled={busy || !online} onClick={() => { setMoveConfirm(false); onMoveToInvite(); }}>{t("Da, mută familia")}</button>
+                <button type="button" className="bf-secondary" onClick={() => setMoveConfirm(false)}>{t("Anulează")}</button>
+                <p className="bf-helper">{t("Celelalte telefoane se opresc până primesc invitația nouă. Datele lor nu se pierd: se unesc când intră.")}</p>
+              </div>
+            ) : (
+              <button type="button" className="bf-secondary" disabled={busy || !online} onClick={() => setMoveConfirm(true)}>{t("Mută familia pe invitație")}</button>
+            )}
+          </div>
+        )}
         {recoveryShown && (
           <div className="bf-notice bf-sync-secret" role="status">
             <p><KeyRound size={14} /> {t("Notează acest cod o dată, pe hârtie, nu în telefon. Cu el poți scoate parola dacă o uiți.")}</p>
@@ -183,9 +227,9 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
           </div>
         )}
         <div className="bf-sync-recovery-actions">
-          <button type="button" className="bf-link-button" onClick={() => setShowSessionPassword((value) => !value)}>
+          {!invite && <button type="button" className="bf-link-button" onClick={() => setShowSessionPassword((value) => !value)}>
             {showSessionPassword ? t("Ascunde parola acestei sesiuni") : t("Arată parola acestei sesiuni")}
-          </button>
+          </button>}
           <button type="button" className="bf-link-button" onClick={onIssueRecovery} disabled={busy}>
             {recoveryIssued ? t("Cod nou de recuperare") : t("Creează cod de recuperare")}
           </button>
@@ -209,36 +253,43 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       </> : <>
         <div className="bf-sync-backup-reminder" role="note">
           <ShieldAlert size={16} aria-hidden="true" />
-          <p>{t("Înainte de reinstalare sau de schimbarea telefonului: exportă un backup din Setări. Parola de familie nu se salvează pe aparat; după reinstalare îți trebuie din nou.")}</p>
+          <p>{t("Înainte de reinstalare sau de schimbarea telefonului: exportă un backup din Setări și păstrează codul de recuperare.")}</p>
         </div>
-        <Field label={t("Parola familiei")} hint={t("Orice parolă inventată de voi. O propoziție scurtă e mai bună decât un cuvânt cu simboluri: „pisicaVerdeSareGardul7”. Trebuie să fie identică, literă cu literă, pe toate telefoanele.")}>
-          <input type={showGenerated ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setShowGenerated(false); }} placeholder={t("minimum 12 caractere")} autoComplete="new-password" />
+        <div className="bf-sync-start">
+          <p><b>{t("Primul telefon din familie")}</b><br />{t("Creează camera familiei, apoi trimite invitația celorlalte telefoane. Nu ai nevoie de cont sau de parolă.")}</p>
+          <button className="bf-primary full" disabled={busy || !online} onClick={onCreateRoom}><Users size={17} /> {t("Creează camera familiei")}</button>
+        </div>
+        <div className={`bf-sync-start${inviteDraft ? " is-offered" : ""}`}>
+          <Field label={t("Am primit o invitație")} hint={t("Lipește mesajul sau linkul primit de la partener.")}>
+            <textarea value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} rows={3} placeholder={t("Lipește invitația aici")} autoComplete="off" spellCheck={false} />
+          </Field>
+          <button className="bf-primary full" disabled={busy || !online || !parseInvite(inviteDraft)} onClick={() => onJoinInvite(inviteDraft)}><Users size={17} /> {t("Intră în familie")}</button>
+          {inviteDraft.trim() && !parseInvite(inviteDraft) && <p className="bf-form-error">{t("Codul nu arată ca o invitație. Lipește tot mesajul primit sau tot linkul.")}</p>}
+        </div>
+        <button type="button" className="bf-link-button" aria-expanded={legacyOpen} onClick={() => setLegacyOpen((value) => !value)}>{t("Am o parolă de familie")}</button>
+        {legacyOpen && <>
+        <Field label={t("Parola familiei")} hint={t("Doar pentru camerele create înainte de invitații. Trebuie să fie identică, literă cu literă, cu cea de pe celelalte telefoane.")}>
+          <input type={showGenerated ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setShowGenerated(false); }} placeholder={t("minimum 12 caractere")} autoComplete="current-password" />
           {password.length > 0 && <PasswordMeter value={password} />}
         </Field>
-        <div className="bf-sync-generate">
-          <button type="button" className="bf-secondary" onClick={generateOnce}><KeyRound size={16} /> {t("Generează o parolă")}</button>
-          {showGenerated && generatedOnce && (
-            <div className="bf-notice bf-sync-secret" role="status">
-              <p><KeyRound size={14} /> {t("Arată-o o singură dată partenerului, apoi noteaz-o în afara telefonului:")}</p>
-              <code className="bf-sync-password-once">{generatedOnce}</code>
-              <button type="button" className="bf-secondary" onClick={() => void copySecret(generatedOnce)}>
-                <Copy size={16} /> {copiedSecret === generatedOnce ? t("Copiat în clipboard") : t("Copiază parola")}
-              </button>
-            </div>
-          )}
-        </div>
-        <p className="bf-helper">{t("Dacă ai registrul pe acest telefon, poți pune o parolă nouă — camera veche rămâne. Recuperarea e pentru când telefonul e gol și ai notat codul.")}</p>
-        <p className="bf-helper">{t("Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată. Telefonul ține minte doar o cheie făcută din ea, ca să se reconecteze singur.")}</p>
-        <button className="bf-primary full" disabled={busy || !online} onClick={onConnect}><Users size={17} /> {t("Conectează acest telefon")}</button>
-        <button type="button" className="bf-link-button" onClick={() => setForgotOpen((value) => !value)}>{t("Am uitat parola")}</button>
+        {showGenerated && generatedOnce && (
+          <div className="bf-notice bf-sync-secret" role="status">
+            <p><KeyRound size={14} /> {t("Parola găsită cu codul de recuperare. Noteaz-o în afara telefonului:")}</p>
+            <code className="bf-sync-password-once">{generatedOnce}</code>
+          </div>
+        )}
+        <p className="bf-helper">{t("Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată. Telefonul ține minte doar o cheie făcută din ea, ca să se reconecteze singur.")}</p>
+        <button className="bf-secondary full" disabled={busy || !online} onClick={onConnect}><KeyRound size={17} /> {t("Conectează cu parola")}</button>
+        </>}
+        <button type="button" className="bf-link-button" onClick={() => setForgotOpen((value) => !value)}>{t("Am un cod de recuperare")}</button>
         {forgotOpen && (
           <div className="bf-sync-forgot">
-            <p className="bf-kicker">{t("AM UITAT PAROLA")}</p>
+            <p className="bf-kicker">{t("RECUPERARE")}</p>
             <Field label={t("Cod de recuperare")} hint={t("Introdu codul notat la prima conectare. Nu e parola familiei.")}>
               <input value={recoveryInput} onChange={(event) => setRecoveryInput(event.target.value.toUpperCase())} placeholder="XXXX-XXXX-XXXX-XXXX" autoComplete="off" spellCheck={false} />
             </Field>
             <button type="button" className="bf-secondary" disabled={busy || !online || recoveryInput.replace(/[^A-Z0-9]/gi, "").length < 16} onClick={() => onRecoverPassword(recoveryInput)}>
-              {t("Recuperează parola")}
+              {t("Recuperează accesul")}
             </button>
           </div>
         )}

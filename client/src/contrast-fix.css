@@ -1183,3 +1183,24 @@ html body .bf-os-day > span:first-child {
   min-height: 44px;
 }
 
+
+/* Camera familiei: creare, invitație, mutare de pe parolă */
+.bf-sync-start,
+.bf-sync-invite,
+.bf-sync-move {
+  display: grid;
+  gap: .6rem;
+  padding: .9rem;
+  border: 1px solid color-mix(in srgb, var(--cf-ink, #1a2420) 14%, transparent);
+  border-radius: .9rem;
+  background: var(--cf-surface, #fffdf7);
+  color: var(--cf-ink, #1a2420);
+}
+.bf-sync-start p,
+.bf-sync-invite p,
+.bf-sync-move p { margin: 0; }
+.bf-sync-start textarea { width: 100%; min-height: 4.5rem; resize: vertical; font: inherit; font-size: 13px; word-break: break-all; }
+.bf-sync-start.is-offered,
+.bf-sync-move { border-color: color-mix(in srgb, var(--cf-warning, #c49a2a) 70%, transparent); background: color-mix(in srgb, var(--cf-warning, #c49a2a) 10%, var(--cf-surface, #fffdf7)); }
+.bf-sync-invite-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bf-sync-invite-actions > button { flex: 1 1 10rem; }

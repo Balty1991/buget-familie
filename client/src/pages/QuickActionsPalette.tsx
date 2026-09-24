@@ -89,7 +89,7 @@ export function CalmOnboarding({ onClose, onAdd: _onAdd, onGo: _onGo }: { onClos
   const [step, setStep] = useState(0);
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const steps = [
-    { kicker: t("ÎNCREDERE"), title: t("Date pe telefon."), emphasis: t("Sync opțional. Fără login bancar."), detail: t("Registrul rămâne local. Sync-ul de familie e criptat cu o parolă pe care o alegeți voi — fără cont bancar și fără reclame pe ecranele financiare."), icon: WalletCards, tone: "calm" },
+    { kicker: t("ÎNCREDERE"), title: t("Date pe telefon."), emphasis: t("Sync opțional. Fără login bancar."), detail: t("Registrul rămâne local. Sync-ul de familie e criptat pe telefon, iar partenerul intră cu invitație — fără cont bancar și fără reclame pe ecranele financiare."), icon: WalletCards, tone: "calm" },
     { kicker: t("01 · ÎMPĂRȚIM"), title: t("Punem banii în locul potrivit."), emphasis: t("Pas cu pas."), detail: t("Un plic este o sumă pusă deoparte pentru un scop: mâncare, facturi, transport sau orice contează pentru tine."), icon: Goal, tone: "envelope" },
     { kicker: t("02 · AZI"), title: t("Vezi ce poți folosi azi."), emphasis: t("Fără presupuneri."), detail: t("Ecranul Astăzi îți arată cât a mai rămas în plicuri, ce plăți urmează și care este următorul pas simplu."), icon: CalendarClock, tone: "rhythm" },
     { kicker: t("03 · PRIMUL PAS"), title: t("Începe cu o singură"), emphasis: t("cheltuială sau încasare."), detail: t("Nu trebuie să completezi totul acum. Adaugă un singur lucru și construim de acolo."), icon: Plus, tone: "start" },

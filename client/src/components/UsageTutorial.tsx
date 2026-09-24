@@ -124,9 +124,9 @@ export function UsageTutorial({ onGo, onOpenReview, onOpenSync }: Props) {
             </p>
           </section>
           <section>
-            <p className="bf-kicker">{t("PAROLA")}</p>
-            <h3>{t("Parola de familie rămâne la voi")}</h3>
-            <p>{t("Parola de sincronizare nu este salvată. Nu o pune în conversații, bonuri sau capturi de ecran. Dacă un telefon se pierde, schimbați parola pe telefoanele rămase — camera veche nu mai decriptează pachetul. Pozele bonurilor nu părăsesc telefonul. Politica, termenii și ștergerea datelor sunt în Setări → Încredere.")}</p>
+            <p className="bf-kicker">{t("INVITAȚIA")}</p>
+            <h3>{t("Invitația familiei rămâne la voi")}</h3>
+            <p>{t("Invitația deschide camera familiei: trimite-o doar oamenilor din casă și nu o pune în capturi de ecran. Dacă un telefon se pierde, revocă-l din Sync și mutați familia într-o cameră nouă. Pozele bonurilor nu părăsesc telefonul. Politica, termenii și ștergerea datelor sunt în Setări → Încredere.")}</p>
           </section>
         </>
       )}

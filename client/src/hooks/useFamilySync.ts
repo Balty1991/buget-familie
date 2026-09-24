@@ -4,12 +4,13 @@
  * Sesiunea se reia singură la pornire din cheia păstrată în family-session (nu din parolă).
  */
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { newId, normalizeAppData, type AppData } from "@/lib/finance-data";
+import { createEmptyAppData, newId, normalizeAppData, type AppData } from "@/lib/finance-data";
 import { checkFamilyPassword } from "@/lib/family-password";
 import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope, FamilySecret } from "@/lib/family-crypto";
 import { clearFamilySession, loadFamilySession, saveFamilySession } from "@/lib/family-session";
+import { createFamilyInvite, formatInvite, parseInvite, type FamilyInvite } from "@/lib/family-invite";
 import { addSelfMember, chooseSelfMember, claimOwnMember, needsSelfChoice, selfMemberIdOf } from "@/lib/member-identity";
 import { safeSetItem } from "@/lib/safe-storage";
 import { notifyFamilyEnvelopeChanges } from "@/lib/local-notifications";
@@ -54,6 +55,10 @@ export function useFamilySync(
   /** Încercarea de reluare automată s-a terminat (reușită sau nu); până atunci nu arătăm „oprit”. */
   const [syncResumeSettled, setSyncResumeSettled] = useState(false);
   const [syncHasSession, setSyncHasSession] = useState(false);
+  /** Codul invitației camerei curente; lipsește la camerele vechi, cu parolă. */
+  const [syncInvite, setSyncInvite] = useState("");
+  /** Invitație primită prin link, pusă deja în câmp ca omul doar să confirme. */
+  const [syncInviteDraft, setSyncInviteDraft] = useState("");
   const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
   useEffect(() => {
     const goOnline = () => setOnline(true);
@@ -133,6 +138,12 @@ export function useFamilySync(
         return;
       }
       const password = await recovery.unwrapFamilyPassword(wrap, code);
+      if (parseInvite(password)) {
+        // Camerele cu invitație păstrează codul invitației în spatele codului de recuperare.
+        setSyncInviteDraft(password);
+        setSyncNotice(t("Am găsit invitația familiei. Apasă „Intră în familie”."));
+        return;
+      }
       setSyncPassword(password);
       setSyncPasswordReveal(password);
       setSyncNotice(t("Am găsit parola. Noteaz-o, apoi conectează acest telefon."));
@@ -151,16 +162,34 @@ export function useFamilySync(
     window.clearTimeout(syncPushTimerRef.current);
     setSyncConnected(false);
     setSyncPassword("");
+    setSyncInvite("");
     setSyncHasSession(false);
     writeClosed(true);
     void clearFamilySession();
     setSyncNotice(t("Sesiunea a fost închisă pe acest telefon."));
   };
 
+  /** Camera veche, cu parolă, a fost golită după mutarea familiei pe invitație. */
+  const syncStopMovedRoom = () => {
+    syncUnsubscribeRef.current?.();
+    syncUnsubscribeRef.current = undefined;
+    syncRoomIdRef.current = undefined;
+    syncSecretRef.current = "";
+    window.clearTimeout(syncPushTimerRef.current);
+    setSyncConnected(false);
+    setSyncHasSession(false);
+    void clearFamilySession();
+    setSyncNotice(t("Familia s-a mutat într-o cameră nouă, cu invitație. Cere invitația de pe telefonul care a mutat-o și lipește-o la „Am primit o invitație”. Datele de pe acest telefon rămân și se unesc la intrare."));
+  };
+
   const syncHandleRemoteEnvelope = async (envelope: EncryptedEnvelope) => {
     try {
       const crypto = await loadFamilyCrypto();
       const remoteData = normalizeAppData(await crypto.decryptFamilyData(envelope, syncSecretRef.current));
+      if (remoteData.settings.syncRoomMovedAt) {
+        syncStopMovedRoom();
+        return;
+      }
       const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
       const mergedPortable = syncPortable(merged);
       if (mergedPortable === syncPortable(syncDataRef.current)) {
@@ -199,13 +228,24 @@ export function useFamilySync(
    * Intră în cameră: unește pachetul existent, își ia membrul propriu la prima intrare,
    * trimite și ascultă. `password` lipsește la reluarea automată (parola nu e păstrată).
    */
-  const syncOpenRoom = async (roomId: string, secret: FamilySecret, password?: string) => {
+  const syncOpenRoom = async (roomId: string, secret: FamilySecret, options: { password?: string; invite?: string; mode: "create" | "join" | "resume" }) => {
     const crypto = await loadFamilyCrypto();
     const syncApi = await loadFamilySync();
     const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
     let merged = syncDataRef.current;
+    if (!remoteEnvelope && options.mode === "join") {
+      // Nu facem camere noi din parolă sau dintr-o invitație greșită: ar fi o cameră goală, separată de familie.
+      setSyncNotice(options.invite
+        ? t("Nu am găsit camera din această invitație. Verifică să fi copiat tot codul sau cere o invitație nouă.")
+        : t("Nu există nicio cameră cu această parolă. Camerele noi se fac cu „Creează camera familiei”, iar partenerul intră cu invitația."));
+      return false;
+    }
     if (remoteEnvelope) {
       const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, secret));
+      if (remoteData.settings.syncRoomMovedAt) {
+        syncStopMovedRoom();
+        return false;
+      }
       const own = claimOwnMember(syncDataRef.current, remoteData, getOrCreateDeviceId());
       merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData));
     }
@@ -217,7 +257,9 @@ export function useFamilySync(
       return false;
     }
     merged = touchSyncDevice(merged);
-    const recovery = password ? await issueRecoveryIfNeeded(merged, password, false) : { data: merged };
+    // Codul de recuperare încuie parola (camere vechi) sau codul invitației (camere noi).
+    const recoverable = options.invite || options.password;
+    const recovery = recoverable ? await issueRecoveryIfNeeded(merged, recoverable, options.mode === "create") : { data: merged };
     merged = recovery.data;
     syncLastPortableRef.current = syncPortable(merged);
     setData(merged);
@@ -232,6 +274,7 @@ export function useFamilySync(
       (error) => setSyncNotice(error.message),
     );
     setSyncConnected(true);
+    setSyncInvite(options.invite || "");
     setSyncLastSync(new Date().toISOString());
     writeClosed(false);
     if ("code" in recovery && recovery.code) setSyncRecoveryReveal(recovery.code);
@@ -259,7 +302,7 @@ export function useFamilySync(
       const crypto = await loadFamilyCrypto();
       const roomId = await crypto.deriveFamilyRoomId(syncPassword);
       const material = await crypto.importFamilyKeyMaterial(syncPassword);
-      if (await syncOpenRoom(roomId, material, syncPassword)) {
+      if (await syncOpenRoom(roomId, material, { password: syncPassword, mode: "join" })) {
         const saved = await saveFamilySession(roomId, material);
         setSyncHasSession(saved);
       }
@@ -268,6 +311,71 @@ export function useFamilySync(
     } finally {
       setSyncBusy(false);
     }
+  };
+
+  /** Intră într-o cameră cu invitație (nouă sau existentă) și ține minte sesiunea. */
+  const syncEnterInvite = async (invite: FamilyInvite, mode: "create" | "join") => {
+    const crypto = await loadFamilyCrypto();
+    const code = formatInvite(invite);
+    const material = await crypto.importFamilyKeyMaterial(invite.key);
+    if (!(await syncOpenRoom(invite.roomId, material, { invite: code, mode }))) return false;
+    setSyncHasSession(await saveFamilySession(invite.roomId, material, code));
+    return true;
+  };
+
+  const syncGuarded = async (work: () => Promise<unknown>, failure: string) => {
+    if (isOfflineOnly()) {
+      setSyncNotice(t("Modul „doar offline” este activ. Dezactivează-l din Setări ca să folosești Sync."));
+      return;
+    }
+    setSyncBusy(true);
+    try {
+      await work();
+    } catch (error) {
+      setSyncNotice(error instanceof Error ? error.message : failure);
+    } finally {
+      setSyncBusy(false);
+    }
+  };
+
+  const syncCreateRoom = () => syncGuarded(async () => {
+    if (await syncEnterInvite(createFamilyInvite(), "create")) {
+      setSyncNotice(t("Camera familiei e gata. Trimite invitația partenerului și notează codul de recuperare."));
+    }
+  }, t("Camera familiei nu a putut fi creată."));
+
+  const syncJoinInvite = (raw: string) => syncGuarded(async () => {
+    const invite = parseInvite(raw);
+    if (!invite) {
+      setSyncNotice(t("Codul nu arată ca o invitație. Lipește tot mesajul primit sau tot linkul."));
+      return;
+    }
+    if (await syncEnterInvite(invite, "join")) setSyncInviteDraft("");
+  }, t("Nu am putut intra în familie."));
+
+  /**
+   * Mută o familie dintr-o cameră cu parolă într-una cu invitație. Camera veche e
+   * suprascrisă cu un pachet gol care spune doar „s-a mutat”, fără cheia nouă: cine
+   * ghicește parola nu mai găsește nimic, iar celelalte telefoane se opresc și cer invitația.
+   */
+  const syncMoveToInvite = () => syncGuarded(async () => {
+    const oldRoomId = syncRoomIdRef.current;
+    const oldSecret = syncSecretRef.current;
+    if (!syncConnected || !oldRoomId || !oldSecret || syncInvite) return;
+    if (!(await syncEnterInvite(createFamilyInvite(), "create"))) return;
+    const crypto = await loadFamilyCrypto();
+    const syncApi = await loadFamilySync();
+    const movedAt = new Date().toISOString();
+    const stub = { ...createEmptyAppData(), settings: { ...createEmptyAppData().settings, members: [], paymentSources: [], syncRoomMovedAt: movedAt } };
+    await syncApi.pushFamilyEnvelope(oldRoomId, await crypto.encryptFamilyData(stub, oldSecret));
+    setSyncNotice(t("Familia s-a mutat în camera nouă, iar camera veche a fost golită. Trimite invitația celorlalte telefoane: ele se opresc până o primesc."));
+  }, t("Mutarea nu a reușit. Camera veche a rămas neatinsă."));
+
+  /** Invitație venită prin link: o punem în câmp și deschidem Sync, fără să intrăm singuri. */
+  const offerInvite = (raw: string) => {
+    if (!parseInvite(raw)) return;
+    setSyncInviteDraft(raw);
+    setSyncNotice(t("Ai primit o invitație în familie. Verifică și apasă „Intră în familie”."));
   };
 
   /** Reluare la pornire: Android închide des aplicația, iar parola nu e păstrată. */
@@ -287,7 +395,7 @@ export function useFamilySync(
       setSyncHasSession(true);
       setSyncBusy(true);
       try {
-        await syncOpenRoom(session.roomId, session.material);
+        await syncOpenRoom(session.roomId, session.material, { invite: session.invite, mode: "resume" });
       } catch (error) {
         setSyncNotice(error instanceof Error ? error.message : t("Sincronizarea nu a putut fi reluată."));
       } finally {
@@ -318,6 +426,10 @@ export function useFamilySync(
           let toPush = syncDataRef.current;
           if (remoteEnvelope) {
             const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncSecretRef.current));
+            if (remoteData.settings.syncRoomMovedAt) {
+              syncStopMovedRoom();
+              return;
+            }
             toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
             const mergedPortable = syncPortable(toPush);
             if (mergedPortable !== syncPortable(syncDataRef.current)) {
@@ -349,6 +461,12 @@ export function useFamilySync(
     connected: syncConnected,
     stopped: syncStopped,
     sessionRemembered: syncHasSession,
+    invite: syncInvite,
+    inviteDraft: syncInviteDraft,
+    setInviteDraft: setSyncInviteDraft,
+    onCreateRoom: () => void syncCreateRoom(),
+    onJoinInvite: (raw: string) => void syncJoinInvite(raw),
+    onMoveToInvite: () => void syncMoveToInvite(),
     members: data.settings.members,
     selfMemberId: selfMemberIdOf(data),
     needsSelfChoice: needsSelfChoice(data),
@@ -431,6 +549,7 @@ export function useFamilySync(
 
   return {
     syncPanelProps,
+    offerInvite,
     setSyncPassword,
     setSyncPasswordReveal,
     syncPortable,

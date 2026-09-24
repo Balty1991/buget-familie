@@ -10,9 +10,12 @@ import { decryptText, encryptText, type EncryptedEnvelope } from "@/lib/family-c
 const LOOKUP_PREFIX = "buget-familie-recovery:";
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+/** Aleator criptografic: `Math.random` e previzibil, iar codul deschide parola sau invitația familiei. */
 export function generateRecoveryCode(): string {
-  const group = () => Array.from({ length: 4 }, () => ALPHABET[Math.floor(Math.random() * ALPHABET.length)]).join("");
-  return `${group()}-${group()}-${group()}-${group()}`;
+  // 32 de litere → 256 se împarte exact, deci fiecare literă e la fel de probabilă.
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  const letters = Array.from(bytes, (byte) => ALPHABET[byte % ALPHABET.length]).join("");
+  return letters.replace(/(.{4})(?=.)/g, "$1-");
 }
 
 /** Ignoră spații, cratime și minuscule — ca să poți scrie codul cum l-ai notat. */

@@ -1,7 +1,8 @@
 /**
  * Sesiunea familiei păstrată pe acest telefon, ca sincronizarea să se reia după ce
  * Android închide aplicația. Parola nu se salvează: rămâne doar cheia PBKDF2 făcută din
- * ea, neexportabilă (nu poate fi citită înapoi ca text), și ID-ul camerei.
+ * ea, neexportabilă (nu poate fi citită înapoi ca text), și ID-ul camerei. Codul unei
+ * invitații (cheie aleatoare, nu o parolă aleasă de om) se păstrează, ca să poți invita din nou.
  * Totul stă în IndexedDB, nu în localStorage și nu în pachetul sincronizat.
  */
 
@@ -10,7 +11,11 @@ const DATABASE_VERSION = 1;
 const STORE_NAME = "session";
 const SESSION_KEY = "family";
 
-export type FamilySession = { roomId: string; material: CryptoKey; savedAt: string };
+/**
+ * `invite` există doar la camerele cu invitație: cheia lor e aleatoare, nu o parolă aleasă
+ * de om, iar fără ea telefonul n-ar mai putea invita pe altcineva după repornire.
+ */
+export type FamilySession = { roomId: string; material: CryptoKey; savedAt: string; invite?: string };
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -51,9 +56,9 @@ export async function loadFamilySession(): Promise<FamilySession | undefined> {
   }
 }
 
-export async function saveFamilySession(roomId: string, material: CryptoKey): Promise<boolean> {
+export async function saveFamilySession(roomId: string, material: CryptoKey, invite?: string): Promise<boolean> {
   try {
-    await run("readwrite", (store) => store.put({ roomId, material, savedAt: new Date().toISOString() } satisfies FamilySession, SESSION_KEY));
+    await run("readwrite", (store) => store.put({ roomId, material, savedAt: new Date().toISOString(), invite } satisfies FamilySession, SESSION_KEY));
     return typeof indexedDB !== "undefined";
   } catch {
     return false;
