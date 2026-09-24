@@ -1,7 +1,7 @@
 # Răspunsuri Data safety — Google Play Console
 
 Text gata de lipit / bifat în **Play Console → Politica aplicației → Siguranța datelor**.  
-Aliniat la aplicația reală (versiune listing **1.1.95** / `versionCode` **97**).  
+Aliniat la aplicația reală (versiune listing **1.1.96** / `versionCode` **98**).  
 Surse: `client/public/privacy.html`, `AndroidManifest.xml` (`allowBackup=false`), sync AES-GCM, IndexedDB bonuri.
 
 > Nu este sfat juridic. Reverifică formularele Play dacă Google schimbă etichetele.

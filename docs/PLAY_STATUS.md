@@ -1,6 +1,6 @@
 # Stare Play (sept 2026)
 
-Versiune țintă listing: **1.1.95** / `versionCode` **97**. Play Billing **implementat, dar oprit** (`BILLING_LIVE = false`): cumpărare, verificare pe server, restaurare și RTDN sunt în cod; se pornesc după pașii din [BILLING_PLAY_PREP.md](./BILLING_PLAY_PREP.md). Text de lipit: [`play-store-listing-ro.md`](./play-store-listing-ro.md). Capturi: [`play-store-assets/SCREENSHOTS.md`](./play-store-assets/SCREENSHOTS.md).
+Versiune țintă listing: **1.1.96** / `versionCode` **98**. Play Billing **implementat, dar oprit** (`BILLING_LIVE = false`): cumpărare, verificare pe server, restaurare și RTDN sunt în cod; se pornesc după pașii din [BILLING_PLAY_PREP.md](./BILLING_PLAY_PREP.md). Text de lipit: [`play-store-listing-ro.md`](./play-store-listing-ro.md). Capturi: [`play-store-assets/SCREENSHOTS.md`](./play-store-assets/SCREENSHOTS.md).
 
 | Doc | Rol |
 |---|---|
