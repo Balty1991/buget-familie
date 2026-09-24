@@ -604,3 +604,27 @@ describe("raportul lunii pentru familie", () => {
     expect(text).toContain("• Alimente 1.600 RON\n");
   });
 });
+
+describe("vânătorul de abonamente nu ia orice repetiție drept abonament", () => {
+  const tx = (id: string, title: string, amount: number, category: string, date: string) => ({ id, title, amount, kind: "expense" as const, category, sourceId: "source-debit", source: "Card", memberId: "member-me", person: "Eu", date });
+
+  it("sare peste plinurile de benzină", () => {
+    const { data } = base();
+    data.transactions = [tx("o1", "OMV 2143", 400, "Transport", "2026-06-15"), tx("o2", "OMV", 420, "Transport", "2026-07-15"), tx("o3", "OMV", 410, "Transport", "2026-08-15")];
+    expect(detectSubscriptions(data, "2026-08-20")).toEqual([]);
+  });
+
+  it("în afara facturilor cere trei plăți cu aceeași sumă", () => {
+    const { data } = base();
+    data.transactions = [tx("g1", "World Class", 250, "Timp liber", "2026-07-02"), tx("g2", "World Class", 250, "Timp liber", "2026-08-02")];
+    expect(detectSubscriptions(data, "2026-08-20")).toEqual([]);
+    data.transactions.push(tx("g0", "World Class", 250, "Timp liber", "2026-06-02"));
+    expect(detectSubscriptions(data, "2026-08-20").map((item) => item.name)).toEqual(["World Class"]);
+  });
+
+  it("facturile rămân detectate după două luni", () => {
+    const { data } = base();
+    data.transactions = [tx("d1", "Digi", 60, "Casă & facturi", "2026-07-15"), tx("d2", "Digi", 62, "Casă & facturi", "2026-08-15")];
+    expect(detectSubscriptions(data, "2026-08-20").map((item) => item.name)).toEqual(["Digi"]);
+  });
+});

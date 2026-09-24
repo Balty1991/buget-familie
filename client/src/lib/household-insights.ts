@@ -234,6 +234,8 @@ export type SubscriptionDetection = {
 const isPriceRise = (from: number, to: number) => to - from >= Math.max(2, from * 0.04);
 
 const groceryCategories = new Set(["Alimente", "Consumabile copil", "Dulciuri", "Băuturi", "Apă"]);
+const billCategories = new Set(["Casă & facturi", "Rate produse"]);
+const FUEL = /\b(omv|mol|petrom|rompetrol|lukoil|socar|gazprom|benzina|motorina|carburant|combustibil|shell)\b/;
 
 /** Detectează comercianți care se repetă lunar, fără a crea scadențe până la confirmare. */
 export const detectSubscriptions = (data: AppData, asOf = isoToday()): SubscriptionDetection[] => {
@@ -270,7 +272,12 @@ export const detectSubscriptions = (data: AppData, asOf = isoToday()): Subscript
     const isGrocery = groceryCategories.has(category);
     const labeled = category === "Abonamente";
     if (isGrocery && !labeled) return;
+    // Plinul la benzinărie se repetă lunar cu sume apropiate, dar nu e o scadență.
+    if (!labeled && FUEL.test(key)) return;
     if (!similar) return;
+    // În afara facturilor și ratelor, o sumă „apropiată” nu ajunge: un abonament costă la fel.
+    const billLike = billCategories.has(category);
+    if (!labeled && !billLike && (dates.length < 3 || history.some((value) => Math.abs(value - typical) > Math.max(2, typical * 0.08)))) return;
     if (!labeled && !monthly && !(weekly && entries.length >= 4)) return;
     if (!labeled && dates.length < 3 && !monthly) return;
     const last = entries.sort((a, b) => b.date.localeCompare(a.date))[0];
