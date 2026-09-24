@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { BarChart3, Bell, BookOpen, CloudOff, Users, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { deviceTimeZone, setFamilyTimeZone, adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { rollIncomeHorizon, deviceTimeZone, setFamilyTimeZone, adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
@@ -580,6 +580,12 @@ export default function Home() {
   const { storageNotice, setStorageNotice, storageReady, applyData } = usePersistAppData(data, setData);
   /** „Azi” al familiei: se setează înainte de orice calcul din randare (testare, #10). */
   setFamilyTimeZone(data.settings.familyTimeZone);
+  /** Venit neregulat: perioada „banii să-mi ajungă N zile” pornește din ziua de azi (M6). */
+  const todayIso = isoToday();
+  useEffect(() => {
+    if (!storageReady || !data.settings.salaryPlan.horizonDays) return;
+    setData((current) => rollIncomeHorizon(current, todayIso));
+  }, [storageReady, todayIso, data.settings.salaryPlan.horizonDays]);
   useEffect(() => {
     if (!storageReady || data.settings.familyTimeZone) return;
     const zone = deviceTimeZone();

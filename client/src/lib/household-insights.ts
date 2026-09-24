@@ -456,7 +456,7 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const fromWeek = rhythm.hasWeekly ? Math.max(0, rhythm.todayLeft) : undefined;
   const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromPace, fromLiquid, safe.available)) : 0;
   const reason = !hasPayday
-    ? t("Setează următorul venit ca să calculăm cât poți cheltui azi.")
+    ? t("Setează următorul venit sau, la venituri neregulate, câte zile să-ți ajungă banii (Plan), ca să calculăm cât poți cheltui azi.")
     : expired
       ? t("Ciclul s-a încheiat pe {date} — pornește ciclul nou ca să-ți spun din nou ritmul zilei.", { date: formatDate(planEndDate(data.settings.salaryPlan)) })
       : spendable <= 0 && remainingDays > 1 && (fromWeek != null ? rhythm.remaining : safe.available) > 0

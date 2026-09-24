@@ -72,7 +72,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
           : trackHero.kind === "income"
             ? t("Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii.")
             : trackHero.kind === "liquid"
-              ? t("Soldul surselor, după mișcările de azi. Pune data venitului în Plan ca să vezi cât poți folosi pe zi.")
+              ? t("Soldul surselor, după mișcările de azi. Pune data venitului în Plan, sau, la venituri neregulate, câte zile să-ți ajungă banii, ca să vezi cât poți folosi pe zi.")
               : trackHero.kind === "spent"
                 ? t("Nu e un sold. E suma ieșită azi, până pui un venit sau un plic.")
                 : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
