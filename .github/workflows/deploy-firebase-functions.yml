@@ -119,14 +119,19 @@ jobs:
       - name: Check aiGuide endpoint
         run: |
           set -euo pipefail
-          status=$(curl -sS -o /tmp/aiguide-health.json -w '%{http_code}' \
-            -X POST "https://${FUNCTIONS_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net/aiGuide" \
-            -H 'content-type: application/json' \
-            --data '{"messages":[{"role":"user","text":"test de disponibilitate"}],"context":{}}')
-          if [ "$status" = "200" ] || [ "$status" = "429" ]; then
-            echo "aiGuide endpoint responded successfully (HTTP $status)."
-          else
-            echo "aiGuide endpoint returned HTTP $status. Response body:"
-            cat /tmp/aiguide-health.json
-            exit 1
-          fi
+          # Ghidul depinde de Gemini / Groq: o încetineală de moment la ei nu înseamnă că publicarea e stricată.
+          # O a doua încercare după 20 s; două eșecuri la rând opresc workflow-ul.
+          for try in 1 2; do
+            status=$(curl -sS -m 70 -o /tmp/aiguide-health.json -w '%{http_code}' \
+              -X POST "https://${FUNCTIONS_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net/aiGuide" \
+              -H 'content-type: application/json' \
+              --data '{"messages":[{"role":"user","text":"test de disponibilitate"}],"context":{}}' || echo 000)
+            if [ "$status" = "200" ] || [ "$status" = "429" ]; then
+              echo "aiGuide endpoint responded successfully (HTTP $status, try $try)."
+              exit 0
+            fi
+            echo "aiGuide endpoint returned HTTP $status (try $try). Response body:"
+            cat /tmp/aiguide-health.json || true
+            [ "$try" = "1" ] && sleep 20
+          done
+          exit 1

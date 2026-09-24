@@ -304,7 +304,15 @@ function quotaFrom(headers, detail = "", exhausted = false) {
         resetAt: shortWindow ? null : delayMs ? new Date(Date.now() + delayMs).toISOString() : exhausted ? nextPacificMidnight() : null,
     };
 }
-async function callGemini(apiKey, contents) {
+/** Ce a mai rămas din timpul cererii; o cerere spre model nu așteaptă mai mult de atât. */
+function timeLeft(deadline, cap) {
+    const left = Math.min(cap, deadline - Date.now());
+    if (left < 2_000)
+        throw new GuideCallError("GUIDE_TIMEOUT", 504);
+    return AbortSignal.timeout(left);
+}
+const isTimeout = (error) => error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+async function callGemini(apiKey, contents, deadline) {
     let lastStatus = 0;
     let lastDetail = "";
     let lastQuota = { remaining: null, limit: null, resetAt: null };
@@ -322,11 +330,23 @@ async function callGemini(apiKey, contents) {
                     : { temperature: 0.6 },
             };
             for (let attempt = 0; attempt < 2; attempt++) {
-                const apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify(payload),
-                });
+                let apiResponse;
+                try {
+                    apiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+                        method: "POST",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify(payload),
+                        signal: timeLeft(deadline, 20_000),
+                    });
+                }
+                catch (error) {
+                    if (!isTimeout(error))
+                        throw error;
+                    // Modelul nu răspunde la timp: trecem la următorul, nu mai reîncercăm pe același.
+                    lastStatus = 504;
+                    lastDetail = `timeout ${model}`;
+                    break;
+                }
                 lastStatus = apiResponse.status;
                 if (apiResponse.ok) {
                     const body = (await apiResponse.json());
@@ -354,7 +374,7 @@ async function callGemini(apiKey, contents) {
     }
     throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_UPSTREAM_ERROR", lastStatus, lastQuota);
 }
-async function callGroq(apiKey, contents) {
+async function callGroq(apiKey, contents, deadline) {
     let lastStatus = 0;
     let lastDetail = "";
     let lastQuota = { remaining: null, limit: null, resetAt: null };
@@ -377,19 +397,30 @@ async function callGroq(apiKey, contents) {
     for (const model of GROQ_MODELS) {
         for (const structured of [true, false]) {
             for (let attempt = 0; attempt < 2; attempt++) {
-                const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "content-type": "application/json",
-                        authorization: `Bearer ${apiKey}`,
-                    },
-                    body: JSON.stringify({
-                        model,
-                        temperature: 0.6,
-                        messages,
-                        ...(structured ? { response_format: { type: "json_object" } } : {}),
-                    }),
-                });
+                let apiResponse;
+                try {
+                    apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                        method: "POST",
+                        headers: {
+                            "content-type": "application/json",
+                            authorization: `Bearer ${apiKey}`,
+                        },
+                        body: JSON.stringify({
+                            model,
+                            temperature: 0.6,
+                            messages,
+                            ...(structured ? { response_format: { type: "json_object" } } : {}),
+                        }),
+                        signal: timeLeft(deadline, 15_000),
+                    });
+                }
+                catch (error) {
+                    if (!isTimeout(error))
+                        throw error;
+                    lastStatus = 504;
+                    lastDetail = `timeout ${model}`;
+                    break;
+                }
                 lastStatus = apiResponse.status;
                 if (apiResponse.ok) {
                     const body = (await apiResponse.json());
@@ -484,10 +515,16 @@ async function allowPerCaller(collection, ip, uid, limit, extra = {}) {
         return takeQuota(collection, ip, limit, extra);
     return (await takeQuota(collection, `uid|${uid}`, limit, extra)) && (await takeQuota(collection, `ip|${ip}`, limit * 5, extra));
 }
+/**
+ * Funcția are 60 s. Fără termene, un Gemini lent o ținea până la capăt: omul primea 504, iar rezerva
+ * Groq nu apuca să fie încercată. Gemini are ~33 s, Groq ce rămâne până la 50 s.
+ */
 async function generateGuide(contents, geminiKey, groqKey) {
+    const started = Date.now();
+    const deadline = started + 50_000;
     if (geminiKey) {
         try {
-            return await callGemini(geminiKey, contents);
+            return await callGemini(geminiKey, contents, groqKey ? started + 33_000 : deadline);
         }
         catch (error) {
             if (!groqKey)
@@ -496,7 +533,7 @@ async function generateGuide(contents, geminiKey, groqKey) {
         }
     }
     if (groqKey) {
-        return await callGroq(groqKey, contents);
+        return await callGroq(groqKey, contents, deadline);
     }
     throw new GuideCallError("NO_GUIDE_PROVIDER", 503);
 }
