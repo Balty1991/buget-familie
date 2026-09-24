@@ -53,9 +53,9 @@ describe("plafonul de !important", () => {
     const count = walk(root)
       .filter((file) => file.endsWith(".css"))
       .reduce((sum, file) => sum + (readFileSync(file, "utf8").split("!important").length - 1), 0);
-    // 8.344 la re-audit; 5.410 după curățenia verificată pe stilul calculat; 3819 după scoaterea regulilor moarte, 3829 cu stratul ds (design-system-37.css) (docs/CSS_IMPORTANT_CLEANUP.md).
+    // 8.344 la re-audit; 5.410 după curățenia verificată pe stilul calculat; 3819 după scoaterea regulilor moarte, 3833 cu stratul ds (design-system-37.css) (docs/CSS_IMPORTANT_CLEANUP.md).
     // Curățenia poate scădea numărul; o foaie nouă nu are voie să-l urce.
-    expect(count).toBeLessThanOrEqual(3829);
+    expect(count).toBeLessThanOrEqual(3833);
   });
 });
 

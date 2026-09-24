@@ -2918,4 +2918,7 @@ export const en: Record<string, string> = {
   "Pune bani în plic": "Add money to the envelope",
   "Ca să compari pe ciclul de salariu, spune întâi când vine venitul.": "To compare on the pay cycle, first set when your income arrives.",
   "Setează în Plan": "Set it in Plan",
+  "Ciclul de salariu are nevoie de data venitului": "The pay cycle needs your payday",
+  "Spune în Plan când vine salariul; apoi comparația merge de la un salariu la altul, nu pe luna calendaristică.": "Set your payday in Plan; then the comparison runs from one payday to the next instead of the calendar month.",
+  "Setează data salariului": "Set payday",
 };

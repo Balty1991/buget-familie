@@ -344,10 +344,27 @@ html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-chevro
   }
 }
 
-/* „Ciclu salariu” fără data venitului: arată stins, dar răspunde la atingere cu explicația. */
-.bf-analysis-window button.is-unavailable { opacity: .62; }
-.bf-analysis-cycle-hint { margin: 8px 0 0; }
-.bf-analysis-cycle-hint .bf-link-button { display: inline; padding: 0; min-height: 0; }
+/*
+ * „Ciclu salariu” fără data venitului: nu se poate selecta (nu are după ce calcula), dar răspunde
+ * la atingere — contur pe buton și un card cu ce lipsește, lipit de comutator.
+ */
+.bf-analysis-window button.is-unavailable { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.bf-analysis-window button.is-unavailable:not(.is-asking) { opacity: .7; }
+.bf-analysis-cycle-hint {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--cf-primary) 35%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--cf-primary) 8%, var(--cf-surface, #fff));
+  color: var(--cf-ink);
+}
+.bf-analysis-cycle-hint > svg { color: var(--cf-primary); margin-top: 2px; }
+.bf-analysis-cycle-hint b { display: block; font-size: 15px; }
+.bf-analysis-cycle-hint p { margin: 4px 0 10px; color: var(--cf-muted); font-size: 14px; line-height: 1.4; }
+.bf-analysis-cycle-hint .bf-primary { width: 100%; }
 
 /*
  * Un singur set de suprafețe și titluri (auditul din septembrie 2026 a găsit 6 raze de colț,
@@ -386,5 +403,12 @@ html.theme-navy {
   html body .os-shell .bf-page .bf-kicker {
     color: var(--cf-primary) !important;
     letter-spacing: .14em !important;
+  }
+  /* Butonul „Ciclu salariu” apăsat fără data venitului: contur, ca să se vadă că a răspuns. */
+  html body .os-shell .bf-analysis-window button.is-asking {
+    outline: 2px solid var(--cf-primary) !important;
+    outline-offset: -2px !important;
+    color: var(--cf-ink) !important;
+    opacity: 1 !important;
   }
 }
