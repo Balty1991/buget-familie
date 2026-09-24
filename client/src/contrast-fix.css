@@ -1280,3 +1280,17 @@ html body .bf-os-day > span:first-child {
 .bf-feedback-kinds button.active { border-color: var(--cf-primary-strong, #1f5240); background: var(--cf-primary-strong, #1f5240); color: #fff; }
 .bf-feedback-details { display: flex; gap: .5rem; align-items: flex-start; font-size: 13px; line-height: 1.45; }
 .bf-feedback-details input { margin-top: 3px; flex: 0 0 auto; }
+
+/* Texte care se tăiau cu „…” pe telefon (auditul pe ecran): se rup pe al doilea rând. */
+body .bf-weekly-tranche-notice > div > span {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+body .bf-cat-grid button span {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.15;
+  text-align: center;
+}

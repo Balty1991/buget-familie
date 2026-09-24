@@ -59,3 +59,11 @@
   font-weight: 600;
   color: var(--cf-muted, #4a5852);
 }
+/* Detaliul (persoană · sursă · categorie · plic) pe cel mult două rânduri, nu tăiat după 8 litere. */
+.bf-movements-ledger .bf-movement-row .bf-movement-copy small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow: hidden;
+}

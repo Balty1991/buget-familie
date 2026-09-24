@@ -1331,3 +1331,8 @@ html:not(.dark) .bf-os-decide {
   color: inherit;
   font-weight: 750;
 }
+/* Pe temele închise, verdele și roșul de mai sus coborau sub 3,6:1 (Navy: 2,85:1). */
+html.theme-dark .bf-cycle-flow span:first-child b,
+html.theme-navy .bf-cycle-flow span:first-child b { color: #86dcae; }
+html.theme-dark .bf-cycle-flow span:last-child b,
+html.theme-navy .bf-cycle-flow span:last-child b { color: #ffa493; }

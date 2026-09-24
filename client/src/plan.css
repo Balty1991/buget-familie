@@ -100,3 +100,30 @@
     grid-template-columns: minmax(0, 1fr) auto var(--bf-hit, 44px) !important;
   }
 }
+
+/*
+ * Plan pe telefon: caseta „Nerepartizați” stătea lângă titlu și îl rupea pe două rânduri,
+ * iar inelul decorativ se suprapunea peste ea. Sub 560 px: textul pe toată lățimea,
+ * suma pe un rând al ei, fără inel.
+ */
+@media (max-width: 560px) {
+  .os-shell .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+  .os-shell .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass::after {
+    display: none;
+  }
+  .os-shell .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass .bf-plan-header-stat {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: start;
+    gap: 10px;
+    width: 100%;
+  }
+  .os-shell .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass .bf-plan-header-stat > span {
+    margin: 0;
+  }
+}

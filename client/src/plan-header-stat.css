@@ -5,3 +5,8 @@
 .bf-plan-header-stat small{color:var(--cf-muted);font:600 8px/1 "IBM Plex Sans",sans-serif;letter-spacing:.07em;white-space:nowrap}
 .bf-plan-header-stat b{color:var(--cf-ink);font:600 16px/1.1 "IBM Plex Sans",Georgia,serif;white-space:nowrap}
 @media(max-width:370px){.bf-plan-header-stat{min-width:76px!important;padding:8px 9px!important}.bf-plan-header-stat b{font-size:14px!important}}
+
+/* Pe telefon caseta stă pe un rând al ei (plan.css): suma la dreapta, puțin mai mare. */
+@media (max-width: 560px) {
+  .os-shell .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass .bf-plan-header-stat b { justify-self: end; font-size: 18px; }
+}
