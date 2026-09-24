@@ -1,4 +1,4 @@
-const CACHE = "buget-familie-shell-v89";
+const CACHE = "buget-familie-shell-v90";
 
 const SHELL = ["./manifest.webmanifest", "./bf-favicon.svg", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/notify-badge.png"];
 
@@ -53,9 +53,11 @@ self.addEventListener("fetch", (event) => {
         return response;
       });
       if (!cached) return network.catch(() => caches.match("./"));
+      // Rețeaua întâi, cache-ul doar dacă întârzie peste 3 s sau lipsește. Cu 0,5 s, pe date mobile
+      // pagina venea aproape mereu din cache: după o publicare, telefonul rămânea o versiune în urmă.
       return Promise.race([
         network.catch(() => cached),
-        new Promise((resolve) => setTimeout(() => resolve(cached), 500)),
+        new Promise((resolve) => setTimeout(() => resolve(cached), 3000)),
       ]);
     })());
     return;
