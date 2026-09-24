@@ -8,7 +8,7 @@ import "../mobile-capture-pass.css";
 import "../receipt-form-fix.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, Ellipsis, HeartPulse, House, Plus, ShoppingCart, Ticket, Trash2, X } from "lucide-react";
-import { BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
@@ -137,7 +137,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   };
   const save = () => {
     const numeric = parseRomanianAmount(amount); const member = data.settings.members.find((item) => item.id === memberId); const source = data.settings.paymentSources.find((item) => item.id === sourceId);
-    if (numeric <= 0) return setError(t("Introdu o sumă mai mare decât zero."));
+    if (numeric <= 0) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
     if (!member || !source) return setError(t("Alege un membru și o sursă de plată."));
     // Suma tastată este în valuta sursei; fără curs nu o putem trece în registru, care e în lei.
     const foreign = source.currency && source.currency !== BASE_CURRENCY ? source.currency : undefined;
@@ -177,7 +177,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     <section ref={dialogRef} tabIndex={-1} className="bf-modal bf-quick-entry-panel" role="dialog" aria-modal="true" aria-label={t("Cât ai dat?")} onPointerDown={(event) => event.stopPropagation()}>
       <header><div><p className="bf-kicker">{t("NOTEAZĂ")}</p><h2>{kind === "income" ? t("Cât a intrat?") : t("Cât ai dat?")}</h2></div><button className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button></header>
       <div className="bf-quick-entry-scroll">
-      <p className="bf-quick-entry-intro">{t("Suma, magazinul, gata. Plicul se alege singur dacă există unul pe categorie.")}</p>
+      <p className="bf-quick-entry-intro">{kind === "income" ? t("Suma și de unde vine: salariu, bonus, o încasare.") : t("Suma, magazinul, gata. Plicul se alege singur dacă există unul pe categorie.")}</p>
       {(data.settings.quickTemplates.length > 0 || data.settings.archivedQuickTemplates.length > 0) && <div className="bf-template-header-actions"><span>{t("{count} șabloane active", { count: data.settings.quickTemplates.length })}</span><button type="button" onClick={() => setShowArchive((value) => !value)}><Archive size={15} /> {t("Arhivă")}{data.settings.archivedQuickTemplates.length ? ` (${data.settings.archivedQuickTemplates.length})` : ""}</button></div>}
       {showArchive && <section className="bf-template-archive" aria-label={t("Arhiva lunară a șabloanelor")}><p className="bf-kicker">{t("ARHIVĂ LOCALĂ")}</p>{archiveGroups.map(([month, items]) => <div key={month}><h3>{formatDate(`${month}-01`, { month: "long", year: "numeric" })}</h3>{items.map((item) => <article key={item.id}><div><b>{item.label}</b><small>{item.amount ? money.format(item.amount) : t("sumă liberă")} · arhivat {formatDate(item.archivedAt)}</small></div><div className="bf-template-archive-actions"><button type="button" onClick={() => onRestoreTemplate(item.id)}><ArchiveRestore size={15} /> {t("Restaurează")}</button><button type="button" className="danger" aria-label={`Șterge definitiv ${item.label}`} onClick={() => removeArchived(item.id, item.label)}><Trash2 size={15} /></button></div></article>)}</div>)}{!archiveGroups.length && <p className="bf-empty-inline">{t("Nu ai șabloane arhivate. Arhivează un șablon activ pentru a-l păstra în istoricul local.")}</p>}</section>}
       {data.settings.quickTemplates.length > 0 && <div className="bf-quick-template-rail" role="list" aria-label={t("Șabloane locale")}><button role="listitem" className={!templateId ? "active" : ""} onClick={chooseManual}>{t("Manual")}</button>{data.settings.quickTemplates.map((item) => <button role="listitem" key={item.id} className={templateId === item.id ? "active" : ""} onClick={() => selectTemplate(item)}><b>{item.label}</b><small>{item.amount ? money.format(item.amount) : t("sumă liberă")}</small></button>)}</div>}

@@ -252,8 +252,11 @@ describe("ce pleacă către model", () => {
     const ctx = compactGuideContext(house(), { view: "plan" });
     expect(ctx.period).toMatchObject({ start: "2026-09-11", end: "2026-10-09", started: true });
     expect(ctx.period!.daysLeft).toBeLessThan(ctx.period!.daysTotal);
-    // Casa din fixture are totul repartizat, deci nu are ce ritm să recomande.
-    expect(ctx.period!.paceWeekly).toBeNull();
+    // Fără bani nerepartizați nu are ce ritm să recomande. (Chiria din „Casă & facturi” se
+    // plătește din plicul ei, deci nu mai e rezervată de două ori: fixture-ul are 245 lei liberi.)
+    const broke = house();
+    broke.settings.paymentSources[0].openingBalance = 0;
+    expect(compactGuideContext(broke, { view: "plan" }).period!.paceWeekly).toBeNull();
 
     /**
      * Perioada se așază față de ziua reală, nu pe datele fixe ale fixture-ului:

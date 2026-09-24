@@ -445,7 +445,7 @@ function answerPace(data: AppData, asOf: string): AnalystAnswer {
   return {
     kind: "pace",
     headline: `Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi.`,
-    detail: sentences(summary.heroHint, verdict, `Ritmul tău actual este ${money(Math.max(0, pace))} pe zi`),
+    detail: sentences(summary.heroHint, verdict, pace > 0 ? `Până acum ai cheltuit în medie ${money(pace)} pe zi în acest ciclu` : ""),
     rows: [
       { label: "Azi", value: `${money(Math.max(0, spendable))}` },
       { label: "Ritmul tău", value: `${money(Math.max(0, pace))}/zi` },

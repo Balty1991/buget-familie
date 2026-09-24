@@ -226,9 +226,34 @@ export const parseRomanianAmount = (raw: string | number | null | undefined) => 
   // Un backup poate să nu aibă deloc câmpul; fără paza asta, o singură linie stricată
   // arunca o excepție și pierdea tot importul.
   if (typeof raw !== "string") return 0;
-  const clean = raw.replace(/[\s\u00A0]/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".").replace(/[^0-9.-]/g, "");
+  // „12,99 lei”, „RON 50”: moneda se scoate; orice altă literă („1e5”) face suma neclară, nu 15.
+  const compact = raw.replace(/[\s\u00A0]/g, "").replace(/^(?:ron|lei)/i, "").replace(/(?:ron|lei|l)\.?$/i, "").replace(/^\+/, "");
+  if (!/^-?[\d.,]+$/.test(compact) || !/\d/.test(compact)) return 0;
+  const lastComma = compact.lastIndexOf(",");
+  const lastDot = compact.lastIndexOf(".");
+  let clean: string;
+  if (lastComma >= 0 && lastDot >= 0) {
+    // Ambele semne: ultimul e zecimala. „1.500,50” (RO) și „1,500.50” (EN) dau 1500,5.
+    const decimal = lastComma > lastDot ? "," : ".";
+    const thousands = decimal === "," ? "." : ",";
+    clean = compact.split(thousands).join("").replace(decimal, ".");
+  } else if (lastComma >= 0) {
+    // „1,5” e zecimală; „1,500,000” are doar separatori de mii.
+    clean = compact.indexOf(",") === lastComma ? compact.replace(",", ".") : compact.split(",").join("");
+  } else {
+    clean = compact.replace(/\.(?=\d{3}(?:\D|$))/g, "");
+  }
   const value = Number(clean);
   return Number.isFinite(value) ? value : 0;
+};
+
+/** Mesajul pentru o sumă greșită: „format neclar” când s-a scris ceva, nu „mai mare decât zero”. */
+export const amountError = (raw: string) => {
+  const value = parseRomanianAmount(raw);
+  if (value > 0) return undefined;
+  return /\d/.test(raw) && value === 0 && !/^[\s0.,]*(?:lei|ron)?$/i.test(raw)
+    ? t("Format neclar. Scrie suma cu cifre, de exemplu 1.500,50.")
+    : t("Introdu o sumă mai mare decât zero.");
 };
 
 /** Un bon se salvează și fără poze: dacă nu există linii cu sumă, totalul devine un singur produs. */
@@ -798,12 +823,33 @@ export const planAllocationMath = (data: AppData) => {
   const availableSources = data.settings.paymentSources
     .filter((source) => sourceIds.includes(source.id))
     .reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
-  const scheduled = scheduledInPlan(data);
   const slice = (item: BudgetAllocation) => allocationPlanSlice(data, item);
   const allocated = plan.allocations.reduce((sum, item) => sum + slice(item).budget, 0);
   const reservedInEnvelopes = plan.allocations.reduce((sum, item) => sum + slice(item).remaining, 0);
+  /**
+   * O scadență din categoria unui plic se plătește din plicul acela (întreținerea din
+   * „Casă & facturi”): banii ei sunt deja în plic, nu se mai rezervă a doua oară.
+   * Doar partea care nu încape în plic rămâne rezervată separat.
+   */
+  const envelopeLeft = new Map<string, number>();
+  plan.allocations.forEach((item) => {
+    const key = item.category || item.label;
+    envelopeLeft.set(key, (envelopeLeft.get(key) || 0) + Math.max(0, slice(item).remaining));
+  });
+  const dues = [
+    ...pendingRecurringInPlan(data).map((item) => ({ category: item.category, amount: item.amount })),
+    ...pendingDebtsInPlan(data).map((item) => ({ category: "Rate produse", amount: item.amount })),
+  ];
+  const scheduledInEnvelopes = dues.reduce((sum, due) => {
+    const left = envelopeLeft.get(due.category) || 0;
+    const take = Math.min(left, due.amount);
+    envelopeLeft.set(due.category, left - take);
+    return sum + take;
+  }, 0);
+  /** Scadențe rezervate în afara plicurilor. */
+  const scheduled = scheduledInPlan(data) - scheduledInEnvelopes;
   const unrepartized = availableSources - reservedInEnvelopes - scheduled;
-  return { sourceIds, availableSources, scheduled, allocated, reservedInEnvelopes, unrepartized };
+  return { sourceIds, availableSources, scheduled, scheduledInEnvelopes, allocated, reservedInEnvelopes, unrepartized };
 };
 
 /**

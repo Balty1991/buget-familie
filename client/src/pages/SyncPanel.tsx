@@ -181,9 +181,9 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         <li>{t("Confirmarea din De verificat (doar pe telefonul care a creat propunerea)")}</li>
         <li>{t("Regulile de comerciant")}</li>
         <li>{t("Șabloanele rapide")}</li>
-        <li>{t("Cache-ul de curs valutar (FX)")}</li>
+        <li>{t("Cursurile valutare salvate")}</li>
       </ul>
-      <p>{t("Pe sume de plic și pe aceeași mișcare editată pe două telefoane: alegi tu local/remote — nu unificăm tăcut banii. Pentru alte câmpuri (notițe, etichete), ultima scriere câștigă.")}</p>
+      <p>{t("Dacă aceeași sumă (un plic sau o mișcare) e schimbată diferit pe două telefoane, te întrebăm care variantă rămâne — nu alegem noi în locul tău. La notițe și etichete rămâne ultima modificare.")}</p>
     </aside>
     <div className={`bf-sync-state ${stateClass}`} role="status"><span aria-hidden="true">{connected && !busy && !pendingMerge && !failedMerge ? <Check size={15} /> : busy || pendingMerge ? <RotateCcw size={15} /> : <Cloud size={15} />}</span><div><b>{stateLabel}</b><small>{stateDetail}</small></div></div>
 

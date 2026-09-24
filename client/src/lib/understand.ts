@@ -383,7 +383,9 @@ export function buildExpenseOffer(
   const weekHint = funded.some((item) => item.weekIndex) ? " Alege din ce săptămână scoatem banii." : " Alege de unde scoatem banii.";
   const text = preferred
     ? `Am înțeles **${title}**, ${money(amount)}, **${when}**. ${usual ? `De obicei scoți din **${preferred.envelope.label}**.` : `Cea mai apropiată opțiune cu bani e **${preferred.envelope.label}**.`}${weekHint}`
-    : `Am înțeles **${title}**, ${money(amount)}, **${when}**. Nu am un plic exact pentru ${category}. Banii sunt în plicuri — alege din ce săptămână scoatem suma.`;
+    : funded.length
+      ? `Am înțeles **${title}**, ${money(amount)}, **${when}**. Nu am un plic exact pentru ${category}.${weekHint}`
+      : `Am înțeles **${title}**, ${money(amount)}, **${when}**. Nu ai plicuri încă, așa că o notăm direct din sursă. Alege de unde au ieșit banii.`;
   return { text: noDoubleStop(text), choices };
 }
 

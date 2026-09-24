@@ -197,23 +197,28 @@ html.bf-high-contrast {
   border-color: var(--cf-line) !important;
 }
 
-/* Hero-urile cu text deschis pe gradient rămân lizibile (text forțat deschis). */
+/*
+ * Hero-urile cu text deschis pe gradient rămân lizibile (text forțat deschis).
+ * Selectorii dublați (`.x.x`) și `html body .os-shell` cresc specificitatea peste regulile
+ * de temă `:is(html.theme-white) .os-shell .bf-kicker` și peste culoarea gri a paragrafelor,
+ * care altfel lăsau eticheta verde pe verde (testare cu utilizatori, M5).
+ */
 .bf-recurring-hero,
 .bf-reports-hero,
 .bf-advisor-hero {
   color: #f4faf6 !important;
 }
-.bf-recurring-hero h2,
-.bf-reports-hero h2,
-.bf-advisor-hero h2,
-.bf-recurring-hero p,
-.bf-reports-hero p {
-  color: inherit !important;
+html body .os-shell .bf-recurring-hero.bf-recurring-hero h2,
+html body .os-shell .bf-reports-hero.bf-reports-hero h2,
+html body .os-shell .bf-advisor-hero.bf-advisor-hero h2,
+html body .os-shell .bf-recurring-hero.bf-recurring-hero p,
+html body .os-shell .bf-reports-hero.bf-reports-hero p {
+  color: #f4faf6 !important;
 }
-.bf-recurring-hero .bf-kicker,
-.bf-reports-hero .bf-kicker,
-.bf-advisor-hero .bf-kicker {
-  color: rgba(255, 255, 255, 0.78) !important;
+html body .os-shell .bf-recurring-hero.bf-recurring-hero .bf-kicker.bf-kicker,
+html body .os-shell .bf-reports-hero.bf-reports-hero .bf-kicker.bf-kicker,
+html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 
 /* Fundaluri: textura stă ÎN SPATELE cardurilor, nu prin ele. */

@@ -62,3 +62,31 @@ describe("ratele la datorii înainte de venit (C1)", () => {
     expect(pendingDebtsInPlan(data)).toEqual([]);
   });
 });
+
+describe("scadențele din categoria unui plic (problema medie #8)", () => {
+  it("se plătesc din plicul lor, nu se rezervă a doua oară", () => {
+    const data = createEmptyAppData();
+    data.settings.paymentSources = data.settings.paymentSources.map((source) => ({ ...source, openingBalance: source.id === "source-debit" ? 2500 : 0 }));
+    data.settings.salaryPlan = {
+      ...data.settings.salaryPlan,
+      periodStart: ASOF,
+      nextPayday: "2026-10-05",
+      paydayFlexDays: 0,
+      allocations: [{ id: "home", label: "Casă & facturi", amount: 800, category: "Casă & facturi" }],
+    };
+    data.recurring = [{ id: "intretinere", name: "Întreținere", amount: 450, category: "Casă & facturi", sourceId: "source-debit", memberId: "member-me", dueDay: 25, active: true }];
+    const math = planAllocationMath(data);
+    expect(math.scheduledInEnvelopes).toBe(450);
+    expect(math.scheduled).toBe(0);
+    // Înainte: 2.500 − 800 − 450 = 1.250.
+    expect(math.unrepartized).toBe(1700);
+  });
+
+  it("partea care nu încape în plic rămâne rezervată separat", () => {
+    const data = andrei();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, allocations: [{ id: "rate", label: "Rate", amount: 100, category: "Rate produse" }] };
+    const math = planAllocationMath(data);
+    expect(math.scheduledInEnvelopes).toBe(100);
+    expect(math.scheduled).toBe(350);
+  });
+});

@@ -13,6 +13,22 @@ describe("registrul financiar Buget Familie", () => {
     expect(parseRomanianAmount("abc")).toBe(0);
   });
 
+  it("citește sumele din testarea cu utilizatori și refuză formatele neclare", () => {
+    expect(parseRomanianAmount("1.500")).toBe(1500);
+    expect(parseRomanianAmount("1 500")).toBe(1500);
+    expect(parseRomanianAmount("1500,5")).toBe(1500.5);
+    expect(parseRomanianAmount("2.350,75")).toBe(2350.75);
+    expect(parseRomanianAmount("12.99 lei")).toBe(12.99);
+    expect(parseRomanianAmount("RON 50")).toBe(50);
+    expect(parseRomanianAmount("1,500.50")).toBe(1500.5);
+    expect(parseRomanianAmount("2.350.000")).toBe(2350000);
+    expect(parseRomanianAmount("1,500,000")).toBe(1500000);
+    // „1e5” se salva ca 15 RON.
+    expect(parseRomanianAmount("1e5")).toBe(0);
+    expect(parseRomanianAmount("12a")).toBe(0);
+    expect(parseRomanianAmount("-50")).toBe(-50);
+  });
+
   it("generează ID-uri criptografice unice, fără coliziuni pe volume mari", () => {
     const ids = Array.from({ length: 5000 }, () => newId("tx"));
     expect(new Set(ids).size).toBe(ids.length);

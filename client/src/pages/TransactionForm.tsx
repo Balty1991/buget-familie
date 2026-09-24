@@ -5,7 +5,7 @@ import "../currency.css";
 import "../transaction-envelope-picker.css";
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { BASE_CURRENCY, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, exchangeRateFor, expenseCategories, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseRomanianAmount, pickerAllocationsForExpense, planAllocationMath, resolveReceiptLines, sourceBalance, sourceCurrency, toBaseAmount, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { amountError, BASE_CURRENCY, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, exchangeRateFor, expenseCategories, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseRomanianAmount, pickerAllocationsForExpense, planAllocationMath, resolveReceiptLines, sourceBalance, sourceCurrency, toBaseAmount, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { Field, Modal, fmtExact, money } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
 import { RoDateInput } from "@/components/RoDateInput";
@@ -83,7 +83,7 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
     const source = data.settings.paymentSources.find((item) => item.id === sourceId);
     const member = data.settings.members.find((item) => item.id === memberId);
     if (!title.trim()) return setError(t("Scrie o denumire pentru mișcare."));
-    if (!numeric || numeric <= 0) return setError(t("Introdu o sumă mai mare decât zero."));
+    if (!numeric || numeric <= 0) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
     if (!source || !member || !date) return setError(t("Alege data, membrul și sursa de plată."));
     if (isForeign && !(activeRate > 0)) return setError(t("Introdu cursul pentru {currency}: câți lei face o unitate.", { currency: entryCurrency }));
     const stored = isForeign ? toBaseAmount(numeric, activeRate) : numeric;
