@@ -19,8 +19,8 @@
 
 .bf-app h1,
 .os-shell h1 {
-  font-family: var(--bf-font-display) !important;
-  font-weight: 600 !important;
+  font-family: var(--bf-font-display);
+  font-weight: 600;
   letter-spacing: -0.03em;
 }
 html body .os-shell.bf-app .bf-page.bf-plan-workspace h1,
@@ -40,7 +40,7 @@ details.bf-plan-tools:not([open]) > :not(summary) {
 .os-shell h3 {
   font-family: var(--bf-font-sans) !important;
   font-size: 17px !important;
-  font-weight: 600 !important;
+  font-weight: 600;
   font-style: normal;
 }
 
@@ -51,9 +51,9 @@ details.bf-plan-tools:not([open]) > :not(summary) {
 }
 
 .bf-kicker {
-  font-family: var(--bf-font-sans) !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
+  font-family: var(--bf-font-sans);
+  font-size: 12px;
+  font-weight: 500;
   letter-spacing: 0.08em;
 }
 
@@ -74,8 +74,8 @@ details.bf-plan-tools:not([open]) > :not(summary) {
 }
 
 .bf-tx-icon {
-  background: var(--cf-surface-alt) !important;
-  color: var(--cf-primary) !important;
+  background: var(--cf-surface-alt);
+  color: var(--cf-primary);
 }
 
 .bf-upcoming-actions button.pay,
@@ -155,7 +155,7 @@ button.danger,
 
 .bf-settings-row {
   min-height: 48px;
-  display: flex !important;
+  display: flex;
   align-items: center;
   gap: 12px;
   border-radius: 12px;
@@ -193,8 +193,8 @@ button.danger,
   gap: 6px;
 }
 .bf-analysis-chart button b {
-  font-size: 12px !important;
-  font-family: var(--bf-font-sans) !important;
+  font-size: 12px;
+  font-family: var(--bf-font-sans);
 }
 .bf-spend-donut.is-thin {
   background: var(--cf-surface-alt) !important;
@@ -226,11 +226,11 @@ button.danger,
   border-radius: inherit;
 }
 .bf-spend-category-pills {
-  display: grid !important;
+  display: grid;
   gap: 8px;
 }
 .bf-spend-category-pills button {
-  display: grid !important;
+  display: grid;
   grid-template-columns: 8px minmax(0, 1fr);
   align-items: center;
   position: relative;
@@ -255,8 +255,8 @@ button.danger,
 .bf-modal,
 .bf-command-palette,
 .bf-theme-picker {
-  border-radius: 20px !important;
-  box-shadow: var(--bf-shadow-raise) !important;
+  border-radius: 20px;
+  box-shadow: var(--bf-shadow-raise);
 }
 .bf-app input,
 .bf-app select,
@@ -269,10 +269,10 @@ button.danger,
 
 /* Foaia Notează: câmpurile se derulează, Gata rămâne jos și nu le acoperă. */
 .bf-modal.bf-quick-entry-panel {
-  display: flex !important;
-  flex-direction: column !important;
+  display: flex;
+  flex-direction: column;
   max-height: min(92dvh, 900px) !important;
-  overflow: hidden !important;
+  overflow: hidden;
   overscroll-behavior: contain;
   border-radius: 24px 24px 0 0 !important;
 }
@@ -280,7 +280,7 @@ button.danger,
   flex: 1 1 auto;
   min-height: 0;
   overflow-x: hidden;
-  overflow-y: auto !important;
+  overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
@@ -303,23 +303,23 @@ button.danger,
 
 /* Mai mult: un rând, pictogramă 20px, chevron real la dreapta. */
 html body .os-shell .bf-more-grid > button.bf-settings-row {
-  display: grid !important;
+  display: grid;
   grid-template-columns: 20px minmax(0, 1fr) 18px !important;
   grid-template-rows: auto !important;
-  align-items: center !important;
+  align-items: center;
   gap: 12px !important;
   min-height: 48px !important;
   padding: 10px 14px !important;
 }
 html body .os-shell .bf-more-grid > button.bf-settings-row::after {
-  content: none !important;
+  content: none;
 }
 html body .os-shell .bf-more-grid > button.bf-settings-row > svg:first-child {
-  grid-column: 1 !important;
+  grid-column: 1;
   grid-row: 1 !important;
   width: 20px !important;
   height: 20px !important;
-  padding: 0 !important;
+  padding: 0;
   border-radius: 0 !important;
   color: var(--cf-muted) !important;
   background: none !important;
@@ -332,11 +332,11 @@ html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-copy {
 html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-chevron {
   grid-column: 3 !important;
   grid-row: 1 !important;
-  width: 18px !important;
-  height: 18px !important;
+  width: 18px;
+  height: 18px;
   color: var(--cf-muted) !important;
-  background: none !important;
-  box-shadow: none !important;
+  background: none;
+  box-shadow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

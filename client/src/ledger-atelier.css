@@ -296,20 +296,20 @@
 .bf-plan-fan .bf-envelope-mark:first-child { margin-left: 0; }
 
 .bf-allocation-list.bf-envelope-desk {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
-  gap: 14px !important;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
 }
 .bf-allocation-list.bf-envelope-desk > article {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) !important;
-  gap: 8px !important;
-  padding: 14px 14px 12px !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 14px 14px 12px;
   border: 1px solid var(--cf-line) !important;
-  border-radius:12px 12px 20px 20px !important;
+  border-radius:12px 12px 20px 20px;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
-  color: var(--cf-ink) !important;
+    linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px);
+  color: var(--cf-ink);
   box-shadow: 0 14px 28px color-mix(in srgb, var(--cf-ink) 8%, transparent);
 }
 .bf-allocation-list.bf-envelope-desk > article.watch {
@@ -318,13 +318,13 @@
 .bf-allocation-list.bf-envelope-desk > article.over {
   background: linear-gradient(180deg, color-mix(in srgb, var(--cf-danger) 20%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
 }
-.bf-allocation-list.bf-envelope-desk > article::after { display: none !important; }
+.bf-allocation-list.bf-envelope-desk > article::after { display: none; }
 .bf-envelope-desk .bf-envelope-portrait {
-  width: 100% !important;
+  width: 100%;
   justify-items: start;
 }
 .bf-envelope-desk .bf-allocation-list-heading b,
-.bf-envelope-desk .bf-allocation-list-total strong { color: var(--cf-ink) !important; }
+.bf-envelope-desk .bf-allocation-list-total strong { color: var(--cf-ink); }
 .bf-envelope-desk .bf-allocation-empty {
   grid-column: 1 / -1;
   display: grid !important;
@@ -393,7 +393,7 @@
   .bf-desk-top { grid-template-columns: 1fr; }
   .bf-today-pulse { grid-template-columns: 1fr; }
   .bf-today-situation .bf-health-gauge { width: 78px; height: auto; }
-  .bf-allocation-list.bf-envelope-desk { grid-template-columns: 1fr !important; }
+  .bf-allocation-list.bf-envelope-desk { grid-template-columns: 1fr; }
   .bf-plan-fan { justify-content: flex-start; overflow-x: auto; }
 }
 
@@ -516,13 +516,13 @@
 .bf-plan-fan { display: none !important; }
 
 .bf-allocation-list.bf-envelope-desk .bf-envelope-portrait {
-  width: auto !important;
+  width: auto;
   justify-items: start;
 }
 .bf-allocation-list.bf-envelope-desk .bf-envelope-portrait svg {
   width: 56px !important;
-  height: auto !important;
-  max-height: 46px !important;
+  height: auto;
+  max-height: 46px;
 }
 
 .bf-obligations-header > span { display: none !important; }
@@ -828,22 +828,22 @@
 
 @media (max-width: 760px) {
   .bf-app {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
   .bf-appbar {
-    position: relative !important;
+    position: relative;
     flex: 0 0 auto;
     z-index: 30;
   }
   .bf-app > main {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     scroll-padding-bottom: var(--bf-nav-clearance);
   }
@@ -868,10 +868,10 @@
     padding-bottom: var(--bf-nav-clearance) !important;
   }
   .bf-more-grid {
-    margin-bottom: 12px !important;
+    margin-bottom: 12px;
   }
   .bf-more-grid button {
-    overflow: visible !important;
+    overflow: visible;
   }
   .bf-obligations-header {
     grid-template-columns: 1fr !important;
@@ -886,15 +886,15 @@
     padding: 12px 14px !important;
   }
   .bf-plan-studio-header {
-    align-items: start !important;
+    align-items: start;
   }
   .bf-plan-studio-header h1 {
-    max-width: 11ch !important;
-    line-height: 1.14 !important;
-    overflow: visible !important;
-    padding-bottom: 2px !important;
+    max-width: 11ch;
+    line-height: 1.14;
+    overflow: visible;
+    padding-bottom: 2px;
   }
-  .bf-plan-header-stat { align-self: start !important; }
+  .bf-plan-header-stat { align-self: start; }
   .bf-desk-top { grid-template-columns: 1fr !important; }
   .bf-envelope-move .bf-transfer-form,
   .bf-salary-rule-form {

@@ -210,27 +210,27 @@ html:not(.dark) .bf-today-situation.risk {
 
 .bf-today-add,
 .bf-os-decide {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 52px !important;
-  gap: 8px !important;
-  padding: 0 18px !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  font-family: "IBM Plex Sans", sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  gap: 8px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .bf-today-add {
-  color: #062016 !important;
-  background: var(--os-mint) !important;
-  box-shadow: none !important;
+  color: #062016;
+  background: var(--os-mint);
+  box-shadow: none;
 }
 
 html:not(.dark) .bf-today-add {
-  color: #f4fff9 !important;
+  color: #f4fff9;
 }
 
 .bf-today-plan-link,
@@ -249,12 +249,12 @@ html:not(.dark) .bf-today-add {
 }
 
 .bf-os-decide {
-  color: #062016 !important;
-  background: var(--os-mint) !important;
+  color: #062016;
+  background: var(--os-mint);
 }
 
 html:not(.dark) .bf-os-decide {
-  color: #f4fff9 !important;
+  color: #f4fff9;
 }
 
 .bf-os-panel,
@@ -474,7 +474,7 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-app {
-  font-family: "IBM Plex Sans", system-ui, sans-serif !important;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
 }
 
 .dark .bf-app h1,
@@ -490,7 +490,7 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-app h2 em {
   color: #7cffc4 !important;
   font-style: italic !important;
-  font-weight: inherit !important;
+  font-weight: inherit;
 }
 
 .dark .bf-kicker,
@@ -499,14 +499,14 @@ html:not(.dark) .bf-os-decide {
   font-family: "IBM Plex Sans", sans-serif !important;
   font-weight: 600 !important;
   letter-spacing: .18em !important;
-  text-transform: uppercase !important;
+  text-transform: uppercase;
 }
 
 .dark .bf-appbar {
-  border-bottom-color: color-mix(in srgb, #7cffc4 14%, transparent) !important;
-  background: color-mix(in srgb, #07090c 88%, transparent) !important;
-  backdrop-filter: blur(18px) !important;
-  box-shadow: none !important;
+  border-bottom-color: color-mix(in srgb, #7cffc4 14%, transparent);
+  background: color-mix(in srgb, #07090c 88%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: none;
 }
 
 .dark .bf-brand > b,
@@ -566,7 +566,7 @@ html:not(.dark) .bf-os-decide {
   padding-bottom: 168px !important;
 }
 
-.dark .bf-today-workspace { gap: 16px !important; }
+.dark .bf-today-workspace { gap: 16px; }
 
 /* Analog chrome off */
 .bf-health-gauge-tick,
@@ -645,7 +645,7 @@ html:not(.dark) .bf-os-decide {
   color: #7cffc4 !important;
 }
 
-.dark .bf-movements-header .bf-kicker { display: none !important; }
+.dark .bf-movements-header .bf-kicker { display: none; }
 
 .dark .bf-movement-add,
 .dark .bf-primary,
@@ -659,17 +659,17 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-journal-day-pulse {
-  display: grid !important;
+  display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, .8fr) !important;
-  overflow: hidden !important;
-  padding: 0 !important;
+  overflow: hidden;
+  padding: 0;
 }
 
 .dark .bf-journal-day-pulse > div,
 .dark .bf-journal-day-pulse > span {
   padding: 16px 14px !important;
   border-right: 1px solid color-mix(in srgb, #7cffc4 12%, transparent) !important;
-  background: transparent !important;
+  background: transparent;
 }
 
 .dark .bf-journal-day-pulse > span:last-child { border-right: 0 !important; }
@@ -677,48 +677,48 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-journal-day-pulse p,
 .dark .bf-journal-day-pulse small {
   color: #9aa8a1 !important;
-  letter-spacing: .14em !important;
-  text-transform: uppercase !important;
-  font-size:12px !important;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-size:12px;
 }
 
 .dark .bf-journal-day-pulse .income { color: #7cffc4 !important; }
 .dark .bf-journal-day-pulse .expense { color: #ff8a7a !important; }
 
 .dark .bf-journal-quickbar {
-  display: grid !important;
-  gap: 10px !important;
-  padding: 12px !important;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
 }
 
 .dark .bf-movement-kind {
-  background: #07090c !important;
-  border-radius: 999px !important;
-  padding: 4px !important;
+  background: #07090c;
+  border-radius: 999px;
+  padding: 4px;
 }
 
 .dark .bf-movement-kind button {
-  color: #9aa8a1 !important;
-  background: transparent !important;
-  border-radius: 999px !important;
+  color: #9aa8a1;
+  background: transparent;
+  border-radius: 999px;
 }
 
 .dark .bf-movement-kind button.active {
-  color: #062016 !important;
-  background: #7cffc4 !important;
+  color: #062016;
+  background: #7cffc4;
 }
 
 .dark .bf-journal-search,
 .dark .bf-journal-filter-toggle {
   border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
-  border-radius: 1.1rem !important;
-  background: #07090c !important;
+  border-radius: 1.1rem;
+  background: #07090c;
   color: #f3f6f4 !important;
 }
 
 .dark .bf-journal-search input {
   color: #f3f6f4 !important;
-  background: transparent !important;
+  background: transparent;
 }
 
 .dark .bf-movement-day header time,
@@ -741,8 +741,8 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-movement-timeline article,
 .dark .bf-today-activity-list article {
   border-color: color-mix(in srgb, #7cffc4 10%, transparent) !important;
-  background: #07090c !important;
-  border-radius: 1.1rem !important;
+  background: #07090c;
+  border-radius: 1.1rem;
 }
 
 .dark .bf-plan-studio-header,
@@ -784,14 +784,14 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .ai-companion-panel {
-  background: #10141a !important;
-  border-color: color-mix(in srgb, #7cffc4 18%, transparent) !important;
-  color: #f3f6f4 !important;
+  background: #10141a;
+  border-color: color-mix(in srgb, #7cffc4 18%, transparent);
+  color: #f3f6f4;
 }
 
 .dark .ai-chat-bubble {
-  background: #161d24 !important;
-  color: #f3f6f4 !important;
+  background: #161d24;
+  color: #f3f6f4;
 }
 
 .dark .ai-chat-row.user .ai-chat-bubble {
@@ -1019,7 +1019,7 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-os-actions {
-  grid-template-columns: 1fr 1fr !important;
+  grid-template-columns: 1fr 1fr;
 }
 
 @media (max-width: 760px) {

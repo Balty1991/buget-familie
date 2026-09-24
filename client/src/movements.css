@@ -28,6 +28,6 @@
 .os-shell .bf-movements-ledger .bf-movement-actions button {
   width: var(--bf-hit, 44px) !important;
   height: var(--bf-hit, 44px) !important;
-  min-width: var(--bf-hit, 44px) !important;
-  min-height: var(--bf-hit, 44px) !important;
+  min-width: var(--bf-hit, 44px);
+  min-height: var(--bf-hit, 44px);
 }

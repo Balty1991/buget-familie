@@ -176,7 +176,7 @@
 .bf-today-envelopes-empty small { color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
 
 .bf-allocation-list article {
-  grid-template-columns: 64px minmax(0, 1fr) auto auto 33px !important;
+  grid-template-columns: 64px minmax(0, 1fr) auto auto 33px;
   align-items: center;
 }
 
@@ -206,6 +206,6 @@
   .bf-today-pulse-chart { min-height: 84px; }
   .bf-payday-track { grid-template-columns: minmax(0, 1fr) auto; }
   .bf-payday-rail { grid-column: 1 / -1; }
-  .bf-allocation-list article { grid-template-columns: 52px minmax(0, 1fr) auto !important; }
+  .bf-allocation-list article { grid-template-columns: 52px minmax(0, 1fr) auto; }
   .bf-envelope-portrait { width: 52px; }
 }

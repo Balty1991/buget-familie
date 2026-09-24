@@ -10,52 +10,52 @@
 
 /* Dock: ținte mai mari, etichete lizibile pe 360px */
 .os-shell .os-dock {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 8px max(10px, var(--os-inset-bottom, 0px)) !important;
-  border-radius: 0 !important;
-  background: var(--os-dock-bg, var(--os-surface, #eef1ef)) !important;
-  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.18) !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 8px max(10px, var(--os-inset-bottom, 0px));
+  border-radius: 0;
+  background: var(--os-dock-bg, var(--os-surface, #eef1ef));
+  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.18);
 }
 
 .os-shell .os-dock button {
-  min-height: 48px !important;
-  height: 48px !important;
-  gap: 1px !important;
-  border-radius: 999px !important;
-  font-size:12px !important;
-  font-weight: 600 !important;
+  min-height: 48px;
+  height: 48px;
+  gap: 1px;
+  border-radius: 999px;
+  font-size:12px;
+  font-weight: 600;
 }
 
 .os-shell .os-dock button svg {
-  width: 18px !important;
-  height: 18px !important;
+  width: 18px;
+  height: 18px;
 }
 
 .os-shell .os-tool {
-  width: var(--os-tap) !important;
-  height: var(--os-tap) !important;
-  min-width: var(--os-tap) !important;
-  min-height: var(--os-tap) !important;
-  border-radius:12px !important;
+  width: var(--os-tap);
+  height: var(--os-tap);
+  min-width: var(--os-tap);
+  min-height: var(--os-tap);
+  border-radius:12px;
 }
 
 /* App bar mai aerisit */
 .os-shell .os-appbar.bf-appbar {
   min-height: 68px !important;
-  padding-top: calc(10px + var(--os-inset-top)) !important;
-  padding-bottom: 10px !important;
+  padding-top: calc(10px + var(--os-inset-top));
+  padding-bottom: 10px;
 }
 
 .os-shell .os-brand-copy b {
-  font-size: 15px !important;
-  letter-spacing: -0.01em !important;
+  font-size: 15px;
+  letter-spacing: -0.01em;
 }
 
 .os-shell .os-brand-copy i {
-  font-size: 12px !important;
-  opacity: 0.72 !important;
+  font-size: 12px;
+  opacity: 0.72;
 }
 
 /* Carduri / pagini: ierarhie clară */
@@ -68,9 +68,9 @@
 }
 
 .os-shell .bf-kicker {
-  font-size:12px !important;
-  letter-spacing: 0.14em !important;
-  opacity: 0.85 !important;
+  font-size:12px;
+  letter-spacing: 0.14em;
+  opacity: 0.85;
 }
 
 .os-shell .bf-sync,
@@ -93,8 +93,8 @@
 }
 
 .os-shell .bf-link-button {
-  min-height: 40px !important;
-  padding: 8px 4px !important;
+  min-height: 40px;
+  padding: 8px 4px;
 }
 
 /* Utilities / meniuri: grilă thumb-friendly */
@@ -288,8 +288,8 @@
 /* Mișcări / Astăzi: spațiere */
 .os-shell .bf-movements-ledger,
 .os-shell .bf-today-workspace {
-  padding-left: max(16px, var(--os-inset-left)) !important;
-  padding-right: max(16px, var(--os-inset-right)) !important;
+  padding-left: max(16px, var(--os-inset-left));
+  padding-right: max(16px, var(--os-inset-right));
 }
 
 .os-shell .bf-more-overview {

@@ -39,6 +39,6 @@ html body .bf-empty-state [aria-hidden="true"]:empty,
 html body .bf-allocation-empty [aria-hidden="true"]:empty { display: none !important; }
 html body .bf-app .bf-utilities-workspace,
 html body .os-shell .bf-utilities-workspace {
-  padding-bottom: var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 24px)) !important;
-  scroll-padding-bottom: var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 24px)) !important;
+  padding-bottom: var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 24px));
+  scroll-padding-bottom: var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 24px));
 }

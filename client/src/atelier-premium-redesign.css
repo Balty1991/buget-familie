@@ -60,8 +60,8 @@
     radial-gradient(720px 420px at 108% -8%, rgba(23, 107, 84, .14), transparent 58%),
     radial-gradient(480px 320px at -12% 18%, rgba(42, 106, 138, .08), transparent 55%),
     linear-gradient(180deg, #d9e0dc 0, #e4e9e6 160px),
-    #e4e9e6 !important;
-  color: #0c1612 !important;
+    #e4e9e6;
+  color: #0c1612;
 }
 
 :is(html.theme-ink, html.theme-white) .os-appbar.bf-appbar {
@@ -72,27 +72,27 @@
 }
 
 :is(html.theme-ink, html.theme-white) .os-brand-copy b {
-  color: #0c1612 !important;
-  font-weight: 780 !important;
+  color: #0c1612;
+  font-weight: 780;
 }
 :is(html.theme-ink, html.theme-white) .os-brand-copy i {
-  color: #176b54 !important;
+  color: #176b54;
   font-weight:600;
 }
 
 :is(html.theme-ink, html.theme-white) .os-tool {
-  color: #0c1612 !important;
+  color: #0c1612;
   background: #f5f7f6 !important;
   box-shadow: 0 0 0 1px #c5cec8, 0 4px 12px rgba(12, 22, 18, .06) !important;
 }
 :is(html.theme-ink, html.theme-white) .os-tool.is-on {
   background: #0e4f3e !important;
-  color: #ffffff !important;
+  color: #ffffff;
   box-shadow:var(--bf-shadow-rest) !important;
 }
 
 .bf-theme-option.white .bf-theme-swatch {
-  background: linear-gradient(135deg, #e4e9e6 0 46%, #176b54 47% 70%, #0c1612 71%) !important;
+  background: linear-gradient(135deg, #e4e9e6 0 46%, #176b54 47% 70%, #0c1612 71%);
 }
 .bf-theme-preview.white {
   --preview-bg: #e4e9e6;
@@ -107,7 +107,7 @@
 
 /* ---------- Astăzi hero: glass + soft elevation ---------- */
 .os-shell .bf-today-workspace {
-  gap: 18px !important;
+  gap: 18px;
   padding-top: 10px !important;
 }
 
@@ -186,18 +186,18 @@
 .os-shell .bf-today-add,
 .os-shell .bf-today-add.bf-os-decide,
 .os-shell .bf-os-decide {
-  min-height: 56px !important;
-  border-radius: 999px !important;
-  font-size:15px !important;
-  font-weight: 780 !important;
+  min-height: 56px;
+  border-radius: 999px;
+  font-size:15px;
+  font-weight: 780;
   letter-spacing: -.01em !important;
-  color: #ffffff !important;
+  color: #ffffff;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 88%, #fff), var(--os-mint, var(--cf-primary-strong, var(--cf-primary)))) !important;
+    linear-gradient(180deg, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 88%, #fff), var(--os-mint, var(--cf-primary-strong, var(--cf-primary))));
   box-shadow:
     0 1px 0 color-mix(in srgb, #fff 35%, transparent) inset,
     0 12px 28px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 38%, transparent),
-    0 2px 0 color-mix(in srgb, var(--os-mint, var(--cf-primary)) 40%, transparent) !important;
+    0 2px 0 color-mix(in srgb, var(--os-mint, var(--cf-primary)) 40%, transparent);
   transition: transform var(--bf-premium-press), filter var(--bf-premium-press), box-shadow var(--bf-premium-motion) !important;
 }
 
@@ -210,7 +210,7 @@
 :is(html.theme-ink, html.theme-white) .os-shell .bf-today-add,
 :is(html.theme-ink, html.theme-white) .os-shell .bf-os-decide {
   color: #ffffff !important;
-  background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
+  background: linear-gradient(180deg, #1d8064, #0e4f3e);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, .28) inset,
     0 14px 30px rgba(14, 79, 62, .34) !important;
@@ -227,47 +227,47 @@
 
 /* ---------- Dock lipit de jos și de laterale ---------- */
 .os-shell .os-dock {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 8px max(10px, var(--os-inset-bottom, 0px)) !important;
-  border-radius: 22px 22px 0 0 !important;
-  border: 0 !important;
-  background: var(--os-surface, var(--cf-surface)) !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 8px max(10px, var(--os-inset-bottom, 0px));
+  border-radius: 22px 22px 0 0;
+  border: 0;
+  background: var(--os-surface, var(--cf-surface));
   box-shadow:
     0 -1px 0 color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent),
-    0 -10px 24px color-mix(in srgb, #000 16%, transparent) !important;
-  backdrop-filter: none !important;
+    0 -10px 24px color-mix(in srgb, #000 16%, transparent);
+  backdrop-filter: none;
   -webkit-backdrop-filter: none !important;
 }
 
 .os-shell .os-dock button {
-  gap: 1px !important;
-  min-height: 48px !important;
-  height: 48px !important;
-  padding: 4px 2px !important;
-  border-radius: 999px !important;
-  color: var(--os-muted, var(--cf-muted)) !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  font-size:12px !important;
-  font-weight: 720 !important;
-  letter-spacing: 0 !important;
-  line-height: 1.1 !important;
-  transition: background-color var(--bf-premium-motion), color var(--bf-premium-motion), transform var(--bf-premium-press), box-shadow var(--bf-premium-motion) !important;
+  gap: 1px;
+  min-height: 48px;
+  height: 48px;
+  padding: 4px 2px;
+  border-radius: 999px;
+  color: var(--os-muted, var(--cf-muted));
+  background: transparent;
+  box-shadow: none;
+  font-size:12px;
+  font-weight: 720;
+  letter-spacing: 0;
+  line-height: 1.1;
+  transition: background-color var(--bf-premium-motion), color var(--bf-premium-motion), transform var(--bf-premium-press), box-shadow var(--bf-premium-motion);
 }
 
 .os-shell .os-dock button svg {
-  width: 20px !important;
-  height: 20px !important;
+  width: 20px;
+  height: 20px;
 }
 
 .os-shell .os-dock button span {
-  overflow: visible !important;
-  text-overflow: unset !important;
-  white-space: normal !important;
-  text-align: center !important;
-  max-width: none !important;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  text-align: center;
+  max-width: none;
 }
 
 .os-shell .os-dock button.is-on,
@@ -280,13 +280,13 @@
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
-  background: rgba(245, 247, 246, .86) !important;
+  background: rgba(245, 247, 246, .86);
   box-shadow:
     0 0 0 1px #b9c5be,
-    0 18px 40px rgba(12, 22, 18, .16) !important;
+    0 18px 40px rgba(12, 22, 18, .16);
 }
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button {
-  color: #4a5852 !important;
+  color: #4a5852;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.is-on,
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
@@ -297,13 +297,13 @@
 
 @media (max-width: 430px) {
   .os-shell .os-dock {
-    left: 0 !important;
-    right: 0 !important;
+    left: 0;
+    right: 0;
   }
   .os-shell .os-dock button span {
-    font-size:12px !important;
-    font-weight: 750 !important;
-    line-height: 1.12 !important;
+    font-size:12px;
+    font-weight: 750;
+    line-height: 1.12;
   }
   .os-shell .bf-today-situation {
     border-radius:20px !important;
@@ -314,29 +314,29 @@
 /* ---------- Mai mult: section headers + card grid + list rows ---------- */
 .os-shell .bf-more-overview,
 .os-shell .bf-utilities-workspace .bf-more-overview {
-  display: grid !important;
+  display: grid;
   gap: 22px !important;
 }
 
 .os-shell .bf-more-group {
-  display: grid !important;
-  gap: 10px !important;
-  margin: 0 !important;
-  padding: 14px !important;
-  border-radius: var(--bf-premium-radius-lg) !important;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border-radius: var(--bf-premium-radius-lg);
   border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent);
   background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, transparent);
   box-shadow: 0 10px 24px color-mix(in srgb, var(--os-ink, #000) 05%, transparent);
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
 .os-shell .bf-more-group > .bf-kicker {
-  margin: 0 2px 2px !important;
-  color: var(--os-mint, var(--cf-primary)) !important;
-  font-size:12px !important;
+  margin: 0 2px 2px;
+  color: var(--os-mint, var(--cf-primary));
+  font-size:12px;
   font-weight:600;
-  letter-spacing: .16em !important;
-  opacity: 1 !important;
+  letter-spacing: .16em;
+  opacity: 1;
 }
 
 .os-shell .bf-more-grid,
@@ -459,9 +459,9 @@
   background: linear-gradient(165deg, #ffffff, #eef2f0) !important;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
-  color: #ffffff !important;
-  background: linear-gradient(180deg, #1d8064, #0e4f3e) !important;
-  box-shadow:var(--bf-shadow-raise) !important;
+  color: #ffffff;
+  background: linear-gradient(180deg, #1d8064, #0e4f3e);
+  box-shadow:var(--bf-shadow-raise);
 }
 
 /* ---------- Sheets / modals ---------- */
@@ -488,8 +488,8 @@
 
 @media (max-width: 760px) {
   .bf-modal-backdrop {
-    align-items: end !important;
-    padding: 0 !important;
+    align-items: end;
+    padding: 0;
   }
   .bf-modal,
   .bf-whats-new,
@@ -541,11 +541,11 @@ html.theme-dark .os-shell.bf-app {
   background:
     radial-gradient(680px 400px at 100% -10%, rgba(197, 203, 212, .1), transparent 55%),
     linear-gradient(180deg, #101318 0, #0c0e11 150px),
-    #0c0e11 !important;
+    #0c0e11;
 }
 html.theme-dark .os-shell .os-dock {
-  background: rgba(22, 25, 30, .82) !important;
-  box-shadow: 0 0 0 1px #2c323a, 0 18px 40px rgba(0, 0, 0, .5) !important;
+  background: rgba(22, 25, 30, .82);
+  box-shadow: 0 0 0 1px #2c323a, 0 18px 40px rgba(0, 0, 0, .5);
 }
 html.theme-dark .os-shell .os-dock button.is-on,
 html.theme-dark .os-shell .os-dock button.active {
@@ -561,8 +561,8 @@ html.theme-dark .os-shell .bf-today-situation {
 }
 html.theme-dark .os-shell .bf-today-add,
 html.theme-dark .os-shell .bf-os-decide {
-  color: #0c0e11 !important;
-  background: linear-gradient(180deg, #e8ecf2, #c5cbd4) !important;
+  color: #0c0e11;
+  background: linear-gradient(180deg, #e8ecf2, #c5cbd4);
   box-shadow:var(--bf-shadow-raise) !important;
 }
 
@@ -571,11 +571,11 @@ html.theme-aurora .os-shell.bf-app {
     radial-gradient(720px 420px at 100% -8%, rgba(124, 91, 255, .22), transparent 55%),
     radial-gradient(480px 320px at 0% 30%, rgba(101, 211, 166, .12), transparent 50%),
     linear-gradient(180deg, #14102a 0, #0d0b1c 160px),
-    #0d0b1c !important;
+    #0d0b1c;
 }
 html.theme-aurora .os-shell .os-dock {
-  background: rgba(24, 20, 47, .82) !important;
-  box-shadow: 0 0 0 1px #49416c, 0 18px 40px rgba(0, 0, 0, .45) !important;
+  background: rgba(24, 20, 47, .82);
+  box-shadow: 0 0 0 1px #49416c, 0 18px 40px rgba(0, 0, 0, .45);
 }
 html.theme-aurora .os-shell .os-dock button.is-on,
 html.theme-aurora .os-shell .os-dock button.active {
@@ -591,8 +591,8 @@ html.theme-aurora .os-shell .bf-today-situation {
 }
 html.theme-aurora .os-shell .bf-today-add,
 html.theme-aurora .os-shell .bf-os-decide {
-  color: #0d0b1c !important;
-  background: linear-gradient(180deg, #7ae0b4, #319e7b) !important;
+  color: #0d0b1c;
+  background: linear-gradient(180deg, #7ae0b4, #319e7b);
   box-shadow:var(--bf-shadow-raise) !important;
 }
 
@@ -601,11 +601,11 @@ html.theme-navy .os-shell.bf-app {
     radial-gradient(720px 420px at 100% -8%, rgba(212, 176, 106, .16), transparent 55%),
     radial-gradient(480px 320px at 0% 40%, rgba(139, 180, 232, .1), transparent 50%),
     linear-gradient(180deg, #10182a 0, #0b1220 160px),
-    #0b1220 !important;
+    #0b1220;
 }
 html.theme-navy .os-shell .os-dock {
-  background: rgba(20, 28, 46, .84) !important;
-  box-shadow: 0 0 0 1px #2a3854, 0 18px 40px rgba(0, 0, 0, .5) !important;
+  background: rgba(20, 28, 46, .84);
+  box-shadow: 0 0 0 1px #2a3854, 0 18px 40px rgba(0, 0, 0, .5);
 }
 html.theme-navy .os-shell .os-dock button.is-on,
 html.theme-navy .os-shell .os-dock button.active {
@@ -621,8 +621,8 @@ html.theme-navy .os-shell .bf-today-situation {
 }
 html.theme-navy .os-shell .bf-today-add,
 html.theme-navy .os-shell .bf-os-decide {
-  color: #14100a !important;
-  background: linear-gradient(180deg, #e0c07a, #c49a4a) !important;
+  color: #14100a;
+  background: linear-gradient(180deg, #e0c07a, #c49a4a);
   box-shadow:var(--bf-shadow-raise) !important;
 }
 
@@ -631,11 +631,11 @@ html.theme-cyber .os-shell.bf-app {
     radial-gradient(720px 420px at 100% -8%, rgba(124, 255, 196, .14), transparent 55%),
     radial-gradient(480px 320px at 0% 40%, rgba(124, 255, 196, .06), transparent 50%),
     linear-gradient(180deg, #0c1216 0, #07090c 160px),
-    #07090c !important;
+    #07090c;
 }
 html.theme-cyber .os-shell .os-dock {
-  background: rgba(16, 21, 26, .84) !important;
-  box-shadow: 0 0 0 1px #22302a, 0 18px 40px rgba(0, 0, 0, .5) !important;
+  background: rgba(16, 21, 26, .84);
+  box-shadow: 0 0 0 1px #22302a, 0 18px 40px rgba(0, 0, 0, .5);
 }
 html.theme-cyber .os-shell .os-dock button.is-on,
 html.theme-cyber .os-shell .os-dock button.active {
@@ -651,8 +651,8 @@ html.theme-cyber .os-shell .bf-today-situation {
 }
 html.theme-cyber .os-shell .bf-today-add,
 html.theme-cyber .os-shell .bf-os-decide {
-  color: #04140e !important;
-  background: linear-gradient(180deg, #9dffd4, #5ee0aa) !important;
+  color: #04140e;
+  background: linear-gradient(180deg, #9dffd4, #5ee0aa);
   box-shadow:var(--bf-shadow-raise) !important;
 }
 

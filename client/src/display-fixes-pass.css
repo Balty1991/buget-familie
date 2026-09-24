@@ -14,14 +14,14 @@
 
 /* —— 1. Plic: rândul de etichete nu se mai suprapune peste text —— */
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 6px !important;
-  margin-bottom: 7px !important;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
 }
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags > * {
-  margin-top: 0 !important;
+  margin-top: 0;
   margin-bottom: 0 !important;
 }
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags:empty {
@@ -29,26 +29,26 @@
 }
 .bf-allocation-list .bf-allocation-flags .bf-allocation-state {
   display: inline-flex !important;
-  align-items: center !important;
-  min-height: 18px !important;
+  align-items: center;
+  min-height: 18px;
 }
 .bf-allocation-list .bf-allocation-flags .bf-plic-pace {
-  max-width: 100% !important;
-  white-space: normal !important;
+  max-width: 100%;
+  white-space: normal;
 }
 
 /* Pastila de ritm avea doar paleta de zi; pe fundal întunecat ardea ochiul. */
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-ahead {
-  color: #8fe3bd !important;
-  background: color-mix(in srgb, #8fe3bd 16%, transparent) !important;
+  color: #8fe3bd;
+  background: color-mix(in srgb, #8fe3bd 16%, transparent);
 }
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-on_track {
-  color: #c3d3ca !important;
-  background: color-mix(in srgb, #c3d3ca 14%, transparent) !important;
+  color: #c3d3ca;
+  background: color-mix(in srgb, #c3d3ca 14%, transparent);
 }
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-behind {
-  color: #f0c98a !important;
-  background: color-mix(in srgb, #f0c98a 16%, transparent) !important;
+  color: #f0c98a;
+  background: color-mix(in srgb, #f0c98a 16%, transparent);
 }
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-over {
   color: #ffa593 !important;
@@ -77,7 +77,7 @@
 
 /* —— 3. Selectorul de teme: fiecare temă își arată fața —— */
 .bf-theme-picker .bf-theme-option .bf-theme-swatch {
-  background: var(--cf-surface-alt) !important;
+  background: var(--cf-surface-alt);
 }
 .bf-theme-picker .bf-theme-option.white .bf-theme-swatch {
   background: linear-gradient(135deg, #e4e9e6 0 46%, #176b54 47% 70%, #0c1612 71%) !important;
@@ -100,21 +100,21 @@
 .bf-theme-picker .bf-theme-option .bf-theme-swatch span {
   background-image:
     linear-gradient(color-mix(in srgb, #ffffff 18%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, #ffffff 18%, transparent) 1px, transparent 1px) !important;
-  background-size: 8px 8px !important;
+    linear-gradient(90deg, color-mix(in srgb, #ffffff 18%, transparent) 1px, transparent 1px);
+  background-size: 8px 8px;
 }
 .bf-theme-picker .bf-theme-option.white .bf-theme-swatch span {
   background-image:
     linear-gradient(rgba(23, 107, 84, .16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 107, 84, .16) 1px, transparent 1px) !important;
+    linear-gradient(90deg, rgba(23, 107, 84, .16) 1px, transparent 1px);
 }
 
 /* Butonul de aplicare: aceeași rază ca restul acțiunilor principale și o linie care
    desparte foaia derulată de bara de jos, ca lista să nu pară tăiată sub buton. */
 .bf-theme-picker .bf-theme-picker-footer {
-  border-top: 1px solid var(--cf-line) !important;
-  background: var(--cf-surface) !important;
-  box-shadow: none !important;
+  border-top: 1px solid var(--cf-line);
+  background: var(--cf-surface);
+  box-shadow: none;
 }
 .bf-theme-picker .bf-theme-picker-footer .bf-theme-apply {
   border-radius:12px !important;
@@ -125,7 +125,7 @@
    conturul ieșea pe lângă butoane ca o umbră de capsulă. Colțuri de card, nu de pastilă. */
 @media (max-width: 640px) {
   .bf-allocation-period .bf-allocation-period-tabs {
-    border-radius:20px !important;
+    border-radius:20px;
   }
 }
 
@@ -162,23 +162,23 @@
 .bf-weekly-tranche-notice .dismiss,
 .bf-week-transfer-toggle,
 .bf-plan-toggle > input[type="checkbox"] {
-  position: relative !important;
+  position: relative;
 }
 .bf-schedule-check::after,
 .bf-weekly-tranche-notice .dismiss::after,
 .bf-week-transfer-toggle::after,
 .bf-plan-toggle > input[type="checkbox"]::after {
-  content: "" !important;
-  position: absolute !important;
-  inset: -9px !important;
-  border-radius: inherit !important;
-  background: transparent !important;
-  pointer-events: auto !important;
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: inherit;
+  background: transparent;
+  pointer-events: auto;
 }
 /* Legătura „Mută bani între săptămâni” era un rând de text de 16px: îi dăm înălțimea unui
    rând de atins, fără să devină buton plin. */
 .bf-week-transfer .bf-week-transfer-toggle {
-  min-height: 34px !important;
+  min-height: 34px;
   padding-block: 9px !important;
 }
 .bf-plan-toggle > input[type="checkbox"] {
@@ -192,24 +192,24 @@
    iar pe 360px cardurile ies în dreapta. `minmax(0, 1fr)` ține coloana în ecran, iar
    rândul de acțiuni se așază pe două rânduri când nu încape. */
 .bf-app .bf-page {
-  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-columns: minmax(0, 1fr);
 }
 .bf-obligation-actions {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 .bf-obligation-actions > button {
-  min-width: 0 !important;
-  white-space: normal !important;
-  padding-inline: 12px !important;
+  min-width: 0;
+  white-space: normal;
+  padding-inline: 12px;
 }
 
 /* Rândul de acțiuni al unei datorii („Confirmă plata · Editează · coș”) nu încăpea pe
    360px și ieșea din card; acum se rupe pe două rânduri în loc să împingă pagina. */
 .bf-obligation-entry-actions {
-  flex-wrap: wrap !important;
+  flex-wrap: wrap;
 }
 .bf-obligation-entry-actions > button {
-  min-width: 0 !important;
+  min-width: 0;
 }
 
 /* Inelul decorativ al antetului din Plan stă la `right: -28px`, deci ieșea din card și
@@ -220,7 +220,7 @@
 .bf-app .bf-plan-workspace > .bf-plan-studio-header,
 .bf-app .bf-salary-cycle-plan > .bf-plan-studio-header {
   overflow-x: clip !important;
-  overflow-y: visible !important;
+  overflow-y: visible;
 }
 
 /* —— 9. Text lizibil pe cardurile întunecate din tema deschisă —— */
@@ -236,10 +236,10 @@
 }
 .os-shell .bf-debt-schedule-head b,
 .os-shell .bf-debt-schedule-row b {
-  color: #edf9f2 !important;
+  color: #edf9f2;
 }
 .os-shell .bf-debt-schedule-row small {
-  color: #b9cfc6 !important;
+  color: #b9cfc6;
 }
 
 /* Butonul „Plan” din anunțul de tranșă are fundal `--cf-info`, care pe temele de noapte
@@ -253,13 +253,13 @@
 /* Ziua curentă, ziua depășită și data din antet stăteau la 3,9–4,3 față de 4,5 cerut.
    Aceleași culori, doar cu un pas mai închise; pe temele de noapte erau deja bune. */
 html:not(.dark) .bf-os-day.is-today span {
-  color: #125a46 !important;
+  color: #125a46;
 }
 html:not(.dark) .bf-os-day.is-over b {
-  color: #8a5f0c !important;
+  color: #8a5f0c;
 }
 html:not(.dark) .os-date b {
-  color: #5f6d67 !important;
+  color: #5f6d67;
 }
 
 /* —— 11. Legătura „Sari la conținut” și mesajul din vrăjitor —— */
@@ -284,7 +284,7 @@ html:not(.dark) .os-date b {
   color: var(--cf-primary, #8fe3bd) !important;
 }
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-recurring-list strong {
-  color: var(--cf-danger, #ff8a7a) !important;
+  color: var(--cf-danger, #ff8a7a);
 }
 
 /* Kicker-ul global e vopsit cu `--cf-primary-strong !important`; pe cardul verde-închis
@@ -314,7 +314,7 @@ html:not(.dark) .bf-field small,
 html:not(.dark) .bf-source-edit small,
 html:not(.dark) .bf-source-name small,
 html:not(.dark) .bf-source-edit label small {
-  color: #5c675f !important;
+  color: #5c675f;
 }
 
 /* —— 14. Ultimele texte la un fir de prag, în tema deschisă —— */
@@ -328,7 +328,7 @@ html:not(.dark) .bf-more-grid .bf-kicker.bf-more-section-label {
   color: #28604b !important;
 }
 html:not(.dark) .bf-recurring-list article > span:not(.done) {
-  color: #3b6152 !important;
+  color: #3b6152;
 }
 
 /* 15 · Acoperirea plicului din mai multe surse.

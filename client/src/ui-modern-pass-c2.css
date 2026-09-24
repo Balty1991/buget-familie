@@ -10,8 +10,8 @@ html body .os-shell .bf-movements-ledger,
 html body .os-shell .bf-obligations-workspace,
 html body .os-shell .bf-insights-workspace,
 html body .os-shell .bf-analysis {
-  display: grid !important;
-  gap: 16px !important;
+  display: grid;
+  gap: 16px;
   padding-top: 8px !important;
 }
 
@@ -124,22 +124,22 @@ html body .os-shell .bf-obligation-timeline-list {
 
 html body .bf-app .bf-obligation-entry,
 html body .os-shell .bf-obligation-entry {
-  padding: 14px !important;
-  gap: 12px !important;
-  border-radius:12px !important;
-  box-shadow: none !important;
+  padding: 14px;
+  gap: 12px;
+  border-radius:12px;
+  box-shadow: none;
 }
 
 html body .bf-app .bf-analysis-snapshot,
 html body .os-shell .bf-analysis-snapshot {
-  display: grid !important;
-  gap: 16px !important;
+  display: grid;
+  gap: 16px;
 }
 
 html body .bf-app .bf-analysis-snapshot-copy,
 html body .os-shell .bf-analysis-snapshot-copy {
-  display: grid !important;
-  gap: 12px !important;
+  display: grid;
+  gap: 12px;
 }
 
 html body .bf-app .bf-analysis h2,
@@ -237,7 +237,7 @@ html body .os-shell .bf-obligation-timeline .bf-obligation-entry-actions button.
   html body .bf-app .bf-obligations-workspace,
   html body .bf-app .bf-insights-workspace,
   html body .bf-app .bf-analysis {
-    gap: 16px !important;
+    gap: 16px;
     padding-left: max(14px, var(--os-inset-left, 0px)) !important;
     padding-right: max(14px, var(--os-inset-right, 0px)) !important;
   }

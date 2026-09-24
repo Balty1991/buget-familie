@@ -35,7 +35,7 @@ html body .os-shell .bf-more-grid.bf-settings-group,
 html body .bf-app .bf-settings-group,
 html body .os-shell .bf-settings-group {
   padding-bottom: 14px !important;
-  scroll-padding-bottom: 0 !important;
+  scroll-padding-bottom: 0;
 }
 
 html body .bf-app .bf-more-group,

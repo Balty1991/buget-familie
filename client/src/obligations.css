@@ -62,8 +62,8 @@
 }
 
 .os-shell .bf-obligations-workspace .bf-obligation-entry-actions button.delete {
-  width: var(--bf-hit, 44px) !important;
-  min-width: var(--bf-hit, 44px) !important;
-  height: var(--bf-hit, 44px) !important;
+  width: var(--bf-hit, 44px);
+  min-width: var(--bf-hit, 44px);
+  height: var(--bf-hit, 44px);
   padding-inline: 0 !important;
 }

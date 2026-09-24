@@ -42,28 +42,28 @@ html.bf-high-contrast {
 /* Dialoguri: niciodată crem hardcodat pe temă închisă. */
 .bf-modal-backdrop {
   position: fixed !important;
-  inset: 0 !important;
-  z-index: 120 !important;
+  inset: 0;
+  z-index: 120;
 }.bf-modal, .dark .bf-modal, .theme-white .bf-modal, .theme-dark .bf-modal, .theme-aurora .bf-modal, .theme-cyber .bf-modal, .theme-navy .bf-modal{
-  color: var(--cf-ink) !important;
-  background: var(--cf-surface) !important;
+  color: var(--cf-ink);
+  background: var(--cf-surface);
   border-color: var(--cf-line) !important;
 }
 .bf-modal h2,
 .bf-modal header h2 {
-  color: var(--cf-ink) !important;
+  color: var(--cf-ink);
 }
 .bf-icon-button {
-  color: var(--cf-ink) !important;
-  background: var(--cf-surface-alt) !important;
-  border: 1px solid var(--cf-line) !important;
+  color: var(--cf-ink);
+  background: var(--cf-surface-alt);
+  border: 1px solid var(--cf-line);
 }
 
 /* Plan: cardul de progres nu mai e hârtie crem pe fundal violet. */
 .bf-allocation-progress-card {
-  color: var(--cf-ink) !important;
-  background: var(--cf-surface) !important;
-  border: 1px solid var(--cf-line) !important;
+  color: var(--cf-ink);
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-line);
 }
 .bf-allocation-progress-card .bf-kicker,
 .bf-allocation-progress-meta,
@@ -74,15 +74,15 @@ html.bf-high-contrast {
 .bf-allocation-progress-card h2,
 .bf-allocation-progress-top strong,
 .bf-allocation-progress-meta b {
-  color: var(--cf-ink) !important;
+  color: var(--cf-ink);
 }
 .bf-allocation-progress-track {
   background: color-mix(in srgb, var(--cf-ink) 14%, var(--cf-surface)) !important;
 }
 .bf-quick-envelope-chips button {
-  color: var(--cf-ink) !important;
-  background: var(--cf-surface-alt) !important;
-  border: 1px solid var(--cf-line) !important;
+  color: var(--cf-ink);
+  background: var(--cf-surface-alt);
+  border: 1px solid var(--cf-line);
 }
 
 /* Titlul Plan nu se mai taie pe linia de sus (line-height < 1 + serif). */
@@ -107,15 +107,15 @@ html.bf-high-contrast {
 }
 .bf-plan-studio-header p:not(.bf-kicker),
 .bf-plan-studio-header .bf-kicker {
-  color: var(--cf-muted) !important;
+  color: var(--cf-muted);
 }
 .bf-plan-header-stat {
-  color: var(--cf-ink) !important;
-  background: var(--cf-surface-alt) !important;
-  border-color: var(--cf-line) !important;
+  color: var(--cf-ink);
+  background: var(--cf-surface-alt);
+  border-color: var(--cf-line);
 }
-.bf-plan-header-stat b { color: var(--cf-ink) !important; }
-.bf-plan-header-stat small { color: var(--cf-muted) !important; }
+.bf-plan-header-stat b { color: var(--cf-ink); }
+.bf-plan-header-stat small { color: var(--cf-muted); }
 
 /* Carduri Plan / ciclu / plicuri — suprafața temei, nu crem. */
 .bf-plan-sheet,
@@ -274,8 +274,8 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 @media (max-width: 760px) {
   .bf-plan-studio-header h1,
   .bf-salary-cycle-plan .bf-plan-studio-header h1 {
-    font-size: clamp(28px, 8.2vw, 34px) !important;
-    line-height: 1.16 !important;
-    max-width: 13ch !important;
+    font-size: clamp(28px, 8.2vw, 34px);
+    line-height: 1.16;
+    max-width: 13ch;
   }
 }

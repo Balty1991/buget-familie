@@ -1,7 +1,7 @@
 /** Colțul din dreapta al antetului Plan arăta doar o iconiță decorativă; acum arată și suma nerepartizată. */
-.bf-plan-studio-header{align-items:flex-start!important}
-.bf-plan-header-stat{display:grid!important;justify-items:center!important;gap:3px!important;flex:0 0 auto!important;min-width:84px!important;padding:10px 12px!important;border:1px solid var(--cf-line)!important;border-radius:12px!important;color:var(--cf-primary-strong)!important;background:var(--cf-surface-alt)!important;text-align:center!important}
-.bf-plan-header-stat>span{display:grid!important;place-items:center!important;width:30px!important;height:30px!important;margin-bottom:1px!important;border-radius:12px !important;background:color-mix(in srgb,var(--cf-primary),transparent 85%)!important;color:var(--cf-primary-strong)!important}
-.bf-plan-header-stat small{color:var(--cf-muted)!important;font:600 8px/1 "IBM Plex Sans",sans-serif!important;letter-spacing:.07em!important;white-space:nowrap!important}
-.bf-plan-header-stat b{color:var(--cf-ink)!important;font:600 16px/1.1 "IBM Plex Sans",Georgia,serif!important;white-space:nowrap!important}
+.bf-plan-studio-header{align-items:flex-start}
+.bf-plan-header-stat{display:grid;justify-items:center;gap:3px;flex:0 0 auto;min-width:84px;padding:10px 12px;border:1px solid var(--cf-line)!important;border-radius:12px;color:var(--cf-primary-strong);background:var(--cf-surface-alt)!important;text-align:center}
+.bf-plan-header-stat>span{display:grid;place-items:center;width:30px;height:30px;margin-bottom:1px;border-radius:12px;background:color-mix(in srgb,var(--cf-primary),transparent 85%);color:var(--cf-primary-strong)}
+.bf-plan-header-stat small{color:var(--cf-muted);font:600 8px/1 "IBM Plex Sans",sans-serif;letter-spacing:.07em;white-space:nowrap}
+.bf-plan-header-stat b{color:var(--cf-ink);font:600 16px/1.1 "IBM Plex Sans",Georgia,serif;white-space:nowrap}
 @media(max-width:370px){.bf-plan-header-stat{min-width:76px!important;padding:8px 9px!important}.bf-plan-header-stat b{font-size:14px!important}}

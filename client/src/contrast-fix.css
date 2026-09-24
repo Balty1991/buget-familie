@@ -119,10 +119,10 @@ html.theme-navy {
   --os-bg: var(--cf-bg) !important;
   --os-surface: var(--cf-surface) !important;
   --os-line: var(--cf-line) !important;
-  --os-mint: var(--cf-primary) !important;
-  --os-ink: var(--cf-ink) !important;
-  --os-muted: var(--cf-muted) !important;
-  --os-warn: var(--cf-warning) !important;
+  --os-mint: var(--cf-primary);
+  --os-ink: var(--cf-ink);
+  --os-muted: var(--cf-muted);
+  --os-warn: var(--cf-warning);
 }
 
 /**
@@ -130,7 +130,7 @@ html.theme-navy {
  * dă 3,9–4,4 — sub cei 4,5 ceruți pentru text mic. Sunt cel mai des întâlnit
  * element din aplicație, deci și cel mai des greu de citit.
  */
-.bf-kicker { color: var(--cf-ink, currentColor) !important; opacity: 0.72; }
+.bf-kicker { color: var(--cf-ink, currentColor); opacity: 0.72; }
 
 /**
  * Comenzile cu umplutură de accent, într-un singur loc.
@@ -188,8 +188,8 @@ html .bf-ghost:not(.bf-primary) {
 
 html .bf-obligation-actions button:first-child,
 html .os-shell .bf-obligation-actions > button:first-child {
-  color: var(--cf-ink) !important;
-  border-color: color-mix(in srgb, var(--cf-danger) 55%, var(--cf-line)) !important;
+  color: var(--cf-ink);
+  border-color: color-mix(in srgb, var(--cf-danger) 55%, var(--cf-line));
   background-color: color-mix(in srgb, var(--cf-surface) 90%, transparent) !important;
 }
 
@@ -214,9 +214,9 @@ html .bf-os-secondary { color: var(--cf-ink) !important; background-color: trans
  * crea singur a doua coloană.
  */
 @media (max-width: 560px) {
-  .bf-obligation-entry { grid-template-columns: minmax(0, 1fr) !important; }
+  .bf-obligation-entry { grid-template-columns: minmax(0, 1fr); }
   .bf-obligation-entry-actions { grid-column: 1 !important; justify-content: flex-start; }
-  .bf-obligation-entry-main { grid-template-columns: 34px minmax(0, 1fr) auto !important; }
+  .bf-obligation-entry-main { grid-template-columns: 34px minmax(0, 1fr) auto; }
 }
 
 /* Linia secundară nu are voie să se rupă; un text întreg pe două rânduri se citește, unul tăiat nu. */
@@ -304,7 +304,7 @@ html .bf-quick-entry-grid {
    * își creează una nouă și strivirea reîncepe. Aceeași capcană ca la rândul din
    * Obligații.
    */
-  grid-auto-flow: row !important;
+  grid-auto-flow: row;
 }
 html .bf-recurring-form > *,
 html .bf-source-builder > *,
@@ -390,11 +390,11 @@ html .bf-quick-entry-grid > * { grid-column: auto !important; }
  * ============================================================ */
 html.theme-white .bf-os-decide, html.theme-aurora .bf-os-decide, html.theme-navy .bf-os-decide, html.theme-cyber .bf-os-decide, html.theme-white .bf-movement-add, html.theme-aurora .bf-movement-add, html.theme-navy .bf-movement-add, html.theme-cyber .bf-movement-add, html.theme-white .bf-primary, html.theme-aurora .bf-primary, html.theme-navy .bf-primary, html.theme-cyber .bf-primary, html.theme-white .bf-movement-kind button.active, html.theme-aurora .bf-movement-kind button.active, html.theme-navy .bf-movement-kind button.active, html.theme-cyber .bf-movement-kind button.active, html.theme-white .bf-segment button.active, html.theme-aurora .bf-segment button.active, html.theme-navy .bf-segment button.active, html.theme-cyber .bf-segment button.active, html.theme-white .bf-journal-quickbar .active, html.theme-aurora .bf-journal-quickbar .active, html.theme-navy .bf-journal-quickbar .active, html.theme-cyber .bf-journal-quickbar .active, html.theme-white .bf-movement-scope button.active, html.theme-aurora .bf-movement-scope button.active, html.theme-navy .bf-movement-scope button.active, html.theme-cyber .bf-movement-scope button.active{
   background-color: var(--cf-primary-strong, #1f5240) !important;
-  background-image: none !important;
-  color: var(--cf-on-primary, #ffffff) !important;
+  background-image: none;
+  color: var(--cf-on-primary, #ffffff);
 }html.theme-white .bf-os-decide svg, html.theme-aurora .bf-os-decide svg, html.theme-navy .bf-os-decide svg, html.theme-cyber .bf-os-decide svg, html.theme-white .bf-movement-add svg, html.theme-aurora .bf-movement-add svg, html.theme-navy .bf-movement-add svg, html.theme-cyber .bf-movement-add svg, html.theme-white .bf-primary svg, html.theme-aurora .bf-primary svg, html.theme-navy .bf-primary svg, html.theme-cyber .bf-primary svg{
-  color: var(--cf-on-primary, #ffffff) !important;
-  stroke: currentColor !important;
+  color: var(--cf-on-primary, #ffffff);
+  stroke: currentColor;
 }html.theme-white .bf-os-secondary, html.theme-aurora .bf-os-secondary, html.theme-navy .bf-os-secondary, html.theme-cyber .bf-os-secondary, html.theme-white .bf-today-add.bf-os-secondary, html.theme-aurora .bf-today-add.bf-os-secondary, html.theme-navy .bf-today-add.bf-os-secondary, html.theme-cyber .bf-today-add.bf-os-secondary, html.theme-white .bf-secondary, html.theme-aurora .bf-secondary, html.theme-navy .bf-secondary, html.theme-cyber .bf-secondary{
   color: var(--cf-ink, #1a2420) !important;
   background-color: var(--cf-surface, #fbfaf7) !important;
@@ -413,31 +413,31 @@ html.theme-cyber .os-desktop-nav button.is-on {
 html.theme-aurora .os-dock button.is-on svg,
 html.theme-navy .os-dock button.is-on svg,
 html.theme-cyber .os-dock button.is-on svg {
-  color: var(--cf-on-primary, #0d0b1c) !important;
-  stroke: currentColor !important;
+  color: var(--cf-on-primary, #0d0b1c);
+  stroke: currentColor;
 }
 
 /* Contor căutare: badge în buton, nu „2” gol sub bară */
 .bf-journal-search {
   position: relative;
-  min-width: 0 !important;
+  min-width: 0;
 }
 .bf-journal-search small {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 22px !important;
-  height: 22px !important;
-  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  margin: 0;
   padding: 0 6px !important;
-  border-radius: 999px !important;
+  border-radius: 999px;
   border: 0 !important;
-  background: var(--cf-surface-alt, #e7e4dc) !important;
-  color: var(--cf-ink, #1a2420) !important;
-  font-size:12px !important;
-  font-weight:600 !important;
-  line-height: 1 !important;
-  white-space: nowrap !important;
+  background: var(--cf-surface-alt, #e7e4dc);
+  color: var(--cf-ink, #1a2420);
+  font-size:12px;
+  font-weight:600;
+  line-height: 1;
+  white-space: nowrap;
   grid-column: auto !important;
 }
 
@@ -450,7 +450,7 @@ html.theme-cyber .os-dock button.is-on svg {
   .os-shell .bf-insights-workspace,
   .os-shell .bf-utilities-workspace {
     padding-top: 14px !important;
-    padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px));
   }
 
   .os-shell .bf-today-workspace > header h1,
@@ -460,8 +460,8 @@ html.theme-cyber .os-dock button.is-on svg {
   }
 
   .bf-movement-scope {
-    margin-bottom: 12px !important;
-    padding-bottom: 4px !important;
+    margin-bottom: 12px;
+    padding-bottom: 4px;
   }
 
   /* Mai mult: carduri 2-col — wrap + line-clamp, fără list-row pe cell */
@@ -549,29 +549,29 @@ html.theme-cyber .os-dock button.is-on svg {
     text-overflow: ellipsis;
   }
   .bf-movements-ledger .bf-movement-add {
-    display: inline-grid !important;
-    place-items: center !important;
-    gap: 0 !important;
-    width: 46px !important;
-    min-width: 46px !important;
-    max-width: 46px !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    padding: 0 !important;
-    color: var(--cf-on-primary, #ffffff) !important;
+    display: inline-grid;
+    place-items: center;
+    gap: 0;
+    width: 46px;
+    min-width: 46px;
+    max-width: 46px;
+    height: 46px;
+    min-height: 46px;
+    padding: 0;
+    color: var(--cf-on-primary, #ffffff);
     background: var(--cf-primary-strong, #1f5240) !important;
     background-image: none !important;
-    font-size: 0 !important;
-    line-height: 0 !important;
+    font-size: 0;
+    line-height: 0;
   }
   .bf-movements-ledger .bf-movement-add svg {
-    width: 20px !important;
-    height: 20px !important;
-    min-width: 20px !important;
-    min-height: 20px !important;
-    flex: none !important;
-    color: var(--cf-on-primary, #ffffff) !important;
-    stroke: currentColor !important;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    flex: none;
+    color: var(--cf-on-primary, #ffffff);
+    stroke: currentColor;
   }
 }
 
@@ -584,15 +584,15 @@ html.theme-dark .bf-movement-kind button.active,
 html.theme-dark .bf-segment button.active,
 html.theme-dark .bf-journal-quickbar .active,
 html.theme-dark .bf-movement-scope button.active {
-  background-color: var(--cf-primary-strong, #1f5240) !important;
-  background-image: none !important;
-  color: var(--cf-on-primary, #ffffff) !important;
+  background-color: var(--cf-primary-strong, #1f5240);
+  background-image: none;
+  color: var(--cf-on-primary, #ffffff);
 }
 html.theme-dark .bf-os-decide svg,
 html.theme-dark .bf-movement-add svg,
 html.theme-dark .bf-primary svg {
-  color: var(--cf-on-primary, #ffffff) !important;
-  stroke: currentColor !important;
+  color: var(--cf-on-primary, #ffffff);
+  stroke: currentColor;
 }
 html.theme-dark .bf-os-secondary,
 html.theme-dark .bf-today-add.bf-os-secondary,
@@ -603,11 +603,11 @@ html.theme-dark .bf-secondary {
 }
 html.theme-dark .os-dock button.is-on,
 html.theme-dark .os-desktop-nav button.is-on {
-  color: var(--cf-on-primary, #ffffff) !important;
+  color: var(--cf-on-primary, #ffffff);
 }
 html.theme-dark .os-dock button.is-on svg {
-  color: var(--cf-on-primary, #ffffff) !important;
-  stroke: currentColor !important;
+  color: var(--cf-on-primary, #ffffff);
+  stroke: currentColor;
 }
 
 .os-dock button,
@@ -958,8 +958,8 @@ html.theme-cyber .bf-primary svg,
 html.theme-aurora .bf-movement-add svg,
 html.theme-navy .bf-movement-add svg,
 html.theme-cyber .bf-movement-add svg {
-  color: var(--cf-on-primary, #0d0b1c) !important;
-  stroke: currentColor !important;
+  color: var(--cf-on-primary, #0d0b1c);
+  stroke: currentColor;
 }
 
 /* Secondary / outline controls on night themes: light ink on dark surface */
@@ -986,34 +986,34 @@ html.theme-cyber .bf-today-add.bf-os-secondary {
 html .bf-movement-add,
 .os-shell .bf-movement-add,
 .bf-movements-ledger .bf-movement-add {
-  display: inline-grid !important;
-  place-items: center !important;
-  gap: 0 !important;
-  box-sizing: border-box !important;
-  width: 46px !important;
-  min-width: 46px !important;
-  max-width: 46px !important;
-  height: 46px !important;
-  min-height: 46px !important;
-  padding: 0 !important;
-  overflow: visible !important;
-  color: var(--cf-on-primary, #ffffff) !important;
-  background-color: var(--cf-primary-strong, #1f5240) !important;
-  background-image: none !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
+  display: inline-grid;
+  place-items: center;
+  gap: 0;
+  box-sizing: border-box;
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
+  height: 46px;
+  min-height: 46px;
+  padding: 0;
+  overflow: visible;
+  color: var(--cf-on-primary, #ffffff);
+  background-color: var(--cf-primary-strong, #1f5240);
+  background-image: none;
+  font-size: 0;
+  line-height: 0;
 }
 html .bf-movement-add svg,
 .os-shell .bf-movement-add svg,
 .bf-movements-ledger .bf-movement-add svg {
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  min-height: 20px !important;
-  flex: 0 0 auto !important;
-  margin: 0 !important;
-  color: var(--cf-on-primary, #ffffff) !important;
-  stroke: currentColor !important;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--cf-on-primary, #ffffff);
+  stroke: currentColor;
 }
 
 
@@ -1032,15 +1032,15 @@ html.theme-dark .os-dock button.is-on,
 html.theme-dark .os-desktop-nav button.is-on {
   color: var(--cf-on-primary, #0d0b1c) !important;
   background-color: var(--cf-primary-strong, #7dcea0) !important;
-  background-image: none !important;
+  background-image: none;
   border-color: transparent !important;
 }
 html.theme-dark .bf-os-decide svg,
 html.theme-dark .bf-today-add svg,
 html.theme-dark .bf-primary svg,
 html.theme-dark .bf-movement-add svg {
-  color: var(--cf-on-primary, #0d0b1c) !important;
-  stroke: currentColor !important;
+  color: var(--cf-on-primary, #0d0b1c);
+  stroke: currentColor;
 }
 html.theme-dark .bf-secondary,
 html.theme-dark .bf-os-secondary {
@@ -1130,14 +1130,14 @@ html body .bf-setup-presets button[aria-pressed="true"] svg {
 /* Notează stă în card, sub pași. Nu se lipește de dock și nu rămâne transparent. */
 html body .os-shell .bf-today-workspace .bf-os-actions,
 html body .os-shell .bf-today-add.bf-os-decide {
-  position: static !important;
-  bottom: auto !important;
-  z-index: auto !important;
+  position: static;
+  bottom: auto;
+  z-index: auto;
 }
 html body .os-shell .bf-today-add.bf-os-decide {
-  display: inline-flex !important;
-  width: 100% !important;
-  color: var(--cf-on-primary, #f4fff9) !important;
+  display: inline-flex;
+  width: 100%;
+  color: var(--cf-on-primary, #f4fff9);
   background-color: var(--cf-primary-strong, #1f6b4a) !important;
   background-image: none !important;
 }
@@ -1149,11 +1149,11 @@ html body .os-shell .bf-today-add.bf-os-decide {
 
 /* Banda de zile: eticheta se citește, ținta de atingere are cel puțin 44px înălțime. */
 html body .bf-os-day {
-  min-height: 44px !important;
+  min-height: 44px;
 }
 html body .bf-os-day > span:first-child {
-  font-size: 12px !important;
-  letter-spacing: 0.04em !important;
+  font-size: 12px;
+  letter-spacing: 0.04em;
 }
 
 /* Turul primei săptămâni stă lângă Notează, nu peste tot ecranul. */

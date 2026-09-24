@@ -93,8 +93,8 @@
   line-height: 1.4 !important;
 }
 .bf-brief-salary {
-  padding: 11px 14px !important;
-  border-radius:12px !important;
+  padding: 11px 14px;
+  border-radius:12px;
 }
 
 /* —— Puls: zilele goale rămân vizibile, etichetele se citesc —— */
@@ -324,19 +324,19 @@
 
 /* —— Fundaluri: atmosferă, nu hârtie milimetrică —— */
 .bf-app::before {
-  opacity: .22 !important;
+  opacity: .22;
   background-image:
     radial-gradient(ellipse 80% 46% at 100% -4%, color-mix(in srgb, var(--cf-primary) 30%, transparent), transparent 62%),
-    radial-gradient(ellipse 58% 40% at -6% 104%, color-mix(in srgb, var(--cf-info) 20%, transparent), transparent 58%) !important;
-  background-size: auto !important;
+    radial-gradient(ellipse 58% 40% at -6% 104%, color-mix(in srgb, var(--cf-info) 20%, transparent), transparent 58%);
+  background-size: auto;
 }
 
 html.background-plain .bf-app,
 .background-plain .bf-app {
-  background-color: var(--cf-bg) !important;
+  background-color: var(--cf-bg);
   background-image:
     radial-gradient(980px 560px at 108% -10%, color-mix(in srgb, var(--cf-primary) 26%, transparent), transparent 58%),
-    radial-gradient(720px 480px at -16% 108%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 54%) !important;
+    radial-gradient(720px 480px at -16% 108%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 54%);
 }
 
 html.background-paper .bf-app,
@@ -379,33 +379,33 @@ html.background-dots .bf-app,
 
 .bf-background-swatch.plain {
   background:
-    radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--cf-primary) 45%, transparent), var(--cf-bg) 62%) !important;
+    radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--cf-primary) 45%, transparent), var(--cf-bg) 62%);
 }
 .bf-background-swatch.paper {
-  background-color: var(--cf-bg) !important;
+  background-color: var(--cf-bg);
   background-image:
     repeating-linear-gradient(0deg, transparent, transparent 2px, color-mix(in srgb, var(--cf-ink) 14%, transparent) 3px),
-    radial-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) .6px, transparent .8px) !important;
-  background-size: 100% 4px, 7px 7px !important;
+    radial-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) .6px, transparent .8px);
+  background-size: 100% 4px, 7px 7px;
 }
 .bf-background-swatch.grid {
-  background-color: var(--cf-bg) !important;
+  background-color: var(--cf-bg);
   background-image:
     linear-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px) !important;
-  background-size: 10px 10px !important;
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px);
+  background-size: 10px 10px;
 }
 .bf-background-swatch.aurora {
   background:
     radial-gradient(circle at 80% 18%, var(--cf-primary), transparent 46%),
-    radial-gradient(circle at 18% 84%, var(--cf-info), var(--cf-bg) 62%) !important;
+    radial-gradient(circle at 18% 84%, var(--cf-info), var(--cf-bg) 62%);
 }
 .bf-background-swatch.dots {
-  background-color: var(--cf-bg) !important;
+  background-color: var(--cf-bg);
   background-image:
     radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--cf-primary) 40%, transparent), transparent 50%),
-    radial-gradient(var(--cf-primary) 1px, transparent 1.5px) !important;
-  background-size: auto, 8px 8px !important;
+    radial-gradient(var(--cf-primary) 1px, transparent 1.5px);
+  background-size: auto, 8px 8px;
 }
 
 html.dark .bf-today-pulse,

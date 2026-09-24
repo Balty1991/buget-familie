@@ -1,8 +1,8 @@
 /**
  * Studio Play — gospodărie, încredere, configurare. Tokeni --cf-* ca restul aplicației.
  */
-.bf-insights-switch { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-.bf-insights-switch button { font-size: 12px !important; padding: 0 8px !important; }
+.bf-insights-switch { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bf-insights-switch button { font-size: 12px; padding: 0 8px; }
 
 .bf-setup { max-width: 420px; }
 .bf-setup .bf-setup-copy { display: grid; gap: 12px; color: var(--cf-ink); }
@@ -81,5 +81,5 @@
   .bf-household { padding: 6px 16px 18px; }
   .bf-household-flow, .bf-household-safe { grid-template-columns: 1fr; }
   .bf-household-recap h2, .bf-household-card h2 { font-size: 22px; }
-  .bf-insights-switch button { font-size:12px !important; gap: 4px !important; }
+  .bf-insights-switch button { font-size:12px; gap: 4px; }
 }

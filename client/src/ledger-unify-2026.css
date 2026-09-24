@@ -191,23 +191,23 @@ html.theme-cyber .os-shell .os-dock button.is-on {
 
 /* —— Theme picker: 5 fețe lizibile —— */
 .bf-theme-picker {
-  width: min(560px, calc(100vw - 20px)) !important;
+  width: min(560px, calc(100vw - 20px));
 }
 .bf-theme-grid {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 10px !important;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 .bf-theme-option {
-  min-height: 92px !important;
-  padding: 12px !important;
-  border-radius:20px !important;
-  grid-template-columns: 54px minmax(0, 1fr) 18px !important;
+  min-height: 92px;
+  padding: 12px;
+  border-radius:20px;
+  grid-template-columns: 54px minmax(0, 1fr) 18px;
 }
 .bf-theme-swatch {
-  width: 54px !important;
-  height: 62px !important;
-  border-radius:12px !important;
+  width: 54px;
+  height: 62px;
+  border-radius:12px;
 }
 .bf-theme-option em {
   display: block;

@@ -14,20 +14,20 @@
 }
 
 .os-shell .bf-today-workspace .bf-os-rhythm-grid {
-  grid-template-columns: repeat(var(--bf-rhythm-days, 7), minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(var(--bf-rhythm-days, 7), minmax(0, 1fr));
 }
 
 .os-shell .bf-today-workspace .bf-os-day {
-  min-width: 0 !important;
-  min-height: var(--bf-hit, 44px) !important;
+  min-width: 0;
+  min-height: var(--bf-hit, 44px);
 }
 
 .os-shell .bf-today-workspace .bf-os-day b {
-  font-size: var(--bf-text-money, 14px) !important;
+  font-size: var(--bf-text-money, 14px);
 }
 
 .os-shell .bf-today-workspace .bf-os-actions,
 .os-shell .bf-today-workspace .bf-today-add.bf-os-decide {
-  position: static !important;
-  bottom: auto !important;
+  position: static;
+  bottom: auto;
 }

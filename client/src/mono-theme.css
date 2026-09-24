@@ -24,7 +24,7 @@
   background:
     radial-gradient(720px 420px at 100% -8%, rgba(47, 107, 85, .08), transparent 58%),
     radial-gradient(520px 360px at -8% 88%, rgba(212, 176, 106, .06), transparent 55%),
-    var(--cf-bg) !important;
+    var(--cf-bg);
 }.theme-white .bf-app::before{
   opacity: .09;
   background-image:
@@ -39,7 +39,7 @@
   color: #ffffff !important;
 }.theme-white .bf-primary{
   color: #ffffff !important;
-  background: var(--cf-primary-strong) !important;
+  background: var(--cf-primary-strong);
   box-shadow:var(--bf-shadow-rest) !important;
 }.theme-white .bf-theme-picker{ background: #fbfaf7; }.theme-white .bf-theme-option{ border-color: #d5d2c8; background: #fff; }.theme-white .bf-theme-option.selected{ border-color: #2f6b55; box-shadow: 0 0 0 2px rgba(47, 107, 85, .16); }
 

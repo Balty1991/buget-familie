@@ -107,9 +107,9 @@
 }
 
 .bf-kicker {
-  color: var(--neo-forest-2) !important;
+  color: var(--neo-forest-2);
   font-size:12px !important;
-  font-weight:600 !important;
+  font-weight:600;
   letter-spacing: .16em !important;
 }
 
@@ -158,7 +158,7 @@
 .bf-today-situation-actions { position: relative; z-index: 1; gap: 10px !important; }
 .bf-today-add,
 .bf-today-plan-link { min-height: 50px !important; border-radius:20px !important; font-weight:600 !important; transition: transform 180ms var(--neo-ease), box-shadow 180ms var(--neo-ease), background 180ms var(--neo-ease) !important; }
-.bf-today-add { color: var(--neo-ink) !important; background: var(--neo-lime) !important; box-shadow:var(--bf-shadow-raise) !important; }
+.bf-today-add { color: var(--neo-ink); background: var(--neo-lime); box-shadow:var(--bf-shadow-raise); }
 .bf-today-plan-link { color: #f7fff2 !important; border-color: rgba(247, 255, 242, .32) !important; background: rgba(255, 255, 255, .08) !important; }
 .bf-today-add:hover, .bf-today-plan-link:hover { transform: translateY(-2px); }
 .bf-today-add:active, .bf-today-plan-link:active { transform: scale(.98); }
@@ -204,9 +204,9 @@
 .bf-decision-row b { color: var(--neo-ink) !important; }
 .bf-decision-row em { color: var(--neo-muted) !important; }
 
-.bf-today-activity-list article { min-height: 70px; border-top-color: rgba(16, 35, 31, .1) !important; }
+.bf-today-activity-list article { min-height: 70px; border-top-color: rgba(16, 35, 31, .1); }
 .bf-today-activity-list article:hover { background: rgba(223, 243, 223, .55) !important; }
-.bf-tx-icon { border-radius:12px !important; }
+.bf-tx-icon { border-radius:12px; }
 .bf-today-hub-links > div { gap: 9px !important; }
 .bf-today-hub-links button { min-height: 60px; border: 1px solid rgba(16, 35, 31, .1) !important; border-radius:20px !important; background: var(--neo-paper) !important; }
 .bf-today-hub-links button:hover { transform: translateY(-2px); border-color: rgba(15, 61, 53, .3) !important; }
@@ -273,16 +273,16 @@
 .bf-plan-toggle button.active,
 .bf-insights-switch button.active { color: var(--neo-ink) !important; background: var(--neo-lime) !important; }
 
-.bf-primary { min-height: 46px !important; border-radius:12px !important; color: var(--neo-ink) !important; background: var(--neo-lime) !important; box-shadow:var(--bf-shadow-rest) !important; font-weight:600 !important; }
-.bf-secondary { min-height: 46px !important; border-radius:12px !important; color: var(--neo-forest) !important; border-color: rgba(15, 61, 53, .18) !important; background: rgba(223, 243, 223, .58) !important; font-weight:600 !important; }
+.bf-primary { min-height: 46px; border-radius:12px; color: var(--neo-ink); background: var(--neo-lime); box-shadow:var(--bf-shadow-rest); font-weight:600 !important; }
+.bf-secondary { min-height: 46px; border-radius:12px; color: var(--neo-forest); border-color: rgba(15, 61, 53, .18); background: rgba(223, 243, 223, .58); font-weight:600; }
 .bf-primary:hover, .bf-secondary:hover { transform: translateY(-2px); }
 
-.bf-modal-backdrop { background: rgba(7, 28, 24, .62) !important; }
+.bf-modal-backdrop { background: rgba(7, 28, 24, .62); }
 .bf-modal,
 .bf-onboarding { border: 1px solid rgba(255, 255, 255, .28) !important; border-radius:20px !important; box-shadow:var(--bf-shadow-raise) !important; }
 .bf-onboarding { background: linear-gradient(145deg, #fffdf8, #edf7eb) !important; }
 .bf-onboarding-skip { min-height: 44px !important; border-radius: 12px !important; }
-.bf-onboarding-progress span { background: rgba(15, 61, 53, .18) !important; }
+.bf-onboarding-progress span { background: rgba(15, 61, 53, .18); }
 .bf-onboarding-progress span.active, .bf-onboarding-progress span.done { background: var(--neo-lime) !important; }
 .bf-setup-presets button[aria-pressed="true"] { border-color: var(--neo-forest) !important; background: var(--neo-mint) !important; }
 
@@ -308,14 +308,14 @@
 
 @media (max-width: 760px) {
   .bf-appbar { position: sticky; top: 0; z-index: 50; min-height: 68px; padding: 10px 14px; background: color-mix(in srgb, var(--cf-nav, var(--cf-bg, #fffdf8)) 96%, transparent); }
-  .bf-appbar nav { display: none !important; }
+  .bf-appbar nav { display: none; }
   .bf-brand-mark { width: 40px; height: 40px; border-radius:12px; }
   .bf-brand b { font-size: 15px; }
   .bf-appbar-tools { margin-left: auto; }
   .bf-appbar-tools > button, .bf-command-trigger { min-width: 42px; min-height: 42px; }
   .bf-command-trigger { width: 42px; overflow: hidden; }
   .bf-command-trigger kbd { display: none; }
-  .bf-page { padding: 18px 13px 138px !important; }
+  .bf-page { padding: 18px 13px 138px; }
   .bf-today-situation { min-height: 0; gap: 22px !important; padding: 21px !important; border-radius:20px !important; }
   .bf-today-situation::before { top: -160px; right: -170px; opacity: .7; }
   .bf-today-situation-number > strong { font-size: clamp(48px, 14vw, 72px) !important; }
@@ -328,7 +328,7 @@
   .bf-today-measurements article:last-child { grid-column: 1 / -1; }
   .bf-today-measurements article > b { font-size:22px !important; }
   .bf-today-decision, .bf-today-activity, .bf-today-envelope-evolution, .bf-today-hub-links { padding: 17px !important; border-radius:20px !important; }
-  .bf-section-heading { gap: 9px !important; }
+  .bf-section-heading { gap: 9px; }
   .bf-section-heading h2, .bf-today-decision-heading h1 { font-size:22px !important; }
   .bf-decision-row { min-height: 72px; }
   .bf-mobile-nav {
@@ -378,16 +378,16 @@
 
 .bf-app,
 .bf-app::before { color: var(--cf-ink, #10231f); }
-.bf-app { background: var(--cf-bg, #f4f7f1) !important; }
+.bf-app { background: var(--cf-bg, #f4f7f1); }
 .bf-app::before {
   background-image: linear-gradient(color-mix(in srgb, var(--cf-ink, #10231f), transparent 94%) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--cf-ink, #10231f), transparent 94%) 1px, transparent 1px);
 }
 
 .bf-appbar {
-  border-bottom-color: var(--cf-line, rgba(16, 35, 31, .12)) !important;
-  color: var(--cf-ink, #10231f) !important;
-  background: color-mix(in srgb, var(--cf-surface, #fffdf8) 94%, transparent) !important;
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--cf-ink, #10231f), transparent 93%) !important;
+  border-bottom-color: var(--cf-line, rgba(16, 35, 31, .12));
+  color: var(--cf-ink, #10231f);
+  background: color-mix(in srgb, var(--cf-surface, #fffdf8) 94%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--cf-ink, #10231f), transparent 93%);
 }
 .bf-brand,
 .bf-brand b { color: var(--cf-ink, #10231f) !important; }
@@ -434,7 +434,7 @@
 .bf-today-activity-list article:hover { background: color-mix(in srgb, var(--cf-primary, #185849) 8%, var(--cf-surface, #fffdf8)) !important; }
 
 .bf-primary,
-.bf-today-add { color: var(--cf-bg, #f4f7f1) !important; background: var(--cf-primary, #185849) !important; box-shadow: 0 8px 18px color-mix(in srgb, var(--cf-primary, #185849), transparent 78%) !important; }
+.bf-today-add { color: var(--cf-bg, #f4f7f1); background: var(--cf-primary, #185849); box-shadow: 0 8px 18px color-mix(in srgb, var(--cf-primary, #185849), transparent 78%); }
 .bf-secondary,
 .bf-today-plan-link { color: var(--cf-ink, #10231f) !important; border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important; background: color-mix(in srgb, var(--cf-primary, #185849) 10%, var(--cf-surface, #fffdf8)) !important; }
 .bf-today-plan-link { color: var(--cf-primary-strong, #0f3d35) !important; background: transparent !important; }
@@ -459,8 +459,8 @@
 
 @media (max-width: 760px) {
   /* Appbar-ul nu mai păstrează linia decorativă care arată ca un tab gol. */
-  .bf-appbar::after { display: none !important; }
-  .bf-appbar { background: var(--cf-surface, #fffdf8) !important; }
+  .bf-appbar::after { display: none; }
+  .bf-appbar { background: var(--cf-surface, #fffdf8); }
   .bf-mobile-nav { background: var(--cf-nav, var(--cf-surface, #fffdf8)) !important; }
 }
 
@@ -474,17 +474,17 @@
 .bf-app > .bf-skip-link {
   position: fixed !important;
   z-index: 200 !important;
-  top: max(8px, env(safe-area-inset-top)) !important;
-  left: 8px !important;
-  width: auto !important;
-  height: auto !important;
-  margin: 0 !important;
+  top: max(8px, env(safe-area-inset-top));
+  left: 8px;
+  width: auto;
+  height: auto;
+  margin: 0;
   transform: translateY(-140%);
 }
 .bf-app > .bf-skip-link:focus { transform: translateY(0); }
 .bf-app > .bf-appbar {
   position: sticky !important;
-  top: 0 !important;
+  top: 0;
   z-index: 30 !important;
   flex: 0 0 auto;
   align-self: stretch;
@@ -494,7 +494,7 @@
 /* Page surfaces: paginile secundare nu mai pot combina suprafață Ivory cu textul unei teme dark. */
 .bf-page {
   background: var(--cf-bg, #f4f7f1) !important;
-  color: var(--cf-ink, #10231f) !important;
+  color: var(--cf-ink, #10231f);
 }
 .bf-page > header h1,
 .bf-page > header h1 em,
@@ -515,8 +515,8 @@
 .bf-movements-ledger .bf-movements-header p:not(.bf-kicker) {
   color: var(--cf-ink, #10231f) !important;
 }
-.bf-movements-ledger .bf-movements-header h1 em { color: var(--cf-primary-strong, #0f3d35) !important; }
-.bf-movements-ledger .bf-movements-header > div::before { color: var(--cf-primary-strong, #0f3d35) !important; border-left-color: var(--cf-primary, #185849) !important; }
+.bf-movements-ledger .bf-movements-header h1 em { color: var(--cf-primary-strong, #0f3d35); }
+.bf-movements-ledger .bf-movements-header > div::before { color: var(--cf-primary-strong, #0f3d35); border-left-color: var(--cf-primary, #185849); }
 .bf-journal-day-pulse,
 .bf-journal-quickbar,
 .bf-journal-filter-sheet,
@@ -548,7 +548,7 @@
 .bf-movement-day article,
 .bf-movement-day header,
 .bf-journal-day-pulse > span,
-.bf-journal-day-pulse > div { border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important; }
+.bf-journal-day-pulse > div { border-color: var(--cf-line, rgba(16, 35, 31, .12)); }
 .bf-journal-quickbar button,
 .bf-journal-filter-toggle,
 .bf-journal-export,
@@ -564,7 +564,7 @@
 .bf-journal-save-filter input { border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important; background: var(--cf-surface-alt, #f4f7f1) !important; color: var(--cf-ink, #10231f) !important; }
 .bf-empty-state .bf-primary { color: var(--cf-on-forest, #fff) !important; background: var(--cf-primary, #185849) !important; }
 
-.dark .bf-page { background: var(--cf-bg, #10251f) !important; }
+.dark .bf-page { background: var(--cf-bg, #10251f); }
 .dark .bf-journal-day-pulse,
 .dark .bf-journal-quickbar,
 .dark .bf-journal-filter-sheet,

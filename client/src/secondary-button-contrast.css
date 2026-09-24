@@ -15,8 +15,8 @@
 }
 /* Butoanele Editează/Șterge se comprimau sub lățimea textului lor (flex-shrink implicit), tăind cuvintele. */
 .bf-allocation-actions button {
-  flex-shrink: 0 !important;
-  white-space: nowrap !important;
+  flex-shrink: 0;
+  white-space: nowrap;
   min-width: -webkit-max-content !important;
   min-width: max-content !important;
 }
@@ -33,6 +33,6 @@
 }
 
 .bf-obligation-actions button:first-child {
-  border-color: color-mix(in srgb, var(--cf-danger) 55%, var(--cf-line)) !important;
-  color: var(--cf-ink) !important;
+  border-color: color-mix(in srgb, var(--cf-danger) 55%, var(--cf-line));
+  color: var(--cf-ink);
 }

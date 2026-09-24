@@ -60,28 +60,28 @@ html.theme-cyber .os-dock,
 html.dark .os-shell .os-dock,
 html.theme-dark .os-shell .os-dock {
   border-top-color: rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.4);
 }
 
 .os-dock::before,
 .os-dock::after,
 .os-shell .os-dock::before,
 .os-shell .os-dock::after {
-  content: none !important;
-  display: none !important;
-  animation: none !important;
+  content: none;
+  display: none;
+  animation: none;
 }
 
 .os-nav-fill {
   position: fixed !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 79 !important;
-  height: max(24px, var(--os-inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
-  pointer-events: none !important;
-  background: var(--os-dock-bg, #eef1ef) !important;
-  opacity: 1 !important;
+  height: max(24px, var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  pointer-events: none;
+  background: var(--os-dock-bg, #eef1ef);
+  opacity: 1;
 }
 
 .os-shell main,
@@ -92,7 +92,7 @@ html.theme-dark .os-shell .os-dock {
 .os-shell .bf-obligations-workspace,
 .os-shell .bf-insights-workspace,
 .os-shell .bf-utilities-workspace {
-  padding-bottom: calc(88px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
+  padding-bottom: calc(88px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 .bf-onboarding-backdrop.bf-first-run-backdrop,

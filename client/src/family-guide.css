@@ -89,7 +89,7 @@
   padding: .65rem .8rem;
   border-radius: .7rem;
   background: color-mix(in srgb, var(--bf-honey, #efc94d) 22%, var(--bf-paper, #fffdf8));
-  color: var(--bf-forest, #123e35) !important;
+  color: var(--bf-forest, #123e35);
   font-weight:600;
 }
 .bf-usage-nav {

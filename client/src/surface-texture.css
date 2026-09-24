@@ -15,49 +15,49 @@
 .bf-theme-option.selected {
   border-color: var(--cf-primary) !important;
   background: color-mix(in srgb, var(--cf-primary) 12%, var(--cf-surface-alt)) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-primary), transparent 68%) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cf-primary), transparent 68%);
 }
 
 .bf-theme-picker .bf-background-preferences {
-  margin: 4px 13px 12px !important;
-  padding: 16px 0 2px !important;
+  margin: 4px 13px 12px;
+  padding: 16px 0 2px;
   border-top: 1px solid var(--cf-line) !important;
   box-shadow: none !important;
 }
 .bf-theme-picker .bf-background-preferences h3 {
-  margin: 2px 0 4px !important;
-  color: var(--cf-ink) !important;
-  font: 600 18px/1.12 "IBM Plex Serif", Georgia, serif !important;
-  letter-spacing: -.03em !important;
+  margin: 2px 0 4px;
+  color: var(--cf-ink);
+  font: 600 18px/1.12 "IBM Plex Serif", Georgia, serif;
+  letter-spacing: -.03em;
 }
 .bf-theme-picker .bf-background-preferences > div > p:last-child {
-  margin: 0 0 12px !important;
-  color: var(--cf-muted) !important;
-  font: 600 12px/1.4 "IBM Plex Sans", sans-serif !important;
+  margin: 0 0 12px;
+  color: var(--cf-muted);
+  font: 600 12px/1.4 "IBM Plex Sans", sans-serif;
 }
 
 .bf-background-grid {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 8px !important;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 .bf-background-grid button {
-  position: relative !important;
-  display: grid !important;
-  gap: 7px !important;
-  min-height: 92px !important;
-  padding: 9px !important;
-  overflow: hidden !important;
-  border: 2px solid var(--cf-line) !important;
-  border-radius:12px !important;
-  background: var(--cf-surface-alt) !important;
-  color: var(--cf-ink) !important;
-  text-align: left !important;
-  cursor: pointer !important;
-  box-shadow: none !important;
-  opacity: 1 !important;
-  transform: none !important;
-  touch-action: manipulation !important;
+  position: relative;
+  display: grid;
+  gap: 7px;
+  min-height: 92px;
+  padding: 9px;
+  overflow: hidden;
+  border: 2px solid var(--cf-line);
+  border-radius:12px;
+  background: var(--cf-surface-alt);
+  color: var(--cf-ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  opacity: 1;
+  transform: none;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
@@ -70,60 +70,60 @@
   background: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface-alt)) !important;
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--cf-primary), transparent 55%),
-    inset 0 0 0 1px color-mix(in srgb, var(--cf-primary), transparent 35%) !important;
-  opacity: 1 !important;
-  transform: none !important;
+    inset 0 0 0 1px color-mix(in srgb, var(--cf-primary), transparent 35%);
+  opacity: 1;
+  transform: none;
 }
 .bf-background-grid button:not(.selected) {
-  opacity: .88 !important;
+  opacity: .88;
 }
 .bf-background-grid button:last-child {
-  grid-column: span 2 !important;
+  grid-column: span 2;
 }
 .bf-background-swatch {
-  display: block !important;
-  height: 36px !important;
-  border: 1px solid color-mix(in srgb, var(--cf-ink), transparent 82%) !important;
-  border-radius:12px !important;
+  display: block;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, var(--cf-ink), transparent 82%);
+  border-radius:12px;
 }
 .bf-background-copy {
-  display: grid !important;
-  gap: 3px !important;
-  min-width: 0 !important;
-  padding-right: 22px !important;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding-right: 22px;
 }
 .bf-background-grid b {
-  display: block !important;
-  color: var(--cf-ink) !important;
-  font: 750 13px/1.15 "IBM Plex Sans", sans-serif !important;
+  display: block;
+  color: var(--cf-ink);
+  font: 750 13px/1.15 "IBM Plex Sans", sans-serif;
 }
 .bf-background-grid small {
-  display: block !important;
+  display: block;
   color: var(--cf-muted) !important;
-  font: 600 11px/1.3 "IBM Plex Sans", sans-serif !important;
+  font: 600 11px/1.3 "IBM Plex Sans", sans-serif;
 }
 .bf-background-grid button i {
-  position: absolute !important;
-  top: 10px !important;
-  right: 10px !important;
-  display: grid !important;
-  place-items: center !important;
-  width: 22px !important;
-  height: 22px !important;
-  border-radius: 50% !important;
-  background: var(--cf-primary) !important;
-  color: var(--cf-bg) !important;
-  box-shadow:var(--bf-shadow-rest) !important;
-  pointer-events: none !important;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cf-primary);
+  color: var(--cf-bg);
+  box-shadow:var(--bf-shadow-rest);
+  pointer-events: none;
 }
 
 /* Previzualizarea mare trebuie să arate textura aleasă — shorthand-ul
    din clarity-rebuild o ștergea. */
 .bf-theme-preview.background-preview-plain {
-  background-color: var(--preview-bg) !important;
+  background-color: var(--preview-bg);
   background-image:
-    radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%) !important;
-  background-size: auto !important;
+    radial-gradient(350px 160px at 100% 0, var(--preview-glow), transparent 58%);
+  background-size: auto;
 }
 .bf-theme-preview.background-preview-paper {
   background-color: var(--preview-bg) !important;
@@ -164,12 +164,12 @@
  */
 html.background-plain .bf-app,
 html[class*="theme-"].background-plain .bf-app {
-  background-color: var(--cf-bg) !important;
+  background-color: var(--cf-bg);
   background-image:
     radial-gradient(980px 560px at 108% -10%, color-mix(in srgb, var(--cf-primary) 26%, transparent), transparent 58%),
-    radial-gradient(720px 480px at -16% 108%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 54%) !important;
-  background-size: auto !important;
-  background-blend-mode: normal !important;
+    radial-gradient(720px 480px at -16% 108%, color-mix(in srgb, var(--cf-info) 16%, transparent), transparent 54%);
+  background-size: auto;
+  background-blend-mode: normal;
 }
 html.background-paper .bf-app,
 html[class*="theme-"].background-paper .bf-app {
@@ -219,12 +219,12 @@ html.background-dots .bf-app::before {
 
 @media (min-width: 641px) {
   .bf-background-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
   .bf-background-grid button:last-child {
-    grid-column: auto !important;
+    grid-column: auto;
   }
   .bf-background-grid button {
-    min-height: 108px !important;
+    min-height: 108px;
   }
 }

@@ -77,8 +77,8 @@ html.theme-aurora {
   --cf-shadow: 0 17px 45px rgba(0, 0, 0, .39);
   --cf-glow: rgba(124, 91, 255, .19);
 }.theme-navy .bf-app, .theme-aurora .bf-app, .theme-cyber .bf-app, .theme-dark .bf-app{
-  background: var(--cf-bg) !important;
-  color: var(--cf-ink) !important;
+  background: var(--cf-bg);
+  color: var(--cf-ink);
 }.theme-navy .bf-app::before, .theme-aurora .bf-app::before, .theme-cyber .bf-app::before, .theme-dark .bf-app::before{ opacity: .08; }
 
 .bf-theme-option.snow .bf-theme-swatch { background: linear-gradient(135deg, #ffffff 0 48%, #0e7a5c 49% 72%, #121614 73%); }
@@ -106,10 +106,10 @@ html.theme-aurora {
 .bf-theme-preview.graphite { --preview-bg:#111214; --preview-surface:#1a1c1f; --preview-ink:#eceff3; --preview-muted:#9aa3ad; --preview-line:#2c3138; --preview-primary:#8ab4ff; --preview-info:#8ab4ff; --preview-glow:rgba(138,180,255,.2); }
 
 .bf-theme-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 @media (max-width: 640px) {
-  .bf-theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .bf-theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bf-theme-option { min-height: 72px; padding: 8px; gap: 8px; }
   .bf-theme-option b { font-size:12px; }
   .bf-theme-option small { font-size:12px; }
@@ -171,54 +171,54 @@ html.theme-aurora {
     radial-gradient(720px 420px at 108% -8%, rgba(23, 107, 84, .14), transparent 58%),
     radial-gradient(480px 320px at -12% 18%, rgba(42, 106, 138, .08), transparent 55%),
     linear-gradient(180deg, #d9e0dc 0, #e4e9e6 160px),
-    #e4e9e6 !important;
-  color: #0c1612 !important;
+    #e4e9e6;
+  color: #0c1612;
 }
 
 :is(html.theme-ink, html.theme-white) .os-appbar.bf-appbar {
-  border-bottom-color: #d5d2c8 !important;
-  background: rgba(251, 250, 247, .92) !important;
+  border-bottom-color: #d5d2c8;
+  background: rgba(251, 250, 247, .92);
   backdrop-filter: blur(14px);
 }
 
 :is(html.theme-ink, html.theme-white) .os-brand-copy b {
-  color: #1a2420 !important;
+  color: #1a2420;
   font-weight:600;
   letter-spacing: -0.02em !important;
 }
 :is(html.theme-ink, html.theme-white) .os-brand-copy i {
-  color: #5a675f !important;
-  font-style: normal !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
+  color: #5a675f;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 :is(html.theme-ink, html.theme-white) .os-tool {
-  color: #1a2420 !important;
-  background: #fbfaf7 !important;
-  box-shadow: 0 0 0 1px #d5d2c8 !important;
+  color: #1a2420;
+  background: #fbfaf7;
+  box-shadow: 0 0 0 1px #d5d2c8;
   border-radius:12px !important;
 }
 :is(html.theme-ink, html.theme-white) .os-tool.is-on {
-  background: #2f6b55 !important;
-  color: #ffffff !important;
-  box-shadow:var(--bf-shadow-rest) !important;
+  background: #2f6b55;
+  color: #ffffff;
+  box-shadow:var(--bf-shadow-rest);
 }
 
 /* Dock: frosted warm platinum, active = pin — distinct de look-ul stark negru */
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  padding: 6px 8px max(10px, var(--os-inset-bottom)) !important;
-  border-radius: 0 !important;
-  background: #eef1ef !important;
-  box-shadow: 0 -8px 22px rgba(26, 36, 32, .14) !important;
-  backdrop-filter: none !important;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 6px 8px max(10px, var(--os-inset-bottom));
+  border-radius: 0;
+  background: #eef1ef;
+  box-shadow: 0 -8px 22px rgba(26, 36, 32, .14);
+  backdrop-filter: none;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button {
-  color: #5a675f !important;
-  font-size:12px !important;
+  color: #5a675f;
+  font-size:12px;
   font-weight: 680 !important;
   letter-spacing: 0.01em !important;
   border-radius: 999px !important;
@@ -230,14 +230,14 @@ html.theme-aurora {
   box-shadow:var(--bf-shadow-rest) !important;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button svg {
-  width: 18px !important;
-  height: 18px !important;
+  width: 18px;
+  height: 18px;
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
-  gap: 14px !important;
-  padding-left: max(14px, var(--os-inset-left)) !important;
-  padding-right: max(14px, var(--os-inset-right)) !important;
+  gap: 14px;
+  padding-left: max(14px, var(--os-inset-left));
+  padding-right: max(14px, var(--os-inset-right));
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell .bf-kicker,
@@ -303,16 +303,16 @@ html.theme-aurora {
   border-color: #c9d8d0 !important;
   border-left-color: #2f6b55 !important;
   color: #1f5240 !important;
-  background: #eef5f1 !important;
-  border-radius:12px !important;
-  padding: 5px 8px !important;
+  background: #eef5f1;
+  border-radius:12px;
+  padding: 5px 8px;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .bf-movement-day,
 :is(html.theme-ink, html.theme-white) .os-shell .bf-journal-day-pulse {
   border: 1px solid #d5d2c8 !important;
-  border-radius:20px !important;
+  border-radius:20px;
   background: #fbfaf7 !important;
-  box-shadow:var(--bf-shadow-rest) !important;
+  box-shadow:var(--bf-shadow-rest);
 }
 :is(html.theme-ink, html.theme-white) .os-shell .bf-journal-day-pulse {
   border-top: 3px solid #2f6b55 !important;
@@ -330,10 +330,10 @@ html.theme-aurora {
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
-  color: #ffffff !important;
-  background: #1f5240 !important;
-  box-shadow:var(--bf-shadow-rest) !important;
-  border-radius:12px !important;
+  color: #ffffff;
+  background: #1f5240;
+  box-shadow:var(--bf-shadow-rest);
+  border-radius:12px;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .bf-secondary {
   color: #1a2420 !important;
@@ -367,7 +367,7 @@ html.theme-aurora {
 
 @media (max-width: 430px) {
   :is(html.theme-ink, html.theme-white) .os-shell .os-dock button span {
-    font-size:12px !important;
+    font-size:12px;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
     gap: 12px !important;
@@ -380,7 +380,7 @@ html.theme-aurora {
     border-radius:12px !important;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
-    left: 0 !important;
-    right: 0 !important;
+    left: 0;
+    right: 0;
   }
 }
