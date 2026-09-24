@@ -658,7 +658,8 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
   return {
     kind: "next",
     headline: sentences(`Azi: ${actions[0]}`),
-    detail: sentences(actions.slice(1).join("; ") || (payday ? `Până pe ${formatDate(payday)}, ritm sigur ${money(Math.max(0, safe))}/zi` : undefined)),
+    // Aceeași cifră ca pe Astăzi: ritmul pe tot ciclul (planForecast) contrazicea „Poți folosi azi” (plicul săptămânii).
+    detail: sentences(actions.slice(1).join("; ") || (payday ? `Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi` : undefined)),
     rows: rows.slice(0, 6),
     followUps: ["Cât pot cheltui pe zi?", "Unde se duc banii?", "Cât mai am?"],
   };
