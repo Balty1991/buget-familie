@@ -15,6 +15,7 @@ import { getLocale, languages, t } from "@/lib/i18n";
 import { canAddMember } from "@/lib/entitlements";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 import { useLanguage } from "@/hooks/use-language";
+import { askConfirm, showNotice } from "@/lib/confirm-dialog";
 
 const TrustCenter = lazy(() => import("@/components/TrustCenter").then((module) => ({ default: module.TrustCenter })));
 const PremiumStudio = lazy(() => import("@/components/PremiumStudio").then((module) => ({ default: module.PremiumStudio })));
@@ -38,12 +39,12 @@ function SourceRow({ data, source, settings, change }: { data: AppData; source: 
   const own = sourceBalanceInCurrency(data, source.id);
   const patchSource = (patch: Partial<typeof source>) => change({ paymentSources: settings.paymentSources.map((item) => item.id === source.id ? { ...item, ...patch, ...("openingBalance" in patch ? { updatedAt: new Date().toISOString() } : {}) } : item) });
   const used = data.transactions.filter((item) => item.sourceId === source.id).length;
-  const remove = () => {
-    if (settings.paymentSources.length <= 1) { window.alert(t("Păstrează cel puțin o sursă de plată.")); return; }
+  const remove = async () => {
+    if (settings.paymentSources.length <= 1) { void showNotice(t("Păstrează cel puțin o sursă de plată.")); return; }
     const question = used
       ? t("Ștergi sursa „{name}”? Cele {count} mișcări înregistrate pe ea rămân în registru, dar nu vor mai avea o sursă.", { name: source.name, count: used })
       : t("Ștergi sursa „{name}”?", { name: source.name });
-    if (!window.confirm(question)) return;
+    if (!await askConfirm(question)) return;
     change({
       paymentSources: settings.paymentSources.filter((item) => item.id !== source.id),
       salaryPlan: { ...settings.salaryPlan, sourceIds: settings.salaryPlan.sourceIds.filter((id) => id !== source.id), allocations: settings.salaryPlan.allocations.map((item) => item.sourceId === source.id ? { ...item, sourceId: undefined } : item) },
@@ -143,7 +144,7 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
       });
   };
 
-  const turnOff = () => {
+  const turnOff = async () => {
     disableLocalAlerts();
     setEnabled(false);
     setArmed(false);
@@ -217,8 +218,8 @@ function AppLockSettings() {
     });
   };
 
-  const turnOff = () => {
-    if (!window.confirm(t("Dezactivezi blocarea cu PIN pe acest telefon?"))) return;
+  const turnOff = async () => {
+    if (!await askConfirm(t("Dezactivezi blocarea cu PIN pe acest telefon?"))) return;
     disableAppLock();
     setEnabled(false);
     setNotice(t("Blocarea a fost dezactivată."));
@@ -318,18 +319,18 @@ function MerchantRulesSection({ data, onChange }: { data: AppData; onChange: (va
 export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onChange: (value: AppData) => void; onReset: () => void }) {
   const [backupPreview, setBackupPreview] = useState<{ data: AppData; exportedAt: string; fileName: string } | null>(null);
   const [pasteOpen, setPasteOpen] = useState(false); const [pasted, setPasted] = useState("");
-  const importBackup = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; void file.text().then((raw) => { acceptBackupText(raw, file.name); }).catch(() => window.alert(t("Nu am putut citi fișierul ales. Încearcă „Lipește text”."))); event.target.value = ""; };
+  const importBackup = (event: ChangeEvent<HTMLInputElement>) => { const file = event.target.files?.[0]; if (!file) return; void file.text().then((raw) => { acceptBackupText(raw, file.name); }).catch(() => void showNotice(t("Nu am putut citi fișierul ales. Încearcă „Lipește text”."))); event.target.value = ""; };
   /**
    * Un singur drum pentru ambele butoane; diferă doar intenția și, la final, ce-i spunem
    * omului. „Salvat” trebuie să spună unde, altfel butonul pare că n-a făcut nimic.
    */
   const exportBackup = (intent: BackupIntent) => downloadBackup(data, intent).then((result) => {
-    if (result.how === "shared") window.alert(result.fallback ? t(BACKUP_SAVE_FALLBACK) : t("Backupul a fost trimis către aplicația aleasă."));
-    else if (result.how === "saved") window.alert(t("Backupul a fost scris în {path}. Îl găsești cu aplicația Fișiere.", { path: result.path }));
-    else if (result.how === "downloaded") window.alert(t("Backupul a fost salvat în descărcări."));
-    else if (result.how === "failed") window.alert(t("Nu am putut salva fișierul: {reason}", { reason: result.reason || t("motiv necunoscut") }));
+    if (result.how === "shared") void showNotice(result.fallback ? t(BACKUP_SAVE_FALLBACK) : t("Backupul a fost trimis către aplicația aleasă."));
+    else if (result.how === "saved") void showNotice(t("Backupul a fost scris în {path}. Îl găsești cu aplicația Fișiere.", { path: result.path }));
+    else if (result.how === "downloaded") void showNotice(t("Backupul a fost salvat în descărcări."));
+    else if (result.how === "failed") void showNotice(t("Nu am putut salva fișierul: {reason}", { reason: result.reason || t("motiv necunoscut") }));
   });
-  const acceptBackupText = (raw: string, fileName: string) => { try { const backup = parseBackup(raw); setBackupPreview({ data: normalizeAppData(backup.data), exportedAt: backup.exportedAt, fileName }); setPasteOpen(false); setPasted(""); return true; } catch (reason) { window.alert(reason instanceof Error ? reason.message : t("Backup-ul nu a putut fi importat.")); return false; } };
+  const acceptBackupText = (raw: string, fileName: string) => { try { const backup = parseBackup(raw); setBackupPreview({ data: normalizeAppData(backup.data), exportedAt: backup.exportedAt, fileName }); setPasteOpen(false); setPasted(""); return true; } catch (reason) { void showNotice(reason instanceof Error ? reason.message : t("Backup-ul nu a putut fi importat.")); return false; } };
   const confirmBackupImport = () => { if (!backupPreview) return; onChange(backupPreview.data); setBackupPreview(null); };
   const [member, setMember] = useState(""); const [source, setSource] = useState(""); const [kind, setKind] = useState<PaymentKind>("card"); const [owner, setOwner] = useState(data.settings.members[0]?.id || ""); const [category, setCategory] = useState("");
   const settings = data.settings; const change = (patch: Partial<typeof settings>) => onChange({ ...data, settings: { ...settings, ...patch } });
@@ -352,9 +353,9 @@ export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onCh
     setSimpleMode(next);
     setSimpleModeState(next);
   };
-  const toggleOfflineOnly = () => {
+  const toggleOfflineOnly = async () => {
     const next = !offlineOnly;
-    if (next && !window.confirm(t("Oprești sincronizarea cloud pe acest telefon? Firebase nu se mai încarcă până reactivezi. Datele rămân locale."))) return;
+    if (next && !await askConfirm(t("Oprești sincronizarea cloud pe acest telefon? Firebase nu se mai încarcă până reactivezi. Datele rămân locale."))) return;
     setOfflineOnly(next);
     setOfflineOnlyState(next);
   };

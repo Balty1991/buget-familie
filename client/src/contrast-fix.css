@@ -1210,3 +1210,29 @@ html body .bf-os-day > span:first-child {
 .bf-sync-move { border-color: color-mix(in srgb, var(--cf-warning, #c49a2a) 70%, transparent); background: color-mix(in srgb, var(--cf-warning, #c49a2a) 10%, var(--cf-surface, #fffdf7)); }
 .bf-sync-invite-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .bf-sync-invite-actions > button { flex: 1 1 10rem; }
+
+/* Dialogul comun de confirmare (în locul ferestrei native) */
+.bf-confirm-backdrop { z-index: 90; display: grid; place-items: center; padding: 16px; }
+.bf-confirm {
+  width: min(420px, 100%);
+  display: grid;
+  gap: .75rem;
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--cf-ink, #1a2420) 14%, transparent);
+  border-radius: 1rem;
+  background: var(--cf-surface, #fffdf7);
+  color: var(--cf-ink, #1a2420);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+}
+.bf-confirm h2 { margin: 0; font-size: 1.15rem; line-height: 1.25; }
+.bf-confirm p { margin: 0; line-height: 1.5; overflow-wrap: anywhere; }
+.bf-confirm footer { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; }
+.bf-confirm footer > button { flex: 1 1 8rem; min-height: 44px; white-space: normal; }
+.bf-confirm-danger {
+  border: 1px solid color-mix(in srgb, var(--cf-coral, #b4452f) 70%, transparent);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--cf-coral, #b4452f);
+  font: inherit;
+  font-weight: 700;
+}

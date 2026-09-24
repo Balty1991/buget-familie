@@ -2801,4 +2801,7 @@ export const en: Record<string, string> = {
   "+{amount} plătite din plicuri": "+{amount} paid from envelopes",
   "Notat · {title} · {amount}": "Saved · {title} · {amount}",
   "Notat · {count} mișcări": "Saved · {count} entries",
+  "De știut": "Good to know",
+  "Ești sigur?": "Are you sure?",
+  "Da": "Yes",
 };

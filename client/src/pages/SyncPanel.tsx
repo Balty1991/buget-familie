@@ -11,6 +11,7 @@ import { Field, type SyncPanelProps } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
 import { canUseFamilySync } from "@/lib/entitlements";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
+import { showNotice } from "@/lib/confirm-dialog";
 
 /**
  * Cât de greu e de ghicit parola de familie, spus pe loc.
@@ -160,7 +161,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       setCopiedSecret(value);
       window.setTimeout(() => setCopiedSecret((current) => current === value ? "" : current), 2500);
     } catch {
-      window.alert(t("Nu am putut copia. Selectează codul și copiază-l tu."));
+      void showNotice(t("Nu am putut copia. Selectează codul și copiază-l tu."));
     }
   };
 

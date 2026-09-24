@@ -6,6 +6,7 @@ import { autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPla
 import { getLocale, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
 import { selfMemberIdOf } from "@/lib/member-identity";
+import { askConfirm } from "@/lib/confirm-dialog";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -149,7 +150,7 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
                 <div className="bf-recurring-actions">
                   <button className="bf-recurring-toggle" onClick={toggleAuto}>{item.autoPost ? t("Treci pe manual") : t("Treci pe automat")}</button>
                   <button type="button" className="bf-recurring-edit" aria-label={t("Modifică {name}", { name: item.name })} onClick={() => startEdit(item)}><Pencil size={16} /></button>
-                  <button className="bf-recurring-delete" aria-label={t("Șterge {name}", { name: item.name })} onClick={() => window.confirm(t("Ștergi scadența „{name}”?", { name: item.name })) && remove()}><Trash2 size={16} /></button>
+                  <button className="bf-recurring-delete" aria-label={t("Șterge {name}", { name: item.name })} onClick={async () => await askConfirm(t("Ștergi scadența „{name}”?", { name: item.name })) && remove()}><Trash2 size={16} /></button>
                 </div>
               </article>
             );

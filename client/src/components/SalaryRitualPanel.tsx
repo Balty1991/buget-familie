@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Banknote, Check, RotateCcw, Trash2 } from "lucide-react";
 import { applySalaryAllocationRules, eligibleSalaryAllocationRules, formatDate, newId, parseRomanianAmount, revertSalaryAllocationApplication, unappliedSalaryIncomes, type AppData, type SalaryAllocationRule } from "@/lib/finance-data";
 import { envelopesLabel, getLocale, t } from "@/lib/i18n";
+import { askConfirm } from "@/lib/confirm-dialog";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
@@ -36,8 +37,8 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
   const toggleRule = (id: string) => {
     onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, salaryAllocationRules: rules.map((item) => item.id === id ? { ...item, active: !item.active, updatedAt: new Date().toISOString() } : item), updatedAt: new Date().toISOString() } } });
   };
-  const deleteRule = (id: string, name: string) => {
-    if (!window.confirm(`Ștergi regula „${name}”? Veniturile deja repartizate rămân neschimbate.`)) return;
+  const deleteRule = async (id: string, name: string) => {
+    if (!await askConfirm(`Ștergi regula „${name}”? Veniturile deja repartizate rămân neschimbate.`)) return;
     onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, salaryAllocationRules: rules.filter((item) => item.id !== id), updatedAt: new Date().toISOString() } } });
   };
   const applyIncome = (incomeId: string) => {
@@ -46,8 +47,8 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
     onChange(result.data);
     setError("");
   };
-  const revert = (applicationId: string) => {
-    if (!window.confirm(t("Anulezi umplerea plicurilor din acest venit? Limitele revin, registrul rămâne neschimbat."))) return;
+  const revert = async (applicationId: string) => {
+    if (!await askConfirm(t("Anulezi umplerea plicurilor din acest venit? Limitele revin, registrul rămâne neschimbat."))) return;
     onChange(revertSalaryAllocationApplication(data, applicationId));
   };
 

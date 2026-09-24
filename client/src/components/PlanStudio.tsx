@@ -31,6 +31,7 @@ import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-pref
 import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/EnvelopeConflictBanner";
 import { canAddEnvelope, PLANS } from "@/lib/entitlements";
 import { RoDateInput } from "@/components/RoDateInput";
+import { askConfirm } from "@/lib/confirm-dialog";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -285,7 +286,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: data.settings.salaryCycleTemplates.map((item) => item.id === id ? { ...item, label: label.slice(0, 42), updatedAt: new Date().toISOString() } : item) } });
     setTemplateRenameId(""); setTemplateRename("");
   };
-  const deleteCycleTemplate = (id: string, label: string) => { if (window.confirm(`Ștergi șablonul local „${label}”?`)) onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: data.settings.salaryCycleTemplates.filter((item) => item.id !== id) } }); };
+  const deleteCycleTemplate = async (id: string, label: string) => { if (await askConfirm(`Ștergi șablonul local „${label}”?`)) onChange({ ...data, settings: { ...data.settings, salaryCycleTemplates: data.settings.salaryCycleTemplates.filter((item) => item.id !== id) } }); };
 
   const saveAllocation = () => {
     const amount = allocationTotalFromInput();
@@ -315,8 +316,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const editAllocation = (item: BudgetAllocation) => { setAllocationFunding((item.funding || []).map((entry) => ({ sourceId: entry.sourceId, amount: String(entry.amount) }))); setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(String(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationWeeklyPace(item.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
   const applyRecommendation = (allocation: BudgetAllocation, amount: number) => { setEditingAllocationId(allocation.id); setAllocationLabel(allocation.label); setAllocationCategory(allocation.category || categories[0] || "Alimente"); setAllocationAmount(String(amount)); setAllocationMemberId(allocation.memberId || ""); setAllocationSourceId(allocation.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(allocation.note || ""); setAllocationThreshold(allocation.alertThreshold || 80); setAllocationWeeklyPace(allocation.weeklyPace !== false); setAllocationError(""); window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); };
   const applyMonthlyAllocation = (changes: { id: string; amount: number }[]) => { let nextData = data; changes.forEach(({ id, amount }) => { const currentPlan = nextData.settings.salaryPlan; const previous = currentPlan.allocations.find((item) => item.id === id); if (!previous || previous.amount === amount) return; const nextAllocations = currentPlan.allocations.map((item) => item.id === id ? { ...item, amount } : item); const changedData = { ...nextData, settings: { ...nextData.settings, salaryPlan: { ...currentPlan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), updatedAt: new Date().toISOString() } } }; nextData = appendAllocationHistory(changedData, { kind: "updated", allocationId: id, allocationLabel: previous.label, amount, previousAmount: previous.amount, newAmount: amount }); }); if (nextData !== data) onChange(nextData); };
-  const deleteAllocation = (id: string, label: string) => {
-    if (!window.confirm(`Ștergi plicul „${label}”? Cheltuielile deja înregistrate rămân în jurnal.`)) return;
+  const deleteAllocation = async (id: string, label: string) => {
+    if (!await askConfirm(`Ștergi plicul „${label}”? Cheltuielile deja înregistrate rămân în jurnal.`)) return;
     const nextAllocations = plan.allocations.filter((item) => item.id !== id);
     const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: nextAllocations, totalLimit: nextAllocations.reduce((sum, item) => sum + item.amount, 0), transfers: plan.transfers.filter((transfer) => transfer.fromAllocationId !== id && transfer.toAllocationId !== id), salaryAllocationRules: (plan.salaryAllocationRules || []).filter((rule) => rule.allocationId !== id) } } };
     onChange(appendAllocationHistory(nextData, { kind: "deleted", allocationId: id, allocationLabel: label, previousAmount: plan.allocations.find((item) => item.id === id)?.amount }));

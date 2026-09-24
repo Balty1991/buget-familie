@@ -24,6 +24,7 @@ import {
 import { daysLabel, moneyFormat, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
 import { RoDateInput } from "@/components/RoDateInput";
+import { askConfirm } from "@/lib/confirm-dialog";
 
 const money = (value: number) => moneyFormat(value, { maximumFractionDigits: 0 });
 const kindIcon = (kind: PlannedEventKind, size = 17) => kind === "anniversary" ? <CalendarHeart size={size} /> : kind === "holiday" ? <Gift size={size} /> : kind === "trip" ? <Plane size={size} /> : kind === "school" ? <GraduationCap size={size} /> : <PartyPopper size={size} />;
@@ -104,8 +105,8 @@ export function PlannedEventsPanel({ data, onChange }: { data: AppData; onChange
     setPutFor(null);
   };
 
-  const remove = (event: PlannedEvent) => {
-    if (!window.confirm(t("Ștergi evenimentul „{name}”?", { name: event.name }))) return;
+  const remove = async (event: PlannedEvent) => {
+    if (!await askConfirm(t("Ștergi evenimentul „{name}”?", { name: event.name }))) return;
     writeEvents(events.filter((item) => item.id !== event.id));
     if (editingId === event.id) resetForm();
   };

@@ -17,6 +17,7 @@ import { notifyFamilyEnvelopeChanges } from "@/lib/local-notifications";
 import { t } from "@/lib/i18n";
 import { isOfflineOnly } from "@/lib/ui-prefs";
 import type { SyncPanelProps } from "@/pages/home-kit";
+import { askConfirm } from "@/lib/confirm-dialog";
 
 const loadFamilySync = () => import("@/lib/realtime-sync");
 const loadFamilyCrypto = () => import("@/lib/family-crypto");
@@ -493,7 +494,7 @@ export function useFamilySync(
           return;
         }
         if (data.settings.syncRecoveryIssuedAt) {
-          const confirmed = typeof window === "undefined" || window.confirm(
+          const confirmed = await askConfirm(
             t("Codul vechi rămâne valabil. Notează-l pe cel nou imediat — nu îl mai arătăm."),
           );
           if (!confirmed) return;
@@ -524,9 +525,9 @@ export function useFamilySync(
       setSyncJournal([]);
       writeSyncJournal([]);
     },
-    onRevokeDevice: (deviceId: string) => {
+    onRevokeDevice: async (deviceId: string) => {
       if (deviceId === getOrCreateDeviceId()) {
-        const confirmed = typeof window === "undefined" || window.confirm(
+        const confirmed = await askConfirm(
           t("Ieși din cameră pe acest telefon. Ca să revii, un alt telefon trebuie să te reactiveze — sau schimbați parola familiei."),
         );
         if (!confirmed) return;

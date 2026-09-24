@@ -12,6 +12,7 @@ import { amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, al
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
+import { askConfirm } from "@/lib/confirm-dialog";
 
 const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
 
@@ -158,9 +159,9 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     onSaveTemplate({ id: templateId || newId("quick-template"), label, kind, category: kind === "expense" ? category : "Venit", amount: Math.max(0, numeric), memberId: member.id, sourceId: source.id, updatedAt: new Date().toISOString() });
     setTemplateLabel(label); setError("");
   };
-  const archive = () => { if (!templateId || !activeTemplate) return; if (!window.confirm(t("Arhivezi șablonul local „{label}”? Îl poți restaura ulterior; tranzacțiile rămân neschimbate.", { label: activeTemplate.label }))) return; onArchiveTemplate(templateId); chooseManual(); };
-  const remove = () => { if (!templateId) return; if (!window.confirm(t("Ștergi definitiv șablonul local „{label}”? Tranzacțiile rămân neschimbate.", { label: activeTemplate?.label || t("acesta") }))) return; onDeleteTemplate(templateId); chooseManual(); };
-  const removeArchived = (id: string, label: string) => { if (window.confirm(t("Ștergi definitiv șablonul arhivat „{label}”? Tranzacțiile rămân neschimbate.", { label }))) onDeleteArchivedTemplate(id); };
+  const archive = async () => { if (!templateId || !activeTemplate) return; if (!await askConfirm(t("Arhivezi șablonul local „{label}”? Îl poți restaura ulterior; tranzacțiile rămân neschimbate.", { label: activeTemplate.label }))) return; onArchiveTemplate(templateId); chooseManual(); };
+  const remove = async () => { if (!templateId) return; if (!await askConfirm(t("Ștergi definitiv șablonul local „{label}”? Tranzacțiile rămân neschimbate.", { label: activeTemplate?.label || t("acesta") }))) return; onDeleteTemplate(templateId); chooseManual(); };
+  const removeArchived = async (id: string, label: string) => { if (await askConfirm(t("Ștergi definitiv șablonul arhivat „{label}”? Tranzacțiile rămân neschimbate.", { label }))) onDeleteArchivedTemplate(id); };
   const sourceOwner = (id: string) => data.settings.members.find((member) => member.id === data.settings.paymentSources.find((source) => source.id === id)?.memberId)?.name || t("Familie / comun");
   const recentCategories = Array.from(new Set(data.transactions.filter((item) => item.kind === "expense" && item.category !== "Venit").map((item) => item.category))).slice(0, 4);
   const recentAmounts = useMemo(() => [...data.transactions].filter((item) => item.kind === kind && item.amount > 0).sort((left, right) => (right.createdAt || "").localeCompare(left.createdAt || "")).map((item) => item.amount).filter((amount, index, all) => all.indexOf(amount) === index).slice(0, 4), [data.transactions, kind]);

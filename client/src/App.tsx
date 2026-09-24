@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { Route, Router as WouterRouter, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AppLockGate } from "./components/AppLockGate";
+import { ConfirmHost } from "./components/ConfirmHost";
 import Home from "./pages/Home";
 import { t } from "@/lib/i18n";
 
@@ -35,6 +36,7 @@ function App() {
       <AppLockGate>
         <AppRouter />
       </AppLockGate>
+      <ConfirmHost />
     </ErrorBoundary>
   );
 }
