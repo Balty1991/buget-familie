@@ -1,6 +1,6 @@
-const CACHE = "buget-familie-shell-v90";
+const CACHE = "buget-familie-shell-v91";
 
-const SHELL = ["./manifest.webmanifest", "./bf-favicon.svg", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/notify-badge.png"];
+const SHELL = ["./manifest.webmanifest", "./bf-favicon.svg", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/mark-240.webp", "./icons/notify-badge.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
