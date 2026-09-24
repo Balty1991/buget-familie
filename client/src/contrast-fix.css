@@ -1196,6 +1196,12 @@ html body .bf-os-day > span:first-child {
   background: var(--cf-surface, #fffdf7);
   color: var(--cf-ink, #1a2420);
 }
+.bf-sync-start,
+.bf-sync-invite,
+.bf-sync-move { grid-template-columns: minmax(0, 1fr); }
+.bf-sync-start > button,
+.bf-sync-move > button,
+.bf-sync-invite-actions > button { min-width: 0; max-width: 100%; white-space: normal; }
 .bf-sync-start p,
 .bf-sync-invite p,
 .bf-sync-move p { margin: 0; }

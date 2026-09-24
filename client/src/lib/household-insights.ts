@@ -16,6 +16,7 @@ import {
   isoToday,
   isWeeklyPaced,
   newId,
+  inPlanPeriod,
   pendingRecurringInPlan,
   scheduledInPlan,
   planEndDate,
@@ -433,10 +434,10 @@ export type TodayBrief = {
 };
 
 /**
- * Cât poți cheltui azi fără să rupi ritmul plicurilor săptămânale.
- * Când există plicuri cu ritm, cifra e limita de azi a săptămânii — nu tot cash-ul
- * împărțit pe zilele până la salariu. Fără plicuri, rămâne minimul dintre ritmul
- * planului și lichidul pe zilele rămase.
+ * Cât poți cheltui azi. O singură regulă, cu plicuri sau fără: partea zilei = banii de la
+ * începutul zilei împărțiți pe zilele rămase, iar ce cheltui azi scade din partea de azi.
+ * Mâine, ce a rămas se reîmparte. Când există plicuri cu ritm, banii sunt cei din plicul
+ * săptămânii; fără plicuri, lichidul prudent până la venit (după scadențe și rate).
  */
 export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const hasPayday = Boolean(data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday);
@@ -445,8 +446,12 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const forecast = planForecast(data, asOf);
   const safe = liquidSafeToSpend(data, asOf);
   const remainingDays = Math.max(1, forecast.remainingDays);
-  const fromPace = Math.max(0, forecast.safeDaily);
-  const fromLiquid = Math.max(0, safe.available / remainingDays);
+  const plan = data.settings.salaryPlan;
+  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
+  /** Partea de azi, socotită din banii de la începutul zilei; cheltuiala de azi o micșorează leu cu leu. */
+  const dayShareLeft = (moneyNowAfterToday: number) => Math.max(0, (moneyNowAfterToday + spentToday) / remainingDays - spentToday);
+  const fromPace = dayShareLeft(Math.max(0, forecast.safeDaily) * remainingDays);
+  const fromLiquid = dayShareLeft(Math.max(0, safe.available));
   const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
   const fromWeek = rhythm.hasWeekly ? Math.max(0, rhythm.todayLeft) : undefined;
   const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromPace, fromLiquid, safe.available)) : 0;
@@ -454,6 +459,10 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
     ? t("Setează următorul venit ca să calculăm cât poți cheltui azi.")
     : expired
       ? t("Ciclul s-a încheiat pe {date} — pornește ciclul nou ca să-ți spun din nou ritmul zilei.", { date: formatDate(planEndDate(data.settings.salaryPlan)) })
+      : spendable <= 0 && remainingDays > 1 && (fromWeek != null ? rhythm.remaining : safe.available) > 0
+      ? t("Azi ai folosit partea zilei. De mâine: {daily} lei/zi ({available} pe {days}).", fromWeek != null
+        ? { daily: stripLei(rhythm.futureShare, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(Math.max(1, rhythm.remainingDays - 1)) }
+        : { daily: stripLei(safe.available / (remainingDays - 1), getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays - 1) })
       : spendable <= 0
       ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
       : fromWeek != null
@@ -553,7 +562,7 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
     ? t("Fără dată de venit nu putem calcula un reper zilnic. Setează salariul în Plan.")
     : rhythm.hasWeekly
       ? t("Reperul zilei ({amount}) e limita de azi din plicurile săptămânii. Banii fără plic nu măresc cifra.", { amount: lei(brief.spendable) })
-      : t("Reperul zilei ({amount}) e minimul dintre ritmul sigur și lichidul împărțit pe zile. Nu e un sold bancar.", { amount: lei(brief.spendable) });
+      : t("Reperul zilei ({amount}): banii de la începutul zilei, după scadențe și rate, împărțiți pe zilele până la venit. Ce cheltui azi scade din el; mâine restul se reîmparte. Nu e un sold bancar.", { amount: lei(brief.spendable) });
   return {
     spendable: brief.spendable,
     hasPayday: brief.hasPayday,

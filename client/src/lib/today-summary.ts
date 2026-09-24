@@ -41,6 +41,8 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
               ? t("Cheltuit astăzi")
               : t("Plicuri neconfigurate");
   const heroTracksWeek = !overPlan && brief.hasPayday && !brief.expired && rhythm.hasWeekly;
+  /** Azi s-a consumat partea zilei, dar plicul mai are bani pentru zilele care urmează. */
+  const todayUsedUp = rhythm.hasWeekly && rhythm.todayLeft <= 0.009 && rhythm.remaining > 0.009 && rhythm.remainingDays > 1 && rhythm.futureShare > 0;
   const heroValue = overPlan
     ? Math.abs(math.remaining)
     : heroTracksWeek
@@ -53,7 +55,9 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const heroHint = overPlan
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : heroTracksWeek
-      ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: exact(brief.spendable), available: exact(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
+      ? todayUsedUp
+        ? t("Azi ai folosit partea zilei. De mâine: {daily} lei/zi ({available} pe {days}).", { daily: exact(rhythm.futureShare), available: exact(rhythm.remaining), days: daysLabel(rhythm.remainingDays - 1) })
+        : t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: exact(brief.spendable), available: exact(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
       : brief.hasPayday
         ? brief.reason
         : data.settings.salaryPlan.allocations.length
@@ -70,7 +74,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
     : brief.hasPayday
       ? rhythm.hasWeekly
         ? t("Este limita de azi din plicurile săptămânii. Ce n-are plic stă liber, nu mărește cifra.")
-        : t("Reperul zilei este minimul dintre ritmul sigur ({daily}) și lichidul împărțit pe zile. Nu e un sold separat. În plicuri mai sunt {envelopes}; în surse {sources}.", { daily: exact(daily), envelopes: exact(envelopeTotalRemaining), sources: exact(math.availableSources) })
+        : t("Partea zilei: banii de la începutul zilei, după scadențe și rate, împărțiți pe zilele până la venit. Ce cheltui azi scade din ea; mâine restul se reîmparte. În plicuri mai sunt {envelopes}; în surse {sources}.", { daily: exact(daily), envelopes: exact(envelopeTotalRemaining), sources: exact(math.availableSources) })
       : data.settings.salaryPlan.allocations.length
         ? t("Este ce mai poți folosi din plicurile alocate. Reperul zilnic împarte suma pe cele {days} până la venit — nu e bani în plus, e ritmul ca să nu golești plicurile înainte.", { days: daysLabel(forecast.remainingDays) })
         : trackHero.kind === "liquid"
@@ -82,14 +86,17 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
     if (!end) return t("duminică");
     return new Date(`${end}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" });
   })();
-  const noteDaily = heroTracksWeek ? brief.spendable : rhythm.days.some((row) => row.isToday && row.over) ? rhythm.futureShare : rhythm.todayShare;
+  /** Partea de azi s-a dus, dar în plic mai sunt bani pentru zilele următoare (cumpărăturile săptămânii). */
+  const noteDaily = todayUsedUp || rhythm.days.some((row) => row.isToday && row.over) ? rhythm.futureShare : heroTracksWeek ? brief.spendable : rhythm.todayShare;
   const rhythmNote = !rhythm.hasWeekly
     ? t("Nu sunt plicuri cu ritm săptămânal de împărțit pe zile.")
     : rhythm.remaining <= 0 && rhythm.todayLeft <= 0
       ? t("Plicul săptămânii e gol până {until}.", { until: untilName })
       : rhythm.days.some((row) => row.isToday && row.over)
         ? t("Azi a trecut peste partea de {share}. Mai rămân {remaining}, cam {daily} pe zi până {until}.", { share: exact(rhythm.todayShare), remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName })
-        : t("Mai rămân {remaining} în plicul săptămânii, cam {daily} pe zi până {until}.", { remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName });
+        : todayUsedUp
+          ? t("Azi ai folosit partea zilei. Mai rămân {remaining}, cam {daily} pe zi de mâine până {until}.", { remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName })
+          : t("Mai rămân {remaining} în plicul săptămânii, cam {daily} pe zi până {until}.", { remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName });
 
   const todayRow = rhythm.days.find((row) => row.isToday);
   const todayStrip = todayRow ? dayStripFigure(todayRow, heroTracksWeek ? brief.spendable : todayRow.left, heroTracksWeek) : 0;

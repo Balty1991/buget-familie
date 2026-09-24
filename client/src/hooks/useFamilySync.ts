@@ -237,7 +237,7 @@ export function useFamilySync(
       // Nu facem camere noi din parolă sau dintr-o invitație greșită: ar fi o cameră goală, separată de familie.
       setSyncNotice(options.invite
         ? t("Nu am găsit camera din această invitație. Verifică să fi copiat tot codul sau cere o invitație nouă.")
-        : t("Nu există nicio cameră cu această parolă. Camerele noi se fac cu „Creează camera familiei”, iar partenerul intră cu invitația."));
+        : t("Nu există nicio cameră cu această parolă. Camerele noi se fac cu „Creează camera”, iar partenerul intră cu invitația."));
       return false;
     }
     if (remoteEnvelope) {

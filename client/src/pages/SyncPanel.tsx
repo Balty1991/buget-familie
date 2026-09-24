@@ -213,7 +213,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
                 <p className="bf-helper">{t("Celelalte telefoane se opresc până primesc invitația nouă. Datele lor nu se pierd: se unesc când intră.")}</p>
               </div>
             ) : (
-              <button type="button" className="bf-secondary" disabled={busy || !online} onClick={() => setMoveConfirm(true)}>{t("Mută familia pe invitație")}</button>
+              <button type="button" className="bf-secondary" disabled={busy || !online} onClick={() => setMoveConfirm(true)}>{t("Mută familia")}</button>
             )}
           </div>
         )}
@@ -257,10 +257,11 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         </div>
         <div className="bf-sync-start">
           <p><b>{t("Primul telefon din familie")}</b><br />{t("Creează camera familiei, apoi trimite invitația celorlalte telefoane. Nu ai nevoie de cont sau de parolă.")}</p>
-          <button className="bf-primary full" disabled={busy || !online} onClick={onCreateRoom}><Users size={17} /> {t("Creează camera familiei")}</button>
+          <button className="bf-primary full" disabled={busy || !online} onClick={onCreateRoom}><Users size={17} /> {t("Creează camera")}</button>
         </div>
         <div className={`bf-sync-start${inviteDraft ? " is-offered" : ""}`}>
-          <Field label={t("Am primit o invitație")} hint={t("Lipește mesajul sau linkul primit de la partener.")}>
+          <p><b>{t("Am primit o invitație")}</b><br />{t("Lipește mesajul sau linkul primit de la partener.")}</p>
+          <Field label={t("Invitația")}>
             <textarea value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} rows={3} placeholder={t("Lipește invitația aici")} autoComplete="off" spellCheck={false} />
           </Field>
           <button className="bf-primary full" disabled={busy || !online || !parseInvite(inviteDraft)} onClick={() => onJoinInvite(inviteDraft)}><Users size={17} /> {t("Intră în familie")}</button>
@@ -268,8 +269,9 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         </div>
         <button type="button" className="bf-link-button" aria-expanded={legacyOpen} onClick={() => setLegacyOpen((value) => !value)}>{t("Am o parolă de familie")}</button>
         {legacyOpen && <>
-        <Field label={t("Parola familiei")} hint={t("Doar pentru camerele create înainte de invitații. Trebuie să fie identică, literă cu literă, cu cea de pe celelalte telefoane.")}>
-          <input type={showGenerated ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setShowGenerated(false); }} placeholder={t("minimum 12 caractere")} autoComplete="current-password" />
+        <p className="bf-helper">{t("Doar pentru camerele create înainte de invitații. Trebuie să fie identică, literă cu literă, cu cea de pe celelalte telefoane.")}</p>
+        <Field label={t("Parola familiei")}>
+          <input type={showGenerated ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setShowGenerated(false); }} placeholder={t("12+ caractere")} autoComplete="current-password" />
           {password.length > 0 && <PasswordMeter value={password} />}
         </Field>
         {showGenerated && generatedOnce && (
@@ -285,8 +287,9 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         {forgotOpen && (
           <div className="bf-sync-forgot">
             <p className="bf-kicker">{t("RECUPERARE")}</p>
-            <Field label={t("Cod de recuperare")} hint={t("Introdu codul notat la prima conectare. Nu e parola familiei.")}>
-              <input value={recoveryInput} onChange={(event) => setRecoveryInput(event.target.value.toUpperCase())} placeholder="XXXX-XXXX-XXXX-XXXX" autoComplete="off" spellCheck={false} />
+            <p className="bf-helper">{t("Introdu codul notat pe hârtie când s-a creat camera (sau la prima conectare, la camerele vechi). Arată așa: XXXX-XXXX-XXXX-XXXX.")}</p>
+            <Field label={t("Cod de recuperare")}>
+              <input value={recoveryInput} onChange={(event) => setRecoveryInput(event.target.value.toUpperCase())} placeholder={t("Codul notat")} autoComplete="off" spellCheck={false} />
             </Field>
             <button type="button" className="bf-secondary" disabled={busy || !online || recoveryInput.replace(/[^A-Z0-9]/gi, "").length < 16} onClick={() => onRecoverPassword(recoveryInput)}>
               {t("Recuperează accesul")}
