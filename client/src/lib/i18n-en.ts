@@ -2799,4 +2799,6 @@ export const en: Record<string, string> = {
   "Data nu e bună. Scrie-o ca zz.ll.aaaa, de exemplu 10.10.2026.": "That date doesn't work. Write it as dd.mm.yyyy, for example 10.10.2026.",
   "Suma și de unde vine: salariu, bonus, o încasare.": "The amount and where it comes from: salary, bonus, a payment.",
   "+{amount} plătite din plicuri": "+{amount} paid from envelopes",
+  "Notat · {title} · {amount}": "Saved · {title} · {amount}",
+  "Notat · {count} mișcări": "Saved · {count} entries",
 };

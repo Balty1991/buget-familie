@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildUndo } from "./undo-delete";
+import { buildUndo, buildUndoSave } from "./undo-delete";
 import { createEmptyAppData, type AppData, type Transaction } from "./finance-data";
 
 const tx = (id: string, title: string): Transaction => ({
@@ -95,5 +95,18 @@ describe("anularea unei ștergeri", () => {
     const restored = buildUndo("x", { transactions: [tx("t3", "Nouă")] })!.apply(before);
     expect(restored.settings).toBe(before.settings);
     expect(restored.savings).toBe(before.savings);
+  });
+});
+
+describe("„Notat · Anulează” după o mișcare nouă", () => {
+  it("scoate doar mișcarea notată și lasă piatră de mormânt pentru celelalte telefoane", () => {
+    const data = createEmptyAppData();
+    const entry = (id: string) => ({ id, title: id, amount: 10, kind: "expense" as const, category: "Alimente", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: "2026-09-24" });
+    data.transactions = [entry("vechi"), entry("nou")];
+    const undone = buildUndoSave("Notat", ["nou"])!.apply(data);
+    expect(undone.transactions.map((item) => item.id)).toEqual(["vechi"]);
+    expect(undone.deleted.some((item) => item.entity === "transactions" && item.id === "nou")).toBe(true);
+    // Apăsat de două ori sau după ce mișcarea a dispărut deja: nimic nu se strică.
+    expect(buildUndoSave("Notat", ["nou"])!.apply(undone)).toBe(undone);
   });
 });

@@ -50,6 +50,7 @@ import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/Env
 import { FirstRunSetup } from "@/components/FirstRunSetup";
 import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
 import { selfMemberOf } from "@/lib/member-identity";
+import { buildUndoSave } from "@/lib/undo-delete";
 import { formatInvite, takeInviteFromLocation } from "@/lib/family-invite";
 
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
@@ -657,7 +658,7 @@ export default function Home() {
     applyData((current) => adoptOutsideExpenses(current));
   }, [storageReady, applyData]);
 
-  const { undo, setUndo, runUndo, deleteWithUndo } = useUndo(data, setData);
+  const { undo, setUndo, runUndo, deleteWithUndo, offerUndo } = useUndo(data, setData);
   const go = (next: MainView) => { preloadView(next); startTransition(() => setView(next)); };
   useEffect(() => {
     if (view !== "today" || modal) void ensureDeferredStyles();
@@ -732,6 +733,9 @@ export default function Home() {
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; applyData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
   const saveTx = (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => {
     let failed: Error | undefined;
+    const saved = Array.isArray(item) ? item : [item];
+    /** Doar mișcările noi primesc „Anulează”; o corectură se refac din formular. */
+    const fresh = saved.every((entry) => !data.transactions.some((existing) => existing.id === entry.id));
     update((current) => {
       try {
         const list = Array.isArray(item) ? item : [item];
@@ -742,6 +746,12 @@ export default function Home() {
       }
     });
     if (failed) throw failed;
+    if (fresh && saved.length) {
+      const label = saved.length === 1
+        ? t("Notat · {title} · {amount}", { title: saved[0].title, amount: money(saved[0].amount) })
+        : t("Notat · {count} mișcări", { count: saved.length });
+      offerUndo(buildUndoSave(label, saved.map((entry) => entry.id)));
+    }
   };
   const applyFinancialUpdate = (change: FinancialUpdate) => update((current) => { const member = current.settings.members.find((item) => "memberId" in change && change.memberId && item.id === change.memberId) || current.settings.members[0]; const source = current.settings.paymentSources.find((item) => item.memberId && member && item.memberId === member.id) || current.settings.paymentSources[0]; const now = new Date().toISOString(); if (change.kind === "income" && member && source) { const incomeCaptureId = ("clientCaptureId" in change && change.clientCaptureId) || newId("guided-income"); if (current.transactions.some((item) => item.id === incomeCaptureId || (item.kind === "income" && item.amount === change.amount && item.title === change.title && item.date === (change.date || isoToday())))) return current; const transaction: Transaction = { id: incomeCaptureId, title: change.title, amount: change.amount, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: change.date || isoToday(), note: t("Venit adăugat împreună cu ghidul AI"), createdAt: now }; return { ...current, transactions: [transaction, ...current.transactions] }; } if (change.kind === "debt") { const key = change.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const existingIndex = current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key); const nextDebt: Debt = { id: existingIndex >= 0 ? current.debts[existingIndex].id : newId("guided-debt"), name: change.name, remaining: change.remaining, monthly: existingIndex >= 0 ? current.debts[existingIndex].monthly : 0, due: change.due || (existingIndex >= 0 ? current.debts[existingIndex].due : "Nespecificat"), memberId: member?.id, tone: existingIndex >= 0 ? current.debts[existingIndex].tone : "coral", updatedAt: now }; const debts = existingIndex >= 0 ? current.debts.map((item, index) => index === existingIndex ? nextDebt : item) : [nextDebt, ...current.debts]; return { ...current, debts }; } if (change.kind === "debt-monthly") { const key = change.name?.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); const index = key ? current.debts.findIndex((item) => item.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim() === key) : 0; if (index < 0) return current; return { ...current, debts: current.debts.map((item, itemIndex) => itemIndex === index ? { ...item, monthly: change.amount, updatedAt: now } : item) }; } if (change.kind === "expense" && member && source) { const day = change.date || isoToday(); const usedSource = current.settings.paymentSources.find((item) => item.id === change.sourceId) || source; const usedMember = current.settings.members.find((item) => item.id === change.memberId) || member; const expenseCaptureId = change.clientCaptureId || newId("guided-expense"); if (current.transactions.some((item) => item.id === expenseCaptureId)) return current; if (change.recurringId && current.transactions.some((item) => item.recurringId === change.recurringId && inPlanPeriod(item.date, current.settings.salaryPlan))) return current; const transaction: Transaction = { id: expenseCaptureId, title: change.title, amount: change.amount, kind: "expense", category: change.category, sourceId: usedSource.id, source: usedSource.name, memberId: usedMember.id, person: usedMember.name, date: day, allocationId: change.allocationId || "outside", recurringId: change.recurringId, note: change.recurringId ? t("Plată recurentă confirmată") : t("Cheltuială adăugată împreună cu ghidul AI"), createdAt: now }; try { const next = commitLedgerEntry(current, transaction, change.fromWeekIndex); if (change.kind === "expense" && change.receiptDraft?.items?.length) { const receipt: Receipt = { id: newId("guided-receipt"), vendor: change.receiptDraft.vendor || change.title, amount: change.amount, category: change.category, date: day, sourceId: usedSource.id, memberId: usedMember.id, linkedTransactionId: transaction.id, note: t("Bon citit de ghid — produsele sunt în rubrica Bonuri."), lines: change.receiptDraft.items.map((item, index) => ({ id: `guided-line-${index}`, category: item.category, amount: item.amount, label: item.label })), updatedAt: now }; return { ...next, receipts: [receipt, ...next.receipts] }; } return next; } catch { return current; } } if (change.kind === "transfer") return transferBetweenEnvelopes(current, { fromAllocationId: change.fromId, toAllocationId: change.toId, amount: change.amount, note: t("Realocare din ghidul AI") }) || current; if (change.kind === "recurring") {
       const source = current.settings.paymentSources.find((item) => item.memberId === member?.id) || current.settings.paymentSources[0];

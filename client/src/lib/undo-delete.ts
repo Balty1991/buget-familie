@@ -62,3 +62,26 @@ export function buildUndo(label: string, removed: Removed): UndoAction | undefin
     }),
   };
 }
+
+/**
+ * Anularea unei mișcări tocmai notate („Notat · Anulează”). Scoate exact rândurile salvate,
+ * cu piatră de mormânt, ca sincronizarea să nu le readucă de pe alt telefon.
+ */
+export function buildUndoSave(label: string, ids: string[]): UndoAction | undefined {
+  const wanted = new Set(ids);
+  if (!wanted.size) return undefined;
+  return {
+    label,
+    apply: (current) => {
+      const now = new Date().toISOString();
+      const present = current.transactions.filter((item) => wanted.has(item.id)).map((item) => item.id);
+      if (!present.length) return current;
+      return {
+        ...current,
+        transactions: current.transactions.filter((item) => !wanted.has(item.id)),
+        receipts: current.receipts.filter((receipt) => !receipt.linkedTransactionId || !wanted.has(receipt.linkedTransactionId)),
+        deleted: [...current.deleted, ...present.map((id) => ({ entity: "transactions" as const, id, deletedAt: now }))].slice(-500),
+      };
+    },
+  };
+}

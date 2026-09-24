@@ -34,5 +34,5 @@ export function useUndo(data: AppData, setData: (value: AppData | ((current: App
     offerUndo(buildUndo(label, removed));
   };
 
-  return { undo, setUndo, runUndo, deleteWithUndo };
+  return { undo, setUndo, runUndo, deleteWithUndo, offerUndo };
 }
