@@ -6,9 +6,6 @@
 .dark .bf-more-grid b { color: #f4faf5; }
 .dark .bf-more-grid span { color: #bad0c2; }
 .dark .bf-more-grid svg { color: #f1c84e; }
-.dark .bf-more-tabs { scrollbar-color: #527363 transparent; }
-.dark .bf-more-tabs button { color: #c5d8cc; border-color: #3b6152; background: #17392f; }
-.dark .bf-more-tabs button.active { color: #fffdf6; border-color: #79ad92; background: #275546; }
 .dark .bf-page { color: #edf7ef; }
 .dark .bf-modal { color: #edf7ef; }
 .dark .bf-modal .bf-field label, .dark .bf-modal .bf-field { color: #c5d8cc; }

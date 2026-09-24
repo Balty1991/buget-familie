@@ -16,7 +16,6 @@ html {
 .bf-app a,
 .bf-app [role="button"],
 .bf-appbar,
-.bf-mobile-nav,
 .bf-app > main {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -107,12 +106,11 @@ html {
 
 @media (max-width: 760px) {
   .bf-appbar,
-  .bf-mobile-nav,
-  .bf-modal-backdrop,
-  .bf-onboarding-backdrop,
-  .bf-theme-backdrop,
-  .bf-command-backdrop,
-  .bf-health-backdrop {
+.bf-modal-backdrop,
+.bf-onboarding-backdrop,
+.bf-theme-backdrop,
+.bf-command-backdrop,
+.bf-health-backdrop {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
@@ -124,18 +122,11 @@ html {
     line-height: 1.25 !important;
   }
 
-  .bf-today-decision,
-  .bf-today-measurements,
   .bf-today-activity,
-  .bf-today-envelope-evolution,
-  .bf-weekly-summary,
-  .bf-today-hub-links {
+.bf-today-envelope-evolution,
+.bf-weekly-summary {
     content-visibility: auto;
     contain-intrinsic-size: auto 220px;
-  }
-
-  .bf-mobile-nav button {
-    min-height: 48px !important;
   }
 
   .bf-lazy-panel {
@@ -165,22 +156,14 @@ html {
     filter: none !important;
   }
 
-  .bf-today-situation,
-  .bf-decision-row,
-  .bf-today-hub-links button,
   .bf-today-add,
-  .bf-today-plan-link,
-  .bf-plic-card {
+.bf-plic-card {
     will-change: auto !important;
   }
 
-  .bf-today-situation,
-  .bf-today-decision,
   .bf-today-activity,
-  .bf-major-enter,
-  .bf-atelier-enter,
-  .bf-first-run-backdrop,
-  .bf-onboarding.bf-first-run {
+.bf-first-run-backdrop,
+.bf-onboarding.bf-first-run {
     animation: none !important;
   }
 
@@ -193,26 +176,24 @@ html {
     to { opacity: 1; transform: none; }
   }
 
-  .bf-today-situation,
   .bf-ledger-desk,
-  .bf-today-envelopes,
-  .bf-spend-stamp,
-  .bf-today-pulse,
-  .bf-payday-strip,
-  .bf-today-brief {
+.bf-today-envelopes,
+.bf-spend-stamp,
+.bf-today-pulse,
+.bf-payday-strip,
+.bf-today-brief {
     box-shadow: 0 6px 16px color-mix(in srgb, var(--cf-ink) 8%, transparent) !important;
   }
 
   .bf-page,
-  .bf-today-workspace,
-  .bf-movements-workspace,
-  .bf-obligations-workspace,
-  .bf-plan-workspace,
-  .bf-insights-workspace,
-  .bf-utilities-workspace,
-  .bf-goals-workspace,
-  .bf-habits-workspace,
-  .bf-calendar-workspace {
+.bf-today-workspace,
+.bf-obligations-workspace,
+.bf-plan-workspace,
+.bf-insights-workspace,
+.bf-utilities-workspace,
+.bf-goals-workspace,
+.bf-habits-workspace,
+.bf-calendar-workspace {
     padding-bottom: var(--bf-nav-clearance, calc(124px + env(safe-area-inset-bottom, 0px))) !important;
   }
 
@@ -250,23 +231,13 @@ html {
   }
 
   /* Bara lungă de Instrumente rămâne scrollabilă, dar indică vizibil gestul necesar. */
-  .bf-more-swipe-hint {
-    display: block !important;
-    margin: 0 16px 6px !important;
-    color: var(--cf-muted) !important;
-    font-size:12px !important;
-    font-weight:600 !important;
-    text-align: right !important;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bf-app button,
-  .bf-app .bf-primary,
-  .bf-app .bf-secondary,
-  .bf-screen-transition,
-  .bf-today-situation,
-  .bf-today-decision {
+.bf-app .bf-primary,
+.bf-app .bf-secondary,
+.bf-screen-transition {
     transition: none !important;
     animation: none !important;
   }

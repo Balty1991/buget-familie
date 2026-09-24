@@ -214,49 +214,6 @@ html.theme-white .os-shell .os-tools {
 }
 
 /* Tab strip — premium capsule rail */
-.os-shell .bf-more-tab-region {
-  margin: 14px 0 18px !important;
-  padding: 8px !important;
-  border-radius:20px !important;
-  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 78%, transparent) !important;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 90%, transparent),
-      color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 55%, transparent)
-    ) !important;
-  box-shadow:
-    0 10px 24px color-mix(in srgb, var(--os-ink, var(--cf-ink)) 6%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent) !important;
-}
-
-.os-shell .bf-more-tabs {
-  gap: 6px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  border: 0 !important;
-}
-
-.os-shell .bf-more-tabs button {
-  position: relative !important;
-  min-height: 42px !important;
-  padding: 0 14px !important;
-  border-radius: 12px !important;
-  font-weight: 680 !important;
-  transition:
-    background-color 200ms ease,
-    color 200ms ease,
-    box-shadow 240ms var(--bf-delight-spring),
-    transform 200ms var(--bf-delight-spring) !important;
-}
-
-.os-shell .bf-more-tabs button.active {
-  transform: translateY(-1px);
-  box-shadow:
-    0 8px 18px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent) !important;
-}
 
 /* Grouping panels */
 .os-shell .bf-more-overview {
@@ -332,8 +289,7 @@ html.theme-white .os-shell .os-tools {
 
 /* Icon wells with soft glow */
 .os-shell .bf-more-grid > button > svg:first-child,
-.os-shell .bf-settings-row > svg:first-child,
-.os-shell .bf-settings-icon {
+.os-shell .bf-settings-row > svg:first-child {
   width: 40px !important;
   height: 40px !important;
   border-radius:12px !important;
@@ -397,8 +353,7 @@ html.theme-white .os-shell .os-tools {
 /* Theme-tuned panel depth */
 html.theme-white .os-shell .bf-more-grid,
 html.theme-white .os-shell .bf-settings-group,
-html.theme-white .os-shell .bf-utilities-workspace > .bf-topline,
-html.theme-white .os-shell .bf-more-tab-region {
+html.theme-white .os-shell .bf-utilities-workspace > .bf-topline {
   box-shadow:
     0 14px 32px rgba(18, 32, 28, .08),
     inset 0 1px 0 rgba(255, 255, 255, .92) !important;
@@ -530,14 +485,13 @@ body .bf-command-palette,
 
 @media (prefers-reduced-motion: no-preference) {
   /* Astăzi e first paint — fără page-in, altfel CSS-ul amânat face flash la opacity 0. */
-  .os-shell .bf-movements-workspace,
   .os-shell .bf-obligations-workspace,
-  .os-shell .bf-plan-workspace,
-  .os-shell .bf-insights-workspace,
-  .os-shell .bf-utilities-workspace,
-  .os-shell .bf-goals-workspace,
-  .os-shell .bf-habits-workspace,
-  .os-shell .bf-calendar-workspace {
+.os-shell .bf-plan-workspace,
+.os-shell .bf-insights-workspace,
+.os-shell .bf-utilities-workspace,
+.os-shell .bf-goals-workspace,
+.os-shell .bf-habits-workspace,
+.os-shell .bf-calendar-workspace {
     animation: bf-delight-page-in var(--bf-delight-ms) var(--bf-delight-spring) both;
   }
 
@@ -629,36 +583,32 @@ body .bf-command-palette,
   }
 
   .os-shell .bf-page,
-  .os-shell .bf-today-workspace,
-  .os-shell .bf-movements-workspace,
-  .os-shell .bf-obligations-workspace,
-  .os-shell .bf-plan-workspace,
-  .os-shell .bf-insights-workspace,
-  .os-shell .bf-utilities-workspace,
-  .os-shell .bf-goals-workspace,
-  .os-shell .bf-habits-workspace,
-  .os-shell .bf-calendar-workspace,
-  .os-shell .bf-more-overview,
-  .os-shell .bf-more-group,
-  .os-shell .bf-more-grid > button,
-  .os-shell .bf-settings-row,
-  .os-shell .bf-pulse-grid article,
-  .os-shell .bf-ledger-mini,
-  .os-shell .bf-today-situation,
-  .os-shell .bf-movement-day,
-  .os-shell .bf-obligation-ledger article,
-  .os-shell .bf-goal-card,
-  .os-shell .bf-more-list article,
-  .bf-modal,
-  .bf-health-sheet,
-  .bf-theme-picker,
-  .bf-whats-new,
-  .bf-onboarding,
-  .bf-command-palette,
-  .bf-plan-sheet,
-  .bf-journal-filter-sheet,
-  .os-shell .os-dock button.is-on svg,
-  .os-shell .os-dock button.active svg {
+.os-shell .bf-today-workspace,
+.os-shell .bf-obligations-workspace,
+.os-shell .bf-plan-workspace,
+.os-shell .bf-insights-workspace,
+.os-shell .bf-utilities-workspace,
+.os-shell .bf-goals-workspace,
+.os-shell .bf-habits-workspace,
+.os-shell .bf-calendar-workspace,
+.os-shell .bf-more-overview,
+.os-shell .bf-more-group,
+.os-shell .bf-more-grid > button,
+.os-shell .bf-settings-row,
+.os-shell .bf-movement-day,
+.os-shell .bf-obligation-ledger article,
+.os-shell .bf-goal-card,
+.os-shell .bf-more-list article,
+.bf-modal,
+.bf-health-sheet,
+.bf-theme-picker,
+.bf-whats-new,
+.bf-onboarding,
+.bf-command-palette,
+.bf-plan-sheet,
+.bf-journal-filter-sheet,
+.os-shell .os-dock button.is-on svg,
+.os-shell .os-dock button.active svg {
     animation: none !important;
     transition: none !important;
     filter: none !important;
@@ -666,9 +616,8 @@ body .bf-command-palette,
   }
 
   .os-shell .os-dock button.is-on,
-  .os-shell .os-dock button.active,
-  .os-shell .bf-more-tabs button.active,
-  .os-shell .os-tool {
+.os-shell .os-dock button.active,
+.os-shell .os-tool {
     transform: none !important;
   }
 }
@@ -682,7 +631,6 @@ html[data-simple-mode="1"] .os-shell.bf-app::after {
 }
 
 html[data-simple-mode="1"] .os-shell .bf-utilities-workspace > .bf-topline,
-html[data-simple-mode="1"] .os-shell .bf-more-tab-region,
 html[data-simple-mode="1"] .os-shell .bf-more-grid,
 html[data-simple-mode="1"] .os-shell .bf-settings-group {
   box-shadow:
@@ -699,7 +647,6 @@ html[data-simple-mode="1"] .os-shell .bf-settings-row > svg:first-child {
 
 html[data-simple-mode="1"] .os-shell .bf-page,
 html[data-simple-mode="1"] .os-shell .bf-today-workspace,
-html[data-simple-mode="1"] .os-shell .bf-movements-workspace,
 html[data-simple-mode="1"] .os-shell .bf-obligations-workspace,
 html[data-simple-mode="1"] .os-shell .bf-plan-workspace,
 html[data-simple-mode="1"] .os-shell .bf-insights-workspace,
@@ -708,7 +655,6 @@ html[data-simple-mode="1"] .os-shell .bf-more-overview,
 html[data-simple-mode="1"] .os-shell .bf-more-group,
 html[data-simple-mode="1"] .os-shell .bf-more-grid > button,
 html[data-simple-mode="1"] .os-shell .bf-settings-row,
-html[data-simple-mode="1"] .os-shell .bf-pulse-grid article,
 html[data-simple-mode="1"] .os-shell .bf-more-list article,
 html[data-simple-mode="1"] .os-shell .os-dock button.is-on svg,
 html[data-simple-mode="1"] .os-shell .os-dock button.active svg {
@@ -716,8 +662,7 @@ html[data-simple-mode="1"] .os-shell .os-dock button.active svg {
 }
 
 html[data-simple-mode="1"] .os-shell .os-dock button.is-on,
-html[data-simple-mode="1"] .os-shell .os-dock button.active,
-html[data-simple-mode="1"] .os-shell .bf-more-tabs button.active {
+html[data-simple-mode="1"] .os-shell .os-dock button.active {
   transform: none !important;
 }
 
@@ -725,7 +670,6 @@ html[data-simple-mode="1"] .os-shell .bf-more-tabs button.active {
 .os-shell .bf-page,
 .os-shell .bf-today-workspace,
 .os-shell .bf-utilities-workspace,
-.os-shell .bf-movements-workspace,
 .os-shell .bf-plan-workspace,
 .os-shell .bf-insights-workspace,
 .os-shell .bf-obligations-workspace {

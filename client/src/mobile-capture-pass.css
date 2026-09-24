@@ -159,27 +159,11 @@
 
 /* Today hierarchy: one clear next action on narrow screens. */
 @media (max-width: 520px) {
-  .bf-today-workspace .bf-today-situation-actions {
-    grid-template-columns: 1fr;
-    gap: 9px;
-    margin-top: 16px;
-  }
 
   .bf-today-workspace .bf-today-add {
     min-height: 50px;
     justify-content: center;
     font-size:14px;
-  }
-
-  .bf-today-workspace .bf-today-plan-link {
-    justify-content: center;
-    min-height: 32px;
-    font-size:12px;
-  }
-
-  .bf-today-workspace .bf-today-situation-number strong {
-    font-size: clamp(38px, 12vw, 52px);
-    letter-spacing: -.065em;
   }
 }
 

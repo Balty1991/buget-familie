@@ -6,8 +6,6 @@
  */
 .os-shell .bf-movements-ledger .bf-movements-header > div::before,
 .os-shell .bf-movements-ledger .bf-empty-state::before,
-.os-shell .bf-movements-ledger .bf-journal-day-pulse p,
-.os-shell .bf-movements-ledger .bf-journal-day-pulse small,
 .os-shell .bf-movements-ledger .bf-movement-kind button,
 .os-shell .bf-movements-ledger .bf-journal-filter-toggle,
 .os-shell .bf-movements-ledger .bf-journal-search small,
@@ -18,7 +16,6 @@
   font-size: var(--bf-text-min, 12px) !important;
 }
 
-.os-shell .bf-movements-ledger .bf-journal-day-pulse > span > b,
 .os-shell .bf-movements-ledger .bf-movement-day > header > span,
 .os-shell .bf-movements-ledger .bf-movement-day > header > span b,
 .os-shell .bf-movements-ledger .bf-movement-day article strong {

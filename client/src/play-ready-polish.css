@@ -83,8 +83,7 @@
 
 .os-shell .bf-primary,
 .os-shell .bf-secondary,
-.os-shell .bf-mini-form button,
-.os-shell .bf-sync-generate .bf-secondary {
+.os-shell .bf-mini-form button {
   min-height: var(--os-tap) !important;
   padding-left: 16px !important;
   padding-right: 16px !important;
@@ -98,16 +97,13 @@
 }
 
 /* Utilities / meniuri: grilă thumb-friendly */
-.os-shell .bf-utilities-grid,
 .os-shell .bf-more-grid {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   gap: 10px !important;
 }
 
-.os-shell .bf-utilities-grid > button,
-.os-shell .bf-more-grid > button,
-.os-shell .bf-more-nav button {
+.os-shell .bf-more-grid > button {
   min-height: 72px !important;
   border-radius:20px !important;
   padding: 14px 12px !important;
@@ -126,12 +122,6 @@
   color: var(--os-fg);
   font-size:14px;
   line-height: 1.4;
-}
-
-.os-shell .bf-sync-generate {
-  display: grid;
-  gap: 10px;
-  margin: 10px 0 12px;
 }
 
 .os-shell .bf-sync-password-once {
@@ -357,12 +347,7 @@
   right: 2px;
   margin: 0;
 }
-
-.bf-more-tabs button {
-  position: relative;
-}
-.bf-more-grid button.has-badge b,
-.bf-more-tabs button {
+.bf-more-grid button.has-badge b {
   display: inline-flex;
   align-items: center;
 }
@@ -420,21 +405,3 @@
 }
 
 /* Tur scurt — prima săptămână (nu înlocuiește FirstRunSetup) */
-.bf-first-week-tour {
-  max-width: 26rem;
-}
-.bf-first-week-visual {
-  display: grid;
-  place-items: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  margin: 0.25rem 0 0.75rem;
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--accent, #e8f0e9) 80%, transparent);
-  color: var(--primary, #143c36);
-}
-.bf-first-week-tour h3 {
-  margin: 0.15rem 0 0.55rem;
-  font-size: 1.15rem;
-  line-height: 1.25;
-}

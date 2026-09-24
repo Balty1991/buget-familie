@@ -107,70 +107,21 @@
   }
 
   /* Situation card (legacy Astăzi path) */
-  .os-shell .bf-today-situation,
-  .os-shell .bf-today-situation.risk,
-  .os-shell .bf-today-situation.paired {
-    padding: 22px 18px 20px !important;
-    gap: 18px !important;
-  }
-
-  .os-shell .bf-today-situation-number {
-    gap: 12px !important;
-  }
-
-  .os-shell .bf-today-situation-number > p,
-  .os-shell .bf-today-situation-number p {
-    letter-spacing: 0.16em !important;
-    font-size:12px !important;
-    line-height: 1.35 !important;
-    opacity: 0.88 !important;
-  }
-
-  .os-shell .bf-today-situation-number > strong,
-  .os-shell .bf-today-situation-number strong {
-    font-size: clamp(48px, 14vw, 62px) !important;
-    letter-spacing: -0.055em !important;
-    line-height: 0.92 !important;
-    font-variant-numeric: tabular-nums !important;
-    font-feature-settings: "tnum" 1, "lnum" 1 !important;
-  }
-
-  .os-shell .bf-today-situation-number > span,
-  .os-shell .bf-today-situation-number span {
-    margin-top: 2px !important;
-    font-size:14px !important;
-    line-height: var(--ui-body-lh) !important;
-    max-width: 34ch !important;
-  }
-
-  .os-shell .bf-today-situation-actions {
-    gap: 12px !important;
-    padding-top: 8px !important;
-  }
 
   .os-shell .bf-today-workspace {
     gap: 18px;
   }
 
   .os-shell .bf-today-brief,
-  .os-shell .bf-spend-stamp,
-  .os-shell .bf-today-ledger,
-  .os-shell .bf-week-checkin,
-  .os-shell .bf-today-decision,
-  .os-shell .bf-today-measurements,
-  .os-shell .bf-today-activity {
+.os-shell .bf-spend-stamp,
+.os-shell .bf-week-checkin,
+.os-shell .bf-today-activity {
     padding: 18px 16px !important;
     border-radius: var(--ui-card-radius, 1.15rem) !important;
   }
 
-  .os-shell .bf-today-decision {
-    display: grid !important;
-    gap: 14px !important;
-  }
-
-  .os-shell .bf-today-decision p,
   .os-shell .bf-today-brief p,
-  .os-shell .bf-spend-stamp p {
+.os-shell .bf-spend-stamp p {
     line-height: var(--ui-body-lh) !important;
     margin: 0 !important;
   }
@@ -280,9 +231,8 @@ html.is-android-standalone .os-shell .os-dock {
 
 @media (prefers-reduced-motion: reduce) {
   .os-shell .os-dock button,
-  .os-shell .os-tool,
-  .os-shell .os-hero,
-  .os-shell .bf-today-situation {
+.os-shell .os-tool,
+.os-shell .os-hero {
     transition: none !important;
     animation: none !important;
   }

@@ -111,77 +111,6 @@
   padding-top: 10px !important;
 }
 
-.os-shell .bf-today-situation,
-.os-shell .bf-today-workspace .bf-today-situation {
-  position: relative !important;
-  overflow: hidden !important;
-  padding: 22px 20px 18px !important;
-  gap: 16px !important;
-  border-radius: var(--bf-premium-radius-xl) !important;
-  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, #fff),
-      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 72%, transparent)
-    ) !important;
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 55%, transparent) inset,
-    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 12%, transparent),
-    0 18px 40px color-mix(in srgb, var(--os-ink, #0c1612) 10%, transparent),
-    0 4px 12px color-mix(in srgb, var(--os-ink, #0c1612) 06%, transparent) !important;
-  backdrop-filter: blur(20px) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.2) !important;
-}
-
-.os-shell .bf-today-situation::before {
-  opacity: .14 !important;
-  background:
-    radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 35%, transparent), transparent 42%),
-    linear-gradient(color-mix(in srgb, var(--os-mint, var(--cf-primary)) 12%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 12%, transparent) 1px, transparent 1px) !important;
-  background-size: auto, 20px 20px, 20px 20px !important;
-  mask-image: radial-gradient(120% 90% at 100% 0%, #000 8%, transparent 70%) !important;
-}
-
-:is(html.theme-ink, html.theme-white) .os-shell .bf-today-situation,
-:is(html.theme-ink, html.theme-white) .bf-today-workspace .bf-today-situation {
-  border-color: #b9c5be !important;
-  color: #0c1612 !important;
-  background:
-    radial-gradient(circle at 94% 6%, rgba(23, 107, 84, .16), transparent 38%),
-    linear-gradient(160deg, rgba(255, 255, 255, .92), rgba(245, 247, 246, .78)) !important;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, .75) inset,
-    0 22px 48px rgba(12, 22, 18, .12),
-    0 6px 16px rgba(12, 22, 18, .06) !important;
-}
-
-.os-shell .bf-today-situation-number > p,
-.os-shell .bf-today-situation-number p {
-  font-size:12px !important;
-  font-weight: 750 !important;
-  letter-spacing: .18em !important;
-  color: var(--os-muted, var(--cf-muted)) !important;
-}
-
-.os-shell .bf-today-situation-number > strong,
-.os-shell .bf-today-situation-number strong {
-  font-size: clamp(48px, 13vw, 76px) !important;
-  font-weight: 620 !important;
-  letter-spacing: -.055em !important;
-  line-height: .9 !important;
-  color: var(--os-ink, var(--cf-ink)) !important;
-  font-variant-numeric: tabular-nums !important;
-}
-
-.os-shell .bf-today-situation-actions {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.4fr) auto !important;
-  gap: 12px !important;
-  padding-top: 6px !important;
-}
-
 /* Capture CTA that pops */
 .os-shell .bf-today-add,
 .os-shell .bf-today-add.bf-os-decide,
@@ -214,15 +143,6 @@
   box-shadow:
     0 1px 0 rgba(255, 255, 255, .28) inset,
     0 14px 30px rgba(14, 79, 62, .34) !important;
-}
-
-.os-shell .bf-today-plan-link,
-.os-shell .bf-os-secondary {
-  min-height: 56px !important;
-  border-radius: 999px !important;
-  font-weight:600;
-  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 70%, transparent) !important;
-  box-shadow: 0 0 0 1.5px var(--os-line, var(--cf-line)) !important;
 }
 
 /* ---------- Dock lipit de jos și de laterale ---------- */
@@ -305,10 +225,6 @@
     font-weight: 750;
     line-height: 1.12;
   }
-  .os-shell .bf-today-situation {
-    border-radius:20px !important;
-    padding: 18px 16px 16px !important;
-  }
 }
 
 /* ---------- Mai mult: section headers + card grid + list rows ---------- */
@@ -339,8 +255,7 @@
   opacity: 1;
 }
 
-.os-shell .bf-more-grid,
-.os-shell .bf-utilities-grid {
+.os-shell .bf-more-grid {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   gap: 10px !important;
@@ -348,8 +263,7 @@
   overflow: hidden !important;
 }
 
-.os-shell .bf-more-grid > button,
-.os-shell .bf-utilities-grid > button {
+.os-shell .bf-more-grid > button {
   min-width: 0 !important;
   min-height: 96px !important;
   align-content: start !important;
@@ -363,8 +277,7 @@
   transition: transform var(--bf-premium-press), border-color var(--bf-premium-motion), box-shadow var(--bf-premium-motion) !important;
 }
 
-.os-shell .bf-more-grid > button svg,
-.os-shell .bf-utilities-grid > button svg {
+.os-shell .bf-more-grid > button svg {
   width: 22px !important;
   height: 22px !important;
   padding: 7px !important;
@@ -374,8 +287,7 @@
   background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
 }
 
-.os-shell .bf-more-grid > button b,
-.os-shell .bf-utilities-grid > button b {
+.os-shell .bf-more-grid > button b {
   display: flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -387,38 +299,15 @@
   overflow-wrap: anywhere !important;
 }
 
-.os-shell .bf-more-grid > button span,
-.os-shell .bf-utilities-grid > button span {
+.os-shell .bf-more-grid > button span {
   color: var(--os-muted, var(--cf-muted)) !important;
   font-size:12px !important;
   line-height: 1.35 !important;
   overflow-wrap: anywhere !important;
 }
 
-.os-shell .bf-more-grid > button:active,
-.os-shell .bf-utilities-grid > button:active {
+.os-shell .bf-more-grid > button:active {
   transform: translateY(1px) scale(.985) !important;
-}
-
-.os-shell .bf-more-tabs {
-  gap: 8px !important;
-  padding-bottom: 8px !important;
-}
-.os-shell .bf-more-tabs button {
-  border-radius: 999px !important;
-  min-height: 40px !important;
-  padding: 0 14px !important;
-  font-weight: 750 !important;
-  white-space: nowrap !important;
-  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
-  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 90%, transparent) !important;
-  color: var(--os-muted, var(--cf-muted)) !important;
-}
-.os-shell .bf-more-tabs button.active {
-  color: var(--os-mint-fg, #fff) !important;
-  background: var(--os-mint, var(--cf-primary)) !important;
-  border-color: transparent !important;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
 }
 
 .os-shell .bf-more-list {
@@ -553,12 +442,6 @@ html.theme-dark .os-shell .os-dock button.active {
   background: linear-gradient(180deg, #e2e6ec, #c5cbd4) !important;
   box-shadow:var(--bf-shadow-raise) !important;
 }
-html.theme-dark .os-shell .bf-today-situation {
-  background:
-    radial-gradient(circle at 92% 8%, rgba(197, 203, 212, .12), transparent 40%),
-    linear-gradient(160deg, rgba(31, 36, 43, .95), rgba(22, 25, 30, .88)) !important;
-  border-color: #2c323a !important;
-}
 html.theme-dark .os-shell .bf-today-add,
 html.theme-dark .os-shell .bf-os-decide {
   color: #0c0e11;
@@ -582,12 +465,6 @@ html.theme-aurora .os-shell .os-dock button.active {
   color: #0d0b1c !important;
   background: linear-gradient(180deg, #7ae0b4, #319e7b) !important;
   box-shadow:var(--bf-shadow-raise) !important;
-}
-html.theme-aurora .os-shell .bf-today-situation {
-  background:
-    radial-gradient(circle at 92% 8%, rgba(124, 91, 255, .22), transparent 40%),
-    linear-gradient(160deg, rgba(37, 32, 68, .95), rgba(24, 20, 47, .88)) !important;
-  border-color: #49416c !important;
 }
 html.theme-aurora .os-shell .bf-today-add,
 html.theme-aurora .os-shell .bf-os-decide {
@@ -613,12 +490,6 @@ html.theme-navy .os-shell .os-dock button.active {
   background: linear-gradient(180deg, #e0c07a, #c49a4a) !important;
   box-shadow:var(--bf-shadow-raise) !important;
 }
-html.theme-navy .os-shell .bf-today-situation {
-  background:
-    radial-gradient(circle at 92% 8%, rgba(212, 176, 106, .16), transparent 40%),
-    linear-gradient(160deg, rgba(28, 39, 64, .95), rgba(20, 28, 46, .88)) !important;
-  border-color: #2a3854 !important;
-}
 html.theme-navy .os-shell .bf-today-add,
 html.theme-navy .os-shell .bf-os-decide {
   color: #14100a;
@@ -643,12 +514,6 @@ html.theme-cyber .os-shell .os-dock button.active {
   background: linear-gradient(180deg, #9dffd4, #5ee0aa) !important;
   box-shadow:var(--bf-shadow-raise) !important;
 }
-html.theme-cyber .os-shell .bf-today-situation {
-  background:
-    radial-gradient(circle at 92% 8%, rgba(124, 255, 196, .14), transparent 40%),
-    linear-gradient(160deg, rgba(22, 29, 35, .95), rgba(16, 21, 26, .88)) !important;
-  border-color: #22302a !important;
-}
 html.theme-cyber .os-shell .bf-today-add,
 html.theme-cyber .os-shell .bf-os-decide {
   color: #04140e;
@@ -669,7 +534,6 @@ html.theme-cyber .bf-whats-new {
 
 /* Romanian labels never clip on chrome */
 .os-shell .os-dock button span,
-.os-shell .bf-more-tabs button,
 .os-shell .bf-more-grid > button b,
 .os-shell .bf-more-grid > button span {
   overflow: visible !important;

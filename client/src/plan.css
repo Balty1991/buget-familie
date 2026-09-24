@@ -9,9 +9,6 @@
 .os-shell .bf-plan-workspace .bf-plan-studio-header p:not(.bf-kicker),
 .os-shell .bf-plan-workspace .bf-plan-field,
 .os-shell .bf-plan-workspace .bf-plan-field small,
-.os-shell .bf-plan-workspace .bf-plan-sources label small,
-.os-shell .bf-plan-workspace .bf-plan-envelope-state,
-.os-shell .bf-plan-workspace .bf-plan-envelope-list article small,
 .os-shell .bf-plan-workspace .bf-plan-sheet-heading > span,
 .os-shell .bf-plan-workspace .bf-plan-flow-toggle,
 .os-shell .bf-plan-workspace .bf-plan-flow li small,
@@ -51,8 +48,6 @@
   line-height: 1.15 !important;
 }
 
-.os-shell .bf-plan-workspace .bf-plan-envelope-list article strong,
-.os-shell .bf-plan-workspace .bf-plan-sources label strong,
 .os-shell .bf-plan-workspace .bf-allocation-period-summary b,
 .os-shell .bf-plan-workspace .bf-plan-resource-band > div:last-child > span > b,
 .os-shell .bf-plan-workspace .bf-plan-field input,
@@ -62,7 +57,6 @@
   font-size: var(--bf-text-money, 14px) !important;
 }
 
-.os-shell .bf-plan-workspace .bf-plan-envelope-list article > button,
 .os-shell .bf-plan-workspace .bf-pace-switch > button,
 .os-shell .bf-plan-workspace .bf-pace-advice li > button,
 .os-shell .bf-plan-workspace .bf-pace-advice > button,
@@ -75,12 +69,10 @@
 .os-shell .bf-plan-workspace .bf-plan-field input,
 .os-shell .bf-plan-workspace .bf-plan-field select,
 .os-shell .bf-plan-workspace .bf-funding-row select,
-.os-shell .bf-plan-workspace .bf-funding-row input,
-.os-shell .bf-plan-workspace .bf-plan-envelope-builder > button {
+.os-shell .bf-plan-workspace .bf-funding-row input {
   min-height: var(--bf-hit, 44px) !important;
 }
 
-.os-shell .bf-plan-workspace .bf-plan-envelope-list article > button,
 .os-shell .bf-plan-workspace .bf-funding-row > button {
   width: var(--bf-hit, 44px) !important;
   min-width: var(--bf-hit, 44px) !important;
@@ -89,16 +81,6 @@
 
 .os-shell .bf-plan-workspace .bf-funding-row {
   grid-template-columns: minmax(0, 1fr) minmax(4.5rem, 6rem) var(--bf-hit, 44px) !important;
-}
-
-.os-shell .bf-plan-workspace .bf-plan-envelope-list article {
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 9.5rem) var(--bf-hit, 44px) !important;
-}
-
-@media (max-width: 640px) {
-  .os-shell .bf-plan-workspace .bf-plan-envelope-list article {
-    grid-template-columns: minmax(0, 1fr) auto var(--bf-hit, 44px) !important;
-  }
 }
 
 /*

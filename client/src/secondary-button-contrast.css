@@ -6,7 +6,6 @@
 .bf-obligation-empty > button,
 .bf-goals-link,
 .bf-secondary,
-.bf-os-secondary,
 .bf-ghost:not(.bf-primary),
 .bf-file-button {
   color: var(--cf-ink) !important;

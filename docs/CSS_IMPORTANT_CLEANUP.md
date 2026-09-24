@@ -39,3 +39,17 @@ Capcane găsite pe drum, bune de știut la o curățenie viitoare:
   de citire.
 - Setul verificat trebuie să fie exact setul aplicat: două `!important` se pot „acoperi” reciproc, iar
   scoaterea doar a unuia dintre ele schimbă câștigătorul.
+
+## Reguli moarte (septembrie 2026, pasul 2)
+
+**5.410 → 3.819** `!important`, **1.153 KB → 927 KB** de CSS: 1.685 de reguli și 2.578 de selectori
+scoși. Țintesc 263 de clase care nu mai apar nicăieri în cod (`client/src/**/*.ts(x)`,
+`client/index.html`) — resturi din redesign-urile vechi (`bf-today-situation`, `bf-mobile-nav`,
+`bf-decision-row`…).
+
+- O clasă e „vie” dacă apare în cod sau dacă e compusă în cod (`s${scor}`, `theme-${id}`, `is-${stare}`).
+- Clasele din interiorul `:not(…)`, `:is(…)`, `:where(…)`, `:has(…)` nu fac un selector mort:
+  `:not(.clasă-inexistentă)` se potrivește peste tot (prima variantă a scriptului le-a tratat greșit și
+  a schimbat Plan și Obligații — prins de comparația de mai jos, apoi reparat).
+- Verificare: instantanee complete ale stilului calculat pe 154 de stări, cod vechi (de două ori) și cod
+  nou; singurele 4 diferențe rămase au fost zero la verificarea directă, proprietate cu proprietate.

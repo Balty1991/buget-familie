@@ -153,9 +153,6 @@ html.theme-cyber {
 .os-shell .bf-next-step-card.watch {
   border-color: color-mix(in srgb, var(--lu-honey, #b07d12) 45%, transparent);
 }
-.os-shell .bf-today-hub-links {
-  display: none;
-}
 
 /* —— Dock Ledger Flow —— */
 .os-shell .os-dock {

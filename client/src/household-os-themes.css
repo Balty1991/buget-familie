@@ -267,33 +267,6 @@ html.theme-aurora {
 }
 
 /* Astăzi — card erou moale, hârtie caldă */
-:is(html.theme-ink, html.theme-white) .bf-today-situation,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-today-situation,
-:is(html.theme-ink, html.theme-white) .bf-today-workspace .bf-today-situation {
-  border: 1px solid #d5d2c8 !important;
-  border-radius:20px !important;
-  background:
-    radial-gradient(circle at 92% 8%, rgba(47, 107, 85, .1), transparent 36%),
-    linear-gradient(165deg, #fffcf7, #f6f3ec) !important;
-  box-shadow:var(--bf-shadow-raise) !important;
-  padding: 16px 16px 14px !important;
-  gap: 12px !important;
-  color: #1a2420 !important;
-}
-:is(html.theme-ink, html.theme-white) .bf-today-situation::before {
-  opacity: .08 !important;
-  background-image:
-    linear-gradient(rgba(47, 107, 85, .1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(47, 107, 85, .1) 1px, transparent 1px) !important;
-  background-size: 16px 16px !important;
-  mask-image: none !important;
-}
-:is(html.theme-ink, html.theme-white) .bf-today-situation.risk {
-  background:
-    radial-gradient(circle at 90% 10%, rgba(182, 67, 56, .1), transparent 40%),
-    linear-gradient(165deg, #fff8f4, #f5ebe6) !important;
-  border-color: #e0c8be !important;
-}
 
 /* Mișcări — registru clar, distinct de Astăzi */
 :is(html.theme-ink, html.theme-white) .os-shell .bf-movements-ledger {
@@ -307,16 +280,11 @@ html.theme-aurora {
   border-radius:12px;
   padding: 5px 8px;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .bf-movement-day,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-journal-day-pulse {
+:is(html.theme-ink, html.theme-white) .os-shell .bf-movement-day {
   border: 1px solid #d5d2c8 !important;
   border-radius:20px;
   background: #fbfaf7 !important;
   box-shadow:var(--bf-shadow-rest);
-}
-:is(html.theme-ink, html.theme-white) .os-shell .bf-journal-day-pulse {
-  border-top: 3px solid #2f6b55 !important;
-  border-radius:4px 4px 20px 20px !important;
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell .bf-sync,
@@ -371,10 +339,6 @@ html.theme-aurora {
   }
   :is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
     gap: 12px !important;
-  }
-  :is(html.theme-ink, html.theme-white) .os-shell .bf-today-situation {
-    border-radius:20px !important;
-    padding: 14px 14px 12px !important;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .bf-movements-ledger .bf-movement-day {
     border-radius:12px !important;

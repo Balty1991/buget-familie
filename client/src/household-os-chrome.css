@@ -119,10 +119,7 @@ html.capacitor-android {
 }
 
 .os-mark::before,
-.os-mark::after,
-.os-mark .bf-logo-roof,
-.os-mark .bf-logo-core,
-.os-mark .bf-logo-letter {
+.os-mark::after {
   display: none !important;
   content: none !important;
 }
@@ -237,7 +234,6 @@ html.capacitor-android {
 .os-hero::after { display: none; content: none; }
 
 .os-hero-top,
-.os-hero-copy,
 .os-gauge {
   position: relative !important;
   z-index: 1 !important;
@@ -468,11 +464,6 @@ html.capacitor-android {
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-}
-
-.os-ghid.is-open {
-  color: var(--os-fg) !important;
-  background: var(--os-surface, #f7f8f6) !important;
 }
 
 .os-ghid-bf {
@@ -731,8 +722,7 @@ html body .bf-command-search input::placeholder {
 }
 
 @media (max-width: 760px) {
-  .bf-command-hint,
-  .bf-command-shortcut {
+  .bf-command-hint {
     display: none !important;
   }
 }
@@ -1560,13 +1550,10 @@ html.dark .bf-onboarding.bf-first-run {
 .os-shell .bf-calm-tick.major { stroke: var(--os-muted) !important; }
 .os-shell .bf-calm-score { fill: var(--os-fg) !important; }
 .os-shell .bf-calm-label { fill: var(--os-muted) !important; }
-.os-shell .bf-health-score { color: var(--os-fg) !important; background: color-mix(in srgb, var(--os-surface) 88%, transparent) !important; box-shadow: 0 0 0 1px var(--os-line) !important; }
-.os-shell .bf-health-score small { color: var(--os-muted) !important; }
 .os-shell .bf-health-gauge-score, .os-shell .bf-health-needle, .os-shell .bf-health-needle-hub { fill: var(--os-fg) !important; }
 .os-shell .bf-health-gauge-end { fill: var(--os-muted) !important; }
 .os-shell .bf-health-gauge-track { stroke: var(--os-line-strong) !important; }
 .os-shell .bf-health-gauge-tick { stroke: var(--os-muted) !important; }
-.os-shell .bf-os-gauge-wrap { background: var(--os-surface) !important; color: var(--os-fg) !important; box-shadow: 0 0 0 1px var(--os-line) !important; }
 
 
 
@@ -1619,21 +1606,6 @@ html.dark .bf-onboarding.bf-first-run {
     margin-top: 12px !important;
     font-size:14px !important;
   }
-
-  .bf-decision-row,
-  .bf-decision-row.primary {
-    grid-template-columns: 22px minmax(0, 1fr) 16px !important;
-    gap: 8px !important;
-    min-height: 0 !important;
-    align-items: start !important;
-  }
-
-  .bf-decision-row b,
-  .bf-decision-row em,
-  .bf-decision-row small {
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-  }
 }
 
 /* ========== Mod simplu — diferență vizibilă față de UI-ul complet ========== */
@@ -1681,9 +1653,6 @@ html[data-simple-mode="1"] .os-dock {
 }
 html[data-simple-mode="1"] .os-dock button {
   flex: 1 1 0;
-  font-weight: 600;
-}
-html[data-simple-mode="1"] .bf-utilities-workspace .bf-more-tabs button {
   font-weight: 600;
 }
 .bf-simple-mode-card.is-on {

@@ -20,12 +20,6 @@
   box-shadow: 0 8px 18px color-mix(in srgb, var(--movement-accent), transparent 78%);
 }
 
-.bf-movements-ledger .bf-journal-day-pulse {
-  border-radius:20px;
-  border: 1px solid color-mix(in srgb, var(--cf-line), transparent 20%);
-  background: var(--movement-surface);
-}
-
 .bf-movements-ledger .bf-journal-quickbar {
   position: sticky;
   top: 8px;
@@ -148,23 +142,6 @@
     justify-content: center;
   }
 
-  .bf-movements-ledger .bf-journal-day-pulse {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    gap: 9px;
-    padding: 13px;
-  }
-
-  .bf-movements-ledger .bf-journal-day-pulse > span {
-    min-width: 58px;
-    padding-left: 9px;
-    border-left: 1px solid var(--cf-line);
-  }
-
-  .bf-movements-ledger .bf-journal-day-pulse > span b {
-    font-size: 12px;
-  }
-
   .bf-movements-ledger .bf-journal-quickbar {
     position: static;
     grid-template-columns: 1fr auto;
@@ -243,22 +220,6 @@
     grid-column: 2 / -1;
     justify-content: flex-start;
     padding-top: 2px;
-  }
-}
-
-@media (max-width: 370px) {
-  .bf-movements-ledger .bf-journal-day-pulse {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .bf-movements-ledger .bf-journal-day-pulse > div {
-    grid-column: 1 / -1;
-  }
-
-  .bf-movements-ledger .bf-journal-day-pulse > span {
-    padding: 7px 0 0;
-    border-top: 1px solid var(--cf-line);
-    border-left: 0;
   }
 }
 

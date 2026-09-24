@@ -15,8 +15,6 @@
 .bf-setup-presets button small { color: var(--cf-muted); }
 .bf-setup-presets button.active { border-color: var(--cf-primary-strong); background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface)); }
 .bf-setup-presets button svg { position: absolute; top: 12px; right: 12px; color: var(--cf-primary-strong); }
-.bf-setup-privacy { margin: 0; padding-left: 18px; color: var(--cf-ink); font-size:14px; line-height: 1.55; }
-.bf-setup-shield { display: grid; place-items: center; width: 48px; height: 48px; border-radius:12px; color: var(--cf-primary-strong); background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)); }
 
 .bf-household { display: grid; gap: 16px; padding: 8px 22px 24px; color: var(--cf-ink); }
 .bf-household-recap, .bf-household-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--cf-line); border-radius:20px; background: var(--cf-surface); color: var(--cf-ink); }
@@ -74,8 +72,6 @@
 .bf-trust-links { display: grid; gap: 8px; }
 .bf-trust-links a { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 12px; border: 1px solid var(--cf-line); border-radius:12px; color: var(--cf-ink); background: var(--cf-surface); text-decoration: none; font-size:14px; font-weight:600; }
 .bf-settings .bf-trust, .bf-settings .bf-premium-catalog { padding: 16px; border: 1px solid var(--cf-line); border-radius:20px; background: var(--cf-surface); }
-
-.bf-obligations-header .bf-goals-link + .bf-goals-link, .bf-calendar-link { margin-top: 8px; }
 
 @media (max-width: 760px) {
   .bf-household { padding: 6px 16px 18px; }

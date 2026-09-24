@@ -2916,4 +2916,6 @@ export const en: Record<string, string> = {
   "Plicul săptămânii s-a terminat până {until}. În Plan mai ai {free} nerepartizați: poți pune o parte în plic.": "This week's envelope is used up until {until}. Plan still has {free} unassigned: you can move some into the envelope.",
   "Plicul săptămânii s-a terminat până {until}. Tranșa următoare pornește atunci.": "This week's envelope is used up until {until}. The next tranche starts then.",
   "Pune bani în plic": "Add money to the envelope",
+  "Ca să compari pe ciclul de salariu, spune întâi când vine venitul.": "To compare on the pay cycle, first set when your income arrives.",
+  "Setează în Plan": "Set it in Plan",
 };

@@ -143,16 +143,6 @@
 }
 
 /* —— 6. Confirmarea repartizării lunare: aceeași zonă sigură ca restul foilor —— */
-.bf-wizard-confirm,
-.os-shell .bf-wizard-confirm {
-  padding-bottom: max(18px, calc(18px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)))) !important;
-  padding-top: max(18px, calc(18px + var(--os-inset-top, env(safe-area-inset-top, 0px)))) !important;
-}
-.bf-wizard-confirm > div {
-  max-height: calc(100dvh - var(--os-inset-top, 0px) - var(--os-inset-bottom, 0px) - 44px) !important;
-  overflow-y: auto !important;
-  overscroll-behavior: contain !important;
-}
 
 /* —— 7. Ținte de atingere: degetul are nevoie de ~9mm, nu de 23px —— */
 /* Butoanele mici rămân la fel de mici la vedere (layout-ul din jur depinde de ele), dar
@@ -272,9 +262,6 @@ html:not(.dark) .os-date b {
 }
 /* Mesajul verde din repartizarea lunară folosea verdele „strong”, prea închis pe fundalul
    de noapte (3,86). Varianta deschisă a aceleiași culori trece pragul. */
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-wizard-message {
-  color: var(--cf-primary, #8fe3bd) !important;
-}
 
 /* —— 12. Verdele „strong” și coralul de zi, pe fundal de noapte —— */
 /* Aceste culori sunt scrise pentru hârtie: pe carduri întunecate coboară la 2,6–4,4.

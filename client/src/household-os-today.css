@@ -24,121 +24,6 @@ html:not(.dark) .bf-today-workspace {
   --os-warn: #b4532a;
 }
 
-.bf-today-situation,
-.bf-today-situation.risk,
-.bf-today-situation.paired,
-.bf-today-workspace .bf-today-situation {
-  position: relative !important;
-  display: grid !important;
-  gap: 18px !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 22px 20px 20px !important;
-  border: 1px solid var(--os-line) !important;
-  border-left: 1px solid var(--os-line) !important;
-  border-radius: 1.85rem !important;
-  color: var(--os-ink) !important;
-  background: var(--os-surface) !important;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-mint) 8%, transparent) !important;
-}
-
-.bf-today-situation::before {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: none !important;
-  opacity: .22 !important;
-  background-image:
-    linear-gradient(90deg, color-mix(in srgb, var(--os-mint) 18%, transparent) 1px, transparent 1px),
-    linear-gradient(color-mix(in srgb, var(--os-mint) 14%, transparent) 1px, transparent 1px) !important;
-  background-size: 42px 100%, 100% 42px !important;
-  mask-image: radial-gradient(120% 80% at 100% 0%, #000 10%, transparent 72%) !important;
-}
-
-.bf-today-situation::after,
-.bf-today-situation-number::after {
-  display: none !important;
-}
-
-.bf-today-situation.risk {
-  border-color: color-mix(in srgb, var(--os-warn) 45%, transparent) !important;
-  background: color-mix(in srgb, #3a1610 55%, var(--os-surface)) !important;
-}
-
-html:not(.dark) .bf-today-situation.risk {
-  background: #fff4ef !important;
-}
-
-.bf-today-situation-top,
-.bf-today-situation-number,
-.bf-today-situation-actions {
-  position: relative !important;
-  z-index: 1 !important;
-}
-
-.bf-today-situation-top {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-  color: var(--os-muted) !important;
-  font-family: "IBM Plex Sans", sans-serif !important;
-  font-size:12px !important;
-  font-weight: 600 !important;
-  letter-spacing: .16em !important;
-  text-transform: uppercase !important;
-}
-
-.bf-today-situation-top time {
-  color: var(--os-muted) !important;
-}
-
-.bf-status-chip {
-  color: var(--os-mint) !important;
-}
-
-.bf-status-chip i {
-  background: var(--os-mint) !important;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--os-mint) 18%, transparent) !important;
-}
-
-.bf-today-situation-number {
-  display: grid !important;
-  gap: 8px !important;
-  max-width: none !important;
-}
-
-.bf-today-situation-number p,
-.bf-today-situation-number > p {
-  margin: 0 !important;
-  color: var(--os-muted) !important;
-  font-family: "IBM Plex Sans", sans-serif !important;
-  font-size:12px !important;
-  font-weight: 600 !important;
-  letter-spacing: .2em !important;
-  text-transform: uppercase !important;
-}
-
-.bf-today-situation-number strong,
-.bf-today-situation-number > strong {
-  color: var(--os-ink) !important;
-  font-family: Fraunces, "IBM Plex Sans", Georgia, serif !important;
-  font-size: clamp(44px, 12vw, 72px) !important;
-  font-weight: 560 !important;
-  letter-spacing: -.06em !important;
-  line-height: .92 !important;
-  text-shadow: none !important;
-  white-space: nowrap !important;
-}
-
-.bf-today-situation-number span,
-.bf-today-situation-number > span {
-  max-width: 36rem !important;
-  color: var(--os-muted) !important;
-  font-size:14px !important;
-  line-height: 1.5 !important;
-}
-
 .bf-today-explainer {
   margin-top: 6px;
 }
@@ -167,47 +52,6 @@ html:not(.dark) .bf-today-situation.risk {
   text-transform: none !important;
 }
 
-.bf-today-situation .bf-health-score {
-  position: relative !important;
-  right: auto !important;
-  bottom: auto !important;
-  margin-top: 8px !important;
-  width: min(100%, 148px) !important;
-  padding: 8px !important;
-  border-radius: 1.25rem !important;
-  background: color-mix(in srgb, var(--os-bg) 72%, transparent) !important;
-  box-shadow: 0 0 0 1px var(--os-line) !important;
-}
-
-.bf-today-situation .bf-health-gauge {
-  color: var(--os-mint) !important;
-}
-
-.bf-today-situation .bf-health-gauge-tick {
-  opacity: .28 !important;
-}
-
-.bf-today-situation .bf-health-gauge-end,
-.bf-today-situation .bf-health-gauge-score,
-.bf-today-situation .bf-health-needle,
-.bf-today-situation .bf-health-needle-hub {
-  fill: var(--os-mint) !important;
-}
-
-.bf-today-situation .bf-health-score small {
-  color: var(--os-muted) !important;
-  font-family: "IBM Plex Sans", sans-serif !important;
-  letter-spacing: .16em !important;
-}
-
-.bf-today-situation-actions {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) auto !important;
-  gap: 10px !important;
-  padding-top: 4px !important;
-  border-top: 0 !important;
-}
-
 .bf-today-add,
 .bf-os-decide {
   display: inline-flex;
@@ -233,15 +77,6 @@ html:not(.dark) .bf-today-add {
   color: #f4fff9;
 }
 
-.bf-today-plan-link,
-.bf-os-secondary {
-  color: var(--os-ink) !important;
-  background: transparent !important;
-  box-shadow: 0 0 0 1px var(--os-line) !important;
-  border-radius: 999px !important;
-  padding-inline: 16px !important;
-}
-
 .bf-os-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -257,42 +92,12 @@ html:not(.dark) .bf-os-decide {
   color: #f4fff9;
 }
 
-.bf-os-panel,
-.bf-os-rhythm,
-.bf-os-sources,
-.bf-os-income {
+.bf-os-rhythm {
   padding: 18px 16px;
   border: 1px solid var(--os-line);
   border-radius: 1.6rem;
   background: var(--os-surface);
   color: var(--os-ink);
-}
-
-.bf-os-kicker {
-  margin: 0;
-  color: var(--os-muted);
-  font-size:12px;
-  font-weight: 600;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-}
-
-.bf-os-title {
-  margin: 4px 0 0;
-  color: var(--os-ink);
-  font-family: Fraunces, "IBM Plex Sans", Georgia, serif;
-  font-size: 1.55rem;
-  font-weight: 560;
-  letter-spacing: -.03em;
-  line-height: 1.15;
-}
-
-.bf-os-rhythm-head,
-.bf-os-income-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
 }
 
 .bf-os-rhythm-grid {
@@ -411,20 +216,6 @@ html:not(.dark) .bf-os-decide {
   font-variant-numeric: tabular-nums;
 }
 
-.bf-os-income-head strong {
-  font-family: Fraunces, Georgia, serif;
-  font-size: 1.7rem;
-  font-weight: 560;
-  color: var(--os-mint);
-}
-
-.bf-os-income-head small {
-  display: block;
-  color: var(--os-muted);
-  font-size: 12px;
-  text-align: right;
-}
-
 .ai-companion-trigger {
   gap: 7px !important;
   border-color: color-mix(in srgb, #7cffc4 28%, transparent) !important;
@@ -445,14 +236,8 @@ html:not(.dark) .bf-os-decide {
 }
 
 @media (max-width: 760px) {
-  .bf-today-situation-actions,
   .bf-os-actions {
     grid-template-columns: 1fr 1fr !important;
-  }
-
-  .bf-today-situation-number strong,
-  .bf-today-situation-number > strong {
-    font-size: clamp(42px, 14vw, 58px) !important;
   }
 
   .bf-os-day b { font-size: 12px; }
@@ -509,49 +294,10 @@ html:not(.dark) .bf-os-decide {
   box-shadow: none;
 }
 
-.dark .bf-brand > b,
-.dark .bf-brand > b i {
-  color: #f3f6f4 !important;
-  text-decoration: none !important;
-}
-
-.dark .bf-brand > b i { color: #7cffc4 !important; }
-
-.dark .bf-appbar-tools > button,
-.dark .bf-theme,
-.dark .bf-command-trigger {
+.dark .bf-theme {
   color: #f3f6f4 !important;
   border-color: color-mix(in srgb, #7cffc4 16%, transparent) !important;
   background: #10141a !important;
-}
-
-.dark .bf-appbar-tools > button.active {
-  color: #062016 !important;
-  border-color: #7cffc4 !important;
-  background: #7cffc4 !important;
-}
-
-.dark .bf-mobile-nav {
-  left: 10px !important;
-  right: 10px !important;
-  bottom: 10px !important;
-  padding: 6px !important;
-  border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
-  border-radius: 1.6rem !important;
-  background: #10141a !important;
-  box-shadow:var(--bf-shadow-raise) !important;
-}
-
-.dark .bf-mobile-nav button {
-  color: #9aa8a1 !important;
-  background: transparent !important;
-  border-radius: 1.2rem !important;
-}
-
-.dark .bf-mobile-nav button.active {
-  color: #7cffc4 !important;
-  background: #14352b !important;
-  box-shadow: none !important;
 }
 
 .dark .bf-page,
@@ -571,9 +317,6 @@ html:not(.dark) .bf-os-decide {
 /* Analog chrome off */
 .bf-health-gauge-tick,
 .bf-health-gauge-end,
-.bf-today-situation-number::after,
-.bf-journal-day-pulse::after,
-.bf-movements-ledger .bf-journal-day-pulse::after,
 .bf-movements-ledger .bf-movements-header > div::before,
 .bf-movements-ledger .bf-empty-state::before,
 .bf-utilities-workspace .bf-topline::before,
@@ -582,9 +325,6 @@ html:not(.dark) .bf-os-decide {
   content: none !important;
 }
 
-.bf-today-situation .bf-health-needle { display: none; }
-
-.dark .bf-today-situation .bf-health-score,
 .dark .os-gauge .os-calm-btn {
   position: relative !important;
   top: auto !important;
@@ -594,20 +334,13 @@ html:not(.dark) .bf-os-decide {
   padding: 0 !important;
 }
 
-.dark .bf-today-situation-top time { margin-right: 0 !important; }
-
 .dark .bf-today-brief,
 .dark .bf-spend-stamp,
-.dark .bf-today-ledger,
 .dark .bf-week-checkin,
-.dark .bf-today-decision,
-.dark .bf-today-measurements,
 .dark .bf-today-activity,
-.dark .bf-today-hub-links,
 .dark .bf-today-envelope-evolution,
 .dark .bf-allocation-history,
 .dark .bf-weekly-summary,
-.dark .bf-journal-day-pulse,
 .dark .bf-journal-quickbar,
 .dark .bf-movement-day,
 .dark .bf-plan-studio-header,
@@ -615,8 +348,6 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-allocation-progress-card,
 .dark .bf-plan-simulator,
 .dark .bf-insights-header,
-.dark .bf-obligations-header,
-.dark .bf-obligation-timeline,
 .dark .bf-obligation-ledger,
 .dark .bf-obligation-lane {
   border-color: color-mix(in srgb, var(--cf-primary, #7cffc4) 16%, transparent) !important;
@@ -627,11 +358,9 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-spend-stamp strong,
-.dark .bf-journal-day-pulse b,
 .dark .bf-plan-header-stat b,
 .dark .bf-allocation-period-summary b,
 .dark .bf-insights-header h1,
-.dark .bf-obligations-header h1,
 .dark .bf-plan-studio-header h1,
 .dark .bf-movements-header h1 {
   color: #f3f6f4 !important;
@@ -640,7 +369,6 @@ html:not(.dark) .bf-os-decide {
 
 .dark .bf-movements-header h1 em,
 .dark .bf-plan-studio-header h1 em,
-.dark .bf-obligations-header h1 em,
 .dark .bf-insights-header h1 em {
   color: #7cffc4 !important;
 }
@@ -649,41 +377,13 @@ html:not(.dark) .bf-os-decide {
 
 .dark .bf-movement-add,
 .dark .bf-primary,
-.dark .bf-os-decide,
-.dark .ai-companion-trigger.is-open {
+.dark .bf-os-decide {
   color: #062016 !important;
   background: #7cffc4 !important;
   border-color: #7cffc4 !important;
   border-radius: 999px !important;
   box-shadow: none !important;
 }
-
-.dark .bf-journal-day-pulse {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr) minmax(0, .8fr) !important;
-  overflow: hidden;
-  padding: 0;
-}
-
-.dark .bf-journal-day-pulse > div,
-.dark .bf-journal-day-pulse > span {
-  padding: 16px 14px !important;
-  border-right: 1px solid color-mix(in srgb, #7cffc4 12%, transparent) !important;
-  background: transparent;
-}
-
-.dark .bf-journal-day-pulse > span:last-child { border-right: 0 !important; }
-
-.dark .bf-journal-day-pulse p,
-.dark .bf-journal-day-pulse small {
-  color: #9aa8a1 !important;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  font-size:12px;
-}
-
-.dark .bf-journal-day-pulse .income { color: #7cffc4 !important; }
-.dark .bf-journal-day-pulse .expense { color: #ff8a7a !important; }
 
 .dark .bf-journal-quickbar {
   display: grid;
@@ -746,35 +446,24 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-plan-studio-header,
-.dark .bf-insights-header,
-.dark .bf-obligations-header {
+.dark .bf-insights-header {
   padding: 8px 2px 18px !important;
   border: 0 !important;
   background: transparent !important;
 }
 
 .dark .bf-allocation-period-tabs,
-.dark .bf-insights-switch,
-.dark .bf-more-tabs {
+.dark .bf-insights-switch {
   background: #10141a !important;
   border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
   border-radius: 999px !important;
 }
 
 .dark .bf-allocation-period-tabs button.active,
-.dark .bf-insights-switch button.active,
-.dark .bf-more-tabs button.active {
+.dark .bf-insights-switch button.active {
   color: #062016 !important;
   background: #7cffc4 !important;
 }
-
-.dark .bf-decision-row.primary {
-  color: #f3f6f4 !important;
-  background: #161d24 !important;
-  border-radius: 1.2rem !important;
-}
-
-.dark .bf-decision-row.primary.good { border-left-color: #7cffc4 !important; }
 
 .dark .ai-companion-trigger {
   bottom: 86px !important;
@@ -809,118 +498,12 @@ html:not(.dark) .bf-os-decide {
 }
 
 /* Preview lock — chrome 1:1 cu Household OS */
-.dark .bf-brand {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-}
 
-.dark .bf-brand-mark,
-.dark .bf-brand-mark.bf-logo-3d {
-  display: grid !important;
-  place-items: center !important;
-  width: 44px !important;
-  height: 44px !important;
-  overflow: hidden !important;
-  border: 1px solid color-mix(in srgb, #7cffc4 18%, transparent) !important;
-  border-radius:20px !important;
-  color: #7cffc4 !important;
-  background: #161d24 !important;
-  box-shadow: none !important;
-}
-
-.dark .bf-brand-mark::before,
-.dark .bf-brand-mark::after,
-.dark .bf-logo-3d::before,
-.dark .bf-logo-3d::after,
-.dark .bf-logo-roof,
-.dark .bf-logo-core,
-.dark .bf-logo-letter { display: none !important; }
-
-.dark .bf-brand-cube { display: block; }
-
-.dark .bf-brand-copy {
-  display: grid !important;
-  line-height: 1.05 !important;
-  text-align: left !important;
-}
-
-.dark .bf-brand-copy b {
-  color: #f3f6f4 !important;
-  font-family: Fraunces, "IBM Plex Sans", Georgia, serif !important;
-  font-size:17px !important;
-  font-weight: 560 !important;
-  letter-spacing: -.03em !important;
-}
-
-.dark .bf-brand-copy i {
-  color: #7cffc4 !important;
-  font-style: normal !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  text-decoration: none !important;
-}
-
-.dark .bf-command-trigger kbd { display: none !important; }
-
-.dark .bf-appbar-tools > button,
-.dark .bf-theme,
-.dark .bf-command-trigger {
+.dark .bf-theme {
   width: 44px !important;
   height: 44px !important;
   border-radius:20px !important;
 }
-
-.dark .bf-os-date {
-  display: grid;
-  justify-items: end;
-  gap: 1px;
-  font-family: ui-monospace, "IBM Plex Sans", monospace;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-  color: #9aa8a1;
-}
-
-.dark .bf-os-date b {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: .22em;
-  color: #c5d0c9;
-}
-
-.dark .bf-os-date span { font-size:12px; }
-
-.dark .bf-today-situation-number > strong small {
-  margin-left: 10px;
-  color: #9aa8a1 !important;
-  font-family: "IBM Plex Sans", sans-serif !important;
-  font-size:15px !important;
-  font-weight: 500 !important;
-  letter-spacing: .28em !important;
-  vertical-align: 8px;
-}
-
-.dark .bf-os-gauge-wrap {
-  display: grid;
-  place-items: center;
-  margin-top: 8px;
-}
-
-.dark .bf-today-situation .bf-health-score,
-.dark .bf-os-gauge-wrap .bf-health-score {
-  position: relative !important;
-  top: auto !important;
-  right: auto !important;
-  width: min(100%, 220px) !important;
-  margin: 4px auto 0 !important;
-  padding: 10px 12px 4px !important;
-  border-radius: 1.5rem !important;
-  background: color-mix(in srgb, #07090c 70%, transparent) !important;
-  box-shadow: 0 0 0 1px color-mix(in srgb, #7cffc4 14%, transparent) !important;
-}
-
-.dark .bf-today-situation-top time,
-.dark .bf-today-situation-top { margin-right: 0 !important; }
 
 .bf-calm-gauge { width: 100%; color: #7cffc4; }
 .bf-calm-track { stroke: #2a3a34; stroke-width: 6; stroke-linecap: round; }
@@ -986,36 +569,6 @@ html:not(.dark) .bf-os-decide {
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
-}
-
-.dark .bf-mobile-nav {
-  left: 12px !important;
-  right: 12px !important;
-  bottom: 10px !important;
-  height: auto !important;
-  padding: 6px !important;
-  border-radius: 1.6rem !important;
-  background: color-mix(in srgb, #10141a 95%, transparent) !important;
-}
-
-.dark .bf-mobile-nav button {
-  min-height: 56px !important;
-  border-radius: 1.2rem !important;
-  color: #9aa8a1 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.dark .bf-mobile-nav button.active {
-  color: #062016 !important;
-  background: #7cffc4 !important;
-  box-shadow: none !important;
-}
-
-.dark .bf-mobile-nav button span {
-  font-family: "IBM Plex Sans", sans-serif !important;
-  font-size:12px !important;
-  font-weight: 600 !important;
 }
 
 .dark .bf-os-actions {
@@ -1249,20 +802,6 @@ html:not(.dark) .bf-os-decide {
 
 
 /* Feed familie + tip glosar plic — claritate multi-perspectivă 2026-09-12 */
-.bf-today-family-feed {
-  display: grid;
-  gap: 8px;
-  margin: 0 0 14px;
-  padding: 14px 14px 12px;
-  border: 1px solid color-mix(in srgb, var(--cf-line, #e2dfd6) 90%, transparent);
-  border-radius:12px;
-  background: color-mix(in srgb, var(--cf-surface, #fffefa) 92%, var(--cf-primary, #eec64d) 8%);
-}
-.bf-today-family-feed h3 {
-  margin: 0;
-  font: 600 16px/1.15 "IBM Plex Sans", Georgia, serif;
-  color: var(--cf-ink, #172d28);
-}
 .bf-envelope-glossary-tip {
   display: grid;
   gap: 6px;
@@ -1277,12 +816,6 @@ html:not(.dark) .bf-os-decide {
 .bf-simple-mode-card {
   display: grid;
   gap: 8px;
-}
-.bf-simple-mode-banner {
-  margin: 0 0 12px;
-  padding: 10px 12px;
-  border-radius:12px;
-  background: color-mix(in srgb, var(--cf-surface-alt, #edf0ea) 80%, transparent);
 }
 .bf-simple-mode-exit {
   width: 100%;

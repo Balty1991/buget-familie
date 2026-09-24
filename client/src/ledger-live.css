@@ -17,15 +17,8 @@
 .bf-envelope-empty-art .bf-envelope-lip { fill: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface)); stroke: var(--cf-line); }
 .bf-envelope-empty-art .bf-envelope-seal { fill: var(--cf-warning); }
 
-.bf-today-ledger {
-  display: grid;
-  gap: 14px;
-  color: var(--cf-ink);
-}
-
 .bf-today-pulse,
-.bf-today-envelopes,
-.bf-payday-track {
+.bf-today-envelopes {
   padding: 16px 18px;
   border: 1px solid var(--cf-line);
   border-radius: 20px;
@@ -86,29 +79,6 @@
   font-weight:600;
   letter-spacing: .04em;
   text-transform: uppercase;
-}
-
-.bf-payday-track {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-}
-
-.bf-payday-track span { display: grid; gap: 2px; }
-.bf-payday-track small { color: var(--cf-muted); font-size:12px; font-weight:600; letter-spacing: .08em; }
-.bf-payday-track b { color: var(--cf-ink); font-family: "IBM Plex Sans", Georgia, serif; font-size: 22px; line-height: 1; }
-.bf-payday-rail {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: color-mix(in srgb, var(--cf-ink) 12%, var(--cf-surface));
-}
-.bf-payday-rail i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--cf-primary), var(--cf-info));
 }
 
 .bf-today-envelopes-heading {
@@ -204,8 +174,6 @@
 @media (max-width: 760px) {
   .bf-today-pulse { grid-template-columns: 1fr; }
   .bf-today-pulse-chart { min-height: 84px; }
-  .bf-payday-track { grid-template-columns: minmax(0, 1fr) auto; }
-  .bf-payday-rail { grid-column: 1 / -1; }
   .bf-allocation-list article { grid-template-columns: 52px minmax(0, 1fr) auto; }
   .bf-envelope-portrait { width: 52px; }
 }

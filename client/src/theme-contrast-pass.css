@@ -88,7 +88,6 @@ html.bf-high-contrast {
 /* Titlul Plan nu se mai taie pe linia de sus (line-height < 1 + serif). */
 .bf-plan-studio-header,
 .bf-movements-header,
-.bf-obligations-header,
 .bf-insights-header,
 .bf-salary-cycle-plan .bf-plan-studio-header {
   overflow: visible !important;
@@ -97,7 +96,6 @@ html.bf-high-contrast {
 .bf-plan-studio-header h1,
 .bf-salary-cycle-plan .bf-plan-studio-header h1,
 .bf-movements-header h1,
-.bf-obligations-header h1,
 .bf-insights-header h1 {
   overflow: visible !important;
   line-height: 1.18 !important;
@@ -119,12 +117,7 @@ html.bf-high-contrast {
 
 /* Carduri Plan / ciclu / plicuri — suprafața temei, nu crem. */
 .bf-plan-sheet,
-.bf-plan-sources,
-.bf-plan-envelope-workbench,
-.bf-cycle-overview,
 .bf-cycle-setup,
-.bf-allocation-studio,
-.bf-plan-unallocated,
 .bf-cycle-tools,
 .bf-plan-flow,
 .bf-allocation-period,
@@ -139,24 +132,18 @@ html.bf-high-contrast {
 .bf-plan-flow h2,
 .bf-allocation-period h2,
 .bf-allocation-guidance h2,
-.bf-cycle-overview h2,
-.bf-allocation-studio h2,
 .bf-plan-sheet-heading h2 {
   color: var(--cf-ink) !important;
 }
 .bf-plan-flow .bf-kicker,
 .bf-allocation-period .bf-kicker,
 .bf-allocation-guidance p,
-.bf-allocation-period p:not(.bf-kicker),
-.bf-plan-envelope-intro {
+.bf-allocation-period p:not(.bf-kicker) {
   color: var(--cf-muted) !important;
 }
 
 /* Situația de azi: inelul de scor nu e tăiat, cardul rămâne pe temă. */
-.bf-today-situation,
-.bf-today-decision,
 .bf-today-activity,
-.bf-today-hub-links,
 .bf-weekly-summary {
   color: var(--cf-ink) !important;
   background: var(--cf-surface) !important;
@@ -167,25 +154,16 @@ html.bf-high-contrast {
 
 /* Rapoarte, scadențe, asistent: carduri crem hardcodate → suprafața temei. */
 .bf-recurring-card,
-.bf-report-card,
-.bf-report-metrics article,
 .bf-advisor-studio,
 .bf-scenario-card,
 .bf-more-grid button,
-.bf-filter-sheet,
-.bf-journal,
-.bf-period-card,
-.bf-balance-card,
-.bf-ledger-mini,
-.bf-pulse-grid article {
+.bf-journal {
   color: var(--cf-ink) !important;
   background: var(--cf-surface) !important;
   border-color: var(--cf-line) !important;
 }
 .bf-recurring-form label,
-.bf-recurring-form small,
-.bf-report-metrics small,
-.bf-report-note {
+.bf-recurring-form small {
   color: var(--cf-muted) !important;
 }
 .bf-recurring-form input,
@@ -204,19 +182,15 @@ html.bf-high-contrast {
  * care altfel lăsau eticheta verde pe verde (testare cu utilizatori, M5).
  */
 .bf-recurring-hero,
-.bf-reports-hero,
 .bf-advisor-hero {
   color: #f4faf6 !important;
 }
 html body .os-shell .bf-recurring-hero.bf-recurring-hero h2,
-html body .os-shell .bf-reports-hero.bf-reports-hero h2,
 html body .os-shell .bf-advisor-hero.bf-advisor-hero h2,
-html body .os-shell .bf-recurring-hero.bf-recurring-hero p,
-html body .os-shell .bf-reports-hero.bf-reports-hero p {
+html body .os-shell .bf-recurring-hero.bf-recurring-hero p {
   color: #f4faf6 !important;
 }
 html body .os-shell .bf-recurring-hero.bf-recurring-hero .bf-kicker.bf-kicker,
-html body .os-shell .bf-reports-hero.bf-reports-hero .bf-kicker.bf-kicker,
 html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
   color: rgba(255, 255, 255, 0.82) !important;
 }
@@ -231,15 +205,13 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 .bf-page,
 .bf-today-workspace,
 .bf-plan-workspace,
-.bf-movements-workspace,
 .bf-obligations-workspace,
 .bf-insights-workspace {
   color: var(--cf-ink) !important;
 }
 
 /* Navigație + appbar pe suprafața temei, nu pe un overlay străin. */
-.bf-appbar,
-.bf-mobile-nav {
+.bf-appbar {
   color: var(--cf-ink);
   background: color-mix(in srgb, var(--cf-surface) 92%, transparent) !important;
   border-color: var(--cf-line) !important;

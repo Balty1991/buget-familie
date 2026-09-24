@@ -22,9 +22,7 @@
 .os-shell .bf-obligations-workspace .bf-debt-history > p,
 .os-shell .bf-obligations-workspace .bf-debt-history small,
 .os-shell .bf-obligations-workspace .bf-debt-history.empty,
-.os-shell .bf-obligations-workspace .bf-debt-plan-stats small,
 .os-shell .bf-obligations-workspace .bf-debt-plan-total small,
-.os-shell .bf-obligations-workspace .bf-debt-plan-progress > div,
 .os-shell .bf-obligations-workspace .bf-debt-schedule-head p,
 .os-shell .bf-obligations-workspace .bf-debt-schedule-head > span,
 .os-shell .bf-obligations-workspace .bf-debt-schedule-row small,
@@ -36,7 +34,6 @@
 }
 
 @media (max-width: 760px) {
-  .os-shell .bf-obligations-workspace .bf-obligations-header > div:first-child > p:last-child,
   .os-shell .bf-obligations-workspace .bf-upcoming-hero > div > p:not(.bf-kicker) {
     font-size: var(--bf-text-min, 12px) !important;
   }
@@ -46,7 +43,6 @@
 .os-shell .bf-obligations-workspace .bf-debt-schedule-row b,
 .os-shell .bf-obligations-workspace .bf-debt-schedule-row strong,
 .os-shell .bf-obligations-workspace .bf-debt-simulator-summary b,
-.os-shell .bf-obligations-workspace .bf-debt-plan-stats b,
 .os-shell .bf-obligations-workspace .bf-debt-history b,
 .os-shell .bf-obligations-workspace .bf-debt-history strong {
   font-size: var(--bf-text-money, 14px) !important;

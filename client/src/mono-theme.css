@@ -34,9 +34,6 @@
 }.theme-white .bf-appbar::after{
   width: 64px;
   background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong));
-}.theme-white .bf-mobile-nav button.active{
-  background: linear-gradient(135deg, var(--cf-primary), var(--cf-primary-strong)) !important;
-  color: #ffffff !important;
 }.theme-white .bf-primary{
   color: #ffffff !important;
   background: var(--cf-primary-strong);
@@ -76,7 +73,5 @@ html.theme-dark{
 
 @media (max-width: 480px) {.theme-white .bf-appbar, .theme-dark .bf-appbar{
     backdrop-filter: blur(12px);
-  }.theme-white .bf-mobile-nav button, .theme-dark .bf-mobile-nav button{
-    min-height: 48px;
   }
 }

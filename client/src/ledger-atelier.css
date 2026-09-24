@@ -10,18 +10,13 @@
 .bf-envelope-shadow { fill: color-mix(in srgb, var(--cf-ink) 18%, transparent); }
 .bf-envelope-body { fill: color-mix(in srgb, var(--cf-surface) 82%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.4; }
 .bf-envelope-fill { fill: var(--cf-primary-strong); opacity: .82; }
-.bf-envelope-window { fill: color-mix(in srgb, var(--cf-surface) 70%, #fff); stroke: var(--cf-line); stroke-width: 1; }
-.bf-envelope-window-fill { fill: color-mix(in srgb, var(--cf-primary) 55%, var(--cf-surface)); }
 .bf-envelope-flap { fill: none; stroke: var(--cf-ink); stroke-width: 1.5; stroke-linejoin: round; }
 .bf-envelope-lip { fill: color-mix(in srgb, var(--cf-surface) 55%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.1; }
-.bf-envelope-grain { fill: var(--cf-ink); opacity: .28; pointer-events: none; }
 .bf-envelope-seal { fill: var(--cf-warning); stroke: color-mix(in srgb, var(--cf-ink) 35%, var(--cf-warning)); stroke-width: 1; }
 .bf-envelope-seal-text { fill: #3a2410; font-size:12px; font-weight:600; font-family: "IBM Plex Sans", system-ui, sans-serif; }
-.bf-envelope-mark.watch .bf-envelope-fill,
-.bf-envelope-mark.watch .bf-envelope-window-fill { fill: var(--cf-warning); }
+.bf-envelope-mark.watch .bf-envelope-fill { fill: var(--cf-warning); }
 .bf-envelope-mark.watch .bf-envelope-seal { fill: var(--cf-warning); }
-.bf-envelope-mark.over .bf-envelope-fill,
-.bf-envelope-mark.over .bf-envelope-window-fill { fill: var(--cf-danger); }
+.bf-envelope-mark.over .bf-envelope-fill { fill: var(--cf-danger); }
 .bf-envelope-mark.over .bf-envelope-body { stroke: var(--cf-danger); }
 .bf-envelope-mark.over .bf-envelope-seal { fill: var(--cf-danger); }
 .bf-envelope-mark.over .bf-envelope-seal-text { fill: #fff; }
@@ -53,15 +48,6 @@
 }
 .bf-health-needle { fill: var(--cf-ink); }
 .bf-health-needle-hub { fill: var(--cf-ink); stroke: var(--cf-surface); stroke-width: 2; }
-
-.bf-health-score {
-  display: inline-flex !important;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px !important;
-  padding: 4px 8px 6px !important;
-}
-.bf-health-score small { letter-spacing: .08em; }
 .bf-health-factor {
   display: grid !important;
   grid-template-columns: 46px minmax(0, 1fr);
@@ -69,26 +55,8 @@
   align-items: start;
 }
 
-.bf-today-situation .bf-health-score {
-  background: rgba(255,255,255,.12) !important;
-  border-color: rgba(255,255,255,.28) !important;
-  color: var(--bf-on-hero, #f4faf6) !important;
-}
-.bf-today-situation .bf-health-gauge { color: #f4ead0; }
-.bf-today-situation .bf-health-gauge.watch { color: var(--cf-warning); }
-.bf-today-situation .bf-health-gauge.risk { color: #ffc1b6; }
-.bf-today-situation .bf-health-gauge-track { stroke: rgba(255,255,255,.22); }
-.bf-today-situation .bf-health-gauge-tick { stroke: rgba(255,255,255,.4); }
-.bf-today-situation .bf-health-gauge-end,
-.bf-today-situation .bf-health-gauge-score,
-.bf-today-situation .bf-health-needle,
-.bf-today-situation .bf-health-needle-hub { fill: #f7fff9; }
-.bf-today-situation .bf-health-needle-hub { stroke: color-mix(in srgb, var(--cf-primary-strong) 40%, #06140f); }
-.bf-today-situation .bf-health-score small { color: #f7fff9 !important; }
-
 /* —— Masa de lucru Astăzi —— */
-.bf-ledger-desk,
-.bf-today-ledger {
+.bf-ledger-desk {
   display: grid;
   gap: 14px;
   color: var(--cf-ink);
@@ -128,7 +96,6 @@
 }
 .bf-today-pulse,
 .bf-today-envelopes,
-.bf-payday-track,
 .bf-payday-strip,
 .bf-cash-note {
   padding: 16px 18px;
@@ -285,15 +252,6 @@
 .bf-today-envelopes-empty small { color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
 
 /* —— Plan: birou de plicuri —— */
-.bf-plan-fan {
-  display: flex;
-  gap: 4px;
-  justify-content: flex-end;
-  min-height: 52px;
-  padding: 4px 0 2px;
-}
-.bf-plan-fan .bf-envelope-mark { margin-left: -18px; filter: drop-shadow(0 6px 8px color-mix(in srgb, var(--cf-ink) 16%, transparent)); }
-.bf-plan-fan .bf-envelope-mark:first-child { margin-left: 0; }
 
 .bf-allocation-list.bf-envelope-desk {
   display: grid;
@@ -392,9 +350,7 @@
 @media (max-width: 760px) {
   .bf-desk-top { grid-template-columns: 1fr; }
   .bf-today-pulse { grid-template-columns: 1fr; }
-  .bf-today-situation .bf-health-gauge { width: 78px; height: auto; }
   .bf-allocation-list.bf-envelope-desk { grid-template-columns: 1fr; }
-  .bf-plan-fan { justify-content: flex-start; overflow-x: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -513,8 +469,6 @@
   grid-template-columns: repeat(auto-fit, minmax(20px, 1fr)) !important;
 }
 
-.bf-plan-fan { display: none !important; }
-
 .bf-allocation-list.bf-envelope-desk .bf-envelope-portrait {
   width: auto;
   justify-items: start;
@@ -524,8 +478,6 @@
   height: auto;
   max-height: 46px;
 }
-
-.bf-obligations-header > span { display: none !important; }
 .bf-obligations-links {
   display: grid;
   gap: 8px;
@@ -847,24 +799,14 @@
     -webkit-overflow-scrolling: touch;
     scroll-padding-bottom: var(--bf-nav-clearance);
   }
-  .bf-mobile-nav {
-    position: fixed !important;
-    z-index: 45 !important;
-    left: 12px !important;
-    right: 12px !important;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
-    height: 68px !important;
-    width: auto !important;
-  }
   .bf-page,
-  .bf-today-workspace,
-  .bf-movements-workspace,
-  .bf-obligations-workspace,
-  .bf-plan-workspace,
-  .bf-insights-workspace,
-  .bf-utilities-workspace,
-  .bf-goals-workspace,
-  .bf-calendar-workspace {
+.bf-today-workspace,
+.bf-obligations-workspace,
+.bf-plan-workspace,
+.bf-insights-workspace,
+.bf-utilities-workspace,
+.bf-goals-workspace,
+.bf-calendar-workspace {
     padding-bottom: var(--bf-nav-clearance) !important;
   }
   .bf-more-grid {
@@ -873,13 +815,7 @@
   .bf-more-grid button {
     overflow: visible;
   }
-  .bf-obligations-header {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-    align-items: start !important;
-  }
-  .bf-obligations-links .bf-goals-link,
-  .bf-obligations-header .bf-goals-link {
+  .bf-obligations-links .bf-goals-link {
     width: 100%;
     min-height: 48px !important;
     justify-content: flex-start !important;

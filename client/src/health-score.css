@@ -1,98 +1,6 @@
 /* Scor de sănătate financiară — badge pe Astăzi + sheet explicabil.
    Culorile vin EXCLUSIV din --cf-*, ca inelul și textul să rămână lizibile pe orice temă. */
 
-.bf-health-score {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-  padding: 0.4rem 0.8rem 0.4rem 0.4rem;
-  border-radius: 999px;
-  border: 1px solid var(--cf-line);
-  background: var(--cf-surface-alt);
-  color: var(--cf-ink);
-  font: inherit;
-  cursor: pointer;
-  isolation: isolate;
-  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-}
-
-.bf-health-score:hover {
-  background: color-mix(in srgb, var(--cf-primary) 12%, var(--cf-surface));
-  border-color: color-mix(in srgb, var(--cf-primary) 45%, var(--cf-line));
-}
-
-.bf-health-score:active {
-  transform: scale(0.97);
-}
-
-.bf-health-score.good { --bf-health-accent: var(--cf-primary); }
-.bf-health-score.watch { --bf-health-accent: var(--cf-warning); }
-.bf-health-score.risk { --bf-health-accent: var(--cf-danger); }
-
-.bf-health-ring {
-  --score: 0;
-  --bf-health-accent: var(--cf-primary);
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(
-    var(--bf-health-accent) calc(var(--score) * 1%),
-    color-mix(in srgb, var(--cf-ink) 16%, var(--cf-surface)) 0
-  );
-  position: relative;
-  flex-shrink: 0;
-}
-
-.bf-health-score.good .bf-health-ring,
-.bf-health-sheet-ring-wrap .bf-health-ring.good { --bf-health-accent: var(--cf-primary); }
-.bf-health-score.watch .bf-health-ring,
-.bf-health-sheet-ring-wrap .bf-health-ring.watch { --bf-health-accent: var(--cf-warning); }
-.bf-health-score.risk .bf-health-ring,
-.bf-health-sheet-ring-wrap .bf-health-ring.risk { --bf-health-accent: var(--cf-danger); }
-
-.bf-health-ring::before {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background: var(--cf-surface);
-  z-index: 0;
-}
-
-.bf-health-ring b {
-  position: relative;
-  z-index: 1;
-  color: var(--cf-ink);
-  font-size: 0.72rem;
-  font-weight:600;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.bf-health-ring.large {
-  width: 5rem;
-  height: 5rem;
-}
-
-.bf-health-ring.large b {
-  font-size: 1.35rem;
-}
-
-.bf-health-ring.large::before {
-  inset: 6px;
-}
-
-.bf-health-score small {
-  font-size: 0.72rem;
-  font-weight:600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--cf-ink);
-}
-
 .bf-health-sheet {
   max-width: 22rem;
   color: var(--cf-ink) !important;
@@ -178,19 +86,6 @@
   text-transform: uppercase;
   color: var(--cf-muted);
   text-align: center;
-}
-
-.bf-today-situation-number .bf-health-score {
-  margin-top: 0.85rem;
-}
-
-.bf-today-situation,
-.bf-today-situation-number {
-  overflow: visible !important;
-}
-
-.bf-mobile-fab {
-  display: none !important;
 }
 
 @media (max-width: 880px) {

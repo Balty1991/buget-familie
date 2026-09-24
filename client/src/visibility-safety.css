@@ -3,17 +3,13 @@
  * This file is intentionally loaded after the visual redesign so no ivory fallback can win.
  */
 
-.bf-appbar,
-.bf-mobile-nav {
+.bf-appbar {
   color: var(--cf-ink) !important;
   background: color-mix(in srgb, var(--cf-surface) 96%, transparent) !important;
   border-color: var(--cf-line) !important;
 }
 
-.bf-appbar nav button,
-.bf-appbar-tools > button,
-.bf-appbar .bf-brand,
-.bf-appbar .bf-brand > b {
+.bf-appbar nav button {
   color: var(--cf-ink) !important;
 }
 
@@ -24,14 +20,11 @@
 }
 
 .bf-obligations-workspace,
-.bf-obligations-header,
-.bf-obligation-timeline,
 .bf-obligation-ledger,
 .bf-obligation-lane,
 .bf-obligation-entry,
 .bf-obligation-empty,
-.bf-debt-history,
-.bf-obligation-links .bf-goals-link {
+.bf-debt-history {
   color: var(--cf-ink) !important;
   border-color: var(--cf-line) !important;
 }
@@ -40,8 +33,7 @@
 .bf-obligation-lane,
 .bf-obligation-entry,
 .bf-obligation-empty,
-.bf-debt-history,
-.bf-obligation-timeline {
+.bf-debt-history {
   background: var(--cf-surface) !important;
 }
 
@@ -55,14 +47,11 @@
 .bf-obligation-lane > header h2,
 .bf-obligation-entry-main b,
 .bf-obligation-empty b,
-.bf-obligation-timeline h2,
-.bf-obligation-timeline b,
 .bf-obligation-ledger article span,
 .bf-obligation-ledger article small {
   color: var(--cf-ink) !important;
 }
 
-.bf-obligation-header p:not(.bf-kicker),
 .bf-obligation-entry-main small,
 .bf-obligation-progress small,
 .bf-obligation-empty small,
@@ -139,17 +128,6 @@
   color: var(--cf-info) !important;
 }
 
-.bf-mobile-nav button {
-  color: var(--cf-muted) !important;
-  background: transparent !important;
-}
-
-.bf-mobile-nav button.active {
-  color: var(--cf-ink) !important;
-  background: color-mix(in srgb, var(--cf-primary) 20%, var(--cf-surface)) !important;
-  box-shadow: inset 0 -2px 0 var(--cf-primary) !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .bf-obligation-entry,
   .bf-obligation-actions button,
@@ -203,18 +181,6 @@
 .bf-allocation-guidance-action:hover,
 .bf-quick-envelope-chips button:hover {
   background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface-alt)) !important;
-}
-
-.bf-wizard-progress span {
-  color: var(--cf-muted) !important;
-  background: var(--cf-surface-alt) !important;
-  border-color: var(--cf-line) !important;
-}
-
-.bf-wizard-progress span.active {
-  color: var(--cf-ink) !important;
-  background: var(--cf-primary) !important;
-  border-color: var(--cf-primary) !important;
 }
 
 /* Restul suprafețelor "ivory" forțate de redesign-2026.css (Plan, Sync, Ghid, Gospodărie,
@@ -278,7 +244,6 @@
 .dark .bf-plan-toggle button.active,
 .dark .bf-analysis-scope button.active,
 .dark .bf-cycle-template-save button,
-.dark .bf-wizard-progress span.active,
 .dark .bf-analysis-next-step button {
   color: #10231f !important;
 }
@@ -324,35 +289,12 @@ html.theme-cyber .bf-obligation-actions button {
  * simplă, stivuită (etichetă / sumă / notă) — clară pe orice lățime de telefon și pentru orice
  * sumă. Selectorul trebuie să repete exact lista :first-child/:nth-child a regulii vechi din
  * clarity-rebuild.css ca să o depășească în specificitate, nu doar în ordine. */
-.bf-today-measurements article,
-.bf-today-measurements article:first-child,
-.bf-today-measurements article:nth-child(2),
-.bf-today-measurements article:nth-child(3) {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 2px !important;
-  height: auto !important;
-  min-height: 0 !important;
-}
 
 /* Cardul mare de pe Astăzi rezervă o coloană fixă (~210px) pentru sumă și una separată
  * (~116px) pentru insigna de sănătate financiară, pe același rând. Suma folosește un font
  * foarte mare (clamp 48-72px); orice sold de 4-5 cifre depășește cei 210px alocați și se
  * scurge peste insignă. O coloană simplă, cu insigna stivuită dedesubt, elimină concurența
  * pentru lățime indiferent cât de mare e suma. */
-.bf-today-situation-number {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-}
-
-.bf-today-situation .bf-health-score {
-  position: relative !important;
-  right: auto !important;
-  bottom: auto !important;
-  margin-top: 12px !important;
-}
 
 /* "Plicurile pe masă" (.bf-envelope-fan) a acumulat reguli de grid contradictorii din mai
  * multe treceri: un fișier fixează grid-auto-flow: column + grid-auto-columns: 132px (gând
@@ -396,14 +338,10 @@ html.theme-cyber .bf-obligation-actions button {
 .bf-debt-schedule{margin:12px 0 0;padding:14px;border:1px solid rgba(112,229,189,.22);border-radius:20px;background:rgba(11,25,29,.72)}.bf-debt-schedule-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:9px}.bf-debt-schedule-head p{margin:0 0 4px;color:#70e5bd;font-size:12px;font-weight:600;letter-spacing:.14em}.bf-debt-schedule-head b{font-size:12px;color:#edf9f2}.bf-debt-schedule-head>span{color:#f4d27d;font-size:12px;font-weight:600}.bf-debt-schedule-list{display:grid;gap:5px}.bf-debt-schedule-row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:8px 6px;border-radius:12px;background:rgba(255,255,255,.045)}.bf-debt-schedule-row.paid{background:rgba(87,223,176,.1)}.bf-schedule-check{display:grid;place-items:center;width:23px;height:23px;border:1px solid #658075;border-radius:12px;background:transparent;color:#071b18;cursor:pointer}.bf-debt-schedule-row.paid .bf-schedule-check{border-color:#57dfb0;background:#57dfb0}.bf-schedule-check span{width:7px;height:7px;border-radius:50%;background:#758981}.bf-debt-schedule-row b{display:block;color:#edf9f2;font-size:12px}.bf-debt-schedule-row small{display:block;margin-top:2px;color:#9bb2a7;font-size:12px}.bf-debt-schedule-row strong{color:#f4d27d;font-size:12px}.bf-schedule-more{margin-top:8px;border:0;background:transparent;color:#70e5bd;font:600 10px "IBM Plex Sans",sans-serif;cursor:pointer}
 @media(max-width:760px){.bf-obligation-ai{grid-template-columns:auto 1fr;gap:12px;padding:15px}.bf-obligation-ai h2{font-size:17px}.bf-obligation-ai p:not(.bf-kicker){font-size:12px}.bf-obligation-ai button{grid-column:1/-1;justify-content:center}.bf-debt-schedule{margin-inline:-2px}.bf-debt-schedule-row{grid-template-columns:28px minmax(0,1fr) auto}.bf-debt-schedule-head>span{font-size:12px}}
 
-.bf-debt-plan{margin:18px 0;padding:22px;border:1px solid color-mix(in srgb,var(--cf-primary) 45%,var(--cf-line));border-radius:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--cf-primary) 14%,var(--cf-surface)),var(--cf-surface));color:var(--cf-ink)}.bf-debt-plan-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.bf-debt-plan .bf-kicker{margin:0 0 7px;color:var(--cf-primary)}.bf-debt-plan h2{margin:0;font:600 clamp(22px,3vw,32px)/1.08 Georgia,serif}.bf-debt-plan h2 em{color:var(--cf-primary);font-style:normal}.bf-debt-plan-top span{display:block;margin-top:8px;color:var(--cf-muted);font-size:12px}.bf-debt-plan-top span b{color:var(--cf-ink)}.bf-debt-plan-total{text-align:right}.bf-debt-plan-total strong{display:block;color:var(--cf-danger);font:600 clamp(25px,4vw,38px)/1 Georgia,serif}.bf-debt-plan-total small{color:var(--cf-muted);font-size:12px}.bf-debt-plan-progress{margin-top:20px}.bf-debt-plan-progress>div{display:flex;justify-content:space-between;color:var(--cf-muted);font-size:12px}.bf-debt-plan-progress b{color:var(--cf-primary)}.bf-debt-plan-progress>i{display:block;height:10px;margin-top:7px;border-radius:99px;background:color-mix(in srgb,var(--cf-line) 70%,var(--cf-surface));overflow:hidden}.bf-debt-plan-progress>i em{display:block;height:100%;border-radius:inherit;background:var(--cf-primary);transition:width .25s ease}.bf-debt-plan-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}.bf-debt-plan-stats span{padding:11px 12px;border-radius:12px;background:color-mix(in srgb,var(--cf-surface-alt) 78%,transparent)}.bf-debt-plan-stats b{display:block;font-size:15px}.bf-debt-plan-stats small{display:block;margin-top:4px;color:var(--cf-muted);font-size:12px}.bf-debt-plan.complete{display:flex;align-items:center;gap:15px}.bf-debt-plan-mark{display:grid;place-items:center;width:48px;height:48px;border-radius:20px;background:var(--cf-primary);color:var(--cf-surface)}.bf-debt-plan.complete h2{font-size:22px}.bf-debt-plan.complete span{display:block;margin-top:6px;color:var(--cf-muted);font-size:12px}
-@media(max-width:600px){.bf-debt-plan{padding:17px;border-radius:20px}.bf-debt-plan-top{display:block}.bf-debt-plan-total{text-align:left;margin-top:16px}.bf-debt-plan-total strong{font-size:30px}.bf-debt-plan-stats{gap:6px}.bf-debt-plan-stats span{padding:9px 8px}.bf-debt-plan-stats b{font-size:14px}.bf-debt-plan-stats small{font-size:12px}}
+.bf-debt-plan{margin:18px 0;padding:22px;border:1px solid color-mix(in srgb,var(--cf-primary) 45%,var(--cf-line));border-radius:20px;background:linear-gradient(135deg,color-mix(in srgb,var(--cf-primary) 14%,var(--cf-surface)),var(--cf-surface));color:var(--cf-ink)}.bf-debt-plan .bf-kicker{margin:0 0 7px;color:var(--cf-primary)}.bf-debt-plan h2{margin:0;font:600 clamp(22px,3vw,32px)/1.08 Georgia,serif}.bf-debt-plan h2 em{color:var(--cf-primary);font-style:normal}.bf-debt-plan-total{text-align:right}.bf-debt-plan-total strong{display:block;color:var(--cf-danger);font:600 clamp(25px,4vw,38px)/1 Georgia,serif}.bf-debt-plan-total small{color:var(--cf-muted);font-size:12px}.bf-debt-plan.complete{display:flex;align-items:center;gap:15px}.bf-debt-plan.complete h2{font-size:22px}.bf-debt-plan.complete span{display:block;margin-top:6px;color:var(--cf-muted);font-size:12px}
+@media(max-width:600px){.bf-debt-plan{padding:17px;border-radius:20px}.bf-debt-plan-total{text-align:left;margin-top:16px}.bf-debt-plan-total strong{font-size:30px}}
 
 .bf-debt-simulator{margin:18px 0;padding:20px;border:1px solid var(--cf-line);border-radius:20px;background:var(--cf-surface-alt);color:var(--cf-ink)}.bf-debt-simulator-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.bf-debt-simulator .bf-kicker{margin:0 0 6px;color:var(--cf-warning)}.bf-debt-simulator h2{margin:0;font:600 24px/1.1 Georgia,serif}.bf-debt-simulator h2 em{color:var(--cf-primary);font-style:normal}.bf-debt-simulator-head span{display:block;margin-top:7px;color:var(--cf-muted);font-size:12px;line-height:1.45}.bf-debt-simulator-result{text-align:right}.bf-debt-simulator-result strong{display:block;color:var(--cf-primary);font:600 36px/1 Georgia,serif}.bf-debt-simulator-result small{color:var(--cf-muted);font-size:12px}.bf-debt-slider{margin-top:20px}.bf-debt-slider>div{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--cf-muted)}.bf-debt-slider>div b{color:var(--cf-primary);font-size:15px}.bf-debt-slider input{width:100%;margin:13px 0 4px;accent-color:var(--cf-primary);cursor:pointer}.bf-debt-slider-labels{font-size:12px}.bf-debt-simulator-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.bf-debt-simulator-summary span{padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--cf-surface) 70%,transparent)}.bf-debt-simulator-summary b{display:block;font-size:14px}.bf-debt-simulator-summary small{display:block;margin-top:3px;color:var(--cf-muted);font-size:12px}
 @media(max-width:600px){.bf-debt-simulator{padding:16px;border-radius:20px}.bf-debt-simulator-head{display:block}.bf-debt-simulator-result{text-align:left;margin-top:14px}.bf-debt-simulator-result strong{font-size:30px}.bf-debt-simulator-summary{gap:5px}.bf-debt-simulator-summary span{padding:9px 7px}.bf-debt-simulator-summary b{font-size:12px}.bf-debt-simulator-summary small{font-size:12px}}
-
-.bf-modern-pulse{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);gap:24px;align-items:center;margin:18px 0;padding:22px;border:1px solid var(--cf-line);border-radius:20px;background:linear-gradient(120deg,color-mix(in srgb,var(--cf-primary) 10%,var(--cf-surface)),var(--cf-surface-alt));color:var(--cf-ink)}.bf-modern-pulse-copy .bf-kicker{margin:0 0 7px;color:var(--cf-primary)}.bf-modern-pulse-copy h2{margin:0;font:600 clamp(22px,3vw,30px)/1.08 Georgia,serif}.bf-modern-pulse-copy p:not(.bf-kicker){margin:8px 0 13px;color:var(--cf-muted);font-size:12px;line-height:1.5}.bf-modern-pulse-copy p b{color:var(--cf-ink)}.bf-modern-pulse-copy button{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--cf-primary);font:600 11px "IBM Plex Sans",sans-serif;cursor:pointer;padding:0}.bf-modern-pulse-chart{display:flex;align-items:end;justify-content:space-between;gap:10px;height:132px;padding:8px 4px 0;border-bottom:1px solid var(--cf-line)}.bf-modern-pulse-chart>div{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:end;height:100%;gap:7px}.bf-modern-pulse-chart span{display:flex;align-items:end;width:100%;height:100%;max-width:30px;border-radius:12px 12px 3px 3px;background:color-mix(in srgb,var(--cf-line) 55%,transparent);overflow:hidden}.bf-modern-pulse-chart i{display:block;width:100%;min-height:8px;border-radius:12px 12px 3px 3px;background:color-mix(in srgb,var(--cf-primary) 65%,var(--cf-surface));transition:height .25s ease}.bf-modern-pulse-chart .today span{background:color-mix(in srgb,var(--cf-primary) 18%,var(--cf-surface))}.bf-modern-pulse-chart .today i{background:var(--cf-primary)}.bf-modern-pulse-chart small{color:var(--cf-muted);font-size:12px;text-transform:capitalize}.bf-modern-pulse-chart .today small{color:var(--cf-primary);font-weight:600}
-@media(max-width:650px){.bf-modern-pulse{grid-template-columns:1fr;gap:15px;padding:17px;border-radius:20px}.bf-modern-pulse-chart{height:105px}.bf-modern-pulse-copy h2{font-size:22px}}
-.bf-modern-pulse-categories{display:flex;flex-direction:column;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--cf-line)}.bf-modern-pulse-categories>small{color:var(--cf-muted);font-size:12px;font-weight:600;letter-spacing:.14em}.bf-modern-pulse-categories>span{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;font-size:12px}.bf-modern-pulse-categories>span b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bf-modern-pulse-categories>span strong{font-size:12px;font-variant-numeric:tabular-nums}.bf-modern-pulse-categories>span i{grid-column:1/-1;display:block;height:4px;border-radius:99px;background:color-mix(in srgb,var(--cf-line) 60%,transparent);overflow:hidden}.bf-modern-pulse-categories>span i em{display:block;height:100%;border-radius:inherit;background:var(--cf-primary)}
 .bf-next-step-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;margin:18px 0;padding:17px 18px;border:1px solid color-mix(in srgb,var(--cf-primary) 42%,var(--cf-line));border-radius:20px;background:linear-gradient(100deg,color-mix(in srgb,var(--cf-primary) 13%,var(--cf-surface)),var(--cf-surface-alt));color:var(--cf-ink)}.bf-next-step-card.watch{border-color:color-mix(in srgb,var(--cf-warning) 55%,var(--cf-line));background:linear-gradient(100deg,color-mix(in srgb,var(--cf-warning) 12%,var(--cf-surface)),var(--cf-surface-alt))}.bf-next-step-card.risk{border-color:color-mix(in srgb,var(--cf-danger) 55%,var(--cf-line));background:linear-gradient(100deg,color-mix(in srgb,var(--cf-danger) 12%,var(--cf-surface)),var(--cf-surface-alt))}.bf-next-step-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:20px;background:var(--cf-primary);color:var(--cf-surface)}.bf-next-step-card.watch .bf-next-step-icon{background:var(--cf-warning);color:var(--cf-surface)}.bf-next-step-card.risk .bf-next-step-icon{background:var(--cf-danger);color:var(--cf-surface)}.bf-next-step-copy .bf-kicker{margin:0 0 5px;color:var(--cf-primary);font-size:12px}.bf-next-step-card.watch .bf-next-step-copy .bf-kicker{color:var(--cf-warning)}.bf-next-step-card.risk .bf-next-step-copy .bf-kicker{color:var(--cf-danger)}.bf-next-step-copy h2{margin:0;font:600 19px/1.15 Georgia,serif}.bf-next-step-copy span{display:block;margin-top:5px;color:var(--cf-muted);font-size:12px;line-height:1.4}.bf-next-step-card>button{display:inline-flex;align-items:center;gap:4px;min-height:38px;padding:0 12px;border:1px solid var(--cf-line);border-radius:12px;background:var(--cf-surface);color:var(--cf-ink);font:600 10px "IBM Plex Sans",sans-serif;cursor:pointer;white-space:nowrap}.bf-next-step-card>button:hover{border-color:var(--cf-primary);color:var(--cf-primary)}
 @media(max-width:650px){.bf-next-step-card{grid-template-columns:auto minmax(0,1fr);gap:11px;padding:15px;border-radius:20px}.bf-next-step-card>button{grid-column:1/-1;width:100%;justify-content:center}.bf-next-step-copy h2{font-size:17px}.bf-next-step-copy span{font-size:12px}}

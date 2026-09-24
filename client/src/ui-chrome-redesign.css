@@ -41,12 +41,10 @@
 .os-shell h1,
 .bf-app h1,
 .os-shell .bf-topline h1,
-.os-shell .bf-obligations-header h1,
 .os-shell .bf-movements-header h1,
 .os-shell .bf-plan-studio-header h1,
 .os-shell .bf-insights-header h1,
 .os-shell .bf-goals-header h1,
-.os-shell .bf-os-title,
 .os-shell .bf-section-heading h2,
 .os-shell .bf-today-workspace > header h1 {
   font-family: var(--font-display) !important;
@@ -57,7 +55,6 @@
 }
 
 .os-shell .bf-topline h1,
-.os-shell .bf-obligations-header h1,
 .os-shell .bf-movements-header h1,
 .os-shell .bf-plan-studio-header h1,
 .os-shell .bf-insights-header h1 {
@@ -74,8 +71,7 @@
 
 .os-shell p,
 .os-shell .bf-helper,
-.os-shell .bf-topline > div > p:not(.bf-kicker),
-.os-shell .bf-obligations-header > div:first-child > p:last-child {
+.os-shell .bf-topline > div > p:not(.bf-kicker) {
   font-size: 15px !important;
   line-height: 1.5 !important;
   color: var(--os-muted, var(--cf-muted)) !important;
@@ -86,8 +82,7 @@
 .os-shell .bf-obligation-entry-main strong,
 .os-shell .bf-more-list article > strong,
 .os-shell .bf-receipt-list strong,
-.os-shell .bf-journal strong,
-.os-shell .bf-pulse-grid strong {
+.os-shell .bf-journal strong {
   font-family: var(--font-ui) !important;
   font-weight: 720 !important;
   font-variant-numeric: tabular-nums !important;
@@ -101,7 +96,6 @@
 .os-shell .bf-ghost,
 .os-shell .bf-link-button,
 .os-shell .bf-os-decide,
-.os-shell .bf-os-secondary,
 .os-shell .bf-obligation-ai > button,
 .os-shell .bf-obligation-actions > button,
 .os-shell .bf-obligation-entry-actions > button,
@@ -178,7 +172,6 @@
 }
 
 .os-shell .bf-secondary,
-.os-shell .bf-os-secondary,
 .os-shell .bf-goals-link,
 .os-shell .bf-obligation-actions > button,
 .os-shell .bf-file-button {
@@ -200,8 +193,7 @@
 }
 
 .os-shell .bf-danger > button,
-.os-shell .bf-obligation-entry-actions > button.delete,
-.os-shell .bf-row-actions button:last-child {
+.os-shell .bf-obligation-entry-actions > button.delete {
   border: 1.5px solid color-mix(in srgb, var(--cf-danger, #b93d36) 35%, transparent) !important;
   border-radius: var(--bf-chrome-radius) !important;
   color: var(--cf-danger, #b93d36) !important;
@@ -237,7 +229,6 @@
 /* Segmented + chips — same squircle family */
 .os-shell .bf-segment,
 .os-shell .kind-switch,
-.os-shell .bf-more-tabs,
 .os-shell .bf-insights-switch,
 .os-shell .bf-analysis-scope {
   gap: 6px !important;
@@ -249,10 +240,8 @@
 
 .os-shell .bf-segment button,
 .os-shell .kind-switch button,
-.os-shell .bf-more-tabs button,
 .os-shell .bf-insights-switch button,
 .os-shell .bf-analysis-scope button,
-.os-shell .bf-filter-pills button,
 .os-shell .bf-chip-list > span,
 .os-shell .bf-language-switch button {
   min-height: 40px !important;
@@ -269,11 +258,8 @@
 }
 
 .os-shell .bf-segment button.active,
-.os-shell .kind-switch button.is-active,
-.os-shell .bf-more-tabs button.active,
 .os-shell .bf-insights-switch button.active,
 .os-shell .bf-analysis-scope button.active,
-.os-shell .bf-filter-pills button.is-selected,
 .os-shell .bf-language-switch button.active {
   color: var(--os-mint-fg, #fff) !important;
   background: var(--os-mint, var(--cf-primary)) !important;
@@ -291,12 +277,9 @@
 .os-shell .bf-field input,
 .os-shell .bf-field select,
 .os-shell .bf-field textarea,
-.os-shell .bf-filter-selects select,
 .os-shell .bf-mini-form input,
 .os-shell .bf-source-builder input,
 .os-shell .bf-source-builder select,
-.os-shell .bf-allocation-form input,
-.os-shell .bf-allocation-form select,
 .os-shell .bf-settings input,
 .os-shell .bf-settings select,
 .os-shell .bf-sync input,
@@ -368,15 +351,14 @@
 /* Bottom clearance — floating dock must never clip content */
 @media (max-width: 760px) {
   .os-shell .bf-page,
-  .os-shell .bf-today-workspace,
-  .os-shell .bf-obligations-workspace,
-  .os-shell .bf-movements-workspace,
-  .os-shell .bf-plan-workspace,
-  .os-shell .bf-insights-workspace,
-  .os-shell .bf-utilities-workspace,
-  .os-shell .bf-goals-workspace,
-  .os-shell .bf-habits-workspace,
-  .os-shell .bf-calendar-workspace {
+.os-shell .bf-today-workspace,
+.os-shell .bf-obligations-workspace,
+.os-shell .bf-plan-workspace,
+.os-shell .bf-insights-workspace,
+.os-shell .bf-utilities-workspace,
+.os-shell .bf-goals-workspace,
+.os-shell .bf-habits-workspace,
+.os-shell .bf-calendar-workspace {
     padding-bottom: var(--bf-dock-clearance) !important;
   }
 }
@@ -456,8 +438,7 @@
   transform: none !important;
 }
 
-.os-shell .bf-more-grid > button > svg:first-child,
-.os-shell .bf-settings-icon {
+.os-shell .bf-more-grid > button > svg:first-child {
   display: grid !important;
   place-items: center !important;
   width: 36px !important;
@@ -607,7 +588,6 @@
   cursor: pointer;
 }
 
-.os-shell .bf-obligation-timeline,
 .os-shell .bf-obligation-lane,
 .os-shell .bf-obligation-ledger {
   border-radius: var(--bf-chrome-radius-lg) !important;
@@ -616,13 +596,6 @@
   box-shadow: 0 12px 28px color-mix(in srgb, var(--os-ink, #000) 06%, transparent) !important;
 }
 
-.os-shell .bf-obligation-timeline {
-  border-top: 0 !important;
-  border-left: 0 !important;
-  padding: 16px !important;
-}
-
-.os-shell .bf-obligation-timeline .bf-section-heading h2,
 .os-shell .bf-obligation-lane > header h2 {
   font-family: var(--font-display) !important;
   font-size: clamp(1.2rem, 4.8vw, 1.55rem) !important;
@@ -700,27 +673,22 @@
 /* Plan / Analiză / Mișcări headers — same title language */
 .os-shell .bf-movements-header,
 .os-shell .bf-plan-studio-header,
-.os-shell .bf-insights-header,
-.os-shell .bf-obligations-header {
+.os-shell .bf-insights-header {
   gap: 14px !important;
 }
 
 .os-shell .bf-movements-header h1 em,
 .os-shell .bf-plan-studio-header h1 em,
 .os-shell .bf-insights-header h1 em,
-.os-shell .bf-obligations-header h1 em,
 .os-shell .bf-topline h1 em {
   color: var(--os-mint, var(--cf-primary)) !important;
   font-style: italic !important;
 }
 
 .os-shell .bf-plan-hero,
-.os-shell .bf-insights-hero,
 .os-shell .analysis-hero,
 .os-shell .bf-plan-resource-band,
-.os-shell .bf-sync-hero,
-.os-shell .bf-reports-hero,
-.os-shell .bf-assistant-panel {
+.os-shell .bf-sync-hero {
   border-radius: var(--bf-chrome-radius-lg) !important;
   border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
   background:
@@ -766,7 +734,6 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 }
 
 /* Labels never clip */
-.os-shell .bf-more-tabs button,
 .os-shell .bf-more-grid > button b,
 .os-shell .bf-more-grid > button span,
 .os-shell .bf-settings-copy b,
@@ -822,9 +789,7 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 .os-shell .bf-household-recap,
 .os-shell .bf-household-card,
 .os-shell .bf-sync-hero,
-.os-shell .bf-plan-resource-band,
-.os-shell .bf-reports-hero,
-.os-shell .bf-assistant-panel {
+.os-shell .bf-plan-resource-band {
   position: relative !important;
   overflow: hidden !important;
   border-radius: var(--bf-chrome-radius-lg) !important;
@@ -864,16 +829,12 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 }
 .os-shell .bf-advisor-hero .bf-kicker,
 .os-shell .bf-sync-hero .bf-kicker,
-.os-shell .bf-plan-resource-band .bf-kicker,
-.os-shell .bf-reports-hero .bf-kicker,
-.os-shell .bf-assistant-panel .bf-kicker {
+.os-shell .bf-plan-resource-band .bf-kicker {
   color: var(--os-mint, var(--cf-primary)) !important;
   opacity: 1 !important;
 }
 .os-shell .bf-advisor-hero h2,
 .os-shell .bf-sync-hero h2,
-.os-shell .bf-reports-hero h2,
-.os-shell .bf-assistant-panel h2,
 .os-shell .bf-coach-card h2,
 .os-shell .bf-household-recap h2,
 .os-shell .bf-household-card h2 {
@@ -887,8 +848,6 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 }
 .os-shell .bf-advisor-hero > p:not(.bf-kicker),
 .os-shell .bf-sync-hero p:not(.bf-kicker),
-.os-shell .bf-reports-hero p:not(.bf-kicker),
-.os-shell .bf-assistant-panel > p:not(.bf-kicker),
 .os-shell .bf-coach-card p:not(.bf-kicker),
 .os-shell .bf-household-recap > div > p:not(.bf-kicker),
 .os-shell .bf-plan-resource-band p,

@@ -17,33 +17,6 @@ html body .os-shell .bf-today-workspace {
   padding-bottom: var(--ui-scr-dock);
 }
 
-html body .bf-app .bf-today-situation,
-html body .os-shell .bf-today-situation {
-  padding: var(--ui-scr-pad) 20px !important;
-  gap: 14px !important;
-  border-radius: 1.2rem !important;
-  line-height: var(--ui-scr-lh) !important;
-}
-
-html body .bf-app .bf-today-situation-actions,
-html body .os-shell .bf-today-situation-actions {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 12px !important;
-  margin-top: 8px !important;
-}
-
-html body .bf-app .bf-today-situation .bf-secondary,
-html body .bf-app .bf-today-situation .bf-ghost {
-  min-height: 44px !important;
-  border-radius: 999px !important;
-  font-weight: 600;
-  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
-  background: var(--os-surface, var(--cf-surface)) !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
 /* ========== Mișcări ========== */
 html body .bf-app .bf-movements-ledger,
 html body .os-shell .bf-movements-ledger {
@@ -58,7 +31,6 @@ html body .os-shell .bf-movements-header {
 }
 
 html body .bf-app .bf-movement-day,
-html body .bf-app .bf-journal-day-pulse,
 html body .os-shell .bf-movement-day {
   padding: 18px 16px !important;
   gap: 12px;
@@ -118,13 +90,6 @@ html body .os-shell .bf-allocation-list {
   gap: 12px;
 }
 
-html body .bf-app .bf-allocation-item,
-html body .os-shell .bf-allocation-item {
-  padding: 16px 14px !important;
-  gap: 10px !important;
-  border-radius: 1rem !important;
-}
-
 html body .bf-app .bf-plan-sheet,
 html body .os-shell .bf-plan-sheet {
   padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
@@ -156,13 +121,6 @@ html body .os-shell .bf-obligations-workspace {
   padding-bottom: var(--ui-scr-dock);
 }
 
-html body .bf-app .bf-obligation-timeline,
-html body .os-shell .bf-obligation-timeline {
-  padding: var(--ui-scr-pad) 18px !important;
-  gap: 12px !important;
-  border-radius: 1.15rem !important;
-}
-
 /* ========== Analiză / Insights ========== */
 html body .bf-app .bf-analysis,
 html body .bf-app .bf-insights-workspace,
@@ -188,31 +146,6 @@ html body .bf-app .bf-more-grid,
 html body .os-shell .bf-more-grid {
   gap: 14px !important;
   padding-bottom: var(--ui-scr-dock);
-}
-
-html body .bf-app .bf-more-tabs,
-html body .os-shell .bf-more-tabs {
-  border: 0 !important;
-  box-shadow: none !important;
-  gap: 6px !important;
-  padding: 4px !important;
-  border-radius:12px !important;
-  background: color-mix(in srgb, var(--os-surface-2, var(--cf-surface-alt)) 94%, transparent) !important;
-}
-
-html body .bf-app .bf-more-tabs button {
-  border: 1px solid transparent !important;
-  border-radius:12px !important;
-  min-height: 40px !important;
-  font-weight: 600 !important;
-  background: transparent !important;
-}
-
-html body .bf-app .bf-more-tabs button.active,
-html body .bf-app .bf-more-tabs button[aria-selected="true"] {
-  color: var(--os-mint-fg, var(--cf-on-forest)) !important;
-  background: var(--os-mint, var(--cf-primary)) !important;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 20%, transparent) !important;
 }
 
 html body .bf-app .bf-more-list,
@@ -358,10 +291,8 @@ html body .bf-setup-presets button[aria-pressed="true"] {
 }
 
 /* ========== PremiumStudio / Household / Assistant ========== */
-html body .bf-app .bf-premium-studio,
 html body .bf-app .bf-household-card,
 html body .bf-app .bf-household-recap,
-html body .bf-app .bf-household-studio,
 html body .os-shell .bf-household-card {
   padding: var(--ui-scr-pad) 18px !important;
   gap: 12px !important;
@@ -369,10 +300,8 @@ html body .os-shell .bf-household-card {
   line-height: var(--ui-scr-lh) !important;
 }
 
-html body .bf-app .bf-ai-companion,
 html body .bf-app .advisor-panel,
-html body .bf-app .bf-advisor,
-html body .os-shell .bf-ai-companion {
+html body .bf-app .bf-advisor {
   padding: 18px 16px !important;
   gap: 12px !important;
   border-radius: 1.15rem !important;
@@ -382,8 +311,7 @@ html body .os-shell .bf-ai-companion {
 html body .bf-quick-entry,
 html body .bf-quick-entry-panel,
 html body .bf-safe-spend-sheet,
-html body .bf-allocation-preview > div,
-html body .bf-modal-sheet {
+html body .bf-allocation-preview > div {
   padding: 20px 18px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
   gap: 14px !important;
   border-radius: 1.25rem 1.25rem 0 0 !important;
@@ -430,7 +358,6 @@ html body .bf-app button.outline:not(.bf-link-button) {
 }
 
 html body .os-shell .os-hero,
-html body .bf-app .bf-today-situation,
 html body .bf-app .bf-plan-simulator,
 html body .bf-app .bf-movement-day {
   filter: none !important;
@@ -445,15 +372,14 @@ html body .bf-app {
 
 @media (max-width: 640px) {
   html body .bf-app .bf-today-workspace > header h1,
-  html body .bf-app .bf-movements-header h1,
-  html body .bf-app .bf-plan-studio-header h1,
-  html body .bf-app .bf-obligations-header h1,
-  html body .bf-app .bf-insights-header h1,
-  html body .bf-app .bf-analysis h1,
-  html body .bf-app .bf-utilities-workspace h1,
-  html body .bf-app .bf-settings h1,
-  html body .bf-app .bf-sync h1,
-  html body .bf-app .bf-sync h2 {
+html body .bf-app .bf-movements-header h1,
+html body .bf-app .bf-plan-studio-header h1,
+html body .bf-app .bf-insights-header h1,
+html body .bf-app .bf-analysis h1,
+html body .bf-app .bf-utilities-workspace h1,
+html body .bf-app .bf-settings h1,
+html body .bf-app .bf-sync h1,
+html body .bf-app .bf-sync h2 {
     font-family: "IBM Plex Sans", system-ui, sans-serif !important;
     font-weight: 600;
     font-size: clamp(1.12rem, 4.6vw, 1.38rem) !important;
@@ -463,8 +389,7 @@ html body .bf-app {
 
 @media (prefers-reduced-motion: reduce) {
   html body .bf-app button,
-  html body .bf-first-run button,
-  html body .bf-more-tabs button {
+html body .bf-first-run button {
     transition: none !important;
     animation: none !important;
   }

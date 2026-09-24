@@ -16,10 +16,8 @@ html body .os-shell .bf-analysis {
 }
 
 html body .bf-app .bf-movements-header,
-html body .bf-app .bf-obligations-header,
 html body .bf-app .bf-insights-header,
 html body .os-shell .bf-movements-header,
-html body .os-shell .bf-obligations-header,
 html body .os-shell .bf-insights-header {
   display: grid !important;
   gap: 14px !important;
@@ -35,10 +33,8 @@ html body .os-shell .bf-insights-header {
 }
 
 html body .bf-app .bf-movements-header h1,
-html body .bf-app .bf-obligations-header h1,
 html body .bf-app .bf-insights-header h1,
 html body .os-shell .bf-movements-header h1,
-html body .os-shell .bf-obligations-header h1,
 html body .os-shell .bf-insights-header h1 {
   margin: 0 !important;
   line-height: 1.22 !important;
@@ -46,10 +42,8 @@ html body .os-shell .bf-insights-header h1 {
 }
 
 html body .bf-app .bf-movements-header p,
-html body .bf-app .bf-obligations-header p,
 html body .bf-app .bf-insights-header p,
 html body .os-shell .bf-movements-header p,
-html body .os-shell .bf-obligations-header p,
 html body .os-shell .bf-insights-header p {
   margin: 0 !important;
   line-height: 1.55 !important;
@@ -57,20 +51,16 @@ html body .os-shell .bf-insights-header p {
 }
 
 html body .bf-app .bf-movements-header .bf-kicker,
-html body .bf-app .bf-obligations-header .bf-kicker,
 html body .bf-app .bf-insights-header .bf-kicker,
 html body .os-shell .bf-movements-header .bf-kicker,
-html body .os-shell .bf-obligations-header .bf-kicker,
 html body .os-shell .bf-insights-header .bf-kicker {
   margin: 0 !important;
   opacity: 0.82 !important;
 }
 
 /* Cards / sections */
-html body .bf-app .bf-journal-day-pulse,
 html body .bf-app .bf-journal-quickbar,
 html body .bf-app .bf-movement-day,
-html body .bf-app .bf-obligation-timeline,
 html body .bf-app .bf-obligation-ledger,
 html body .bf-app .bf-obligation-lane,
 html body .bf-app .bf-analysis-control,
@@ -81,10 +71,8 @@ html body .bf-app .bf-analysis-year,
 html body .bf-app .bf-spend-compass,
 html body .bf-app .bf-analysis-watch,
 html body .bf-app .bf-analysis-balance,
-html body .os-shell .bf-journal-day-pulse,
 html body .os-shell .bf-journal-quickbar,
 html body .os-shell .bf-movement-day,
-html body .os-shell .bf-obligation-timeline,
 html body .os-shell .bf-obligation-ledger,
 html body .os-shell .bf-obligation-lane,
 html body .os-shell .bf-analysis-control,
@@ -114,12 +102,6 @@ html body .bf-app .bf-movement-day > div > article,
 html body .os-shell .bf-movement-day > div > article {
   padding: 14px 16px !important;
   min-height: 72px !important;
-}
-
-html body .bf-app .bf-obligation-timeline-list,
-html body .os-shell .bf-obligation-timeline-list {
-  display: grid !important;
-  gap: 12px !important;
 }
 
 html body .bf-app .bf-obligation-entry,
@@ -191,18 +173,7 @@ html body .os-shell .bf-insights-workspace .bf-primary {
   filter: none !important;
 }
 
-html body .bf-app .bf-obligation-timeline .bf-obligation-entry-actions button.bf-primary,
-html body .os-shell .bf-obligation-timeline .bf-obligation-entry-actions button.bf-primary {
-  min-height: 44px !important;
-  border-radius: 999px !important;
-  border: 0 !important;
-  color: var(--os-mint-fg, var(--cf-on-forest)) !important;
-  background: var(--os-mint, var(--cf-primary)) !important;
-  box-shadow: none !important;
-}
-
 /* Tabular money in journals / obligations / analysis */
-.os-shell .bf-journal-day-pulse b,
 .os-shell .bf-movement-day article strong,
 .os-shell .bf-obligation-entry-main strong,
 .os-shell .bf-analysis-snapshot-stats b,
@@ -215,18 +186,16 @@ html body .os-shell .bf-obligation-timeline .bf-obligation-entry-actions button.
 /* Mobile sans titles (dense feeds — same as Plan) */
 @media (max-width: 760px) {
   html body .bf-app .bf-movements-header h1,
-  html body .bf-app .bf-obligations-header h1,
-  html body .bf-app .bf-insights-header h1,
-  html body .bf-app .bf-movements-ledger h2,
-  html body .bf-app .bf-obligations-workspace h2,
-  html body .bf-app .bf-insights-workspace h2,
-  html body .bf-app .bf-analysis h2,
-  html body .bf-app .bf-analysis-snapshot-copy h2,
-  html body .bf-app .bf-analysis-section-heading h2,
-  html body .os-shell .bf-movements-header h1,
-  html body .os-shell .bf-obligations-header h1,
-  html body .os-shell .bf-insights-header h1,
-  html body .os-shell .bf-analysis h2 {
+html body .bf-app .bf-insights-header h1,
+html body .bf-app .bf-movements-ledger h2,
+html body .bf-app .bf-obligations-workspace h2,
+html body .bf-app .bf-insights-workspace h2,
+html body .bf-app .bf-analysis h2,
+html body .bf-app .bf-analysis-snapshot-copy h2,
+html body .bf-app .bf-analysis-section-heading h2,
+html body .os-shell .bf-movements-header h1,
+html body .os-shell .bf-insights-header h1,
+html body .os-shell .bf-analysis h2 {
     font-family: "IBM Plex Sans", system-ui, sans-serif !important;
     font-weight: 600 !important;
     font-size: clamp(1.2rem, 5vw, 1.55rem) !important;
@@ -242,25 +211,22 @@ html body .os-shell .bf-obligation-timeline .bf-obligation-entry-actions button.
     padding-right: max(14px, var(--os-inset-right, 0px)) !important;
   }
 
-  html body .bf-app .bf-journal-day-pulse,
   html body .bf-app .bf-journal-quickbar,
-  html body .bf-app .bf-movement-day,
-  html body .bf-app .bf-obligation-timeline,
-  html body .bf-app .bf-obligation-lane,
-  html body .bf-app .bf-analysis-control,
-  html body .bf-app .bf-analysis-snapshot,
-  html body .bf-app .bf-analysis-next-step,
-  html body .bf-app .bf-analysis-month,
-  html body .bf-app .bf-analysis-year,
-  html body .bf-app .bf-spend-compass,
-  html body .bf-app .bf-analysis-watch,
-  html body .bf-app .bf-analysis-balance {
+html body .bf-app .bf-movement-day,
+html body .bf-app .bf-obligation-lane,
+html body .bf-app .bf-analysis-control,
+html body .bf-app .bf-analysis-snapshot,
+html body .bf-app .bf-analysis-next-step,
+html body .bf-app .bf-analysis-month,
+html body .bf-app .bf-analysis-year,
+html body .bf-app .bf-spend-compass,
+html body .bf-app .bf-analysis-watch,
+html body .bf-app .bf-analysis-balance {
     padding: 20px 16px !important;
     gap: 14px !important;
   }
 
-  html body .bf-app .bf-movements-header > div > p:last-child,
-  html body .bf-app .bf-obligations-header > div:first-child > p:last-child {
+  html body .bf-app .bf-movements-header > div > p:last-child {
     max-width: 38ch !important;
     font-size:14px !important;
     line-height: 1.55 !important;
@@ -269,17 +235,13 @@ html body .os-shell .bf-obligation-timeline .bf-obligation-entry-actions button.
 
 /* ---- Dark themes: elevation, not violet bloom; coral only for alerts ---- */
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movements-header,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligations-header,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-insights-header,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-journal-day-pulse,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movement-day,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligation-timeline,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligation-lane,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-control,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-month,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-today-situation {
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero {
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-line, #22302a) 80%, transparent) !important;
   border-color: color-mix(in srgb, var(--os-mint, #7cffc4) 12%, #1a2420) !important;
   outline: none !important;
@@ -289,11 +251,9 @@ html body .os-shell .bf-obligation-timeline .bf-obligation-entry-actions button.
 }
 
 html.theme-aurora body .bf-app .bf-movements-header,
-html.theme-aurora body .bf-app .bf-obligations-header,
 html.theme-aurora body .bf-app .bf-insights-header,
 html.theme-aurora body .bf-app .bf-analysis-snapshot,
-html.theme-aurora body .bf-app .os-hero,
-html.theme-aurora body .bf-app .bf-today-situation {
+html.theme-aurora body .bf-app .os-hero {
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), 0 0 0 1px color-mix(in srgb, var(--cf-line, #49416c) 70%, transparent) !important;
   border-color: color-mix(in srgb, var(--cf-primary, #65d3a6) 14%, #252044) !important;
   background: var(--cf-surface, #18142f) !important;
@@ -319,15 +279,10 @@ html.theme-aurora body .bf-app .bf-today-situation {
 }
 
 /* Coral / danger only for alert / risk / overdue — not ambient glow */
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-today-situation.risk,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero.is-risk,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot.risk {
   border-color: color-mix(in srgb, var(--os-out, var(--cf-danger, #ff8a7a)) 42%, transparent) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-out, var(--cf-danger, #ff8a7a)) 22%, transparent) !important;
-}
-
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligation-timeline {
-  border-top-color: color-mix(in srgb, var(--cf-danger, #ff8a7a) 55%, transparent) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

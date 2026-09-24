@@ -21,7 +21,6 @@
 .os-shell h1,
 .bf-app h1,
 .bf-topline h1,
-.bf-os-title,
 .bf-today-workspace > header h1,
 .bf-movements-header h1 {
   font-family: var(--bf-display);
@@ -47,8 +46,7 @@
   letter-spacing: -0.01em;
   transition: transform var(--bf-press), filter var(--bf-press), box-shadow var(--bf-motion);
 }
-.bf-secondary,
-.bf-os-secondary {
+.bf-secondary {
   border-radius:12px;
   font-weight:600;
   transition: transform var(--bf-press), background-color var(--bf-motion), border-color var(--bf-motion);
@@ -65,32 +63,19 @@
 .bf-primary:active,
 .bf-os-decide:active,
 .bf-secondary:active,
-.bf-os-secondary:active,
 .bf-movement-add:active {
   transform: scale(0.98);
   filter: brightness(0.97);
 }
 
 /* Mai mult — card rhythm, less noise */
-.bf-more-grid > button,
-.bf-utilities-grid > button {
+.bf-more-grid > button {
   border-radius:20px;
   box-shadow: 0 1px 0 color-mix(in srgb, var(--cf-ink, #1a2420) 4%, transparent);
   transition: transform var(--bf-press), box-shadow var(--bf-motion), border-color var(--bf-motion);
 }
-.bf-more-grid > button:active,
-.bf-utilities-grid > button:active {
+.bf-more-grid > button:active {
   transform: translateY(1px) scale(0.99);
-}
-.bf-more-tabs {
-  gap: 8px;
-  padding-bottom: 6px;
-}
-.bf-more-tabs button {
-  border-radius: 999px;
-  padding: 0 14px;
-  font-weight: 750;
-  white-space: nowrap;
 }
 
 /* Sheets / modals — soft enter */
@@ -144,7 +129,6 @@
 /* Romanian labels: never clip on primary chrome */
 .os-dock button span,
 .os-desktop-nav button span,
-.bf-more-tabs button,
 .bf-movement-kind button {
   overflow: visible;
   text-overflow: unset;
@@ -158,9 +142,6 @@
     line-height: 1.15;
     white-space: normal;
     text-align: center;
-  }
-  .bf-more-tabs button {
-    font-size: 12px;
   }
 }
 

@@ -8,12 +8,10 @@ html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber{
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app{
 --cf-glow:transparent;--os-glow:transparent}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-dock,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-dock::before,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-mobile-nav{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-dock::before{
 filter:none!important;background-image:none!important;outline:none!important;
 box-shadow:0 -6px 20px rgba(0,0,0,.1)!important}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-hero,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-today-situation,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-simulator,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-simulation,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-allocation-period,
@@ -39,14 +37,12 @@ box-shadow:0 6px 16px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 22%,tra
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-pace-switch,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-insights-switch,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-analysis-scope,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-movement-kind,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-more-tabs{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-movement-kind{
 border:0!important;box-shadow:none!important;gap:6px!important;padding:4px!important;border-radius:12px !important;
 background:color-mix(in srgb,var(--os-surface-2,var(--cf-surface-alt)) 94%,transparent)!important}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-allocation-period-tabs button.active,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-allocation-period-tabs button[aria-selected="true"],
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-pace-switch button.active,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-more-tabs button.active,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-movement-kind button.active{
 border:1px solid transparent!important;color:var(--os-mint-fg,var(--cf-on-forest,#04140e))!important;
 background:var(--os-mint,var(--cf-primary))!important;font-weight:600 !important}
@@ -70,7 +66,6 @@ font-size:clamp(1.12rem,4.6vw,1.38rem)!important;letter-spacing:-.02em!important
 /* Paletele white/dark/aurora/navy/cyber stau în tokens.css, încărcat imediat după. */
 :is(html.theme-white,html.theme-ink) body,:is(html.theme-white,html.theme-ink) body .os-shell.bf-app{
 background:radial-gradient(640px 360px at 100% -6%,rgba(23,107,84,.1),transparent 55%),linear-gradient(180deg,#dfe6e1 0,#e8ece9 140px),#e8ece9;color:#0c1612}
-:is(html.theme-white,html.theme-ink) body .bf-app .bf-today-situation,
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-plan-simulator,
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-allocation-period,
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-movement-day,
@@ -82,32 +77,42 @@ box-shadow:var(--bf-shadow-raise) !important}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#fff!important;background:#176b54!important}
 /* tokens.css */
 html.theme-dark body,html.theme-dark body .os-shell.bf-app{background:#0c0d0f;color:#eceff3}
-html.theme-dark body .bf-app .bf-today-situation,html.theme-dark body .os-shell .os-hero,html.theme-dark body .bf-app .bf-insights-header,html.theme-dark body .bf-app .bf-analysis-control,html.theme-dark body .bf-app .bf-plan-simulator,
-html.theme-dark body .bf-app .bf-allocation-period,html.theme-dark body .bf-app .bf-movement-day,
+html.theme-dark body .os-shell .os-hero,
+html.theme-dark body .bf-app .bf-insights-header,
+html.theme-dark body .bf-app .bf-analysis-control,
+html.theme-dark body .bf-app .bf-plan-simulator,
+html.theme-dark body .bf-app .bf-allocation-period,
+html.theme-dark body .bf-app .bf-movement-day,
 html.theme-dark body .bf-app .bf-analysis-snapshot{background:#16181c!important;border:1px solid #2a2e35!important;box-shadow:var(--bf-shadow-raise) !important}
 html.theme-dark body .os-shell .os-dock{background:#121418!important;box-shadow:0 -6px 20px rgba(0,0,0,.45)!important;filter:none;border-top:1px solid #2a2e35!important}
 html.theme-dark body .os-shell .os-dock button.is-on,html.theme-dark body .os-shell .os-dock button.active{color:#062018!important;background:#7dcfab!important}
 /* tokens.css */
 html.theme-aurora body,html.theme-aurora body .os-shell.bf-app{
 background:radial-gradient(520px 300px at 92% -4%,rgba(101,211,166,.08),transparent 50%),radial-gradient(400px 280px at -8% 40%,rgba(116,208,255,.05),transparent 48%),#0c0b16;color:#f4f1ff}
-html.theme-aurora body .bf-app .bf-today-situation,html.theme-aurora body .bf-app .bf-plan-simulator,
-html.theme-aurora body .bf-app .bf-allocation-period,html.theme-aurora body .bf-app .bf-movement-day,
+html.theme-aurora body .bf-app .bf-plan-simulator,
+html.theme-aurora body .bf-app .bf-allocation-period,
+html.theme-aurora body .bf-app .bf-movement-day,
 html.theme-aurora body .bf-app .bf-analysis-snapshot{background:#15132a!important;border:1px solid color-mix(in srgb,#65d3a6 16%,#35305a)!important;box-shadow:var(--bf-shadow-raise) !important;filter:none!important}
 html.theme-aurora body .os-shell .os-dock{background:#12101f!important;box-shadow:0 -6px 20px rgba(0,0,0,.4)!important;filter:none}
 html.theme-aurora body .os-shell .os-dock button.is-on,html.theme-aurora body .os-shell .os-dock button.active{color:#0c0b16!important;background:#65d3a6!important}
 /* tokens.css */
 html.theme-navy body,html.theme-navy body .os-shell.bf-app{
 background:radial-gradient(560px 320px at 100% -8%,rgba(212,176,106,.22),transparent 52%),#071428;color:#eef2f8}
-html.theme-navy body .bf-app .bf-today-situation,html.theme-navy body .os-shell .os-hero,html.theme-navy body .bf-app .bf-insights-header,html.theme-navy body .bf-app .bf-analysis-control,html.theme-navy body .bf-app .bf-plan-simulator,
-html.theme-navy body .bf-app .bf-allocation-period,html.theme-navy body .bf-app .bf-movement-day,
+html.theme-navy body .os-shell .os-hero,
+html.theme-navy body .bf-app .bf-insights-header,
+html.theme-navy body .bf-app .bf-analysis-control,
+html.theme-navy body .bf-app .bf-plan-simulator,
+html.theme-navy body .bf-app .bf-allocation-period,
+html.theme-navy body .bf-app .bf-movement-day,
 html.theme-navy body .bf-app .bf-analysis-snapshot{background:#102646!important;border:1px solid #2c4d7a!important;box-shadow:var(--bf-shadow-raise) !important}
 html.theme-navy body .os-shell .os-dock{background:#0a1a36!important;box-shadow:0 -6px 20px rgba(0,0,0,.42)!important;filter:none}
 html.theme-navy body .os-shell .os-dock button.is-on,html.theme-navy body .os-shell .os-dock button.active{color:#12100a!important;background:#d4b06a!important}
 /* tokens.css */
 html.theme-cyber body,html.theme-cyber body .os-shell.bf-app{
 background:radial-gradient(420px 260px at 96% -2%,rgba(124,255,196,.07),transparent 48%),#050708;color:#e8eeea}
-html.theme-cyber body .bf-app .bf-today-situation,html.theme-cyber body .bf-app .bf-plan-simulator,
-html.theme-cyber body .bf-app .bf-allocation-period,html.theme-cyber body .bf-app .bf-movement-day,
+html.theme-cyber body .bf-app .bf-plan-simulator,
+html.theme-cyber body .bf-app .bf-allocation-period,
+html.theme-cyber body .bf-app .bf-movement-day,
 html.theme-cyber body .bf-app .bf-analysis-snapshot{background:#0e1318!important;border:1px solid color-mix(in srgb,#7cffc4 14%,#1e2c26)!important;box-shadow:var(--bf-shadow-raise) !important}
 html.theme-cyber body .os-shell .os-dock{background:#080c0f!important;box-shadow:0 -6px 20px rgba(0,0,0,.45)!important;filter:none}
 html.theme-cyber body .os-shell .os-dock button.is-on,html.theme-cyber body .os-shell .os-dock button.active{color:#04140e!important;background:#7cffc4!important}

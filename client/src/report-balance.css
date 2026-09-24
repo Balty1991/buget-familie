@@ -1,8 +1,1 @@
 /* Atelierul Financiar — bilanțul separă lichiditatea, ratele și economiile; nu repetă un total opac. */
-.bf-report-balance { background: radial-gradient(circle at 92% 4%, rgba(214, 166, 71, .12), transparent 28%), #f7f8f4; }
-.bf-report-balance .bf-report-metrics { margin-top: 14px; }
-.bf-report-metrics small { display: block; margin-top: 5px; color: #738177; font-size:12px; line-height: 1.4; }
-.bf-report-note { margin: 16px 2px 0; color: #637269; font-size:12px; line-height: 1.55; }
-.dark .bf-report-balance { background: radial-gradient(circle at 92% 4%, rgba(239, 208, 121, .12), transparent 28%), #10271f; }
-.dark .bf-report-metrics small, .dark .bf-report-note { color: #b4c9ba; }
-@media (max-width: 760px) { .bf-report-note { margin-top: 12px; font-size:12px; } }

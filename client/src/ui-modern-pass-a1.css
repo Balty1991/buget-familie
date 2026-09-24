@@ -1,15 +1,12 @@
 .os-shell.bf-app{--ui-hero-tracking:-0.045em;--ui-card-radius:1.15rem;--ui-card-pad:18px;--ui-card-gap:14px;--ui-enter-ms:220ms;--ui-tap:var(--os-tap,44px)}
-.os-shell .os-amount,.os-shell .os-amount span,.os-shell .bf-today-situation-number>strong,.os-shell .bf-today-situation-number strong,.os-shell .bf-spend-stamp strong,.os-shell .bf-journal-day-pulse b,.os-shell .bf-plan-header-stat b,.os-shell .bf-allocation-period-summary b,.os-shell .bf-os-income-head strong,.os-shell .bf-os-source-list strong,.os-shell .bf-os-day b{font-variant-numeric:tabular-nums !important;font-feature-settings:"tnum" 1,"lnum" 1 !important}
+.os-shell .os-amount, .os-shell .os-amount span, .os-shell .bf-spend-stamp strong, .os-shell .bf-plan-header-stat b, .os-shell .bf-allocation-period-summary b, .os-shell .bf-os-source-list strong, .os-shell .bf-os-day b{font-variant-numeric:tabular-nums !important;font-feature-settings:"tnum" 1,"lnum" 1 !important}
 .os-shell .os-amount{font-size:clamp(52px,15vw,76px) !important;letter-spacing:var(--ui-hero-tracking) !important;line-height:0.9 !important}
-.os-shell .bf-today-situation-number>strong,.os-shell .bf-today-situation-number strong{font-size:clamp(46px,13.5vw,74px) !important;letter-spacing:-0.055em !important;line-height:0.9 !important}
 @media (max-width:760px){.os-shell .os-amount{font-size:clamp(48px,14.5vw,64px)}
-.os-shell .bf-today-situation-number>strong,.os-shell .bf-today-situation-number strong{font-size:clamp(44px,13.5vw,58px) !important}
 }
-@media (max-width:760px){.os-shell .os-hero,.os-shell .bf-today-situation,.os-shell .bf-os-panel,.os-shell .bf-os-rhythm,.os-shell .bf-os-sources,.os-shell .bf-os-income,.os-shell .bf-today-brief,.os-shell .bf-spend-stamp,.os-shell .bf-today-ledger,.os-shell .bf-week-checkin,.os-shell .bf-today-decision,.os-shell .bf-movement-day,.os-shell .bf-plan-studio-header,.os-shell .bf-allocation-period,.os-shell .bf-allocation-progress-card,.os-shell .bf-empty-state,.os-shell .bf-allocation-empty{border-radius:var(--ui-card-radius) !important}
+@media (max-width:760px){.os-shell .os-hero, .os-shell .bf-os-rhythm, .os-shell .bf-today-brief, .os-shell .bf-spend-stamp, .os-shell .bf-week-checkin, .os-shell .bf-movement-day, .os-shell .bf-plan-studio-header, .os-shell .bf-allocation-period, .os-shell .bf-allocation-progress-card, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty{border-radius:var(--ui-card-radius) !important}
 .os-shell .os-hero{padding:18px 16px 20px}
-.os-shell .bf-today-situation,.os-shell .bf-today-situation.risk,.os-shell .bf-today-situation.paired{padding:18px 16px 16px !important;gap:var(--ui-card-gap) !important}
 .os-shell .bf-today-workspace{gap:16px}
-.os-shell .bf-os-panel,.os-shell .bf-os-rhythm,.os-shell .bf-os-sources,.os-shell .bf-os-income{padding:14px 14px !important}
+.os-shell .bf-os-rhythm{padding:14px 14px !important}
 .os-shell .bf-movements-ledger,.os-shell .bf-today-workspace,.os-shell .bf-plan-workspace{padding-left:max(14px,var(--os-inset-left,0px)) !important;padding-right:max(14px,var(--os-inset-right,0px)) !important}
 }
 .os-shell .os-dock{padding:8px 10px max(12px,var(--os-inset-bottom,env(safe-area-inset-bottom,0px)));box-shadow:0 -6px 18px color-mix(in srgb,#000 12%,transparent)}
@@ -18,7 +15,6 @@
 .os-shell .os-dock button.is-on,.os-shell .os-dock button.active{color:var(--os-mint-fg,var(--cf-on-forest,#fff)) !important;background:var(--os-mint,var(--cf-primary,#176b54)) !important;box-shadow:0 4px 12px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 28%,transparent) !important}
 .os-shell .os-dock button:active{transform:scale(0.97)}
 .os-shell .os-tool{min-width:var(--ui-tap);min-height:var(--ui-tap)}
-.os-shell .bf-mobile-nav button,.bf-app .bf-mobile-nav button{min-height:var(--ui-tap) !important;min-width:44px !important}
 .os-shell .bf-empty-state,.os-shell .bf-allocation-empty,.os-shell .bf-today-empty-activity{position:relative;overflow:hidden;text-align:center}
 .os-shell .bf-empty-state,.os-shell .bf-allocation-empty{display:grid !important;justify-items:center;gap:10px !important;margin:12px 0 !important;padding:28px 18px 24px !important;border:1px dashed color-mix(in srgb,var(--os-line,var(--cf-line)) 85%,transparent) !important;border-radius:var(--ui-card-radius) !important;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 14%,transparent),transparent 58%),var(--os-surface,var(--cf-surface)) !important;box-shadow:none !important}
 .os-shell .bf-empty-state::before,.os-shell .bf-allocation-empty::before{content:"" !important;display:block !important;width:56px !important;height:56px !important;margin-bottom:4px;border-radius:20px !important;background:linear-gradient(135deg,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 22%,transparent),transparent 62%),linear-gradient(45deg,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 12%,transparent) 25%,transparent 25% 50%,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 12%,transparent) 50% 75%,transparent 75%),color-mix(in srgb,var(--os-surface-2,var(--cf-surface-alt)) 88%,var(--os-mint,var(--cf-primary)));background-size:auto,10px 10px,auto;box-shadow:0 0 0 1px color-mix(in srgb,var(--os-line,var(--cf-line)) 70%,transparent)}

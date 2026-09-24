@@ -26,7 +26,6 @@
 html body .os-shell.bf-app .bf-page.bf-plan-workspace h1,
 html body .os-shell.bf-app .bf-today-workspace h1,
 html body .os-shell.bf-app .bf-movements-header h1,
-html body .os-shell.bf-app .bf-obligations-header h1,
 html body .os-shell.bf-app .bf-insights-header h1 {
   font-family: var(--bf-font-display) !important;
 }
@@ -58,7 +57,6 @@ details.bf-plan-tools:not([open]) > :not(summary) {
 }
 
 .bf-movement-timeline strong,
-.bf-journal-day-pulse b,
 .bf-settings-row b,
 .bf-obligation-entry strong {
   font-family: var(--bf-font-sans) !important;
@@ -68,7 +66,6 @@ details.bf-plan-tools:not([open]) > :not(summary) {
 }
 
 .bf-movement-row strong.expense,
-.bf-journal-day-pulse b.expense,
 .bf-movement-day header b.expense {
   color: var(--cf-ink) !important;
 }
@@ -346,3 +343,8 @@ html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-chevro
     transition: none !important;
   }
 }
+
+/* „Ciclu salariu” fără data venitului: arată stins, dar răspunde la atingere cu explicația. */
+.bf-analysis-window button.is-unavailable { opacity: .62; }
+.bf-analysis-cycle-hint { margin: 8px 0 0; }
+.bf-analysis-cycle-hint .bf-link-button { display: inline; padding: 0; min-height: 0; }

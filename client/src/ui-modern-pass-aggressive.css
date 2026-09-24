@@ -13,7 +13,6 @@ html {
 
 /* ========== 1. P0 — dock must not cover content ========== */
 html body .os-shell main,
-html body .os-shell .os-content,
 html body .os-shell .bf-page,
 html body .bf-app .bf-page,
 html body .os-shell .bf-today-workspace,
@@ -169,7 +168,6 @@ html body .os-shell,
 html body .bf-app,
 html body .os-shell .os-dock,
 html body .os-shell .os-hero,
-html body .os-shell .bf-today-situation,
 html body .os-shell .bf-plan-workspace,
 html body .os-shell .bf-plan-simulator,
 html body .os-shell .bf-plan-simulation,
@@ -185,10 +183,7 @@ html body .bf-app .bf-analysis-snapshot {
 html body .os-shell .os-dock,
 html body .os-shell .os-dock::before,
 html body .os-shell .os-dock::after,
-html body .bf-app .os-dock,
-html body .bf-mobile-nav,
-html body .bf-mobile-nav::before,
-html body .bf-mobile-nav::after {
+html body .bf-app .os-dock {
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
   filter: none !important;
   background-image: none !important;
@@ -197,9 +192,7 @@ html body .bf-mobile-nav::after {
 }
 
 html body .os-shell .os-dock button.is-on,
-html body .os-shell .os-dock button.active,
-html body .bf-mobile-nav button.active,
-html body .bf-mobile-nav button.is-on {
+html body .os-shell .os-dock button.active {
   box-shadow: 0 3px 10px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 20%, transparent) !important;
   filter: none !important;
   outline: none !important;
@@ -209,7 +202,6 @@ html body .bf-mobile-nav button.is-on {
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-plan-simulator,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-plan-simulation,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movement-day,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-today-situation,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-allocation-period,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot {
   box-shadow:var(--bf-shadow-raise) !important;
@@ -229,15 +221,12 @@ html.theme-navy body .os-shell .os-dock {
 
 /* ========== 5. Visible card air ========== */
 html body .os-shell .os-hero,
-html body .os-shell .bf-today-situation,
 html body .os-shell .bf-plan-studio-header,
 html body .os-shell .bf-plan-simulator,
 html body .os-shell .bf-plan-simulation,
 html body .os-shell .bf-allocation-period,
 html body .os-shell .bf-allocation-progress-card,
 html body .os-shell .bf-movement-day,
-html body .os-shell .bf-journal-day-pulse,
-html body .os-shell .bf-obligation-timeline,
 html body .os-shell .bf-analysis-snapshot,
 html body .os-shell .bf-analysis-control,
 html body .bf-app .bf-plan-studio-header,
@@ -264,9 +253,7 @@ html body .bf-app .bf-movement-day p {
 
 html body .os-shell .bf-plan-simulator-action,
 html body .bf-app .bf-plan-simulator footer,
-html body .bf-app .bf-plan-simulation footer,
-html body .bf-app .bf-today-situation-actions,
-html body .os-shell .bf-today-situation-actions {
+html body .bf-app .bf-plan-simulation footer {
   margin-top: var(--ui-agg-cta-gap) !important;
   gap: 12px !important;
 }
@@ -298,21 +285,20 @@ html body .bf-app .bf-analysis-next-step .bf-primary {
 /* ========== 7. Mobile sans titles ========== */
 @media (max-width: 640px) {
   html body .bf-app .bf-plan-workspace h1,
-  html body .bf-app .bf-plan-workspace h2,
-  html body .bf-app .bf-salary-cycle-plan h1,
-  html body .bf-app .bf-salary-cycle-plan h2,
-  html body .bf-app .bf-plan-simulator h2,
-  html body .bf-app .bf-plan-simulation h2,
-  html body .bf-app .bf-allocation-period h2,
-  html body .bf-app .bf-movements-header h1,
-  html body .bf-app .bf-obligations-header h1,
-  html body .bf-app .bf-insights-header h1,
-  html body .bf-app .bf-analysis h2,
-  html body .os-shell .bf-plan-workspace h1,
-  html body .os-shell .bf-plan-workspace h2,
-  html body .os-shell .bf-plan-simulator h2,
-  html body .os-shell .bf-movements-header h1,
-  html body .os-shell .bf-analysis h2 {
+html body .bf-app .bf-plan-workspace h2,
+html body .bf-app .bf-salary-cycle-plan h1,
+html body .bf-app .bf-salary-cycle-plan h2,
+html body .bf-app .bf-plan-simulator h2,
+html body .bf-app .bf-plan-simulation h2,
+html body .bf-app .bf-allocation-period h2,
+html body .bf-app .bf-movements-header h1,
+html body .bf-app .bf-insights-header h1,
+html body .bf-app .bf-analysis h2,
+html body .os-shell .bf-plan-workspace h1,
+html body .os-shell .bf-plan-workspace h2,
+html body .os-shell .bf-plan-simulator h2,
+html body .os-shell .bf-movements-header h1,
+html body .os-shell .bf-analysis h2 {
     font-family: "IBM Plex Sans", system-ui, sans-serif !important;
     font-weight: 600 !important;
     font-size: clamp(1.12rem, 4.6vw, 1.38rem) !important;
@@ -354,8 +340,7 @@ html body .os-shell .os-dock button svg {
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulation,
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-movement-day,
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-allocation-period,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-analysis-snapshot,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-today-situation {
+:is(html.theme-ink, html.theme-white) body .bf-app .bf-analysis-snapshot {
   background: var(--os-surface, var(--cf-surface, #fffefa)) !important;
   border: 1px solid color-mix(in srgb, var(--os-line, #d8e0d8) 100%, transparent) !important;
   box-shadow:var(--bf-shadow-rest) !important;

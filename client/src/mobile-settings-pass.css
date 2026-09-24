@@ -1,29 +1,14 @@
 /* Mobile settings pass — preferințe clare, date protejate, acțiuni fără ambiguitate. */
-.bf-more-tab-region,
 .bf-settings,
 .bf-sync,
-.bf-trust,
-.bf-family-settings {
+.bf-trust {
   color: var(--cf-ink, #17382f);
-}
-
-.bf-more-tab-region {
-  gap: 14px;
-}
-
-.bf-more-tabs {
-  position: sticky;
-  top: 8px;
-  z-index: 8;
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--cf-ink), transparent 93%);
-  backdrop-filter: blur(14px);
 }
 
 .bf-more-grid button,
 .bf-settings > section,
 .bf-sync,
-.bf-trust,
-.bf-family-settings {
+.bf-trust {
   border-radius:20px;
 }
 
@@ -38,8 +23,7 @@
 
 .bf-settings > section,
 .bf-sync,
-.bf-trust,
-.bf-family-settings {
+.bf-trust {
   border: 1px solid var(--cf-line, #d7ded8);
   background: var(--cf-surface, #fffdf7);
 }
@@ -50,16 +34,12 @@
 .bf-sync input,
 .bf-sync select,
 .bf-sync button,
-.bf-trust button,
-.bf-family-settings input,
-.bf-family-settings select,
-.bf-family-settings button {
+.bf-trust button {
   min-height: 42px;
 }
 
 .bf-settings section > header,
-.bf-sync-journal-heading,
-.bf-family-settings > header {
+.bf-sync-journal-heading {
   display: flex;
   align-items: start;
   justify-content: space-between;
@@ -68,15 +48,12 @@
 
 .bf-settings section h2,
 .bf-sync h2,
-.bf-trust h2,
-.bf-family-settings h2 {
+.bf-trust h2 {
   letter-spacing: -.035em;
 }
 
 .bf-sync-session,
-.bf-sync-journal,
-.bf-trust-danger,
-.bf-settings-danger {
+.bf-sync-journal {
   border-radius:12px;
 }
 
@@ -89,41 +66,17 @@
   border-radius:12px;
 }
 
-.bf-settings-danger,
-.bf-trust-danger {
-  border-left: 3px solid var(--cf-danger, #c96855);
-}
-
-.bf-settings-danger button,
-.bf-trust-danger button,
 .bf-sync button.bf-link-button {
   min-height: 40px;
   border-radius:12px;
 }
 
 @media (max-width: 640px) {
-  .bf-more-tab-region,
   .bf-settings,
-  .bf-sync,
-  .bf-trust,
-  .bf-family-settings {
+.bf-sync,
+.bf-trust {
     gap: 12px;
     padding-inline: 13px;
-  }
-
-  .bf-more-tabs {
-    top: 4px;
-    overflow-x: auto;
-    justify-content: flex-start;
-    scrollbar-width: none;
-  }
-
-  .bf-more-tabs::-webkit-scrollbar { display: none; }
-
-  .bf-more-tabs button {
-    flex: 0 0 auto;
-    min-width: 104px;
-    min-height: 44px;
   }
 
   .bf-more-grid {
@@ -147,77 +100,50 @@
   }
 
   .bf-settings,
-  .bf-sync,
-  .bf-trust,
-  .bf-family-settings {
+.bf-sync,
+.bf-trust {
     grid-template-columns: 1fr;
   }
 
   .bf-settings > section,
-  .bf-sync > section,
-  .bf-trust > section,
-  .bf-family-settings > section {
+.bf-sync > section,
+.bf-trust > section {
     min-width: 0;
     padding: 14px;
   }
 
   .bf-settings section > header,
-  .bf-sync-journal-heading,
-  .bf-family-settings > header {
+.bf-sync-journal-heading {
     flex-direction: column;
     gap: 8px;
   }
 
   .bf-settings section > header button,
-  .bf-sync-journal-heading button,
-  .bf-family-settings > header button {
+.bf-sync-journal-heading button {
     align-self: stretch;
     justify-content: center;
   }
 
   .bf-settings .bf-form-grid,
-  .bf-family-settings .bf-form-grid,
-  .bf-sync .bf-form-grid {
+.bf-sync .bf-form-grid {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
   .bf-settings .bf-primary.full,
-  .bf-sync .bf-primary.full,
-  .bf-family-settings .bf-primary.full {
+.bf-sync .bf-primary.full {
     width: 100%;
     justify-content: center;
   }
 
-  .bf-source-list,
-  .bf-member-list,
   .bf-sync-journal-list {
     gap: 8px;
   }
 
-  .bf-source-list article,
-  .bf-member-list article,
   .bf-sync-journal-entry {
     grid-template-columns: 34px minmax(0, 1fr);
     gap: 9px;
     padding: 11px;
-  }
-
-  .bf-source-list article > :last-child,
-  .bf-member-list article > :last-child {
-    grid-column: 2;
-    justify-content: flex-start;
-  }
-
-  .bf-sync-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .bf-sync-actions button {
-    width: 100%;
-    justify-content: center;
   }
 
   .bf-sync-session {
@@ -227,17 +153,6 @@
   .bf-sync-journal-entry p {
     font-size:12px;
     line-height: 1.4;
-  }
-
-  .bf-trust-danger,
-  .bf-settings-danger {
-    padding: 13px;
-  }
-
-  .bf-settings-danger button,
-  .bf-trust-danger button {
-    width: 100%;
-    justify-content: center;
   }
 }
 

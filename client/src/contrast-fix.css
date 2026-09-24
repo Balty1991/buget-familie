@@ -178,7 +178,6 @@ html .os-shell .bf-obligation-actions > button,
 html .bf-obligation-empty > button,
 html .bf-goals-link,
 html .bf-secondary,
-html .bf-os-secondary,
 html .bf-ghost:not(.bf-primary) {
   color: var(--cf-ink) !important;
   background-color: color-mix(in srgb, var(--cf-surface) 90%, transparent) !important;
@@ -201,8 +200,7 @@ html .os-shell .bf-obligation-actions > button:first-child {
  */
 html:not(.dark) .bf-today-add,
 html.dark .bf-today-add,
-html .bf-today-add,
-html .bf-os-secondary { color: var(--cf-ink) !important; background-color: transparent !important; }
+html .bf-today-add { color: var(--cf-ink) !important; background-color: transparent !important; }
 
 /**
  * Obligații, pe ecran îngust: rândul se așază pe verticală.
@@ -250,18 +248,15 @@ html .bf-os-secondary { color: var(--cf-ink) !important; background-color: trans
  */
 @media (max-width: 560px) {
   .bf-form-grid,
-  .bf-field,
-  .bf-plan-field,
-  .bf-source-builder,
-  .bf-mini-form,
-  .bf-movement-filter-selects,
-  .bf-journal-date-range,
-  .bf-allocation-history-filters,
-  .bf-history-filters,
-  .bf-recurring-form,
-  .bf-analysis-control,
-  .bf-week-transfer-form,
-  .bf-envelope-transfer-form {
+.bf-field,
+.bf-plan-field,
+.bf-source-builder,
+.bf-mini-form,
+.bf-movement-filter-selects,
+.bf-journal-date-range,
+.bf-recurring-form,
+.bf-analysis-control,
+.bf-week-transfer-form {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
@@ -337,7 +332,6 @@ html .bf-quick-entry-grid > * { grid-column: auto !important; }
 .bf-obligations-workspace .bf-obligation-entry-main b,
 .bf-calendar-events article small,
 .bf-calendar-events article b,
-.bf-calendar-budget-weeks small,
 .bf-cycle-template-list small,
 .bf-recurring-list small,
 .bf-recurring-list b {
@@ -395,7 +389,7 @@ html.theme-white .bf-os-decide, html.theme-aurora .bf-os-decide, html.theme-navy
 }html.theme-white .bf-os-decide svg, html.theme-aurora .bf-os-decide svg, html.theme-navy .bf-os-decide svg, html.theme-cyber .bf-os-decide svg, html.theme-white .bf-movement-add svg, html.theme-aurora .bf-movement-add svg, html.theme-navy .bf-movement-add svg, html.theme-cyber .bf-movement-add svg, html.theme-white .bf-primary svg, html.theme-aurora .bf-primary svg, html.theme-navy .bf-primary svg, html.theme-cyber .bf-primary svg{
   color: var(--cf-on-primary, #ffffff);
   stroke: currentColor;
-}html.theme-white .bf-os-secondary, html.theme-aurora .bf-os-secondary, html.theme-navy .bf-os-secondary, html.theme-cyber .bf-os-secondary, html.theme-white .bf-today-add.bf-os-secondary, html.theme-aurora .bf-today-add.bf-os-secondary, html.theme-navy .bf-today-add.bf-os-secondary, html.theme-cyber .bf-today-add.bf-os-secondary, html.theme-white .bf-secondary, html.theme-aurora .bf-secondary, html.theme-navy .bf-secondary, html.theme-cyber .bf-secondary{
+}html.theme-white .bf-secondary, html.theme-aurora .bf-secondary, html.theme-navy .bf-secondary, html.theme-cyber .bf-secondary{
   color: var(--cf-ink, #1a2420) !important;
   background-color: var(--cf-surface, #fbfaf7) !important;
   border: 1px solid var(--cf-line, #d5d2c8) !important;
@@ -454,8 +448,7 @@ html.theme-cyber .os-dock button.is-on svg {
   }
 
   .os-shell .bf-today-workspace > header h1,
-  .os-shell .bf-movements-header h1,
-  .os-shell .bf-os-title {
+.os-shell .bf-movements-header h1 {
     scroll-margin-top: 12px;
   }
 
@@ -465,8 +458,7 @@ html.theme-cyber .os-dock button.is-on svg {
   }
 
   /* Mai mult: carduri 2-col — wrap + line-clamp, fără list-row pe cell */
-  .os-shell .bf-more-grid,
-  .os-shell .bf-utilities-grid {
+  .os-shell .bf-more-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
@@ -474,8 +466,7 @@ html.theme-cyber .os-dock button.is-on svg {
     background: transparent !important;
     overflow: visible !important;
   }
-  .os-shell .bf-more-grid > button,
-  .os-shell .bf-utilities-grid > button {
+  .os-shell .bf-more-grid > button {
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -494,18 +485,15 @@ html.theme-cyber .os-dock button.is-on svg {
     grid-template-rows: none !important;
   }
   .os-shell .bf-more-grid > button::before,
-  .os-shell .bf-more-grid > button::after,
-  .os-shell .bf-utilities-grid > button::after {
+.os-shell .bf-more-grid > button::after {
     content: none !important;
     display: none !important;
   }
-  .os-shell .bf-more-grid > button > svg,
-  .os-shell .bf-utilities-grid > button > svg {
+  .os-shell .bf-more-grid > button > svg {
     grid-row: auto !important;
     flex: 0 0 auto;
   }
-  .os-shell .bf-more-grid > button > b,
-  .os-shell .bf-utilities-grid > button > b {
+  .os-shell .bf-more-grid > button > b {
     display: -webkit-box !important;
     -webkit-box-orient: vertical !important;
     -webkit-line-clamp: 2 !important;
@@ -521,8 +509,7 @@ html.theme-cyber .os-dock button.is-on svg {
     grid-column: auto !important;
     grid-row: auto !important;
   }
-  .os-shell .bf-more-grid > button > span,
-  .os-shell .bf-utilities-grid > button > span {
+  .os-shell .bf-more-grid > button > span {
     display: -webkit-box !important;
     -webkit-box-orient: vertical !important;
     -webkit-line-clamp: 2 !important;
@@ -594,8 +581,6 @@ html.theme-dark .bf-primary svg {
   color: var(--cf-on-primary, #ffffff);
   stroke: currentColor;
 }
-html.theme-dark .bf-os-secondary,
-html.theme-dark .bf-today-add.bf-os-secondary,
 html.theme-dark .bf-secondary {
   color: var(--cf-ink, #e8f0ea) !important;
   background-color: var(--cf-surface, #132820) !important;
@@ -615,7 +600,6 @@ html.theme-dark .os-dock button.is-on svg {
 .bf-movement-kind button,
 .bf-movement-scope button,
 .bf-journal-filter-toggle,
-.bf-more-tabs button,
 .bf-segment button {
   min-height: 44px;
   min-width: 44px;
@@ -627,7 +611,6 @@ html.theme-dark .os-dock button.is-on svg {
 .bf-secondary:focus-visible,
 .bf-movement-kind button:focus-visible,
 .bf-movement-scope button:focus-visible,
-.bf-more-tabs button:focus-visible,
 .bf-journal-filter-toggle:focus-visible,
 .bf-link-button:focus-visible {
   outline: 2px solid var(--cf-primary-strong, #1f5240) !important;
@@ -722,15 +705,14 @@ html.theme-dark .os-dock button.is-on svg {
 /* ui-chrome-dock-clearance — floating pill dock must not clip secondary tabs */
 @media (max-width: 760px) {
   .os-shell .bf-page,
-  .os-shell .bf-today-workspace,
-  .os-shell .bf-obligations-workspace,
-  .os-shell .bf-movements-workspace,
-  .os-shell .bf-plan-workspace,
-  .os-shell .bf-insights-workspace,
-  .os-shell .bf-utilities-workspace,
-  .os-shell .bf-goals-workspace,
-  .os-shell .bf-habits-workspace,
-  .os-shell .bf-calendar-workspace {
+.os-shell .bf-today-workspace,
+.os-shell .bf-obligations-workspace,
+.os-shell .bf-plan-workspace,
+.os-shell .bf-insights-workspace,
+.os-shell .bf-utilities-workspace,
+.os-shell .bf-goals-workspace,
+.os-shell .bf-habits-workspace,
+.os-shell .bf-calendar-workspace {
     padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
@@ -739,29 +721,21 @@ html.theme-dark .os-dock button.is-on svg {
 html .bf-advisor-hero,
 html .bf-sync-hero,
 html .bf-plan-resource-band,
-html .bf-reports-hero,
-html .bf-assistant-panel,
 html .bf-coach-card {
   color: var(--cf-ink, #0c1612) !important;
 }
 html .bf-advisor-hero h2,
 html .bf-sync-hero h2,
-html .bf-reports-hero h2,
-html .bf-assistant-panel h2,
 html .bf-coach-card h2 {
   color: var(--cf-ink, #0c1612) !important;
 }
 html .bf-advisor-hero > p:not(.bf-kicker),
 html .bf-sync-hero p:not(.bf-kicker),
-html .bf-reports-hero p:not(.bf-kicker),
-html .bf-assistant-panel > p:not(.bf-kicker),
 html .bf-coach-card p:not(.bf-kicker) {
   color: var(--cf-muted, #4d5f58) !important;
 }
 html .bf-advisor-hero .bf-kicker,
-html .bf-sync-hero .bf-kicker,
-html .bf-reports-hero .bf-kicker,
-html .bf-assistant-panel .bf-kicker {
+html .bf-sync-hero .bf-kicker {
   color: var(--cf-primary-strong, #0e4f3e) !important;
   opacity: 1 !important;
 }
@@ -831,18 +805,9 @@ html.theme-cyber .bf-advisor-metrics small {
 html.theme-aurora .bf-plan-resource-band,
 html.theme-navy .bf-plan-resource-band,
 html.theme-cyber .bf-plan-resource-band,
-html.theme-aurora .bf-reports-hero,
-html.theme-navy .bf-reports-hero,
-html.theme-cyber .bf-reports-hero,
-html.theme-aurora .bf-assistant-panel,
-html.theme-navy .bf-assistant-panel,
-html.theme-cyber .bf-assistant-panel,
 html.theme-aurora .bf-coach-card,
 html.theme-navy .bf-coach-card,
 html.theme-cyber .bf-coach-card,
-html.theme-aurora .bf-today-situation,
-html.theme-navy .bf-today-situation,
-html.theme-cyber .bf-today-situation,
 html.theme-aurora .bf-week-digest,
 html.theme-navy .bf-week-digest,
 html.theme-cyber .bf-week-digest,
@@ -870,18 +835,9 @@ html.theme-cyber .bf-weekly-summary {
 html.theme-aurora .bf-plan-resource-band h2,
 html.theme-navy .bf-plan-resource-band h2,
 html.theme-cyber .bf-plan-resource-band h2,
-html.theme-aurora .bf-reports-hero h2,
-html.theme-navy .bf-reports-hero h2,
-html.theme-cyber .bf-reports-hero h2,
-html.theme-aurora .bf-assistant-panel h2,
-html.theme-navy .bf-assistant-panel h2,
-html.theme-cyber .bf-assistant-panel h2,
 html.theme-aurora .bf-coach-card h2,
 html.theme-navy .bf-coach-card h2,
 html.theme-cyber .bf-coach-card h2,
-html.theme-aurora .bf-today-situation h2,
-html.theme-navy .bf-today-situation h2,
-html.theme-cyber .bf-today-situation h2,
 html.theme-aurora .bf-obligation-ai h2,
 html.theme-navy .bf-obligation-ai h2,
 html.theme-cyber .bf-obligation-ai h2,
@@ -900,18 +856,9 @@ html.theme-cyber .bf-household article b {
 html.theme-aurora .bf-plan-resource-band p:not(.bf-kicker),
 html.theme-navy .bf-plan-resource-band p:not(.bf-kicker),
 html.theme-cyber .bf-plan-resource-band p:not(.bf-kicker),
-html.theme-aurora .bf-reports-hero p:not(.bf-kicker),
-html.theme-navy .bf-reports-hero p:not(.bf-kicker),
-html.theme-cyber .bf-reports-hero p:not(.bf-kicker),
-html.theme-aurora .bf-assistant-panel p:not(.bf-kicker),
-html.theme-navy .bf-assistant-panel p:not(.bf-kicker),
-html.theme-cyber .bf-assistant-panel p:not(.bf-kicker),
 html.theme-aurora .bf-coach-card p:not(.bf-kicker),
 html.theme-navy .bf-coach-card p:not(.bf-kicker),
 html.theme-cyber .bf-coach-card p:not(.bf-kicker),
-html.theme-aurora .bf-today-situation p:not(.bf-kicker),
-html.theme-navy .bf-today-situation p:not(.bf-kicker),
-html.theme-cyber .bf-today-situation p:not(.bf-kicker),
 html.theme-aurora .bf-week-digest small,
 html.theme-navy .bf-week-digest small,
 html.theme-cyber .bf-week-digest small,
@@ -963,15 +910,9 @@ html.theme-cyber .bf-movement-add svg {
 }
 
 /* Secondary / outline controls on night themes: light ink on dark surface */
-html.theme-aurora .bf-os-secondary,
-html.theme-navy .bf-os-secondary,
-html.theme-cyber .bf-os-secondary,
 html.theme-aurora .bf-secondary,
 html.theme-navy .bf-secondary,
-html.theme-cyber .bf-secondary,
-html.theme-aurora .bf-today-add.bf-os-secondary,
-html.theme-navy .bf-today-add.bf-os-secondary,
-html.theme-cyber .bf-today-add.bf-os-secondary {
+html.theme-cyber .bf-secondary {
   color: var(--cf-ink, #f1f4f8) !important;
   background-color: var(--cf-surface, #18142f) !important;
   border-color: var(--cf-line, #49416c) !important;
@@ -1042,18 +983,13 @@ html.theme-dark .bf-movement-add svg {
   color: var(--cf-on-primary, #0d0b1c);
   stroke: currentColor;
 }
-html.theme-dark .bf-secondary,
-html.theme-dark .bf-os-secondary {
+html.theme-dark .bf-secondary {
   color: var(--cf-ink, #eef2f6) !important;
   background-color: var(--cf-surface, #1a1f27) !important;
   border-color: var(--cf-line, #3a4450) !important;
 }
 
 /* Chip / tab filled pe aurora/navy/cyber — ținte ≥48dp pe dock active */
-html.theme-aurora .bf-more-tabs button.active,
-html.theme-navy .bf-more-tabs button.active,
-html.theme-cyber .bf-more-tabs button.active,
-html.theme-dark .bf-more-tabs button.active,
 html.theme-aurora .bf-allocation-period-tabs button.active,
 html.theme-navy .bf-allocation-period-tabs button.active,
 html.theme-cyber .bf-allocation-period-tabs button.active,
@@ -1080,14 +1016,9 @@ html.theme-dark .bf-secondary,
 html.theme-aurora .bf-secondary,
 html.theme-navy .bf-secondary,
 html.theme-cyber .bf-secondary,
-html.theme-dark .bf-os-secondary,
-html.theme-aurora .bf-os-secondary,
-html.theme-navy .bf-os-secondary,
-html.theme-cyber .bf-os-secondary,
 .dark .bf-obligation-actions button,
 .dark .bf-obligation-empty > button,
 .dark .bf-secondary,
-.dark .bf-os-secondary,
 .dark .bf-goals-link {
   color: var(--cf-ink) !important;
   background-color: color-mix(in srgb, var(--cf-surface) 88%, transparent) !important;
@@ -1104,8 +1035,7 @@ html.theme-aurora .bf-obligation-entry-actions > button.delete,
 html.theme-navy .bf-obligation-entry-actions > button.delete,
 html.theme-cyber .bf-obligation-entry-actions > button.delete,
 .dark .bf-danger > button,
-.dark .bf-obligation-entry-actions > button.delete,
-.dark .bf-row-actions button:last-child {
+.dark .bf-obligation-entry-actions > button.delete {
   color: var(--cf-ink) !important;
   border-color: color-mix(in srgb, var(--cf-danger) 45%, var(--cf-line)) !important;
   background-color: color-mix(in srgb, var(--cf-danger) 12%, var(--cf-surface)) !important;
