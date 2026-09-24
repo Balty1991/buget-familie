@@ -797,7 +797,7 @@ export const planAllocationMath = (data: AppData) => {
   const availableSources = data.settings.paymentSources
     .filter((source) => sourceIds.includes(source.id))
     .reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
-  const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
+  const scheduled = scheduledInPlan(data);
   const slice = (item: BudgetAllocation) => allocationPlanSlice(data, item);
   const allocated = plan.allocations.reduce((sum, item) => sum + slice(item).budget, 0);
   const reservedInEnvelopes = plan.allocations.reduce((sum, item) => sum + slice(item).remaining, 0);
@@ -1262,16 +1262,19 @@ export const recordDebtPayment = (data: AppData, input: { debtId: string; amount
 };
 
 /** Prima scadență lunară care intră în perioada curentă de plan, dacă există. */
-export const recurringDueInPlan = (item: RecurringPayment, plan: SalaryPlan) => {
-  const planEnd = planEndDate(plan); if (!item.active || !planEnd) return undefined;
+/** Prima zi `dueDay` din lună care cade în perioada activă, până la venitul tipic. */
+const monthDayDueInPlan = (dueDay: number, plan: SalaryPlan) => {
+  const planEnd = planEndDate(plan); if (!planEnd || !(dueDay >= 1)) return undefined;
   const start = new Date(`${plan.periodStart}T12:00:00`); const end = new Date(`${planEnd}T12:00:00`);
   for (let cursor = new Date(start.getFullYear(), start.getMonth(), 1); cursor <= end; cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)) {
     const lastDay = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
-    const due = new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(item.dueDay, lastDay), 12);
+    const due = new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(dueDay, lastDay), 12);
     if (due >= start && due <= end) return isoDate(due);
   }
   return undefined;
 };
+
+export const recurringDueInPlan = (item: RecurringPayment, plan: SalaryPlan) => item.active ? monthDayDueInPlan(item.dueDay, plan) : undefined;
 
 /** Plățile programate care trebuie încă rezervate, fără a număra de două ori mișcările deja înregistrate. */
 export const pendingRecurringInPlan = (data: AppData) => data.recurring.flatMap((item) => {
@@ -1279,6 +1282,30 @@ export const pendingRecurringInPlan = (data: AppData) => data.recurring.flatMap(
   const paid = data.transactions.some((transaction) => transaction.recurringId === item.id && inPlanPeriod(transaction.date, data.settings.salaryPlan));
   return dueDate && !paid ? [{ ...item, dueDate }] : [];
 });
+
+/**
+ * Ratele la datorii care cad înainte de următorul venit și încă nu au fost plătite în perioadă.
+ * Data ratei nu avansează singură după plată, așa că o dată rămasă în urmă se reia lunar pe
+ * aceeași zi; o primă rată de după venit nu se rezervă acum. Fără rezerva asta, „Poți folosi azi”
+ * și ghidul socoteau banii ratei drept liberi.
+ */
+export const pendingDebtsInPlan = (data: AppData) => {
+  const plan = data.settings.salaryPlan;
+  const planEnd = planEndDate(plan);
+  if (!planEnd) return [];
+  return data.debts.flatMap((debt) => {
+    const amount = roundedMoney(Math.min(debt.monthly, debt.remaining));
+    if (amount <= 0 || !debt.dueDate || !/^\d{4}-\d{2}-\d{2}$/.test(debt.dueDate) || debt.dueDate > planEnd) return [];
+    const dueDate = debt.dueDate >= plan.periodStart ? debt.dueDate : monthDayDueInPlan(Number(debt.dueDate.slice(8)), plan);
+    const paid = data.transactions.some((transaction) => transaction.debtId === debt.id && inPlanPeriod(transaction.date, plan));
+    return dueDate && !paid ? [{ ...debt, amount, dueDate }] : [];
+  });
+};
+
+/** Tot ce trebuie ținut deoparte până la venit: scadențe recurente plus rate la datorii. */
+export const scheduledInPlan = (data: AppData) =>
+  pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0)
+  + pendingDebtsInPlan(data).reduce((sum, item) => sum + item.amount, 0);
 
 /** Confirmă o scadență rezervată în perioada activă: adaugă mișcarea reală o singură dată, fără s-o poată dubla. */
 export const confirmRecurringPayment = (data: AppData, recurringId: string): AppData | undefined => {
@@ -1333,7 +1360,7 @@ export const planForecast = (data: AppData, asOf = isoToday()) => {
   const plan = data.settings.salaryPlan;
   const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
   const availableSources = data.settings.paymentSources.filter((source) => sourceIds.includes(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
-  const scheduled = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
+  const scheduled = scheduledInPlan(data);
   const prudentEnd = prudentPlanEndDate(plan);
   const endIso = prudentEnd || addIsoDays(plan.periodStart, 6);
   const clamped = asOf < plan.periodStart ? plan.periodStart : asOf > endIso ? endIso : asOf;
@@ -1452,7 +1479,7 @@ export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSugge
   if (envelope) suggestions.push({ id: "envelope", tone: envelope.state === "over" ? "risk" : "watch", title: envelope.state === "over" ? t("{label} a depășit limita", { label: envelope.item.label }) : t("{label} se apropie de limită", { label: envelope.item.label }), detail: t("{spent} RON au fost cheltuiți din limita ajustată de {budget} RON. O realocare nu mută bani între surse; schimbă numai limitele plicurilor.", { spent: Math.round(envelope.spent), budget: Math.round(envelope.budget) }), potential: Math.abs(envelope.remaining), basis: t("{percent}% utilizat în perioada planului", { percent: Math.round(envelope.usage * 100) }), nextStep: t("Vezi plicul și realocările") });
   const top = spendingByCategory[0];
   if (top && top[1] > 0) { const potential = Math.max(1, Math.round(top[1] * 0.1)); suggestions.push({ id: "category", tone: "watch", title: t("Revizuiește {category}", { category: t(top[0]) }), detail: t("Aceasta este categoria principală în perioada curentă ({amount} RON). O reducere orientativă de 10% ar păstra aproximativ {potential} RON, fără să modifice nimic automat.", { amount: Math.round(top[1]), potential }), potential, basis: t("{amount} RON din {count} cheltuieli ale planului", { amount: Math.round(top[1]), count: currentExpenses.length }), nextStep: t("Deschide jurnalul") }); }
-  if (forecast.scheduled > 0) suggestions.push({ id: "reserve", tone: "watch", title: t("Păstrează rezerva pentru scadențe"), detail: t("{amount} RON sunt deja rezervați pentru plăți recurente din acest plan. Tratează suma ca indisponibilă înainte de a face o cheltuială nouă.", { amount: Math.round(forecast.scheduled) }), potential: forecast.scheduled, basis: t("{count} scadențe active înregistrate", { count: data.recurring.filter((item) => item.active).length }), nextStep: t("Verifică scadențele") });
+  if (forecast.scheduled > 0) suggestions.push({ id: "reserve", tone: "watch", title: t("Păstrează rezerva pentru scadențe"), detail: t("{amount} RON sunt deja rezervați pentru scadențe și rate din acest plan. Tratează suma ca indisponibilă înainte de a face o cheltuială nouă.", { amount: Math.round(forecast.scheduled) }), potential: forecast.scheduled, basis: t("{count} scadențe active înregistrate", { count: pendingRecurringInPlan(data).length + pendingDebtsInPlan(data).length }), nextStep: t("Verifică scadențele") });
   const goal = data.savings.find((item) => item.target > item.current);
   if (goal && forecast.projectedRemaining > 0) suggestions.push({ id: "goal", tone: "good", title: t("Protejează obiectivul „{name}”", { name: goal.name }), detail: t("Planul proiectează o marjă de {amount} RON. Poți compara această marjă cu deficitul obiectivului, fără ca aplicația să mute bani automat.", { amount: Math.round(forecast.projectedRemaining) }), potential: Math.min(forecast.projectedRemaining, goal.target - goal.current), basis: t("{current} RON din ținta de {target} RON", { current: Math.round(goal.current), target: Math.round(goal.target) }), nextStep: t("Vezi obiectivul") });
   if (!suggestions.length) suggestions.push({ id: "history", tone: "good", title: t("Construiește un profil financiar observabil"), detail: t("Înregistrează câteva venituri și cheltuieli, apoi stabilește data următorului venit. Asistentul va compara istoricul, bilanțul și ritmul real fără să trimită datele către un serviciu extern."), basis: t("Încă nu există suficiente mișcări pentru o comparație personală"), nextStep: t("Adaugă prima mișcare") });
@@ -1496,7 +1523,7 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
     .reduce((sum, s) => sum + sourceBalance(data, s.id), 0);
 
   const reserved = plan.allocations.reduce((sum, a) => sum + Math.max(0, allocationStatus(data, a).remaining), 0);
-  const scheduled = pendingRecurringInPlan(data).reduce((sum, i) => sum + i.amount, 0);
+  const scheduled = scheduledInPlan(data);
   const remaining = availableSources - reserved - scheduled;
   const marginRatio = availableSources > 0 ? Math.max(0, Math.min(1, remaining / availableSources)) : (remaining >= 0 ? 0.6 : 0);
   // Marja are sens doar dacă știm ce bani există: o mișcare înregistrată sau un sold de pornire.

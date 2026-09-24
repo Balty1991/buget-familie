@@ -17,6 +17,7 @@ import {
   isWeeklyPaced,
   newId,
   pendingRecurringInPlan,
+  scheduledInPlan,
   planEndDate,
   planExpired,
   planCoverEndDate,
@@ -305,7 +306,7 @@ export const closeMonthLocally = (recap: MonthlyRecap, note?: string): MonthClos
 
 export const liquidSafeToSpend = (data: AppData, asOf = isoToday()) => {
   const balance = financialBalance(data);
-  const pending = pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0);
+  const pending = scheduledInPlan(data);
   const envelopeLeft = data.settings.salaryPlan.allocations.reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
   const available = Math.max(0, balance.liquidFunds - pending);
   return { liquidFunds: balance.liquidFunds, reservedRecurring: pending, envelopeLeft, available, asOf };
@@ -542,7 +543,7 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
     ]
     : [
       { label: t("Lichid în surse"), amount: safe.liquidFunds, note: t("Card, cash, bonuri — sold calculat local") },
-      { label: t("Minus scadențe active"), amount: -safe.reservedRecurring, note: t("Chirie, abonamente rezervate, încă neconfirmate") },
+      { label: t("Minus scadențe active"), amount: -safe.reservedRecurring, note: t("Chirie, abonamente și rate rezervate, încă neconfirmate") },
       { label: t("Disponibil prudent"), amount: safe.available },
       { label: t("Ritm sigur din plan"), amount: forecast.safeDaily, note: t("Ce rămâne după plicuri și cheltuieli, pe zi") },
       { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} până la venit", { days: daysLabel(remainingDays) }) },

@@ -191,7 +191,7 @@ export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDe
       <section className="bf-obligation-ledger">
         <article className="debt"><span>{t("Sold datorii")}</span><b>{money(totalDebt)}</b><small>{t("{amount} rate declarate / lună", { amount: money(monthlyRates) })}</small></article>
         <article className="savings"><span>{t("Economii urmărite")}</span><b>{money(totalSavings)}</b><small>{t("{count} obiective înregistrate", { count: data.savings.length })}</small></article>
-        <button onClick={onOpenRecurring}><CalendarClock size={18} /><span>{t("Scadențe programate")}</span><b>{data.recurring.length}</b><ChevronRight size={16} /></button>
+        <button onClick={onOpenRecurring}><CalendarClock size={18} /><span>{t("Scadențe programate")}</span><b>{data.recurring.length + data.debts.filter((item) => item.remaining > 0 && item.monthly > 0 && item.dueDate).length}</b><ChevronRight size={16} /></button>
       </section>
       <section className="bf-obligation-actions">
         <button type="button" className="bf-secondary bf-obligation-cta debt" onClick={openDebt}><Plus size={17} /> {t("Adaugă datorie")}</button>

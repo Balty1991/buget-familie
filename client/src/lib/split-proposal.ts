@@ -14,7 +14,7 @@
  * Scadențele rezervate (chirie, abonamente) se scot din suma de împărțit înainte de orice:
  * banii aceia sunt deja promiși, iar un plan care îi reîmparte minte.
  */
-import { pendingRecurringInPlan, type AppData } from "./finance-data";
+import { scheduledInPlan, type AppData } from "./finance-data";
 
 export type SplitLine = { label: string; category: string; amount: number; share: number };
 export type SplitProposal = {
@@ -70,7 +70,7 @@ const historyWeights = (data: AppData, today: string, days = 90) => {
 
 export function proposeSplit(data: AppData, total: number, today: string): SplitProposal {
   const safeTotal = Number.isFinite(total) ? Math.max(0, total) : 0;
-  const reserved = round(pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0));
+  const reserved = round(scheduledInPlan(data));
   const spendable = round(Math.max(0, safeTotal - reserved));
   const envelopes = data.settings.salaryPlan.allocations.filter((item) => item.amount > 0);
   if (spendable <= 0) return { total: safeTotal, spendable, reserved, lines: [], basis: "none" };
