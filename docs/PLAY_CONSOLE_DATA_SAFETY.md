@@ -1,7 +1,7 @@
 # Răspunsuri Data safety — Google Play Console
 
 Text gata de lipit / bifat în **Play Console → Politica aplicației → Siguranța datelor**.  
-Aliniat la aplicația reală (versiune listing **1.1.45** / `versionCode` **47**).  
+Aliniat la aplicația reală (versiune listing **1.1.95** / `versionCode` **97**).  
 Surse: `client/public/privacy.html`, `AndroidManifest.xml` (`allowBackup=false`), sync AES-GCM, IndexedDB bonuri.
 
 > Nu este sfat juridic. Reverifică formularele Play dacă Google schimbă etichetele.
@@ -57,19 +57,31 @@ Fotografiile bonurilor rămân pe telefon (IndexedDB). Nu se sincronizează înt
 OCR-ul rulează local. Utilizatorul confirmă în „De verificat” înainte ca suma să intre în registru.
 ```
 
-### 3. Identificatori de dispozitiv / aplicație (sync)
+### 3. Identificatori de dispozitiv / aplicație (identitate anonimă)
 
 | Câmp Play | Alegere |
 |---|---|
-| Categorie | Identificatori de dispozitiv sau alți ID-uri de aplicație (dacă formularul cere) |
-| Colectat? | **Da, opțional** — doar dacă activezi sync-ul de familie |
-| Ce ajunge pe server | Hash cameră (din parolă) + ciphertext + metadate sesiune (ex. „ultima dată văzut”) |
-| Parola de familie | **Nu** este trimisă și **nu** este stocată pe server |
+| Categorie | **Identificatori de dispozitiv sau alte ID-uri** |
+| Colectat? | **Da** — ID anonim Firebase Authentication, când folosești sync, ghidul online sau feedbackul |
+| Partajat? | **Nu** |
+| Scopuri | **Funcționalitatea aplicației**, **Prevenirea fraudei, securitate și conformitate** (acces la camere, limite pe telefon) |
+| Ce ajunge pe server la sync | ID cameră aleator + ciphertext AES-GCM; cheia camerei **nu** pleacă de pe telefoane |
 
 ```
-Sincronizarea de familie este opțională. Parola nu părăsește telefonul. Pe Firestore
-ajunge doar un pachet AES-GCM; dezvoltatorul nu poate citi sumele în clar.
+Telefonul primește un identificator anonim aleator (Firebase Authentication), fără nume,
+e-mail sau cont. Sincronizarea de familie este opțională; pe Firestore ajunge doar un pachet
+AES-GCM, iar dezvoltatorul nu poate citi sumele în clar.
 ```
+
+### 3b. Feedback din aplicație („Spune-ne ce nu merge”)
+
+| Câmp Play | Alegere |
+|---|---|
+| Categorie | **Activitate în aplicație → Alt conținut generat de utilizator**; **Informații despre aplicație și performanță → Alte date** (versiune, ecran, tip telefon — doar cu bifa) |
+| Categorie (dacă omul își lasă contactul) | **Informații personale → Adresă de e-mail / Număr de telefon**, opțional |
+| Colectat? | **Da, opțional** — doar când omul trimite un mesaj |
+| Partajat? | **Nu** |
+| Scop | **Funcționalitatea aplicației** (repararea problemelor) |
 
 ### 4. Mesaje / chat AI (opțional)
 
@@ -129,7 +141,8 @@ către Google Gemini — niciodată registrul complet, fotografiile de bonuri sa
 |---|---|
 | Creare cont obligatorie | **Nu** |
 | Login pentru funcțiile de bază | **Nu** |
-| Sync familie | Parolă comună pe dispozitive — **nu** este cont de utilizator la dezvoltator |
+| Sync familie | Invitație (cheie aleatoare) între telefoane — **nu** este cont de utilizator la dezvoltator |
+| Identitate anonimă Firebase | ID aleator pe telefon, fără date de login — nu e cont |
 
 ---
 
@@ -147,6 +160,8 @@ către Google Gemini — niciodată registrul complet, fotografiile de bonuri sa
 - [ ] Fotografii bonuri = Da, local, nu sync, nu partajare  
 - [ ] Sync = opțional, criptat, dezvoltator fără plaintext  
 - [ ] AI online = opțional, doar rezumat — bifat / dezvăluit  
+- [ ] Identificatori = Da (ID anonim Firebase), funcționalitate + securitate, nu partajare  
+- [ ] Feedback = opțional; conținut scris de utilizator + contact opțional + date tehnice  
 - [ ] Ads / sale / data brokers = Nu  
 - [ ] allowBackup = false menționat dacă există câmp de note  
 - [ ] URL ștergere + email `contact.vanzo@gmail.com`  

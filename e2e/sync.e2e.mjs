@@ -1,5 +1,6 @@
 /**
- * Test cap-coadă al sincronizării familiei, pe emulatorul Firestore (fără date reale).
+ * Test cap-coadă al sincronizării familiei, pe emulatoarele Firestore și Auth (fără date reale),
+ * cu regulile din etapa 2 (firestore.auth.rules): fiecare telefon intră cu identitate anonimă.
  *
  * Refă scenariul lui Radu și al Ioanei din testarea cu utilizatori: două „telefoane”
  * (profiluri de browser izolate) pe aplicația reală, legată de emulator.
@@ -16,6 +17,8 @@ import { chromium } from "playwright-core";
 const PORT = 5199;
 const BASE = `http://127.0.0.1:${PORT}/`;
 const EMULATOR = process.env.FIRESTORE_EMULATOR_HOST || "127.0.0.1:8080";
+const AUTH_EMULATOR = process.env.FIREBASE_AUTH_EMULATOR_HOST || "127.0.0.1:9099";
+const PROJECT = process.env.GCLOUD_PROJECT || "buget-familie-a6a0d";
 
 const fail = (message) => { throw new Error(message); };
 const step = (message) => console.log(`• ${message}`);
@@ -35,7 +38,7 @@ async function startVite() {
   // Vite pornit direct (nu prin pnpm), ca `kill()` să-l oprească sigur: altfel serverul rămas
   // deschis ține procesul Node în viață, iar pasul din CI nu se mai termină.
   const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", String(PORT), "--strictPort", "--host", "127.0.0.1"], {
-    env: { ...process.env, VITE_FIRESTORE_EMULATOR: EMULATOR },
+    env: { ...process.env, VITE_FIRESTORE_EMULATOR: EMULATOR, VITE_AUTH_EMULATOR: AUTH_EMULATOR },
     stdio: ["ignore", "pipe", "pipe"],
   });
   let output = "";
@@ -112,6 +115,17 @@ async function main() {
   const vite = await startVite();
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   try {
+    step("Fără identitate, Firestore refuză camera familiei");
+    const room = "a".repeat(64);
+    const anonymousWrite = await fetch(`http://${EMULATOR}/v1/projects/${PROJECT}/databases/(default)/documents/familySync/${room}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ fields: { envelope: { mapValue: { fields: { version: { integerValue: "1" } } } } } }),
+    });
+    if (anonymousWrite.status !== 403) fail(`Scriere fără identitate: HTTP ${anonymousWrite.status}, așteptat 403`);
+    const anonymousRead = await fetch(`http://${EMULATOR}/v1/projects/${PROJECT}/databases/(default)/documents/familySync/${room}`);
+    if (anonymousRead.status !== 403) fail(`Citire fără identitate: HTTP ${anonymousRead.status}, așteptat 403`);
+
     step("Radu creează camera familiei");
     const radu = await phone(browser, { name: "Radu", partner: "Ioana" });
     await openSync(radu.page);
@@ -119,6 +133,8 @@ async function main() {
     await waitFor(() => connected(radu.page), "Radu conectat");
     const invite = await radu.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite);
     if (!invite?.startsWith("bf1.")) fail(`Invitația nu a fost păstrată: ${invite}`);
+    const raduUid = await radu.page.evaluate(async () => (await import("/src/lib/realtime-sync.ts")).ensureSignedIn());
+    if (!raduUid) fail("Telefonul lui Radu nu are identitate anonimă");
 
     step("Ioana intră cu invitația, de pe alt telefon");
     const ioana = await phone(browser, { name: "Ioana" });
@@ -127,6 +143,8 @@ async function main() {
     await ioana.page.goto(`${BASE}#alatura=${invite}`);
     await joinWithInvite(ioana.page);
     await waitFor(() => connected(ioana.page), "Ioana conectată");
+    const ioanaUid = await ioana.page.evaluate(async () => (await import("/src/lib/realtime-sync.ts")).ensureSignedIn());
+    if (!ioanaUid || ioanaUid === raduUid) fail(`Identitatea Ioanei: ${ioanaUid}`);
 
     step("Cheltuiala Ioanei ajunge la Radu pe numele ei");
     await addExpense(ioana.page, 38);
@@ -134,10 +152,11 @@ async function main() {
     const raduMembers = (await ledger(radu.page)).members.sort();
     if (JSON.stringify(raduMembers) !== JSON.stringify(["Ioana", "Radu"])) fail(`Membrii la Radu: ${raduMembers}`);
 
-    step("Ioana redeschide aplicația: sync-ul se reia singur");
+    step("Ioana redeschide aplicația: sync-ul se reia singur, cu aceeași identitate");
     await ioana.page.reload();
     await waitFor(() => connected(ioana.page).catch(() => false).then(async (ok) => ok || (await openSync(ioana.page).then(() => connected(ioana.page)))), "Ioana reconectată după redeschidere");
     if (await ioana.page.locator(".bf-sync-off-banner").count()) fail("Bannerul „sync oprit” apare după reconectare");
+    if ((await ioana.page.evaluate(async () => (await import("/src/lib/realtime-sync.ts")).ensureSignedIn())) !== ioanaUid) fail("Ioana a primit altă identitate după redeschidere");
     await addExpense(ioana.page, 12.5);
     await waitFor(async () => (await ledger(radu.page)).transactions.some((item) => item.amount === 12.5 && item.person === "Ioana"), "12,50 lei după redeschidere ajung la Radu");
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.95
+
+- Fiecare telefon are o identitate anonimă Firebase (fără cont, fără date personale). Sincronizarea merge și fără ea; regulile de etapa 2 (`firestore.auth.rules`) o vor cere, după ce toți testerii au 1.1.95. Vezi `docs/ANONYMOUS_AUTH.md`.
+- Ghidul online și feedbackul numără cererile pe telefon, nu pe IP-ul rețelei mobile.
+- „Spune-ne ce nu merge”: formular în aplicație pentru testarea închisă, cu coadă fără internet.
+- Politica de confidențialitate, pagina de ștergere și răspunsurile Data safety descriu invitația, identitatea anonimă și feedbackul.
+
 ## 1.1.94
 
 Corecturile din testarea cu utilizatori (24.09.2026).

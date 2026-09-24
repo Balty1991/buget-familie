@@ -63,6 +63,27 @@ jobs:
       - name: Enable Gemini API
         run: gcloud services enable generativelanguage.googleapis.com --project "$FIREBASE_PROJECT_ID"
 
+      # Identitatea anonimă a telefoanelor (docs/ANONYMOUS_AUTH.md). Dacă contul de serviciu
+      # nu are drept pe configurația Auth, pasul spune ce e de făcut în consolă, fără să
+      # oprească publicarea funcțiilor: aplicația merge și fără identitate.
+      - name: Enable anonymous sign-in (Firebase Auth)
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          gcloud services enable identitytoolkit.googleapis.com --project "$FIREBASE_PROJECT_ID" || true
+          token=$(gcloud auth print-access-token)
+          config="https://identitytoolkit.googleapis.com/admin/v2/projects/${FIREBASE_PROJECT_ID}/config"
+          status=$(curl -sS -o /tmp/auth-config.json -w '%{http_code}' -X PATCH "${config}?updateMask=signIn.anonymous.enabled" \
+            -H "Authorization: Bearer ${token}" -H "x-goog-user-project: ${FIREBASE_PROJECT_ID}" \
+            -H 'content-type: application/json' --data '{"signIn":{"anonymous":{"enabled":true}}}')
+          if [ "$status" = "200" ] && grep -q '"anonymous"' /tmp/auth-config.json; then
+            echo "Anonymous sign-in is enabled."
+          else
+            echo "::warning::Anonymous sign-in could not be enabled (HTTP $status). Firebase Console → Authentication → Get started → Sign-in method → Anonymous → Enable."
+            head -c 600 /tmp/auth-config.json || true
+            exit 1
+          fi
+
       - name: Sync Gemini and Groq secrets to Secret Manager
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

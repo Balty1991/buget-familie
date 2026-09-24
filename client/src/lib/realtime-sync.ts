@@ -10,6 +10,7 @@
  */
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
+import { browserLocalPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth, signInAnonymously, type Auth } from "firebase/auth";
 import { connectFirestoreEmulator, doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
 import { appCheckDebug, firebaseConfig, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
@@ -25,6 +26,11 @@ export class RealtimeSyncError extends Error {
 let app: FirebaseApp | undefined;
 let firestore: Firestore | undefined;
 let appCheck: AppCheck | undefined;
+let auth: Auth | undefined;
+let signingIn: Promise<string | null> | undefined;
+let signInFailedAt = 0;
+
+const firebaseApp = () => (app = app || initializeApp(firebaseConfig));
 
 function ensureAppCheck(firebaseApp: FirebaseApp) {
   if (appCheck) return;
@@ -46,6 +52,56 @@ function ensureAppCheck(firebaseApp: FirebaseApp) {
  * leagă aplicația de emulatorul local. În build-urile publicate variabila lipsește.
  */
 const emulatorHost = typeof import.meta !== "undefined" ? String(import.meta.env?.VITE_FIRESTORE_EMULATOR || "").trim() : "";
+const authEmulatorHost = typeof import.meta !== "undefined" ? String(import.meta.env?.VITE_AUTH_EMULATOR || "").trim() : "";
+
+const SIGN_IN_RETRY_MS = 60_000;
+const SIGN_IN_WAIT_MS = 6_000;
+
+/**
+ * Identitate anonimă a telefonului (Firebase Auth, fără cont, fără date personale).
+ * Regulile Firestore o pot cere pe camerele familiei (firestore.auth.rules), iar funcțiile
+ * numără cererile pe telefon, nu pe IP-ul rețelei mobile. Dacă nu merge — furnizorul
+ * anonim oprit în consolă, fără rețea la prima pornire — sincronizarea continuă ca înainte
+ * și reîncercăm peste un minut.
+ */
+export function ensureSignedIn(): Promise<string | null> {
+  if (isOfflineOnly() || !isFirebaseConfigured) return Promise.resolve(null);
+  if (signingIn) return signingIn;
+  if (signInFailedAt && Date.now() - signInFailedAt < SIGN_IN_RETRY_MS) return Promise.resolve(null);
+  signingIn = (async () => {
+    try {
+      if (!auth) {
+        auth = initializeAuth(firebaseApp(), { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
+        if (authEmulatorHost) connectAuthEmulator(auth, `http://${authEmulatorHost}`, { disableWarnings: true });
+      }
+      await auth.authStateReady();
+      const uid = auth.currentUser?.uid || (await signInAnonymously(auth)).user.uid;
+      signInFailedAt = 0;
+      return uid;
+    } catch {
+      signingIn = undefined;
+      signInFailedAt = Date.now();
+      return null;
+    }
+  })();
+  return signingIn;
+}
+
+/** Așteaptă identitatea cel mult câteva secunde; fără ea, cererea pleacă oricum. */
+const signedInOrTimeout = () => Promise.race([
+  ensureSignedIn(),
+  new Promise<null>((resolve) => setTimeout(() => resolve(null), SIGN_IN_WAIT_MS)),
+]);
+
+/** Antet `Authorization` pentru funcții (ghidul online, feedback), dacă telefonul are identitate. */
+export async function authHeader(): Promise<string | undefined> {
+  if (!(await signedInOrTimeout()) || !auth?.currentUser) return undefined;
+  try {
+    return `Bearer ${await auth.currentUser.getIdToken()}`;
+  } catch {
+    return undefined;
+  }
+}
 
 function db(): Firestore {
   if (isOfflineOnly()) {
@@ -53,15 +109,16 @@ function db(): Firestore {
   }
   if (!isFirebaseConfigured) throw new RealtimeSyncError("not-configured", "Sincronizarea nu a fost încă configurată de administratorul aplicației.");
   if (!firestore) {
-    app = app || initializeApp(firebaseConfig);
+    const firebase = firebaseApp();
+    void ensureSignedIn();
     if (emulatorHost) {
-      firestore = getFirestore(app);
+      firestore = getFirestore(firebase);
       const [host, port] = emulatorHost.split(":");
       connectFirestoreEmulator(firestore, host, Number(port) || 8080);
       return firestore;
     }
-    ensureAppCheck(app);
-    firestore = getFirestore(app);
+    ensureAppCheck(firebase);
+    firestore = getFirestore(firebase);
   }
   return firestore;
 }
@@ -69,9 +126,7 @@ function db(): Firestore {
 export async function appCheckHeader(): Promise<string | undefined> {
   if (isOfflineOnly() || !isFirebaseConfigured || !recaptchaSiteKey) return undefined;
   try {
-    const firebaseApp = app || initializeApp(firebaseConfig);
-    app = firebaseApp;
-    ensureAppCheck(firebaseApp);
+    ensureAppCheck(firebaseApp());
     if (!appCheck) return undefined;
     const { getToken } = await import("firebase/app-check");
     const result = await getToken(appCheck, false);
@@ -85,6 +140,7 @@ const recoveryRef = (recoveryId: string) => doc(db(), "familyRecovery", recovery
 
 export async function fetchFamilyEnvelope(roomId: string): Promise<EncryptedEnvelope | null> {
   try {
+    await signedInOrTimeout();
     const snapshot = await getDoc(roomRef(roomId));
     return snapshot.exists() ? (snapshot.data().envelope as EncryptedEnvelope) : null;
   } catch (error) {
@@ -95,6 +151,7 @@ export async function fetchFamilyEnvelope(roomId: string): Promise<EncryptedEnve
 
 export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnvelope): Promise<void> {
   try {
+    await signedInOrTimeout();
     await setDoc(roomRef(roomId), { envelope, updatedAt: serverTimestamp() });
   } catch (error) {
     if (error instanceof RealtimeSyncError) throw error;
@@ -104,6 +161,7 @@ export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnve
 
 export async function fetchRecoveryWrap(recoveryId: string): Promise<EncryptedEnvelope | null> {
   try {
+    await signedInOrTimeout();
     const snapshot = await getDoc(recoveryRef(recoveryId));
     return snapshot.exists() ? (snapshot.data().envelope as EncryptedEnvelope) : null;
   } catch (error) {
@@ -114,6 +172,7 @@ export async function fetchRecoveryWrap(recoveryId: string): Promise<EncryptedEn
 
 export async function pushRecoveryWrap(recoveryId: string, envelope: EncryptedEnvelope): Promise<void> {
   try {
+    await signedInOrTimeout();
     await setDoc(recoveryRef(recoveryId), { envelope, updatedAt: serverTimestamp() });
   } catch (error) {
     if (error instanceof RealtimeSyncError) throw error;
@@ -123,11 +182,21 @@ export async function pushRecoveryWrap(recoveryId: string, envelope: EncryptedEn
 
 /** Ascultă actualizări live ale familiei; ignoră ecoul propriei scrieri via `hasPendingWrites`. */
 export function subscribeFamilyRoom(roomId: string, onEnvelope: (envelope: EncryptedEnvelope) => void, onError: (error: Error) => void): Unsubscribe {
-  return onSnapshot(roomRef(roomId), { includeMetadataChanges: true }, (snapshot) => {
-    if (snapshot.metadata.hasPendingWrites || !snapshot.exists()) return;
-    const envelope = snapshot.data().envelope as EncryptedEnvelope | undefined;
-    if (envelope) onEnvelope(envelope);
-  }, (error) => onError(error instanceof RealtimeSyncError ? error : new RealtimeSyncError("unavailable", "Conexiunea live cu serviciul de sincronizare a fost întreruptă.")));
+  const ref = roomRef(roomId); // aruncă imediat dacă sync e oprit sau neconfigurat, ca înainte
+  let stop: Unsubscribe | undefined;
+  let cancelled = false;
+  void signedInOrTimeout().then(() => {
+    if (cancelled) return;
+    stop = onSnapshot(ref, { includeMetadataChanges: true }, (snapshot) => {
+      if (snapshot.metadata.hasPendingWrites || !snapshot.exists()) return;
+      const envelope = snapshot.data().envelope as EncryptedEnvelope | undefined;
+      if (envelope) onEnvelope(envelope);
+    }, (error) => onError(error instanceof RealtimeSyncError ? error : new RealtimeSyncError("unavailable", "Conexiunea live cu serviciul de sincronizare a fost întreruptă.")));
+  });
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
 }
 
 /**
@@ -136,6 +205,7 @@ export function subscribeFamilyRoom(roomId: string, onEnvelope: (envelope: Encry
  */
 export async function fetchFamilyEntitlement(roomId: string): Promise<{ expiresAt: string } | null> {
   try {
+    await signedInOrTimeout();
     const snapshot = await getDoc(doc(db(), "familyEntitlements", roomId));
     const expiresAt = snapshot.exists() ? snapshot.data().expiresAt : undefined;
     return typeof expiresAt === "string" ? { expiresAt } : null;

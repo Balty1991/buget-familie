@@ -6,7 +6,7 @@ import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
 import { getLocale, t } from "@/lib/i18n";
 import { aiDailyLimit } from "@/lib/entitlements";
-import { appCheckHeader } from "@/lib/realtime-sync";
+import { appCheckHeader, authHeader } from "@/lib/realtime-sync";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 import { parseModelIntents, type AppScreen, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
@@ -1095,9 +1095,10 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
           localSend(true, raw);
           return;
         }
-        const token = await appCheckHeader();
+        const [token, identity] = await Promise.all([appCheckHeader(), authHeader()]);
         const headers: Record<string, string> = { "content-type": "application/json" };
         if (token) headers["X-Firebase-AppCheck"] = token;
+        if (identity) headers.Authorization = identity;
         const response = await fetch("https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/aiGuide", {
           method: "POST", headers,
           body: JSON.stringify({ messages: [...messages, { role: "user", text: onlineRequestText }].slice(-20), context: compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }) }),

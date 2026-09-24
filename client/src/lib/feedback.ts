@@ -6,6 +6,7 @@
 import { APP_VERSION } from "@/lib/app-version";
 import { isNativeApp } from "@/lib/app-storage";
 import { getLocale } from "@/lib/i18n";
+import { authHeader } from "@/lib/realtime-sync";
 import { safeSetItem } from "@/lib/safe-storage";
 
 const FEEDBACK_URL = "https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/appFeedback";
@@ -31,7 +32,10 @@ export function technicalDetails(screen: string, synced: boolean): Record<string
 
 async function post(payload: FeedbackPayload): Promise<{ ok: boolean; error?: string; retry: boolean }> {
   try {
-    const response = await fetch(FEEDBACK_URL, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+    const identity = await authHeader();
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (identity) headers.Authorization = identity;
+    const response = await fetch(FEEDBACK_URL, { method: "POST", headers, body: JSON.stringify(payload) });
     if (response.ok) return { ok: true, retry: false };
     const body = await response.json().catch(() => ({})) as { error?: string };
     // 4xx: mesajul în sine nu e bun sau s-a atins plafonul — nu-l mai retrimitem singuri.

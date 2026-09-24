@@ -17,7 +17,7 @@
 </head>
 <body>
   <main>
-    <p class="meta">Buget Familie · versiunea 1.1.45 · actualizat 20 septembrie 2026</p>
+    <p class="meta">Buget Familie · versiunea 1.1.95 · actualizat 24 septembrie 2026</p>
     <h1>Politică de confidențialitate</h1>
     <p>Buget Familie este o aplicație de evidență financiară personală sau de familie, publicată de dezvoltatorul Balty1991. Contact: <a href="mailto:contact.vanzo@gmail.com">contact.vanzo@gmail.com</a>. Pachet Android: <code>ro.balty1991.bugetfamilie</code>.</p>
     <p>Nu creăm conturi de utilizator, nu cerem date bancare și nu vindem informații. Tu ești operatorul datelor din registrul tău.</p>
@@ -30,8 +30,11 @@
       <li>fotografii de bonuri și text OCR, numai local;</li>
       <li>preferințe de temă, alerte și configurare.</li>
     </ul>
-    <p>Opțional, dacă activezi sincronizarea de familie: un pachet criptat AES-GCM (PBKDF2, 250.000 iterații) este salvat în Google Firebase Firestore, într-o cameră identificată prin hash SHA-256 al parolei de familie. Parola nu este trimisă și nu este stocată. Serverul nu poate citi lei, nume sau note în clar.</p>
+    <p>Opțional, dacă activezi sincronizarea de familie: un pachet criptat AES-GCM este salvat în Google Firebase Firestore, într-o cameră cu ID aleator. Cheia camerei stă doar pe telefoanele familiei și ajunge la partener prin invitație (link sau cod QR); camerele vechi, create cu parolă de familie, au ca ID hash-ul SHA-256 al parolei. Nici cheia, nici parola nu sunt trimise sau stocate pe server. Serverul nu poate citi lei, nume sau note în clar.</p>
+    <p>Identitate anonimă: pentru sincronizare, ghidul online și formularul de feedback, telefonul primește de la Google Firebase Authentication un identificator anonim aleator (fără nume, e-mail, telefon sau cont). Îl folosim ca doar telefoanele aplicației să ajungă la camerele familiilor și ca limitele de folosire să se numere pe telefon, nu pe rețea. La dezinstalare, telefonul îl uită.</p>
     <p>Fotografiile bonurilor, șabloanele rapide, filtrele jurnalului, tema și jurnalul de sincronizare al telefonului nu sunt incluse în pachetul criptat.</p>
+
+    <p>Opțional, formularul „Spune-ne ce nu merge”: pleacă textul scris de tine, contactul doar dacă îl completezi și, dacă lași bifa, detalii tehnice (versiunea aplicației, ecranul, tipul telefonului, limba, tema, mărimea ecranului), împreună cu identificatorul anonim al telefonului. Nimic din registru. Mesajele le citește doar dezvoltatorul, ca să repare aplicația.</p>
 
     <p>Opțional, ghidul AI: conversația rămâne pe telefon. Dacă ghidul local nu înțelege, poate pleca un rezumat scurt către Google Gemini — niciodată registrul întreg, pozele de bonuri sau parola de familie.</p>
 
@@ -53,10 +56,10 @@
     <p>Backup-ul Google al aplicației este dezactivat (<code>allowBackup=false</code>), ca datele financiare să nu părăsească telefonul prin backup-ul de sistem. Poți exporta un fișier JSON local din Setări.</p>
 
     <h2>6. Păstrare și ștergere</h2>
-    <p>Datele locale rămân până le ștergi (Setări → Resetare) sau dezinstalezi aplicația. Nu există un cont de șters la noi. Pentru camera de familie: schimbați parola pe telefoanele rămase; camera veche, derivată din parola veche, nu mai poate decripta un pachet nou. Instrucțiuni: pagina <a href="./delete-data.html">Cum ștergi datele</a>.</p>
+    <p>Datele locale rămân până le ștergi (Setări → Resetare) sau dezinstalezi aplicația. Nu există un cont de șters la noi; identificatorul anonim nu e legat de numele tău, iar la cerere îl ștergem, împreună cu mesajele de feedback. Pachetul criptat al camerei de familie rămâne pe server fără cheie, deci nu poate fi citit; dacă vrei să dispară, scrie-ne și îl ștergem. Instrucțiuni: pagina <a href="./delete-data.html">Cum ștergi datele</a>.</p>
 
     <h2>7. Destinatari</h2>
-    <p>Google Firebase (UE/US, infrastructură Google Cloud) primește doar ciphertext-ul, dacă sincronizezi. GitHub Pages servește interfața web publică, nu registrul tău. Nu folosim procesatori de plăți în această versiune.</p>
+    <p>Google Firebase (UE/US, infrastructură Google Cloud) primește ciphertext-ul, dacă sincronizezi, identificatorul anonim al telefonului și mesajele trimise prin formularul de feedback. GitHub Pages servește interfața web publică, nu registrul tău. Nu folosim procesatori de plăți în această versiune.</p>
 
     <h2>8. Drepturile tale</h2>
     <p>Poți accesa, exporta și șterge datele din aplicație. Pentru întrebări GDPR: <a href="mailto:contact.vanzo@gmail.com">contact.vanzo@gmail.com</a>. Răspundem în maximum 30 de zile.</p>

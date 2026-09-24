@@ -38,4 +38,18 @@ describe("firestore.rules ↔ family-crypto shape", () => {
     expect(envelope.ciphertext.length).toBeLessThan(FIRESTORE_CIPHERTEXT_MAX);
     expect(Object.keys(envelope).sort()).toEqual([...FIRESTORE_ALLOWED_ENVELOPE_KEYS].sort());
   });
+
+  it("etapa 2 (firestore.auth.rules) = aceleași reguli, plus identitate pe fiecare acces al familiei", () => {
+    const code = (file: string) => readFileSync(resolve(process.cwd(), file), "utf8")
+      .split("\n").map((line) => line.replace(/\/\/.*$/, "").trim()).filter(Boolean).join("\n");
+    const stage1 = code("firestore.rules");
+    const stage2 = code("firestore.auth.rules");
+    expect(stage2).toContain("return request.auth != null;");
+    const allows = stage2.split("\n").filter((line) => line.startsWith("allow ") && !line.includes("if false"));
+    expect(allows.length).toBeGreaterThanOrEqual(5);
+    for (const line of allows) expect(line).toMatch(/: if signedIn\(\) && /);
+    const withoutAuth = stage2.replace(/function signedIn\(\) \{\nreturn request\.auth != null;\n\}\n/, "").replaceAll("signedIn() && ", "");
+    expect(withoutAuth).toBe(stage1);
+  });
 });
+

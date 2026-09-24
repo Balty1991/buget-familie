@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// Etapa 2 a regulilor Firestore: aceleași reguli ca în firestore.rules, plus identitatea
+// anonimă a telefonului (Firebase Auth) pe camerele familiei și pe codurile de recuperare.
+// O cerere trimisă direct la Firestore, fără aplicație și fără identitate, e refuzată.
+//
+// NU le publica până când (vezi docs/ANONYMOUS_AUTH.md):
+//   1. furnizorul „Anonymous” e pornit în Firebase Console → Authentication → Sign-in method;
+//   2. toți testerii au versiunea 1.1.95 sau mai nouă (cele vechi nu au identitate și
+//      s-ar opri din sincronizat).
+// Testul cap-coadă (pnpm test:sync) rulează pe aceste reguli, cu emulatorul Auth.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Telefonul are identitate anonimă Firebase (fără cont, fără date personale).
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function envelopeWriteOk() {
+      return request.resource.data.keys().hasOnly(['envelope', 'updatedAt'])
+        && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
+        && request.resource.data.envelope.version == 1
+        && request.resource.data.envelope.ciphertext is string
+        && request.resource.data.envelope.ciphertext.size() < 2000000
+        && request.resource.data.envelope.salt is string
+        && request.resource.data.envelope.salt.size() == 24
+        && request.resource.data.envelope.iv is string
+        && request.resource.data.envelope.iv.size() == 16;
+    }
+
+    match /familySync/{roomId} {
+      // `get`, nu `read`: `read` acoperă și interogarea colecției, așa că oricine
+      // putea descărca pachetele criptate ale tuturor familiilor și le putea ataca
+      // offline. Un `get` cere ID-ul camerei, adică deja cunoașterea parolei.
+      allow get: if signedIn() && roomId.size() == 64;
+      // `create, update`, nu `write`: `write` acoperă și `delete`, deci oricine
+      // ajungea la ID-ul camerei putea șterge pachetul familiei dintr-o singură
+      // cerere. Nu există niciun motiv legitim ca aplicația să șteargă documentul —
+      // o familie care vrea să se retragă schimbă parola, iar camera veche rămâne
+      // orfană. Ce poate face cineva rămâne astfel „strică”, nu „distruge”.
+      allow create, update: if signedIn() && roomId.size() == 64 && envelopeWriteOk();
+    }
+
+    // Cod de recuperare: același format de pachet, ID derivat din cod (nu din parolă).
+    // Serverul vede doar parola de familie deja criptată cu codul. Fără list/delete.
+    match /familyRecovery/{recoveryId} {
+      allow get: if signedIn() && recoveryId.size() == 64;
+      allow create, update: if signedIn() && recoveryId.size() == 64 && envelopeWriteOk();
+    }
+
+    // Abonamentul Familia legat de o cameră. Îl scrie doar funcția verifyPlayPurchase
+    // (Admin SDK), după verificarea la Google Play; telefoanele din cameră doar îl citesc.
+    match /familyEntitlements/{roomId} {
+      allow get: if signedIn() && roomId.size() == 64;
+    }
+
+    // Achizițiile Play verificate. Doar serverul le vede.
+    match /playPurchases/{id} {
+      allow read, write: if false;
+    }
+
+    // Contor de abuz pentru ghidul online. Doar Admin SDK scrie aici.
+    match /aiGuideQuota/{id} {
+      allow read, write: if false;
+    }
+  }
+}

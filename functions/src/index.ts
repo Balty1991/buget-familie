@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
 import { getAppCheck } from "firebase-admin/app-check";
+import { getAuth } from "firebase-admin/auth";
 import cors from "cors";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
@@ -485,26 +486,50 @@ async function appCheckTrusted(token: string): Promise<"ok" | "invalid" | "absen
   }
 }
 
-/** Plafon pe oră și IP. Cu token valid, 60. Fără token, 12 — un proxy anonim se oprește repede. */
-async function allowGuideCall(ip: string, trusted: boolean): Promise<boolean> {
-  const limit = trusted ? 60 : 12;
+/**
+ * Identitatea anonimă a telefonului (Firebase Auth), dacă a trimis `Authorization: Bearer`.
+ * Un token lipsă sau expirat nu blochează cererea: se numără atunci pe IP, ca înainte.
+ */
+async function callerUid(header: string): Promise<string | null> {
+  const match = /^Bearer\s+(\S+)$/i.exec(header.trim());
+  if (!match) return null;
+  try {
+    ensureAdmin();
+    return (await getAuth().verifyIdToken(match[1])).uid;
+  } catch {
+    return null;
+  }
+}
+
+/** O cerere în plus pe ora curentă pentru `key`; false peste `limit`. Dacă Firestore cade, lasă cererea să treacă. */
+async function takeQuota(collection: string, key: string, limit: number, extra: Record<string, unknown> = {}): Promise<boolean> {
   const bucket = new Date().toISOString().slice(0, 13);
-  const id = createHash("sha256").update(`${bucket}|${ip}`).digest("hex").slice(0, 40);
+  const id = createHash("sha256").update(`${bucket}|${key}`).digest("hex").slice(0, 40);
   try {
     ensureAdmin();
     const db = getFirestore();
-    const ref = db.collection("aiGuideQuota").doc(id);
+    const ref = db.collection(collection).doc(id);
     return await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
       const count = snap.exists ? Number(snap.get("n") || 0) : 0;
       if (count >= limit) return false;
-      tx.set(ref, { n: count + 1, bucket, trusted, at: FieldValue.serverTimestamp() }, { merge: true });
+      tx.set(ref, { n: count + 1, bucket, ...extra, at: FieldValue.serverTimestamp() }, { merge: true });
       return true;
     });
   } catch (error) {
-    console.error("aiGuide quota", error instanceof Error ? error.message.slice(0, 180) : "unknown");
+    console.error(`${collection} quota`, error instanceof Error ? error.message.slice(0, 180) : "unknown");
     return true;
   }
+}
+
+/**
+ * Plafon pe oră. Cu identitate anonimă se numără pe telefon, ca doi oameni din aceeași rețea
+ * mobilă (același IP) să nu-și consume unul altuia ghidul; IP-ul rămâne cu un plafon larg,
+ * ca să nu ajute conturile anonime create pe bandă. Fără identitate: pe IP, ca înainte.
+ */
+async function allowPerCaller(collection: string, ip: string, uid: string | null, limit: number, extra: Record<string, unknown> = {}): Promise<boolean> {
+  if (!uid) return takeQuota(collection, ip, limit, extra);
+  return (await takeQuota(collection, `uid|${uid}`, limit, extra)) && (await takeQuota(collection, `ip|${ip}`, limit * 5, extra));
 }
 
 async function generateGuide(contents: GeminiContent[], geminiKey: string, groqKey: string) {
@@ -554,7 +579,9 @@ export const aiGuide = onRequest(
         return;
       }
       const ip = String(request.ip || request.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 64);
-      if (!(await allowGuideCall(ip, trust === "ok"))) {
+      const uid = await callerUid(String(request.get("authorization") || ""));
+      // Cu App Check valid, 60 pe oră. Fără, 12 — un proxy anonim se oprește repede.
+      if (!(await allowPerCaller("aiGuideQuota", ip, uid, trust === "ok" ? 60 : 12, { trusted: trust === "ok" }))) {
         response.status(429).json({ error: "Too many requests", code: "quota" });
         return;
       }
@@ -749,25 +776,6 @@ export const playRtdn = onRequest(
 const FEEDBACK_KINDS = new Set(["problem", "idea", "other"]);
 const clip = (value: unknown, max: number) => (typeof value === "string" ? value.trim().slice(0, max) : "");
 
-async function allowFeedback(ip: string): Promise<boolean> {
-  const bucket = new Date().toISOString().slice(0, 13);
-  const id = createHash("sha256").update(`feedback|${bucket}|${ip}`).digest("hex").slice(0, 40);
-  try {
-    ensureAdmin();
-    const db = getFirestore();
-    const ref = db.collection("appFeedbackQuota").doc(id);
-    return await db.runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-      const count = snap.exists ? Number(snap.get("n") || 0) : 0;
-      if (count >= 10) return false;
-      tx.set(ref, { n: count + 1, bucket, at: FieldValue.serverTimestamp() }, { merge: true });
-      return true;
-    });
-  } catch {
-    return true;
-  }
-}
-
 export const appFeedback = onRequest(
   { region: "europe-central2", invoker: "public", timeoutSeconds: 15, memory: "256MiB", maxInstances: 4 },
   (request, response) => {
@@ -793,7 +801,8 @@ export const appFeedback = onRequest(
         return;
       }
       const ip = String(request.ip || request.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 64);
-      if (!(await allowFeedback(ip))) {
+      const uid = await callerUid(String(request.get("authorization") || ""));
+      if (!(await allowPerCaller("appFeedbackQuota", `feedback|${ip}`, uid, 10))) {
         response.status(429).json({ error: "Ai trimis multe mesaje într-o oră. Mulțumim! Încearcă puțin mai târziu." });
         return;
       }
@@ -804,6 +813,8 @@ export const appFeedback = onRequest(
           kind,
           message,
           contact: clip(body.contact, 120) || null,
+          // Identitatea anonimă a telefonului: leagă mesajele aceluiași tester, fără nume.
+          reporter: uid,
           details: details ? {
             version: clip(details.version, 20),
             screen: clip(details.screen, 40),

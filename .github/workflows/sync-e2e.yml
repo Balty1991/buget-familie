@@ -1,6 +1,7 @@
 name: Sync familie cap-coadă
 
-# Două „telefoane” pe aplicația reală și un Firestore local (emulator, fără date reale):
+# Două „telefoane” pe aplicația reală, cu Firestore și Auth locale (emulatoare, fără date reale)
+# și regulile din etapa 2 (firestore.auth.rules):
 # invitație, cine a cheltuit, reconectare după redeschidere, mutare de pe parolă.
 # Nu oprește publicarea site-ului; arată dacă sincronizarea s-a stricat.
 
@@ -11,7 +12,9 @@ on:
       - "client/src/**"
       - "e2e/**"
       - "firestore.rules"
+      - "firestore.auth.rules"
       - "firebase.json"
+      - "firebase.e2e.json"
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/sync-e2e.yml"
@@ -20,6 +23,7 @@ on:
       - "client/src/**"
       - "e2e/**"
       - "firestore.rules"
+      - "firestore.auth.rules"
   workflow_dispatch:
 
 permissions:
