@@ -25,6 +25,23 @@ const titleFor = (month: string) => { const [year, index] = month.split("-").map
 export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: MainView) => void }) {
   const year = new Date().getFullYear();
   const currentMonth = `${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+  /**
+   * Lunile de ales: de la prima mișcare (cel mult 5 ani în urmă) până la luna curentă. Un <select>
+   * cu numele lunilor în limba aplicației, nu <input type="month">, pe care unele telefoane îl
+   * afișează în limba sistemului („September 2026”).
+   */
+  const monthChoices = useMemo(() => {
+    const first = data.transactions.reduce((min, item) => (item.date && item.date.slice(0, 7) < min ? item.date.slice(0, 7) : min), currentMonth);
+    const out: string[] = [];
+    const cursor = new Date(Number(currentMonth.slice(0, 4)), Number(currentMonth.slice(5, 7)) - 1, 1);
+    for (let i = 0; i < 60; i++) {
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}`;
+      out.push(key);
+      if (key <= first && i >= 11) break;
+      cursor.setMonth(cursor.getMonth() - 1);
+    }
+    return out;
+  }, [data.transactions, currentMonth]);
   const [scope, setScope] = useState("family");
   const [shareScope, setShareScope] = useState<"all" | ShareScope>("all");
   const [focusMonth, setFocusMonth] = useState(currentMonth);
@@ -103,7 +120,7 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
         : { title: t("Înregistrează prima mișcare"), detail: t("Analiza devine mai utilă după ce există date reale în registru."), label: t("Deschide Registrul"), view: "journal" as MainView };
 
   return <div className="bf-analysis">
-    <section className="bf-analysis-control"><div><p className="bf-kicker">{compare.mode === "cycle" ? t("CITEȘTE CICLUL") : t("CITEȘTE LUNA")}</p><h2>{compare.mode === "cycle" ? compare.title : titleFor(focusMonth)}</h2></div><label>{t("Luna analizată")}<input type="month" value={focusMonth} onChange={(event) => { setFocusMonth(event.target.value); setWindowMode("calendar"); }} /></label></section>
+    <section className="bf-analysis-control"><div><p className="bf-kicker">{compare.mode === "cycle" ? t("CITEȘTE CICLUL") : t("CITEȘTE LUNA")}</p><h2>{compare.mode === "cycle" ? compare.title : titleFor(focusMonth)}</h2></div><label>{t("Luna analizată")}<select value={focusMonth} onChange={(event) => { setFocusMonth(event.target.value); setWindowMode("calendar"); }}>{(monthChoices.includes(focusMonth) ? monthChoices : [...monthChoices, focusMonth].sort().reverse()).map((month) => <option key={month} value={month}>{titleFor(month)}</option>)}</select></label></section>
     <div className="bf-analysis-scope bf-analysis-window" role="group" aria-label={t("Fereastra de comparație")}><button type="button" className={compare.mode === "calendar" ? "active" : ""} onClick={() => setWindowMode("calendar")}>{t("Lună calendar")}</button><button type="button" className={`${compare.mode === "cycle" ? "active" : ""}${cycleReady ? "" : " is-unavailable"}${!cycleReady && cycleHint ? " is-asking" : ""}`} aria-expanded={cycleReady ? undefined : cycleHint} title={cycleReady ? t("Compară pe ciclul de salariu") : undefined} onClick={() => { if (cycleReady) setWindowMode("cycle"); else setCycleHint((open) => !open); }}>{!cycleReady && <Info size={15} aria-hidden="true" />}{t("Ciclu salariu")}</button></div>
     {!cycleReady && cycleHint && <div className="bf-analysis-cycle-hint" role="status"><Info size={18} aria-hidden="true" /><div><b>{t("Ciclul de salariu are nevoie de data venitului")}</b><p>{t("Spune în Plan când vine salariul; apoi comparația merge de la un salariu la altul, nu pe luna calendaristică.")}</p>{onGo && <button type="button" className="bf-primary" onClick={() => onGo("plan")}>{t("Setează data salariului")}</button>}</div></div>}
     {isCollaborative && <div className="bf-analysis-scope" role="group" aria-label={t("Perspectiva analizei")}><button className={scope === "family" ? "active" : ""} onClick={() => setScope("family")}>{t("Familie")}</button>{data.settings.members.map((member) => <button key={member.id} className={scope === member.id ? "active" : ""} onClick={() => setScope(member.id)}>{member.name}</button>)}</div>}

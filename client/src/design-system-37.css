@@ -411,4 +411,36 @@ html.theme-navy {
     color: var(--cf-ink) !important;
     opacity: 1 !important;
   }
+  /*
+   * Ținte de atingere sub 24 × 24 px (WCAG 2.2 AA), găsite automat pe ecrane: „Vezi” din alerta de plic,
+   * „Mai târziu”, bifele din graficul de plăți, „Arată toate ratele”, coșul unei surse din Setări.
+   */
+  html body .bf-envelope-live-notice > button:not(.dismiss) {
+    min-width: 44px !important;
+    min-height: 36px !important;
+    padding-inline: 10px !important;
+  }
+  html body .bf-brief-check-later,
+  html body .bf-schedule-more {
+    min-height: 36px !important;
+    padding: 6px 10px !important;
+  }
+  html body .bf-schedule-check {
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+  html body .bf-source-edit-foot > button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+  }
+  /* „Copil” la un membru din Setări: eticheta avea 17 px; toată eticheta devine zona de atingere. */
+  html body .bf-member-row > label {
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding-inline: 4px !important;
+  }
 }

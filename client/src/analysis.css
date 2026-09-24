@@ -44,3 +44,18 @@
 .os-shell .bf-insights-workspace .bf-analysis-control input {
   min-height: var(--bf-hit, 44px) !important;
 }
+
+/* Alegerea lunii: <select> cu lunile în română (în locul <input type="month">), cu aspectul câmpului de dinainte. */
+.os-shell .bf-insights-workspace .bf-analysis-control select {
+  min-height: var(--bf-hit, 44px);
+  padding: 0 36px 0 12px;
+  border: 1px solid var(--cf-line);
+  border-radius: 12px;
+  background-color: var(--cf-surface, #fff);
+  color: var(--cf-ink);
+  font: inherit;
+  font-size: var(--bf-text-money, 14px);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
