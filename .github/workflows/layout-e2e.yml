@@ -1,0 +1,44 @@
+name: Interfață pe telefon
+
+# Aplicația reală, cu date de test: ecranele principale × Alb / Întunecat / Navy × 360 și 412 px.
+# Pică la text ieșit din ecran, text strivit, contrast sub WCAG AA sau erori în pagină.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "client/src/**"
+      - "e2e/layout.e2e.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/layout-e2e.yml"
+  pull_request:
+    paths:
+      - "client/src/**"
+      - "e2e/layout.e2e.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright-core install --with-deps chromium
+      - name: Verifică interfața
+        timeout-minutes: 15
+        run: pnpm test:layout
