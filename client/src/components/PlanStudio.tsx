@@ -23,7 +23,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, suggestWeeklyAllocationsFromCashflow, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace } from "@/lib/household-insights";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
@@ -32,6 +32,7 @@ import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/Enve
 import { canAddEnvelope, PLANS } from "@/lib/entitlements";
 import { RoDateInput } from "@/components/RoDateInput";
 import { askConfirm } from "@/lib/confirm-dialog";
+import { PlanCashflowSuggest, PlanSimulator } from "@/components/PlanTools";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
@@ -103,11 +104,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const [allocationPeriod, setAllocationPeriod] = useState<"next-income" | "month" | "week" | "custom">("next-income");
   const [allocationPreviewOpen, setAllocationPreviewOpen] = useState(false);
   const [planFlowOpen, setPlanFlowOpen] = useState(false);
-  const [simulationOpen, setSimulationOpen] = useState(false);
-  const [simulationAmounts, setSimulationAmounts] = useState<Record<string, string>>({});
   const [showGlossary, setShowGlossary] = useState(() => !hasSeenEnvelopeGlossary());
-  const [cashflowOpen, setCashflowOpen] = useState(false);
-  const [cashflowDraft, setCashflowDraft] = useState<Record<string, string>>({});
 
   const periodValid = Boolean(cycleStart && cycleEnd && cycleEnd >= cycleStart);
   const weeklyPacedTotal = plan.allocations.filter((item) => isWeeklyPaced(item, plan)).reduce((sum, item) => sum + item.amount, 0);
@@ -188,23 +185,6 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     }
     return options;
   })();
-  const simulationTotal = plan.allocations.reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(simulationAmounts[item.id] ?? String(item.amount))), 0);
-  const simulationRemainder = availableSources - scheduled - simulationTotal;
-  const openSimulation = () => { setSimulationAmounts(Object.fromEntries(plan.allocations.map((item) => [item.id, String(item.amount)]))); setSimulationOpen(true); };
-  const applySimulation = () => { const changes = plan.allocations.map((item) => ({ id: item.id, amount: Math.max(0, parseRomanianAmount(simulationAmounts[item.id] ?? String(item.amount))) })).filter((change) => change.amount !== plan.allocations.find((item) => item.id === change.id)?.amount); applyMonthlyAllocation(changes); setSimulationOpen(false); };
-  const cashflowHint = suggestWeeklyAllocationsFromCashflow(data);
-  const openCashflowSuggest = () => {
-    setCashflowDraft(Object.fromEntries(cashflowHint.suggestions.map((item) => [item.allocationId, String(item.suggestedAmount)])));
-    setCashflowOpen(true);
-  };
-  const applyCashflowSuggest = () => {
-    const changes = cashflowHint.suggestions.map((item) => ({
-      id: item.allocationId,
-      amount: Math.max(0, parseRomanianAmount(cashflowDraft[item.allocationId] ?? String(item.suggestedAmount))),
-    })).filter((change) => change.amount !== plan.allocations.find((item) => item.id === change.id)?.amount);
-    if (changes.length) applyMonthlyAllocation(changes);
-    setCashflowOpen(false);
-  };
   const currentSourceOptions = data.settings.paymentSources.filter((source) => !allocationMemberId || !source.memberId || source.memberId === allocationMemberId);
   /**
    * Eticheta sursei arată banii care mai pot fi repartizați, nu soldul brut: ce stă deja în
@@ -457,58 +437,10 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     <section className="bf-allocation-period" aria-labelledby="allocation-period-title"><div className="bf-allocation-period-heading"><div><p className="bf-kicker">{t("REPARTIZARE PE PERIOADĂ")}</p><h2 id="allocation-period-title">{t("Alege ritmul casei.")}</h2><p>{t("Vezi banii disponibili pentru intervalul în care iei decizia.")}</p></div><span>{money(Math.max(0, unrepartized))}<small>{t("rămași de repartizat")}</small></span></div><div className="bf-allocation-period-tabs" role="tablist" aria-label={t("Perioada repartizării")}>{allocationPeriodOptions.map((option) => <button key={option.id} role="tab" aria-selected={allocationPeriod === option.id} className={allocationPeriod === option.id ? "active" : ""} onClick={() => selectAllocationPeriod(option.id)}>{option.label}</button>)}</div><div className="bf-allocation-period-summary"><span><b>{money(availableSources)}</b><small>{t("disponibil în surse")}</small></span><span><b>{money(reservedInEnvelopes)}</b><small>{t("în plicuri")}</small></span><span><b>{money(scheduled)}</b><small>{t("scadențe rezervate")}</small></span><span><b>{money(Math.max(0, unrepartized))}</b><small>{t("de repartizat")}</small></span></div></section>
     </details>
 
-
     <details className="bf-plan-tools">
       <summary>{t("Unelte: propunere, simulare, ghid")}</summary>
-    <section className="bf-plan-cashflow-suggest" aria-labelledby="bf-cashflow-suggest-title">
-      <div>
-        <p className="bf-kicker">{t("DIN FLUXUL REAL")}</p>
-        <h2 id="bf-cashflow-suggest-title">{t("Propunere pentru următoarele 7 zile")}</h2>
-        <p>{t("Combină ultimele 7 zile de cheltuieli cu scadențele și obiectivele din săptămâna următoare. Tu confirmi fiecare sumă.")}</p>
-      </div>
-      <button type="button" className="bf-secondary" disabled={!plan.allocations.length || !cashflowHint.suggestions.length} onClick={openCashflowSuggest}>
-        <Sparkles size={16} /> {t("Vezi propunerea")}
-      </button>
-    </section>
-    {cashflowOpen && (
-      <section className="bf-plan-simulation bf-plan-cashflow-panel" role="dialog" aria-modal="true" aria-labelledby="bf-cashflow-panel-title">
-        <div className="bf-plan-simulation-heading">
-          <div>
-            <p className="bf-kicker">{t("SUGESTIE EDITABILĂ")}</p>
-            <h2 id="bf-cashflow-panel-title">{t("Cheltuieli, scadențe și obiective → 7 zile")}</h2>
-            <p>{t("Ajustează sumele, apoi aplică doar ce confirmi. Nimic nu se schimbă automat.")}</p>
-          </div>
-          <button type="button" className="bf-link-button" onClick={() => setCashflowOpen(false)}>{t("Închide")}</button>
-        </div>
-        <div className="bf-plan-simulation-list">
-          {cashflowHint.suggestions.map((item) => (
-            <label key={item.allocationId}>
-              <span>
-                <b>{item.label}</b>
-                <small>{t("acum {current} · propus {actual}{dues}{goals}", { current: money(item.currentAmount), actual: money(item.suggestedAmount), dues: item.fromDues ? t(" · scadențe {amount}", { amount: money(item.fromDues) }) : "", goals: item.fromGoals ? t(" · obiective {amount}", { amount: money(item.fromGoals) }) : "" })}</small>
-              </span>
-              <input
-                value={cashflowDraft[item.allocationId] ?? String(item.suggestedAmount)}
-                onChange={(event) => setCashflowDraft((current) => ({ ...current, [item.allocationId]: event.target.value }))}
-                inputMode="decimal"
-                aria-label={t("Sumă propusă pentru {label}", { label: item.label })}
-              />
-            </label>
-          ))}
-        </div>
-        {cashflowHint.unallocated.length > 0 && (
-          <p className="bf-plan-simulation-note">
-            {t("Categorii fără plic în ultimele 7 zile")}: {cashflowHint.unallocated.map((item) => `${item.category} ${money(item.amount)}`).join(" · ")}
-          </p>
-        )}
-        <footer>
-          <button type="button" onClick={() => setCashflowOpen(false)}>{t("Renunță")}</button>
-          <button type="button" className="bf-primary" onClick={applyCashflowSuggest}><Check size={16} /> {t("Aplică sumele confirmate")}</button>
-        </footer>
-      </section>
-    )}
-    <section className="bf-plan-simulator" aria-labelledby="bf-plan-simulator-title"><div className="bf-plan-simulator-copy"><p className="bf-kicker">{t("SCENARIU FĂRĂ RISC")}</p><h2 id="bf-plan-simulator-title">{t("Testează planul înainte să-l schimbi.")}</h2><p>{t("Modifică sumele într-o copie temporară. Registrul și planul real rămân intacte până când confirmi.")}</p></div><button type="button" className="bf-secondary bf-plan-simulator-action" onClick={openSimulation} disabled={!plan.allocations.length}><Sparkles size={16} aria-hidden="true" /> {t("Deschide simularea")}</button></section>
-    {simulationOpen && <section className="bf-plan-simulation" role="dialog" aria-modal="true" aria-labelledby="bf-plan-simulation-title"><div className="bf-plan-simulation-heading"><div><p className="bf-kicker">{t("SIMULARE LOCALĂ")}</p><h2 id="bf-plan-simulation-title">{t("Cum ar arăta o altă repartizare?")}</h2><p>{t("Aceste valori sunt temporare și nu sunt salvate automat.")}</p></div><button type="button" className="bf-link-button" onClick={() => setSimulationOpen(false)}>{t("Închide")}</button></div><div className="bf-plan-simulation-list">{plan.allocations.map((item) => <label key={item.id}><span><b>{item.label}</b><small>{item.category || "Categorie"} · acum {money(item.amount)}</small></span><input value={simulationAmounts[item.id] ?? String(item.amount)} onChange={(event) => setSimulationAmounts((current) => ({ ...current, [item.id]: event.target.value }))} inputMode="decimal" aria-label={`Suma simulată pentru ${item.label}`} /></label>)}</div><div className={`bf-plan-simulation-result ${simulationRemainder < 0 ? "negative" : "positive"}`}><span><small>{t("Total simulat")}</small><b>{money(simulationTotal)}</b></span><span><small>{t("Rămâne după scadențe")}</small><b>{money(simulationRemainder)}</b></span><span><small>{t("Interpretare")}</small><b>{simulationRemainder < 0 ? t("Peste disponibil") : simulationRemainder === 0 ? t("Echilibru") : t("Bani nealocați")}</b></span></div><p className="bf-plan-simulation-note">{simulationRemainder < 0 ? t("Scenariul depășește banii disponibili. Redu una dintre sume înainte de aplicare.") : simulationRemainder > 0 ? t("După repartizare rămân {amount} nealocați, disponibili pentru o nevoie viitoare.", { amount: money(simulationRemainder) }) : t("Scenariul acoperă disponibilul și scadențele fără surplus.")}</p><footer><button type="button" className="bf-ghost" onClick={() => setSimulationOpen(false)}>{t("Renunță")}</button><button type="button" className="bf-primary" disabled={simulationRemainder < 0} onClick={applySimulation}><Check size={16} /> {t("Aplică scenariul")}</button></footer></section>}
+    <PlanCashflowSuggest data={data} allocations={plan.allocations} onApply={applyMonthlyAllocation} />
+    <PlanSimulator allocations={plan.allocations} available={availableSources - scheduled} onApply={applyMonthlyAllocation} />
     {!simpleMode && <AllocationRecommendationsPanel data={data} allocations={plan.allocations} periodDays={periodValid ? daysBetween(cycleStart, cycleEnd) : 30} onApply={applyRecommendation} />}
     <section className={`bf-plan-flow ${planFlowOpen ? "expanded" : "compact"}`} aria-label={t("Progresul planului în trei pași")}><button type="button" className="bf-plan-flow-toggle" aria-expanded={planFlowOpen} onClick={() => setPlanFlowOpen((value) => !value)}><span>{planFlowOpen ? "Ascunde ghidul" : t("Arată ghidul complet")}</span><ChevronDown size={16} /></button>
       <div className="bf-plan-flow-summary"><div><p className="bf-kicker">{t("PLAN ÎN TREI PAȘI")}</p><h2>{nextPlanStep}</h2><span>{t("Configurația rămâne locală și poate fi ajustată oricând.")}</span></div><strong>{completedPlanSteps}<small>{t("/ 3 pregătit")}</small></strong></div>
