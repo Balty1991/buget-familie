@@ -1,7 +1,8 @@
 name: Interfață pe telefon
 
-# Aplicația reală, cu date de test: ecranele principale × Alb / Întunecat / Navy × 360 și 412 px.
-# Pică la text ieșit din ecran, text strivit, contrast sub WCAG AA sau erori în pagină.
+# Aplicația reală, cu date de test: ecranele principale × Alb / Întunecat / Navy × 360 și 412 px
+# (text ieșit din ecran, strivit, contrast sub WCAG AA, erori) și fluxurile de bază (notare și
+# anulare, plic nou, plata ratei, ștergere, ciclu salariu, temă automată).
 
 on:
   push:
@@ -9,6 +10,7 @@ on:
     paths:
       - "client/src/**"
       - "e2e/layout.e2e.mjs"
+      - "e2e/flows.e2e.mjs"
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/layout-e2e.yml"
@@ -16,6 +18,7 @@ on:
     paths:
       - "client/src/**"
       - "e2e/layout.e2e.mjs"
+      - "e2e/flows.e2e.mjs"
   workflow_dispatch:
 
 permissions:
@@ -42,3 +45,6 @@ jobs:
       - name: Verifică interfața
         timeout-minutes: 15
         run: pnpm test:layout
+      - name: Verifică fluxurile de bază
+        timeout-minutes: 10
+        run: pnpm test:flows
