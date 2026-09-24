@@ -50,8 +50,9 @@ import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/Env
 import { FirstRunSetup } from "@/components/FirstRunSetup";
 import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
 import { selfMemberOf } from "@/lib/member-identity";
+import { isNativeApp } from "@/lib/app-storage";
 import { buildUndoSave } from "@/lib/undo-delete";
-import { formatInvite, takeInviteFromLocation } from "@/lib/family-invite";
+import { formatInvite, parseInvite, takeInviteFromLocation } from "@/lib/family-invite";
 
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
 const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio })));
@@ -731,6 +732,28 @@ export default function Home() {
     setMore("sync");
     go("utilities");
     // O singură dată, la deschiderea linkului.
+  }, []);
+  /**
+   * Aplicația Android deschisă din „Deschide în aplicație” (bugetfamilie://alatura?cod=…):
+   * aceeași invitație, pusă în câmp, fără să intrăm singuri în familie.
+   */
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    let remove: (() => void) | undefined;
+    const accept = (url: string | undefined) => {
+      const invite = url ? parseInvite(decodeURIComponent(url)) : undefined;
+      if (!invite) return;
+      offerInvite(formatInvite(invite));
+      setSetupOpen(false);
+      setMore("sync");
+      go("utilities");
+    };
+    void import("@capacitor/app").then(async ({ App }) => {
+      accept((await App.getLaunchUrl().catch(() => undefined))?.url);
+      const handle = await App.addListener("appUrlOpen", (event) => accept(event.url));
+      remove = () => void handle.remove();
+    }).catch(() => undefined);
+    return () => remove?.();
   }, []);
   const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
   useEffect(() => {

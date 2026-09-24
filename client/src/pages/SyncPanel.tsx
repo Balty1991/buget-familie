@@ -5,7 +5,8 @@
 import { useEffect, useState } from "react";
 import { Check, Cloud, Copy, KeyRound, RotateCcw, Send, ShieldAlert, Smartphone, UserRound, Users, X } from "lucide-react";
 import { checkFamilyPassword } from "@/lib/family-password";
-import { inviteMessage, parseInvite } from "@/lib/family-invite";
+import { inviteLink, inviteMessage, parseInvite } from "@/lib/family-invite";
+import { InviteQr } from "@/components/InviteQr";
 import { isNativeApp } from "@/lib/app-storage";
 import { Field, type SyncPanelProps } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
@@ -30,6 +31,18 @@ function PasswordMeter({ value }: { value: string }) {
     </div>
   );
 }
+
+/**
+ * Linkul invitației deschis din camera telefonului ajunge în browser. Pe Android, acest link
+ * `intent://` pornește aplicația instalată cu invitația (schema `bugetfamilie`, AndroidManifest);
+ * fără aplicație, Chrome rămâne pe site.
+ */
+const androidInviteIntent = (raw: string) => {
+  const invite = parseInvite(raw);
+  if (!invite) return "#";
+  const code = `bf1.${invite.roomId}.${invite.key}`;
+  return `intent://alatura?cod=${code}#Intent;scheme=bugetfamilie;package=ro.balty1991.bugetfamilie;end`;
+};
 
 /** Trimite invitația prin foaia de partajare a telefonului (WhatsApp, SMS…); fără ea, doar copiem. */
 async function shareInvite(code: string): Promise<boolean> {
@@ -98,6 +111,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
   const [forgotOpen, setForgotOpen] = useState(false);
   const [legacyOpen, setLegacyOpen] = useState(Boolean(passwordRevealOnce));
   const [moveConfirm, setMoveConfirm] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [recoveryInput, setRecoveryInput] = useState("");
   const [recoveryShown, setRecoveryShown] = useState(recoveryRevealOnce || "");
   const [showSessionPassword, setShowSessionPassword] = useState(false);
@@ -201,6 +215,8 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
               <button type="button" className="bf-primary" onClick={() => void shareInvite(invite).then((shared) => { if (!shared) void copySecret(inviteMessage(parseInvite(invite)!)); })}><Send size={16} /> {t("Trimite invitația")}</button>
               <button type="button" className="bf-secondary" onClick={() => void copySecret(inviteMessage(parseInvite(invite)!))}><Copy size={16} /> {copiedSecret === inviteMessage(parseInvite(invite)!) ? t("Copiat în clipboard") : t("Copiază invitația")}</button>
             </div>
+            <button type="button" className="bf-link-button" aria-expanded={qrOpen} onClick={() => setQrOpen((value) => !value)}>{qrOpen ? t("Ascunde codul QR") : t("Arată codul QR")}</button>
+            {qrOpen && <InviteQr link={inviteLink(parseInvite(invite)!)} />}
             <p className="bf-helper">{t("Cine are invitația intră în familie. Trimite-o doar oamenilor din casă.")}</p>
           </div>
         ) : (
@@ -266,6 +282,9 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <textarea value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} rows={3} placeholder={t("Lipește invitația aici")} autoComplete="off" spellCheck={false} />
           </Field>
           <button className="bf-primary full" disabled={busy || !online || !parseInvite(inviteDraft)} onClick={() => onJoinInvite(inviteDraft)}><Users size={17} /> {t("Intră în familie")}</button>
+          {parseInvite(inviteDraft) && !isNativeApp() && typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent) && (
+            <a className="bf-secondary full bf-open-in-app" href={androidInviteIntent(inviteDraft)}>{t("Deschide în aplicație")}</a>
+          )}
           {inviteDraft.trim() && !parseInvite(inviteDraft) && <p className="bf-form-error">{t("Codul nu arată ca o invitație. Lipește tot mesajul primit sau tot linkul.")}</p>}
         </div>
         <button type="button" className="bf-link-button" aria-expanded={legacyOpen} onClick={() => setLegacyOpen((value) => !value)}>{t("Am o parolă de familie")}</button>

@@ -1259,3 +1259,9 @@ html body .bf-os-day > span:first-child {
 .bf-billing-buy { display: grid; gap: .5rem; }
 .bf-billing-buy > button { white-space: normal; }
 .bf-billing-active { display: flex; align-items: center; gap: .35rem; margin: 0; font-weight: 700; }
+
+/* Codul QR al invitației: pe fond alb, pe orice temă */
+.bf-invite-qr { display: grid; justify-items: center; gap: .5rem; margin: .5rem 0; }
+.bf-invite-qr svg { width: min(240px, 100%); height: auto; border-radius: 12px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--cf-ink, #1a2420) 14%, transparent); }
+.bf-invite-qr figcaption { font-size: 13px; line-height: 1.45; text-align: center; }
+.bf-open-in-app { display: flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; }

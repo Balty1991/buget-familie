@@ -2882,4 +2882,10 @@ export const en: Record<string, string> = {
   "Plicurile propuse sunt o parte din venit: 25% mâncare, 8% transport, 20% casă și facturi. Le schimbi oricând în Plan.": "Suggested envelopes are a share of income: 25% food, 8% transport, 20% home and bills. Change them any time in Plan.",
   "Cât intră pe lună în casă": "Monthly household income",
   "ex. 7.000": "e.g. 7,000",
+  "Pregătim codul QR…": "Preparing the QR code…",
+  "Codul QR al invitației": "Invitation QR code",
+  "Scanează-l cu camera celuilalt telefon. Pe Android, apasă apoi „Deschide în aplicație”.": "Scan it with the other phone's camera. On Android, then tap “Open in the app”.",
+  "Ascunde codul QR": "Hide QR code",
+  "Arată codul QR": "Show QR code",
+  "Deschide în aplicație": "Open in the app",
 };

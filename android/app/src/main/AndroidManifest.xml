@@ -23,6 +23,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Invitația în camera familiei, deschisă din browser după scanarea codului QR. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="bugetfamilie" android:host="alatura" />
+            </intent-filter>
+
         </activity>
 
         <!-- Widget de pe ecranul principal: adaugă o cheltuială fără a deschide aplicația. -->

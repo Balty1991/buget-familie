@@ -27,6 +27,12 @@ describe("invitația în camera familiei (C4)", () => {
     expect(parseInvite(`  ${inviteMessage(invite)}  \nTrimis de pe WhatsApp`)).toEqual(invite);
   });
 
+  it("se citește și din linkul aplicației Android deschis din browser (codul QR)", () => {
+    const invite = createFamilyInvite();
+    expect(parseInvite(`bugetfamilie://alatura?cod=${formatInvite(invite)}`)).toEqual(invite);
+    expect(parseInvite(decodeURIComponent(encodeURIComponent(`bugetfamilie://alatura?cod=${formatInvite(invite)}`)))).toEqual(invite);
+  });
+
   it("refuză codurile tăiate sau stricate", () => {
     const code = formatInvite(createFamilyInvite());
     expect(parseInvite(code.slice(0, -1))).toBeUndefined();
