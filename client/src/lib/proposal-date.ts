@@ -4,10 +4,11 @@
  * („azi”, „alaltăieri”, punctul abrevierii) care merită verificate singure.
  */
 import { getLocale, t } from "./i18n";
+import { isoToday } from "./finance-data";
 
+/** Pornește din „azi” al familiei (isoToday), nu din ceasul telefonului. */
 export const shiftDay = (offset: number) => {
-  const date = new Date();
-  date.setHours(12, 0, 0, 0);
+  const date = new Date(`${isoToday()}T12:00:00`);
   date.setDate(date.getDate() + offset);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 };

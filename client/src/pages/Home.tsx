@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { BarChart3, Bell, BookOpen, CloudOff, Users, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { deviceTimeZone, setFamilyTimeZone, adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
@@ -578,6 +578,13 @@ function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSe
 export default function Home() {
   const [data, setData] = useState<AppData>(readInitialAppData);
   const { storageNotice, setStorageNotice, storageReady, applyData } = usePersistAppData(data, setData);
+  /** „Azi” al familiei: se setează înainte de orice calcul din randare (testare, #10). */
+  setFamilyTimeZone(data.settings.familyTimeZone);
+  useEffect(() => {
+    if (!storageReady || data.settings.familyTimeZone) return;
+    const zone = deviceTimeZone();
+    if (zone) setData((current) => current.settings.familyTimeZone ? current : { ...current, settings: { ...current.settings, familyTimeZone: zone } });
+  }, [storageReady, data.settings.familyTimeZone]);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(() => {
     try {

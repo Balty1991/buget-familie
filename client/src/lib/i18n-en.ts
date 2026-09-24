@@ -2810,4 +2810,6 @@ export const en: Record<string, string> = {
   "Scrie banii de azi și când vine următorul venit (salariu sau pensie). Pe Astăzi vei vedea doar cât mai ai și butonul de notat.": "Enter today's money and when your next income arrives (salary or pension). Today will show only what's left and the button to jot things down.",
   "Înapoi la Obligații": "Back to Obligations",
   "Înapoi la Astăzi": "Back to Today",
+  "Ziua familiei („azi”, tranșa săptămânii) se socotește după fusul {zone}, pe toate telefoanele.": "The family's day (“today”, the week's tranche) follows the {zone} time zone on every phone.",
+  "Folosește fusul acestui telefon ({zone})": "Use this phone's time zone ({zone})",
 };

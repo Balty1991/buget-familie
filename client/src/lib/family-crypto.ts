@@ -449,6 +449,14 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       // Cine folosește telefonul e o alegere locală; pachetul altui telefon nu o schimbă.
       selfMemberId: local.settings.selfMemberId,
       syncRoomMovedAt: undefined,
+      // Fusul familiei: câștigă alegerea făcută mai recent de mână; altfel cel al camerei,
+      // ca un telefon nou să preia ziua familiei, nu pe a lui.
+      ...(() => {
+        const localAt = Date.parse(local.settings.familyTimeZoneSetAt || "") || 0;
+        const remoteAt = Date.parse(remote.settings.familyTimeZoneSetAt || "") || 0;
+        const pick = localAt > remoteAt || !remote.settings.familyTimeZone ? local.settings : remote.settings;
+        return { familyTimeZone: pick.familyTimeZone, familyTimeZoneSetAt: pick.familyTimeZoneSetAt };
+      })(),
     },
   });
 }
