@@ -33,7 +33,7 @@ const SyncPanel = lazy(() => import("./SyncPanel").then((module) => ({ default: 
 const ReceiptThumbnail = lazy(() => import("./ReceiptMedia").then((module) => ({ default: module.ReceiptThumbnail })));
 const FamilyGuide = lazy(() => import("./FamilyGuide").then((module) => ({ default: module.FamilyGuide })));
 
-export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveReceipt, onDeleteReceipt, onOpenDebt, onOpenSaving, onOpenCalendar: _onOpenCalendar, onEditDebt, onEditSaving, onPayDebt, onGo, receiptStorageNotice, sync }: { tab: MoreView; setTab: (value: MoreView) => void; data: AppData; onChange: (value: AppData) => void; onAddReceipt: () => void; onSaveReceipt: (item: Receipt) => void; onDeleteReceipt: (id: string) => void; onOpenDebt: () => void; onOpenSaving: () => void; onOpenCalendar: () => void; onEditDebt?: (item: Debt) => void; onEditSaving?: (item: SavingsGoal) => void; onPayDebt?: (item: Debt) => void; onGo?: (view: MainView) => void; receiptStorageNotice?: string; sync: SyncPanelProps }) {
+export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, onSaveReceipt, onDeleteReceipt, onOpenDebt, onOpenSaving, onOpenCalendar: _onOpenCalendar, onEditDebt, onEditSaving, onPayDebt, onGo, receiptStorageNotice, sync }: { backTo?: { label: string; go: () => void }; tab: MoreView; setTab: (value: MoreView) => void; data: AppData; onChange: (value: AppData) => void; onAddReceipt: () => void; onSaveReceipt: (item: Receipt) => void; onDeleteReceipt: (id: string) => void; onOpenDebt: () => void; onOpenSaving: () => void; onOpenCalendar: () => void; onEditDebt?: (item: Debt) => void; onEditSaving?: (item: SavingsGoal) => void; onPayDebt?: (item: Debt) => void; onGo?: (view: MainView) => void; receiptStorageNotice?: string; sync: SyncPanelProps }) {
   const [simpleMode, setSimpleModeState] = useState(() => {
     try { return window.localStorage.getItem("buget-familie:simple-mode") === "1"; } catch { return false; }
   });
@@ -138,6 +138,6 @@ export function MoreView({ tab, setTab, data, onChange, onAddReceipt, onSaveRece
     if (tab === "guide") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim ghidul…")}</div>}><FamilyGuide onGo={onGo} onOpenReview={() => setTab("review")} onOpenSync={() => setTab("sync")} /></Suspense>;
     return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim sincronizarea…")}</div>}><SyncPanel {...sync} /></Suspense>;
   };
-  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><h1>{t("Mai mult")}</h1></div></header>{tab !== "overview" && <div className="bf-more-back-row"><button type="button" className="bf-more-back" onClick={() => setTab("overview")}><ChevronLeft size={18} aria-hidden="true" /> {t("Înapoi la instrumente")}</button></div>}{content()}</div>;
+  return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><h1>{t("Mai mult")}</h1></div></header>{tab !== "overview" && <div className="bf-more-back-row"><button type="button" className="bf-more-back" onClick={() => (backTo ? backTo.go() : setTab("overview"))}><ChevronLeft size={18} aria-hidden="true" /> {backTo ? backTo.label : t("Înapoi la instrumente")}</button></div>}{content()}</div>;
 }
 

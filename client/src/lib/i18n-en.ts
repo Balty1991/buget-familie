@@ -2808,4 +2808,6 @@ export const en: Record<string, string> = {
   "Ecran simplu, text mare. Fără plicuri; le poți porni oricând din Setări.": "A simple screen with large text. No envelopes; you can turn them on any time in Settings.",
   "Cât ai": "How much do you have",
   "Scrie banii de azi și când vine următorul venit (salariu sau pensie). Pe Astăzi vei vedea doar cât mai ai și butonul de notat.": "Enter today's money and when your next income arrives (salary or pension). Today will show only what's left and the button to jot things down.",
+  "Înapoi la Obligații": "Back to Obligations",
+  "Înapoi la Astăzi": "Back to Today",
 };
