@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, ChevronDown, ChevronUp, CircleCheck, FileText, Lightbulb, Paperclip, Send, Trash2, WalletCards, X } from "lucide-react";
-import { newId, expenseCategories, formatDate, isoToday, matchingAllocationsForExpense, parseNaturalSpendScenario, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
+import { newId, expenseCategories, isoToday, parseNaturalSpendScenario, type AppData, type Transaction } from "@/lib/finance-data";
 import { todayBrief } from "@/lib/household-insights";
 import type { MainView } from "@/pages/home-kit";
 import "../ai-companion.css";
-import { getLocale, t } from "@/lib/i18n";
-import { aiDailyLimit } from "@/lib/entitlements";
+import { t } from "@/lib/i18n";
 import { appCheckHeader, authHeader } from "@/lib/realtime-sync";
-import { FamilieUpgrade } from "@/components/FamilieUpgrade";
-import { parseModelIntents, type AppScreen, type AssistantIntent, type ParsedIntent } from "@/lib/assistant-intents";
+import { parseModelIntents, type AssistantIntent } from "@/lib/assistant-intents";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText } from "@/lib/analyst";
 import { dominantReceiptCategory, looksLikeProductSearch } from "@/lib/product-catalog";
@@ -17,25 +15,14 @@ import { RoDateInput } from "@/components/RoDateInput";
 import {
   claimsSaved,
   decide,
-  emptyGuideMemory,
   expenseProposal,
   foldRo,
-  habitKey,
   isConfirm,
   isCorrection,
   isQuestion,
   householdIsSetUp,
-  memberIdFor,
   planWarningFor,
-  planWeeks,
-  matchEnvelope,
-  matchPlannedEvent,
-  matchRecurring,
-  matchTransaction,
   resolveIntents,
-  rememberExpense,
-  parsePayday,
-  parseWeeks,
   compactGuideContext,
   readingLabel,
   shouldAskWhichReading,
@@ -51,487 +38,21 @@ import {
   type GuideMemory,
   type Reading,
 } from "@/lib/understand";
-import { planIncome } from "@/lib/suggest-source";
 import { shownChatMessages, hiddenChatCount } from "@/lib/shown-chat";
+import { consumeQuota, emptyQuota, formatReset, GuideQuotaBar, GuideText, guideMemory, learn, loadMemory, loadQuota, markLocalSave, MEMORY_KEY, money, naturalTitle, QUOTA_KEY, seedMemory, type QuotaInfo } from "@/components/ai-companion-parts";
+import { intentToUpdate, pickFundsSource, proposalText, SCREEN_NAMES, spendAlternatives, updatesFromGuide } from "@/components/ai-companion-logic";
+
+export { pickFundsSource } from "@/components/ai-companion-logic";
 
 export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "kind"> & { date?: string; note?: string };
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
 export type { FinancialUpdate } from "@/lib/understand";
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void; initiallyOpen?: boolean };
-type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "apply" | "catalog" | MainView; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
+export type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "apply" | "catalog" | MainView; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
 type ChatAttachment = { name: string; mimeType: string; data: string };
 type PendingReceiptDraft = { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
 const CHAT_KEY = "buget-familie:ai-chat-v1";
-const money = (value: number) => `${Number(value.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
-const naturalTitle = (raw: string, category?: string) => /combustibil|benzina|motorina/i.test(raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ? "Combustibil" : category || t("Cheltuială");
-
-
-function GuideText({ text }: { text: string }) {
-  const nodes: ReactNode[] = [];
-  text.split(/\n+/).forEach((line, lineIndex) => {
-    if (lineIndex) nodes.push(<br key={`br-${lineIndex}`} />);
-    line.split(/(\*\*[^*]+\*\*)/g).forEach((chunk, chunkIndex) => {
-      const bold = chunk.match(/^\*\*([^*]+)\*\*$/);
-      nodes.push(bold ? <strong key={`${lineIndex}-${chunkIndex}`}>{bold[1]}</strong> : chunk);
-    });
-  });
-  return <span className="ai-chat-text">{nodes}</span>;
-}
-
-const QUOTA_KEY = "buget-familie:ai-quota-v2";
-const MEMORY_KEY = "buget-familie:ai-memory-v1";
-
-
-
-
-const emptyMemory = emptyGuideMemory;
-
-function loadMemory(): GuideMemory {
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(MEMORY_KEY) || "null") as Partial<GuideMemory> | null;
-    if (!parsed || !Array.isArray(parsed.phrases)) return emptyMemory();
-    return { phrases: parsed.phrases.slice(-80), skippedOnline: Number(parsed.skippedOnline) || 0 };
-  } catch {
-    return emptyMemory();
-  }
-}
-
-let liveMemory: GuideMemory = emptyMemory();
-
-
-/** Reține alegerea și o salvează pe telefon. Corectura cântărește dublu. */
-function learn(update: Extract<FinancialUpdate, { kind: "expense" }>, weight: 1 | 2 = 1): GuideMemory {
-  liveMemory = rememberExpense(liveMemory, update, weight);
-  return liveMemory;
-}
-
-function markLocalSave(): GuideMemory {
-  liveMemory = { ...liveMemory, skippedOnline: liveMemory.skippedOnline + 1 };
-  return liveMemory;
-}
-
-function seedMemory(current: GuideMemory, data: AppData): GuideMemory {
-  const map = new Map(current.phrases.map((item) => [item.key, item]));
-  data.transactions.forEach((item) => {
-    if (item.kind !== "expense") return;
-    const key = habitKey(item.title);
-    if (key.length < 3 || key === "altele" || key === "cheltuiala") return;
-    const prev = map.get(key);
-    if (prev) {
-      map.set(key, {
-        ...prev,
-        category: prev.category || item.category,
-        allocationId: prev.allocationId || item.allocationId,
-        sourceId: prev.sourceId || item.sourceId,
-        count: Math.max(prev.count, 1),
-      });
-      return;
-    }
-    map.set(key, {
-      key,
-      title: item.title,
-      category: item.category,
-      allocationId: item.allocationId,
-      sourceId: item.sourceId,
-      count: 1,
-      lastAt: item.date,
-    });
-  });
-  return { phrases: Array.from(map.values()).slice(-80), skippedOnline: current.skippedOnline };
-}
-
-
-type QuotaInfo = { remaining: number; limit: number; resetAt: string; mode: "online" | "local" };
-
-function nextLocalMidnight() {
-  const at = new Date();
-  at.setHours(24, 0, 0, 0);
-  return at.toISOString();
-}
-
-function emptyQuota(): QuotaInfo {
-  const limit = aiDailyLimit();
-  return { remaining: limit, limit, resetAt: nextLocalMidnight(), mode: "online" };
-}
-
-function consumeQuota(current: QuotaInfo, payload: { remaining?: number | null; limit?: number | null; resetAt?: string | null } | undefined, ok: boolean, exhausted: boolean): QuotaInfo {
-  const resetAt = current.resetAt && Date.parse(current.resetAt) > Date.now() ? current.resetAt : nextLocalMidnight();
-  const limit = aiDailyLimit();
-  if (exhausted) return { remaining: 0, limit, resetAt: payload?.resetAt || resetAt, mode: "local" };
-  if (!ok) return { remaining: current.remaining, limit, resetAt, mode: current.remaining > 0 ? current.mode : "local" };
-  const remaining = Math.max(0, current.remaining - 1);
-  return { remaining, limit, resetAt, mode: remaining > 0 ? "online" : "local" };
-}
-
-function loadQuota(): QuotaInfo {
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(QUOTA_KEY) || "null") as Partial<QuotaInfo> | null;
-    const limit = aiDailyLimit();
-    if (!parsed || (parsed.mode !== "online" && parsed.mode !== "local")) return emptyQuota();
-    if (!parsed.resetAt || Date.parse(parsed.resetAt) <= Date.now()) return emptyQuota();
-    const used = Math.max(0, (Number(parsed.limit) || limit) - Number(parsed.remaining ?? limit));
-    const remaining = Math.max(0, limit - used);
-    return { remaining, limit, resetAt: parsed.resetAt, mode: remaining <= 0 ? "local" : parsed.mode === "local" ? "local" : "online" };
-  } catch {
-    return emptyQuota();
-  }
-}
-
-function formatReset(iso: string | null) {
-  if (!iso) return t("mâine");
-  const at = new Date(iso);
-  if (Number.isNaN(at.getTime())) return t("mâine");
-  const time = at.toLocaleTimeString("ro-RO", { hour: "2-digit", minute: "2-digit" });
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-  if (at.toDateString() === now.toDateString()) return `azi la ${time}`;
-  if (at.toDateString() === tomorrow.toDateString()) return `mâine la ${time}`;
-  return `${at.toLocaleDateString(getLocale(), { day: "numeric", month: "short" })} la ${time}`;
-}
-
-function quotaPercent(quota: QuotaInfo) {
-  if (quota.mode === "local" || quota.remaining <= 0) return 0;
-  return Math.max(3, Math.min(100, Math.round((quota.remaining / Math.max(1, quota.limit)) * 100)));
-}
-
-function GuideQuotaBar({ quota, habits }: { quota: QuotaInfo; habits: number }) {
-  const low = quota.mode === "online" && quota.remaining <= 8;
-  const local = quota.mode === "local" || quota.remaining <= 0;
-  const learned = habits > 0 ? ` · ${habits} obiceiuri` : "";
-  const longLabel = local
-    ? `Ghid local · ${quota.remaining} / ${quota.limit} mesaje online azi · se reia ${formatReset(quota.resetAt)}${habits > 0 ? ` · ${habits} obiceiuri învățate local` : ""}`
-    : `Ghid online · ${quota.remaining} / ${quota.limit} mesaje rămase azi · se reia ${formatReset(quota.resetAt)}${habits > 0 ? ` · ${habits} obiceiuri învățate local` : ""}`;
-  const shortLabel = local
-    ? `Local · se reia ${formatReset(quota.resetAt)}${learned}`
-    : `${quota.remaining}/${quota.limit} azi${learned}`;
-  return (
-    <div className={`ai-quota ${local ? "is-local" : low ? "is-low" : "is-ok"}`} aria-live="polite">
-      <div className="ai-quota-track" aria-hidden="true"><i style={{ width: `${quotaPercent(quota)}%` }} /></div>
-      <p className="ai-quota-long">{longLabel}</p>
-      <p className="ai-quota-short">{shortLabel}</p>
-      {local ? <FamilieUpgrade reason="ai" /> : null}
-    </div>
-  );
-}
-
-function allAmounts(raw: string) {
-  const matches = raw.match(/\d[\d.\s]*(?:,\d{1,2})?/g) || [];
-  return matches.map((tokenRaw) => {
-    const token = tokenRaw.replace(/\s/g, "");
-    const normalized = token.includes(",") ? token.replace(/\./g, "").replace(",", ".") : /^\d{1,3}(?:\.\d{3})+$/.test(token) ? token.replace(/\./g, "") : token;
-    return parseFloat(normalized) || 0;
-  }).filter((value) => value >= 20);
-}
-
-
-
-
-
-
-function parseWeeklyAmount(raw: string) {
-  const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const match = folded.match(/(\d[\d .]*)\s*(?:lei|ron)?\s*(?:\/|pe)\s*saptaman/);
-  return match ? allAmounts(match[1])[0] : undefined;
-}
-
-function parseAllocationUpdate(extracted: ExtractedGuide | undefined, userText: string): FinancialUpdate | undefined {
-  const folded = userText.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const looksLikeEnvelope = Boolean(extracted?.category) || /plic|imparte|repartiz|aloc|aliment|saptaman/.test(folded);
-  if (!looksLikeEnvelope) return undefined;
-  const weeklyAmount = parseWeeklyAmount(userText);
-  const amounts = allAmounts(userText).filter((value) => value !== weeklyAmount && value < 1900);
-  let amount = extracted?.amount;
-  if (!amount && amounts.length) {
-    amount = /din (cei|cei|cele)|imparte din/.test(folded) && amounts.length >= 2 ? Math.min(...amounts.filter((value) => value >= 100)) : amounts.find((value) => value >= 100) || amounts[0];
-  }
-  if (!amount) return undefined;
-  const category = extracted?.category
-    || (/aliment/.test(folded) ? "Alimente" : /transport|taxi/.test(folded) ? "Transport" : /factura|casa|chirie/.test(folded) ? "Casă & facturi" : /econom/.test(folded) ? "Economii" : "Alimente");
-  const weeks = parseWeeks(userText) || (weeklyAmount ? Math.round(amount / weeklyAmount) : 4);
-  return { kind: "allocation", category, amount, weekly: true, weeklyAmount, weeks: weeks >= 2 && weeks <= 12 ? weeks : 4, payday: parsePayday(userText) };
-}
-
-
-
-
-
-
-
-
-
-
-
-
-function updatesFromGuide(intent: string | undefined, extracted: ExtractedGuide | undefined, userText: string, data: AppData, history: ChatMessage[] = []): FinancialUpdate[] {
-  const sourceText = allAmounts(userText).length ? userText : [...history].reverse().find((item) => item.role === "user" && allAmounts(item.text).length)?.text || userText;
-  if (intent === "expense") return [];
-  if (intent === "debt" && (extracted?.debtName || extracted?.title) && (extracted.amount || extracted.monthlyPayment)) {
-    const updates: FinancialUpdate[] = [];
-    if (extracted.amount) updates.push({ kind: "debt", name: extracted.debtName || extracted.title || "Datorie", remaining: extracted.amount, due: extracted.dueDay ? `Ziua ${extracted.dueDay}` : undefined });
-    if (extracted.monthlyPayment) updates.push({ kind: "debt-monthly", amount: extracted.monthlyPayment, name: extracted.debtName || extracted.title || "Datorie" });
-    return updates;
-  }
-  const envelope = parseAllocationUpdate(extracted, sourceText);
-  if (intent === "allocation" || envelope && /plic|imparte|repartiz|aloc|aliment.*saptaman|saptaman/.test(sourceText.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) {
-    if (envelope) return [envelope];
-  }
-  if (intent !== "income" && intent !== "next_step" && intent !== "summary") {
-    if (!/venit|salariu|intrare|întrare/i.test(sourceText) && !extracted?.amount && !extracted?.items?.length) return [];
-  }
-  const named = (extracted?.items || []).filter((item): item is { amount: number; title?: string } => Boolean(item.amount && item.amount > 0));
-  if (named.length) {
-    return named.map((item, index) => ({ kind: "income" as const, amount: item.amount, title: item.title || (index ? "Salariu partener" : "Salariu"), date: spendDate(sourceText), memberId: memberIdFor(data, item.title || "", index) }));
-  }
-  const spoken = allAmounts(sourceText);
-  if (spoken.length >= 2 && /salariu|venit|sotie|soție|partener|intrare|întrare/i.test(sourceText)) {
-    return spoken.slice(0, 3).map((amount, index) => ({
-      kind: "income" as const,
-      amount,
-      title: index === 0 ? "Salariu" : index === 1 ? "Salariu partener" : `Venit ${index + 1}`,
-      date: spendDate(sourceText),
-      memberId: memberIdFor(data, sourceText, index),
-    }));
-  }
-  if (extracted?.amount) {
-    return [{ kind: "income", amount: extracted.amount, title: extracted.title || t("Venit lunar"), date: spendDate(sourceText), memberId: memberIdFor(data, extracted.title || sourceText, 0) }];
-  }
-  if (spoken.length === 1 && /venit|salariu|intrare|întrare/i.test(sourceText)) {
-    return [{ kind: "income", amount: spoken[0], title: /salariu/i.test(sourceText) ? "Salariu" : t("Venit lunar"), date: spendDate(sourceText), memberId: data.settings.members[0]?.id }];
-  }
-  return [];
-}
-
-/**
- * Unde se pun banii declarați. Indiciul din frază („în card”, „cash”) alege sursa; altfel
- * prima sursă a omului. Nu se creează surse noi dintr-o frază — ar apărea conturi pe care
- * nu le-a cerut nimeni.
- */
-export const pickFundsSource = (data: AppData, hint?: string, sourceId?: string) => {
-  const sources = data.settings.paymentSources;
-  // Alegerea omului bate orice indiciu din frază: el știe unde sunt banii.
-  const ales = sourceId ? sources.find((item) => item.id === sourceId) : undefined;
-  if (ales) return ales;
-  if (hint) {
-    const match = sources.find((item) => item.kind === hint);
-    if (match) return match;
-  }
-  return sources[0];
-};
-
-/**
- * Intenția, tradusă în lucrul pe care aplicația îl face. Întoarce `undefined` când
- * intenția vorbește despre ceva ce nu există în registru — un plic, un eveniment sau o
- * scadență pe care nu le găsim — ca să nu ajungă în propunere un buton care nu face nimic.
- */
-function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): FinancialUpdate | undefined {
-  switch (intent.kind) {
-    case "expense": {
-      if (data) {
-        const offer = buildExpenseOffer(data, intent, memory);
-        const picked = offer.choices[0]?.update;
-        if (picked && picked.kind === "expense") return picked;
-      }
-      return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
-    }
-    case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date };
-    case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit, amountIsWeekly: intent.amountIsWeekly, delta: intent.delta };
-    case "debt": return { kind: "debt", name: intent.name, remaining: intent.remaining };
-    case "recurring": return { kind: "recurring", name: intent.name, amount: intent.amount, dueDay: intent.dueDay, category: intent.category };
-    case "goal": return { kind: "goal", name: intent.name, target: intent.target, current: intent.current, dueDate: intent.dueDate };
-    case "planned-event": return { kind: "planned-event", name: intent.name, date: intent.date, estimate: intent.estimate, repeat: intent.repeat };
-    case "envelope-delete": return { kind: "allocation-delete", label: intent.label };
-    case "funds": return { kind: "funds", amount: intent.amount, sourceHint: intent.sourceHint as "cash" | "card" | "meal" | undefined, sourceId: intent.sourceId, date: intent.date };
-    case "payday": return { kind: "payday", date: intent.date, flexDays: intent.flexDays };
-    case "transfer": {
-      const from = data ? matchEnvelope(data, intent.from) : undefined;
-      const to = data ? matchEnvelope(data, intent.to) : undefined;
-      if (!from || !to || from.id === to.id) return undefined;
-      return { kind: "transfer", amount: intent.amount, fromId: from.id, toId: to.id, fromLabel: from.label, toLabel: to.label };
-    }
-    case "event-contribution": {
-      const event = data ? matchPlannedEvent(data, intent.name) : undefined;
-      if (!event) return undefined;
-      return { kind: "event-contribution", eventId: event.id, name: event.name, amount: intent.amount, date: intent.date || isoToday() };
-    }
-    case "open": return undefined; // nu scrie nimic în registru: se deschide un ecran
-    case "transaction-delete": {
-      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.amount, date: intent.date }) : undefined;
-      return found ? { kind: "delete-transaction", id: found.id, title: found.title, amount: found.amount } : undefined;
-    }
-    case "transaction-amend": {
-      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.was, date: intent.date }) : undefined;
-      return found ? { kind: "amend-transaction", id: found.id, amount: intent.amount, title: found.title, was: found.amount } : undefined;
-    }
-    case "merchant-rule": {
-      const envelope = data && intent.envelope ? matchEnvelope(data, intent.envelope) : undefined;
-      if (!intent.category && !envelope) return undefined;
-      return { kind: "merchant-rule", match: intent.match, category: intent.category, allocationId: envelope?.id, envelopeLabel: envelope?.label };
-    }
-    case "salary-rule": {
-      const envelope = data ? matchEnvelope(data, intent.envelope) : undefined;
-      if (!envelope) return undefined;
-      return { kind: "salary-rule", allocationId: envelope.id, label: intent.label || envelope.label, mode: intent.mode, value: intent.value };
-    }
-    case "due-paid": {
-      const due = data ? matchRecurring(data, intent.name) : undefined;
-      if (!due || !data) return undefined;
-      const source = data.settings.paymentSources.find((item) => item.id === due.sourceId) || data.settings.paymentSources[0];
-      const matched = matchingAllocationsForExpense(data, { category: due.category, memberId: due.memberId, sourceId: due.sourceId })[0];
-      return {
-        kind: "expense",
-        amount: due.amount,
-        title: due.name,
-        category: due.category,
-        date: intent.date || isoToday(),
-        sourceId: source?.id,
-        allocationId: matched?.id || "outside",
-        memberId: due.memberId,
-        recurringId: due.id,
-      };
-    }
-  }
-}
-
-/** Ce spune asistentul înainte de confirmare — exact cifrele pe care le va scrie. */
-/**
- * Ce a înțeles asistentul, scris pentru cineva care stă în magazin cu telefonul în
- * mână. La o cheltuială, „40 RON · Alimente” nu e destul ca să apeși pe salvează:
- * lipsește tocmai lucrul pe care îl decizi acolo — din ce plic se scad banii.
- * `buildExpenseOffer` alege locurile cu bani; omul atinge săptămâna.
- */
-/** Numele ecranelor, exact cum le vede omul în aplicație. */
-const SCREEN_NAMES: Record<AppScreen, string> = {
-  today: "Astăzi",
-  journal: "Mișcări",
-  plan: "Plan",
-  obligations: "Obligații",
-  goals: "Obiective",
-  habits: "Obiceiuri",
-  calendar: "Calendar",
-  insights: "Analiză",
-  utilities: "Mai mult",
-};
-
-function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): string {
-  switch (intent.kind) {
-    case "expense": {
-      const head = `cheltuială ${money(intent.amount)} · ${intent.category} · ${formatDate(intent.date)}`;
-      if (!data) return head;
-      const offer = buildExpenseOffer(data, intent, memory);
-      const first = offer.choices[0];
-      return first ? `${head}\n  ↳ ${first.label}` : `${head}\n  ↳ ${offer.text}`;
-    }
-    case "income": {
-      const head = `venit ${money(intent.amount)} · ${intent.title} · ${formatDate(intent.date)}`;
-      if (!data) return head;
-      const target = planIncome(data)[0];
-      return target ? `${head}\n  ↳ intră în ${target.source.name} (${money(target.balance)} acum)` : head;
-    }
-    case "envelope": {
-      /**
-       * La o ajustare se scrie și rezultatul, nu doar suma spusă: „mărește cu 200” și
-       * „pune 200” arătau amândouă „plicul Alimente cu 200 RON”, deci o tăiere de 700 de
-       * lei se confirma fără ca nimic din ecran să o dea de gol.
-       */
-      if (intent.delta && data) {
-        const current = data.settings.salaryPlan.allocations.find((item) => item.label === intent.label || item.category === intent.label);
-        const before = current?.amount ?? 0;
-        const after = intent.delta === "increase" ? before + intent.amount : Math.max(0, before - intent.amount);
-        return current
-          ? `plicul „${intent.label}”: ${intent.delta === "increase" ? "+" : "−"}${money(intent.amount)} (${money(before)} → ${money(after)})`
-          : `plicul „${intent.label}” cu ${money(intent.amount)} — nu există încă, îl creez`;
-      }
-      if (intent.delta) return `plicul „${intent.label}”: ${intent.delta === "increase" ? "+" : "−"}${money(intent.amount)}`;
-      if (intent.amountIsWeekly) return `plicul „${intent.label}” cu ${money(intent.amount)} pe săptămână întreagă, până la venit`;
-      /**
-       * Ritmul se scrie în propunere, nu se lasă pe ghicite: omul cere „împarte-mi banii pe
-       * săptămâni”, vede o listă de plicuri cu totaluri și crede că n-am împărțit nimic.
-       */
-      const saptamani = intent.weeklyPace && !intent.weeklyLimit && data ? planWeeks(data) : 0;
-      const ritm = saptamani > 1 ? `, pe săptămâni (~${money(Math.round(intent.amount / saptamani))} pe săptămână)` : "";
-      return `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ritm}`;
-    }
-    case "debt": return `datoria „${intent.name}”, sold ${money(intent.remaining)}${intent.monthly ? `, rată ${money(intent.monthly)}` : ""}`;
-    case "recurring": return `scadența „${intent.name}”, ${money(intent.amount)} pe data de ${intent.dueDay}`;
-    case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;
-    case "funds": {
-      const source = data ? pickFundsSource(data, intent.sourceHint, intent.sourceId) : undefined;
-      if (!source || !data) return `banii pe care îi ai acum: ${money(intent.amount)}`;
-      /**
-       * Se scrie cât intră, nu doar cât ai. Când sursa are deja bani, în Mișcări intră
-       * doar diferența — altfel omul ar vedea o intrare mai mare decât ce s-a schimbat.
-       */
-      const diferenta = Math.round((intent.amount - sourceBalance(data, source.id)) * 100) / 100;
-      if (Math.abs(diferenta) < 0.005) return `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — atât arată și acum, nu am ce schimba`;
-      const cand = intent.date && intent.date !== isoToday() ? `, pe ${formatDate(intent.date)}` : "";
-      return diferenta > 0
-        ? `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — trec ${money(diferenta)} ca intrare în Mișcări${cand}`
-        : `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — scad ${money(Math.abs(diferenta))} din registru${cand}, ca să iasă soldul`;
-    }
-    case "envelope-delete": {
-      const current = data?.settings.salaryPlan.allocations.find((item) => item.label === intent.label || item.category === intent.label);
-      return current
-        ? `șterge plicul „${current.label}” — cei ${money(current.amount)} din el se întorc în nerepartizat`
-        : `șterge plicul „${intent.label}” — nu găsesc niciun plic cu numele ăsta`;
-    }
-    case "planned-event": return `evenimentul „${intent.name}” pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.estimate ? `, cost estimat ${money(intent.estimate)}` : ", fără cost estimat încă"}${intent.repeat === "yearly" ? ", în fiecare an" : ""}`;
-    case "payday": return `următorul venit pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.flexDays ? `, cu ${intent.flexDays} zile de flexibilitate` : ""}`;
-    case "transfer": return `mută ${money(intent.amount)} din plicul „${intent.from}” în „${intent.to}” — banii rămân pe același card`;
-    case "event-contribution": return `pune ${money(intent.amount)} deoparte pentru „${intent.name}” — socoteală de planificare, nu iese din surse`;
-    case "due-paid": {
-      const due = data ? matchRecurring(data, intent.name) : undefined;
-      return due
-        ? `scadența „${due.name}”, ${money(due.amount)} — o trec ca plătită`
-        : `scadența „${intent.name}” — nu o găsesc printre plățile tale recurente`;
-    }
-    case "open": return `deschid ecranul ${SCREEN_NAMES[intent.screen]}`;
-    /**
-     * La o corectare se scrie rândul găsit, nu ce a spus omul: „50 lei” poate fi oricare
-     * dintre trei cafele. Dacă pe ecran scrie ziua și titlul exact, confirmarea e informată.
-     */
-    case "transaction-delete": {
-      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.amount, date: intent.date }) : undefined;
-      return found
-        ? `șterge mișcarea „${found.title}” · ${money(found.amount)} · ${formatDate(found.date)}`
-        : `șterge mișcarea „${intent.title || ""}” — nu o găsesc în registru`;
-    }
-    case "transaction-amend": {
-      const found = data ? matchTransaction(data, { title: intent.title, amount: intent.was, date: intent.date }) : undefined;
-      return found
-        ? `corectează „${found.title}” · ${formatDate(found.date)}: ${money(found.amount)} → ${money(intent.amount)}`
-        : `corectează „${intent.title || ""}” — nu găsesc mișcarea`;
-    }
-    case "merchant-rule": {
-      const unde = intent.envelope ? `plicul „${intent.envelope}”` : `categoria ${intent.category}`;
-      return `regulă: de fiecare dată când scrie „${intent.match}”, propun ${unde}`;
-    }
-    case "salary-rule": {
-      const cat = intent.mode === "percent" ? `${intent.value}%` : money(intent.value);
-      return `din fiecare venit, ${cat} merg în plicul „${intent.envelope}” — se aplică la venitul următor`;
-    }
-  }
-}
-
-/** Textul propunerii, scris o singură dată ca să poată fi refăcut la schimbarea zilei. */
-function proposalText(intents: AssistantIntent[], data?: AppData, memory?: GuideMemory, headline?: string, warning?: string): string {
-  // O propunere de împărțire nu e o înțelegere a mesajului, deci nu se anunță „am înțeles”.
-  // Titlul propriu își aduce punctul lui; lista de dedesubt adaugă „:”, deci ar ieși „.:”.
-  const head = (headline ? headline.replace(/\.$/, "") : undefined) || (intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`);
-  const avertisment = warning ? `\n\n${warning}` : "";
-  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}${avertisment}\n\nConfirmi să le trec în registru?`;
-}
-
-/** Alternativele se arată doar când mesajul conține exact o cheltuială; altfel ar fi ambiguu ce schimbă atingerea. */
-function spendAlternatives(data: AppData, parsed: ParsedIntent[], memory?: GuideMemory): ChatChoice[] | undefined {
-  if (parsed.length !== 1) return undefined;
-  const intent = parsed[0].intent;
-  if (intent.kind !== "expense") return undefined;
-  const choices = buildExpenseOffer(data, intent, memory).choices;
-  return choices.length ? choices : undefined;
-}
-
 export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNaturalEntry, onFinancialUpdate, onRevert, initiallyOpen = false }: Props) {
   const [open, setOpen] = useState(initiallyOpen);
   const historyRef = useRef<HTMLDivElement>(null);
@@ -558,8 +79,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
   const [historyOpen, setHistoryOpen] = useState(false);
   const [quota, setQuota] = useState<QuotaInfo>(() => loadQuota());
   const [memory, setMemory] = useState<GuideMemory>(() => {
-    liveMemory = loadMemory();
-    return liveMemory;
+    guideMemory.current = loadMemory();
+    return guideMemory.current;
   });
   const [spendDay, setSpendDay] = useState(today);
   const [pickedChoice, setPickedChoice] = useState<ChatChoice | null>(null);
@@ -584,13 +105,13 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
   }, [open]);
   useEffect(() => { try { window.localStorage.setItem(QUOTA_KEY, JSON.stringify(quota)); } catch { /* ignore */ } }, [quota]);
   useEffect(() => {
-    liveMemory = memory;
+    guideMemory.current = memory;
     try { window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory)); } catch { /* ignore */ }
   }, [memory]);
   useEffect(() => {
     setMemory((current) => {
       const next = seedMemory(current, data);
-      liveMemory = next;
+      guideMemory.current = next;
       return next;
     });
   }, [data.transactions.length]);
@@ -692,7 +213,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         intents,
         choices: target.choices?.map((item) => (item.update.kind === "expense" || item.update.kind === "income" || item.update.kind === "funds" ? { ...item, update: { ...item.update, date: day } } : item)),
         text: intents
-          ? proposalText(intents, data, liveMemory)
+          ? proposalText(intents, data, guideMemory.current)
           : before
             ? retimeText(target.text, before, day)
             : target.text,
@@ -717,7 +238,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         ...target,
         updates: target.updates.map((item) => (item.kind === "funds" ? { ...item, sourceId } : item)),
         intents,
-        text: intents ? proposalText(intents, data, liveMemory) : target.text,
+        text: intents ? proposalText(intents, data, guideMemory.current) : target.text,
       };
       return next;
     });
@@ -822,7 +343,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
      * scoruri. Înainte erau două cascade cu ordini diferite, deci aceeași frază
      * putea însemna altceva online față de offline.
      */
-    const offline = understand(raw, data, { memory: liveMemory, asOf: isoToday() }).filter((reading) => {
+    const offline = understand(raw, data, { memory: guideMemory.current, asOf: isoToday() }).filter((reading) => {
       // Ghidul pas cu pas întreabă ceva anume; îi lăsăm lui răspunsul la întrebarea lui.
       if (!stageKind || reading.kind !== "intents") return true;
       return reading.intents.some((item) => item.intent.kind !== stageKind);
@@ -845,7 +366,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
       addMessage({ role: "assistant", text: t("Asta nu pare un venit. Spune-mi întâi ce bani intră într-o lună obișnuită — salariu, pensie sau altceva — și ne întoarcem imediat la restul.") });
       return;
     }
-    if (guideStage === "income") { if (!amount) { addMessage({ role: "assistant", text: t("Am nevoie doar de o sumă aproximativă. De exemplu: «salariul meu este 6.500 lei pe lună».") }); return; } onFinancialUpdate({ kind: "income", amount, title: /salariu/i.test(folded) ? "Salariu lunar" : t("Venit lunar") }); setGuideStage("debts"); addMessage({ role: "assistant", text: `Am notat ${money(amount)} ca venit lunar. Următoarea întrebare: ai datorii, credite, rate sau carduri de cumpărături?` }); return; } if (guideStage === "debts") { if (/nu\s+(am|exista)|fara\s+datorii|niciuna/.test(folded)) { setGuideStage("allocation"); addMessage({ role: "assistant", text: t("În regulă, fără datorii. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii. Ce sume vrei să rezervi?") }); return; } if (!amount) { addMessage({ role: "assistant", text: t("Spune-mi, de exemplu: «Credit auto, mai am 18.000 lei» sau «rată la bancă, sold 42.000 lei».") }); return; } const debtName = raw.replace(/\d[\d.,\s]*(?:lei|ron)?/gi, "").replace(/(mai am|sold|datorie|credit|rata|rată|la banca|la bancă)/gi, "").replace(/[,:-]/g, " ").trim() || "Datorie"; setPendingDebtName(debtName); onFinancialUpdate({ kind: "debt", name: debtName, remaining: amount }); setGuideStage("rate"); addMessage({ role: "assistant", text: `Am trecut „${debtName}” cu soldul de ${money(amount)}. Cât plătești lunar pentru această datorie?` }); return; } if (guideStage === "rate") { if (amount) onFinancialUpdate({ kind: "debt-monthly", amount }); setGuideStage("allocation"); addMessage({ role: "assistant", text: amount ? `Am notat rata de ${money(amount)}. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.` : t("În regulă, lăsăm rata de completat mai târziu. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.") }); return; } if (guideStage === "allocation") { const categories = ["alimente", "facturi", "casa", "transport", "economii", "datorii"]; const found = categories.map((category) => { const match = folded.match(new RegExp(`${category}[^\\d]{0,18}(\\d[\\d.,]*)`)); return match ? { category, amount: firstAmount(match[1]) } : undefined; }).filter((item): item is { category: string; amount: number } => Boolean(item?.amount)); if (!found.length) { addMessage({ role: "assistant", text: t("Nu am găsit categoriile și sumele. Scrie simplu: «alimente 1500, facturi 800, transport 400, economii 500».") }); return; } found.forEach((item) => onFinancialUpdate({ kind: "allocation", category: item.category === "facturi" || item.category === "casa" ? "Casă & facturi" : item.category[0].toLocaleUpperCase("ro-RO") + item.category.slice(1), amount: item.amount, weekly: item.category === "alimente" || item.category === "transport" })); setGuideStage("ready"); addMessage({ role: "assistant", text: `Am repartizat ${found.map((item) => `${item.category} ${money(item.amount)}`).join(", ")}. Putem ajusta orice sumă. De acum sunt disponibil să urmărim împreună cheltuielile, veniturile și ritmul lunii.` }); return; } const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); if (!parsed.understood) { if (looksLikeProductSearch(raw)) { offerCatalog(raw); return; } addMessage({ role: "assistant", text: t("Spune-mi suma și ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil».") }); return; } const proposal = expenseProposal(raw, { amount: parsed.amount, category: parsed.category, title: naturalTitle(raw, parsed.category) }, data, liveMemory, true); if (proposal) { offerSpend(proposal); return; } offerSpend(buildExpenseOffer(data, { amount: parsed.amount, title: naturalTitle(raw, parsed.category), category: parsed.category || t("Altele"), date: spendDate(raw) }, liveMemory)); }, 420); };
+    if (guideStage === "income") { if (!amount) { addMessage({ role: "assistant", text: t("Am nevoie doar de o sumă aproximativă. De exemplu: «salariul meu este 6.500 lei pe lună».") }); return; } onFinancialUpdate({ kind: "income", amount, title: /salariu/i.test(folded) ? "Salariu lunar" : t("Venit lunar") }); setGuideStage("debts"); addMessage({ role: "assistant", text: `Am notat ${money(amount)} ca venit lunar. Următoarea întrebare: ai datorii, credite, rate sau carduri de cumpărături?` }); return; } if (guideStage === "debts") { if (/nu\s+(am|exista)|fara\s+datorii|niciuna/.test(folded)) { setGuideStage("allocation"); addMessage({ role: "assistant", text: t("În regulă, fără datorii. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii. Ce sume vrei să rezervi?") }); return; } if (!amount) { addMessage({ role: "assistant", text: t("Spune-mi, de exemplu: «Credit auto, mai am 18.000 lei» sau «rată la bancă, sold 42.000 lei».") }); return; } const debtName = raw.replace(/\d[\d.,\s]*(?:lei|ron)?/gi, "").replace(/(mai am|sold|datorie|credit|rata|rată|la banca|la bancă)/gi, "").replace(/[,:-]/g, " ").trim() || "Datorie"; setPendingDebtName(debtName); onFinancialUpdate({ kind: "debt", name: debtName, remaining: amount }); setGuideStage("rate"); addMessage({ role: "assistant", text: `Am trecut „${debtName}” cu soldul de ${money(amount)}. Cât plătești lunar pentru această datorie?` }); return; } if (guideStage === "rate") { if (amount) onFinancialUpdate({ kind: "debt-monthly", amount }); setGuideStage("allocation"); addMessage({ role: "assistant", text: amount ? `Am notat rata de ${money(amount)}. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.` : t("În regulă, lăsăm rata de completat mai târziu. Acum împărțim venitul pe categorii: alimente, facturi, transport și economii.") }); return; } if (guideStage === "allocation") { const categories = ["alimente", "facturi", "casa", "transport", "economii", "datorii"]; const found = categories.map((category) => { const match = folded.match(new RegExp(`${category}[^\\d]{0,18}(\\d[\\d.,]*)`)); return match ? { category, amount: firstAmount(match[1]) } : undefined; }).filter((item): item is { category: string; amount: number } => Boolean(item?.amount)); if (!found.length) { addMessage({ role: "assistant", text: t("Nu am găsit categoriile și sumele. Scrie simplu: «alimente 1500, facturi 800, transport 400, economii 500».") }); return; } found.forEach((item) => onFinancialUpdate({ kind: "allocation", category: item.category === "facturi" || item.category === "casa" ? "Casă & facturi" : item.category[0].toLocaleUpperCase("ro-RO") + item.category.slice(1), amount: item.amount, weekly: item.category === "alimente" || item.category === "transport" })); setGuideStage("ready"); addMessage({ role: "assistant", text: `Am repartizat ${found.map((item) => `${item.category} ${money(item.amount)}`).join(", ")}. Putem ajusta orice sumă. De acum sunt disponibil să urmărim împreună cheltuielile, veniturile și ritmul lunii.` }); return; } const parsed = parseNaturalSpendScenario(raw, [...expenseCategories, ...data.settings.customCategories]); if (!parsed.understood) { if (looksLikeProductSearch(raw)) { offerCatalog(raw); return; } addMessage({ role: "assistant", text: t("Spune-mi suma și ce ai plătit, de exemplu: «am cheltuit 50 de lei pe combustibil».") }); return; } const proposal = expenseProposal(raw, { amount: parsed.amount, category: parsed.category, title: naturalTitle(raw, parsed.category) }, data, guideMemory.current, true); if (proposal) { offerSpend(proposal); return; } offerSpend(buildExpenseOffer(data, { amount: parsed.amount, title: naturalTitle(raw, parsed.category), category: parsed.category || t("Altele"), date: spendDate(raw) }, guideMemory.current)); }, 420); };
 
   const handleAttachments = async (list?: FileList | null) => {
     const picked = list ? Array.from(list) : [];
@@ -898,7 +419,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     if (reading.kind === "intents") {
       const only = reading.intents.length === 1 ? reading.intents[0].intent : undefined;
       if (only?.kind === "expense") {
-        offerSpend(buildExpenseOffer(data, only, liveMemory));
+        offerSpend(buildExpenseOffer(data, only, guideMemory.current));
         return true;
       }
       const intents = reading.intents.map((item) => item.intent);
@@ -919,11 +440,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
       resetSpendDraft();
       addMessage({
         role: "assistant",
-        text: proposalText(intents, data, liveMemory, reading.headline, planWarningFor(reading.intents, data)),
-        updates: intents.map((item) => intentToUpdate(item, data, liveMemory)).filter((item): item is FinancialUpdate => Boolean(item)),
+        text: proposalText(intents, data, guideMemory.current, reading.headline, planWarningFor(reading.intents, data)),
+        updates: intents.map((item) => intentToUpdate(item, data, guideMemory.current)).filter((item): item is FinancialUpdate => Boolean(item)),
         intents,
         action: { type: "apply", label: intents.length === 1 ? t("Confirmă și salvează") : t("Confirmă pe toate") },
-        choices: spendAlternatives(data, reading.intents, liveMemory),
+        choices: spendAlternatives(data, reading.intents, guideMemory.current),
       });
       return true;
     }
@@ -962,8 +483,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
       return;
     }
     if (isConfirm(raw)) {
-      const lastSpend = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data, liveMemory));
-      const recovered = lastSpend ? expenseProposal(lastSpend.text, undefined, data, liveMemory, true) : undefined;
+      const lastSpend = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data, guideMemory.current));
+      const recovered = lastSpend ? expenseProposal(lastSpend.text, undefined, data, guideMemory.current, true) : undefined;
       if (recovered) {
         offerSpend(recovered);
         return;
@@ -980,7 +501,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
      * OCR-ul rămâne pe telefon. La Gemini pleacă doar textul citit local, niciodată poza.
      */
     const sentPhotos = sentAttachments.length > 0;
-    const readings = sentPhotos ? [] : understand(requestText, data, { memory: liveMemory, asOf: isoToday() });
+    const readings = sentPhotos ? [] : understand(requestText, data, { memory: guideMemory.current, asOf: isoToday() });
     const { winner, runnerUp, ambiguous } = decide(readings);
     const blocked = quota.mode === "local" || quota.remaining <= 0;
     /**
@@ -1071,7 +592,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
                 category: dominantReceiptCategory(local.items),
                 confidence: receiptReadIsReconciled(local) ? "high" : "medium",
               };
-              const localProposal = expenseProposal(requestText, extracted, data, liveMemory, true);
+              const localProposal = expenseProposal(requestText, extracted, data, guideMemory.current, true);
               if (localProposal) {
                 setTyping(false);
                 offerSpend(localProposal);
@@ -1170,12 +691,12 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         const receiptExtracted = sentPhotos && localReceiptAmount && localReceiptAmount > 0
           ? { ...payload.extracted, amount: localReceiptAmount }
           : payload.extracted;
-        const lastSpendText = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data, liveMemory))?.text || requestText;
+        const lastSpendText = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data, guideMemory.current))?.text || requestText;
         const extractedText = payload.extracted?.vendor ? `${sourceTextSafe(requestText)} ${payload.extracted.vendor}` : requestText;
         const sourceText = isConfirm(raw) ? lastSpendText : extractedText;
         const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt"
           ? undefined
-          : expenseProposal(sourceText, receiptExtracted, data, liveMemory, Boolean(sentPhotos) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
+          : expenseProposal(sourceText, receiptExtracted, data, guideMemory.current, Boolean(sentPhotos) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
         if (proposal) {
           offerSpend(proposal);
           return;
