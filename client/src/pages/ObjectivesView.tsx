@@ -5,56 +5,82 @@ import "../objective-edit.css";
 import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
-import { debtPaymentHistory, debtSnowball, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { BudgetBar, dateText, money } from "@/pages/home-kit";
-import { t } from "@/lib/i18n";
+import { amortize, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type PayoffStrategy } from "@/lib/debt-plan";
+import { getLocale, t } from "@/lib/i18n";
 import { upcomingPlannedEvents } from "@/lib/planned-events";
 
 export function DebtPaymentHistory({ data, debt }: { data: AppData; debt: Debt }) { const history = debtPaymentHistory(data, debt.id); if (!history.length) return <p className="bf-debt-history empty">{t("Nu există încă plăți confirmate pentru această datorie.")}</p>; return <div className="bf-debt-history"><p>{t("PLĂȚI ÎNREGISTRATE")}</p>{history.slice(0, 4).map((payment) => <div key={payment.id}><span><b>{payment.title.includes("achitată integral") ? t("Achitată integral") : t("Plată parțială")}</b><small>{dateText(payment.date, true)} · {payment.source}</small></span><span><strong>{money(payment.amount)}</strong><small>{t("rămân {amount}", { amount: money(payment.debtRemainingAfter ?? debt.remaining) })}</small></span></div>)}</div>; }
 
-type ScheduleRow = { index: number; date: string; amount: number; paid?: Transaction };
-function debtScheduleRows(data: AppData, debt: Debt): ScheduleRow[] {
+type ScheduleRow = { index: number; date: string; amount: number; interest?: number; paid?: Transaction };
+/**
+ * Ratele plătite deja, apoi ratele rămase cu dobânda pe sold (testare, M4). Fără dobândă
+ * scrisă, calculul rămâne sold ÷ rată, ca înainte.
+ */
+function debtScheduleRows(data: AppData, debt: Debt): { rows: ScheduleRow[]; plan: ReturnType<typeof amortize> } {
   const monthly = Math.max(0, debt.monthly);
-  if (!monthly) return [];
+  const plan = amortize(debt.remaining, debt.annualRate, monthly);
+  if (!monthly) return { rows: [], plan };
   const history = debtPaymentHistory(data, debt.id).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const paidRows: ScheduleRow[] = history.map((item, offset) => ({ index: offset + 1, date: item.date, amount: item.amount, paid: item }));
   const first = debt.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(debt.dueDate) ? new Date(debt.dueDate + "T12:00:00") : new Date();
-  const original = Math.max(debt.remaining + history.reduce((sum, item) => sum + item.amount, 0), monthly);
-  const count = Math.min(120, Math.max(1, Math.ceil(original / monthly)));
-  return Array.from({ length: count }, (_, offset) => {
-    const index = offset + 1;
-    const dateObject = new Date(first.getFullYear(), first.getMonth() + offset, Math.min(first.getDate(), new Date(first.getFullYear(), first.getMonth() + offset + 1, 0).getDate()), 12);
-    const date = isoDate(dateObject);
-    const paid = history.find((item) => item.date.slice(0, 7) === date.slice(0, 7));
-    return { index, date, amount: Math.min(monthly, Math.max(0, original - offset * monthly)), paid };
+  const lastPaidMonth = history.length ? history[history.length - 1].date.slice(0, 7) : "";
+  let cursor = new Date(first.getFullYear(), first.getMonth(), 1, 12);
+  while (lastPaidMonth && isoDate(cursor).slice(0, 7) <= lastPaidMonth) cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12);
+  const futureRows: ScheduleRow[] = plan.rows.slice(0, 120).map((row, offset) => {
+    const month = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1, 12);
+    const day = Math.min(first.getDate(), new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate());
+    return { index: paidRows.length + row.index, date: isoDate(new Date(month.getFullYear(), month.getMonth(), day, 12)), amount: row.payment, interest: row.interest };
   });
+  return { rows: [...paidRows, ...futureRows], plan };
 }
 function DebtSchedule({ data, debt, onPay }: { data: AppData; debt: Debt; onPay: () => void }) {
-  const rows = debtScheduleRows(data, debt);
+  const { rows, plan } = debtScheduleRows(data, debt);
   const [expanded, setExpanded] = useState(false);
+  if (!debt.monthly) return null;
+  if (plan.months === null) return <div className="bf-debt-schedule"><p className="bf-form-error" role="alert">{t("Rata de {monthly} nu acoperă nici dobânda lunară: datoria crește. Mărește rata sau vorbește cu creditorul.", { monthly: money(debt.monthly) })}</p></div>;
   if (!rows.length) return null;
   const visible = expanded ? rows : rows.slice(0, 6);
   const paidCount = rows.filter((row) => row.paid).length;
-  return <div className="bf-debt-schedule"><div className="bf-debt-schedule-head"><div><p>{t("SCADENȚAR COMPLET")}</p><b>{paidCount} din {rows.length} rate bifate</b></div><span>{money(debt.remaining)} rămas</span></div><div className="bf-debt-schedule-list">{visible.map((row) => <div className={"bf-debt-schedule-row " + (row.paid ? "paid" : "")} key={row.date}><button type="button" className="bf-schedule-check" aria-label={row.paid ? "Rata " + row.index + t(" achitată") : t("Confirmă rata ") + row.index} onClick={row.paid ? undefined : onPay}>{row.paid ? <Check size={15} /> : <span />}</button><span><b>Rata {String(row.index).padStart(2, "0")}</b><small>{dateText(row.date, true)}{row.paid ? t(" · plătită la ") + dateText(row.paid.date, true) : t(" · neplătită")}</small></span><strong>{money(row.paid?.amount || row.amount)}</strong></div>)}</div>{rows.length > 6 && <button type="button" className="bf-schedule-more" onClick={() => setExpanded((value) => !value)}>{expanded ? t("Arată mai puține") : t("Arată toate cele ") + rows.length + " rate"}</button>}</div>;
+  return <div className="bf-debt-schedule"><div className="bf-debt-schedule-head"><div><p>{t("SCADENȚAR COMPLET")}</p><b>{t("{paid} din {total} rate bifate", { paid: paidCount, total: rows.length })}</b>{plan.totalInterest > 0 && <small>{t("Dobândă de plătit până la final: {amount}", { amount: money(plan.totalInterest) })}</small>}</div><span>{t("{amount} rămas", { amount: money(debt.remaining) })}</span></div><div className="bf-debt-schedule-list">{visible.map((row) => <div className={"bf-debt-schedule-row " + (row.paid ? "paid" : "")} key={`${row.index}-${row.date}`}><button type="button" className="bf-schedule-check" aria-label={row.paid ? "Rata " + row.index + t(" achitată") : t("Confirmă rata ") + row.index} onClick={row.paid ? undefined : onPay}>{row.paid ? <Check size={15} /> : <span />}</button><span><b>Rata {String(row.index).padStart(2, "0")}</b><small>{dateText(row.date, true)}{row.paid ? t(" · plătită la ") + dateText(row.paid.date, true) : row.interest ? t(" · din care dobândă {amount}", { amount: money(row.interest) }) : t(" · neplătită")}</small></span><strong>{money(row.paid?.amount || row.amount)}</strong></div>)}</div>{rows.length > 6 && <button type="button" className="bf-schedule-more" onClick={() => setExpanded((value) => !value)}>{expanded ? t("Arată mai puține") : t("Arată toate cele ") + rows.length + " rate"}</button>}</div>;
 }
+const monthYear = (date: Date) => new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(date);
+/** Simulatorul: cu dobândă, în ordinea care costă cel mai puțin, și data în care scapi de datorii. */
 function DebtPayoffSimulator({ data }: { data: AppData }) {
   const [extra, setExtra] = useState(0);
   const active = data.debts.filter((debt) => debt.remaining > 0);
-  const total = active.reduce((sum, debt) => sum + debt.remaining, 0);
+  const [strategy, setStrategy] = useState<PayoffStrategy>(() => recommendedStrategy(active));
   const minimum = active.reduce((sum, debt) => sum + Math.max(0, debt.monthly), 0);
-  if (!total || !minimum) return null;
-  const baseMonths = Math.ceil(total / minimum);
-  const simulatedMonths = Math.ceil(total / (minimum + extra));
-  const savedMonths = Math.max(0, baseMonths - simulatedMonths);
+  if (!active.length || !minimum) return null;
+  const base = payoffPlan(active, 0, strategy);
+  const withExtra = payoffPlan(active, extra, strategy);
+  const other = payoffPlan(active, extra, strategy === "avalanche" ? "snowball" : "avalanche");
+  const savedMonths = base.months !== null && withExtra.months !== null ? Math.max(0, base.months - withExtra.months) : 0;
+  const savedInterest = Math.max(0, base.totalInterest - withExtra.totalInterest);
   const maxExtra = Math.max(100, Math.ceil(minimum * 1.5 / 100) * 100);
-  return <section className="bf-debt-simulator"><div className="bf-debt-simulator-head"><div><p className="bf-kicker">{t("SIMULATOR DE DECIZIE")}</p><h2>{t("Dacă plătești")} <em>{t("în plus")}</em>?</h2><span>{t("Testează un efort lunar suplimentar. Nu schimbă datele tale, doar îți arată scenariul.")}</span></div><div className="bf-debt-simulator-result"><strong>{savedMonths ? "−" + savedMonths : "0"}</strong><small>{t("luni câștigate")}</small></div></div><div className="bf-debt-slider"><div><span>{t("Sumă extra / lună")}</span><b>{money(extra)}</b></div><input type="range" min="0" max={maxExtra} step="50" value={extra} onChange={(event) => setExtra(Number(event.target.value))} aria-label={t("Sumă suplimentară lunară")} /><div className="bf-debt-slider-labels"><small>0 RON</small><small>{money(maxExtra)}</small></div></div><div className="bf-debt-simulator-summary"><span><b>{baseMonths}</b><small>{t("luni acum")}</small></span><span><b>{simulatedMonths}</b><small>{t("luni cu extra")}</small></span><span><b>{money(minimum + extra)}</b><small>{t("efort lunar")}</small></span></div></section>;
+  const hasRates = active.some((debt) => (debt.annualRate || 0) > 0);
+  return <section className="bf-debt-simulator"><div className="bf-debt-simulator-head"><div><p className="bf-kicker">{t("SIMULATOR DE DECIZIE")}</p><h2>{t("Dacă plătești")} <em>{t("în plus")}</em>?</h2><span>{t("Testează un efort lunar suplimentar. Nu schimbă datele tale, doar îți arată scenariul.")}</span></div><div className="bf-debt-simulator-result"><strong>{savedMonths ? "−" + savedMonths : "0"}</strong><small>{t("luni câștigate")}</small></div></div>
+    <div className="bf-debt-strategy" role="radiogroup" aria-label={t("Ordinea de plată")}><button type="button" role="radio" aria-checked={strategy === "avalanche"} className={strategy === "avalanche" ? "active" : ""} onClick={() => setStrategy("avalanche")}><b>{t("Avalanșă")}</b><small>{t("întâi dobânda cea mai mare")}</small></button><button type="button" role="radio" aria-checked={strategy === "snowball"} className={strategy === "snowball" ? "active" : ""} onClick={() => setStrategy("snowball")}><b>{t("Minge de zăpadă")}</b><small>{t("întâi soldul cel mai mic")}</small></button></div>
+    <div className="bf-debt-slider"><div><span>{t("Sumă extra / lună")}</span><b>{money(extra)}</b></div><input type="range" min="0" max={maxExtra} step="50" value={extra} onChange={(event) => setExtra(Number(event.target.value))} aria-label={t("Sumă suplimentară lunară")} /><div className="bf-debt-slider-labels"><small>0 RON</small><small>{money(maxExtra)}</small></div></div>
+    {withExtra.months === null
+      ? <p className="bf-form-error" role="alert">{t("Cu plățile acestea, dobânzile cresc mai repede decât scad datoriile. Mărește efortul lunar.")}</p>
+      : <><p className="bf-debt-freedom"><b>{t("Scapi de datorii în {date}", { date: monthYear(monthAfter(withExtra.months)) })}</b>{hasRates ? <span>{t(" · dobândă totală {amount}", { amount: money(withExtra.totalInterest) })}{savedInterest > 0 ? t(" · economisești {amount}", { amount: money(savedInterest) }) : ""}</span> : <span>{t(" · scrie dobânzile în fiecare datorie pentru costul real")}</span>}</p>
+        <ol className="bf-debt-order">{withExtra.order.map((debt, index) => <li key={debt.id}><b>{index + 1}. {debt.name}</b><small>{debt.annualRate ? t("{rate}% pe an", { rate: String(debt.annualRate).replace(".", ",") }) : t("dobândă necunoscută")} · {t("închisă în {date}", { date: monthYear(monthAfter(withExtra.closedAt[debt.id] || withExtra.months || 0)) })}</small></li>)}</ol>
+        {hasRates && other.months !== null && other.totalInterest - withExtra.totalInterest > 1 && <p className="bf-helper">{t("Ordinea aleasă costă cu {amount} mai puțin decât cealaltă.", { amount: money(other.totalInterest - withExtra.totalInterest) })}</p>}
+        {hasRates && other.months !== null && withExtra.totalInterest - other.totalInterest > 1 && <p className="bf-helper">{t("Cealaltă ordine ar costa cu {amount} mai puțin în dobânzi.", { amount: money(withExtra.totalInterest - other.totalInterest) })}</p>}</>}
+    <div className="bf-debt-simulator-summary"><span><b>{base.months ?? "∞"}</b><small>{t("luni acum")}</small></span><span><b>{withExtra.months ?? "∞"}</b><small>{t("luni cu extra")}</small></span><span><b>{money(minimum + extra)}</b><small>{t("efort lunar")}</small></span></div></section>;
 }
 export function ObjectivesView({ data, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onOpenGoals, onOpenCalendar, onOpenEvents, onOpenAssistant }: { data: AppData; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenEvents: () => void; onOpenAssistant: () => void }) {
   const [laterIds, setLaterIds] = useState<string[]>([]);
   const totalDebt = data.debts.reduce((sum, item) => sum + item.remaining, 0);
   const totalSavings = data.savings.reduce((sum, item) => sum + item.current, 0);
   const monthlyRates = data.debts.reduce((sum, item) => sum + item.monthly, 0);
-  const snowball = debtSnowball(data);
-  const rankedDebts = snowball.order.length ? [...snowball.order.map((item) => item.debt), ...data.debts.filter((item) => item.remaining <= 0)] : data.debts;
+  // Ordinea de plată: cu dobânzi cunoscute, avalanșa (costă cel mai puțin); altfel soldul cel mai mic.
+  const openDebts = data.debts.filter((item) => item.remaining > 0);
+  const ordered = orderDebts(openDebts, recommendedStrategy(openDebts));
+  const snowball = { next: ordered[0] ? { debt: ordered[0] } : undefined };
+  const rankedDebts = ordered.length ? [...ordered, ...data.debts.filter((item) => item.remaining <= 0)] : data.debts;
   const today = isoToday();
   const inferDue = (item: { dueDate?: string; due?: string }) => {
     if (item.dueDate) return item.dueDate;

@@ -9,6 +9,7 @@ import {
   formatDate,
   isoToday,
   isWeeklyPaced,
+  pendingDebtsInPlan,
   pendingRecurringInPlan,
   planEndDate,
   planForecast,
@@ -349,6 +350,23 @@ function buildAlerts(data: AppData): PlannedAlert[] {
       body: `${item.name || t("Obligație")} · ${money(item.amount)} · ${formatDate(item.dueDate)}`,
       at: when,
       tag: `due-${item.id || item.dueDate}`,
+    });
+  }
+
+  // Rate la datorii: aviz cu 3 zile înainte și în ziua ratei, ca banii să fie pe card (testare, M4).
+  for (const debt of pendingDebtsInPlan(data).filter((item) => item.dueDate >= today).slice(0, 5)) {
+    const due = new Date(`${debt.dueDate}T12:00:00`);
+    const todayNoon = new Date(`${today}T12:00:00`);
+    const days = Math.round((due.valueOf() - todayNoon.valueOf()) / 86_400_000);
+    if (days < 0 || days > 3) continue;
+    const when = days === 0 ? atLocalHour(0, 9, 0) : atLocalHour(0, 18, 30);
+    if (when.getTime() <= Date.now() - 60_000) continue;
+    alerts.push({
+      id: id++,
+      title: days === 0 ? t("Rată azi") : t("Rată în {days} zile", { days }),
+      body: `${debt.name} · ${money(debt.amount)} · ${formatDate(debt.dueDate)}`,
+      at: when,
+      tag: `debt-${debt.id}-${debt.dueDate}`,
     });
   }
 
