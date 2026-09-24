@@ -20,7 +20,7 @@ const dueLabel = (daysLeft: number) => {
  * Briefing de dimineață: cât poți cheltui azi, scadențe din 7 zile, abonamente detectate, ritual de salariu.
  * Scrie în registru doar la confirmare explicită — aceeași formă sincronizată.
  */
-export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = false, simpleMode = false }: { data: AppData; onGo: Go; onChange: (next: AppData) => void; onOpenWeek?: () => void; hideSpendStamp?: boolean; simpleMode?: boolean }) {
+export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, hideSpendStamp = false, simpleMode = false }: { data: AppData; onGo: Go; onChange: (next: AppData) => void; onOpenWeek?: () => void; onOpenRecurring?: () => void; hideSpendStamp?: boolean; simpleMode?: boolean }) {
   const brief = todayBrief(data);
   const week = weeklyCheckIn(data);
   const rules = data.settings.salaryPlan.salaryAllocationRules || [];
@@ -28,6 +28,8 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
   const needsRitual = !rules.length && unappliedSalaryIncomes(data).length > 0 && data.settings.salaryPlan.allocations.length > 0;
   const [pendingHunt, setPendingHunt] = useState<SubscriptionDetection | null>(null);
   const pay = (id: string) => {
+    // Suma variabilă (curent, gaz) se confirmă cu valoarea de pe factură, în Scadențe.
+    if (data.recurring.find((item) => item.id === id)?.variable && onOpenRecurring) return onOpenRecurring();
     const next = confirmRecurringPayment(data, id);
     if (next) onChange(next);
   };

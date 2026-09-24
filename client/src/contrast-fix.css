@@ -1238,3 +1238,7 @@ html body .bf-os-day > span:first-child {
   font: inherit;
   font-weight: 700;
 }
+
+/* Scadență cu sumă variabilă: suma de pe factură, scrisă la confirmare */
+.bf-recurring-paid-amount { grid-column: 1 / -1; display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
+.bf-recurring-paid-amount input { min-height: 44px; padding: 0 12px; border: 1px solid var(--cf-line, #d5d2c8); border-radius: 12px; font: inherit; font-size: 16px; }

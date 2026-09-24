@@ -2,11 +2,24 @@
 import "../recurring.css";
 import { useState } from "react";
 import { CalendarClock, Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringPayment } from "@/lib/finance-data";
+import { autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringFrequency, type RecurringPayment } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
 import { selfMemberIdOf } from "@/lib/member-identity";
 import { askConfirm } from "@/lib/confirm-dialog";
+
+const monthName = (month: number) => new Intl.DateTimeFormat(getLocale(), { month: "long" }).format(new Date(2026, month - 1, 1));
+
+/** „Ziua 5”, „Ziua 5 · trimestrial: ian., apr., iul., oct.”, „5 martie · anual”. */
+export function recurringScheduleLabel(item: Pick<RecurringPayment, "dueDay" | "frequency" | "month">) {
+  if (item.frequency === "yearly") return t("{day} {month} · anual", { day: item.dueDay, month: monthName(item.month || 1) });
+  if (item.frequency === "quarterly") {
+    const first = item.month || 1;
+    const months = [0, 3, 6, 9].map((offset) => new Intl.DateTimeFormat(getLocale(), { month: "short" }).format(new Date(2026, ((first - 1 + offset) % 12), 1)));
+    return t("Ziua {day} · trimestrial: {months}", { day: item.dueDay, months: months.join(", ") });
+  }
+  return t("Ziua {day}", { day: item.dueDay });
+}
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -18,6 +31,12 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
   const [memberId, setMemberId] = useState(selfMemberIdOf(data));
   const [dueDay, setDueDay] = useState("1");
   const [autoPost, setAutoPost] = useState(false);
+  const [frequency, setFrequency] = useState<RecurringFrequency>("monthly");
+  const [month, setMonth] = useState(String(new Date().getMonth() + 1));
+  const [variable, setVariable] = useState(false);
+  /** Scadența variabilă confirmată acum: suma reală de pe factură. */
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [paidAmount, setPaidAmount] = useState("");
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const pending = pendingRecurringInPlan(data);
@@ -29,6 +48,8 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
     setAmount("");
     setDueDay("1");
     setAutoPost(false);
+    setFrequency("monthly");
+    setVariable(false);
     setError("");
     setEditingId(null);
   };
@@ -42,6 +63,9 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
     setMemberId(item.memberId);
     setDueDay(String(item.dueDay));
     setAutoPost(Boolean(item.autoPost));
+    setFrequency(item.frequency || "monthly");
+    setMonth(String(item.month || new Date().getMonth() + 1));
+    setVariable(Boolean(item.variable));
     setError("");
   };
 
@@ -52,22 +76,38 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
       return setError(t("Completează denumirea, suma, ziua (1–31), membrul și sursa."));
     }
     const now = new Date().toISOString();
+    const schedule = {
+      frequency: frequency === "monthly" ? undefined : frequency,
+      month: frequency === "monthly" ? undefined : Math.min(12, Math.max(1, Number(month) || 1)),
+      variable: variable || undefined,
+      autoPost: autoPost && !variable,
+    };
     if (editingId) {
       const next: RecurringPayment[] = data.recurring.map((entry) => entry.id === editingId
-        ? { ...entry, name: name.trim(), amount: numeric, category, sourceId, memberId, dueDay: due, autoPost, updatedAt: now }
+        ? { ...entry, name: name.trim(), amount: numeric, category, sourceId, memberId, dueDay: due, ...schedule, updatedAt: now }
         : entry);
       onChange(autoPostDueRecurring({ ...data, recurring: next }));
       resetForm();
       return;
     }
-    const item: RecurringPayment = { id: newId("recurring"), name: name.trim(), amount: numeric, category, sourceId, memberId, dueDay: due, active: true, autoPost, updatedAt: now };
+    const item: RecurringPayment = { id: newId("recurring"), name: name.trim(), amount: numeric, category, sourceId, memberId, dueDay: due, active: true, ...schedule, updatedAt: now };
     onChange(autoPostDueRecurring({ ...data, recurring: [...data.recurring, item] }));
     resetForm();
   };
 
   const pay = (item: typeof pending[number]) => {
-    const next = confirmRecurringPayment(data, item.id);
+    if (item.variable && payingId !== item.id) {
+      setPayingId(item.id);
+      setPaidAmount(String(item.amount).replace(".", ","));
+      return;
+    }
+    const real = item.variable ? parseRomanianAmount(paidAmount) : undefined;
+    if (item.variable && !(real && real > 0)) return setError(t("Scrie suma de pe factură."));
+    const next = confirmRecurringPayment(data, item.id, real);
     if (next) onChange(next);
+    setPayingId(null);
+    setPaidAmount("");
+    setError("");
   };
 
   return (
@@ -86,12 +126,21 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
           <label>{t("Denumire")}<input value={name} onChange={(event) => setName(event.target.value)} placeholder={t("ex. Chirie")} /></label>
           <label>{t("Sumă (lei)")}<input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0,00" /></label>
           <label>{t("Ziua lunii")}<input inputMode="numeric" value={dueDay} onChange={(event) => setDueDay(event.target.value)} placeholder={t("ex. 5")} /></label>
+          <label>{t("Cât de des")}<select value={frequency} onChange={(event) => setFrequency(event.target.value as RecurringFrequency)}><option value="monthly">{t("Lunar")}</option><option value="quarterly">{t("Trimestrial")}</option><option value="yearly">{t("Anual")}</option></select></label>
+          {frequency !== "monthly" && <label>{frequency === "yearly" ? t("Luna") : t("Una dintre luni")}<select value={month} onChange={(event) => setMonth(event.target.value)}>{Array.from({ length: 12 }, (_, index) => <option key={index + 1} value={String(index + 1)}>{monthName(index + 1)}</option>)}</select></label>}
           <label>{t("Membru")}<select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           <label>{t("Plătit din")}<select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((item) => <option key={item.id} value={item.id}>{item.name} · {money(sourceBalance(data, item.id))}</option>)}</select></label>
           <label>{t("Categorie")}<select value={category} onChange={(event) => setCategory(event.target.value)}>{[...expenseCategories, ...data.settings.customCategories].map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label>
         </div>
         <label className="bf-recurring-auto">
-          <input type="checkbox" checked={autoPost} onChange={(event) => setAutoPost(event.target.checked)} />
+          <input type="checkbox" checked={variable} onChange={(event) => { setVariable(event.target.checked); if (event.target.checked) setAutoPost(false); }} />
+          <span>
+            <b>{t("Suma variază (curent, gaz)")}</b>
+            <small>{t("Suma de mai sus e o estimare și se rezervă ca atare. La plată scrii valoarea de pe factură.")}</small>
+          </span>
+        </label>
+        <label className="bf-recurring-auto">
+          <input type="checkbox" checked={autoPost} disabled={variable} onChange={(event) => setAutoPost(event.target.checked)} />
           <span>
             <b>{t("Adaugă automat în registru")}</b>
             <small>{t("La prima deschidere din ziua scadenței sau după; nu poate dubla plata.")}</small>
@@ -118,9 +167,12 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
                 <b>{item.name}</b>
                 <small>{t("Scadență: {date}", { date: dateText(item.dueDate, true) })} · {data.settings.paymentSources.find((entry) => entry.id === item.sourceId)?.name}{(() => { const balance = sourceBalance(data, item.sourceId); return ` · ${money(balance)}${balance < item.amount ? ` — ${t("nu acoperă")}` : ""}`; })()}</small>
               </div>
-              <strong>{money(item.amount)}</strong>
+              <strong>{item.variable ? t("~{amount}", { amount: money(item.amount) }) : money(item.amount)}</strong>
+              {payingId === item.id && (
+                <label className="bf-recurring-paid-amount">{t("Suma de pe factură")}<input inputMode="decimal" autoFocus value={paidAmount} onChange={(event) => setPaidAmount(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") pay(item); }} /></label>
+              )}
               <div className="bf-recurring-actions">
-                <button className="bf-secondary" onClick={() => pay(item)}><Check size={16} /> {t("Plătită")}</button>
+                <button className="bf-secondary" onClick={() => pay(item)}><Check size={16} /> {payingId === item.id ? t("Confirmă plata") : t("Plătită")}</button>
                 <button type="button" className="bf-recurring-edit" aria-label={t("Modifică {name}", { name: item.name })} onClick={() => startEdit(item)}><Pencil size={16} /></button>
               </div>
             </article>
@@ -143,7 +195,7 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
               <article key={item.id} className={!item.active ? "muted" : editingId === item.id ? "is-editing" : ""}>
                 <div>
                   <b>{item.name}</b>
-                  <small>{t("Ziua {day}", { day: item.dueDay })} · {t(item.category)}</small>
+                  <small>{recurringScheduleLabel(item)} · {t(item.category)}{item.variable ? ` · ${t("sumă estimată")}` : ""}</small>
                 </div>
                 <strong>{money(item.amount)}</strong>
                 <span className={paid ? "done" : ""}>{paid ? t("Înregistrată") : item.autoPost ? t("Automată") : item.active ? t("Confirmare manuală") : t("Oprită")}</span>
