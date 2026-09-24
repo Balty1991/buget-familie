@@ -20,11 +20,19 @@ const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "cu
 
 type Intent = "track" | "money" | "organize" | "family" | "simple";
 
+/** `share`: partea din venitul lunar propusă pentru plic, când omul își scrie venitul. */
 const PRESETS = [
-  { category: "Alimente", amount: 1500, weekly: true, weeklyRate: 600 },
-  { category: "Transport", amount: 400, weekly: true, weeklyRate: 160 },
-  { category: "Casă & facturi", amount: 800, weekly: false, weeklyRate: 0 },
+  { category: "Alimente", amount: 1500, share: 0.25, weekly: true, weeklyRate: 600 },
+  { category: "Transport", amount: 400, share: 0.08, weekly: true, weeklyRate: 160 },
+  { category: "Casă & facturi", amount: 800, share: 0.2, weekly: false, weeklyRate: 0 },
 ] as const;
+
+/**
+ * Plicuri ca procent din venit (testare cu utilizatori, #5): cine are 2.900 lei nu primește
+ * aceleași 1.500 / 400 / 800 ca cine are 9.000. Fără venit scris, rămân sumele obișnuite.
+ */
+const incomePresets = <T extends { amount: number; share: number }>(presets: readonly T[], income: number): T[] =>
+  presets.map((preset) => income > 0 ? { ...preset, amount: Math.max(10, Math.round(income * preset.share / 10) * 10) } : preset);
 
 /**
  * Plicurile de start nu pot cere mai mult decât banii scriși acum: o familie cu 2.900 lei
@@ -100,6 +108,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const [partnerBalances, setPartnerBalances] = useState<Record<string, string>>({ card: "", cash: "", meal: "" });
   const [payday, setPayday] = useState(data.settings.salaryPlan.nextPayday || "");
   const [selected, setSelected] = useState<string[]>(["Alimente", "Casă & facturi"]);
+  const [monthlyIncome, setMonthlyIncome] = useState("");
+  const incomeNow = Math.max(0, parseRomanianAmount(monthlyIncome || "0"));
 
   const moneySources = data.settings.paymentSources.filter((source) => source.kind !== "transfer");
 
@@ -145,7 +155,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     const horizon = midHorizon(payday);
     const funded = [...paymentSources].sort((a, b) => b.openingBalance - a.openingBalance)[0] || paymentSources[0];
     const moneyNow = paymentSources.reduce((sum, source) => sum + (source.kind === "transfer" ? 0 : source.openingBalance), 0);
-    const presets = fitPresets(PRESETS.filter((preset) => selected.includes(preset.category)), moneyNow);
+    const presets = fitPresets(incomePresets(PRESETS.filter((preset) => selected.includes(preset.category)), incomeNow), moneyNow);
     const paydayReady = /^\d{4}-\d{2}-\d{2}$/.test(payday);
     const allocations: BudgetAllocation[] = opts.withEnvelopes
       ? [
@@ -216,7 +226,9 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const partnerNow = PARTNER_KINDS.reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(partnerBalances[item.kind] || "0")), 0);
   const totalNow = cashNow + (partnerName.trim() ? partnerNow : 0);
   /** Ce sumă primește fiecare plic ales, după banii scriși acum — aceeași ca la creare. */
-  const presetAmount = new Map(fitPresets(PRESETS.filter((preset) => selected.includes(preset.category)), totalNow).map((preset) => [preset.category, preset.amount]));
+  const presetAmount = new Map(fitPresets(incomePresets(PRESETS.filter((preset) => selected.includes(preset.category)), incomeNow), totalNow).map((preset) => [preset.category, preset.amount]));
+  /** Și plicurile nealese arată suma pe care ar primi-o din venit. */
+  const presetShown = (preset: typeof PRESETS[number]) => presetAmount.get(preset.category) ?? incomePresets([preset], incomeNow)[0].amount;
 
   return (
     <div className="bf-modal-backdrop bf-onboarding-backdrop bf-first-run-backdrop" role="presentation">
@@ -362,15 +374,16 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
           <div className="bf-setup-copy">
             <p className="bf-kicker">{t("ORGANIZEAZĂ LUNA")}</p>
             <h2 id="bf-setup-title">{t("Până când vrei să ajungă")} <em>{t("banii?")}</em></h2>
-            <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Următorul venit")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Cât intră pe lună (salariu, pensie)")}</span><input inputMode="decimal" value={monthlyIncome} onChange={(event) => setMonthlyIncome(event.target.value)} placeholder={t("ex. 4.500")} /></label>
+            <p className="bf-helper">{t("Plicurile propuse sunt o parte din venit: 25% mâncare, 8% transport, 20% casă și facturi. Le schimbi oricând în Plan.")}</p>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
                 const active = selected.includes(preset.category);
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(presetAmount.get(preset.category) ?? preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
+                    <small>{money(presetShown(preset))}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );
@@ -385,6 +398,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 </label>
               ))}
             </div>
+            <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <div className="bf-onboarding-actions">
               <button className="bf-primary" onClick={finishOrganize}><Home size={17} /> {t("Deschide planul")}</button>
             </div>
@@ -399,13 +413,14 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
             <label className="bf-field"><span>{t("Următorul venit")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Cât intră pe lună în casă")}</span><input inputMode="decimal" value={monthlyIncome} onChange={(event) => setMonthlyIncome(event.target.value)} placeholder={t("ex. 7.000")} /></label>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
                 const active = selected.includes(preset.category);
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(presetAmount.get(preset.category) ?? preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
+                    <small>{money(presetShown(preset))}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );

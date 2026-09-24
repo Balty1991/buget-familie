@@ -2877,4 +2877,9 @@ export const en: Record<string, string> = {
   "Abonamentul Familia a fost restaurat.": "Your Family subscription was restored.",
   "Nu am găsit un abonament activ pe contul Google de pe acest telefon.": "No active subscription found on this phone's Google account.",
   "Restaurarea nu a reușit.": "The restore didn't work.",
+  "Cât intră pe lună (salariu, pensie)": "Monthly income (salary, pension)",
+  "ex. 4.500": "e.g. 4,500",
+  "Plicurile propuse sunt o parte din venit: 25% mâncare, 8% transport, 20% casă și facturi. Le schimbi oricând în Plan.": "Suggested envelopes are a share of income: 25% food, 8% transport, 20% home and bills. Change them any time in Plan.",
+  "Cât intră pe lună în casă": "Monthly household income",
+  "ex. 7.000": "e.g. 7,000",
 };
