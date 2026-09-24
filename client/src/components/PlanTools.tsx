@@ -6,10 +6,11 @@
 import { useState } from "react";
 import { Check, Sparkles } from "lucide-react";
 import { parseRomanianAmount, suggestWeeklyAllocationsFromCashflow, type AppData, type BudgetAllocation } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
 type Change = { id: string; amount: number };
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 /** Doar sumele care diferă de plan, citite cu aceleași reguli ca în restul aplicației. */
 const changedAmounts = (allocations: BudgetAllocation[], draft: Record<string, string>, fallback: (id: string) => number): Change[] =>
   Object.keys(draft).map((id) => ({ id, amount: Math.max(0, parseRomanianAmount(draft[id] ?? String(fallback(id)))) }))

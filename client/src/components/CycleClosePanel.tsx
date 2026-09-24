@@ -9,10 +9,11 @@ import { useState } from "react";
 import { CalendarCheck, Check } from "lucide-react";
 import { cycleClose, startNextCycle } from "@/lib/cycle-close";
 import { formatDate, type AppData } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import "../cycle-close.css";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 const zi = (iso: string) => formatDate(iso, { day: "2-digit", month: "short" });
 
 export function CycleClosePanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {

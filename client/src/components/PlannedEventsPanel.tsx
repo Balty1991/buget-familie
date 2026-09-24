@@ -21,12 +21,13 @@ import {
   type PlannedEventRepeat,
   type PlannedEventStatus,
 } from "@/lib/planned-events";
-import { daysLabel, moneyFormat, t } from "@/lib/i18n";
+import { daysLabel, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
 import { RoDateInput } from "@/components/RoDateInput";
 import { askConfirm } from "@/lib/confirm-dialog";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => moneyFormat(value, { maximumFractionDigits: 0 });
+const money = lei;
 const kindIcon = (kind: PlannedEventKind, size = 17) => kind === "anniversary" ? <CalendarHeart size={size} /> : kind === "holiday" ? <Gift size={size} /> : kind === "trip" ? <Plane size={size} /> : kind === "school" ? <GraduationCap size={size} /> : <PartyPopper size={size} />;
 const kindName = (kind: PlannedEventKind) => kind === "anniversary" ? t("Aniversare") : kind === "holiday" ? t("Sărbătoare") : kind === "trip" ? t("Vacanță") : kind === "school" ? t("Școală") : t("Altceva");
 const kinds: PlannedEventKind[] = ["holiday", "anniversary", "school", "trip", "other"];

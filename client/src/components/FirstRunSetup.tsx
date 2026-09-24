@@ -8,15 +8,16 @@ import { BrandMark } from "@/components/BrandMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { isoDate, isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type PaymentKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
 import { markWhatsNewSeen } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
 import { hideNativeSplash } from "@/lib/native-splash";
 import { RoDateInput } from "@/components/RoDateInput";
 import { setSimpleMode } from "@/lib/ui-prefs";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
+const money = lei;
 
 type Intent = "track" | "money" | "organize" | "family" | "simple";
 

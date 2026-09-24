@@ -8,10 +8,11 @@ import { autoPostDueRecurring, formatDate, type AppData } from "@/lib/finance-da
 import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, householdActivity, liquidSafeToSpend, monthlyRecap, readClosedMonths, recurringFromDetection, type SubscriptionDetection } from "@/lib/household-insights";
-import { countLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
+import { countLabel, envelopesLabel, t } from "@/lib/i18n";
 import { SettleUpCard } from "@/components/SettleUpCard";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 
 export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const month = currentMonthKey();
@@ -118,7 +119,6 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           </article>
         )) : <div className="bf-empty-soft"><EmptyMark /><p>{t("Nu am găsit comercianți cu sumă stabilă. După 2–3 luni de registru, Netflix, chiria sau factura de telefon apar aici.")}</p></div>}
       </section>
-
 
       {pendingHunt && (
         <div className="bf-brief-hunt-confirm" role="dialog" aria-labelledby="bf-house-hunt-title">

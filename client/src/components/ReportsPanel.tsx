@@ -17,8 +17,9 @@ import { chartBarHeight, hasChartValues, leiAxisTicks, leiLabel } from "@/lib/ch
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import type { MainView } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 const months = ["I", "F", "M", "A", "M", "I", "I", "A", "S", "O", "N", "D"];
 const titleFor = (month: string) => { const [year, index] = month.split("-").map(Number); return new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(new Date(year, index - 1, 1)); };
 

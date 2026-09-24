@@ -13,8 +13,9 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
 import { askConfirm } from "@/lib/confirm-dialog";
+import { lei } from "@/lib/money-format";
 
-const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
+const money = { format: lei };
 
 /**
  * Registrul și soldul sursei sunt în lei. Pe o sursă în euro, cifra tastată nu e deja lei —

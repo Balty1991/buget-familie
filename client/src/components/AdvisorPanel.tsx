@@ -11,8 +11,9 @@ import { coachGoalLabel, coachPromptForGoal, type CoachGoal } from "@/lib/coach-
 import { analyze, answerToText } from "@/lib/analyst";
 import { periodDays } from "@/lib/calendar-budget";
 import { getLocale, t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 const dateText = (value: string) => formatDate(value, { day: "2-digit", month: "short" });
 
 function planMath(data: AppData) {

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Banknote, Check, RotateCcw, Trash2 } from "lucide-react";
 import { applySalaryAllocationRules, eligibleSalaryAllocationRules, formatDate, newId, parseRomanianAmount, revertSalaryAllocationApplication, unappliedSalaryIncomes, type AppData, type SalaryAllocationRule } from "@/lib/finance-data";
-import { envelopesLabel, getLocale, t } from "@/lib/i18n";
+import { envelopesLabel, t } from "@/lib/i18n";
 import { askConfirm } from "@/lib/confirm-dialog";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 
 /**
  * Ritual de salariu: reguli de umplere a plicurilor când un venit e deja în registru.

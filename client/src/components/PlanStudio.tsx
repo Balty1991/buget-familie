@@ -33,8 +33,9 @@ import { canAddEnvelope, PLANS } from "@/lib/entitlements";
 import { RoDateInput } from "@/components/RoDateInput";
 import { askConfirm } from "@/lib/confirm-dialog";
 import { PlanCashflowSuggest, PlanSimulator } from "@/components/PlanTools";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 const thresholdOptions = [50, 60, 70, 80, 90, 95];
 
 const QUICK_ENVELOPE_PRESETS = [

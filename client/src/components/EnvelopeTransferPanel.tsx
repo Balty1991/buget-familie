@@ -2,9 +2,10 @@ import "../envelope-transfer.css";
 import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import { allocationStatus, appendAllocationHistory, parseRomanianAmount, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 
 /**
  * Realocare între plicuri: mută o limită, nu o mișcare bancară.

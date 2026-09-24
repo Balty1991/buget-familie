@@ -13,8 +13,9 @@ import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { takeJournalQuery } from "@/lib/command-search";
 import { RoDateInput } from "@/components/RoDateInput";
 import { askConfirm } from "@/lib/confirm-dialog";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
+const money = lei;
 const exactMoney = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
 const dateText = (value: string) => formatDate(value, { day: "2-digit", month: "long", year: "numeric" });
 

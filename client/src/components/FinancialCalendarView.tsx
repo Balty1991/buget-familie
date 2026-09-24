@@ -4,8 +4,9 @@ import { ArrowDownRight, ArrowUpRight, CalendarDays, Check, ChevronLeft, Chevron
 import { formatDate, type AppData } from "@/lib/finance-data";
 import { occurrenceInMonth } from "@/lib/planned-events";
 import { getLocale, t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = (amount: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(amount);
+const money = lei;
 
 type CalendarFilter = "all" | "money" | "due" | "goal" | "event";
 type CalendarEvent = { id: string; date: string; title: string; detail: string; amount?: number; kind: "income" | "expense" | "due" | "goal" | "event" };

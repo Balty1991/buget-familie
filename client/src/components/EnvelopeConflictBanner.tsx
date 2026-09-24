@@ -8,10 +8,10 @@ import {
   activeTransactionConflicts,
 } from "@/lib/family-crypto";
 import type { AppData } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) =>
-  new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
+const money = lei;
 
 export function EnvelopeConflictBanner({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const open = activeAllocationConflicts(data);

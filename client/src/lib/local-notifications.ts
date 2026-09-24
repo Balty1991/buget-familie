@@ -17,6 +17,7 @@ import {
 } from "@/lib/finance-data";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { getLocale, t } from "./i18n";
+import { lei } from "@/lib/money-format";
 
 const PREF_KEY = "buget-familie:notifications-enabled";
 const ARMED_KEY = "buget-familie:notifications-armed";
@@ -313,10 +314,7 @@ type PlannedAlert = {
   tag: string;
 };
 
-const money = (value: number) =>
-  new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(
-    Number.isFinite(value) ? value : 0,
-  );
+const money = lei;
 
 function atLocalHour(daysFromToday: number, hour: number, minute = 0): Date {
   const date = new Date();

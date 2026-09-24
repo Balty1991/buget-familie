@@ -7,6 +7,7 @@ import { getLocale, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
 import { selfMemberIdOf } from "@/lib/member-identity";
 import { askConfirm } from "@/lib/confirm-dialog";
+import { lei } from "@/lib/money-format";
 
 const monthName = (month: number) => new Intl.DateTimeFormat(getLocale(), { month: "long" }).format(new Date(2026, month - 1, 1));
 
@@ -21,7 +22,7 @@ export function recurringScheduleLabel(item: Pick<RecurringPayment, "dueDay" | "
   return t("Ziua {day}", { day: item.dueDay });
 }
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
+const money = lei;
 
 export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const [name, setName] = useState("");

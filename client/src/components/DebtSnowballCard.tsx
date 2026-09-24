@@ -1,8 +1,9 @@
 import { Check, ListOrdered } from "lucide-react";
 import { debtSnowball, type AppData, type Debt } from "@/lib/finance-data";
-import { getLocale, t, monthsLabel } from "@/lib/i18n";
+import { t, monthsLabel } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 
 /**
  * Minge de zăpadă: cea mai mică datorie rămasă întâi.

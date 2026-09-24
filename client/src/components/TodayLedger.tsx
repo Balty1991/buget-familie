@@ -3,13 +3,14 @@ import { EnvelopeDeskScene, EnvelopeMark, EnvelopeStack } from "@/components/Env
 import { CashNote, PaydayStrip } from "@/components/LedgerArt";
 import { envelopeBurnPace, envelopeLane, lastDaysPulse, liquidSafeToSpend, paydayTrack } from "@/lib/household-insights";
 import { type AppData } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import { ChartTip } from "@/components/ChartFrame";
 import { chartBarHeight, leiLabel } from "@/lib/chart-ui";
+import { lei } from "@/lib/money-format";
 
 type Go = (view: "plan" | "journal") => void;
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 
 const paceLabel = (pace: "ahead" | "on_track" | "behind" | "over") => {
   if (pace === "ahead") return t("în avans");

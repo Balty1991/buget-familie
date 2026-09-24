@@ -8,13 +8,11 @@ import { formatDate, type AppData } from "@/lib/finance-data";
 import { paydayTrack, safeSpendBreakdown } from "@/lib/household-insights";
 import { PaydayStrip } from "@/components/LedgerArt";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
-import { daysLabel, getLocale, t } from "@/lib/i18n";
+import { daysLabel, t } from "@/lib/i18n";
 import "../safe-spend-sheet.css";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) =>
-  new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(
-    Number.isFinite(value) ? value : 0,
-  );
+const money = lei;
 
 export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onClose: () => void; onGoPlan: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);

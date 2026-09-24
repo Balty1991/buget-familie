@@ -3,11 +3,12 @@ import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayme
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
 import { cycleClose } from "@/lib/cycle-close";
 import { recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
 type Go = (view: "plan" | "obligations" | "insights") => void;
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 
 const dueLabel = (daysLeft: number) => {
   if (daysLeft < 0) return t("Întârziată");

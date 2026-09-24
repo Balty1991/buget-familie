@@ -2,9 +2,10 @@ import { useMemo, useState } from "react";
 import { Check, Sparkles, WalletCards } from "lucide-react";
 import type { BudgetAllocation } from "@/lib/finance-data";
 import { plannedEnvelopeReserved } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
 type AllocationChange = { id: string; amount: number };

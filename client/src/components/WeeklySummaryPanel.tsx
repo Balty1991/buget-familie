@@ -9,9 +9,10 @@ import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, CalendarDays, Check, Chev
 import { formatDate, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";
 import { checkInRebalance, formatWeeklyCheckInShare, weeklyCheckIn, weeklyDigestHeadline } from "@/lib/household-insights";
 import { downloadWeeklyDigestPdf } from "@/lib/weekly-digest-pdf";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
-const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
+const money = { format: lei };
 
 export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }: { data: AppData; onChange?: (value: AppData) => void; onOpenJournal: () => void; onOpenPlan?: () => void }) {
   const collaborative = data.settings.members.length > 1;

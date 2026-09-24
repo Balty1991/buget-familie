@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Scale } from "lucide-react";
 import { applySettlement, pickSettlementSources, settleUp } from "@/lib/settle-up";
 import { formatDate, type AppData } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
 import "../settle-up.css";
+import { lei } from "@/lib/money-format";
 
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 
 export function SettleUpCard({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const socoteala = settleUp(data);

@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { type SyncJournalEntry } from "@/lib/app-storage";
 import { moneyFormat, t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
 export type MoreView = "overview" | "review" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
@@ -40,7 +41,7 @@ export const automaticTheme = (minutes: number, times: ThemeScheduleTimes): Them
  * schimbarea limbii nu s-ar vedea până la reîncărcarea aplicației. `.format()` rămâne
  * aceeași interfață, deci niciun apel existent nu se schimbă.
  */
-export const fmt = { format: (value: number) => moneyFormat(value, { maximumFractionDigits: 0 }) };
+export const fmt = { format: lei };
 export const fmtExact = { format: (value: number) => moneyFormat(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
 export const sourceKindName: Record<"card" | "cash" | "meal" | "transfer", string> = { get card() { return t("Card"); }, get cash() { return t("Cash"); }, get meal() { return t("Bonuri de masă"); }, get transfer() { return t("Transfer"); } };
 export const money = (value: number) => fmt.format(Number.isFinite(value) ? value : 0);

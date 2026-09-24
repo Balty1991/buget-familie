@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import { Check, Lightbulb, TrendingDown, TrendingUp } from "lucide-react";
 import { isoDate, type AppData, type BudgetAllocation } from "@/lib/finance-data";
-import { getLocale, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 
 type Recommendation = { allocation: BudgetAllocation; spent: number; count: number; average: number; recommended: number; direction: "up" | "down"; reason: string };
-const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
+const money = lei;
 const round10 = (value: number) => Math.max(0, Math.round(value / 10) * 10);
 const dateKey = isoDate;
 
