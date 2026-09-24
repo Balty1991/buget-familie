@@ -11,6 +11,7 @@
  *
  * Rulare: pnpm test:flows  (pornește Vite și Chromium).
  */
+/* global document, localStorage -- rulează în pagină (page.evaluate) */
 import { spawn } from "node:child_process";
 import { chromium } from "playwright-core";
 
