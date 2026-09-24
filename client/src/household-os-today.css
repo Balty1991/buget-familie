@@ -619,9 +619,9 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-obligation-timeline,
 .dark .bf-obligation-ledger,
 .dark .bf-obligation-lane {
-  border-color: color-mix(in srgb, #7cffc4 16%, transparent) !important;
+  border-color: color-mix(in srgb, var(--cf-primary, #7cffc4) 16%, transparent) !important;
   border-radius: 1.5rem !important;
-  background: #10141a !important;
+  background: var(--cf-surface, #16181c) !important;
   box-shadow: none !important;
   color: #f3f6f4 !important;
 }

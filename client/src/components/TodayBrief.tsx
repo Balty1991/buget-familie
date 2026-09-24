@@ -71,6 +71,18 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
     else setCheckedNow((current) => [...current, row.id]);
   };
 
+  const closed = cycleClose(data);
+  const showStamp = !hideSpendStamp;
+  const showIncome = Boolean(pendingIncome);
+  const showRitual = needsRitual && !pendingIncome && !simpleMode;
+  const showCheck = Boolean(check.due && acum && !simpleMode);
+  const showCheckOk = Boolean(confirmat && !showCheck);
+  const showDues = brief.dues.length > 0;
+  const showHunts = brief.hunts.length > 0 || Boolean(pendingHunt);
+  const showWeek = Boolean(week.shouldPrompt && !simpleMode && onOpenWeek);
+  const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed));
+  if (!showStamp && !showIncome && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
+
   return (
     <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
       {!hideSpendStamp && (
@@ -170,13 +182,13 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, hideSpendStamp = 
         </button>
       )}
 
-      {cycleClose(data) && (
+      {closed && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("plan")}>
           {t("Ciclul s-a încheiat — vezi ce a rămas")}
         </button>
       )}
 
-      {brief.closeSoon && !simpleMode && !cycleClose(data) && (
+      {brief.closeSoon && !simpleMode && !closed && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("plan")}>
           {t("Ciclul se închide. Uită-te ce a rămas.")}
         </button>
