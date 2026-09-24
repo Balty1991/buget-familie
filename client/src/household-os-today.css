@@ -237,7 +237,7 @@ html:not(.dark) .bf-os-decide {
 
 @media (max-width: 760px) {
   .bf-os-actions {
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: 1fr 1fr;
   }
 
   .bf-os-day b { font-size: 12px; }
@@ -370,7 +370,7 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-movements-header h1 em,
 .dark .bf-plan-studio-header h1 em,
 .dark .bf-insights-header h1 em {
-  color: #7cffc4 !important;
+  color: #7cffc4;
 }
 
 .dark .bf-movements-header .bf-kicker { display: none; }
@@ -378,11 +378,11 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-movement-add,
 .dark .bf-primary,
 .dark .bf-os-decide {
-  color: #062016 !important;
-  background: #7cffc4 !important;
-  border-color: #7cffc4 !important;
-  border-radius: 999px !important;
-  box-shadow: none !important;
+  color: #062016;
+  background: #7cffc4;
+  border-color: #7cffc4;
+  border-radius: 999px;
+  box-shadow: none;
 }
 
 .dark .bf-journal-quickbar {
@@ -428,14 +428,14 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-tx-icon {
-  background: #14352b !important;
-  color: #7cffc4 !important;
+  background: #14352b;
+  color: #7cffc4;
   border-radius: 999px !important;
 }
 
 .dark .bf-tx-icon.expense {
-  background: color-mix(in srgb, #ff8a7a 16%, #10141a) !important;
-  color: #ff8a7a !important;
+  background: color-mix(in srgb, #ff8a7a 16%, #10141a);
+  color: #ff8a7a;
 }
 
 .dark .bf-movement-timeline article,
@@ -447,22 +447,22 @@ html:not(.dark) .bf-os-decide {
 
 .dark .bf-plan-studio-header,
 .dark .bf-insights-header {
-  padding: 8px 2px 18px !important;
-  border: 0 !important;
-  background: transparent !important;
+  padding: 8px 2px 18px;
+  border: 0;
+  background: transparent;
 }
 
 .dark .bf-allocation-period-tabs,
 .dark .bf-insights-switch {
-  background: #10141a !important;
-  border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent) !important;
-  border-radius: 999px !important;
+  background: #10141a;
+  border: 1px solid color-mix(in srgb, #7cffc4 16%, transparent);
+  border-radius: 999px;
 }
 
 .dark .bf-allocation-period-tabs button.active,
 .dark .bf-insights-switch button.active {
-  color: #062016 !important;
-  background: #7cffc4 !important;
+  color: #062016;
+  background: #7cffc4;
 }
 
 .dark .ai-companion-trigger {
@@ -576,7 +576,7 @@ html:not(.dark) .bf-os-decide {
 }
 
 @media (max-width: 760px) {
-  .dark .bf-os-actions { grid-template-columns: 1fr !important; }
+  .dark .bf-os-actions { grid-template-columns: 1fr; }
 }
 
 

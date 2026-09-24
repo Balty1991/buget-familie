@@ -44,8 +44,8 @@
 }
 
 .os-shell .bf-plan-workspace .bf-plan-header-stat small {
-  white-space: normal !important;
-  line-height: 1.15 !important;
+  white-space: normal;
+  line-height: 1.15;
 }
 
 .os-shell .bf-plan-workspace .bf-allocation-period-summary b,

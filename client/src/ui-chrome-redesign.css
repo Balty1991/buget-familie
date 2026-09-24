@@ -58,7 +58,7 @@
 .os-shell .bf-movements-header h1,
 .os-shell .bf-plan-studio-header h1,
 .os-shell .bf-insights-header h1 {
-  font-size: clamp(1.85rem, 7.2vw, 2.55rem) !important;
+  font-size: clamp(1.85rem, 7.2vw, 2.55rem);
 }
 
 .os-shell .bf-kicker,
@@ -105,18 +105,18 @@
 .os-shell .bf-source-builder > button,
 .os-shell .bf-backup-actions > button,
 .os-shell .bf-notification-actions > button {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   gap: var(--bf-chrome-icon-gap) !important;
-  min-height: var(--bf-chrome-btn-h) !important;
+  min-height: var(--bf-chrome-btn-h);
   padding: 0 18px !important;
   border-radius: var(--bf-chrome-radius) !important;
-  font-family: var(--font-ui) !important;
-  font-size:14px !important;
+  font-family: var(--font-ui);
+  font-size:14px;
   font-weight: 680 !important;
-  letter-spacing: -.015em !important;
-  white-space: nowrap !important;
+  letter-spacing: -.015em;
+  white-space: nowrap;
   transition:
     transform var(--bf-chrome-press),
     filter var(--bf-chrome-press),
@@ -128,7 +128,7 @@
 .os-shell .bf-primary,
 .os-shell .bf-primary.full,
 .os-shell .bf-os-decide {
-  border: 0 !important;
+  border: 0;
   color: var(--os-mint-fg, #fff);
   background: linear-gradient(
     180deg,
@@ -178,7 +178,7 @@
   border: 1.5px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
   color: var(--os-ink, var(--cf-ink)) !important;
   background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, transparent) !important;
-  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset !important;
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset;
 }
 
 .os-shell .bf-ghost,
@@ -195,10 +195,10 @@
 .os-shell .bf-danger > button,
 .os-shell .bf-obligation-entry-actions > button.delete {
   border: 1.5px solid color-mix(in srgb, var(--cf-danger, #b93d36) 35%, transparent) !important;
-  border-radius: var(--bf-chrome-radius) !important;
+  border-radius: var(--bf-chrome-radius);
   color: var(--cf-danger, #b93d36) !important;
   background: color-mix(in srgb, var(--cf-danger, #b93d36) 8%, var(--os-surface, #fff)) !important;
-  font-weight: 680 !important;
+  font-weight: 680;
 }
 
 .os-shell .bf-primary:hover,
@@ -220,8 +220,8 @@
 .os-shell .bf-today-add,
 .os-shell .bf-today-add.bf-os-decide {
   border-radius: 999px !important;
-  min-height: 56px !important;
-  font-size:15px !important;
+  min-height: 56px;
+  font-size:15px;
   font-weight: 740 !important;
   gap: 12px !important;
 }
@@ -408,9 +408,9 @@
 
 .os-shell .bf-more-grid > button,
 .os-shell .bf-settings-row {
-  display: grid !important;
+  display: grid;
   grid-template-columns: 40px minmax(0, 1fr) 18px;
-  align-items: center !important;
+  align-items: center;
   gap: 12px;
   width: 100%;
   min-height: 64px;
@@ -420,7 +420,7 @@
   border: 0 !important;
   border-radius: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 70%, transparent) !important;
-  background: transparent !important;
+  background: transparent;
   box-shadow: none;
   text-align: left;
   color: var(--os-ink, var(--cf-ink)) !important;
@@ -439,23 +439,23 @@
 }
 
 .os-shell .bf-more-grid > button > svg:first-child {
-  display: grid !important;
-  place-items: center !important;
-  width: 36px !important;
-  height: 36px !important;
-  padding: 0 !important;
-  border-radius:12px !important;
-  color: var(--os-mint, var(--cf-primary)) !important;
-  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
-  box-sizing: border-box !important;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius:12px;
+  color: var(--os-mint, var(--cf-primary));
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent);
+  box-sizing: border-box;
 }
 
 .os-shell .bf-more-grid > button b,
 .os-shell .bf-settings-copy b {
-  display: block !important;
-  margin: 0 !important;
-  font-size: 15px !important;
-  font-weight: 600 !important;
+  display: block;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
   line-height: 1.25;
   color: var(--os-ink, var(--cf-ink));
   overflow: visible;
@@ -464,17 +464,17 @@
 
 .os-shell .bf-more-grid > button span,
 .os-shell .bf-settings-copy {
-  display: grid !important;
+  display: grid;
   gap: 2px;
   min-width: 0;
 }
 .os-shell .bf-more-grid > button > .bf-settings-copy,
 .os-shell .bf-settings-row > .bf-settings-copy {
   margin: 0;
-  color: inherit !important;
-  font-size: inherit !important;
+  color: inherit;
+  font-size: inherit;
   font-weight: inherit;
-  line-height: inherit !important;
+  line-height: inherit;
 }
 .os-shell .bf-settings-copy small {
   display: block;
@@ -489,11 +489,11 @@
 
 .os-shell .bf-more-grid > button > svg:last-child,
 .os-shell .bf-settings-chevron {
-  width: 18px !important;
-  height: 18px !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: color-mix(in srgb, var(--os-muted, var(--cf-muted)) 80%, transparent);
   justify-self: end;
 }
@@ -550,7 +550,7 @@
 }
 
 .os-shell .bf-obligation-ai .bf-kicker {
-  color: var(--os-mint, var(--cf-primary)) !important;
+  color: var(--os-mint, var(--cf-primary));
   margin: 0 0 4px;
 }
 
@@ -590,17 +590,17 @@
 
 .os-shell .bf-obligation-lane,
 .os-shell .bf-obligation-ledger {
-  border-radius: var(--bf-chrome-radius-lg) !important;
-  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 88%, transparent) !important;
-  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 94%, transparent) !important;
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--os-ink, #000) 06%, transparent) !important;
+  border-radius: var(--bf-chrome-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 88%, transparent);
+  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 94%, transparent);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--os-ink, #000) 06%, transparent);
 }
 
 .os-shell .bf-obligation-lane > header h2 {
   font-family: var(--font-display) !important;
   font-size: clamp(1.2rem, 4.8vw, 1.55rem) !important;
   font-weight: 640 !important;
-  letter-spacing: -.035em !important;
+  letter-spacing: -.035em;
   color: var(--os-ink, var(--cf-ink)) !important;
 }
 
@@ -740,9 +740,9 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 .os-shell .bf-settings-copy small,
 .os-shell .os-dock button span,
 .os-shell .bf-obligation-ledger article small {
-  overflow: visible !important;
-  text-overflow: unset !important;
-  max-width: none !important;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

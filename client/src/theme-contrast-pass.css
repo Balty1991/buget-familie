@@ -90,18 +90,18 @@ html.bf-high-contrast {
 .bf-movements-header,
 .bf-insights-header,
 .bf-salary-cycle-plan .bf-plan-studio-header {
-  overflow: visible !important;
+  overflow: visible;
   align-items: start !important;
 }
 .bf-plan-studio-header h1,
 .bf-salary-cycle-plan .bf-plan-studio-header h1,
 .bf-movements-header h1,
 .bf-insights-header h1 {
-  overflow: visible !important;
-  line-height: 1.18 !important;
-  padding-top: 0.12em !important;
-  max-width: 14ch !important;
-  color: var(--cf-ink) !important;
+  overflow: visible;
+  line-height: 1.18;
+  padding-top: 0.12em;
+  max-width: 14ch;
+  color: var(--cf-ink);
 }
 .bf-plan-studio-header p:not(.bf-kicker),
 .bf-plan-studio-header .bf-kicker {
@@ -133,13 +133,13 @@ html.bf-high-contrast {
 .bf-allocation-period h2,
 .bf-allocation-guidance h2,
 .bf-plan-sheet-heading h2 {
-  color: var(--cf-ink) !important;
+  color: var(--cf-ink);
 }
 .bf-plan-flow .bf-kicker,
 .bf-allocation-period .bf-kicker,
 .bf-allocation-guidance p,
 .bf-allocation-period p:not(.bf-kicker) {
-  color: var(--cf-muted) !important;
+  color: var(--cf-muted);
 }
 
 /* Situația de azi: inelul de scor nu e tăiat, cardul rămâne pe temă. */
@@ -207,13 +207,13 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 .bf-plan-workspace,
 .bf-obligations-workspace,
 .bf-insights-workspace {
-  color: var(--cf-ink) !important;
+  color: var(--cf-ink);
 }
 
 /* Navigație + appbar pe suprafața temei, nu pe un overlay străin. */
 .bf-appbar {
   color: var(--cf-ink);
-  background: color-mix(in srgb, var(--cf-surface) 92%, transparent) !important;
+  background: color-mix(in srgb, var(--cf-surface) 92%, transparent);
   border-color: var(--cf-line) !important;
 }
 

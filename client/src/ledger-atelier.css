@@ -817,9 +817,9 @@
   }
   .bf-obligations-links .bf-goals-link {
     width: 100%;
-    min-height: 48px !important;
-    justify-content: flex-start !important;
-    padding: 12px 14px !important;
+    min-height: 48px;
+    justify-content: flex-start;
+    padding: 12px 14px;
   }
   .bf-plan-studio-header {
     align-items: start;

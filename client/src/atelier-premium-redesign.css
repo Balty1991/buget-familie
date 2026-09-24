@@ -82,8 +82,8 @@
 
 :is(html.theme-ink, html.theme-white) .os-tool {
   color: #0c1612;
-  background: #f5f7f6 !important;
-  box-shadow: 0 0 0 1px #c5cec8, 0 4px 12px rgba(12, 22, 18, .06) !important;
+  background: #f5f7f6;
+  box-shadow: 0 0 0 1px #c5cec8, 0 4px 12px rgba(12, 22, 18, .06);
 }
 :is(html.theme-ink, html.theme-white) .os-tool.is-on {
   background: #0e4f3e !important;
@@ -138,11 +138,11 @@
 
 :is(html.theme-ink, html.theme-white) .os-shell .bf-today-add,
 :is(html.theme-ink, html.theme-white) .os-shell .bf-os-decide {
-  color: #ffffff !important;
+  color: #ffffff;
   background: linear-gradient(180deg, #1d8064, #0e4f3e);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, .28) inset,
-    0 14px 30px rgba(14, 79, 62, .34) !important;
+    0 14px 30px rgba(14, 79, 62, .34);
 }
 
 /* ---------- Dock lipit de jos și de laterale ---------- */
@@ -231,7 +231,7 @@
 .os-shell .bf-more-overview,
 .os-shell .bf-utilities-workspace .bf-more-overview {
   display: grid;
-  gap: 22px !important;
+  gap: 22px;
 }
 
 .os-shell .bf-more-group {
@@ -256,54 +256,54 @@
 }
 
 .os-shell .bf-more-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 10px !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .os-shell .bf-more-grid > button {
-  min-width: 0 !important;
-  min-height: 96px !important;
-  align-content: start !important;
-  gap: 6px !important;
-  padding: 14px 12px !important;
-  border-radius: var(--bf-premium-radius-md) !important;
-  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent) !important;
-  background: color-mix(in srgb, var(--os-bg, var(--cf-bg)) 55%, var(--os-surface, #fff)) !important;
-  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset !important;
-  overflow: hidden !important;
-  transition: transform var(--bf-premium-press), border-color var(--bf-premium-motion), box-shadow var(--bf-premium-motion) !important;
+  min-width: 0;
+  min-height: 96px;
+  align-content: start;
+  gap: 6px;
+  padding: 14px 12px;
+  border-radius: var(--bf-premium-radius-md);
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent);
+  background: color-mix(in srgb, var(--os-bg, var(--cf-bg)) 55%, var(--os-surface, #fff));
+  box-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent) inset;
+  overflow: hidden;
+  transition: transform var(--bf-premium-press), border-color var(--bf-premium-motion), box-shadow var(--bf-premium-motion);
 }
 
 .os-shell .bf-more-grid > button svg {
-  width: 22px !important;
-  height: 22px !important;
-  padding: 7px !important;
-  box-sizing: content-box !important;
-  border-radius: 12px !important;
-  color: var(--os-mint, var(--cf-primary)) !important;
-  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent) !important;
+  width: 22px;
+  height: 22px;
+  padding: 7px;
+  box-sizing: content-box;
+  border-radius: 12px;
+  color: var(--os-mint, var(--cf-primary));
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 14%, transparent);
 }
 
 .os-shell .bf-more-grid > button b {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  margin-top: 2px !important;
-  font-size:14px !important;
-  font-weight: 780 !important;
-  color: var(--os-ink, var(--cf-ink)) !important;
-  line-height: 1.25 !important;
-  overflow-wrap: anywhere !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size:14px;
+  font-weight: 780;
+  color: var(--os-ink, var(--cf-ink));
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .os-shell .bf-more-grid > button span {
-  color: var(--os-muted, var(--cf-muted)) !important;
-  font-size:12px !important;
-  line-height: 1.35 !important;
-  overflow-wrap: anywhere !important;
+  color: var(--os-muted, var(--cf-muted));
+  font-size:12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .os-shell .bf-more-grid > button:active {
@@ -446,7 +446,7 @@ html.theme-dark .os-shell .bf-today-add,
 html.theme-dark .os-shell .bf-os-decide {
   color: #0c0e11;
   background: linear-gradient(180deg, #e8ecf2, #c5cbd4);
-  box-shadow:var(--bf-shadow-raise) !important;
+  box-shadow:var(--bf-shadow-raise);
 }
 
 html.theme-aurora .os-shell.bf-app {
@@ -470,7 +470,7 @@ html.theme-aurora .os-shell .bf-today-add,
 html.theme-aurora .os-shell .bf-os-decide {
   color: #0d0b1c;
   background: linear-gradient(180deg, #7ae0b4, #319e7b);
-  box-shadow:var(--bf-shadow-raise) !important;
+  box-shadow:var(--bf-shadow-raise);
 }
 
 html.theme-navy .os-shell.bf-app {
@@ -494,7 +494,7 @@ html.theme-navy .os-shell .bf-today-add,
 html.theme-navy .os-shell .bf-os-decide {
   color: #14100a;
   background: linear-gradient(180deg, #e0c07a, #c49a4a);
-  box-shadow:var(--bf-shadow-raise) !important;
+  box-shadow:var(--bf-shadow-raise);
 }
 
 html.theme-cyber .os-shell.bf-app {
@@ -518,7 +518,7 @@ html.theme-cyber .os-shell .bf-today-add,
 html.theme-cyber .os-shell .bf-os-decide {
   color: #04140e;
   background: linear-gradient(180deg, #9dffd4, #5ee0aa);
-  box-shadow:var(--bf-shadow-raise) !important;
+  box-shadow:var(--bf-shadow-raise);
 }
 
 html.theme-dark .bf-modal,
@@ -536,9 +536,9 @@ html.theme-cyber .bf-whats-new {
 .os-shell .os-dock button span,
 .os-shell .bf-more-grid > button b,
 .os-shell .bf-more-grid > button span {
-  overflow: visible !important;
-  text-overflow: unset !important;
-  max-width: none !important;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

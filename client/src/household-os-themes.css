@@ -184,7 +184,7 @@ html.theme-aurora {
 :is(html.theme-ink, html.theme-white) .os-brand-copy b {
   color: #1a2420;
   font-weight:600;
-  letter-spacing: -0.02em !important;
+  letter-spacing: -0.02em;
 }
 :is(html.theme-ink, html.theme-white) .os-brand-copy i {
   color: #5a675f;
@@ -219,9 +219,9 @@ html.theme-aurora {
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button {
   color: #5a675f;
   font-size:12px;
-  font-weight: 680 !important;
-  letter-spacing: 0.01em !important;
-  border-radius: 999px !important;
+  font-weight: 680;
+  letter-spacing: 0.01em;
+  border-radius: 999px;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.is-on,
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
@@ -270,20 +270,20 @@ html.theme-aurora {
 
 /* Mișcări — registru clar, distinct de Astăzi */
 :is(html.theme-ink, html.theme-white) .os-shell .bf-movements-ledger {
-  gap: 12px !important;
+  gap: 12px;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .bf-movements-header > div::before {
   border-color: #c9d8d0 !important;
   border-left-color: #2f6b55 !important;
-  color: #1f5240 !important;
+  color: #1f5240;
   background: #eef5f1;
   border-radius:12px;
   padding: 5px 8px;
 }
 :is(html.theme-ink, html.theme-white) .os-shell .bf-movement-day {
-  border: 1px solid #d5d2c8 !important;
+  border: 1px solid #d5d2c8;
   border-radius:20px;
-  background: #fbfaf7 !important;
+  background: #fbfaf7;
   box-shadow:var(--bf-shadow-rest);
 }
 
@@ -338,10 +338,10 @@ html.theme-aurora {
     font-size:12px;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
-    gap: 12px !important;
+    gap: 12px;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .bf-movements-ledger .bf-movement-day {
-    border-radius:12px !important;
+    border-radius:12px;
   }
   :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
     left: 0;

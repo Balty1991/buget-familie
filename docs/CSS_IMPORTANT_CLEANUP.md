@@ -53,3 +53,11 @@ scoși. Țintesc 263 de clase care nu mai apar nicăieri în cod (`client/src/**
   a schimbat Plan și Obligații — prins de comparația de mai jos, apoi reparat).
 - Verificare: instantanee complete ale stilului calculat pe 154 de stări, cod vechi (de două ori) și cod
   nou; singurele 4 diferențe rămase au fost zero la verificarea directă, proprietate cu proprietate.
+
+## A doua rundă (septembrie 2026, pasul 3)
+
+**3.833 → 3.426** `!important` (−407, în 29 de foi), cu același instrument ca prima rundă, pe CSS-ul
+fără reguli moarte: pași restrânși până la zero respingeri pe 154 de stări, apoi instantanee complete
+înainte/după (singurele 2 diferențe aparente au fost zero la verificarea directă). Rămân 615 declarații
+care chiar decid ceva pe ecran și cele din selectori cu stări dinamice sau părți nevăzute pe ecranele
+testate. Stratul `@layer ds` din `design-system-37.css` (aspectul unitar) folosește `!important` intenționat.

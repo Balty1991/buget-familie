@@ -82,7 +82,7 @@
 .bf-today-explainer { position: relative; z-index: 2; }
 .bf-today-explainer summary { border-color: rgba(247, 255, 242, .28) !important; color: #f7fff2 !important; }
 .bf-today-explainer p { color: #e7f7e9 !important; border-color: rgba(216, 240, 110, .55) !important; }
-.bf-today-add { min-height: 50px !important; border-radius:20px !important; font-weight:600 !important; transition: transform 180ms var(--neo-ease), box-shadow 180ms var(--neo-ease), background 180ms var(--neo-ease) !important; }
+.bf-today-add { min-height: 50px; border-radius:20px; font-weight:600; transition: transform 180ms var(--neo-ease), box-shadow 180ms var(--neo-ease), background 180ms var(--neo-ease); }
 .bf-today-add { color: var(--neo-ink); background: var(--neo-lime); box-shadow:var(--bf-shadow-raise); }
 .bf-today-add:hover { transform: translateY(-2px); }
 .bf-today-add:active { transform: scale(.98); }
@@ -101,8 +101,8 @@
 .bf-today-activity,
 .bf-today-envelope-evolution { padding: 22px !important; }
 
-.bf-section-heading h2 { color: var(--neo-ink) !important; font-family: "Fraunces", Georgia, serif !important; letter-spacing: -.05em !important; }
-.bf-section-heading > button { color: var(--neo-forest) !important; }
+.bf-section-heading h2 { color: var(--neo-ink); font-family: "Fraunces", Georgia, serif; letter-spacing: -.05em; }
+.bf-section-heading > button { color: var(--neo-forest); }
 
 .bf-today-activity-list article { min-height: 70px; border-top-color: rgba(16, 35, 31, .1); }
 .bf-today-activity-list article:hover { background: rgba(223, 243, 223, .55) !important; }
@@ -239,13 +239,13 @@
 .bf-payday-strip,
 .bf-today-activity,
 .bf-today-envelope-evolution { border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important; background: var(--cf-surface, #fffdf8) !important; color: var(--cf-ink, #10231f) !important; }
-.bf-section-heading h2 { color: var(--cf-ink, #10231f) !important; }
+.bf-section-heading h2 { color: var(--cf-ink, #10231f); }
 .bf-section-heading > button { color: var(--cf-primary-strong, #0f3d35) !important; }
 .bf-today-activity-list article:hover { background: color-mix(in srgb, var(--cf-primary, #185849) 8%, var(--cf-surface, #fffdf8)) !important; }
 
 .bf-primary,
 .bf-today-add { color: var(--cf-bg, #f4f7f1); background: var(--cf-primary, #185849); box-shadow: 0 8px 18px color-mix(in srgb, var(--cf-primary, #185849), transparent 78%); }
-.bf-secondary { color: var(--cf-ink, #10231f) !important; border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important; background: color-mix(in srgb, var(--cf-primary, #185849) 10%, var(--cf-surface, #fffdf8)) !important; }
+.bf-secondary { color: var(--cf-ink, #10231f); border-color: var(--cf-line, rgba(16, 35, 31, .12)); background: color-mix(in srgb, var(--cf-primary, #185849) 10%, var(--cf-surface, #fffdf8)); }
 .bf-primary:hover,
 .bf-secondary:hover,
 .bf-today-add:hover { filter: brightness(1.06); }

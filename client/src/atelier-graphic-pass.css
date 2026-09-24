@@ -103,14 +103,14 @@
 }
 
 .bf-allocation-progress-track {
-  height: 8px !important;
-  border-radius: 99px !important;
+  height: 8px;
+  border-radius: 99px;
   overflow: hidden;
 }
 
 .bf-allocation-progress-track i {
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong)) !important;
+  background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong));
 }
 
 .bf-allocation-progress-track i.ready {
@@ -177,7 +177,7 @@
 .bf-plan-workspace,
 .bf-insights-workspace,
 .bf-utilities-workspace {
-    padding-bottom: calc(122px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(122px + env(safe-area-inset-bottom));
   }
 }
 

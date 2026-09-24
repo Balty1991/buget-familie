@@ -19,12 +19,12 @@
 .os-shell .bf-movements-ledger .bf-movement-day > header > span,
 .os-shell .bf-movements-ledger .bf-movement-day > header > span b,
 .os-shell .bf-movements-ledger .bf-movement-day article strong {
-  font-size: var(--bf-text-money, 14px) !important;
+  font-size: var(--bf-text-money, 14px);
 }
 
 .os-shell .bf-movements-ledger .bf-movement-actions button {
-  width: var(--bf-hit, 44px) !important;
-  height: var(--bf-hit, 44px) !important;
+  width: var(--bf-hit, 44px);
+  height: var(--bf-hit, 44px);
   min-width: var(--bf-hit, 44px);
   min-height: var(--bf-hit, 44px);
 }

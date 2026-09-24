@@ -183,7 +183,7 @@ html.theme-white .os-shell .os-tools {
 }
 
 .os-shell .bf-section-heading .bf-kicker {
-  color: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 70%, var(--os-muted, var(--cf-muted))) !important;
+  color: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 70%, var(--os-muted, var(--cf-muted)));
 }
 
 /* Mai mult workspace hero */
@@ -191,10 +191,10 @@ html.theme-white .os-shell .os-tools {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  margin-bottom: 8px !important;
-  padding: 20px 18px 18px !important;
+  margin-bottom: 8px;
+  padding: 20px 18px 18px;
   border-radius:20px;
-  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent);
   background:
     radial-gradient(110% 90% at 108% -20%, color-mix(in srgb, var(--os-mint, var(--cf-primary)) 26%, transparent), transparent 55%),
     radial-gradient(80% 70% at -12% 110%, color-mix(in srgb, var(--cf-info, #6aa8ff) 14%, transparent), transparent 50%),
@@ -210,7 +210,7 @@ html.theme-white .os-shell .os-tools {
 }
 
 .os-shell .bf-utilities-workspace > .bf-topline h1 {
-  max-width: 16ch !important;
+  max-width: 16ch;
 }
 
 /* Tab strip — premium capsule rail */
@@ -235,7 +235,7 @@ html.theme-white .os-shell .os-tools {
   margin: 0 2px 4px;
   padding: 5px 10px;
   border-radius: 999px;
-  color: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 75%, var(--os-muted)) !important;
+  color: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 75%, var(--os-muted));
   background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--os-mint, var(--cf-primary)) 18%, transparent);
   backdrop-filter: blur(8px);
@@ -248,7 +248,7 @@ html.theme-white .os-shell .os-tools {
 .os-shell .bf-settings-group {
   position: relative;
   gap: 0;
-  grid-template-columns: 1fr !important;
+  grid-template-columns: 1fr;
   overflow: hidden;
   border-radius: 20px;
   border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 82%, transparent) !important;
@@ -274,7 +274,7 @@ html.theme-white .os-shell .os-tools {
   border-bottom-color: color-mix(in srgb, var(--os-line, var(--cf-line)) 55%, transparent) !important;
   transition:
     background-color 160ms ease,
-    transform 160ms var(--bf-delight-spring) !important;
+    transform 160ms var(--bf-delight-spring);
 }
 
 .os-shell .bf-more-grid > button:hover,
@@ -290,17 +290,17 @@ html.theme-white .os-shell .os-tools {
 /* Icon wells with soft glow */
 .os-shell .bf-more-grid > button > svg:first-child,
 .os-shell .bf-settings-row > svg:first-child {
-  width: 40px !important;
-  height: 40px !important;
-  border-radius:12px !important;
-  color: var(--os-mint, var(--cf-primary)) !important;
+  width: 40px;
+  height: 40px;
+  border-radius:12px;
+  color: var(--os-mint, var(--cf-primary));
   background:
     radial-gradient(120% 120% at 30% 20%, color-mix(in srgb, #fff 22%, transparent), transparent 55%),
-    color-mix(in srgb, var(--os-mint, var(--cf-primary)) 16%, transparent) !important;
+    color-mix(in srgb, var(--os-mint, var(--cf-primary)) 16%, transparent);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent),
     0 6px 14px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent) !important;
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent);
 }
 
 .os-shell .bf-more-grid > button:nth-child(3n+2) > svg:first-child,
@@ -356,7 +356,7 @@ html.theme-white .os-shell .bf-settings-group,
 html.theme-white .os-shell .bf-utilities-workspace > .bf-topline {
   box-shadow:
     0 14px 32px rgba(18, 32, 28, .08),
-    inset 0 1px 0 rgba(255, 255, 255, .92) !important;
+    inset 0 1px 0 rgba(255, 255, 255, .92);
 }
 
 html.theme-aurora .os-shell .bf-more-grid,
@@ -364,7 +364,7 @@ html.theme-aurora .os-shell .bf-settings-group {
   box-shadow:
     0 16px 40px rgba(8, 4, 24, .35),
     0 0 28px rgba(124, 91, 255, .1),
-    inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+    inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 
 html.theme-navy .os-shell .bf-more-grid,
@@ -372,7 +372,7 @@ html.theme-navy .os-shell .bf-settings-group {
   box-shadow:
     0 16px 40px rgba(4, 10, 24, .4),
     0 0 24px rgba(212, 176, 106, .08),
-    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+    inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 
 html.theme-cyber .os-shell .bf-more-grid,
@@ -380,14 +380,14 @@ html.theme-cyber .os-shell .bf-settings-group {
   box-shadow:
     0 16px 40px rgba(2, 12, 10, .42),
     0 0 26px rgba(124, 255, 196, .1),
-    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+    inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 
 html.theme-dark .os-shell .bf-more-grid,
 html.theme-dark .os-shell .bf-settings-group {
   box-shadow:
     0 16px 36px rgba(0, 0, 0, .38),
-    inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+    inset 0 1px 0 rgba(255, 255, 255, .05);
 }
 
 /* Command palette / quick overflow list */

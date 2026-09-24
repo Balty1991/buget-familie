@@ -19,16 +19,16 @@ html body .bf-app .bf-movements-header,
 html body .bf-app .bf-insights-header,
 html body .os-shell .bf-movements-header,
 html body .os-shell .bf-insights-header {
-  display: grid !important;
-  gap: 14px !important;
+  display: grid;
+  gap: 14px;
   padding: 18px 16px !important;
-  border-radius: 1.1rem !important;
+  border-radius: 1.1rem;
   border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line, #2a3832)) 92%, transparent) !important;
   background: var(--os-surface, var(--cf-surface, #10151a)) !important;
   background-image: none !important;
-  box-shadow:var(--bf-shadow-raise) !important;
-  filter: none !important;
-  backdrop-filter: none !important;
+  box-shadow:var(--bf-shadow-raise);
+  filter: none;
+  backdrop-filter: none;
   -webkit-backdrop-filter: none !important;
 }
 
@@ -37,8 +37,8 @@ html body .bf-app .bf-insights-header h1,
 html body .os-shell .bf-movements-header h1,
 html body .os-shell .bf-insights-header h1 {
   margin: 0 !important;
-  line-height: 1.22 !important;
-  letter-spacing: -0.02em !important;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
 }
 
 html body .bf-app .bf-movements-header p,
@@ -46,8 +46,8 @@ html body .bf-app .bf-insights-header p,
 html body .os-shell .bf-movements-header p,
 html body .os-shell .bf-insights-header p {
   margin: 0 !important;
-  line-height: 1.55 !important;
-  color: var(--os-muted, var(--cf-muted)) !important;
+  line-height: 1.55;
+  color: var(--os-muted, var(--cf-muted));
 }
 
 html body .bf-app .bf-movements-header .bf-kicker,
@@ -84,24 +84,24 @@ html body .os-shell .bf-spend-compass,
 html body .os-shell .bf-analysis-watch,
 html body .os-shell .bf-analysis-balance {
   padding: 18px 16px !important;
-  border-radius: 1.1rem !important;
+  border-radius: 1.1rem;
   border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 92%, transparent) !important;
   background: var(--os-surface, var(--cf-surface)) !important;
   background-image: none !important;
-  box-shadow:var(--bf-shadow-rest) !important;
-  filter: none !important;
+  box-shadow:var(--bf-shadow-rest);
+  filter: none;
   --cf-glow: transparent;
 }
 
 html body .bf-app .bf-movement-day > header,
 html body .os-shell .bf-movement-day > header {
-  padding: 14px 16px !important;
+  padding: 14px 16px;
 }
 
 html body .bf-app .bf-movement-day > div > article,
 html body .os-shell .bf-movement-day > div > article {
-  padding: 14px 16px !important;
-  min-height: 72px !important;
+  padding: 14px 16px;
+  min-height: 72px;
 }
 
 html body .bf-app .bf-obligation-entry,
@@ -223,7 +223,7 @@ html body .bf-app .bf-spend-compass,
 html body .bf-app .bf-analysis-watch,
 html body .bf-app .bf-analysis-balance {
     padding: 20px 16px !important;
-    gap: 14px !important;
+    gap: 14px;
   }
 
   html body .bf-app .bf-movements-header > div > p:last-child {
@@ -242,23 +242,23 @@ html body .bf-app .bf-analysis-balance {
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-month,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero {
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-line, #22302a) 80%, transparent) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-line, #22302a) 80%, transparent);
   border-color: color-mix(in srgb, var(--os-mint, #7cffc4) 12%, #1a2420) !important;
-  outline: none !important;
-  filter: none !important;
+  outline: none;
+  filter: none;
   --cf-glow: transparent;
-  text-shadow: none !important;
+  text-shadow: none;
 }
 
 html.theme-aurora body .bf-app .bf-movements-header,
 html.theme-aurora body .bf-app .bf-insights-header,
 html.theme-aurora body .bf-app .bf-analysis-snapshot,
 html.theme-aurora body .bf-app .os-hero {
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), 0 0 0 1px color-mix(in srgb, var(--cf-line, #49416c) 70%, transparent) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), 0 0 0 1px color-mix(in srgb, var(--cf-line, #49416c) 70%, transparent);
   border-color: color-mix(in srgb, var(--cf-primary, #65d3a6) 14%, #252044) !important;
   background: var(--cf-surface, #18142f) !important;
   background-image: none !important;
-  filter: none !important;
+  filter: none;
 }
 
 /* Kill violet bloom / neon halos on shell surfaces */

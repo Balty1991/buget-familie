@@ -43,7 +43,7 @@
 
 /* App bar mai aerisit */
 .os-shell .os-appbar.bf-appbar {
-  min-height: 68px !important;
+  min-height: 68px;
   padding-top: calc(10px + var(--os-inset-top));
   padding-bottom: 10px;
 }
@@ -84,11 +84,11 @@
 .os-shell .bf-primary,
 .os-shell .bf-secondary,
 .os-shell .bf-mini-form button {
-  min-height: var(--os-tap) !important;
-  padding-left: 16px !important;
-  padding-right: 16px !important;
-  border-radius:12px !important;
-  font-weight: 600 !important;
+  min-height: var(--os-tap);
+  padding-left: 16px;
+  padding-right: 16px;
+  border-radius:12px;
+  font-weight: 600;
 }
 
 .os-shell .bf-link-button {
@@ -98,16 +98,16 @@
 
 /* Utilities / meniuri: grilă thumb-friendly */
 .os-shell .bf-more-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 10px !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .os-shell .bf-more-grid > button {
-  min-height: 72px !important;
-  border-radius:20px !important;
-  padding: 14px 12px !important;
-  text-align: left !important;
+  min-height: 72px;
+  border-radius:20px;
+  padding: 14px 12px;
+  text-align: left;
 }
 
 /* Sync pairing */

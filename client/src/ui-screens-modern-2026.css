@@ -32,9 +32,9 @@ html body .os-shell .bf-movements-header {
 
 html body .bf-app .bf-movement-day,
 html body .os-shell .bf-movement-day {
-  padding: 18px 16px !important;
+  padding: 18px 16px;
   gap: 12px;
-  border-radius: 1.1rem !important;
+  border-radius: 1.1rem;
 }
 
 html body .bf-app .bf-movement-add,
@@ -74,7 +74,7 @@ html body .bf-app .bf-allocation-builder,
 html body .os-shell .bf-allocation-builder {
   gap: 14px;
   padding: 18px 16px;
-  border-radius: 1.1rem !important;
+  border-radius: 1.1rem;
 }
 
 html body .bf-app .bf-allocation-builder-actions,
@@ -117,7 +117,7 @@ html body .bf-app .bf-allocation-builder-actions > button:not(.bf-primary) {
 /* ========== Obligații ========== */
 html body .bf-app .bf-obligations-workspace,
 html body .os-shell .bf-obligations-workspace {
-  gap: 14px !important;
+  gap: 14px;
   padding-bottom: var(--ui-scr-dock);
 }
 
@@ -126,7 +126,7 @@ html body .bf-app .bf-analysis,
 html body .bf-app .bf-insights-workspace,
 html body .os-shell .bf-analysis,
 html body .os-shell .bf-insights-workspace {
-  gap: 14px !important;
+  gap: 14px;
   padding-bottom: var(--ui-scr-dock);
 }
 
@@ -134,8 +134,8 @@ html body .bf-app .bf-analysis-snapshot,
 html body .bf-app .bf-analysis-control,
 html body .bf-app .bf-analysis-next-step {
   padding: var(--ui-scr-pad) 18px !important;
-  gap: 12px !important;
-  border-radius: 1.15rem !important;
+  gap: 12px;
+  border-radius: 1.15rem;
   line-height: var(--ui-scr-lh);
 }
 
@@ -166,7 +166,7 @@ html body .bf-app .bf-more-grid > button {
 
 html body .bf-app .bf-kicker.bf-more-section-label {
   margin-top: 8px;
-  letter-spacing: 0.12em !important;
+  letter-spacing: 0.12em;
   font-weight:600;
 }
 
@@ -360,8 +360,8 @@ html body .bf-app button.outline:not(.bf-link-button) {
 html body .os-shell .os-hero,
 html body .bf-app .bf-plan-simulator,
 html body .bf-app .bf-movement-day {
-  filter: none !important;
-  text-shadow: none !important;
+  filter: none;
+  text-shadow: none;
 }
 
 html body .os-shell,

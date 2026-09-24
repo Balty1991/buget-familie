@@ -59,7 +59,7 @@ details.bf-plan-tools:not([open]) > :not(summary) {
 .bf-movement-timeline strong,
 .bf-settings-row b,
 .bf-obligation-entry strong {
-  font-family: var(--bf-font-sans) !important;
+  font-family: var(--bf-font-sans);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   font-size: 15px;
@@ -301,8 +301,8 @@ button.danger,
 /* Mai mult: un rând, pictogramă 20px, chevron real la dreapta. */
 html body .os-shell .bf-more-grid > button.bf-settings-row {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 18px !important;
-  grid-template-rows: auto !important;
+  grid-template-columns: 20px minmax(0, 1fr) 18px;
+  grid-template-rows: auto;
   align-items: center;
   gap: 12px !important;
   min-height: 48px !important;
@@ -313,7 +313,7 @@ html body .os-shell .bf-more-grid > button.bf-settings-row::after {
 }
 html body .os-shell .bf-more-grid > button.bf-settings-row > svg:first-child {
   grid-column: 1;
-  grid-row: 1 !important;
+  grid-row: 1;
   width: 20px !important;
   height: 20px !important;
   padding: 0;
@@ -323,12 +323,12 @@ html body .os-shell .bf-more-grid > button.bf-settings-row > svg:first-child {
   box-shadow: none !important;
 }
 html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-copy {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
+  grid-column: 2;
+  grid-row: 1;
 }
 html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-chevron {
-  grid-column: 3 !important;
-  grid-row: 1 !important;
+  grid-column: 3;
+  grid-row: 1;
   width: 18px;
   height: 18px;
   color: var(--cf-muted) !important;

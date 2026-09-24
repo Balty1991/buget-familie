@@ -22,13 +22,13 @@
 }
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags > * {
   margin-top: 0;
-  margin-bottom: 0 !important;
+  margin-bottom: 0;
 }
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags:empty {
   display: none !important;
 }
 .bf-allocation-list .bf-allocation-flags .bf-allocation-state {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   min-height: 18px;
 }
@@ -83,18 +83,18 @@
   background: linear-gradient(135deg, #e4e9e6 0 46%, #176b54 47% 70%, #0c1612 71%) !important;
 }
 .bf-theme-picker .bf-theme-option.dark .bf-theme-swatch {
-  background: linear-gradient(135deg, #111214 0 46%, #d4d8e0 47% 70%, #23262b 71%) !important;
+  background: linear-gradient(135deg, #111214 0 46%, #d4d8e0 47% 70%, #23262b 71%);
 }
 .bf-theme-picker .bf-theme-option.aurora .bf-theme-swatch {
   background:
     radial-gradient(circle at 74% 24%, #a781ff 0 12%, transparent 30%),
-    linear-gradient(145deg, #0d0b1c 0 46%, #319e7b 47% 70%, #74d0ff 71%) !important;
+    linear-gradient(145deg, #0d0b1c 0 46%, #319e7b 47% 70%, #74d0ff 71%);
 }
 .bf-theme-picker .bf-theme-option.navy .bf-theme-swatch {
-  background: linear-gradient(135deg, #0b1220 0 46%, #d4b06a 47% 70%, #141c2e 71%) !important;
+  background: linear-gradient(135deg, #0b1220 0 46%, #d4b06a 47% 70%, #141c2e 71%);
 }
 .bf-theme-picker .bf-theme-option.cyber .bf-theme-swatch {
-  background: linear-gradient(135deg, #07090c 0 46%, #5ee0aa 47% 70%, #10151a 71%) !important;
+  background: linear-gradient(135deg, #07090c 0 46%, #5ee0aa 47% 70%, #10151a 71%);
 }
 /* Pânza interioară dă textura; fără ea pătratul arată ca o gaură în foaie. */
 .bf-theme-picker .bf-theme-option .bf-theme-swatch span {
@@ -117,7 +117,7 @@
   box-shadow: none;
 }
 .bf-theme-picker .bf-theme-picker-footer .bf-theme-apply {
-  border-radius:12px !important;
+  border-radius:12px;
 }
 
 /* —— 4. Tab-uri de perioadă: capsula era desenată pentru un singur rând —— */
@@ -169,11 +169,11 @@
    rând de atins, fără să devină buton plin. */
 .bf-week-transfer .bf-week-transfer-toggle {
   min-height: 34px;
-  padding-block: 9px !important;
+  padding-block: 9px;
 }
 .bf-plan-toggle > input[type="checkbox"] {
-  width: 20px !important;
-  height: 20px !important;
+  width: 20px;
+  height: 20px;
 }
 
 /* —— 8. Ecranul nu se mai lățește după un singur rând de butoane —— */
@@ -236,7 +236,7 @@
    e o culoare deschisă; textul alb dispărea (raport 1,2–2,1). Pe fundal deschis punem
    cerneala închisă a temei. */
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-weekly-tranche-notice > button:not(.dismiss) {
-  color: var(--cf-on-primary, #0c1612) !important;
+  color: var(--cf-on-primary, #0c1612);
 }
 
 /* —— 10. Ultimele trei texte sub pragul AA din tema deschisă —— */
@@ -283,7 +283,7 @@ html:not(.dark) .os-date b {
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .os-shell .bf-guide-hero .bf-kicker,
 .os-shell .bf-guide-hero .bf-kicker,
 .bf-guide-hero > .bf-kicker {
-  color: #d4e3d9 !important;
+  color: #d4e3d9;
 }
 
 /* Rândul evidențiat din paleta de acțiuni rapide: descrierea rămânea la gri de text

@@ -35,9 +35,9 @@
   width: 64px;
   background: linear-gradient(90deg, var(--cf-primary), var(--cf-primary-strong));
 }.theme-white .bf-primary{
-  color: #ffffff !important;
+  color: #ffffff;
   background: var(--cf-primary-strong);
-  box-shadow:var(--bf-shadow-rest) !important;
+  box-shadow:var(--bf-shadow-rest);
 }.theme-white .bf-theme-picker{ background: #fbfaf7; }.theme-white .bf-theme-option{ border-color: #d5d2c8; background: #fff; }.theme-white .bf-theme-option.selected{ border-color: #2f6b55; box-shadow: 0 0 0 2px rgba(47, 107, 85, .16); }
 
 .bf-theme-preview.ink,

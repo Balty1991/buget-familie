@@ -31,8 +31,8 @@ html body .bf-app .bf-insights-workspace,
 html body .bf-app .bf-analysis,
 html body .bf-app .bf-utilities-workspace,
 html body .os-shell .bf-utilities-workspace {
-  padding-bottom: var(--ui-agg-dock-clear) !important;
-  scroll-padding-bottom: var(--ui-agg-dock-clear) !important;
+  padding-bottom: var(--ui-agg-dock-clear);
+  scroll-padding-bottom: var(--ui-agg-dock-clear);
 }
 
 html.capacitor-android body .os-shell main,
@@ -184,11 +184,11 @@ html body .os-shell .os-dock,
 html body .os-shell .os-dock::before,
 html body .os-shell .os-dock::after,
 html body .bf-app .os-dock {
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08) !important;
-  filter: none !important;
-  background-image: none !important;
-  outline: none !important;
-  border-top-color: color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent) !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+  filter: none;
+  background-image: none;
+  outline: none;
+  border-top-color: color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent);
 }
 
 html body .os-shell .os-dock button.is-on,

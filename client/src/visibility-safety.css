@@ -4,13 +4,13 @@
  */
 
 .bf-appbar {
-  color: var(--cf-ink) !important;
-  background: color-mix(in srgb, var(--cf-surface) 96%, transparent) !important;
-  border-color: var(--cf-line) !important;
+  color: var(--cf-ink);
+  background: color-mix(in srgb, var(--cf-surface) 96%, transparent);
+  border-color: var(--cf-line);
 }
 
 .bf-appbar nav button {
-  color: var(--cf-ink) !important;
+  color: var(--cf-ink);
 }
 
 .bf-appbar nav button.active {
@@ -231,7 +231,7 @@
   .bf-household-card,
   .bf-sync
 ) :is(.bf-kicker, small, em) {
-  color: var(--cf-muted) !important;
+  color: var(--cf-muted);
 }
 
 /* În temele întunecate, --cf-primary devine deschis la culoare intenționat, ca accentul să

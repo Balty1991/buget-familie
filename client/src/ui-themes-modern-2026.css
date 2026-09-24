@@ -9,8 +9,8 @@ html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber{
 --cf-glow:transparent;--os-glow:transparent}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-dock,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-dock::before{
-filter:none!important;background-image:none!important;outline:none!important;
-box-shadow:0 -6px 20px rgba(0,0,0,.1)!important}
+filter:none;background-image:none;outline:none;
+box-shadow:0 -6px 20px rgba(0,0,0,.1)}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-hero,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-simulator,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-simulation,
@@ -38,14 +38,14 @@ box-shadow:0 6px 16px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 22%,tra
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-insights-switch,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-analysis-scope,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-movement-kind{
-border:0!important;box-shadow:none!important;gap:6px!important;padding:4px!important;border-radius:12px !important;
+border:0;box-shadow:none!important;gap:6px;padding:4px!important;border-radius:12px !important;
 background:color-mix(in srgb,var(--os-surface-2,var(--cf-surface-alt)) 94%,transparent)!important}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-allocation-period-tabs button.active,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-allocation-period-tabs button[aria-selected="true"],
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-pace-switch button.active,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-movement-kind button.active{
-border:1px solid transparent!important;color:var(--os-mint-fg,var(--cf-on-forest,#04140e))!important;
-background:var(--os-mint,var(--cf-primary))!important;font-weight:600 !important}
+border:1px solid transparent;color:var(--os-mint-fg,var(--cf-on-forest,#04140e));
+background:var(--os-mint,var(--cf-primary))!important;font-weight:600}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-page,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-today-workspace,
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-movements-ledger,
@@ -92,7 +92,7 @@ background:radial-gradient(520px 300px at 92% -4%,rgba(101,211,166,.08),transpar
 html.theme-aurora body .bf-app .bf-plan-simulator,
 html.theme-aurora body .bf-app .bf-allocation-period,
 html.theme-aurora body .bf-app .bf-movement-day,
-html.theme-aurora body .bf-app .bf-analysis-snapshot{background:#15132a!important;border:1px solid color-mix(in srgb,#65d3a6 16%,#35305a)!important;box-shadow:var(--bf-shadow-raise) !important;filter:none!important}
+html.theme-aurora body .bf-app .bf-analysis-snapshot{background:#15132a!important;border:1px solid color-mix(in srgb,#65d3a6 16%,#35305a)!important;box-shadow:var(--bf-shadow-raise) !important;filter:none}
 html.theme-aurora body .os-shell .os-dock{background:#12101f!important;box-shadow:0 -6px 20px rgba(0,0,0,.4)!important;filter:none}
 html.theme-aurora body .os-shell .os-dock button.is-on,html.theme-aurora body .os-shell .os-dock button.active{color:#0c0b16!important;background:#65d3a6!important}
 /* tokens.css */

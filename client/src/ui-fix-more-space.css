@@ -60,5 +60,5 @@ html body .os-shell .bf-utilities-workspace {
   scroll-padding-bottom: var(
     --ui-scr-dock,
     var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 28px))
-  ) !important;
+  );
 }

@@ -200,7 +200,7 @@ html .os-shell .bf-obligation-actions > button:first-child {
  */
 html:not(.dark) .bf-today-add,
 html.dark .bf-today-add,
-html .bf-today-add { color: var(--cf-ink) !important; background-color: transparent !important; }
+html .bf-today-add { color: var(--cf-ink); background-color: transparent; }
 
 /**
  * Obligații, pe ecran îngust: rândul se așază pe verticală.
@@ -390,9 +390,9 @@ html.theme-white .bf-os-decide, html.theme-aurora .bf-os-decide, html.theme-navy
   color: var(--cf-on-primary, #ffffff);
   stroke: currentColor;
 }html.theme-white .bf-secondary, html.theme-aurora .bf-secondary, html.theme-navy .bf-secondary, html.theme-cyber .bf-secondary{
-  color: var(--cf-ink, #1a2420) !important;
-  background-color: var(--cf-surface, #fbfaf7) !important;
-  border: 1px solid var(--cf-line, #d5d2c8) !important;
+  color: var(--cf-ink, #1a2420);
+  background-color: var(--cf-surface, #fbfaf7);
+  border: 1px solid var(--cf-line, #d5d2c8);
 }
 
 /* Dock is-on pe temele de noapte: etichetă pe umplutură via --cf-on-primary */
@@ -459,38 +459,38 @@ html.theme-cyber .os-dock button.is-on svg {
 
   /* Mai mult: carduri 2-col — wrap + line-clamp, fără list-row pe cell */
   .os-shell .bf-more-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    border: 0 !important;
-    background: transparent !important;
-    overflow: visible !important;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    border: 0;
+    background: transparent;
+    overflow: visible;
   }
   .os-shell .bf-more-grid > button {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    gap: 6px !important;
-    min-width: 0 !important;
-    min-height: 88px !important;
-    padding: 12px !important;
-    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 6px;
+    min-width: 0;
+    min-height: 88px;
+    padding: 12px;
+    overflow: hidden;
     border: 1px solid var(--cf-line, var(--os-line)) !important;
-    border-radius:20px !important;
+    border-radius:20px;
     border-bottom: 1px solid var(--cf-line, var(--os-line)) !important;
-    background: var(--cf-surface, var(--os-surface)) !important;
-    box-shadow: none !important;
-    grid-template-columns: none !important;
-    grid-template-rows: none !important;
+    background: var(--cf-surface, var(--os-surface));
+    box-shadow: none;
+    grid-template-columns: none;
+    grid-template-rows: none;
   }
   .os-shell .bf-more-grid > button::before,
 .os-shell .bf-more-grid > button::after {
-    content: none !important;
-    display: none !important;
+    content: none;
+    display: none;
   }
   .os-shell .bf-more-grid > button > svg {
-    grid-row: auto !important;
+    grid-row: auto;
     flex: 0 0 auto;
   }
   .os-shell .bf-more-grid > button > b {
@@ -510,18 +510,18 @@ html.theme-cyber .os-dock button.is-on svg {
     grid-row: auto !important;
   }
   .os-shell .bf-more-grid > button > span {
-    display: -webkit-box !important;
-    -webkit-box-orient: vertical !important;
-    -webkit-line-clamp: 2 !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    font-size:12px !important;
-    line-height: 1.3 !important;
-    grid-column: auto !important;
-    grid-row: auto !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    white-space: normal;
+    word-break: break-word;
+    font-size:12px;
+    line-height: 1.3;
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .bf-movements-ledger .bf-journal-quickbar {
@@ -582,9 +582,9 @@ html.theme-dark .bf-primary svg {
   stroke: currentColor;
 }
 html.theme-dark .bf-secondary {
-  color: var(--cf-ink, #e8f0ea) !important;
-  background-color: var(--cf-surface, #132820) !important;
-  border: 1px solid var(--cf-line, #2f4a3d) !important;
+  color: var(--cf-ink, #e8f0ea);
+  background-color: var(--cf-surface, #132820);
+  border: 1px solid var(--cf-line, #2f4a3d);
 }
 html.theme-dark .os-dock button.is-on,
 html.theme-dark .os-desktop-nav button.is-on {
@@ -913,9 +913,9 @@ html.theme-cyber .bf-movement-add svg {
 html.theme-aurora .bf-secondary,
 html.theme-navy .bf-secondary,
 html.theme-cyber .bf-secondary {
-  color: var(--cf-ink, #f1f4f8) !important;
-  background-color: var(--cf-surface, #18142f) !important;
-  border-color: var(--cf-line, #49416c) !important;
+  color: var(--cf-ink, #f1f4f8);
+  background-color: var(--cf-surface, #18142f);
+  border-color: var(--cf-line, #49416c);
 }
 
 /* ============================================================
@@ -984,9 +984,9 @@ html.theme-dark .bf-movement-add svg {
   stroke: currentColor;
 }
 html.theme-dark .bf-secondary {
-  color: var(--cf-ink, #eef2f6) !important;
-  background-color: var(--cf-surface, #1a1f27) !important;
-  border-color: var(--cf-line, #3a4450) !important;
+  color: var(--cf-ink, #eef2f6);
+  background-color: var(--cf-surface, #1a1f27);
+  border-color: var(--cf-line, #3a4450);
 }
 
 /* Chip / tab filled pe aurora/navy/cyber — ținte ≥48dp pe dock active */
@@ -994,8 +994,8 @@ html.theme-aurora .bf-allocation-period-tabs button.active,
 html.theme-navy .bf-allocation-period-tabs button.active,
 html.theme-cyber .bf-allocation-period-tabs button.active,
 html.theme-dark .bf-allocation-period-tabs button.active {
-  color: var(--cf-on-primary, #0d0b1c) !important;
-  background-color: var(--cf-primary-strong, #7dcea0) !important;
+  color: var(--cf-on-primary, #0d0b1c);
+  background-color: var(--cf-primary-strong, #7dcea0);
 }
 
 
@@ -1069,7 +1069,7 @@ html body .os-shell .bf-today-add.bf-os-decide {
   width: 100%;
   color: var(--cf-on-primary, #f4fff9);
   background-color: var(--cf-primary-strong, #1f6b4a) !important;
-  background-image: none !important;
+  background-image: none;
 }
 /* Configurarea la 320 px: spațiu egal stânga-dreapta, ca bara de derulare să nu cadă peste
    câmpuri (testare cu utilizatori, problema medie #13). */

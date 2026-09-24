@@ -83,7 +83,7 @@ html.capacitor-android {
   padding-left: max(16px, var(--os-inset-left));
   border-bottom: 1px solid var(--os-line);
   background: var(--os-bg) !important;
-  backdrop-filter: none !important;
+  backdrop-filter: none;
   box-shadow: none !important;
 }
 
@@ -120,8 +120,8 @@ html.capacitor-android {
 
 .os-mark::before,
 .os-mark::after {
-  display: none !important;
-  content: none !important;
+  display: none;
+  content: none;
 }
 
 .os-mark svg {
@@ -610,7 +610,7 @@ html.capacitor-android {
 .os-ghid[hidden] { display: none; }
 
 .os-shell .bf-today-workspace {
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   gap: 24px;
   padding-top: 8px;
@@ -621,7 +621,7 @@ html:not(.dark) .os-shell.bf-app {
 }
 
 html.ai-guide-open .os-tools .os-tool:last-child {
-  color: var(--os-mint-fg) !important;
+  color: var(--os-mint-fg);
   background: var(--os-mint) !important;
 }
 
@@ -743,7 +743,7 @@ html body .bf-command-search input::placeholder {
   padding: 16px;
   overflow: hidden;
   border: 0;
-  border-radius: 1.6rem !important;
+  border-radius: 1.6rem;
   color: var(--os-fg);
   background: var(--os-surface, #f7f8f6);
   box-shadow: 0 0 0 1px var(--os-line), 0 24px 60px rgba(0, 0, 0, .35);
@@ -790,7 +790,7 @@ html body .bf-command-search input::placeholder {
   color: var(--os-fg);
   font-family: Fraunces, Georgia, serif !important;
   font-size: 22px !important;
-  font-weight: 560 !important;
+  font-weight: 560;
   letter-spacing: -.03em !important;
 }
 
@@ -1089,7 +1089,7 @@ body .bf-command-palette .bf-icon-button,
   border: 1px solid var(--os-line, var(--cf-line));
   border-radius: 999px;
   color: var(--os-fg, var(--cf-ink));
-  background: transparent !important;
+  background: transparent;
   box-shadow: none;
   transform: none;
 }
@@ -1155,7 +1155,7 @@ body .bf-command-palette .bf-icon-button,
 .os-shell .bf-quick-entry-panel h2 {
   color: var(--os-fg);
   font-family: Fraunces, Georgia, serif !important;
-  font-weight: 560 !important;
+  font-weight: 560;
 }
 
 .os-shell .bf-modal button:hover,
@@ -1367,7 +1367,7 @@ html.dark .bf-onboarding.bf-first-run {
 }
 .os-shell .bf-guide-hero .bf-kicker {
   color: #c5ddd4;
-  opacity: 1 !important;
+  opacity: 1;
 }
 .os-shell .bf-guide-hero h2 {
   color: #f7faf7;
