@@ -2,7 +2,7 @@
 import "../recurring.css";
 import { useState } from "react";
 import { CalendarClock, Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringFrequency, type RecurringPayment } from "@/lib/finance-data";
+import { recurringNextDue, isoToday, autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringFrequency, type RecurringPayment } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
 import { selfMemberIdOf } from "@/lib/member-identity";
@@ -110,6 +110,20 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
     setError("");
   };
 
+  /**
+   * Plățile anuale și trimestriale (RCA, impozit) nu trebuie să vină deodată: le propunem
+   * un fond în „Evenimente viitoare”, unde se vede cât pui deoparte pe lună și cât ai strâns.
+   */
+  const fundFor = (item: RecurringPayment) => (data.settings.plannedEvents || []).find((event) => event.note === `recurring:${item.id}`);
+  const createFund = (item: RecurringPayment) => {
+    const date = recurringNextDue(item);
+    if (!date || fundFor(item)) return;
+    const now = new Date().toISOString();
+    const event = { id: newId("event"), name: item.name, date, estimate: item.amount, kind: "other" as const, repeat: item.frequency === "yearly" ? "yearly" as const : "once" as const, note: `recurring:${item.id}`, memberId: item.memberId, updatedAt: now };
+    onChange({ ...data, settings: { ...data.settings, plannedEvents: [...(data.settings.plannedEvents || []), event] } });
+  };
+  const today = isoToday();
+
   return (
     <div className="bf-recurring">
       <section className="bf-recurring-hero">
@@ -204,6 +218,18 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
                   <button type="button" className="bf-recurring-edit" aria-label={t("Modifică {name}", { name: item.name })} onClick={() => startEdit(item)}><Pencil size={16} /></button>
                   <button className="bf-recurring-delete" aria-label={t("Șterge {name}", { name: item.name })} onClick={async () => await askConfirm(t("Ștergi scadența „{name}”?", { name: item.name })) && remove()}><Trash2 size={16} /></button>
                 </div>
+                {item.active && item.frequency && (() => {
+                  const next = recurringNextDue(item, today);
+                  if (!next) return null;
+                  const days = Math.max(1, Math.round((Date.parse(`${next}T12:00:00`) - Date.parse(`${today}T12:00:00`)) / 86_400_000));
+                  const perMonth = Math.ceil(item.amount * 30 / days / 5) * 5;
+                  const fund = fundFor(item);
+                  return <p className="bf-recurring-fund">{fund
+                    ? t("Fond în Evenimente viitoare, până pe {date}.", { date: dateText(next, true) })
+                    : days > 31
+                      ? <>{t("Ca să nu vină deodată: ~{amount}/lună până pe {date}.", { amount: money(perMonth), date: dateText(next, true) })} <button type="button" className="bf-link-button" onClick={() => createFund(item)}>{t("Pune deoparte lunar")}</button></>
+                      : t("Vine pe {date}: suma e deja rezervată până la venit.", { date: dateText(next, true) })}</p>;
+                })()}
               </article>
             );
           })}

@@ -1374,6 +1374,19 @@ export const recurringOccursInMonth = (item: Pick<RecurringPayment, "frequency" 
   return (((month - anchor) % step) + step) % step === 0;
 };
 
+/** Următoarea scadență de azi încolo (până la un an), pentru plățile care nu vin lunar. */
+export const recurringNextDue = (item: Pick<RecurringPayment, "dueDay" | "frequency" | "month">, asOf = isoToday()): string | undefined => {
+  const today = new Date(`${asOf}T12:00:00`);
+  for (let offset = 0; offset <= 12; offset += 1) {
+    const cursor = new Date(today.getFullYear(), today.getMonth() + offset, 1, 12);
+    if (!recurringOccursInMonth(item, cursor.getMonth() + 1)) continue;
+    const lastDay = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+    const due = isoDate(new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(item.dueDay, lastDay), 12));
+    if (due >= asOf) return due;
+  }
+  return undefined;
+};
+
 export const recurringDueInPlan = (item: RecurringPayment, plan: SalaryPlan) => item.active ? monthDayDueInPlan(item.dueDay, plan, (month) => recurringOccursInMonth(item, month)) : undefined;
 
 /** Plățile programate care trebuie încă rezervate, fără a număra de două ori mișcările deja înregistrate. */

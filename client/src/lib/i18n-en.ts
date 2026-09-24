@@ -2891,4 +2891,8 @@ export const en: Record<string, string> = {
   "Tot ce e pe acest telefon (mișcări, plicuri, datorii) va fi trimis și văzut în camera din invitație. Intră doar dacă invitația e de la cineva din casa ta.": "Everything on this phone (entries, envelopes, debts) will be sent to and visible in the invitation's room. Only join if the invitation comes from someone in your household.",
   "Intri în această familie?": "Join this family?",
   "Da, intru": "Yes, join",
+  "Fond în Evenimente viitoare, până pe {date}.": "Fund in Upcoming events, until {date}.",
+  "Ca să nu vină deodată: ~{amount}/lună până pe {date}.": "So it doesn't hit all at once: ~{amount}/month until {date}.",
+  "Pune deoparte lunar": "Set aside monthly",
+  "Vine pe {date}: suma e deja rezervată până la venit.": "Due on {date}: the amount is already reserved until payday.",
 };

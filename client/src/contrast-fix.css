@@ -1265,3 +1265,7 @@ html body .bf-os-day > span:first-child {
 .bf-invite-qr svg { width: min(240px, 100%); height: auto; border-radius: 12px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--cf-ink, #1a2420) 14%, transparent); }
 .bf-invite-qr figcaption { font-size: 13px; line-height: 1.45; text-align: center; }
 .bf-open-in-app { display: flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; }
+
+/* Fond lunar pentru o scadență anuală / trimestrială */
+.bf-recurring-fund { display: block; grid-column: 1 / -1; margin: 2px 0 0; font-size: 13px; line-height: 1.45; white-space: normal; }
+.bf-recurring-fund .bf-link-button { display: inline; min-height: 0; padding: 0; font-size: inherit; }

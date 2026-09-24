@@ -2,7 +2,7 @@
  * Testarea cu utilizatori, #7: RCA, impozitul și facturile cu sumă variabilă.
  */
 import { describe, expect, it } from "vitest";
-import { autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, pendingRecurringInPlan, recurringDueForMonth, recurringOccursInMonth, type AppData, type RecurringPayment } from "./finance-data";
+import { autoPostDueRecurring, confirmRecurringPayment, createEmptyAppData, pendingRecurringInPlan, recurringDueForMonth, recurringNextDue, recurringOccursInMonth, type AppData, type RecurringPayment } from "./finance-data";
 
 const plan = (data: AppData, periodStart: string, nextPayday: string) => {
   data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart, nextPayday, paydayFlexDays: 0 };
@@ -49,5 +49,18 @@ describe("sumă variabilă", () => {
     const data = plan(createEmptyAppData(), "2026-09-01", "2026-10-22");
     data.recurring = [due({ id: "gaz", name: "Gaz", amount: 150, dueDay: 5, variable: true, autoPost: true })];
     expect(autoPostDueRecurring(data, "2026-09-24").transactions).toHaveLength(0);
+  });
+});
+
+describe("următoarea scadență a unei plăți care nu vine lunar", () => {
+  it("anual: luna ei, anul acesta sau anul viitor", () => {
+    expect(recurringNextDue({ dueDay: 15, frequency: "yearly", month: 3 }, "2026-09-24")).toBe("2027-03-15");
+    expect(recurringNextDue({ dueDay: 15, frequency: "yearly", month: 10 }, "2026-09-24")).toBe("2026-10-15");
+    expect(recurringNextDue({ dueDay: 24, frequency: "yearly", month: 9 }, "2026-09-24")).toBe("2026-09-24");
+  });
+
+  it("trimestrial: următoarea lună din ciclul ei; ziua 31 cade pe ultima zi a lunii", () => {
+    expect(recurringNextDue({ dueDay: 10, frequency: "quarterly", month: 1 }, "2026-09-24")).toBe("2026-10-10");
+    expect(recurringNextDue({ dueDay: 31, frequency: "quarterly", month: 2 }, "2026-09-24")).toBe("2026-11-30");
   });
 });
