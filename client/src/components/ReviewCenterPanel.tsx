@@ -22,7 +22,7 @@ import {
   type ShareScope,
   transactionShareScope,
 } from "@/lib/finance-data";
-import { parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
+import { decodeStatement, parseStatementCsv, statementDrafts, STATEMENT_BANK_LABELS, type StatementBank, type StatementSkip } from "@/lib/statement-import";
 import { Field, dateText, fmtExact } from "@/pages/home-kit";
 import { countLabel, t } from "@/lib/i18n";
 import { partnerPendingReviewMeta } from "@/lib/family-crypto";
@@ -57,7 +57,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
     setError("");
     setSummary(undefined);
     try {
-      const text = await file.text();
+      const text = decodeStatement(await file.arrayBuffer());
       const parsed = parseStatementCsv(text);
       const { drafts: fresh, duplicates } = statementDrafts(data, parsed.rows, { sourceId, memberId, fileName: file.name });
       if (fresh.length) onChange(addReviewDrafts(data, fresh));
@@ -83,7 +83,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           <FileUp size={19} />
         </div>
         <p className="bf-review-intro">{t("Alege fișierul CSV exportat din aplicația băncii. Este citit pe telefon, nu se trimite nicăieri, iar fiecare rând ajunge aici ca propunere de confirmat. Mișcările deja existente sunt recunoscute și nu se dublează.")}</p>
-        <p className="bf-review-banks">{t("Formate verificate:")} <b>BCR · Banca Transilvania · ING · Revolut</b>. {t("Alte CSV-uri cu dată, descriere și sumă (sau debit/credit) sunt citite automat.")}</p>
+        <p className="bf-review-banks">{t("Formate verificate:")} <b>BCR · Banca Transilvania · ING · Raiffeisen · Revolut</b>. {t("Alte CSV-uri cu dată, descriere și sumă (sau debit/credit) sunt citite automat.")} {t("Titlul devine numele magazinului, iar categoria e cea aleasă data trecută la același magazin.")}</p>
         <div className="bf-form-grid">
           <Field label={t("În ce sursă intră")}>
             <select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>

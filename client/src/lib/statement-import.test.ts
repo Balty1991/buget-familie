@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, addReviewDrafts } from "./finance-data";
-import { parseStatementAmount, parseStatementCsv, parseStatementDate, splitCsv, statementDrafts } from "./statement-import";
+import { decodeStatement, learnedMerchantCategories, merchantKey, parseStatementAmount, parseStatementCsv, parseStatementDate, splitCsv, statementDrafts, statementMerchant } from "./statement-import";
 
 describe("sume din extras", () => {
   it("citește formatul românesc și pe cel englezesc", () => {
@@ -240,5 +240,134 @@ describe("exporturi bancare românești", () => {
       { line: 3, date: "2026-09-08", description: "Salary", amount: 3000, kind: "income" },
     ]);
     expect(parsed.skipped).toEqual([{ line: 4, reason: "Stare nefinalizată" }]);
+  });
+});
+
+describe("numele comerciantului", () => {
+  it("scoate felul plății, cardul, codurile și orașul", () => {
+    expect(statementMerchant("Plata la POS non-BT cu card VISA; LIDL DISCOUNT 0123 BUCURESTI RO; valoare tranzactie: 184,50 RON; RRN:123456789012")).toBe("Lidl");
+    expect(statementMerchant("Plata la POS cu card MASTERCARD 5213XXXXXXXX1234; KAUFLAND 5920 CLUJ NAPOCA RO; TID:BT123456")).toBe("Kaufland");
+    expect(statementMerchant("Cumparare POS 21.09.2026 CARREFOUR ROMANIA SA BUCURESTI RO")).toBe("Carrefour");
+    expect(statementMerchant("PAYPAL *NETFLIX.COM 4029357733 LU")).toBe("Netflix.com");
+    expect(statementMerchant("Plata OP inter - canal electronic; ENEL ENERGIE MUNTENIA SA; factura 123456")).toBe("Enel Energie Muntenia");
+    expect(statementMerchant("Retragere numerar ATM BT 1234 CLUJ NAPOCA RO")).toBe("Retragere numerar");
+  });
+
+  it("preferă terminalul la ING și lasă neatinse numele deja curate", () => {
+    expect(statementMerchant("Cumparare POS; Nr. card: ****1234; Terminal: MEGA IMAGE 0456 BUCURESTI RO; Data: 01-09-2026 Autorizare: 123456")).toBe("Mega Image");
+    expect(statementMerchant("Glovo")).toBe("Glovo");
+    expect(statementMerchant("Farmacia Catena")).toBe("Farmacia Catena");
+  });
+
+  it("cheia leagă același comerciant scris diferit", () => {
+    expect(merchantKey("Mega Image")).toBe(merchantKey("MEGA IMAGE 0456"));
+    expect(merchantKey("Lidl")).toBe("lidl");
+    expect(merchantKey("")).toBe("");
+  });
+});
+
+describe("luna scrisă în litere", () => {
+  it("citește datele ING și exporturile englezești", () => {
+    expect(parseStatementDate("02 septembrie 2026")).toBe("2026-09-02");
+    expect(parseStatementDate("15 martie 2026")).toBe("2026-03-15");
+    expect(parseStatementDate("3 noi. 2026")).toBe("2026-11-03");
+    expect(parseStatementDate("2 Sep 2026")).toBe("2026-09-02");
+    expect(parseStatementDate("31 februarie 2026")).toBeUndefined();
+  });
+});
+
+describe("extrase reale, cap-coadă", () => {
+  it("ING: detaliile de pe rândurile de sub mișcare se lipesc de ea", () => {
+    const csv = [
+      "Data,,,Detalii tranzactie,,Debit,Credit",
+      "02 septembrie 2026,,,Cumparare POS,,\"45,20\",",
+      ",,,Nr. card: ****1234,,,",
+      ",,,Terminal: MEGA IMAGE 0456 BUCURESTI RO,,,",
+      ",,,Data: 01-09-2026 Autorizare: 123456,,,",
+      "05 septembrie 2026,,,Incasare,,,\"8.500,00\"",
+      ",,,Ordonator: ACME SOFTWARE SRL,,,",
+    ].join("\n");
+    const parsed = parseStatementCsv(csv);
+    expect(parsed.skipped).toEqual([]);
+    expect(parsed.rows).toHaveLength(2);
+    expect(parsed.rows[0]).toMatchObject({ date: "2026-09-02", amount: 45.2, kind: "expense" });
+    expect(parsed.rows[0].description).toContain("Terminal: MEGA IMAGE");
+    const { drafts } = statementDrafts(createEmptyAppData(), parsed.rows, { sourceId: "source-debit", memberId: "member-me" });
+    expect(drafts[0].transaction).toMatchObject({ title: "Mega Image", category: "Alimente" });
+    expect(drafts[0].transaction.note).toContain("Terminal: MEGA IMAGE");
+    expect(drafts[1].transaction).toMatchObject({ kind: "income", amount: 8500 });
+  });
+
+  it("Raiffeisen: beneficiarul și detaliile, fără IBAN", () => {
+    const csv = [
+      "Data inregistrare;Data tranzactiei;Suma debit;Suma credit;Nume/Denumire ordonator/beneficiar;Cod IBAN ordonator/beneficiar;Descrierea tranzactiei",
+      "07.09.2026;06.09.2026;212,30;;ENEL ENERGIE MUNTENIA SA;RO49AAAA1B31007593840000;Plata factura 123",
+      "08.09.2026;08.09.2026;;4.500,00;ACME SOFTWARE SRL;RO49AAAA1B31007593840001;Salariu septembrie",
+    ].join("\n");
+    const parsed = parseStatementCsv(csv);
+    expect(parsed.bank).toBe("raiffeisen");
+    expect(parsed.rows[0]).toMatchObject({ date: "2026-09-07", amount: 212.3, kind: "expense" });
+    expect(parsed.rows[0].description).toBe("ENEL ENERGIE MUNTENIA SA; Plata factura 123");
+    const { drafts } = statementDrafts(createEmptyAppData(), parsed.rows, { sourceId: "source-debit", memberId: "member-me" });
+    expect(drafts[0].transaction).toMatchObject({ title: "Enel Energie Muntenia", category: "Casă & facturi" });
+  });
+
+  it("BT: titlul e comerciantul, descrierea băncii rămâne în notiță", () => {
+    const csv = [
+      "Data tranzactie;Data valuta;Descriere;Referinta tranzactiei;Debit;Credit;Sold contabil",
+      "21-09-2026;21-09-2026;Plata la POS non-BT cu card VISA; LIDL DISCOUNT 0123 BUCURESTI RO; valoare tranzactie: 184,50 RON;FT2626400001;-184,50;;3.815,50",
+    ].join("\n").replace("VISA; LIDL", "VISA, LIDL").replace("RO; valoare", "RO, valoare");
+    const parsed = parseStatementCsv(csv);
+    expect(parsed.bank).toBe("bt");
+    expect(parsed.rows).toHaveLength(1);
+    expect(parsed.rows[0].description).not.toContain("FT2626400001");
+    const { drafts } = statementDrafts(createEmptyAppData(), parsed.rows, { sourceId: "source-debit", memberId: "member-me", fileName: "bt.csv" });
+    expect(drafts[0].transaction.title).toBe("Lidl");
+    expect(drafts[0].transaction.note).toContain("Plata la POS non-BT");
+  });
+});
+
+describe("categorii învățate din registru", () => {
+  const withHistory = () => {
+    const data = createEmptyAppData();
+    const tx = (id: string, title: string, category: string, date: string) => ({ id, title, amount: 50, kind: "expense" as const, category, source: "Card", person: "Eu", date, sourceId: "source-debit", memberId: "member-me" });
+    data.transactions = [
+      tx("h1", "Decathlon", "Consumabile copil", "2026-08-01"),
+      tx("h2", "DECATHLON 12 BUCURESTI", "Consumabile copil", "2026-08-15"),
+      tx("h3", "Decathlon", "Timp liber", "2026-08-20"),
+      tx("h4", "Lidl", "Altele", "2026-08-21"),
+    ];
+    return data;
+  };
+
+  it("alege categoria cea mai des folosită la același comerciant", () => {
+    const learned = learnedMerchantCategories(withHistory());
+    expect(learned.get("decathlon")).toMatchObject({ category: "Consumabile copil", count: 2 });
+    expect(learned.has("lidl")).toBe(false); // „Altele” nu învață nimic
+  });
+
+  it("o propune la import și spune de unde o știe", () => {
+    const csv = ["Data;Descriere;Suma", "22.09.2026;Plata la POS cu card VISA DECATHLON 12 BUCURESTI RO;-320,00"].join("\n");
+    const { drafts } = statementDrafts(withHistory(), parseStatementCsv(csv).rows, { sourceId: "source-debit", memberId: "member-me" });
+    expect(drafts[0].transaction).toMatchObject({ title: "Decathlon", category: "Consumabile copil" });
+    expect(drafts[0].reason).toContain("ca data trecută la Decathlon");
+  });
+
+  it("regula scrisă de om câștigă în fața obiceiului", () => {
+    const data = withHistory();
+    data.settings.merchantRules = [{ id: "r1", match: "decathlon", category: "Timp liber" }];
+    const csv = ["Data;Descriere;Suma", "22.09.2026;DECATHLON 12;-320,00"].join("\n");
+    const { drafts } = statementDrafts(data, parseStatementCsv(csv).rows, { sourceId: "source-debit", memberId: "member-me" });
+    expect(drafts[0].transaction.category).toBe("Timp liber");
+  });
+});
+
+describe("codarea fișierului", () => {
+  it("citește UTF-8 și Windows-1250", () => {
+    const utf8 = new TextEncoder().encode("Plată;ş").buffer;
+    expect(decodeStatement(utf8)).toBe("Plată;ş");
+    // „Plată ş” în Windows-1250: ă = 0xE3, ş = 0xBA.
+    const cp1250 = new Uint8Array([0x50, 0x6c, 0x61, 0x74, 0xe3, 0x20, 0xba]).buffer;
+    expect(decodeStatement(cp1250)).toBe("Plată ş");
   });
 });
