@@ -267,7 +267,8 @@ export function parseStatementCsv(text: string): StatementParse {
 /** Același cititor pentru CSV, Excel și tabelele HTML: primește rândurile deja despărțite în celule. */
 export function parseStatementTable(table: string[][], delimiter = ""): StatementParse {
   // Rândurile goale rămân: „rândul 5” trebuie să fie rândul 5 și în Excel, nu al cincilea plin.
-  const all = table.map((row) => row.map((cell) => (cell || "").replace(/\s+/g, " ").trim()));
+  // Windows-1250 aduce „ş/ţ” cu sedilă; în română corecte sunt „ș/ț” cu virgulă.
+  const all = table.map((row) => row.map((cell) => (cell || "").replace(/\s+/g, " ").trim().replace(/ş/g, "ș").replace(/ţ/g, "ț").replace(/Ş/g, "Ș").replace(/Ţ/g, "Ț")));
   if (all.filter((row) => row.some((cell) => cell)).length < 2) throw new Error(t("Fișierul nu conține rânduri de citit. Verifică dacă este un export CSV al băncii."));
   const header = findColumns(all);
   const columns = header?.columns || inferColumns(all);

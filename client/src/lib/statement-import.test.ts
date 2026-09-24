@@ -372,3 +372,10 @@ describe("codarea fișierului", () => {
     expect(decodeStatement(cp1250)).toBe("Plată ş");
   });
 });
+
+describe("diacriticele din extras", () => {
+  it("trec „ş/ţ” cu sedilă la „ș/ț” cu virgulă", () => {
+    const parsed = parseStatementCsv("Data;Descriere;Suma\n21.09.2026;Plată Ştefan Ţurcanu;-10,00");
+    expect(parsed.rows[0].description).toBe("Plată Ștefan Țurcanu");
+  });
+});

@@ -534,6 +534,8 @@ async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
         title: alert.title,
         body: alert.body,
         schedule: { at: alert.at, allowWhileIdle: true },
+        // Inexact: fără el, pe Android 14 fiecare programare deschidea setarea „Alarme și mementouri”.
+        isExactNotification: false,
         extra: { tag: alert.tag },
       })),
     });
@@ -645,7 +647,7 @@ async function showNow(title: string, body: string, tag: string) {
       const LocalNotifications = await loadNativeNotifications();
       const permission = await LocalNotifications.checkPermissions();
       if (permission.display !== "granted") return;
-      await LocalNotifications.schedule({ notifications: [{ id: Math.floor(Math.random() * 100000) + 5000, title, body, extra: { tag } }] });
+      await LocalNotifications.schedule({ notifications: [{ id: Math.floor(Math.random() * 100000) + 5000, title, body, isExactNotification: false, extra: { tag } }] });
       return;
     } catch {
       /* cădem pe Notification API */
