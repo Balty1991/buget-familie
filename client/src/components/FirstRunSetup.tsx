@@ -25,6 +25,16 @@ const PRESETS = [
   { category: "Casă & facturi", amount: 800, weekly: false, weeklyRate: 0 },
 ] as const;
 
+/**
+ * Plicurile de start nu pot cere mai mult decât banii scriși acum: o familie cu 2.900 lei
+ * nu primește 2.700 lei în plicuri fixe. Fără sume scrise, rămân propunerile obișnuite.
+ */
+const fitPresets = <T extends { amount: number }>(presets: T[], moneyNow: number): T[] => {
+  const total = presets.reduce((sum, preset) => sum + preset.amount, 0);
+  if (moneyNow <= 0 || total <= moneyNow) return presets;
+  return presets.map((preset) => ({ ...preset, amount: Math.max(10, Math.floor(preset.amount * moneyNow / total / 10) * 10) }));
+};
+
 const PARTNER_KINDS: Array<{ kind: PaymentKind; label: string }> = [
   { kind: "card", label: "Card" },
   { kind: "cash", label: "Cash" },
@@ -133,7 +143,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     const existingLabels = new Set(data.settings.salaryPlan.allocations.map((item) => item.category || item.label));
     const horizon = midHorizon(payday);
     const funded = [...paymentSources].sort((a, b) => b.openingBalance - a.openingBalance)[0] || paymentSources[0];
-    const presets = PRESETS.filter((preset) => selected.includes(preset.category));
+    const moneyNow = paymentSources.reduce((sum, source) => sum + (source.kind === "transfer" ? 0 : source.openingBalance), 0);
+    const presets = fitPresets(PRESETS.filter((preset) => selected.includes(preset.category)), moneyNow);
     const paydayReady = /^\d{4}-\d{2}-\d{2}$/.test(payday);
     const allocations: BudgetAllocation[] = opts.withEnvelopes
       ? [
@@ -196,6 +207,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const cashNow = moneySources.reduce((sum, source) => sum + Math.max(0, parseRomanianAmount(balances[source.id] || "0")), 0);
   const partnerNow = PARTNER_KINDS.reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(partnerBalances[item.kind] || "0")), 0);
   const totalNow = cashNow + (partnerName.trim() ? partnerNow : 0);
+  /** Ce sumă primește fiecare plic ales, după banii scriși acum — aceeași ca la creare. */
+  const presetAmount = new Map(fitPresets(PRESETS.filter((preset) => selected.includes(preset.category)), totalNow).map((preset) => [preset.category, preset.amount]));
 
   return (
     <div className="bf-modal-backdrop bf-onboarding-backdrop bf-first-run-backdrop" role="presentation">
@@ -323,7 +336,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
+                    <small>{money(presetAmount.get(preset.category) ?? preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );
@@ -358,13 +371,22 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 return (
                   <button key={preset.category} type="button" className={active ? "active" : ""} aria-pressed={active} onClick={() => setSelected((current) => current.includes(preset.category) ? current.filter((item) => item !== preset.category) : [...current, preset.category])}>
                     <b>{t(preset.category)}</b>
-                    <small>{money(preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
+                    <small>{money(presetAmount.get(preset.category) ?? preset.amount)}{preset.weekly && /^\d{4}-\d{2}-\d{2}$/.test(payday) ? t(" · ritm săptămânal până la venit") : preset.weekly ? t(" · total până pui data venitului") : t(" · pentru perioada aleasă")}</small>
                     {active && <Check size={14} />}
                   </button>
                 );
               })}
             </div>
             {!/^\d{4}-\d{2}-\d{2}$/.test(payday) && <p className="bf-helper">{t("Fără data venitului, plicurile rămân pe toată perioada, nu pe săptămâni.")}</p>}
+            <p className="bf-helper">{t("Cât ai acum? Din sumele astea calculăm cât poți folosi pe zi. Plicurile nu vor cere mai mult.")}</p>
+            <div className="bf-setup-sources">
+              {moneySources.slice(0, 2).map((source) => (
+                <label className="bf-field" key={source.id}>
+                  <span>{source.name}</span>
+                  <input inputMode="decimal" value={balances[source.id] || ""} onChange={(event) => setBalances((current) => ({ ...current, [source.id]: event.target.value }))} placeholder="0" />
+                </label>
+              ))}
+            </div>
             <div className="bf-onboarding-actions">
               <button className="bf-primary" onClick={finishFamily}><PiggyBank size={17} /> {t("Creează planul familiei")}</button>
             </div>

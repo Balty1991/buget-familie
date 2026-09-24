@@ -22,7 +22,7 @@ import { TodayBrief } from "@/components/TodayBrief";
 import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
 import { householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
-import { planCycle } from "@/lib/plan-cycle";
+import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   WhatsNewSheet,
   dateText,
@@ -105,7 +105,7 @@ function advisorSignals(data: AppData): AdvisorSignal[] {
   const pending = pendingRecurringInPlan(data).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   if (!math.plan.nextPayday) {
     signals.push({ id: "plan-needed", tone: "watch", eyebrow: t("URMĂTORUL PAS"), title: t("Alege următorul venit"), detail: t("Planul are nevoie de o dată de salariu pentru a calcula ritmul sigur de cheltuire."), action: "plan", actionLabel: t("Configurează planul") });
-  } else if (math.remaining < 0) {
+  } else if (math.remaining < 0 && !hasNoMoneyYet(data)) {
     signals.push({ id: "over-plan", tone: "risk", eyebrow: t("ATENȚIE"), title: t("Planul este peste limită cu {amount}", { amount: money(Math.abs(math.remaining)) }), detail: t("Sunt incluse {expenses} cheltuieli și {scheduled} rezervate până la {until}.", { expenses: money(math.periodExpenses), scheduled: money(math.scheduled), until: dateText(math.planEnd || math.plan.nextPayday) }), action: "plan", actionLabel: t("Revizuiește planul") });
   } else if (forecast.spentToDate > 0 && forecast.projectedRemaining < 0) {
     signals.push({ id: "pace-risk", tone: "risk", eyebrow: t("RITM DE REVIZUIT"), title: t("La ritmul actual lipsesc {amount}", { amount: money(Math.abs(forecast.projectedRemaining)) }), detail: t("Cheltuielile sunt în medie {pace} pe zi; ritmul sigur este {safe} pe zi până la venit.", { pace: money(forecast.paceDaily), safe: money(forecast.safeDaily) }), action: "plan", actionLabel: t("Ajustează planul") });

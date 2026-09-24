@@ -1,7 +1,7 @@
 import { envelopeDecisionStatus, inPlanPeriod, isoToday, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
 import { dayStripFigure, stripLei, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import { daysLabel, getLocale, t } from "@/lib/i18n";
-import { planCycle } from "@/lib/plan-cycle";
+import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 
 const exact = (value: number) => stripLei(value, getLocale());
 
@@ -15,7 +15,8 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const brief = todayBrief(data, asOf);
   const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
   const envelopes = data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) }));
-  const overPlan = math.remaining < 0;
+  const noMoneyYet = hasNoMoneyYet(data);
+  const overPlan = math.remaining < 0 && !noMoneyYet;
   const daily = math.plan.nextPayday ? forecast.safeDaily : 0;
   const weeklyEnvelopesRemaining = envelopes.filter((entry) => entry.scope === "week").reduce((sum, entry) => sum + entry.remaining, 0);
   const monthlyEnvelopesRemaining = envelopes.filter((entry) => entry.scope === "cycle").reduce((sum, entry) => sum + entry.remaining, 0);
@@ -27,7 +28,9 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === todayIso).reduce((sum, item) => sum + item.amount, 0);
   const trackHero = trackModeHero({ periodIncome, liquidNow, spentToday });
 
-  const heroLabel = overPlan
+  const heroLabel = noMoneyYet
+    ? t("Pune banii de azi")
+    : overPlan
     ? t("Peste limita planului")
     : brief.hasPayday
       ? t("Poți folosi azi")
@@ -43,7 +46,9 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const heroTracksWeek = !overPlan && brief.hasPayday && !brief.expired && rhythm.hasWeekly;
   /** Azi s-a consumat partea zilei, dar plicul mai are bani pentru zilele care urmează. */
   const todayUsedUp = rhythm.hasWeekly && rhythm.todayLeft <= 0.009 && rhythm.remaining > 0.009 && rhythm.remainingDays > 1 && rhythm.futureShare > 0;
-  const heroValue = overPlan
+  const heroValue = noMoneyYet
+    ? 0
+    : overPlan
     ? Math.abs(math.remaining)
     : heroTracksWeek
       ? brief.spendable
@@ -52,7 +57,9 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
         : data.settings.salaryPlan.allocations.length
           ? envelopeTotalRemaining
           : trackHero.value;
-  const heroHint = overPlan
+  const heroHint = noMoneyYet
+    ? t("Scrie cât ai acum pe card și în numerar (Setări → Surse și sold inițial). Apoi îți spunem cât poți folosi pe zi.")
+    : overPlan
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : heroTracksWeek
       ? todayUsedUp
@@ -88,7 +95,9 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   })();
   /** Partea de azi s-a dus, dar în plic mai sunt bani pentru zilele următoare (cumpărăturile săptămânii). */
   const noteDaily = todayUsedUp || rhythm.days.some((row) => row.isToday && row.over) ? rhythm.futureShare : heroTracksWeek ? brief.spendable : rhythm.todayShare;
-  const rhythmNote = !rhythm.hasWeekly
+  const rhythmNote = noMoneyYet
+    ? t("După ce pui banii de azi, împărțim plicul săptămânii pe zile.")
+    : !rhythm.hasWeekly
     ? t("Nu sunt plicuri cu ritm săptămânal de împărțit pe zile.")
     : rhythm.remaining <= 0 && rhythm.todayLeft <= 0
       ? t("Plicul săptămânii e gol până {until}.", { until: untilName })

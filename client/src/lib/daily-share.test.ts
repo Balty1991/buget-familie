@@ -69,3 +69,26 @@ describe("după cumpărăturile săptămânii (M2)", () => {
     expect(summary.rhythm.futureShare).toBeGreaterThan(0);
   });
 });
+
+describe("planul de familie nu pornește „în roșu” (M1)", () => {
+  it("cu plicuri, dar fără bani scriși încă, cere banii de azi în loc de „peste limită”", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan = {
+      ...data.settings.salaryPlan,
+      periodStart: ASOF,
+      nextPayday: "2026-10-05",
+      allocations: [{ id: "food", label: "Alimente", amount: 1500, category: "Alimente", weeklyPace: true }, { id: "home", label: "Casă & facturi", amount: 800, category: "Casă & facturi" }],
+    };
+    const summary = buildTodaySummary(data, ASOF);
+    expect(summary.overPlan).toBe(false);
+    expect(summary.heroLabel).toBe("Pune banii de azi");
+    expect(summary.heroValue).toBe(0);
+    expect(summary.rhythmNote).not.toMatch(/pe zi până/);
+  });
+
+  it("după ce există bani, depășirea reală se arată în continuare", () => {
+    const data = noEnvelopes();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, allocations: [{ id: "food", label: "Alimente", amount: 3000, category: "Alimente" }] };
+    expect(buildTodaySummary(data, ASOF).overPlan).toBe(true);
+  });
+});

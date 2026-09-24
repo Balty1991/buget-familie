@@ -14,3 +14,10 @@ export function planCycle(data: AppData) {
   const weekly = plan.weeklyLimit || weeklyPacedTotal / weeks;
   return { plan, planEnd, selected, periodExpenses, days, weeks, weekly, weeklyPacedTotal, remaining: alloc.unrepartized, ...alloc };
 }
+
+/**
+ * Încă nu știm câți bani sunt: nicio sursă cu sold și nicio mișcare. Plicurile nu pot fi
+ * „peste limită” față de zero lei pe care omul nici n-a apucat să-i scrie (testare, M1).
+ */
+export const hasNoMoneyYet = (data: AppData) =>
+  data.transactions.length === 0 && data.settings.paymentSources.every((source) => source.openingBalance <= 0);

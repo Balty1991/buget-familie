@@ -2791,4 +2791,7 @@ export const en: Record<string, string> = {
   "Invitația": "Invitation",
   "Introdu codul notat pe hârtie când s-a creat camera (sau la prima conectare, la camerele vechi). Arată așa: XXXX-XXXX-XXXX-XXXX.": "Enter the code you wrote on paper when the room was created (or at the first connection, for older rooms). It looks like this: XXXX-XXXX-XXXX-XXXX.",
   "Codul notat": "Your code",
+  "Scrie cât ai acum pe card și în numerar (Setări → Surse și sold inițial). Apoi îți spunem cât poți folosi pe zi.": "Enter what you have now on card and in cash (Settings → Sources and opening balance). Then we'll tell you how much you can use per day.",
+  "După ce pui banii de azi, împărțim plicul săptămânii pe zile.": "Once you add today's money, we'll split the week's envelope into days.",
+  "Cât ai acum? Din sumele astea calculăm cât poți folosi pe zi. Plicurile nu vor cere mai mult.": "How much do you have now? We use these amounts to work out what you can spend per day. The envelopes won't ask for more.",
 };
