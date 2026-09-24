@@ -49,6 +49,10 @@ const MAX_ROWS = 2000;
  * românești încă exportă („ş”, „ţ”). Citit ca UTF-8, „Plată” ar deveni „Plat�”.
  */
 export function decodeStatement(buffer: ArrayBuffer): string {
+  // „Text Unicode” din Excel și unele bănci: UTF-16 cu marcaj la început (FF FE / FE FF).
+  const head = new Uint8Array(buffer.slice(0, 2));
+  if (head[0] === 0xff && head[1] === 0xfe) return new TextDecoder("utf-16le").decode(buffer);
+  if (head[0] === 0xfe && head[1] === 0xff) return new TextDecoder("utf-16be").decode(buffer);
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
   } catch {

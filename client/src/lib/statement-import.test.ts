@@ -370,6 +370,9 @@ describe("codarea fișierului", () => {
     // „Plată ş” în Windows-1250: ă = 0xE3, ş = 0xBA.
     const cp1250 = new Uint8Array([0x50, 0x6c, 0x61, 0x74, 0xe3, 0x20, 0xba]).buffer;
     expect(decodeStatement(cp1250)).toBe("Plată ş");
+    // UTF-16LE cu marcaj („Text Unicode” din Excel): „Plată” = 50 00 6C 00 61 00 74 00 03 01.
+    const utf16 = new Uint8Array([0xff, 0xfe, 0x50, 0x00, 0x6c, 0x00, 0x61, 0x00, 0x74, 0x00, 0x03, 0x01]).buffer;
+    expect(decodeStatement(utf16).replace(/^\uFEFF/, "")).toBe("Plată");
   });
 });
 
