@@ -616,6 +616,11 @@ async function syncPlayPurchase(purchaseToken, roomIdHint) {
     const previous = (await purchaseRef.get()).data();
     const roomId = roomIdHint && /^[0-9a-f]{64}$/.test(roomIdHint) ? roomIdHint : previous?.roomId;
     await purchaseRef.set({ productId: productId || null, expiresAt: expiresAt || null, state: subscription.subscriptionState || null, roomId: roomId || null, updatedAt: firestore_1.FieldValue.serverTimestamp() }, { merge: true });
+    // Un abonament ține o singură cameră: mutat în alta, camera veche pierde Familia.
+    // Altfel același token, trimis cu alte ID-uri, ar fi dat Familia oricâtor familii.
+    if (previous?.roomId && previous.roomId !== roomId) {
+        await db.collection("familyEntitlements").doc(previous.roomId).delete().catch(() => undefined);
+    }
     if (roomId) {
         const roomRef = db.collection("familyEntitlements").doc(roomId);
         if (active)

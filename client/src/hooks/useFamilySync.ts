@@ -356,6 +356,16 @@ export function useFamilySync(
       setSyncNotice(t("Codul nu arată ca o invitație. Lipește tot mesajul primit sau tot linkul."));
       return;
     }
+    /**
+     * Invitația poate veni de la oricine: un link, un mesaj sau altă aplicație de pe telefon.
+     * La intrare, tot registrul de pe telefon pleacă în camera aceea; întrebăm limpede înainte.
+     */
+    const current = syncDataRef.current;
+    const hasLocalData = current.transactions.length > 0 || current.debts.length > 0 || current.savings.length > 0 || current.settings.salaryPlan.allocations.length > 0 || current.settings.paymentSources.some((source) => source.openingBalance > 0);
+    if (hasLocalData && !(await askConfirm(
+      t("Tot ce e pe acest telefon (mișcări, plicuri, datorii) va fi trimis și văzut în camera din invitație. Intră doar dacă invitația e de la cineva din casa ta."),
+      { title: t("Intri în această familie?"), confirmLabel: t("Da, intru") },
+    ))) return;
     if (await syncEnterInvite(invite, "join")) setSyncInviteDraft("");
   }, t("Nu am putut intra în familie."));
 

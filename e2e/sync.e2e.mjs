@@ -96,6 +96,14 @@ async function addExpense(page, amount) {
   await page.locator(".bf-undo-bar").waitFor();
 }
 
+/** „Intră în familie”; telefonul are deja date, deci confirmă că le trimite în camera invitației. */
+async function joinWithInvite(page) {
+  await page.getByRole("button", { name: "Intră în familie" }).click();
+  const confirm = page.getByRole("button", { name: "Da, intru" });
+  await confirm.waitFor({ timeout: 5_000 });
+  await confirm.click();
+}
+
 const connected = (page) => page.locator(".bf-sync-state.connected").count().then((count) => count > 0);
 
 async function main() {
@@ -115,7 +123,7 @@ async function main() {
     // Linkul deschis de la zero, ca din camera telefonului (doar schimbarea `#` n-ar reîncărca pagina).
     await ioana.page.goto("about:blank");
     await ioana.page.goto(`${BASE}#alatura=${invite}`);
-    await ioana.page.getByRole("button", { name: "Intră în familie" }).click();
+    await joinWithInvite(ioana.page);
     await waitFor(() => connected(ioana.page), "Ioana conectată");
 
     step("Cheltuiala Ioanei ajunge la Radu pe numele ei");
@@ -182,7 +190,7 @@ async function main() {
     if (!oldRoom.movedAt || oldRoom.transactions || oldRoom.hasInvite) fail(`Camera veche nu a fost golită corect: ${JSON.stringify(oldRoom)}`);
     await mihai.page.goto("about:blank");
     await mihai.page.goto(`${BASE}#alatura=${moved}`);
-    await mihai.page.getByRole("button", { name: "Intră în familie" }).click();
+    await joinWithInvite(mihai.page);
     await waitFor(() => connected(mihai.page), "Mihai în camera nouă");
     await addExpense(mihai.page, 7);
     await waitFor(async () => (await ledger(ana.page)).transactions.some((item) => item.amount === 7 && item.person === "Mihai"), "7 lei ai lui Mihai la Ana, prin camera nouă");

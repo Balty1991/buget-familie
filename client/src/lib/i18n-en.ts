@@ -2888,4 +2888,7 @@ export const en: Record<string, string> = {
   "Ascunde codul QR": "Hide QR code",
   "Arată codul QR": "Show QR code",
   "Deschide în aplicație": "Open in the app",
+  "Tot ce e pe acest telefon (mișcări, plicuri, datorii) va fi trimis și văzut în camera din invitație. Intră doar dacă invitația e de la cineva din casa ta.": "Everything on this phone (entries, envelopes, debts) will be sent to and visible in the invitation's room. Only join if the invitation comes from someone in your household.",
+  "Intri în această familie?": "Join this family?",
+  "Da, intru": "Yes, join",
 };
