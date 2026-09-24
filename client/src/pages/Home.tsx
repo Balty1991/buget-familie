@@ -38,6 +38,7 @@ import { isNativeApp } from "@/lib/app-storage";
 import { buildUndoSave } from "@/lib/undo-delete";
 import { formatInvite, parseInvite, takeInviteFromLocation } from "@/lib/family-invite";
 import { openHouseholdGuide, TodayView } from "@/pages/TodayView";
+import { reloadToNewVersion, useUpdateAvailable } from "@/lib/update-check";
 
 export { recentActivityMoves } from "@/pages/TodayView";
 
@@ -82,6 +83,7 @@ const preloadView = (id: MainView) => {
 };
 
 export default function Home() {
+  const updateAvailable = useUpdateAvailable();
   const [data, setData] = useState<AppData>(readInitialAppData);
   const { storageNotice, setStorageNotice, storageReady, applyData } = usePersistAppData(data, setData);
   /** „Azi” al familiei: se setează înainte de orice calcul din randare (testare, #10). */
@@ -561,6 +563,7 @@ export default function Home() {
   return <div className={"bf-app os-shell" + (setupOpen || onboardingOpen ? " is-setup" : "")}>
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
+    {updateAvailable && <div className="bf-offline-banner bf-update-banner" role="status" aria-live="polite"><RotateCcw size={15} aria-hidden="true" /><span>{t("Există o versiune nouă a aplicației.")}</span><button type="button" onClick={() => void reloadToNewVersion()}>{t("Reîncarcă")}</button></div>}
     {!online && <div className="bf-offline-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{syncPanelProps.connected ? t("Fără conexiune — modificările rămân pe telefon și se trimit la reconectare.") : t("Fără conexiune — lucrezi local pe acest telefon.")}</span></div>}
     {syncPanelProps.stopped && !onSyncScreen && <div className="bf-offline-banner bf-sync-off-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{t("Sincronizarea familiei e oprită pe acest telefon. Ce notezi nu ajunge la ceilalți.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Reconectează")}</button></div>}
     {syncPanelProps.needsSelfChoice && syncPanelProps.connected && !onSyncScreen && <div className="bf-offline-banner bf-sync-off-banner" role="status"><Users size={15} aria-hidden="true" /><span>{t("Spune-ne cine ești pe acest telefon, ca cheltuielile tale să nu apară pe altcineva.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Alege")}</button></div>}

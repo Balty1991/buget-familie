@@ -34,13 +34,31 @@ function vitePluginPreloadCriticalFonts(): Plugin {
   };
 }
 
-export default defineConfig(() => {
-  const plugins = [react(), tailwindcss(), vitePluginPreloadCriticalFonts()];
+/**
+ * Un identificator pentru fiecare build, pus și în `build.json` lângă pagină. Aplicația deschisă îl
+ * compară cu cel publicat și, dacă diferă, arată „Versiune nouă” — altfel, după o publicare, telefonul
+ * rămânea pe codul vechi până la o reîncărcare dublă.
+ */
+const BUILD_ID = (process.env.GITHUB_SHA || "").slice(0, 12) || Date.now().toString(36);
+
+function vitePluginBuildId(): Plugin {
+  return {
+    name: "build-id",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "build.json", source: JSON.stringify({ id: BUILD_ID }) });
+    },
+  };
+}
+
+export default defineConfig(({ command }) => {
+  const plugins = [react(), tailwindcss(), vitePluginPreloadCriticalFonts(), vitePluginBuildId()];
 
   return {
     // GitHub Pages servește acest proiect sub /buget-familie/; buildurile locale și Android rămân la rădăcină.
     base: process.env.GITHUB_PAGES === "true" ? "/buget-familie/" : "/",
     plugins,
+    define: { "import.meta.env.VITE_BUILD_ID": JSON.stringify(command === "build" ? BUILD_ID : "dev") },
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "client", "src"),

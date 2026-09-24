@@ -2924,4 +2924,6 @@ export const en: Record<string, string> = {
   "Aplică · automat (acum {name})": "Apply · automatic (now {name})",
   "Aplică {name} · oprește automat": "Apply {name} · turns off automatic",
   "tema automată": "automatic theme",
+  "Există o versiune nouă a aplicației.": "A new version of the app is available.",
+  "Reîncarcă": "Reload",
 };
