@@ -3,7 +3,7 @@
  * Starea live trăiește în Home, ca să reziste la schimbarea de tab.
  */
 import { useEffect, useState } from "react";
-import { Check, Cloud, Copy, KeyRound, RotateCcw, ShieldAlert, Smartphone, Users, X } from "lucide-react";
+import { Check, Cloud, Copy, KeyRound, RotateCcw, ShieldAlert, Smartphone, UserRound, Users, X } from "lucide-react";
 import { checkFamilyPassword, generateFamilyPassword } from "@/lib/family-password";
 import { Field, type SyncPanelProps } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
@@ -28,7 +28,47 @@ function PasswordMeter({ value }: { value: string }) {
   );
 }
 
-export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery }: SyncPanelProps) {
+/**
+ * „Cine ești pe acest telefon?” — fiecare telefon notează pe membrul lui.
+ * Alegerea rămâne pe telefon; numele membrilor se sincronizează.
+ */
+function SelfMemberPicker({ members, selfMemberId, needsChoice, onChoose, onAdd }: { members: SyncPanelProps["members"]; selfMemberId: string; needsChoice: boolean; onChoose: (id: string) => void; onAdd: (name: string) => void }) {
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const add = () => {
+    if (!name.trim()) return;
+    onAdd(name);
+    setName("");
+    setAdding(false);
+  };
+  return (
+    <section className={`bf-sync-self${needsChoice ? " is-needed" : ""}`} aria-labelledby="sync-self-title">
+      <p className="bf-kicker">{t("PE ACEST TELEFON")}</p>
+      <h3 id="sync-self-title"><UserRound size={16} aria-hidden="true" /> {t("Cine ești pe acest telefon?")}</h3>
+      <p className="bf-helper">{needsChoice
+        ? t("Alege-ți numele, ca tot ce notezi de aici să apară pe tine, nu pe celălalt telefon.")
+        : t("Ce notezi de aici apare pe acest membru. Celălalt telefon își alege singur membrul lui.")}</p>
+      <div className="bf-sync-self-options" role="radiogroup" aria-labelledby="sync-self-title">
+        {members.map((member) => (
+          <button key={member.id} type="button" role="radio" aria-checked={member.id === selfMemberId && !needsChoice} className={member.id === selfMemberId && !needsChoice ? "active" : ""} onClick={() => onChoose(member.id)}>
+            {member.name}
+          </button>
+        ))}
+        <button type="button" className={adding ? "active" : ""} onClick={() => setAdding((value) => !value)}>{t("Altcineva")}</button>
+      </div>
+      {adding && (
+        <div className="bf-sync-self-add">
+          <Field label={t("Numele tău")}>
+            <input value={name} onChange={(event) => setName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") add(); }} maxLength={40} placeholder="ex. Ioana" />
+          </Field>
+          <button type="button" className="bf-secondary" disabled={!name.trim()} onClick={add}>{t("Sunt eu")}</button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -132,6 +172,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       <p className="bf-kicker">{connected ? t("CONECTAT") : t("CONECTEAZĂ FAMILIA")}</p>
       {connected ? <>
         <p><b>{t("Actualizare live, fără reîmprospătare manuală")}</b><br />{t("Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.")}</p>
+        {sessionRemembered && <p className="bf-helper">{t("Telefonul se reconectează singur când redeschizi aplicația. Parola nu e păstrată, doar o cheie făcută din ea.")}</p>}
         {recoveryShown && (
           <div className="bf-notice bf-sync-secret" role="status">
             <p><KeyRound size={14} /> {t("Notează acest cod o dată, pe hârtie, nu în telefon. Cu el poți scoate parola dacă o uiți.")}</p>
@@ -149,6 +190,9 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             {recoveryIssued ? t("Cod nou de recuperare") : t("Creează cod de recuperare")}
           </button>
         </div>
+        {showSessionPassword && !password && (
+          <p className="bf-helper" role="status">{t("Sesiunea s-a reluat singură, iar parola nu e păstrată pe telefon. Dacă ai uitat-o, folosește codul de recuperare.")}</p>
+        )}
         {showSessionPassword && password && (
           <div className="bf-notice bf-sync-secret" role="status">
             <p>{t("Parola acestei sesiuni (doar cât ești conectat):")}</p>
@@ -165,7 +209,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       </> : <>
         <div className="bf-sync-backup-reminder" role="note">
           <ShieldAlert size={16} aria-hidden="true" />
-          <p>{t("Înainte de reinstalare sau de schimbarea telefonului: exportă un backup din Setări. Parola de familie nu se salvează pe aparat.")}</p>
+          <p>{t("Înainte de reinstalare sau de schimbarea telefonului: exportă un backup din Setări. Parola de familie nu se salvează pe aparat; după reinstalare îți trebuie din nou.")}</p>
         </div>
         <Field label={t("Parola familiei")} hint={t("Orice parolă inventată de voi. O propoziție scurtă e mai bună decât un cuvânt cu simboluri: „pisicaVerdeSareGardul7”. Trebuie să fie identică, literă cu literă, pe toate telefoanele.")}>
           <input type={showGenerated ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setShowGenerated(false); }} placeholder={t("minimum 12 caractere")} autoComplete="new-password" />
@@ -184,7 +228,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
           )}
         </div>
         <p className="bf-helper">{t("Dacă ai registrul pe acest telefon, poți pune o parolă nouă — camera veche rămâne. Recuperarea e pentru când telefonul e gol și ai notat codul.")}</p>
-        <p className="bf-helper">{t("Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată.")}</p>
+        <p className="bf-helper">{t("Nu ai nevoie de niciun cont sau token. Parola nu se salvează pe telefon și nu este trimisă niciodată necriptată. Telefonul ține minte doar o cheie făcută din ea, ca să se reconecteze singur.")}</p>
         <button className="bf-primary full" disabled={busy || !online} onClick={onConnect}><Users size={17} /> {t("Conectează acest telefon")}</button>
         <button type="button" className="bf-link-button" onClick={() => setForgotOpen((value) => !value)}>{t("Am uitat parola")}</button>
         {forgotOpen && (
@@ -200,6 +244,8 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         )}
       </>}
     </section>
+
+    {connected && members.length > 0 && <SelfMemberPicker members={members} selfMemberId={selfMemberId} needsChoice={needsSelfChoice} onChoose={onChooseSelf} onAdd={onAddSelf} />}
 
     {(connected || devices.length > 0) && (
       <section className="bf-sync-devices" aria-labelledby="sync-devices-title">

@@ -18,6 +18,7 @@ import {
   type BudgetAllocation,
   type PaymentSource,
 } from "./finance-data";
+import { selfMemberIdOf } from "./member-identity";
 
 export type SourceOption = {
   source: PaymentSource;
@@ -99,7 +100,7 @@ export function planSpend(
   },
 ): SpendPlan {
   const amount = Math.max(0, input.amount);
-  const memberId = input.memberId || data.settings.members[0]?.id;
+  const memberId = input.memberId || selfMemberIdOf(data);
 
   const sources: SourceOption[] = data.settings.paymentSources.map((source) => {
     const balance = Math.round(sourceBalance(data, source.id) * 100) / 100;
@@ -177,7 +178,7 @@ export function planSpend(
 
 /** Unde intră un venit: sursele, cu soldul lor, cea a membrului întâi. */
 export function planIncome(data: AppData, input: { memberId?: string } = {}): SourceOption[] {
-  const memberId = input.memberId || data.settings.members[0]?.id;
+  const memberId = input.memberId || selfMemberIdOf(data);
   return data.settings.paymentSources
     .map((source) => ({
       source,

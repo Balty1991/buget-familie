@@ -8,6 +8,7 @@ import { storeReceiptImages } from "@/lib/receipt-storage";
 import { Field, Modal, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 import { RoDateInput } from "@/components/RoDateInput";
+import { selfMemberIdOf } from "@/lib/member-identity";
 
 const RECEIPT_DRAFT_KEY = "buget-familie:receipt-draft";
 type ReceiptFormDraft = {
@@ -50,7 +51,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
   const [amount, setAmount] = useState(draft?.amount ?? "");
   const [date, setDate] = useState(draft?.date || isoToday());
   const [sourceId, setSourceId] = useState(draft?.sourceId || data.settings.paymentSources[0]?.id || "");
-  const [memberId, setMemberId] = useState(draft?.memberId || data.settings.members[0]?.id || "");
+  const [memberId, setMemberId] = useState(draft?.memberId || selfMemberIdOf(data));
   const [note, setNote] = useState(draft?.note ?? "");
   const [images, setImages] = useState<string[]>(draft?.images ?? []);
   const [lines, setLines] = useState<Array<{ id: string; category: string; amount: string; label: string }>>(draft?.lines?.length ? draft.lines : [{ id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }]);

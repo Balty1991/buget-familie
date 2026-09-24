@@ -33,6 +33,7 @@ import {
 } from "./finance-data";
 import { daysLabel, getLocale, t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
+import { selfMemberIdOf } from "./member-identity";
 
 const fold = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const daysBetween = (from: string, to: string) => Math.round((new Date(`${to}T12:00:00`).valueOf() - new Date(`${from}T12:00:00`).valueOf()) / 86_400_000);
@@ -275,7 +276,7 @@ export const detectSubscriptions = (data: AppData, asOf = isoToday()): Subscript
 
 export const recurringFromDetection = (data: AppData, detection: SubscriptionDetection): RecurringPayment | undefined => {
   const sourceId = detection.sourceId || data.settings.paymentSources[0]?.id;
-  const memberId = detection.memberId || data.settings.members[0]?.id;
+  const memberId = detection.memberId || selfMemberIdOf(data);
   if (!sourceId || !memberId || detection.amount <= 0) return undefined;
   const dueDay = Math.min(28, Math.max(1, Number(detection.lastDate.slice(8, 10)) || 1));
   return { id: newId("recurring"), name: detection.name, amount: detection.amount, category: detection.category, sourceId, memberId, dueDay, active: true, autoPost: false, note: t("Adăugat din detectarea abonamentelor"), updatedAt: new Date().toISOString() };

@@ -11,6 +11,7 @@ import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, El
 import { BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
+import { selfMemberIdOf } from "@/lib/member-identity";
 
 const money = new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 });
 
@@ -43,7 +44,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const [category, setCategory] = useState("Alimente");
   const [incomeLabel, setIncomeLabel] = useState("");
   const [merchant, setMerchant] = useState("");
-  const [memberId, setMemberId] = useState(data.settings.members[0]?.id || "");
+  const [memberId, setMemberId] = useState(selfMemberIdOf(data));
   const [sourceId, setSourceId] = useState(data.settings.paymentSources[0]?.id || "");
   const [allocationId, setAllocationId] = useState("outside");
   const [fromWeekIndex, setFromWeekIndex] = useState<number | undefined>();

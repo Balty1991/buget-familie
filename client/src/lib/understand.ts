@@ -43,6 +43,7 @@ import { relatedCategories } from "./suggest-source";
 import { spendGroupOf } from "./product-catalog";
 import { explicitSplitLines, extractAmounts, extractDates, parseAssistantMessage, repeatFactor, type AppScreen, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
+import { selfMemberIdOf, selfMemberOf } from "./member-identity";
 
 export type FinancialUpdate =
   | { kind: "income"; amount: number; title: string; date?: string; memberId?: string; clientCaptureId?: string }
@@ -156,7 +157,7 @@ export function memberIdFor(data: AppData, hint: string, index = 0) {
   const members = data.settings.members;
   if (/sotie|sotiei|partenera|ea\b/.test(folded)) return members[1]?.id || members[0]?.id;
   if (/sot\b|sotul|el\b/.test(folded) && !/sotie/.test(folded)) return members[0]?.id;
-  return members[index]?.id || members[0]?.id;
+  return (index ? members[index]?.id : undefined) || selfMemberIdOf(data) || members[0]?.id;
 }
 
 export function parsePayday(raw: string) {
@@ -314,7 +315,7 @@ export function buildExpenseOffer(
 ): { text: string; choices: ChatChoice[] } {
   const { amount, title, category, date } = spend;
   const when = dateCopy(date);
-  const member = data.settings.members[0];
+  const member = selfMemberOf(data);
   const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
   const related = relatedCategories(category);
   const habit = findHabit(memory, title, title);

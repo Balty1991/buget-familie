@@ -648,6 +648,44 @@ html.theme-dark .os-dock button.is-on svg {
   line-height: 1.35;
 }
 .bf-offline-banner svg { flex: 0 0 auto; color: var(--cf-warning, #8d6515); }
+.bf-offline-banner > span { flex: 1 1 auto; }
+.bf-sync-off-banner button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, var(--cf-warning, #8d6515) 55%, transparent);
+  border-radius: 999px;
+  background: var(--cf-surface, #fffdf7);
+  color: var(--cf-ink, #1a2420);
+  font: inherit;
+}
+
+/* „Cine ești pe acest telefon?” */
+.bf-sync-self {
+  display: grid;
+  gap: .6rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--cf-ink, #1a2420) 14%, transparent);
+  border-radius: 1rem;
+  background: var(--cf-surface, #fffdf7);
+  color: var(--cf-ink, #1a2420);
+}
+.bf-sync-self.is-needed { border-color: color-mix(in srgb, var(--cf-warning, #c49a2a) 70%, transparent); background: color-mix(in srgb, var(--cf-warning, #c49a2a) 12%, var(--cf-surface, #fffdf7)); }
+.bf-sync-self h3 { display: flex; align-items: center; gap: .4rem; margin: 0; font-size: 1rem; }
+.bf-sync-self-options { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bf-sync-self-options button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid color-mix(in srgb, var(--cf-ink, #1a2420) 22%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+}
+.bf-sync-self-options button.active { border-color: var(--cf-primary-strong, #1f5240); background: var(--cf-primary-strong, #1f5240); color: #fff; }
+.bf-sync-self-add { display: grid; gap: .5rem; }
 .bf-sync-state.offline {
   border-color: color-mix(in srgb, var(--cf-warning, #c49a2a) 50%, transparent);
   background: color-mix(in srgb, var(--cf-warning, #c49a2a) 12%, transparent);

@@ -5,6 +5,7 @@ import { CalendarClock, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringPayment } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
+import { selfMemberIdOf } from "@/lib/member-identity";
 
 const money = (value: number) => new Intl.NumberFormat(getLocale(), { style: "currency", currency: "RON", maximumFractionDigits: 0 }).format(value);
 
@@ -13,7 +14,7 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Casă & facturi");
   const [sourceId, setSourceId] = useState(data.settings.paymentSources[0]?.id || "");
-  const [memberId, setMemberId] = useState(data.settings.members[0]?.id || "");
+  const [memberId, setMemberId] = useState(selfMemberIdOf(data));
   const [dueDay, setDueDay] = useState("1");
   const [autoPost, setAutoPost] = useState(false);
   const [error, setError] = useState("");

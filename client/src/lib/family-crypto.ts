@@ -1,6 +1,7 @@
 /**
  * Atelierul Financiar — criptare locală a registrului de familie și unirea a două copii.
  * Parola nu se persistă; doar un pachet AES-GCM deja criptat părăsește telefonul.
+ * Pe telefon poate rămâne cheia PBKDF2 neexportabilă (vezi family-session.ts).
  */
 import {
   buildPendingReviewMeta,
@@ -39,12 +40,21 @@ const toBase64 = (bytes: Uint8Array) => {
 
 const fromBase64 = (value: string) => Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
 
-async function deriveKey(secret: string, salt: Uint8Array) {
-  const material = await crypto.subtle.importKey("raw", encoder.encode(secret), "PBKDF2", false, ["deriveKey"]);
+/**
+ * Parola familiei sau cheia PBKDF2 făcută din ea. Cheia e neexportabilă: poate sta pe
+ * telefon ca sesiunea să se reia singură, fără ca parola să poată fi citită înapoi.
+ */
+export type FamilySecret = string | CryptoKey;
+
+export const importFamilyKeyMaterial = (password: string) =>
+  crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveKey"]);
+
+async function deriveKey(secret: FamilySecret, salt: Uint8Array) {
+  const material = typeof secret === "string" ? await importFamilyKeyMaterial(secret) : secret;
   return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, material, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 }
 
-export async function encryptFamilyData(data: AppData, secret: string): Promise<EncryptedEnvelope> {
+export async function encryptFamilyData(data: AppData, secret: FamilySecret): Promise<EncryptedEnvelope> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(secret, salt);
@@ -68,6 +78,7 @@ export async function encryptFamilyData(data: AppData, secret: string): Promise<
       seenWeeklyPlanTranches: [],
       basketProducts: [],
       merchantRules: [],
+      selfMemberId: undefined,
     },
   };
   const plain = encoder.encode(JSON.stringify(shareable));
@@ -75,7 +86,7 @@ export async function encryptFamilyData(data: AppData, secret: string): Promise<
   return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(ciphertext)) };
 }
 
-export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: string): Promise<AppData> {
+export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: FamilySecret): Promise<AppData> {
   if (envelope.version !== 1) throw new Error("Format de pachet necunoscut.");
   try {
     const key = await deriveKey(secret, fromBase64(envelope.salt));
@@ -334,7 +345,12 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
   // Aceeași regulă ca la normalizare: vârsta ține locul numărului, ca o curățenie mare să
   // nu șteargă urmele ștergerilor dinainte și să le învie de pe celălalt telefon.
   const deleted = pruneTombstones(deletedAll);
-  const memberMap = new Map([...remote.settings.members, ...local.settings.members].map((item) => [item.id, item]));
+  // Același membru pe ambele telefoane: câștigă ultima redenumire; fără marcaj rămâne varianta locală.
+  const memberMap = new Map(remote.settings.members.map((item) => [item.id, item]));
+  local.settings.members.forEach((item) => {
+    const theirs = memberMap.get(item.id);
+    if (!theirs || (Date.parse(item.updatedAt || "") || 0) >= (Date.parse(theirs.updatedAt || "") || 0)) memberMap.set(item.id, item);
+  });
   const paymentSources = mergePaymentSources(local.settings.paymentSources, remote.settings.paymentSources);
   const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);
   // Plan scalars follow LWW on the plan stamp, but plicuri / transferuri / reguli
@@ -430,6 +446,8 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       syncDevices,
       salaryPlan,
       syncRecoveryIssuedAt: local.settings.syncRecoveryIssuedAt || remote.settings.syncRecoveryIssuedAt,
+      // Cine folosește telefonul e o alegere locală; pachetul altui telefon nu o schimbă.
+      selfMemberId: local.settings.selfMemberId,
     },
   });
 }

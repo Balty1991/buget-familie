@@ -3,7 +3,7 @@
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { BarChart3, Bell, BookOpen, CloudOff, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BarChart3, Bell, BookOpen, CloudOff, Users, RotateCcw, BellRing, CalendarClock, CreditCard, Inbox, Info, LayoutGrid, MessagesSquare, MoreHorizontal, PlayCircle, Plus, ReceiptText, Search, ShieldCheck, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { adoptOutsideExpenses, calculateHealthScore, commitLedgerEntry, confirmRecurringPayment, envelopeDecisionStatus, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
 import { addContribution, eventTraits } from "@/lib/planned-events";
@@ -49,6 +49,7 @@ import { useTodaySummary } from "@/hooks/useTodaySummary";
 import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/EnvelopeConflictBanner";
 import { FirstRunSetup } from "@/components/FirstRunSetup";
 import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
+import { selfMemberOf } from "@/lib/member-identity";
 
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
 const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio })));
@@ -702,7 +703,7 @@ export default function Home() {
     if (skip instanceof HTMLElement && skip === document.activeElement) skip.blur();
   }, []);
 
-  const { syncPanelProps, setSyncPassword, setSyncPasswordReveal } = useFamilySync(data, setData);
+  const { syncPanelProps, setSyncPassword, setSyncPasswordReveal } = useFamilySync(data, setData, storageReady);
   const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
   useEffect(() => {
     const on = () => setOnline(true);
@@ -927,7 +928,7 @@ export default function Home() {
       deleted: [...current.deleted, { entity: "transactions" as const, id: removed.id, deletedAt: now }].slice(-500),
     };
   });
-  const openNaturalDraft = (draft: NaturalDraft) => { const member = data.settings.members[0]; const source = data.settings.paymentSources[0]; if (!member || !source) { openTx(); return; } openTx({ id: newId("natural-draft"), title: draft.title, amount: draft.amount, kind: draft.kind, category: draft.category, source: source.name, sourceId: source.id, person: member.name, memberId: member.id, date: draft.date || isoToday(), note: draft.note }); };
+  const openNaturalDraft = (draft: NaturalDraft) => { const member = selfMemberOf(data); const source = data.settings.paymentSources[0]; if (!member || !source) { openTx(); return; } openTx({ id: newId("natural-draft"), title: draft.title, amount: draft.amount, kind: draft.kind, category: draft.category, source: source.name, sourceId: source.id, person: member.name, memberId: member.id, date: draft.date || isoToday(), note: draft.note }); };
   const saveQuickTemplate = (item: AppData["settings"]["quickTemplates"][number]) => update((current) => ({ ...current, settings: { ...current.settings, quickTemplates: [item, ...current.settings.quickTemplates.filter((entry) => entry.id !== item.id && entry.label.toLocaleLowerCase("ro-RO") !== item.label.toLocaleLowerCase("ro-RO"))].slice(0, 12) } }));
   const deleteQuickTemplate = (id: string) => update((current) => ({ ...current, settings: { ...current.settings, quickTemplates: current.settings.quickTemplates.filter((item) => item.id !== id) } }));
   const archiveQuickTemplate = (id: string) => update((current) => { const template = current.settings.quickTemplates.find((item) => item.id === id); if (!template) return current; const archivedAt = new Date().toISOString(); return { ...current, settings: { ...current.settings, quickTemplates: current.settings.quickTemplates.filter((item) => item.id !== id), archivedQuickTemplates: [{ ...template, archivedAt }, ...current.settings.archivedQuickTemplates.filter((item) => item.id !== id)].slice(0, 60) } }; });
@@ -992,6 +993,8 @@ export default function Home() {
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
     {!online && <div className="bf-offline-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{syncPanelProps.connected ? t("Fără conexiune — modificările rămân pe telefon și se trimit la reconectare.") : t("Fără conexiune — lucrezi local pe acest telefon.")}</span></div>}
+    {syncPanelProps.stopped && more !== "sync" && <div className="bf-offline-banner bf-sync-off-banner" role="status" aria-live="polite"><CloudOff size={15} aria-hidden="true" /><span>{t("Sincronizarea familiei e oprită pe acest telefon. Ce notezi nu ajunge la ceilalți.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Reconectează")}</button></div>}
+    {syncPanelProps.needsSelfChoice && syncPanelProps.connected && more !== "sync" && <div className="bf-offline-banner bf-sync-off-banner" role="status"><Users size={15} aria-hidden="true" /><span>{t("Spune-ne cine ești pe acest telefon, ca cheltuielile tale să nu apară pe altcineva.")}</span><button type="button" onClick={() => { setMore("sync"); go("utilities"); }}>{t("Alege")}</button></div>}
     {simpleMode && view !== "today" && <div className="bf-simple-mode-top-banner" role="status"><span>{t("Mod simplu activ — Dezactivează în Setări")}</span><button type="button" onClick={() => { setSimpleModePref(false); setMore("settings"); go("utilities"); }}>{t("Dezactivează")}</button></div>}
     <header className="bf-appbar os-appbar"><button className="os-brand" onClick={() => go("today")}><BrandMark /><span className="os-brand-copy"><b>Buget</b><i>Familie</i></span></button><nav className="os-desktop-nav" aria-label={t("Navigație principală")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerEnter={() => preloadView(item.id)} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={17} aria-hidden="true" /><span>{item.label}</span></button>; })}</nav><div className="os-tools"><button className="os-tool" aria-label={t("Deschide acțiunile rapide")} title={t("Acțiuni rapide · Ctrl K")} onPointerDown={() => void import("@/pages/QuickActionsPalette")} onClick={() => setQuickActionsOpen(true)}><Search size={17} /></button><button className={view === "utilities" ? "os-tool is-on" : "os-tool"} aria-label={data.pendingReview.length ? t("Deschide instrumentele · {count} de verificat", { count: data.pendingReview.length }) : t("Deschide instrumentele")} onPointerDown={() => preloadView("utilities")} onClick={() => go("utilities")}><MoreHorizontal size={19} />{data.pendingReview.length > 0 && <span className="bf-nav-count" aria-hidden="true">{data.pendingReview.length}</span>}</button><button className="os-tool" aria-label={t("Deschide ghidul")} onClick={openHouseholdGuide}><MessagesSquare size={17} /></button></div></header>
     <main id="main-content" key={view} className={setupOpen || onboardingOpen || view === initialViewRef.current ? undefined : "bf-screen-transition"}>{setupOpen ? null : current()}</main>

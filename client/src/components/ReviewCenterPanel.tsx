@@ -27,6 +27,7 @@ import { Field, dateText, fmtExact } from "@/pages/home-kit";
 import { countLabel, t } from "@/lib/i18n";
 import { partnerPendingReviewMeta } from "@/lib/family-crypto";
 import { RoDateInput } from "@/components/RoDateInput";
+import { selfMemberIdOf } from "@/lib/member-identity";
 
 const originCopy = (origin: ReviewOrigin) => {
   if (origin === "import") return t("Extras de cont");
@@ -40,7 +41,7 @@ type ImportSummary = { added: number; duplicates: number; skipped: StatementSkip
 export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange: (value: AppData) => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [sourceId, setSourceId] = useState(data.settings.paymentSources[0]?.id || "");
-  const [memberId, setMemberId] = useState(data.settings.members[0]?.id || "");
+  const [memberId, setMemberId] = useState(selfMemberIdOf(data));
   const [summary, setSummary] = useState<ImportSummary>();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

@@ -18,6 +18,7 @@ import { isOfflineOnly } from "@/lib/ui-prefs";
 import { fmtExact, money } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 import { RoDateInput } from "@/components/RoDateInput";
+import { selfMemberIdOf } from "@/lib/member-identity";
 
 type Props = {
   data: AppData;
@@ -60,7 +61,7 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
   const [vendor, setVendor] = useState(saved?.vendor || "");
   const [date, setDate] = useState(saved?.date || isoToday());
   const [sourceId, setSourceId] = useState(data.settings.paymentSources[0]?.id || "");
-  const [memberId, setMemberId] = useState(data.settings.members[0]?.id || "");
+  const [memberId, setMemberId] = useState(selfMemberIdOf(data));
   const [lines, setLines] = useState<BasketLine[]>(saved?.lines || []);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");

@@ -28,6 +28,7 @@ import {
   type Transaction,
 } from "./finance-data";
 import { buildTodaySummary } from "./today-summary";
+import { selfMemberOf } from "./member-identity";
 
 export type AnalystRow = { label: string; value: string; hint?: string; share?: number };
 
@@ -218,7 +219,8 @@ function readMember(data: AppData, folded: string): { id: string; name: string }
   const first = data.settings.members[0];
   if (/\b(sotia|sotiei|nevasta|partenera)\b/.test(folded) && second) return { id: second.id, name: second.name };
   if (/\b(sotul|sotului|barbatul|partenerul)\b/.test(folded) && first) return { id: first.id, name: first.name };
-  if (/\b(eu|mine|meu|mea)\b/.test(folded) && first) return { id: first.id, name: first.name };
+  const self = selfMemberOf(data) || first;
+  if (/\b(eu|mine|meu|mea)\b/.test(folded) && self) return { id: self.id, name: self.name };
   return undefined;
 }
 

@@ -1,13 +1,17 @@
 /**
  * Sincronizare familie: conectare, push debounce, unire remote, jurnal, dispozitive.
  * Pozele bonurilor rămân pe telefon; pachetul trimis e fără imageData.
+ * Sesiunea se reia singură la pornire din cheia păstrată în family-session (nu din parolă).
  */
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { newId, normalizeAppData, type AppData } from "@/lib/finance-data";
 import { checkFamilyPassword } from "@/lib/family-password";
 import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
-import type { EncryptedEnvelope } from "@/lib/family-crypto";
+import type { EncryptedEnvelope, FamilySecret } from "@/lib/family-crypto";
+import { clearFamilySession, loadFamilySession, saveFamilySession } from "@/lib/family-session";
+import { addSelfMember, chooseSelfMember, claimOwnMember, needsSelfChoice, selfMemberIdOf } from "@/lib/member-identity";
+import { safeSetItem } from "@/lib/safe-storage";
 import { notifyFamilyEnvelopeChanges } from "@/lib/local-notifications";
 import { t } from "@/lib/i18n";
 import { isOfflineOnly } from "@/lib/ui-prefs";
@@ -16,6 +20,16 @@ import type { SyncPanelProps } from "@/pages/home-kit";
 const loadFamilySync = () => import("@/lib/realtime-sync");
 const loadFamilyCrypto = () => import("@/lib/family-crypto");
 const loadFamilyRecovery = () => import("@/lib/family-recovery");
+
+/** Omul a închis singur sesiunea: nu o reluăm și nu-l certăm cu bannerul „sync oprit”. */
+const CLOSED_KEY = "buget-familie:sync-closed";
+const readClosed = () => { try { return window.localStorage.getItem(CLOSED_KEY) === "1"; } catch { return false; } };
+const writeClosed = (closed: boolean) => {
+  try {
+    if (closed) safeSetItem(window.localStorage, CLOSED_KEY, "1");
+    else window.localStorage.removeItem(CLOSED_KEY);
+  } catch { /* stocare blocată: bannerul poate apărea, nimic mai grav */ }
+};
 
 /** Serializare fără poze — același format pentru localStorage și push familie. */
 export const syncPortable = (value: AppData) =>
@@ -27,6 +41,8 @@ export const syncPortable = (value: AppData) =>
 export function useFamilySync(
   data: AppData,
   setData: Dispatch<SetStateAction<AppData>>,
+  /** Registrul s-a încărcat din stocare; până atunci reluarea ar uni camera cu un registru gol. */
+  storageReady = true,
 ) {
   const [syncPassword, setSyncPassword] = useState("");
   const [syncPasswordReveal, setSyncPasswordReveal] = useState("");
@@ -35,6 +51,9 @@ export function useFamilySync(
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncConnected, setSyncConnected] = useState(false);
   const [syncLastSync, setSyncLastSync] = useState("");
+  /** Încercarea de reluare automată s-a terminat (reușită sau nu); până atunci nu arătăm „oprit”. */
+  const [syncResumeSettled, setSyncResumeSettled] = useState(false);
+  const [syncHasSession, setSyncHasSession] = useState(false);
   const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
   useEffect(() => {
     const goOnline = () => setOnline(true);
@@ -52,6 +71,9 @@ export function useFamilySync(
   syncDataRef.current = data;
   const syncPasswordRef = useRef(syncPassword);
   syncPasswordRef.current = syncPassword;
+  /** Cu ce se criptează: cheia PBKDF2 neexportabilă (sau parola, dacă stocarea cheii lipsește). */
+  const syncSecretRef = useRef<FamilySecret>("");
+  const syncResumeTriedRef = useRef(false);
   const syncRoomIdRef = useRef<string | undefined>(undefined);
   const syncUnsubscribeRef = useRef<(() => void) | undefined>(undefined);
   const syncLastPortableRef = useRef("");
@@ -125,16 +147,20 @@ export function useFamilySync(
     syncUnsubscribeRef.current?.();
     syncUnsubscribeRef.current = undefined;
     syncRoomIdRef.current = undefined;
+    syncSecretRef.current = "";
     window.clearTimeout(syncPushTimerRef.current);
     setSyncConnected(false);
     setSyncPassword("");
+    setSyncHasSession(false);
+    writeClosed(true);
+    void clearFamilySession();
     setSyncNotice(t("Sesiunea a fost închisă pe acest telefon."));
   };
 
   const syncHandleRemoteEnvelope = async (envelope: EncryptedEnvelope) => {
     try {
       const crypto = await loadFamilyCrypto();
-      const remoteData = normalizeAppData(await crypto.decryptFamilyData(envelope, syncPasswordRef.current));
+      const remoteData = normalizeAppData(await crypto.decryptFamilyData(envelope, syncSecretRef.current));
       const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
       const mergedPortable = syncPortable(merged);
       if (mergedPortable === syncPortable(syncDataRef.current)) {
@@ -169,6 +195,55 @@ export function useFamilySync(
     }
   };
 
+  /**
+   * Intră în cameră: unește pachetul existent, își ia membrul propriu la prima intrare,
+   * trimite și ascultă. `password` lipsește la reluarea automată (parola nu e păstrată).
+   */
+  const syncOpenRoom = async (roomId: string, secret: FamilySecret, password?: string) => {
+    const crypto = await loadFamilyCrypto();
+    const syncApi = await loadFamilySync();
+    const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
+    let merged = syncDataRef.current;
+    if (remoteEnvelope) {
+      const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, secret));
+      const own = claimOwnMember(syncDataRef.current, remoteData, getOrCreateDeviceId());
+      merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData));
+    }
+    if (isThisDeviceRevoked(merged)) {
+      setData(merged);
+      await clearFamilySession();
+      setSyncHasSession(false);
+      setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
+      return false;
+    }
+    merged = touchSyncDevice(merged);
+    const recovery = password ? await issueRecoveryIfNeeded(merged, password, false) : { data: merged };
+    merged = recovery.data;
+    syncLastPortableRef.current = syncPortable(merged);
+    setData(merged);
+    const envelope = await crypto.encryptFamilyData(merged, secret);
+    await syncApi.pushFamilyEnvelope(roomId, envelope);
+    syncRoomIdRef.current = roomId;
+    syncSecretRef.current = secret;
+    syncUnsubscribeRef.current?.();
+    syncUnsubscribeRef.current = syncApi.subscribeFamilyRoom(
+      roomId,
+      (incoming) => void syncHandleRemoteEnvelope(incoming),
+      (error) => setSyncNotice(error.message),
+    );
+    setSyncConnected(true);
+    setSyncLastSync(new Date().toISOString());
+    writeClosed(false);
+    if ("code" in recovery && recovery.code) setSyncRecoveryReveal(recovery.code);
+    setSyncNotice(
+      ("warning" in recovery && recovery.warning)
+        || ("code" in recovery && recovery.code
+          ? t("Sesiunea e activă. Notează codul de recuperare pe hârtie — nu îl mai arătăm.")
+          : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală.")),
+    );
+    return true;
+  };
+
   const syncConnect = async () => {
     if (isOfflineOnly()) {
       setSyncNotice(t("Modul „doar offline” este activ. Dezactivează-l din Setări ca să folosești Sync."));
@@ -183,47 +258,45 @@ export function useFamilySync(
     try {
       const crypto = await loadFamilyCrypto();
       const roomId = await crypto.deriveFamilyRoomId(syncPassword);
-      const syncApi = await loadFamilySync();
-      const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
-      let merged = syncDataRef.current;
-      if (remoteEnvelope) {
-        const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncPassword));
-        merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
+      const material = await crypto.importFamilyKeyMaterial(syncPassword);
+      if (await syncOpenRoom(roomId, material, syncPassword)) {
+        const saved = await saveFamilySession(roomId, material);
+        setSyncHasSession(saved);
       }
-      if (isThisDeviceRevoked(merged)) {
-        setData(merged);
-        setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
-        return;
-      }
-      merged = touchSyncDevice(merged);
-      const recovery = await issueRecoveryIfNeeded(merged, syncPassword, false);
-      merged = recovery.data;
-      const mergedPortable = syncPortable(merged);
-      syncLastPortableRef.current = mergedPortable;
-      setData(merged);
-      const envelope = await crypto.encryptFamilyData(merged, syncPassword);
-      await syncApi.pushFamilyEnvelope(roomId, envelope);
-      syncRoomIdRef.current = roomId;
-      syncUnsubscribeRef.current = syncApi.subscribeFamilyRoom(
-        roomId,
-        (incoming) => void syncHandleRemoteEnvelope(incoming),
-        (error) => setSyncNotice(error.message),
-      );
-      setSyncConnected(true);
-      setSyncLastSync(new Date().toISOString());
-      if (recovery.code) setSyncRecoveryReveal(recovery.code);
-      setSyncNotice(
-        recovery.warning
-          || (recovery.code
-            ? t("Sesiunea e activă. Notează codul de recuperare pe hârtie — nu îl mai arătăm.")
-            : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală.")),
-      );
     } catch (error) {
       setSyncNotice(error instanceof Error ? error.message : t("Familia nu a putut fi conectată."));
     } finally {
       setSyncBusy(false);
     }
   };
+
+  /** Reluare la pornire: Android închide des aplicația, iar parola nu e păstrată. */
+  useEffect(() => {
+    if (syncResumeTriedRef.current || !online || !storageReady) return;
+    syncResumeTriedRef.current = true;
+    if (isOfflineOnly() || readClosed()) {
+      setSyncResumeSettled(true);
+      return;
+    }
+    void (async () => {
+      const session = await loadFamilySession();
+      if (!session) {
+        setSyncResumeSettled(true);
+        return;
+      }
+      setSyncHasSession(true);
+      setSyncBusy(true);
+      try {
+        await syncOpenRoom(session.roomId, session.material);
+      } catch (error) {
+        setSyncNotice(error instanceof Error ? error.message : t("Sincronizarea nu a putut fi reluată."));
+      } finally {
+        setSyncBusy(false);
+        setSyncResumeSettled(true);
+      }
+    })();
+    // syncOpenRoom citește starea curentă prin ref-uri; reluarea rulează o singură dată.
+  }, [online, storageReady]);
 
   useEffect(() => {
     if (!syncConnected || !syncRoomIdRef.current) return;
@@ -244,7 +317,7 @@ export function useFamilySync(
           const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
           let toPush = syncDataRef.current;
           if (remoteEnvelope) {
-            const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncPasswordRef.current));
+            const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncSecretRef.current));
             toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
             const mergedPortable = syncPortable(toPush);
             if (mergedPortable !== syncPortable(syncDataRef.current)) {
@@ -252,7 +325,7 @@ export function useFamilySync(
               setData(toPush);
             }
           }
-          const envelope = await crypto.encryptFamilyData(toPush, syncPasswordRef.current);
+          const envelope = await crypto.encryptFamilyData(toPush, syncSecretRef.current);
           await syncApi.pushFamilyEnvelope(roomId, envelope);
           syncLastPortableRef.current = syncPortable(toPush);
           setSyncLastSync(new Date().toISOString());
@@ -267,8 +340,20 @@ export function useFamilySync(
 
   useEffect(() => () => syncUnsubscribeRef.current?.(), []);
 
+  const thisDevice = (data.settings.syncDevices || []).find((device) => device.id === getOrCreateDeviceId());
+  /** Telefonul a fost în cameră și nu a ieșit singur, dar acum nu primește nimic. */
+  const syncStopped = online && syncResumeSettled && !syncConnected && !syncBusy && !isOfflineOnly()
+    && !readClosed() && (syncHasSession || Boolean(thisDevice && !thisDevice.revokedAt));
+
   const syncPanelProps: SyncPanelProps = {
     connected: syncConnected,
+    stopped: syncStopped,
+    sessionRemembered: syncHasSession,
+    members: data.settings.members,
+    selfMemberId: selfMemberIdOf(data),
+    needsSelfChoice: needsSelfChoice(data),
+    onChooseSelf: (memberId: string) => setData((current) => chooseSelfMember(current, memberId)),
+    onAddSelf: (name: string) => setData((current) => addSelfMember(current, name)),
     busy: syncBusy,
     online,
     password: syncPassword,
@@ -281,8 +366,12 @@ export function useFamilySync(
     onRecoverPassword: (code: string) => void recoverWithCode(code),
     onIssueRecovery: () => {
       void (async () => {
-        if (!syncConnected || !syncPasswordRef.current) {
+        if (!syncConnected) {
           setSyncNotice(t("Conectează mai întâi acest telefon, apoi creează codul de recuperare."));
+          return;
+        }
+        if (!syncPasswordRef.current) {
+          setSyncNotice(t("Sesiunea s-a reluat fără parolă, care nu se păstrează pe telefon. Pentru un cod nou, închide sesiunea și conectează-te din nou cu parola."));
           return;
         }
         if (data.settings.syncRecoveryIssuedAt) {
