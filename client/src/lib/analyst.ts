@@ -392,12 +392,27 @@ function answerAfford(data: AppData, folded: string, asOf: string): AnalystAnswe
 
   const payday = nextPaydayOf(data);
   const after = round(free - amount);
+  /**
+   * „Încape” nu e totuna cu „îți permiți”: fără plicuri pentru ziua de zi cu zi, banii
+   * nerepartizați sunt chiar banii de mâncare. Andrei ar fi rămas cu 50 de lei pentru
+   * 12 zile după mașina de spălat, iar ghidul spunea „Da” (testare cu utilizatori).
+   */
+  const math = planAllocationMath(data);
+  const forecast = planForecast(data, asOf);
+  const daysLeft = Math.max(1, forecast.remainingDays);
+  const perDayAfter = round(after / daysLeft);
+  const floor = Math.max(30, round(forecast.paceDaily * 0.8));
+  const tight = after >= 0 && Boolean(payday) && daysLeft > 1 && math.reservedInEnvelopes < 1 && perDayAfter < floor;
   return {
     kind: "afford",
-    headline: after >= 0
+    headline: tight
+      ? `Încape, dar îți rămân ${money(after)} pentru ${daysLeft} zile, cam ${money(perDayAfter)} pe zi până la venit.`
+      : after >= 0
       ? `Da. Rămân ${money(after)} nerepartizați până la următorul venit.`
       : `Ar ieși ${money(Math.abs(after))} peste ce ai nerepartizat.`,
-    detail: payday
+    detail: tight
+      ? sentences(`Nu ai plicuri pentru mâncare și cele de zi cu zi, deci banii aceștia trebuie să le acopere și pe ele`, `Dacă o poți amâna după ${formatDate(payday!)}, e mai sigur`)
+      : payday
       ? sentences(`Calculat până pe ${formatDate(payday)}, după ce se scad plicurile și scadențele rezervate`)
       : "Nu ai stabilit data următorului venit, deci calculul se oprește la banii din surse.",
     rows: [

@@ -32,7 +32,9 @@ async function waitFor(check, what, timeout = 30_000) {
 }
 
 async function startVite() {
-  const vite = spawn("pnpm", ["exec", "vite", "--port", String(PORT), "--strictPort", "--host", "127.0.0.1"], {
+  // Vite pornit direct (nu prin pnpm), ca `kill()` să-l oprească sigur: altfel serverul rămas
+  // deschis ține procesul Node în viață, iar pasul din CI nu se mai termină.
+  const vite = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", String(PORT), "--strictPort", "--host", "127.0.0.1"], {
     env: { ...process.env, VITE_FIRESTORE_EMULATOR: EMULATOR },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -205,7 +207,16 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+/** Plasă de siguranță: un test care atârnă e tot un test picat, nu un pas care nu se termină. */
+const watchdog = setTimeout(() => {
+  console.error("✗ Testul a depășit 8 minute.");
+  process.exit(1);
+}, 8 * 60_000);
+
+main().then(() => {
+  clearTimeout(watchdog);
+  process.exit(0);
+}).catch((error) => {
   console.error(`✗ ${error.message}`);
   process.exit(1);
 });

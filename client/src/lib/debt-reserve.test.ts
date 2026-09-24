@@ -34,7 +34,9 @@ describe("ratele la datorii înainte de venit (C1)", () => {
     expect(planAllocationMath(data).scheduled).toBe(450);
     // Fără rezervă, ghidul socotea toți cei 2.500 liberi: „Da. Rămân 400”.
     expect(analyze("Pot să-mi permit o mașină de spălat de 2100 lei luna asta?", data, ASOF)!.headline).toMatch(/^Ar ieși 50 RON peste/);
-    expect(analyze("Îmi permit 2000 lei?", data, ASOF)!.headline).toMatch(/^Da\. Rămân 50 RON/);
+    // Încape, dar fără plicuri de zi cu zi rămân 50 de lei pe 12 zile: ghidul nu mai spune „Da”.
+    expect(analyze("Îmi permit 2000 lei?", data, ASOF)!.headline).toMatch(/^Încape, dar îți rămân 50 RON pentru 12 zile/);
+    expect(analyze("Îmi permit 200 lei?", data, ASOF)!.headline).toMatch(/^Da\. Rămân 1\.850 RON/);
   });
 
   it("nu mai rezervă rata după ce a fost plătită în perioadă", () => {

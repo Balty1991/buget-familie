@@ -54,4 +54,5 @@ jobs:
       - name: Install Chromium
         run: pnpm exec playwright-core install --with-deps chromium
       - name: Test sync cap-coadă
+        timeout-minutes: 12
         run: pnpm test:sync
