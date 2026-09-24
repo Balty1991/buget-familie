@@ -106,7 +106,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           <button className="bf-primary" disabled={exporting} onClick={() => void close()}>
             <CalendarCheck size={16} /> {closedThis ? t("Reînchide și descarcă PDF") : exporting ? t("Generăm PDF-ul…") : t("Închide luna · PDF local")}
           </button>
-          {closedThis && <small>Închisă local pe {formatDate(closedThis.closedAt.slice(0, 10), { day: "2-digit", month: "long" })}. Marcajul rămâne pe acest telefon.</small>}
+          {closedThis && <small>{t("Închisă local pe {date}. Marcajul rămâne pe acest telefon.", { date: formatDate(closedThis.closedAt.slice(0, 10), { day: "2-digit", month: "long" }) })}</small>}
         </div>
       </section>
 
@@ -118,7 +118,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
         {age ? (
           <div className="bf-household-age">
             <CashNote amount={age.days < 1 ? "sub o zi" : `${age.days} zile`} caption={t("Vârsta medie a leului")} />
-            <p>Media ponderată pe {money(age.sampleAmount)} cheltuiți. {age.unfundedAmount > 0 ? `${money(age.unfundedAmount)} nu au avut încă un venit pereche — completează soldul inițial.` : t("Fiecare leu cheltuit a avut o încasare în spate.")}</p>
+            <p>{t("Media ponderată pe {amount} cheltuiți.", { amount: money(age.sampleAmount) })} {age.unfundedAmount > 0 ? t("{amount} nu au avut încă un venit pereche — completează soldul inițial.", { amount: money(age.unfundedAmount) }) : t("Fiecare leu cheltuit a avut o încasare în spate.")}</p>
           </div>
         ) : <div className="bf-empty-soft"><EmptyMark /><p>{t("După primul venit și prima cheltuială, aici vei vedea cât de „proaspeți” sunt banii.")}</p></div>}
         <div className="bf-household-safe">
@@ -141,7 +141,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
                 <div><span>{t("Cheltuit")}</span><strong>{money(member.expense)}</strong></div>
                 <div><span>{t("Încasat")}</span><strong>{money(member.income)}</strong></div>
                 <i><em style={{ width: `${Math.round(member.share * 100)}%` }} /></i>
-                <small>{Math.round(member.share * 100)}% din cheltuielile casei</small>
+                <small>{t("{percent}% din cheltuielile casei", { percent: Math.round(member.share * 100) })}</small>
               </article>
             ))}
           </div>

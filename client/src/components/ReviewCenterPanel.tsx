@@ -122,7 +122,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
             {summary.skipped.length > 0 && (
               <details>
                 <summary>{t("Vezi rândurile sărite")}</summary>
-                <ul>{summary.skipped.slice(0, 20).map((item) => <li key={item.line}>Rândul {item.line}: {item.reason}</li>)}</ul>
+                <ul>{summary.skipped.slice(0, 20).map((item) => <li key={item.line}>{t("Rândul {line}: {reason}", { line: item.line, reason: item.reason })}</li>)}</ul>
               </details>
             )}
           </div>

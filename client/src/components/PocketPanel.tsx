@@ -32,10 +32,7 @@ export function PocketPanel({ data }: { data: AppData }) {
       <div className="bf-empty-state slim">
         <Wallet size={23} />
         <h2>{t("Încă nu are un plic")}</h2>
-        <p>
-          Creează în Plan un plic pe numele lui {children.find((item) => item.id === memberId)?.name || children[0].name} și
-          pune-i suma de buzunar. Cheltuielile lui vor scădea din acel plic.
-        </p>
+        <p>{t("Creează în Plan un plic pe numele lui {name} și pune-i suma de buzunar. Cheltuielile lui vor scădea din acel plic.", { name: children.find((item) => item.id === memberId)?.name || children[0].name })}</p>
       </div>
     );
   }

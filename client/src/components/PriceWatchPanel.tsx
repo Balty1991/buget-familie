@@ -103,7 +103,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
           </p>
         )}
         {basket.pending.length > 0 && (
-          <p className="bf-price-pending">În așteptarea unui al doilea preț: {basket.pending.slice(0, 6).join(", ")}</p>
+          <p className="bf-price-pending">{t("În așteptarea unui al doilea preț: {items}", { items: basket.pending.slice(0, 6).join(", ") })}</p>
         )}
 
         <div className="bf-price-picker">
@@ -151,7 +151,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
               </div>
               <footer>
                 <Trend percent={item.changePercent} />
-                <small>de la {fmtExact.format(item.earliest.amount)} pe {dateText(item.earliest.date)}</small>
+                <small>{t("de la {amount} pe {date}", { amount: fmtExact.format(item.earliest.amount), date: dateText(item.earliest.date) })}</small>
               </footer>
             </article>
           ))}

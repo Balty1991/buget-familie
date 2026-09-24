@@ -112,7 +112,7 @@ export function AllocationHistoryChart({ entries, allocationFilter }: { entries:
         })}
         {chart.omitted > 0 && <small>+{chart.omitted} alte categorii în total</small>}
       </div>
-      <p className="bf-allocation-chart-footnote">{t("Total net pe cele 12 luni:")} <b>{leiLabel(chart.total)}</b>. Graficul folosește doar repartizările care au fost jurnalizate; nu reconstruiește modificări vechi care nu aveau istoric.</p>
+      <p className="bf-allocation-chart-footnote">{t("Total net pe cele 12 luni:")} <b>{leiLabel(chart.total)}</b>. {t("Graficul folosește doar repartizările care au fost jurnalizate; nu reconstruiește modificări vechi care nu aveau istoric.")}</p>
     </div>
   );
 

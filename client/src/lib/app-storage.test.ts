@@ -283,3 +283,35 @@ describe("stocare LS ↔ IndexedDB", () => {
     expect(picked?.settings.familyName).toBe("IDB-nou");
   });
 });
+
+describe("backup cap-coadă, cu registru bogat", () => {
+  it("salvarea, citirea și normalizarea nu pierd și nu schimbă nimic", async () => {
+    const { createEmptyAppData, normalizeAppData } = await import("./finance-data");
+    const data = createEmptyAppData();
+    data.settings.familyName = "Familia Pop";
+    data.settings.members = [{ id: "m1", name: "Ana" }, { id: "m2", name: "Mihai" }];
+    data.settings.exchangeRates = [{ code: "EUR", rate: 4.97, updatedAt: "2026-09-01T10:00:00.000Z" }] as typeof data.settings.exchangeRates;
+    data.settings.merchantRules = [{ id: "r1", match: "decathlon", category: "Timp liber", updatedAt: "2026-09-02T10:00:00.000Z" }];
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-10", nextPayday: "2026-10-10", allocations: [{ id: "a1", label: "Alimente", amount: 1500, category: "Alimente", weeklyPace: true, alertThreshold: 80 }] };
+    data.transactions = [
+      { id: "t1", title: "Lidl", amount: 184.5, kind: "expense", category: "Alimente", source: "Card", person: "Ana", date: "2026-09-21", sourceId: "source-debit", memberId: "m1", allocationId: "a1", note: "Import din bt.xlsx, rândul 5", shareScope: "shared", createdAt: "2026-09-21T10:00:00.000Z" },
+      { id: "t2", title: "Hotel", amount: 497, originalAmount: 100, originalCurrency: "EUR", exchangeRate: 4.97, kind: "expense", category: "Timp liber", source: "Card", person: "Mihai", date: "2026-09-22", sourceId: "source-debit", memberId: "m2", shareScope: "personal" },
+      { id: "t3", title: "Salariu", amount: 9200, kind: "income", category: "Venit", source: "Card", person: "Ana", date: "2026-09-10", sourceId: "source-debit", memberId: "m1" },
+    ];
+    data.recurring = [
+      { id: "rc1", name: "Netflix", amount: 59.99, category: "Abonamente", sourceId: "source-debit", memberId: "m1", dueDay: 8, active: true },
+      { id: "rc2", name: "RCA", amount: 1200, category: "Transport", sourceId: "source-debit", memberId: "m2", dueDay: 15, active: true, frequency: "yearly", month: 3 },
+      { id: "rc3", name: "Enel", amount: 220, category: "Casă & facturi", sourceId: "source-debit", memberId: "m1", dueDay: 12, active: true, variable: true, autoPost: false },
+    ];
+    data.debts = [{ id: "d1", name: "Credit", remaining: 18500, monthly: 620, annualRate: 18, kind: "credit", due: "", tone: "coral", dueDate: "2026-10-03" }] as typeof data.debts;
+    data.savings = [{ id: "s1", name: "Vacanță", current: 1200, target: 5000, due: "", tone: "forest", dueDate: "2027-06-01" }] as typeof data.savings;
+    const once = normalizeAppData(data);
+    const restored = normalizeAppData(parseBackup(JSON.stringify(makeBackup(once))).data);
+    expect(restored).toEqual(once);
+    expect(normalizeAppData(restored)).toEqual(restored);
+    expect(restored.transactions.find((item) => item.id === "t2")).toMatchObject({ originalAmount: 100, originalCurrency: "EUR", exchangeRate: 4.97, shareScope: "personal" });
+    expect(restored.recurring.find((item) => item.id === "rc2")).toMatchObject({ frequency: "yearly", month: 3 });
+    expect(restored.recurring.find((item) => item.id === "rc3")).toMatchObject({ variable: true });
+    expect(restored.settings.merchantRules).toHaveLength(1);
+  });
+});
