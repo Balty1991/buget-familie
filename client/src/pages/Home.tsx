@@ -14,6 +14,7 @@ import { safeSetItem } from "@/lib/safe-storage";
 import { BrandMark } from "@/components/BrandMark";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { observeQuickActions, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
+import { hasQueuedFeedback } from "@/lib/feedback-queue";
 import {
   WhatsNewSheet,
   fmtExact,
@@ -34,7 +35,6 @@ import { useThemeChrome } from "@/hooks/useThemeChrome";
 import { useFamilySync } from "@/hooks/useFamilySync";
 import { usePersistAppData, readInitialAppData } from "@/hooks/usePersistAppData";
 import { useSimpleMode } from "@/hooks/useSimpleMode";
-import { FirstRunSetup } from "@/components/FirstRunSetup";
 import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
 import { selfMemberOf } from "@/lib/member-identity";
 import { isNativeApp } from "@/lib/app-storage";
@@ -62,6 +62,7 @@ const LongTermGoalsView = lazy(() => import("@/pages/HabitsGoals").then((module)
 const ObjectivesView = lazy(() => import("@/pages/ObjectivesView").then((module) => ({ default: module.ObjectivesView })));
 const InsightsView = lazy(() => import("@/pages/InsightsView").then((module) => ({ default: module.InsightsView })));
 const MoreViewScreen = lazy(() => import("@/pages/home-secondary").then((module) => ({ default: module.MoreView })));
+const FirstRunSetup = lazy(() => import("@/components/FirstRunSetup").then((module) => ({ default: module.FirstRunSetup })));
 const AICompanion = lazy(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion })));
 
 /**
@@ -92,7 +93,8 @@ export default function Home() {
   /** „Azi” al familiei: se setează înainte de orice calcul din randare (testare, #10). */
   setFamilyTimeZone(data.settings.familyTimeZone);
   /** Mesajele de feedback trimise fără internet pleacă la prima deschidere cu rețea. */
-  useEffect(() => { void import("@/lib/feedback").then(({ flushFeedbackQueue }) => flushFeedbackQueue()).catch(() => undefined); }, []);
+  // Firebase se încarcă doar dacă e un mesaj de trimis, nu la fiecare pornire.
+  useEffect(() => { if (hasQueuedFeedback()) void import("@/lib/feedback").then(({ flushFeedbackQueue }) => flushFeedbackQueue()).catch(() => undefined); }, []);
   /** Venit neregulat: perioada „banii să-mi ajungă N zile” pornește din ziua de azi (M6). */
   const todayIso = isoToday();
   useEffect(() => {
@@ -601,7 +603,7 @@ export default function Home() {
     <div className="os-nav-fill" aria-hidden="true" />
     <nav className="os-dock" aria-label={t("Navigație mobilă")}>{nav.map((item) => { const Icon = item.icon; return <button key={item.id} className={view === item.id ? "is-on" : ""} aria-current={view === item.id ? "page" : undefined} onPointerDown={() => preloadView(item.id)} onClick={() => go(item.id)}><Icon size={16} aria-hidden="true" /><span>{item.label}</span>{item.id === "journal" && data.pendingReview.length > 0 ? <i className="bf-dock-dot" aria-hidden="true" /> : null}</button>; })}</nav>
     {!simpleMode && guideOn && <Suspense fallback={null}><AICompanion initiallyOpen data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>}
-    {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={activeTheme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <FirstRunSetup data={data} onChange={applyData} onClose={() => setSetupOpen(false)} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={() => { setMore("sync"); go("utilities"); }} />}
+    {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={activeTheme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={null}><FirstRunSetup data={data} onChange={applyData} onClose={() => setSetupOpen(false)} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={() => { setMore("sync"); go("utilities"); }} /></Suspense>}
     {modal === "quick" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); }} onMore={(draft) => { setEditTx(draft); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
     {modal === "transaction" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); }} /></Suspense>}
     {modal === "receipt" && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim bonul…")}</div></div>}><ReceiptForm data={data} onSave={saveReceipt} onClose={() => setModal(null)} /></Suspense>}

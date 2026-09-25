@@ -10,7 +10,7 @@ import { authHeader } from "@/lib/realtime-sync";
 import { safeSetItem } from "@/lib/safe-storage";
 
 const FEEDBACK_URL = "https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/appFeedback";
-const QUEUE_KEY = "buget-familie:feedback-queue-v1";
+import { FEEDBACK_QUEUE_KEY as QUEUE_KEY } from "./feedback-queue";
 
 export type FeedbackKind = "problem" | "idea" | "other";
 export type FeedbackPayload = { kind: FeedbackKind; message: string; contact?: string; details?: Record<string, string | boolean> };

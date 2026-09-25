@@ -14,7 +14,6 @@ import { refreshRoomEntitlement, setActiveFamilyRoom } from "@/lib/billing";
 import { createFamilyInvite, formatInvite, parseInvite, type FamilyInvite } from "@/lib/family-invite";
 import { addSelfMember, chooseSelfMember, claimOwnMember, needsSelfChoice, selfMemberIdOf } from "@/lib/member-identity";
 import { safeSetItem } from "@/lib/safe-storage";
-import { notifyFamilyEnvelopeChanges } from "@/lib/local-notifications";
 import { t } from "@/lib/i18n";
 import { isOfflineOnly } from "@/lib/ui-prefs";
 import type { SyncPanelProps } from "@/pages/home-kit";
@@ -210,7 +209,7 @@ export function useFamilySync(
       syncLastPortableRef.current = mergedPortable;
       setData(merged);
       setSyncLastSync(new Date().toISOString());
-      void notifyFamilyEnvelopeChanges(previous, merged).catch(() => undefined);
+      void import("@/lib/local-notifications").then(({ notifyFamilyEnvelopeChanges }) => notifyFamilyEnvelopeChanges(previous, merged)).catch(() => undefined);
       syncAppendJournal({
         createdAt: new Date().toISOString(),
         status: "resolved",

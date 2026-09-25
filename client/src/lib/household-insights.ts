@@ -34,7 +34,7 @@ import {
   type Transaction,
   isoDate,
 } from "./finance-data";
-import { statementMerchant } from "./statement-import";
+import { statementMerchant } from "./statement-merchant";
 import { lei as leiExact } from "./money-format";
 import { daysLabel, getLocale, t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
