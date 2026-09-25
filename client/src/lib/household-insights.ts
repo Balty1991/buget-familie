@@ -513,6 +513,20 @@ export const envelopeUntilPayday = (data: AppData, allocation: BudgetAllocation,
   return { ...until, remaining, perDay, perWeek: Math.floor(remaining * 7 / days) };
 };
 
+/**
+ * Cât se poate da azi dintr-un plic pe săptămâni, ca tranșa să ajungă până la capătul ei:
+ * ce a rămas în săptămână, împărțit la zilele rămase (cu tot cu azi). Aceeași cifră pe
+ * plic, în avertizare și în ghid.
+ */
+export const weekDayCap = (data: AppData, allocation: BudgetAllocation, asOf = isoToday()) => {
+  if (!isWeeklyPaced(allocation, data.settings.salaryPlan)) return undefined;
+  const week = allocationWeekStatus(data, allocation, asOf);
+  if (!week) return undefined;
+  const daysLeft = Math.max(1, daysBetween(asOf, week.end) + 1);
+  // La bani, ca cifra de pe Astăzi (37,50), rotunjit în jos ca să nu promită mai mult.
+  return { week, daysLeft, perDay: Math.floor(Math.max(0, week.remaining) * 100 / daysLeft) / 100 };
+};
+
 export type WeekTooFast = { allocationId: string; label: string; weekIndex: number; spent: number; budget: number; remaining: number; daysLeft: number; perDay: number; over: boolean };
 
 /**
@@ -525,15 +539,15 @@ export const weekTooFast = (data: AppData, asOf = isoToday()): WeekTooFast[] => 
   const out: WeekTooFast[] = [];
   for (const item of plan.allocations) {
     if (!isWeeklyPaced(item, plan)) continue;
-    const week = allocationWeekStatus(data, item, asOf);
-    if (!week || week.budget <= 0 || week.spent <= 0) continue;
+    const cap = weekDayCap(data, item, asOf);
+    if (!cap) continue;
+    const { week, daysLeft } = cap;
+    if (week.budget <= 0 || week.spent <= 0) continue;
     const elapsed = Math.max(1, daysBetween(week.start, asOf) + 1);
-    // Zilele rămase includ ziua de azi: banii trebuie să ajungă și pentru ea.
-    const daysLeft = Math.max(0, week.days - elapsed + 1);
     const usage = week.spent / week.budget;
     const over = week.remaining < 0;
     if (!over && (daysLeft < 2 || usage < 0.6 || usage < elapsed / week.days + 0.15)) continue;
-    out.push({ allocationId: item.id, label: item.label, weekIndex: week.index, spent: week.spent, budget: week.budget, remaining: week.remaining, daysLeft, perDay: daysLeft > 0 ? Math.floor(Math.max(0, week.remaining) / daysLeft) : 0, over });
+    out.push({ allocationId: item.id, label: item.label, weekIndex: week.index, spent: week.spent, budget: week.budget, remaining: week.remaining, daysLeft, perDay: cap.perDay, over });
   }
   return out.sort((a, b) => Number(b.over) - Number(a.over) || b.spent / b.budget - a.spent / a.budget);
 };
@@ -681,7 +695,11 @@ export const envelopeRunOut = (data: AppData, asOf = isoToday()): EnvelopeRunOut
   const track = paydayTrack(data, asOf);
   if (!track || track.elapsed < 3 || track.remaining < 2) return [];
   const out: EnvelopeRunOut[] = [];
+  // Când săptămâna plicului merge deja prea repede, avertizarea ei spune cifra de azi; a doua
+  // cifră, pe tot ciclul, ar contrazice-o pe același ecran.
+  const fast = new Set(weekTooFast(data, asOf).map((item) => item.allocationId));
   for (const item of data.settings.salaryPlan.allocations) {
+    if (fast.has(item.id)) continue;
     const status = allocationStatus(data, item);
     if (status.spent <= 0 || status.remaining <= 0) continue;
     const dailyRate = status.spent / track.elapsed;
@@ -1113,6 +1131,8 @@ export type WeeklyCheckIn = {
 };
 
 const lei = (value: number) => `${Math.round(value).toLocaleString("ro-RO")} lei`;
+/** Ca `lei`, dar cu bani când există: cifra pe zi trebuie să fie aceeași ca pe Astăzi (37,50). */
+const leiCents = (value: number) => `${value.toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} lei`;
 
 /**
  * Bilanțul săptămânii de familie: luni–duminică, planificat vs realizat pe plic, fără scriere în AppData.
@@ -1123,6 +1143,8 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
   const end = planEndDate(plan);
   const planDays = end ? Math.max(1, daysBetween(plan.periodStart, end) + 1) : 7;
   const weekTx = data.transactions.filter((item) => item.date >= summary.start && item.date <= summary.end && (!memberId || item.memberId === memberId));
+  // Aceeași regulă ca avertizarea de pe Astăzi: o săptămână care merge prea repede e „atenție”, nu „în ritm”.
+  const fastIds = new Set(weekTooFast(data, asOf).map((item) => item.allocationId));
   const envelopes = plan.allocations.map((allocation) => {
     const cycleBudget = allocationBudget(data, allocation);
     const weekStatus = isWeeklyPaced(allocation, plan) ? allocationWeekStatus(data, allocation, asOf) : undefined;
@@ -1134,7 +1156,7 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
     const remaining = roundMoney(weekStatus ? weekStatus.remaining : planned - spent);
     const usage = planned > 0 ? spent / planned : spent > 0 ? 1 : 0;
     const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80));
-    const state = remaining < 0 || (planned <= 0 && spent > 0) ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const;
+    const state = remaining < 0 || (planned <= 0 && spent > 0) ? "over" as const : usage >= alertThreshold / 100 || fastIds.has(allocation.id) ? "watch" as const : "healthy" as const;
     return { id: allocation.id, label: allocation.label, planned, spent, remaining, usage, state };
   }).sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.spent - left.spent);
 
@@ -1310,7 +1332,7 @@ export const familyWeekExtras = (data: AppData, asOf = isoToday()): string[] => 
   for (const item of weekTooFast(data, asOf).slice(0, 3)) {
     lines.push(item.over
       ? t("{label}: săptămâna e depășită cu {amount}.", { label: item.label, amount: lei(-item.remaining) })
-      : t("{label}: {spent} din {budget}, cel mult {perDay} pe zi până la capătul săptămânii.", { label: item.label, spent: lei(item.spent), budget: lei(item.budget), perDay: lei(item.perDay) }));
+      : t("{label}: {spent} din {budget}, cel mult {perDay} pe zi până la capătul săptămânii.", { label: item.label, spent: lei(item.spent), budget: lei(item.budget), perDay: leiCents(item.perDay) }));
   }
   const members = data.settings.members;
   for (const entry of members.length > 1 ? pendingTransfers(data, asOf) : []) {

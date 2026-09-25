@@ -2324,6 +2324,8 @@ export const en: Record<string, string> = {
   "Vine fix în ziua asta.": "It arrives exactly on this day.",
   "Se stabilește singur din ziua declarată când notezi salariul. Îl poți alege și acum.": "It is set from the declared day when you record the salary. You can also choose it now.",
   "Data aproximativă": "Approximate date",
+  "Săptămâna asta mai ai {left}: cel mult {perDay} pe zi, {days} cu tot cu azi.": "This week you have {left} left: at most {perDay} a day, {days} including today.",
+  "Tranșa săptămânii s-a terminat; în tot plicul mai sunt {amount}.": "This week's share is used up; the whole envelope has {amount} left.",
   "Până la salariu: {days} (~{date}).": "Until payday: {days} (~{date}).",
   "{label}: săptămâna e depășită cu {amount}.": "{label}: the week is {amount} over.",
   "{label}: {spent} din {budget}, cel mult {perDay} pe zi până la capătul săptămânii.": "{label}: {spent} of {budget}, at most {perDay} a day until the end of the week.",

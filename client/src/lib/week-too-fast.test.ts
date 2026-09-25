@@ -11,7 +11,7 @@ const family = (spent: number, date: string) => {
 
 describe("săptămâna merge prea repede", () => {
   it("450 din 600 în a patra zi: avertizează, cu cât mai e pe zi", () => {
-    expect(weekTooFast(family(450, "2026-10-02"), "2026-10-04")[0]).toMatchObject({ weekIndex: 1, spent: 450, daysLeft: 4, perDay: 37, over: false });
+    expect(weekTooFast(family(450, "2026-10-02"), "2026-10-04")[0]).toMatchObject({ weekIndex: 1, spent: 450, daysLeft: 4, perDay: 37.5, over: false });
   });
   it("o cumpărătură normală nu sună alarma", () => {
     expect(weekTooFast(family(250, "2026-10-02"), "2026-10-04")).toEqual([]);
@@ -27,6 +27,6 @@ describe("rândurile adăugate la bilanțul familiei", () => {
     const { familyWeekExtras } = await import("./household-insights");
     const lines = familyWeekExtras(family(450, "2026-10-02"), "2026-10-04");
     expect(lines[0]).toMatch(/Până la salariu: 24 de zile/);
-    expect(lines[1]).toMatch(/Mâncare: 450 lei din 600 lei, cel mult 37 lei pe zi/);
+    expect(lines[1]).toMatch(/Mâncare: 450 lei din 600 lei, cel mult 37,50 lei pe zi/);
   });
 });

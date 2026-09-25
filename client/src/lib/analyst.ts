@@ -12,8 +12,6 @@ import {
   addIsoDays,
   allocationFromText,
   allocationStatus,
-  allocationWeekStatus,
-  isWeeklyPaced,
   envelopeDecisionStatus,
   expenseCategories,
   foldRomanian,
@@ -34,7 +32,7 @@ import {
 } from "./finance-data";
 import { buildTodaySummary } from "./today-summary";
 import { daysLabel } from "./i18n";
-import { envelopeUntilPayday } from "./household-insights";
+import { envelopeUntilPayday, weekDayCap } from "./household-insights";
 import { selfMemberOf } from "./member-identity";
 
 export type AnalystRow = { label: string; value: string; hint?: string; share?: number };
@@ -471,7 +469,8 @@ function answerPace(data: AppData, asOf: string): AnalystAnswer {
     rows: [
       { label: "Azi", value: `${money(Math.max(0, spendable))}` },
       { label: "Ritmul tău", value: `${money(Math.max(0, pace))}/zi` },
-      ...(Math.abs(round(forecast.safeDaily) - spendable) > 1 ? [{ label: "Ritm sigur până la venit", value: `${money(Math.max(0, round(forecast.safeDaily)))}/zi` }] : []),
+      // Cu plicuri pe săptămâni, cifra de azi e a săptămânii; „ritmul sigur” pe tot ciclul (cu banii nerepartizați) ar contrazice-o.
+      ...(!summary.heroTracksWeek && Math.abs(round(forecast.safeDaily) - spendable) > 1 ? [{ label: "Ritm sigur până la venit", value: `${money(Math.max(0, round(forecast.safeDaily)))}/zi` }] : []),
       { label: "Nerepartizat", value: money(free) },
     ],
     followUps: ["Unde se duc banii?", "Îmi permit 200 de lei?"],
@@ -554,7 +553,7 @@ function answerPayday(data: AppData, asOf: string): AnalystAnswer {
   const days = Math.round((new Date(`${payday}T12:00:00`).getTime() - new Date(`${asOf}T12:00:00`).getTime()) / 86400000);
   return {
     kind: "payday",
-    headline: sentences(days <= 0 ? `Salariul era așteptat pe ${formatDate(payday)}` : `Mai sunt ${plural(days, "zi", "zile")} până pe ${formatDate(payday)}`),
+    headline: sentences(days <= 0 ? `Salariul era așteptat pe ${formatDate(payday, { day: "numeric", month: "long" })}` : `Mai sunt ${daysLabel(days)} până la salariu (~${formatDate(payday, { day: "numeric", month: "long" })})`, (plan.paydayFlexDays ?? 0) > 0 && days > 0 ? `Poate varia cu ± ${daysLabel(plan.paydayFlexDays ?? 0)}` : ""),
     detail: sentences(`Nerepartizat, la fel ca în Plan: ${money(round(planAllocationMath(data).unrepartized))}`),
     followUps: ["Cât pot cheltui pe zi?"],
   };
@@ -940,11 +939,11 @@ const MATCHERS: Matcher[] = [
 function answerEnvelopeLeft(data: AppData, envelope: BudgetAllocation, asOf: string): AnalystAnswer {
   const status = allocationStatus(data, envelope);
   const left = round(Math.max(0, status.remaining));
-  const week = isWeeklyPaced(envelope, data.settings.salaryPlan) ? allocationWeekStatus(data, envelope, asOf) : undefined;
+  const cap = weekDayCap(data, envelope, asOf);
+  const week = cap?.week;
   const until = envelopeUntilPayday(data, envelope, asOf);
-  const weekDaysLeft = week ? Math.max(1, Math.round((new Date(`${week.end}T12:00:00`).valueOf() - new Date(`${asOf}T12:00:00`).valueOf()) / 86_400_000) + 1) : 0;
   const weekLeft = week ? round(Math.max(0, week.remaining)) : 0;
-  const todayCap = week ? Math.floor(weekLeft / weekDaysLeft) : until ? until.perDay : undefined;
+  const todayCap = cap ? cap.perDay : until ? until.perDay : undefined;
   const headline = status.remaining < 0
     ? `${envelope.label}: plicul e depășit cu ${money(-status.remaining)}.`
     : week

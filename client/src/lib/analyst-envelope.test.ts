@@ -20,7 +20,7 @@ describe("ghidul și plicurile", () => {
     const answer = analyze("cât mai am la mâncare?", family(), "2026-10-04")!;
     expect(answer.kind).toBe("envelope-left");
     expect(answer.headline).toMatch(/Mâncare: mai ai 150 RON săptămâna asta \(S1\) și 1\.950 RON în tot plicul/);
-    expect(answer.detail).toMatch(/azi poți da cel mult 37 RON/);
+    expect(answer.detail).toMatch(/azi poți da cel mult 37,50 RON/);
     expect(answer.detail).toMatch(/Mai sunt 24 de zile până la salariu/);
   });
   it("„cât pot cheltui azi pe taxi?” împarte ce a rămas până la salariu", () => {

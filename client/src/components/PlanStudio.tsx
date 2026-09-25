@@ -24,7 +24,7 @@ import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
-import { envelopeBurnPace, envelopeRunOut, envelopeUntilPayday } from "@/lib/household-insights";
+import { envelopeBurnPace, envelopeRunOut, envelopeUntilPayday, weekDayCap } from "@/lib/household-insights";
 import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
 import { activeIncomes } from "@/lib/monthly-needs";
 import "../monthly-needs.css";
@@ -616,11 +616,14 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             const head = until.days > 0
               ? t("Mai ai nevoie de bani {days}, până la salariu (~{date}).", { days: daysLabel(until.days), date: date(until.typical) })
               : t("Salariul e așteptat azi.");
-            const paced = isWeeklyPaced(item, plan);
+            // Pe plicurile pe săptămâni, cifra de azi e a tranșei — aceeași ca în avertizare și în ghid.
+            const cap = weekDayCap(data, item);
             const tail = until.remaining <= 0
               ? t("Plicul e gol.")
-              : paced && until.latestDays > 0
-                ? `${t("Rămân {amount}: cam {perDay} pe zi, {perWeek} pe săptămână.", { amount: money(until.remaining), perDay: money(until.perDay), perWeek: money(until.perWeek) })}${until.flex > 0 ? ` ${t("Socotit până pe {date}, dacă salariul întârzie.", { date: date(until.latest) })}` : ""}`
+              : cap
+                ? cap.week.remaining > 0
+                  ? t("Săptămâna asta mai ai {left}: cel mult {perDay} pe zi, {days} cu tot cu azi.", { left: money(cap.week.remaining), perDay: money(cap.perDay), days: daysLabel(cap.daysLeft) })
+                  : t("Tranșa săptămânii s-a terminat; în tot plicul mai sunt {amount}.", { amount: money(until.remaining) })
                 : t("Rămân {amount} pentru perioada asta.", { amount: money(until.remaining) });
             return <p className="bf-envelope-until">{head} {tail}</p>;
           })()}
@@ -630,7 +633,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           {weeks.length > 1 && <details className="bf-envelope-weeks"><summary><span>{t("Toate săptămânile ({count})", { count: weeks.length })}</span><ChevronDown size={16} aria-hidden="true" /></summary><ol>{weeks.map((other) => <li key={other.index} className={`${other.index === week?.index ? "is-current" : ""}${other.remaining < 0 ? " is-over" : ""}`} aria-current={other.index === week?.index ? "true" : undefined}><span>S{other.index}</span><b>{formatDate(other.start)} – {formatDate(other.end)}</b><small>{t("{spent} cheltuiți din {amount}", { spent: money(other.spent), amount: money(other.budget) })}{other.carry ? ` · ${other.carry > 0 ? t("+{amount} rămași din săptămâna trecută", { amount: money(other.carry) }) : t("−{amount} depășiți săptămâna trecută", { amount: money(-other.carry) })}` : ""}</small><strong>{money(Math.max(0, other.remaining))}</strong></li>)}</ol><label className="bf-envelope-carry"><input type="checkbox" checked={Boolean(plan.weekCarryOver)} onChange={(event) => updatePlan({ weekCarryOver: event.target.checked || undefined })} /><span>{t("Ce rămâne dintr-o săptămână trece în următoarea (și ce depășești se scade din ea). Se aplică la toate plicurile pe săptămâni.")}</span></label></details>}
           {week && weeks.length > 1 && (() => {
             const shift = startedWeekPlan(data, item);
-            if (!shift) return null;
+            // Doar când chiar e ceva de mutat; altfel e încă o cifră pe zi, care o contrazice pe cea a săptămânii.
+            if (!shift || shift.movable < 1) return null;
             return <div className="bf-week-started">
               <p>{t("Săptămâna e începută: pentru {days} rămase revin {fair} (≈{perDay}/zi).", { days: daysLabel(shift.share.daysLeft), fair: money(shift.share.fair), perDay: money(shift.share.perDay) })}</p>
               {shift.movable >= 1

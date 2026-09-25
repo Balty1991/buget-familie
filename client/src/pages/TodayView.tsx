@@ -4,8 +4,8 @@
  */
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BookOpen, BellRing, CalendarClock, CreditCard, Inbox, Info, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { calculateHealthScore, envelopeDecisionStatus, formatDate, inPlanPeriod, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
-import { calendarBudgetWeekKey, currentCalendarBudgetWeek } from "@/lib/calendar-budget";
+import { calculateHealthScore, envelopeDecisionStatus, formatDate, inPlanPeriod, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
+import { calendarBudgetWeekKey } from "@/lib/calendar-budget";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { ChartTip } from "@/components/ChartFrame";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
@@ -185,7 +185,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   }, [data]);
   const periodIncome = data.transactions.filter((item) => item.kind === "income" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const periodExpense = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
-  const activeTranche = math.planEnd ? currentCalendarBudgetWeek(math.weeklyPacedTotal, math.plan.periodStart, math.planEnd, isoToday()) : undefined;
+  // Tranșa din plicuri (600 la mâncare), nu o împărțire pe zile a totalului (599,97).
+  const activeTranche = math.planEnd ? planWeeklyCycle(data)?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end) : undefined;
   const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : "";
   const showTrancheNotice = Boolean(activeTranche && shownTrancheKey === activeTrancheKey);
   useEffect(() => {
