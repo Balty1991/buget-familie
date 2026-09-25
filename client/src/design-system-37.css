@@ -412,6 +412,11 @@ html.theme-navy {
   html body .os-shell .os-amount small {
     opacity: 1 !important;
   }
+  /* Codul de recuperare moștenea un verde închis: pe Navy abia se vedea. E textul de notat, deci contrast plin. */
+  html body .os-shell .bf-sync-password-once {
+    color: var(--cf-ink) !important;
+    font-weight: 600 !important;
+  }
   /* Descrierea temei („NOAPTE · OLED”): 9 px și 4,3:1 pe opțiunea aleasă din Navy. */
   html body .bf-theme-option em {
     font-size: 11px !important;

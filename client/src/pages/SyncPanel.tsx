@@ -236,7 +236,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         )}
         {recoveryShown && (
           <div className="bf-notice bf-sync-secret" role="status">
-            <p><KeyRound size={14} /> {t("Notează acest cod o dată, pe hârtie, nu în telefon. Cu el poți scoate parola dacă o uiți.")}</p>
+            <p><KeyRound size={14} /> {t("Notează acest cod o dată, pe hârtie, nu în telefon. Cu el intri din nou în familie dacă pierzi telefonul sau ștergi aplicația.")}</p>
             <code className="bf-sync-password-once">{recoveryShown}</code>
             <button type="button" className="bf-secondary" onClick={() => void copySecret(recoveryShown)}>
               <Copy size={16} /> {copiedSecret === recoveryShown ? t("Copiat în clipboard") : t("Copiază codul")}

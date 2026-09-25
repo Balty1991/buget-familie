@@ -75,7 +75,7 @@ export const en: Record<string, string> = {
   "Am găsit parola. Noteaz-o, apoi conectează acest telefon.": "I found the password. Write it down, then connect this phone.",
   "Nu am găsit acest cod de recuperare. Verifică-l sau folosește un backup din Setări.": "I could not find this recovery code. Check it, or use a backup from Settings.",
   "Codul de recuperare e greșit sau pachetul nu poate fi decriptat.": "The recovery code is wrong or the package cannot be decrypted.",
-  "Notează acest cod o dată, pe hârtie, nu în telefon. Cu el poți scoate parola dacă o uiți.": "Write this code down once, on paper, not on the phone. With it you can recover the password if you forget it.",
+  "Notează acest cod o dată, pe hârtie, nu în telefon. Cu el intri din nou în familie dacă pierzi telefonul sau ștergi aplicația.": "Write this code down once, on paper, not on the phone. With it you can get back into the family if you lose the phone or delete the app.",
   "Creează cod de recuperare": "Create a recovery code",
   "Cod nou de recuperare": "New recovery code",
   "Arată parola acestei sesiuni": "Show this session’s password",
