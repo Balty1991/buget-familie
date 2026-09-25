@@ -936,7 +936,34 @@ export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => 
 };
 
 export const allocationBudget = (data: AppData, allocation: BudgetAllocation) => allocation.amount + data.settings.salaryPlan.transfers.reduce((sum, transfer) => sum + (transfer.toAllocationId === allocation.id ? transfer.amount : 0) - (transfer.fromAllocationId === allocation.id ? transfer.amount : 0), 0);
-export const allocationStatus = (data: AppData, allocation: BudgetAllocation) => { const budget = allocationBudget(data, allocation); const spent = allocationSpent(data, allocation); const remaining = money2(budget - spent); const usage = budget > 0 ? spent / budget : 0; const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80)); return { budget, spent, remaining, usage, alertThreshold, state: remaining < 0 ? "over" as const : usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const }; };
+/** Categoriile care, într-un plic lunar, înseamnă o plată fixă: se plătește o dată, nu se cheltuie pe zile. */
+const FIXED_CATEGORIES = new Set(["Casă & facturi", "Rate produse", "Abonamente"]);
+
+/**
+ * Plicul unei plăți fixe (factură, rată, chirie, abonament): lunar, fără ritm pe săptămâni,
+ * legat de o cheltuială „fixă” din „Ce plătim lunar” sau dintr-o categorie de facturi.
+ * Rata de 1.400 plătită pe 5 nu „merge prea repede”: e plătită. Ritmul pe zile, pragul de
+ * atenție și „se termină înainte de salariu” nu au sens pentru el.
+ */
+export const isFixedEnvelope = (plan: SalaryPlan, allocation: BudgetAllocation) => {
+  if (isWeeklyPaced(allocation, plan)) return false;
+  const need = (plan.needs || []).find((item) => item.allocationId === allocation.id && !item.archived);
+  if (need?.priority) return need.priority === "fixed";
+  return FIXED_CATEGORIES.has(need?.category || allocation.category || "");
+};
+
+export const allocationStatus = (data: AppData, allocation: BudgetAllocation) => {
+  const budget = allocationBudget(data, allocation);
+  const spent = allocationSpent(data, allocation);
+  const remaining = money2(budget - spent);
+  const usage = budget > 0 ? spent / budget : 0;
+  const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80));
+  const fixed = isFixedEnvelope(data.settings.salaryPlan, allocation);
+  // Plătit: s-a dat toată suma (cu o toleranță de un leu, pentru bănuții facturii).
+  const paid = fixed && spent > 0 && remaining <= 1 && remaining >= 0;
+  const state = remaining < 0 ? "over" as const : !fixed && usage >= alertThreshold / 100 ? "watch" as const : "healthy" as const;
+  return { budget, spent, remaining, usage, alertThreshold, state, fixed, paid };
+};
 
 /**
  * Cifrele de repartizare, aceleași pe Plan, Astăzi și în teste.
@@ -1169,6 +1196,8 @@ export const envelopeDecisionStatus = (data: AppData, allocation: BudgetAllocati
     usage,
     alertThreshold: cycle.alertThreshold,
     state: remaining < 0 ? "over" as const : usage >= cycle.alertThreshold / 100 ? "watch" as const : "healthy" as const,
+    fixed: false,
+    paid: false,
     scope: "week" as const,
     weekIndex: week.index as number | undefined,
   };

@@ -382,6 +382,8 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     if (!status) continue;
     const usage = status.usage;
     const threshold = (alloc.alertThreshold ?? 80) / 100;
+    // Factura plătită exact nu e „plic epuizat”; doar plata peste sumă merită o notificare.
+    if (status.fixed && status.remaining >= 0) continue;
     if (usage >= 1) {
       alerts.push({
         id: id++,

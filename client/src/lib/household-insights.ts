@@ -34,6 +34,7 @@ import {
   type Transaction,
   isoDate,
   foldRomanian,
+  isFixedEnvelope,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
 import { lei as leiExact } from "./money-format";
@@ -508,6 +509,8 @@ export const untilPayday = (plan: SalaryPlan, asOf = isoToday()) => {
 export const envelopeUntilPayday = (data: AppData, allocation: BudgetAllocation, asOf = isoToday()) => {
   const until = untilPayday(data.settings.salaryPlan, asOf);
   if (!until) return undefined;
+  // O factură nu se împarte pe zile: „cel mult 0,25 lei pe zi la Lumină” nu înseamnă nimic.
+  if (isFixedEnvelope(data.settings.salaryPlan, allocation)) return undefined;
   const remaining = Math.max(0, allocationStatus(data, allocation).remaining);
   const days = Math.max(1, until.latestDays);
   const perDay = Math.floor(remaining / days);
@@ -637,12 +640,15 @@ export const envelopeBurnPace = (data: AppData, asOf = isoToday()): EnvelopeBurn
     const status = allocationStatus(data, item);
     const usage = status.usage;
     let pace: EnvelopeBurnPace["pace"] = "on_track";
-    if (status.remaining < 0 || usage >= 1) pace = "over";
+    if (status.fixed) pace = status.remaining < 0 ? "over" : "on_track";
+    else if (status.remaining < 0 || usage >= 1) pace = "over";
     else if (!track) pace = usage >= (item.alertThreshold ?? 80) / 100 ? "behind" : "on_track";
     else if (usage > expectedUsage + 0.08) pace = "behind";
     else if (usage < expectedUsage - 0.08) pace = "ahead";
     const delta = Math.round((expectedUsage - usage) * 100);
-    const reason = !track
+    const reason = status.fixed && pace !== "over"
+      ? status.paid ? t("Plătit.") : t("Plată fixă: se plătește o dată, nu pe zile.")
+      : !track
       ? t("Setează perioada până la venit ca să comparăm ritmul cu calendarul.")
       : pace === "over"
         ? t("Plicul e depășit — mută lei din alt plic sau reduce cheltuielile.")
@@ -702,7 +708,7 @@ export const envelopeRunOut = (data: AppData, asOf = isoToday()): EnvelopeRunOut
   for (const item of data.settings.salaryPlan.allocations) {
     if (fast.has(item.id)) continue;
     const status = allocationStatus(data, item);
-    if (status.spent <= 0 || status.remaining <= 0) continue;
+    if (status.fixed || status.spent <= 0 || status.remaining <= 0) continue;
     const dailyRate = status.spent / track.elapsed;
     const daysLeft = status.remaining / dailyRate;
     const daysShort = Math.floor(track.remaining - daysLeft);
@@ -1179,6 +1185,12 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
     const remaining = roundMoney(weekStatus ? weekStatus.remaining : planned - spent);
     const usage = planned > 0 ? spent / planned : spent > 0 ? 1 : 0;
     const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80));
+    if (isFixedEnvelope(plan, allocation)) {
+      // Factura sau rata: o singură plată pe ciclu. Se compară cu toată suma, nu cu o „săptămână”
+      // din ea — altfel rata plătită luni apare „1.094 lei peste plan”.
+      const cycle = allocationStatus(data, allocation);
+      return { id: allocation.id, label: allocation.label, planned: cycle.budget, spent: calendarSpent, remaining: cycle.remaining, usage: cycle.usage, state: cycle.remaining < 0 ? "over" as const : "healthy" as const };
+    }
     const state = remaining < 0 || (planned <= 0 && spent > 0) ? "over" as const : usage >= alertThreshold / 100 || fastIds.has(allocation.id) ? "watch" as const : "healthy" as const;
     return { id: allocation.id, label: allocation.label, planned, spent, remaining, usage, state };
   }).sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.spent - left.spent);

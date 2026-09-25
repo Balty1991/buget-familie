@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, allocationWeekStatus } from "./finance-data";
+import { createEmptyAppData, allocationStatus, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, envelopeUntilPayday } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
@@ -685,5 +685,22 @@ describe("cât să pui deoparte pentru un obiectiv", () => {
   it("tace când obiectivul e atins sau nu există istoric pentru o propunere", () => {
     expect(savingsSuggestion(withHistory(), goal({ current: 5000 }), "2026-09-25")).toBeUndefined();
     expect(savingsSuggestion(base().data, goal(), "2026-09-25")).toBeUndefined();
+  });
+});
+
+describe("plata fixă (rată, factură)", () => {
+  it("rata plătită exact: „Plătit”, fără alarmă de ritm, fără „peste plan” în bilanț", () => {
+    const data = createEmptyAppData();
+    const card = data.settings.paymentSources[0];
+    data.settings.paymentSources = data.settings.paymentSources.map((item) => item.id === card.id ? { ...item, openingBalance: 5000 } : item);
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-10-01", sourceIds: [card.id], allocations: [{ id: "rata", label: "Rata", amount: 1400, category: "Rate produse", weeklyPace: false }] };
+    data.transactions = [{ id: "r1", title: "Rata", amount: 1400, kind: "expense", category: "Rate produse", sourceId: card.id, source: card.name, person: "Eu", date: "2026-09-05", allocationId: "rata" }];
+    const status = allocationStatus(data, data.settings.salaryPlan.allocations[0]);
+    expect(status).toMatchObject({ fixed: true, paid: true, state: "healthy" });
+    expect(envelopeBurnPace(data, "2026-09-07")[0].pace).toBe("on_track");
+    expect(envelopeRunOut(data, "2026-09-07")).toEqual([]);
+    const check = weeklyCheckIn(data, "2026-09-06");
+    expect(check.envelopes[0].state).toBe("healthy");
+    expect(envelopeUntilPayday(data, data.settings.salaryPlan.allocations[0], "2026-09-07")).toBeUndefined();
   });
 });

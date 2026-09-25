@@ -95,7 +95,7 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
                     <strong>{money(Math.max(0, entry.remaining))}</strong>
                     <span className="bf-plic-bar" aria-hidden="true">
                       <i style={{ width: `${Math.min(100, Math.max(4, entry.usage * 100))}%` }} />
-                      {burn && track && entry.scope !== "week" ? (
+                      {burn && track && entry.scope !== "week" && !entry.fixed ? (
                         <em className="bf-plic-expected" style={{ left: `${Math.min(96, Math.max(4, burn.expectedUsage * 100))}%` }} title={t("Ritm așteptat")} />
                       ) : null}
                     </span>
@@ -103,7 +103,9 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
                       <span>{Math.round(entry.usage * 100)}%</span>
                       <span>{t("din {amount}", { amount: money(entry.budget) })}{entry.scope === "week" && entry.weekIndex ? ` · ${t("tranșa S{index}", { index: entry.weekIndex })}` : ""}</span>
                     </small>
-                    {burn && (
+                    {entry.fixed && entry.state !== "over" ? (
+                      <span className={`bf-plic-pace ${entry.paid ? "pace-paid" : "pace-due"}`}>{entry.paid ? t("✓ Plătit") : t("de plătit")}</span>
+                    ) : burn && (
                       <span className={`bf-plic-pace pace-${burn.pace}`} title={burn.reason}>
                         {paceLabel(burn.pace)}
                         {track && entry.scope !== "week" ? ` · ${t("{pct}% așteptat", { pct: Math.round(burn.expectedUsage * 100) })}` : ""}
