@@ -99,10 +99,10 @@ Răspunsuri complete, mapate pe categorii Play: [`PLAY_CONSOLE_DATA_SAFETY.md`](
 - Sincronizare: da, opțională; AES-GCM; dezvoltatorul nu poate citi plaintext.
 - Cont utilizator: nu (core use).
 - Publicitate / sharing / vânzare: nu.
-- Analytics: opțional Umami, doar dacă e configurat la build.
+- Analytics: niciun SDK de analytics sau reclame.
 - Backup sistem Android: nu (`allowBackup=false`).
 - Ștergere: in-app Resetare + pagina publică de ștergere.
-- AI: rezumat opțional către Gemini, niciodată registrul întreg.
+- AI: opțional, întrebarea + ultimele mesaje + rezumatul bugetului către Google Gemini (Groq ca rezervă); niciodată jurnalul de mișcări sau pozele.
 - Bonuri: IndexedDB local, nu sync.
 - Bilanțul trimis pe WhatsApp: pleacă doar când omul apasă, prin aplicația lui de mesaje; dezvoltatorul nu primește nimic.
 

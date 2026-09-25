@@ -13,6 +13,7 @@ import { queueReceiptForReview } from "@/lib/receipt-review";
 import { safeSetItem } from "@/lib/safe-storage";
 import { BrandMark } from "@/components/BrandMark";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
+import { isAppLockEnabled } from "@/lib/app-lock";
 import { observeQuickActions, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { hasQueuedFeedback } from "@/lib/feedback-queue";
 import { useMemberMode } from "@/lib/member-mode";
@@ -551,15 +552,20 @@ export default function Home() {
   }), []);
   useEffect(() => {
     // Widgetul „Poți cheltui azi” arată aceeași cifră ca Astăzi; fără punte nativă nu face nimic.
-    const brief = todayBrief(data);
     const today = isoToday();
+    // Cu PIN pe aplicație sau pe telefonul unui copil, suma nu stă pe ecranul principal.
+    if (isAppLockEnabled() || memberModeActive) {
+      publishSpendToday({ amount: "", caption: "", date: today, stale: "" });
+      return;
+    }
+    const brief = todayBrief(data);
     publishSpendToday({
       amount: fmtExact.format(brief.spendable),
       caption: brief.hasPayday && !brief.expired ? t("până la salariu: {days}", { days: daysLabel(brief.remainingDays) }) : t("Setează data salariului în Plan."),
       date: today,
       stale: t("Cifra e de pe {date} — deschide aplicația pentru azi", { date: formatDate(today, { day: "numeric", month: "long" }) }),
     });
-  }, [data]);
+  }, [data, memberModeActive]);
   // Copia săptămânală, pe telefon: o dată la 7 zile, după ce omul a spus „da”.
   useEffect(() => { void import("@/components/AutoBackupCard").then(({ runAutoBackupIfDue }) => runAutoBackupIfDue(data)).catch(() => undefined); }, [data]);
   useEffect(() => {

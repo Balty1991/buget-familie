@@ -19,6 +19,10 @@ import { calendarBudget } from "@/lib/calendar-budget";
 import { daysLabel, getLocale, t } from "./i18n";
 import { weekTooFast } from "./household-insights";
 import { lei } from "@/lib/money-format";
+import { isAppLockEnabled } from "@/lib/app-lock";
+
+/** Cu PIN pe aplicație, notificarea spune doar ce s-a întâmplat, fără sume sau nume. */
+const lockSafeBody = (body: string) => isAppLockEnabled() ? t("Deschide aplicația ca să vezi detaliile.") : body;
 
 const PREF_KEY = "buget-familie:notifications-enabled";
 const ARMED_KEY = "buget-familie:notifications-armed";
@@ -657,7 +661,8 @@ async function showViaServiceWorker(title: string, body: string, tag: string): P
   }
 }
 
-async function showNow(title: string, body: string, tag: string) {
+async function showNow(title: string, rawBody: string, tag: string) {
+  const body = lockSafeBody(rawBody);
   const bridge = nativeReminders();
   if (bridge?.notifyNow) {
     try {
@@ -801,7 +806,7 @@ export async function scheduleFinancialReminders(data: AppData): Promise<void> {
   const permission = await getNotificationPermission();
   if (permission === "denied") return;
 
-  const alerts = buildAlerts(data);
+  const alerts = buildAlerts(data).map((alert) => ({ ...alert, body: lockSafeBody(alert.body) }));
 
   if (isNative()) {
     if (alerts.length) scheduleWorkManager(alerts);

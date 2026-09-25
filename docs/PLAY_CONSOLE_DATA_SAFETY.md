@@ -2,7 +2,7 @@
 
 Text gata de lipit / bifat în **Play Console → Politica aplicației → Siguranța datelor**.  
 Aliniat la aplicația reală (versiune listing **1.1.96** / `versionCode` **98**).  
-Surse: `client/public/privacy.html`, `AndroidManifest.xml` (`allowBackup=false`), sync AES-GCM, IndexedDB bonuri.
+Surse: `client/public/privacy.html`, `AndroidManifest.xml` (`allowBackup=false` + `dataExtractionRules`), sync AES-GCM, IndexedDB bonuri, `functions/src/index.ts` (ghid AI, feedback), `understand.ts` (`compactGuideContext`).
 
 > Nu este sfat juridic. Reverifică formularele Play dacă Google schimbă etichetele.
 
@@ -42,19 +42,15 @@ Date financiare (sume, categorii, plicuri, datorii, scadențe) sunt introduse de
 Fără vânzare de date. Backup-ul sistem Android este dezactivat (allowBackup=false).
 ```
 
-### 2. Fotografii și videoclipuri (bonuri)
+### 2. Fotografii și videoclipuri (bonuri): NU se colectează
 
-| Câmp Play | Alegere |
-|---|---|
-| Categorie | **Fotografii și videoclipuri** (sau Imagini selectate de utilizator) |
-| Colectat? | **Da** — doar dacă utilizatorul alege un bon |
-| Partajat? | **Nu** |
-| Unde stau | **Doar local**, IndexedDB pe telefon |
-| Sync familie | **Nu** — pozele **nu** intră în pachetul criptat |
+În Play, „colectat” înseamnă că datele pleacă de pe dispozitiv. Pozele bonurilor nu pleacă:
+stau în IndexedDB, OCR-ul rulează local, nu intră în sync și nu merg la ghidul AI.
+Bifează **Nu** la Fotografii și videoclipuri.
 
 ```
-Fotografiile bonurilor rămân pe telefon (IndexedDB). Nu se sincronizează între dispozitive.
-OCR-ul rulează local. Utilizatorul confirmă în „De verificat” înainte ca suma să intre în registru.
+Fotografiile bonurilor rămân pe telefon (IndexedDB). Nu se sincronizează și nu se trimit la ghid.
+OCR-ul rulează local; la ghidul online pleacă doar magazinul, data, totalul și produsele citite.
 ```
 
 ### 3. Identificatori de dispozitiv / aplicație (identitate anonimă)
@@ -83,24 +79,38 @@ AES-GCM, iar dezvoltatorul nu poate citi sumele în clar.
 | Partajat? | **Nu** |
 | Scop | **Funcționalitatea aplicației** (repararea problemelor) |
 
-### 4. Mesaje / chat AI (opțional)
+### 4. Ghidul AI online (opțional)
 
 | Câmp Play | Alegere |
 |---|---|
-| Categorie | Mesaje / conținut generat de utilizator (dacă există) **sau** note în „Alte date” |
-| Colectat? | **Da, opțional** — doar când ghidul local nu înțelege și utilizatorul folosește rezervă online |
-| Ce pleacă | **Rezumat scurt**, nu registrul întreg, nu poze, nu parola |
-| Destinatar | Google Gemini (când e folosit ghidul online) |
+| Categorii | **Activitate în aplicație → Alt conținut generat de utilizator** (întrebarea, ultimele 8 mesaje); **Informații financiare → Alte informații financiare** (rezumatul bugetului); **Informații personale → Nume** (numele membrilor familiei din rezumat) |
+| Colectat? | **Da, opțional**: doar când ghidul local nu înțelege și omul trimite mesajul |
+| Prelucrat efemer? | **Da**: serverul nu păstrează conversația; doar contoare de limită (fără conținut) |
+| Partajat? | **Nu** în sensul Play: Google Gemini și Groq sunt furnizori de servicii care prelucrează în numele nostru |
+| Scop | **Funcționalitatea aplicației** |
+
+Ce pleacă, exact: întrebarea, ultimele 8 mesaje, `compactGuideContext` (plicuri cu sumă și rest,
+surse cu sold, categorii, scadențe, recurente, datorii, obiective, evenimente, venituri așteptate
+cu ziua lor, numele membrilor, totalurile lunii, data salariului) și, la bon, magazin/dată/total/produse.
+Nu pleacă jurnalul de mișcări, pozele, cheia sau parola camerei.
 
 ```
-Ghidul rămâne local. Dacă ghidul de pe telefon nu înțelege, poate pleca un rezumat scurt
-către Google Gemini — niciodată registrul complet, fotografiile de bonuri sau parola de familie.
+Ghidul răspunde întâi de pe telefon. Dacă nu înțelege, întrebarea, ultimele mesaje și un rezumat
+al bugetului (plicuri, surse, scadențe, numele membrilor) merg prin serverul nostru la Google Gemini
+sau, ca rezervă, la Groq. Nu pleacă jurnalul de mișcări și nici fotografiile. Conversația nu e păstrată pe server.
 ```
+
+### 4b. Adresa IP și protecție la abuz
+
+Adresa IP și ID-ul anonim sunt folosite pe server pentru limite (ghid, feedback). Pe web, App Check
+folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau alte ID-uri**, scop
+**Prevenirea fraudei, securitate și conformitate** (deja bifat la 3).
 
 ### 5. Date care NU se colectează (bifează „Nu”)
 
 - Locație precisă / aproximativă  
 - Contacte  
+- Fotografii și videoclipuri (rămân pe telefon)  
 - Microfon / înregistrări audio  
 - Conturi de autentificare (Google/Facebook etc.) pentru core use  
 - Date de sănătate  
@@ -115,8 +125,8 @@ către Google Gemini — niciodată registrul complet, fotografiile de bonuri sa
 |---|---|
 | Se partajează date cu terți în sensul Play (vânzare, publicitate, brokeri)? | **Nu** |
 | Firebase / Firestore | Infrastructură pentru **ciphertext** sync opțional — nu e „sale of data”; nu citește plaintext financiar |
-| Gemini | Doar rezumat opțional din ghid — **dezvăluit** în privacy + aici |
-| Umami analytics | **Opțional**, doar dacă e configurat la build; nu e SDK de ads |
+| Google Gemini / Groq | Furnizori de servicii pentru ghidul online opțional (Groq doar ca rezervă, SUA) — **dezvăluit** în privacy + aici |
+| Analytics / ads SDK | **Niciunul** în aplicație |
 
 În formular: **Nu vindem datele utilizatorilor** · **Nu folosim date pentru publicitate**.
 
@@ -131,7 +141,8 @@ către Google Gemini — niciodată registrul complet, fotografiile de bonuri sa
 | Cum | 1) In-app: Setări → Resetare → „Resetează datele locale” · 2) Public: https://balty1991.github.io/buget-familie/delete-data.html · 3) Dezinstalare |
 | Cont de șters la dezvoltator | **Nu există** cont Buget Familie |
 | Cameră familie | Schimbați parola (≥12 caractere) pe telefoanele rămase; camera veche rămâne indescifrabilă |
-| Backup Android | **Dezactivat** — `android:allowBackup="false"` |
+| Backup Android | **Dezactivat**: `android:allowBackup="false"` și `dataExtractionRules` exclud backup-ul cloud și transferul pe telefon nou |
+| Copie automată (opțională) | JSON necriptat în Descărcări, pe telefon; nu pleacă la noi. Dezvăluit în politică |
 
 ---
 
@@ -157,13 +168,14 @@ către Google Gemini — niciodată registrul complet, fotografiile de bonuri sa
 ## G. Checklist rapid înainte de Submit
 
 - [ ] Informații financiare = Da, pe dispozitiv, scop Funcționalitate  
-- [ ] Fotografii bonuri = Da, local, nu sync, nu partajare  
+- [ ] Fotografii = **Nu** (rămân pe telefon)  
 - [ ] Sync = opțional, criptat, dezvoltator fără plaintext  
-- [ ] AI online = opțional, doar rezumat — bifat / dezvăluit  
+- [ ] AI online = opțional: conținut utilizator + informații financiare + nume; efemer; Gemini + Groq furnizori  
 - [ ] Identificatori = Da (ID anonim Firebase), funcționalitate + securitate, nu partajare  
 - [ ] Feedback = opțional; conținut scris de utilizator + contact opțional + date tehnice  
 - [ ] Ads / sale / data brokers = Nu  
-- [ ] allowBackup = false menționat dacă există câmp de note  
+- [ ] allowBackup = false + dataExtractionRules menționate dacă există câmp de note  
+- [ ] Public țintă: **18+** (modul „Telefonul lui X” e pornit de un adult; vezi politica, secțiunea Copii)  
 - [ ] URL ștergere + email `contact.vanzo@gmail.com`  
 - [ ] Privacy publică: https://balty1991.github.io/buget-familie/privacy.html  
 

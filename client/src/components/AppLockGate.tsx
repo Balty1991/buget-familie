@@ -2,7 +2,7 @@
 import "../app-lock.css";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Delete, LockKeyhole } from "lucide-react";
-import { APP_LOCK_BACKGROUND_RELOCK_MS, hasAppLockPin, isAppLockEnabled, verifyAppLockPin } from "@/lib/app-lock";
+import { APP_LOCK_BACKGROUND_RELOCK_MS, appLockWaitSeconds, hasAppLockPin, isAppLockEnabled, verifyAppLockPin } from "@/lib/app-lock";
 import { hideNativeSplash } from "@/lib/native-splash";
 import { t } from "@/lib/i18n";
 
@@ -49,7 +49,8 @@ export function AppLockGate({ children }: { children: ReactNode }) {
         setError("");
       } else {
         setPin("");
-        setError(t("PIN greșit."));
+        const wait = appLockWaitSeconds();
+        setError(wait > 0 ? t("Prea multe încercări. Mai așteaptă {seconds} secunde.", { seconds: wait }) : t("PIN greșit."));
       }
     });
     return () => {
