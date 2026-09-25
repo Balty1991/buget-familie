@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allocationFromText, createEmptyAppData, revertSalaryAllocationApplication, type AppData, type MonthlyNeed } from "./finance-data";
-import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, weeksInCycle } from "./monthly-needs";
+import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, cycleWeeks, weeklyTarget } from "./monthly-needs";
 
 const need = (id: string, label: string, min: number, max: number, extra: Partial<MonthlyNeed> = {}): MonthlyNeed => ({ id, label, category: label, cadence: "monthly", min, max, priority: "fixed", ...extra });
 
@@ -37,9 +37,12 @@ const family = (): AppData => {
 const income = (id: string, memberId: string, amount: number, date: string, sourceId = "card") => ({ id, title: "Salariu", amount, kind: "income" as const, category: "Venit", source: "Card", person: "", date, sourceId, memberId });
 
 describe("săptămânile și zilele ciclului", () => {
-  it("numără săptămânile care încep în ciclu: 4 sau 5, fără virgulă", () => {
-    expect(weeksInCycle("2026-10-10", "2026-11-10")).toBe(5); // luni: 12, 19, 26 oct., 2, 9 nov.
-    expect(weeksInCycle("2026-02-10", "2026-03-10")).toBe(4);
+  it("săptămâni întregi plus zilele rămase, fără virgulă", () => {
+    expect(cycleWeeks("2026-10-10", "2026-11-10")).toEqual({ days: 32, weeks: 4, extraDays: 4 });
+    expect(cycleWeeks("2026-02-10", "2026-03-09")).toEqual({ days: 28, weeks: 4, extraDays: 0 });
+    // 600 pe fiecare săptămână întreagă, iar zilele rămase primesc partea lor rotundă.
+    expect(weeklyTarget(600, { weeks: 4, extraDays: 4 })).toBe(2743);
+    expect(weeklyTarget(600, { weeks: 4, extraDays: 0 })).toBe(2400);
   });
   it("aceeași zi luna viitoare, fără să sară în luna de după", () => {
     expect(sameDayNextMonth("2026-01-31")).toBe("2026-02-28");
@@ -58,13 +61,13 @@ describe("repartizarea la salariu", () => {
     data.transactions = [income("s-eu", "eu", 4700, "2026-10-10")];
     const split = proposeIncomeSplit(data, "s-eu");
     if (!split.ok) throw new Error(split.message);
-    expect(split.weeks).toBe(5);
+    expect(split).toMatchObject({ weeks: 4, extraDays: 4 });
     const by = Object.fromEntries(split.lines.map((line) => [line.need.id, line]));
     // Obligații (maximul): 400 + 350 + 250 + 1.400 + 300 + 100 = 2.800.
     expect(["lumina", "abonamente", "gradinita", "rate", "rate0", "apa"].map((id) => by[id].amount)).toEqual([400, 350, 250, 1400, 300, 100]);
-    expect(by.mancare).toMatchObject({ target: 3000, weeks: 5, amount: 1900, remaining: 1100 });
+    expect(by.mancare).toMatchObject({ target: 2743, weeks: 4, extraDays: 4, perWeek: 600, amount: 1900, remaining: 843 });
     expect(by.taxi).toMatchObject({ amount: 0, remaining: 500 });
-    expect(split).toMatchObject({ covered: 4700, free: 0, uncovered: 1600 });
+    expect(split).toMatchObject({ covered: 4700, free: 0, uncovered: 1343 });
     expect(split.nextIncome).toMatchObject({ label: "Salariul soției", amount: 2800, date: "2026-10-12" });
   });
 
@@ -75,15 +78,15 @@ describe("repartizarea la salariu", () => {
     const split = proposeIncomeSplit(data, "s-sotia");
     if (!split.ok) throw new Error(split.message);
     const by = Object.fromEntries(split.lines.map((line) => [line.need.id, line]));
-    expect(by.mancare).toMatchObject({ fundedBefore: 1900, amount: 1100, remaining: 0 });
+    expect(by.mancare).toMatchObject({ fundedBefore: 1900, amount: 843, remaining: 0 });
     expect(by.taxi).toMatchObject({ amount: 500, remaining: 0 });
     expect(by.rate).toMatchObject({ fundedBefore: 1400, amount: 0 });
-    expect(split).toMatchObject({ covered: 1600, free: 1200, uncovered: 0 });
+    expect(split).toMatchObject({ covered: 1343, free: 1457, uncovered: 0 });
     expect(split.nextIncome).toBeUndefined();
 
     data = applyIncomeSplit(data, "s-sotia").data;
     const envelope = (label: string) => data.settings.salaryPlan.allocations.find((item) => item.label === label);
-    expect(envelope("Mâncare")).toMatchObject({ amount: 3000, weeklyPace: true });
+    expect(envelope("Mâncare")).toMatchObject({ amount: 2743, weeklyAmount: 600, weeklyPace: true });
     expect(envelope("Rate bănci")).toMatchObject({ amount: 1400, weeklyPace: false });
     expect(envelope("Taxi")?.amount).toBe(500);
   });

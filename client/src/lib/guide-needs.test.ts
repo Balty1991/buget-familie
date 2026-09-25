@@ -30,8 +30,8 @@ describe("ghidul și „Ce plătim lunar”", () => {
     const kinds = reading.intents.map((item) => item.intent.kind);
     expect(kinds).toEqual(["income", "income-split"]);
     const split = reading.intents[1].intent;
-    expect(split.kind === "income-split" && split.preview).toMatch(/Rate bănci 1\.400 RON · Lumină 400 RON · Mâncare 2\.900 RON din 3\.000 RON/);
-    expect(split.kind === "income-split" && split.preview).toMatch(/rămân 100 RON pentru Salariul soției/);
+    expect(split.kind === "income-split" && split.preview).toMatch(/Rate bănci 1\.400 RON · Lumină 400 RON · Mâncare 2\.743 RON/);
+    expect(split.kind === "income-split" && split.preview).toMatch(/liberi 157 RON/);
   });
 
   it("„soția a primit salariul 2800” pune venitul pe soție", () => {

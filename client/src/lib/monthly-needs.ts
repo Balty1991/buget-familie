@@ -45,12 +45,18 @@ export const sameDayNextMonth = (iso: string, day = Number(iso.slice(8, 10))) =>
   return toIso(target);
 };
 
-/** Câte săptămâni încep (lunea) în [start, end): 4 sau 5 într-o lună, fără fracții. */
-export const weeksInCycle = (start: string, endExclusive: string) => {
-  let count = 0;
-  for (let day = start; day < endExclusive; day = addIsoDays(day, 1)) if (atNoon(day).getDay() === 1) count += 1;
-  return Math.max(1, count);
+/**
+ * Săptămânile ciclului, aceleași felii de 7 zile ca tranșele din Plan (de la ziua venitului,
+ * cu ziua următorului venit inclusă): 4 săptămâni întregi și câteva zile.
+ */
+export const cycleWeeks = (start: string, end: string) => {
+  const days = Math.max(1, Math.round((atNoon(end).valueOf() - atNoon(start).valueOf()) / 86_400_000) + 1);
+  return { days, weeks: Math.floor(days / 7), extraDays: days % 7 };
 };
+
+/** Cât cere o cheltuială pe săptămână într-un ciclu: săptămânile întregi exact, zilele rămase rotund. */
+export const weeklyTarget = (perWeek: number, cycle: { weeks: number; extraDays: number }) =>
+  round2(perWeek * cycle.weeks + Math.round(perWeek * cycle.extraDays / 7));
 
 const incomeOf = (data: AppData, id: string) => data.transactions.find((item) => item.id === id && item.kind === "income");
 
@@ -89,7 +95,10 @@ export type SplitLine = {
   need: MonthlyNeed;
   /** Ținta pe ciclu: suma aleasă din interval, sau săptămânal × săptămânile ciclului. */
   target: number;
+  /** La cheltuielile pe săptămână: săptămânile întregi și zilele rămase din ciclu. */
   weeks?: number;
+  extraDays?: number;
+  perWeek?: number;
   fundedBefore: number;
   amount: number;
   /** Cât rămâne de acoperit după acest venit. */
@@ -106,6 +115,7 @@ export type IncomeSplit =
     cycleStart: string;
     cycleEnd: string;
     weeks: number;
+    extraDays: number;
     lines: SplitLine[];
     covered: number;
     free: number;
@@ -128,19 +138,21 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
 
   const { funded, cycleStart } = fundedInCycle(data, income);
   const cycleEnd = sameDayNextMonth(cycleStart);
-  const weeks = weeksInCycle(cycleStart, cycleEnd);
+  const cycle = cycleWeeks(cycleStart, cycleEnd);
   let money = round2(income.amount);
   const ordered = [...needs].sort((a, b) => Number(a.priority === "flex") - Number(b.priority === "flex"));
   const lines: SplitLine[] = ordered.map((need) => {
-    const target = need.cadence === "weekly" ? round2(reserveOf(need) * weeks) : reserveOf(need);
+    const weekly = need.cadence === "weekly";
+    const target = weekly ? weeklyTarget(reserveOf(need), cycle) : reserveOf(need);
+    const weekInfo = weekly ? { weeks: cycle.weeks, extraDays: cycle.extraDays, perWeek: reserveOf(need) } : {};
     const fundedBefore = funded.get(need.id) || 0;
     const open = Math.max(0, round2(target - fundedBefore));
     if (need.payerId && need.payerId !== income.memberId) {
-      return { need, target, weeks: need.cadence === "weekly" ? weeks : undefined, fundedBefore, amount: 0, remaining: open, skipped: "other-payer" as const };
+      return { need, target, ...weekInfo, fundedBefore, amount: 0, remaining: open, skipped: "other-payer" as const };
     }
     const amount = Math.min(open, money);
     money = round2(money - amount);
-    return { need, target, weeks: need.cadence === "weekly" ? weeks : undefined, fundedBefore, amount: round2(amount), remaining: round2(open - amount) };
+    return { need, target, ...weekInfo, fundedBefore, amount: round2(amount), remaining: round2(open - amount) };
   });
   const covered = round2(lines.reduce((sum, item) => sum + item.amount, 0));
   return {
@@ -148,7 +160,8 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     income,
     cycleStart,
     cycleEnd,
-    weeks,
+    weeks: cycle.weeks,
+    extraDays: cycle.extraDays,
     lines,
     covered,
     free: money,
@@ -182,7 +195,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     let envelope = envelopeFor(allocations, line.need);
     const created = !envelope;
     if (!envelope) {
-      envelope = { id: newId("allocation"), label: line.need.label, amount: 0, category: line.need.category, weeklyPace: line.need.cadence === "weekly", updatedAt: now };
+      envelope = { id: newId("allocation"), label: line.need.label, amount: 0, category: line.need.category, weeklyPace: line.need.cadence === "weekly", ...(line.perWeek ? { weeklyAmount: line.perWeek } : {}), updatedAt: now };
       allocations = [...allocations, envelope];
     }
     if (line.need.allocationId !== envelope.id) {
@@ -192,7 +205,8 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     const previousAmount = envelope.amount;
     const id = envelope.id;
     if (!created && previousAmount === next && line.amount <= 0) continue;
-    allocations = allocations.map((item) => item.id === id ? { ...item, amount: next, updatedAt: now } : item);
+    // Plicul săptămânal primește și suma pe săptămână: tranșele din Plan sunt exact atât.
+    allocations = allocations.map((item) => item.id === id ? { ...item, amount: next, ...(line.perWeek ? { weeklyAmount: line.perWeek, weeklyPace: true } : {}), updatedAt: now } : item);
     lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount, ...(created ? { created: true } : {}) });
   }
   if (!lines.some((item) => item.amount > 0)) return { data, error: t("Nu e nimic de repartizat din acest venit: cheltuielile ciclului sunt deja acoperite.") };

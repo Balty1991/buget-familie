@@ -19,18 +19,28 @@ const toIso = (ms: number) => {
 };
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-export function calendarBudget(total: number, start: string, end: string): CalendarBudget | undefined {
+/**
+ * Tranșele unui plic pe felii de 7 zile. Cu `weekly` (plicul are o sumă pe săptămână, „600”),
+ * fiecare săptămână întreagă primește exact atât, în lei întregi, iar ultima tranșă ia restul
+ * (fără 541,94 pe săptămână). Fără ea, suma se împarte pe zile, ca până acum.
+ */
+export function calendarBudget(total: number, start: string, end: string, weekly?: number): CalendarBudget | undefined {
   const first = atNoon(start); const last = atNoon(end); const safeTotal = Number.isFinite(total) ? Math.max(0, total) : 0;
   if (!start || !end || Number.isNaN(first) || Number.isNaN(last) || last < first || safeTotal <= 0) return undefined;
   const days = Math.round((last - first) / dayMs) + 1;
-  const weeklyAmount = roundMoney(safeTotal * 7 / days);
+  const perWeek = weekly && weekly > 0 ? weekly : undefined;
+  const weeklyAmount = perWeek ?? roundMoney(safeTotal * 7 / days);
   const weeks: CalendarBudgetWeek[] = [];
   let cursor = first;
   let distributed = 0;
   while (cursor <= last) {
     const sliceEnd = Math.min(cursor + 6 * dayMs, last);
     const sliceDays = Math.round((sliceEnd - cursor) / dayMs) + 1;
-    const amount = sliceEnd === last ? roundMoney(safeTotal - distributed) : roundMoney(safeTotal * sliceDays / days);
+    const amount = sliceEnd === last
+      ? roundMoney(Math.max(0, safeTotal - distributed))
+      : perWeek
+        ? roundMoney(Math.min(Math.round(perWeek * sliceDays / 7), Math.max(0, safeTotal - distributed)))
+        : roundMoney(safeTotal * sliceDays / days);
     weeks.push({ index: weeks.length + 1, start: toIso(cursor), end: toIso(sliceEnd), days: sliceDays, amount });
     distributed = roundMoney(distributed + amount); cursor = sliceEnd + dayMs;
   }

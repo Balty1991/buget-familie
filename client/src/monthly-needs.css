@@ -58,3 +58,19 @@
 .bf-needs-applied-row button { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
 .bf-income-split-done { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 14px; border: 1px solid var(--cf-line); border-radius: 14px; background: var(--cf-surface); color: var(--cf-ink); font-size: 14px; }
 .bf-income-split-done button { min-height: 44px; }
+
+/* Toate tranșele unui plic, direct pe cartonaș. */
+.bf-envelope-weeks { grid-column: 1 / -1; border: 1px solid var(--cf-line); border-radius: 12px; background: var(--cf-surface); }
+.bf-envelope-weeks > summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; color: var(--cf-link); font-size: 13px; font-weight: 700; cursor: pointer; list-style: none; }
+.bf-envelope-weeks > summary::-webkit-details-marker { display: none; }
+.bf-envelope-weeks[open] > summary { border-bottom: 1px solid var(--cf-line); }
+.bf-envelope-weeks[open] > summary svg { transform: rotate(180deg); }
+.bf-envelope-weeks ol { display: grid; margin: 0; padding: 0; list-style: none; }
+.bf-envelope-weeks li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--cf-line); color: var(--cf-ink); }
+.bf-envelope-weeks li:first-child { border-top: 0; }
+.bf-envelope-weeks li > span { font-size: 11px; font-weight: 700; }
+.bf-envelope-weeks li > b { font-size: 13px; font-weight: 600; }
+.bf-envelope-weeks li > small { grid-column: 2; font-size: 12px; }
+.bf-envelope-weeks li > strong { grid-column: 3; grid-row: 1 / span 2; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bf-envelope-weeks li.is-current { background: color-mix(in srgb, var(--cf-primary) 10%, transparent); box-shadow: inset 3px 0 0 var(--cf-primary); }
+.bf-envelope-weeks li.is-over > strong { color: var(--cf-danger); }

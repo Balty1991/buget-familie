@@ -26,6 +26,7 @@ import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace, envelopeRunOut } from "@/lib/household-insights";
 import { MonthlyNeedsSection } from "@/components/MonthlyNeedsPanel";
+import "../monthly-needs.css";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
 import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-prefs";
@@ -604,6 +605,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           {runOutById.get(item.id) && (() => { const runOut = runOutById.get(item.id)!; return <p className="bf-envelope-runout" role="note">{t("La ritmul de acum se termină pe {date}, cu {days} înainte de salariu. Ca să ajungă: cel mult {safe} pe zi.", { date: formatDate(runOut.runOutDate, { day: "numeric", month: "long" }), days: daysLabel(runOut.daysShort), safe: money(runOut.safeDaily) })}</p>; })()}
           <div className={`bf-envelope-meter${(week ? week.state : state) === "over" ? " is-over" : ""}`}><span>{week ? t("Săptămâna asta") : t("Tot plicul")}</span><b>{money(week ? week.spent : spent)} <small>/ {money(week ? week.budget : budget)}</small></b><i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.max(0, ((week ? week.budget : budget) > 0 ? (week ? week.spent : spent) / (week ? week.budget : budget) : 0) * 100))}%` }} /></i></div>
           {week && <div className={`bf-allocation-week ${week.state === "over" ? "over" : ""}`}><span>S{week.index} · {formatDate(week.start)} – {formatDate(week.end)}</span><b>{money(Math.max(0, week.remaining))}</b><small>{t("{spent} cheltuiți din {budget} în această tranșă", { spent: money(week.spent), budget: money(week.budget) })}</small></div>}
+          {weeks.length > 1 && <details className="bf-envelope-weeks"><summary><span>{t("Toate săptămânile ({count})", { count: weeks.length })}</span><ChevronDown size={16} aria-hidden="true" /></summary><ol>{weeks.map((other) => <li key={other.index} className={`${other.index === week?.index ? "is-current" : ""}${other.remaining < 0 ? " is-over" : ""}`} aria-current={other.index === week?.index ? "true" : undefined}><span>S{other.index}</span><b>{formatDate(other.start)} – {formatDate(other.end)}</b><small>{t("{spent} cheltuiți din {amount}", { spent: money(other.spent), amount: money(other.budget) })}</small><strong>{money(Math.max(0, other.remaining))}</strong></li>)}</ol></details>}
           {week && weeks.length > 1 && (() => {
             const shift = startedWeekPlan(data, item);
             if (!shift) return null;
