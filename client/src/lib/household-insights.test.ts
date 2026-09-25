@@ -718,3 +718,18 @@ describe("ziua salariului (BF-04)", () => {
     expect(brief.spendable).toBeLessThanOrEqual(500);
   });
 });
+
+describe("cheltuiala fără plic, pe o categorie comună (BF-12)", () => {
+  it("nu scade din două plicuri deodată", () => {
+    const data = createEmptyAppData();
+    const card = data.settings.paymentSources[0];
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-10-01", sourceIds: [card.id], allocations: [
+      { id: "lumina", label: "Lumină", amount: 400, category: "Casă & facturi", weeklyPace: false },
+      { id: "apa", label: "Apă", amount: 100, category: "Casă & facturi", weeklyPace: false },
+    ] };
+    data.transactions = [{ id: "f", title: "Factură", amount: 380, kind: "expense", category: "Casă & facturi", sourceId: card.id, source: card.name, person: "Eu", date: "2026-09-05" }];
+    const [lumina, apa] = data.settings.salaryPlan.allocations;
+    expect(allocationStatus(data, lumina).spent + allocationStatus(data, apa).spent).toBeLessThanOrEqual(380);
+    expect(allocationStatus(data, apa).state).not.toBe("over");
+  });
+});

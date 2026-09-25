@@ -390,3 +390,35 @@ describe("pornire la mijlocul lunii (P1-5)", () => {
     expect(nextPaydayAfter("2026-09-08", 10)).toBe("2026-10-10");
   });
 });
+
+describe("bug-uri QA la repartizare", () => {
+  it("două cheltuieli cu același nume primesc plicuri separate (BF-07)", () => {
+    let data = family();
+    data.settings.salaryPlan.needs = [need("r1", "Rate", 1000, 1000), need("r2", "rate ", 500, 500)];
+    data.transactions = [income("s-eu", "eu", 5000, "2026-10-10")];
+    data = applyIncomeSplit(data, "s-eu").data;
+    const rates = data.settings.salaryPlan.allocations.filter((item) => item.label.trim().toLowerCase() === "rate");
+    expect(rates.map((item) => item.amount).sort((a, b) => a - b)).toEqual([500, 1000]);
+  });
+  it("cheltuiala trecută pe lunar pierde tranșele săptămânale (BF-08)", () => {
+    let data = family();
+    data.settings.salaryPlan.needs = [need("taxi", "Taxi", 100, 100, { cadence: "weekly", priority: "flex" })];
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10"), income("s-2", "eu", 4700, "2026-11-10")];
+    data = applyIncomeSplit(data, "s-eu").data;
+    expect(data.settings.salaryPlan.allocations[0].weeklyAmount).toBe(100);
+    data.settings.salaryPlan.needs = [need("taxi", "Taxi", 500, 500, { priority: "flex", allocationId: data.settings.salaryPlan.allocations[0].id })];
+    data = applyIncomeSplit(data, "s-2").data;
+    const taxi = data.settings.salaryPlan.allocations[0];
+    expect(taxi.weeklyAmount).toBeUndefined();
+    expect(taxi.weeklyPace).toBe(false);
+  });
+  it("venitul declarat pe 31 cade pe 30 septembrie (BF-13)", () => {
+    const data = family();
+    data.settings.salaryPlan.incomes = [{ id: "i-eu", memberId: "eu", label: "Al meu", amount: 4700, day: 15 }, { id: "i-ea", memberId: "sotia", label: "Al ei", amount: 1000, day: 31 }];
+    data.settings.salaryPlan.periodStart = "2026-09-15";
+    data.settings.salaryPlan.nextPayday = "2026-10-15";
+    data.transactions = [income("s", "eu", 4700, "2026-09-15")];
+    const split = proposeIncomeSplit(data, "s");
+    expect(split.ok && split.nextIncome?.date).toBe("2026-09-30");
+  });
+});

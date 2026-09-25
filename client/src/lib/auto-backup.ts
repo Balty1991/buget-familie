@@ -28,9 +28,16 @@ export const writeAutoBackup = (patch: Partial<AutoBackupPrefs>) => {
   return next;
 };
 
-/** E timpul pentru o copie: pornită și fără copie în ultimele 7 zile. */
-export const autoBackupDue = (prefs: AutoBackupPrefs, now = Date.now()) =>
-  prefs.enabled && (!prefs.lastAt || now - Date.parse(prefs.lastAt) >= AUTO_BACKUP_DAYS * 86_400_000);
+/**
+ * E timpul pentru o copie: pornită și fără copie în ultimele 7 zile. O dată ilizibilă sau din
+ * viitor (ceasul telefonului a fost greșit) înseamnă „copie necesară”, nu „așteaptă până atunci”.
+ */
+export const autoBackupDue = (prefs: AutoBackupPrefs, now = Date.now()) => {
+  if (!prefs.enabled) return false;
+  const last = prefs.lastAt ? Date.parse(prefs.lastAt) : NaN;
+  if (!Number.isFinite(last) || last > now) return true;
+  return now - last >= AUTO_BACKUP_DAYS * 86_400_000;
+};
 
 /** Merită întrebat: familia are deja câteva mișcări de pierdut și n-a răspuns încă. */
 export const autoBackupWorthAsking = (prefs: AutoBackupPrefs, movements: number) => !prefs.asked && movements >= 10;

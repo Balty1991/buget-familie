@@ -35,6 +35,7 @@ import {
   isoDate,
   foldRomanian,
   isFixedEnvelope,
+  expenseBelongsTo,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
 import { lei as leiExact } from "./money-format";
@@ -966,13 +967,7 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-const matchesAllocation = (item: Transaction, allocation: BudgetAllocation) => {
-  if (item.kind !== "expense") return false;
-  if (item.allocationId) return item.allocationId === allocation.id;
-  return (!allocation.memberId || item.memberId === allocation.memberId)
-    && (!allocation.category || item.category === allocation.category)
-    && (!allocation.sourceId || item.sourceId === allocation.sourceId);
-};
+
 
 export type EnvelopeMonth = { month: string; amount: number };
 
@@ -987,7 +982,7 @@ export const envelopeMonthlyHistory = (data: AppData, allocation: BudgetAllocati
   for (let back = count - 1; back >= 0; back -= 1) {
     const date = new Date(base.getFullYear(), base.getMonth() - back, 1, 12);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const amount = data.transactions.filter((item) => item.date.startsWith(key) && matchesAllocation(item, allocation)).reduce((sum, item) => sum + item.amount, 0);
+    const amount = data.transactions.filter((item) => item.date.startsWith(key) && expenseBelongsTo(data.settings.salaryPlan, item, allocation)).reduce((sum, item) => sum + item.amount, 0);
     months.push({ month: key, amount: roundMoney(amount) });
   }
   const full = months.slice(0, -1).filter((item) => item.amount > 0);
@@ -1071,7 +1066,7 @@ export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): Wee
   const cursorEnd = hasTranche ? windowEnd : windowEnd;
   for (let day = cursor; day && day <= cursorEnd && listed.length < 14; day = addIsoDays(day, 1)) listed.push(day);
   const spentByDay = listed.map((day) => {
-    const out = data.transactions.filter((item) => item.date === day && weekly.some((allocation) => matchesAllocation(item, allocation))).reduce((sum, item) => sum + item.amount, 0);
+    const out = data.transactions.filter((item) => item.date === day && weekly.some((allocation) => expenseBelongsTo(data.settings.salaryPlan, item, allocation))).reduce((sum, item) => sum + item.amount, 0);
     return { day, out };
   });
   const todayIndex = Math.max(0, spentByDay.findIndex((item) => item.day === asOf));
@@ -1189,7 +1184,7 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
   const envelopes = plan.allocations.map((allocation) => {
     const cycleBudget = allocationBudget(data, allocation);
     const weekStatus = isWeeklyPaced(allocation, plan) ? allocationWeekStatus(data, allocation, asOf) : undefined;
-    const calendarSpent = roundMoney(weekTx.filter((item) => matchesAllocation(item, allocation)).reduce((sum, item) => sum + item.amount, 0));
+    const calendarSpent = roundMoney(weekTx.filter((item) => expenseBelongsTo(data.settings.salaryPlan, item, allocation)).reduce((sum, item) => sum + item.amount, 0));
     const planned = roundMoney(weekStatus ? weekStatus.budget : cycleBudget * Math.min(7, planDays) / planDays);
     // La plicurile cu ritm, cheltuiala din tranșă contează și dacă a căzut în săptămâna
     // calendaristică anterioară. Altfel restul arătat luni uită ce s-a cheltuit marțea trecută.

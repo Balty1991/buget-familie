@@ -919,6 +919,24 @@ export const inPlanPeriod = (iso: string, plan: SalaryPlan) => {
  * referință egală nu garantează date egale. Trecerea unică este destul de ieftină
  * și nu poate rămâne în urmă.
  */
+/** Potrivirea veche, după membru, categorie și sursă, pentru cheltuielile fără plic ales. */
+const legacyFits = (item: Pick<Transaction, "memberId" | "category" | "sourceId">, allocation: BudgetAllocation) =>
+  (!allocation.memberId || item.memberId === allocation.memberId)
+  && (!allocation.category || item.category === allocation.category)
+  && (!allocation.sourceId || !item.sourceId || allocationSourceIds(allocation).includes(item.sourceId));
+
+/**
+ * O cheltuială aparține plicului: cel ales, sau — fără plic ales (date vechi) — plicul care i
+ * se potrivește, dar numai dacă e singurul. Lumină și Apă, ambele pe „Casă & facturi”,
+ * scădeau amândouă aceeași factură de 380. Aceeași regulă peste tot: plic, tranșe, notificări.
+ */
+export const expenseBelongsTo = (plan: Pick<SalaryPlan, "allocations">, item: Transaction, allocation: BudgetAllocation) => {
+  if (item.kind !== "expense") return false;
+  if (item.allocationId) return item.allocationId === allocation.id;
+  if (!legacyFits(item, allocation)) return false;
+  return !plan.allocations.some((other) => other.id !== allocation.id && legacyFits(item, other));
+};
+
 export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => {
   const plan = data.settings.salaryPlan;
   const start = plan.periodStart;
@@ -927,12 +945,7 @@ export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => 
   for (const item of data.transactions) {
     if (item.kind !== "expense") continue;
     if (item.date < start || (end && item.date > end)) continue;
-    const matches = item.allocationId
-      ? item.allocationId === allocation.id
-      : (!allocation.memberId || item.memberId === allocation.memberId)
-        && (!allocation.category || item.category === allocation.category)
-        && (!allocation.sourceId || !item.sourceId || allocationSourceIds(allocation).includes(item.sourceId));
-    if (matches) total += item.amount;
+    if (expenseBelongsTo(plan, item, allocation)) total += item.amount;
   }
   // La bani: 126,33 + 155,77 + 83,18 nu trebuie să dea 365,28000000000003 și un plic „depășit”.
   return money2(total);
@@ -1046,12 +1059,7 @@ const allocationSpentFromSource = (data: AppData, allocation: BudgetAllocation, 
     if (item.kind !== "expense" || item.sourceId !== sourceId) continue;
     if (start && item.date < start) continue;
     if (end && item.date > end) continue;
-    const matches = item.allocationId
-      ? item.allocationId === allocation.id
-      : (!allocation.memberId || item.memberId === allocation.memberId)
-        && (!allocation.category || item.category === allocation.category)
-        && (!allocation.sourceId || allocationSourceIds(allocation).includes(item.sourceId || ""));
-    if (matches) total += item.amount;
+    if (expenseBelongsTo(plan, item, allocation)) total += item.amount;
   }
   return total;
 };
@@ -1116,12 +1124,7 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
      Înainte, fiecare săptămână filtra tot jurnalul (5 × 5.000 de rânduri pe plic, la fiecare randare). */
   const first = calendar.weeks[0]?.start || "";
   const last = cover > (calendar.weeks[lastIndex]?.end || "") ? cover : calendar.weeks[lastIndex]?.end || "";
-  const sourceIds = allocation.sourceId ? allocationSourceIds(allocation) : [];
-  const mine = data.transactions.filter((item) => {
-    if (item.kind !== "expense" || item.date < first || item.date > last) return false;
-    if (item.allocationId) return item.allocationId === allocation.id;
-    return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || !item.sourceId || sourceIds.includes(item.sourceId));
-  });
+  const mine = data.transactions.filter((item) => item.kind === "expense" && item.date >= first && item.date <= last && expenseBelongsTo(plan, item, allocation));
   let carryNext = 0;
   return calendar.weeks.map((week, index) => {
     const adjustment = weekTransfers.reduce((sum, item) => sum + (item.toWeekIndex === week.index ? item.amount : 0) - (item.fromWeekIndex === week.index ? item.amount : 0), 0);

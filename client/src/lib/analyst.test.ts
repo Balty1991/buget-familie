@@ -448,3 +448,15 @@ describe("cât pot cheltui azi, în ghid", () => {
     expect(text).toContain("fără rate și facturi");
   });
 });
+
+describe("plicul întrebat nu există (BF-11)", () => {
+  it("nu răspunde despre alt plic", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-10-01", allocations: [
+      { id: "rate", label: "Rate bănci", amount: 1400, category: "Rate produse", weeklyPace: false },
+      { id: "food", label: "Mâncare", amount: 900, category: "Alimente", weeklyPace: false },
+    ] };
+    const answer = analyze("De ce mi-a scăzut plicul de taxi?", data, "2026-09-10");
+    expect(answer?.headline || "").not.toContain("Rate bănci");
+  });
+});

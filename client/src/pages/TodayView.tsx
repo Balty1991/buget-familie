@@ -368,7 +368,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             {(periodIncome > 0 || periodExpense > 0) && (
               <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
                 <span><small>{t("Intrat")}</small><b>+{fmtExact.format(periodIncome)}</b></span>
-                <span><small>{t("Ieșit")}</small><b>−{fmtExact.format(periodExpense)}</b></span>
+                <span><small>{t("Ieșit")}</small><b>{periodExpense > 0.004 ? "−" : ""}{fmtExact.format(periodExpense)}</b></span>
               </div>
             )}
             <div className="bf-os-actions">

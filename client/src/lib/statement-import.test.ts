@@ -155,6 +155,12 @@ describe("reimportarea aceleiași perioade", () => {
     expect(result.drafts).toHaveLength(1);
     expect(result.duplicates).toBe(1);
   });
+  it("Lidl 12 și biletul STB 12 din aceeași zi rămân două mișcări (BF-09)", () => {
+    const two = ["Data;Descriere;Suma", "07.09.2026;LIDL BUCURESTI;-12,00", "07.09.2026;STB BILET;-12,00"].join("\n");
+    const result = statementDrafts(createEmptyAppData(), parseStatementCsv(two).rows, { sourceId: "source-debit", memberId: "member-me" });
+    expect(result.drafts).toHaveLength(2);
+    expect(result.duplicates).toBe(0);
+  });
 });
 
 describe("extrasul unui cont valutar", () => {

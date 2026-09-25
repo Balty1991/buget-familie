@@ -386,13 +386,14 @@ export function statementDrafts(
   if (foreign && !rate) return { drafts: [], duplicates: 0 };
   const learned = learnedMerchantCategories(data);
   const drafts: ReviewDraft[] = [];
-  const staged: Array<Pick<Transaction, "date" | "amount" | "kind" | "sourceId">> = [];
+  const staged: Array<Pick<Transaction, "date" | "amount" | "kind" | "sourceId"> & { description: string }> = [];
   let duplicates = 0;
   for (const row of rows) {
     const base = foreign ? toBaseAmount(row.amount, rate) : row.amount;
     if (!base) continue;
-    const candidate = { date: row.date, amount: base, kind: row.kind, sourceId: source.id };
-    const alreadyStaged = staged.some((item) => item.date === candidate.date && item.kind === candidate.kind && Math.abs(item.amount - candidate.amount) < 0.005);
+    const candidate = { date: row.date, amount: base, kind: row.kind, sourceId: source.id, description: row.description.replace(/\s+/g, " ").trim().toLocaleLowerCase("ro-RO") };
+    // În același fișier, Lidl 12 lei și biletul STB de 12 lei din aceeași zi sunt două mișcări.
+    const alreadyStaged = staged.some((item) => item.date === candidate.date && item.kind === candidate.kind && Math.abs(item.amount - candidate.amount) < 0.005 && item.description === candidate.description);
     if (alreadyStaged || isKnownTransaction(data, candidate)) { duplicates += 1; continue; }
     staged.push(candidate);
     const merchant = statementMerchant(row.description);

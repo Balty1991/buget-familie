@@ -809,9 +809,14 @@ function answerEnvelopeWhy(data: AppData, folded: string, asOf: string): Analyst
   const allocations = data.settings.salaryPlan.allocations;
   const envelope = (category ? allocations.find((item) => (item.category || item.label) === category) : undefined)
     || allocations.find((item) => folded.includes(foldRomanian(item.label)))
-    || allocations[0];
-  if (!envelope) {
+    // Fără nume în întrebare și cu un singur plic, e clar despre care e vorba.
+    || (!category && allocations.length === 1 ? allocations[0] : undefined);
+  if (!allocations.length) {
     return { kind: "envelope-why", headline: "Nu ai niciun plic deschis.", detail: "Fă unul din Plan și îți urmăresc eu consumul.", followUps: ["Cum stau cu banii?"] };
+  }
+  if (!envelope) {
+    // Răspunsul despre alt plic („Din Rate bănci au plecat 1.400”) ar fi fost mai rău decât niciunul.
+    return { kind: "envelope-why", headline: category ? `Nu ai un plic pentru ${category.toLocaleLowerCase("ro-RO")}.` : "Nu știu la ce plic te referi.", detail: `Plicurile tale sunt: ${allocations.slice(0, 6).map((item) => item.label).join(", ")}. Poți face unul nou din Plan.`, followUps: ["Cât mai am în plicuri?"] };
   }
   const status = envelopeDecisionStatus(data, envelope, asOf);
   const plan = data.settings.salaryPlan;

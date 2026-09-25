@@ -6,6 +6,7 @@
 
 import {
   allocationStatus,
+  expenseBelongsTo,
   formatDate,
   isoToday,
   isWeeklyPaced,
@@ -727,9 +728,7 @@ export async function notifyFamilyEnvelopeChanges(previous: AppData, next: AppDa
     if (after.state === "healthy" || after.state === beforeState) continue;
     if (beforeState === "over") continue;
 
-    const responsible = incoming.filter((item) => item.allocationId
-      ? item.allocationId === allocation.id
-      : (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || item.sourceId === allocation.sourceId));
+    const responsible = incoming.filter((item) => expenseBelongsTo(next.settings.salaryPlan, item, allocation));
     if (!responsible.length) continue;
 
     const key = `${allocation.id}:${after.state}`;

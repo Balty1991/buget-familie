@@ -142,7 +142,10 @@ export const nextPaydayAfter = (start: string, day: number) => {
 const otherIncomeSoon = (data: AppData, income: Transaction, cycleStart: string, cycleEnd: string): { label: string; amount: number; date: string } | undefined => {
   const incomes = activeIncomes(data).filter((item) => item.memberId !== income.memberId);
   const candidates = incomes.map((item) => {
-    let date = `${income.date.slice(0, 8)}${String(item.day).padStart(2, "0")}`;
+    // Ziua 31 în septembrie e 30, în februarie 28: fără limită ieșea „2026-09-31” (afișat 1 octombrie).
+    const start = atNoon(income.date);
+    const last = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+    let date = `${income.date.slice(0, 8)}${String(Math.min(item.day, last)).padStart(2, "0")}`;
     if (date < income.date) date = sameDayNextMonth(date, item.day);
     return { item, date };
   }).filter(({ date }) => date < cycleEnd);
@@ -270,10 +273,15 @@ const splitTransfers = (lines: SplitLine[], memberId?: string): SplitTransfer[] 
   return Array.from(byMember.values());
 };
 
-/** Plicul unei cheltuieli: cel legat, altul cu același nume, sau unul nou. */
-const envelopeFor = (allocations: BudgetAllocation[], need: MonthlyNeed): BudgetAllocation | undefined =>
+/**
+ * Plicul unei cheltuieli: cel legat, altul cu același nume, sau unul nou. Un plic legat deja
+ * de altă cheltuială nu se refolosește după nume: „Rate” 1.000 și „rate” 500 (două bănci)
+ * se suprascriau în același plic și se pierdeau 1.000 de lei.
+ */
+const envelopeFor = (allocations: BudgetAllocation[], need: MonthlyNeed, needs: MonthlyNeed[] = []): BudgetAllocation | undefined =>
   allocations.find((item) => item.id === need.allocationId)
-  || allocations.find((item) => item.label.trim().toLocaleLowerCase("ro-RO") === need.label.trim().toLocaleLowerCase("ro-RO"));
+  || allocations.find((item) => item.label.trim().toLocaleLowerCase("ro-RO") === need.label.trim().toLocaleLowerCase("ro-RO")
+    && !needs.some((other) => other.id !== need.id && !other.archived && other.allocationId === item.id));
 
 /**
  * Aplică propunerea: fiecare plic ajunge la ce s-a acoperit în ciclu (venitul de acum plus
@@ -308,7 +316,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
       });
       continue;
     }
-    let envelope = envelopeFor(allocations, line.need);
+    let envelope = envelopeFor(allocations, line.need, needs);
     const created = !envelope;
     if (!envelope) {
       envelope = { id: newId("allocation"), label: line.need.label, amount: 0, category: line.need.category, weeklyPace: line.need.cadence === "weekly", ...(line.perWeek ? { weeklyAmount: line.perWeek } : {}), updatedAt: now };
@@ -322,7 +330,17 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     const id = envelope.id;
     if (!created && previousAmount === next && line.amount <= 0) continue;
     // Plicul săptămânal primește și suma pe săptămână: tranșele din Plan sunt exact atât.
-    allocations = allocations.map((item) => item.id === id ? { ...item, amount: next, ...(line.perWeek ? { weeklyAmount: line.perWeek, weeklyPace: true } : {}), updatedAt: now } : item);
+    // Cheltuiala trecută pe lunar își pierde tranșele vechi de 100/săpt., altfel o cursă de 150 „depășea săptămâna”.
+    allocations = allocations.map((item) => {
+      if (item.id !== id) return item;
+      if (line.perWeek) return { ...item, amount: next, weeklyAmount: line.perWeek, weeklyPace: true, updatedAt: now };
+      if (line.need.cadence === "monthly" && item.weeklyAmount) {
+        const { weeklyAmount: _dropped, ...rest } = item;
+        void _dropped;
+        return { ...rest, amount: next, weeklyPace: false, updatedAt: now };
+      }
+      return { ...item, amount: next, updatedAt: now };
+    });
     lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount, afterAmount: next, ...(created ? { created: true } : {}) });
   }
   if (!lines.some((item) => item.amount > 0)) return { data, error: t("Nu e nimic de repartizat din acest venit: cheltuielile ciclului sunt deja acoperite.") };

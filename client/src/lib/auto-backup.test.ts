@@ -18,3 +18,12 @@ describe("copia de siguranță săptămânală", () => {
     expect(autoBackupName(new Date(2026, 9, 10, 12))).toBe("buget-familie-copie-2026-10-10.json");
   });
 });
+
+describe("copia automată cu ceasul greșit (BF-17)", () => {
+  it("o dată din viitor sau ilizibilă cere copie", () => {
+    const now = Date.parse("2026-09-25T10:00:00Z");
+    expect(autoBackupDue({ enabled: true, asked: true, lastAt: "2027-03-01T10:00:00Z" }, now)).toBe(true);
+    expect(autoBackupDue({ enabled: true, asked: true, lastAt: "ieri" }, now)).toBe(true);
+    expect(autoBackupDue({ enabled: true, asked: true, lastAt: "2026-09-24T10:00:00Z" }, now)).toBe(false);
+  });
+});
