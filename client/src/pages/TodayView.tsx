@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BookOpen, BellRing, CalendarClock, CreditCard, Inbox, Info, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
@@ -109,18 +110,18 @@ function OpeningBalanceCard({ data, onChange }: { data: AppData; onChange: (next
   const [dismissed, setDismissed] = useState(false);
   const source = data.settings.paymentSources[0];
   if (dismissed || !source || source.openingBalance > 0 || data.transactions.length === 0 || !shouldAskOpeningBalance()) return null;
+  // Când „Cât ai de fapt pe card?” e deja pe ecran, a doua întrebare despre același lucru e în plus.
+  if (balanceCheckDue(data, readLastBalanceCheck()).due) return null;
   const save = () => {
     const amount = Math.max(0, parseRomanianAmount(value));
     if (!amount) return;
     markOpeningBalanceAsked();
+    // Aceeași verificare ca „Cât ai de fapt pe card?”: nu mai întreabă a doua oară azi.
+    markBalanceChecked();
     setDismissed(true);
-    onChange({
-      ...data,
-      settings: {
-        ...data.settings,
-        paymentSources: data.settings.paymentSources.map((entry) => entry.id === source.id ? { ...entry, openingBalance: amount, updatedAt: new Date().toISOString() } : entry),
-      },
-    });
+    /* „Cât ai acum” e soldul de azi, nu cel de la început: se scrie doar diferența față de
+       ce vede aplicația. Ca sold inițial, 5.200 + salariile deja notate dădea 9.942. */
+    onChange(applyDeclaredBalance(data, source.id, amount));
   };
   return (
     <section className="bf-opening-prompt" aria-labelledby="bf-opening-title">

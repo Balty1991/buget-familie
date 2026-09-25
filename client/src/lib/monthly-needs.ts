@@ -121,15 +121,20 @@ export const expectedIncomeFor = (data: AppData, income: Pick<Transaction, "date
   return [...(own.length ? own : all)].sort((a, b) => gap(a) - gap(b))[0];
 };
 
+/** Sub atâtea zile până la ziua declarată, venitul e un salariu venit devreme, nu unul întârziat. */
+const EARLY_SALARY_DAYS = 10;
+
 /**
  * Ziua următorului salariu, după ziua declarată, nu după ziua în care a intrat de fapt:
- * dacă a venit pe 8 în loc de 10, următorul e tot pe 10. Cel puțin 20 de zile distanță,
- * ca un salariu venit devreme (30 sept. în loc de 1 oct.) să nu închidă ciclul a doua zi.
+ * dacă a venit pe 8 în loc de 10, următorul e tot pe 10. Un salariu venit devreme
+ * (30 sept. în loc de 1 oct.) nu închide ciclul a doua zi: sub 10 zile se sare o lună.
+ * Dar cine pornește aplicația pe 25 cu salariul pe 10 are ciclul până pe 10 oct., nu
+ * până pe 10 noiembrie („Mâncare 600 × 6 săpt. + 5 zile”).
  */
 export const nextPaydayAfter = (start: string, day: number) => {
   const sameMonth = (() => { const date = atNoon(start); const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(); date.setDate(Math.min(day, last)); return toIso(date); })();
   let candidate = sameMonth;
-  for (let step = 0; step < 3 && cycleWeeks(start, candidate).days - 1 < CYCLE_WINDOW_DAYS; step += 1) candidate = sameDayNextMonth(candidate, day);
+  for (let step = 0; step < 3 && cycleWeeks(start, candidate).days - 1 < EARLY_SALARY_DAYS; step += 1) candidate = sameDayNextMonth(candidate, day);
   return candidate;
 };
 
@@ -200,7 +205,7 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
   const plan = data.settings.salaryPlan;
   const opener = cycleStart === income.date ? income : incomeOf(data, activeSalaryApplications(plan).find((item) => item.origin === "needs" && incomeOf(data, item.incomeId)?.date === cycleStart)?.incomeId || "") || income;
   const declaredDay = expectedIncomeFor(data, opener)?.day ?? Number(cycleStart.slice(8, 10));
-  const manual = plan.periodStart && plan.periodStart <= cycleStart && plan.nextPayday && plan.nextPayday > addIsoDays(cycleStart, CYCLE_WINDOW_DAYS - 1) && !plan.horizonDays ? plan.nextPayday : "";
+  const manual = plan.periodStart && plan.periodStart <= cycleStart && plan.nextPayday && plan.nextPayday > addIsoDays(cycleStart, EARLY_SALARY_DAYS - 1) && !plan.horizonDays ? plan.nextPayday : "";
   const cycleEnd = manual || nextPaydayAfter(cycleStart, declaredDay);
   const cycle = cycleWeeks(cycleStart, cycleEnd);
   let money = round2(income.amount);

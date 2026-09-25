@@ -381,3 +381,12 @@ describe("salarii pe 1 și pe 25 (BF-02)", () => {
     expect(data.settings.salaryPlan.periodStart).toBe("2026-09-01");
   });
 });
+
+describe("pornire la mijlocul lunii (P1-5)", () => {
+  it("salariul notat pe 25, cu ziua declarată 10: ciclul ține până pe 10, nu o lună și jumătate", () => {
+    expect(nextPaydayAfter("2026-09-25", 10)).toBe("2026-10-10");
+    // Salariul venit devreme nu închide ciclul a doua zi.
+    expect(nextPaydayAfter("2026-09-30", 1)).toBe("2026-11-01");
+    expect(nextPaydayAfter("2026-09-08", 10)).toBe("2026-10-10");
+  });
+});
