@@ -264,7 +264,9 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
           </div>
         )}
         {recoveryIssued && !recoveryShown && (
-          <p className="bf-helper">{t("Un cod de recuperare există deja. E cel notat la prima conectare. Poți emite altul — cel vechi rămâne valabil până schimbați parola.")}</p>
+          <p className="bf-helper">{invite
+            ? t("Un cod de recuperare există deja. E cel notat la crearea camerei. Poți emite altul — cel vechi rămâne valabil până mutați familia într-o cameră nouă.")
+            : t("Un cod de recuperare există deja. E cel notat la prima conectare. Poți emite altul — cel vechi rămâne valabil până schimbați parola.")}</p>
         )}
         <button className="bf-link-button" onClick={onDisconnect}>{t("Închide sesiunea acestui telefon")}</button>
       </> : <>
@@ -321,7 +323,8 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
 
     {connected && members.length > 0 && <SelfMemberPicker members={members} selfMemberId={selfMemberId} needsChoice={needsSelfChoice} onChoose={onChooseSelf} onAdd={onAddSelf} />}
 
-    {(connected || devices.length > 0) && (
+    {/* Doar cât ești în cameră: după „Închide sesiunea” lista rămânea și îndemna la o revocare fără rost. */}
+    {connected && (
       <section className="bf-sync-devices" aria-labelledby="sync-devices-title">
         <div className="bf-sync-journal-heading">
           <div>
@@ -329,7 +332,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <h3 id="sync-devices-title">{t("Telefoane în cameră")}</h3>
           </div>
         </div>
-        <p className="bf-helper">{t("Revocarea scoate sesiunea de pe acel telefon. Dacă telefonul e pierdut și cineva știe parola, schimbați parola familiei — e singura încuietoare reală.")}</p>
+        <p className="bf-helper">{t("Revocarea scoate sesiunea de pe acel telefon. Dacă un telefon e pierdut, revocă-l aici, apoi mutați familia într-o cameră nouă („Mută familia”): invitația veche nu mai deschide nimic.")}</p>
         {devices.length ? (
           <ul className="bf-sync-device-list">
             {devices.map((device) => (
@@ -343,9 +346,10 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
                   <button type="button" className="bf-link-button" onClick={() => onRestoreDevice(device.id)}>
                     {t("Reactivează")}
                   </button>
-                ) : (
+                ) : device.id === thisDeviceId ? null : (
+                  // Pentru telefonul tău există „Închide sesiunea acestui telefon”, mai jos.
                   <button type="button" className="bf-link-button" onClick={() => onRevokeDevice(device.id)}>
-                    {device.id === thisDeviceId ? t("Revocă acest telefon") : t("Revocă")}
+                    {t("Revocă")}
                   </button>
                 )}
               </li>
