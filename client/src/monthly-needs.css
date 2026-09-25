@@ -84,3 +84,9 @@
 .bf-envelope-until { grid-column: 1 / -1; margin: 0; padding: 9px 11px; border-radius: 10px; background: color-mix(in srgb, var(--cf-primary) 8%, transparent); color: var(--cf-ink); font-size: 13px; line-height: 1.45; }
 .bf-envelope-carry { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border-top: 1px solid var(--cf-line); color: var(--cf-ink); font-size: 12px; line-height: 1.45; }
 .bf-envelope-carry input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--cf-primary); }
+.bf-needs-adjust { display: grid; gap: 8px; }
+.bf-needs-adjust-row { display: grid; gap: 10px; padding: 12px; border: 1px solid color-mix(in srgb, var(--cf-warning) 45%, var(--cf-line)); border-radius: 14px; background: color-mix(in srgb, var(--cf-warning) 8%, var(--cf-surface)); }
+.bf-needs-adjust-row p { display: grid; gap: 4px; margin: 0; font-size: 13px; line-height: 1.45; }
+.bf-needs-adjust-row p b { font-size: 15px; }
+.bf-needs-adjust-row > div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.bf-needs-adjust-row button { min-height: 44px; }

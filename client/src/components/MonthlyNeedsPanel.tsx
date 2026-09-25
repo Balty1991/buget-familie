@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, revertSalaryAllocationApplication, addIsoDays, paydayWindow, type AppData, type ExpectedIncome, type MonthlyNeed, type SalaryPlan } from "@/lib/finance-data";
 import { askConfirm } from "@/lib/confirm-dialog";
-import { activeIncomes, activeNeeds, expectedMonthlyIncome, nextPaydayAfter, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
+import { activeIncomes, activeNeeds, expectedMonthlyIncome, needAdjustments, nextPaydayAfter, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
 import { RoDateInput } from "@/components/RoDateInput";
 import { t } from "@/lib/i18n";
@@ -150,6 +150,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
   const monthlyIn = expectedMonthlyIncome(incomes);
   const monthlyOut = expectedMonthlyNeeds(needs);
   const pending = pendingSplitIncome(data, isoToday());
+  const adjustments = needAdjustments(data, isoToday());
   const recurring = data.recurring.filter((item) => item.active);
   const usedPresets = new Set(needs.map((item) => item.label));
 
@@ -187,6 +188,28 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
         <button type="button" onClick={() => addNeed({ label: t("Altă cheltuială"), category: "Altele", cadence: "monthly", priority: "fixed" })}><Plus size={13} /> {t("Altă cheltuială")}</button>
       </div>
 
+      {adjustments.length > 0 && (
+        <div className="bf-needs-adjust">
+          <h3>{t("Din ce ați plătit de fapt")}</h3>
+          {adjustments.map((item) => {
+            const per = item.need.cadence === "weekly" ? t("pe săptămână") : t("pe lună");
+            const range = (min: number, max: number) => min === max ? money(max) : `${money(min)} – ${money(max)}`;
+            return (
+              <div className="bf-needs-adjust-row" key={item.need.id}>
+                <p>
+                  <b>{item.need.label}</b>
+                  <span>{t("În ultimele luni: {list} ({per}). Acum ai trecut {declared}.", { list: item.months.map((entry) => money(entry.amount)).join(", "), per, declared: range(item.need.min, item.need.max) })}</span>
+                  <span>{item.direction === "up" ? t("Plătiți mai mult decât ai scris. Pun {range}?", { range: range(item.min, item.max) }) : t("Plătiți mai puțin decât ai scris. Pun {range}? Banii rămași pot merge în altă parte.", { range: range(item.min, item.max) })}</span>
+                </p>
+                <div>
+                  <button type="button" className="bf-secondary" onClick={() => updateNeed(item.need.id, { reviewedMonth: isoToday().slice(0, 7) })}>{t("Lasă cum e")}</button>
+                  <button type="button" className="bf-primary" onClick={() => updateNeed(item.need.id, { min: item.min, max: item.max, reviewedMonth: isoToday().slice(0, 7) })}>{t("Pune {range}", { range: range(item.min, item.max) })}</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
       {(monthlyIn > 0 || monthlyOut > 0) && (
         <p className={`bf-needs-total${monthlyOut > monthlyIn && monthlyIn > 0 ? " is-over" : ""}`}>
           {t("Într-o lună obișnuită: intră {income}, pleacă ~{needs} (mâncarea socotită pe 4,33 săptămâni).", { income: money(monthlyIn), needs: money(monthlyOut) })}{" "}
@@ -217,7 +240,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
  * la prima cheltuială adăugată, iar omul nu mai apuca să scrie suma.
  */
 export function MonthlyNeedsSection({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
-  const [open, setOpen] = useState(() => Boolean(pendingSplitIncome(data, isoToday())));
+  const [open, setOpen] = useState(() => Boolean(pendingSplitIncome(data, isoToday())) || needAdjustments(data, isoToday()).length > 0);
   const count = activeNeeds(data).length;
   return (
     <details className="bf-plan-tools bf-needs-details" open={open} onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}>

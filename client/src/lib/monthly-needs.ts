@@ -308,3 +308,44 @@ export function splitPreviewText(split: Extract<IncomeSplit, { ok: true }>, mone
     : split.free > 0 ? t("liberi {amount}", { amount: money(split.free) }) : "";
   return [t("repartizează {amount} după Ce plătim lunar", { amount: money(split.income.amount) }) + ":", parts.join(" · ") + (tail ? ` · ${tail}` : "")].join(" ");
 }
+
+export type NeedAdjustment = { need: MonthlyNeed; months: Array<{ month: string; amount: number }>; min: number; max: number; direction: "up" | "down" };
+
+const roundTo10 = (value: number, up: boolean) => (up ? Math.ceil(value / 10) : Math.floor(value / 10)) * 10;
+
+/**
+ * Intervalele din „Ce plătim lunar”, verificate cu ce s-a plătit de fapt în ultimele 3 luni
+ * întregi: „la lumină ați plătit 320, 350, 380 — pun 320–380?”. Cel puțin două luni cu plăți,
+ * iar diferența trebuie să conteze (peste maxim, sau mult sub minim), ca să nu cicălim.
+ * Plățile se iau din plicul cheltuielii; pe categorie doar dacă nicio altă cheltuială n-o are.
+ */
+export function needAdjustments(data: AppData, asOf: string): NeedAdjustment[] {
+  const needs = activeNeeds(data);
+  const current = asOf.slice(0, 7);
+  const months: string[] = [];
+  for (let step = 1; step <= 3; step += 1) {
+    const date = new Date(Number(current.slice(0, 4)), Number(current.slice(5, 7)) - 1 - step, 1, 12);
+    months.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
+  }
+  const out: NeedAdjustment[] = [];
+  for (const need of needs) {
+    if (need.reviewedMonth === current || need.max <= 0) continue;
+    const sharedCategory = needs.some((other) => other.id !== need.id && other.category === need.category);
+    const envelopeId = need.allocationId;
+    if (!envelopeId && sharedCategory) continue;
+    const belongs = (tx: Transaction) => tx.kind === "expense" && (tx.allocationId ? tx.allocationId === envelopeId : !sharedCategory && tx.category === need.category);
+    const perMonth = months.map((month) => {
+      const days = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0).getDate();
+      const total = data.transactions.filter((tx) => tx.date.startsWith(month) && belongs(tx)).reduce((sum, tx) => sum + tx.amount, 0);
+      return { month, amount: round2(need.cadence === "weekly" ? total * 7 / days : total) };
+    }).filter((item) => item.amount > 0);
+    if (perMonth.length < 2) continue;
+    const low = Math.min(...perMonth.map((item) => item.amount));
+    const high = Math.max(...perMonth.map((item) => item.amount));
+    const up = high > need.max * 1.05;
+    const down = high < need.min * 0.85;
+    if (!up && !down) continue;
+    out.push({ need, months: perMonth.reverse(), min: roundTo10(low, false), max: Math.max(roundTo10(low, false), roundTo10(high, true)), direction: up ? "up" : "down" });
+  }
+  return out;
+}

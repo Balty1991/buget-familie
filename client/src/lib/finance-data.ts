@@ -117,7 +117,7 @@ export type SalaryAllocationApplication = { id: string; incomeId: string; income
  * O cheltuială pe care familia o știe dinainte: „mâncare 600 pe săptămână”, „lumină 300–400”.
  * Din ea, la fiecare salariu, aplicația propune cât merge în plicul ei.
  */
-export type MonthlyNeed = { id: string; label: string; category: string; cadence: "monthly" | "weekly"; min: number; max: number; /** Cât se rezervă din interval. Implicit maximul (prudent). */ reserve?: "max" | "avg" | "min"; /** Doar din venitul acestui membru; lipsă = din oricare. */ payerId?: string; /** „fixed” (rate, facturi) se acoperă înaintea celor „flex” (mâncare, taxi). */ priority?: "fixed" | "flex"; allocationId?: string; archived?: boolean; updatedAt?: string };
+export type MonthlyNeed = { id: string; label: string; category: string; cadence: "monthly" | "weekly"; min: number; max: number; /** Cât se rezervă din interval. Implicit maximul (prudent). */ reserve?: "max" | "avg" | "min"; /** Doar din venitul acestui membru; lipsă = din oricare. */ payerId?: string; /** „fixed” (rate, facturi) se acoperă înaintea celor „flex” (mâncare, taxi). */ priority?: "fixed" | "flex"; allocationId?: string; /** Luna („2026-10”) în care propunerea de ajustare a fost pusă sau lăsată; nu se mai cere până luna viitoare. */ reviewedMonth?: string; archived?: boolean; updatedAt?: string };
 /** Un venit care vine lunar, într-o zi știută: „salariul meu, 4.700, pe 10”. */
 export type ExpectedIncome = { id: string; memberId: string; label: string; amount: number; day: number; archived?: boolean; updatedAt?: string };
 export type AllocationHistoryKind = "created" | "updated" | "deleted" | "income-applied" | "income-reverted" | "envelope-transfer" | "week-transfer";
@@ -386,6 +386,7 @@ const normalizeNeeds = (value: unknown): MonthlyNeed[] | undefined => {
       payerId: typeof item.payerId === "string" && item.payerId ? item.payerId : undefined,
       priority: item.priority === "flex" ? "flex" as const : "fixed" as const,
       allocationId: typeof item.allocationId === "string" && item.allocationId ? item.allocationId : undefined,
+      reviewedMonth: typeof item.reviewedMonth === "string" && /^\d{4}-\d{2}$/.test(item.reviewedMonth) ? item.reviewedMonth : undefined,
       archived: item.archived === true ? true : undefined,
       updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : undefined,
     };
