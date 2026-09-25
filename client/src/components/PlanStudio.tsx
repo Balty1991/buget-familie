@@ -24,7 +24,7 @@ import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
-import { envelopeBurnPace, envelopeRunOut } from "@/lib/household-insights";
+import { envelopeBurnPace, envelopeRunOut, envelopeUntilPayday } from "@/lib/household-insights";
 import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
 import { activeIncomes } from "@/lib/monthly-needs";
 import "../monthly-needs.css";
@@ -609,6 +609,21 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           <div className="bf-envelope-portrait" aria-hidden="true"><EnvelopeMark remaining={Math.max(0, 1 - usage)} state={state} size={58} /></div>
           <div className="bf-allocation-list-heading"><div className="bf-allocation-flags"><span className={`bf-allocation-state ${state}`}>{state === "over" ? t("depășit") : state === "watch" ? t("aproape de limită") : t("în plan")}</span>{(() => { const burn = envelopeBurnPace(data).find((entry) => entry.allocationId === item.id); if (!burn || !burn.totalDays) return null; const label = burn.pace === "ahead" ? t("în avans") : burn.pace === "behind" ? t("în urmă") : burn.pace === "over" ? t("depășit") : t("în ritm"); return <span className={`bf-plic-pace pace-${burn.pace}`} title={burn.reason}>{label} · {t("{pct}% așteptat", { pct: Math.round(burn.expectedUsage * 100) })}</span>; })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>{t("rămași din {amount}", { amount: money(budget) })}</small></div>
+          {(() => {
+            const until = envelopeUntilPayday(data, item);
+            if (!until) return null;
+            const date = (iso: string) => formatDate(iso, { day: "numeric", month: "long" });
+            const head = until.days > 0
+              ? t("Mai ai nevoie de bani {days}, până la salariu (~{date}).", { days: daysLabel(until.days), date: date(until.typical) })
+              : t("Salariul e așteptat azi.");
+            const paced = isWeeklyPaced(item, plan);
+            const tail = until.remaining <= 0
+              ? t("Plicul e gol.")
+              : paced && until.latestDays > 0
+                ? `${t("Rămân {amount}: cam {perDay} pe zi, {perWeek} pe săptămână.", { amount: money(until.remaining), perDay: money(until.perDay), perWeek: money(until.perWeek) })}${until.flex > 0 ? ` ${t("Socotit până pe {date}, dacă salariul întârzie.", { date: date(until.latest) })}` : ""}`
+                : t("Rămân {amount} pentru perioada asta.", { amount: money(until.remaining) });
+            return <p className="bf-envelope-until">{head} {tail}</p>;
+          })()}
           {runOutById.get(item.id) && (() => { const runOut = runOutById.get(item.id)!; return <p className="bf-envelope-runout" role="note">{t("La ritmul de acum se termină pe {date}, cu {days} înainte de salariu. Ca să ajungă: cel mult {safe} pe zi.", { date: formatDate(runOut.runOutDate, { day: "numeric", month: "long" }), days: daysLabel(runOut.daysShort), safe: money(runOut.safeDaily) })}</p>; })()}
           <div className={`bf-envelope-meter${(week ? week.state : state) === "over" ? " is-over" : ""}`}><span>{week ? t("Săptămâna asta") : t("Tot plicul")}</span><b>{money(week ? week.spent : spent)} <small>/ {money(week ? week.budget : budget)}</small></b><i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.max(0, ((week ? week.budget : budget) > 0 ? (week ? week.spent : spent) / (week ? week.budget : budget) : 0) * 100))}%` }} /></i></div>
           {week && <div className={`bf-allocation-week ${week.state === "over" ? "over" : ""}`}><span>S{week.index} · {formatDate(week.start)} – {formatDate(week.end)}</span><b>{money(Math.max(0, week.remaining))}</b><small>{t("{spent} cheltuiți din {budget} în această tranșă", { spent: money(week.spent), budget: money(week.budget) })}</small></div>}

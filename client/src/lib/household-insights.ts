@@ -22,6 +22,7 @@ import {
   planEndDate,
   planExpired,
   planCoverEndDate,
+  paydayWindow,
   planForecast,
   weeklySummary,
   transactionShareScope,
@@ -489,6 +490,26 @@ export const paydayTrack = (data: AppData, asOf = isoToday()) => {
   const total = Math.max(1, daysBetween(plan.periodStart, end) + 1);
   const elapsed = Math.max(0, Math.min(total, daysBetween(plan.periodStart, asOf) + 1));
   return { start: plan.periodStart, end, total, elapsed, remaining: Math.max(0, total - elapsed), ratio: elapsed / total };
+};
+
+/**
+ * Cât mai e până la salariu: zilele până la data obișnuită și până la cea mai târzie din
+ * fereastra de ± zile. Banii trebuie să ajungă până în ziua dinaintea salariului.
+ */
+export const untilPayday = (plan: SalaryPlan, asOf = isoToday()) => {
+  if (!plan.nextPayday || plan.nextPayday < asOf || plan.horizonDays) return undefined;
+  const range = paydayWindow(plan);
+  return { typical: range.typical, earliest: range.earliest, latest: range.latest, flex: range.flex, days: daysBetween(asOf, range.typical), latestDays: daysBetween(asOf, range.latest) };
+};
+
+/** Pentru un plic: câte zile mai are de acoperit și cât iese pe zi / pe săptămână, prudent. */
+export const envelopeUntilPayday = (data: AppData, allocation: BudgetAllocation, asOf = isoToday()) => {
+  const until = untilPayday(data.settings.salaryPlan, asOf);
+  if (!until) return undefined;
+  const remaining = Math.max(0, allocationStatus(data, allocation).remaining);
+  const days = Math.max(1, until.latestDays);
+  const perDay = Math.floor(remaining / days);
+  return { ...until, remaining, perDay, perWeek: Math.floor(remaining * 7 / days) };
 };
 
 export const envelopeLane = (data: AppData, asOf = isoToday()) => data.settings.salaryPlan.allocations
