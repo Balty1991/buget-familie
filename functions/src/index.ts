@@ -528,9 +528,12 @@ async function callerUid(header: string): Promise<string | null> {
   }
 }
 
-/** O cerere în plus pe ora curentă pentru `key`; false peste `limit`. Dacă Firestore cade, lasă cererea să treacă. */
-async function takeQuota(collection: string, key: string, limit: number, extra: Record<string, unknown> = {}): Promise<boolean> {
-  const bucket = new Date().toISOString().slice(0, 13);
+/**
+ * O cerere în plus pe ora curentă (sau pe zi, cu `perDay`) pentru `key`; false peste `limit`.
+ * Dacă Firestore cade: ghidul refuză (costă bani pe o cheie comună tuturor), feedbackul trece.
+ */
+async function takeQuota(collection: string, key: string, limit: number, extra: Record<string, unknown> = {}, options: { failOpen?: boolean; perDay?: boolean } = {}): Promise<boolean> {
+  const bucket = new Date().toISOString().slice(0, options.perDay ? 10 : 13);
   const id = createHash("sha256").update(`${bucket}|${key}`).digest("hex").slice(0, 40);
   try {
     ensureAdmin();
@@ -545,18 +548,30 @@ async function takeQuota(collection: string, key: string, limit: number, extra: 
     });
   } catch (error) {
     console.error(`${collection} quota`, error instanceof Error ? error.message.slice(0, 180) : "unknown");
-    return true;
+    return options.failOpen !== false;
   }
 }
+
+/**
+ * IP-ul clientului: ultima valoare din X-Forwarded-For e cea adăugată de infrastructura Google;
+ * cele dinainte le poate scrie oricine, deci nu ajută la ocolirea limitei.
+ */
+function clientIp(request: { ip?: string; get(name: string): string | undefined }) {
+  const forwarded = String(request.get("x-forwarded-for") || "").split(",").map((part) => part.trim()).filter(Boolean);
+  return String(forwarded[forwarded.length - 1] || request.ip || "unknown").slice(0, 64);
+}
+
+/** Plafon zilnic pentru tot ghidul online: un cost maxim cunoscut, orice s-ar întâmpla. */
+const AI_GUIDE_DAILY_CAP = Number(process.env.AI_GUIDE_DAILY_CAP || 3000);
 
 /**
  * Plafon pe oră. Cu identitate anonimă se numără pe telefon, ca doi oameni din aceeași rețea
  * mobilă (același IP) să nu-și consume unul altuia ghidul; IP-ul rămâne cu un plafon larg,
  * ca să nu ajute conturile anonime create pe bandă. Fără identitate: pe IP, ca înainte.
  */
-async function allowPerCaller(collection: string, ip: string, uid: string | null, limit: number, extra: Record<string, unknown> = {}): Promise<boolean> {
-  if (!uid) return takeQuota(collection, ip, limit, extra);
-  return (await takeQuota(collection, `uid|${uid}`, limit, extra)) && (await takeQuota(collection, `ip|${ip}`, limit * 5, extra));
+async function allowPerCaller(collection: string, ip: string, uid: string | null, limit: number, extra: Record<string, unknown> = {}, failOpen = true): Promise<boolean> {
+  if (!uid) return takeQuota(collection, ip, limit, extra, { failOpen });
+  return (await takeQuota(collection, `uid|${uid}`, limit, extra, { failOpen })) && (await takeQuota(collection, `ip|${ip}`, limit * 5, extra, { failOpen }));
 }
 
 /**
@@ -611,10 +626,14 @@ export const aiGuide = onRequest(
         response.status(401).json({ error: "App Check invalid", code: "app_check" });
         return;
       }
-      const ip = String(request.ip || request.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 64);
+      const ip = clientIp(request);
       const uid = await callerUid(String(request.get("authorization") || ""));
-      // Cu App Check valid, 60 pe oră. Fără, 12 — un proxy anonim se oprește repede.
-      if (!(await allowPerCaller("aiGuideQuota", ip, uid, trust === "ok" ? 60 : 12, { trusted: trust === "ok" }))) {
+      // Fără identitate anonimă și fără App Check: un singur plafon mic, comun tuturor acestor cereri.
+      const anonymous = !uid && trust !== "ok";
+      const perCaller = anonymous
+        ? await takeQuota("aiGuideQuota", "anonymous-pool", 30, { trusted: false }, { failOpen: false })
+        : await allowPerCaller("aiGuideQuota", ip, uid, trust === "ok" ? 60 : 12, { trusted: trust === "ok" }, false);
+      if (!perCaller || !(await takeQuota("aiGuideQuota", "global-day", AI_GUIDE_DAILY_CAP, {}, { failOpen: false, perDay: true }))) {
         response.status(429).json({ error: "Too many requests", code: "quota" });
         return;
       }
@@ -833,7 +852,7 @@ export const appFeedback = onRequest(
         response.status(400).json({ error: "Scrie câteva cuvinte despre ce s-a întâmplat." });
         return;
       }
-      const ip = String(request.ip || request.get("x-forwarded-for") || "unknown").split(",")[0].trim().slice(0, 64);
+      const ip = clientIp(request);
       const uid = await callerUid(String(request.get("authorization") || ""));
       if (!(await allowPerCaller("appFeedbackQuota", `feedback|${ip}`, uid, 10))) {
         response.status(429).json({ error: "Ai trimis multe mesaje într-o oră. Mulțumim! Încearcă puțin mai târziu." });

@@ -575,7 +575,6 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
               local.date ? `data: ${local.date}` : "",
               local.amount ? `total candidat: ${local.amount}` : "",
               ocrItems ? `produse: ${ocrItems}` : "",
-              local.text ? `text brut: ${local.text.slice(0, 5000)}` : "",
             ].filter(Boolean).join("\n");
             if (local.amount) {
               pendingReceiptRef.current = {
@@ -622,7 +621,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         if (identity) headers.Authorization = identity;
         const response = await fetch("https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/aiGuide", {
           method: "POST", headers,
-          body: JSON.stringify({ messages: [...messages, { role: "user", text: onlineRequestText }].slice(-20), context: compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }) }),
+          body: JSON.stringify({ messages: [...messages, { role: "user", text: onlineRequestText }].slice(-8), context: compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }) }),
         });
         const payload = await response.json() as {
           reply?: string;
