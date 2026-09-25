@@ -8,7 +8,7 @@ import { createEmptyAppData, newId, normalizeAppData, type AppData } from "@/lib
 import { checkFamilyPassword } from "@/lib/family-password";
 import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
-import type { EncryptedEnvelope, FamilySecret } from "@/lib/family-crypto";
+import type { EncryptedEnvelope, FamilySecret, SyncBase } from "@/lib/family-crypto";
 import { clearFamilySession, loadFamilySession, saveFamilySession } from "@/lib/family-session";
 import { refreshRoomEntitlement, setActiveFamilyRoom } from "@/lib/billing";
 import { createFamilyInvite, formatInvite, parseInvite, type FamilyInvite } from "@/lib/family-invite";
@@ -20,6 +20,18 @@ import type { SyncPanelProps } from "@/pages/home-kit";
 import { askConfirm } from "@/lib/confirm-dialog";
 
 const loadFamilySync = () => import("@/lib/realtime-sync");
+/** Ce era în cameră la ultima sincronizare (vezi `SyncBase`): ține conflictele doar pentru schimbări pe ambele telefoane. */
+const SYNC_BASE_KEY = "buget-familie:sync-base-v1";
+type StoredBase = { roomId: string; base: SyncBase };
+const readSyncBase = (roomId: string): SyncBase | undefined => {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(SYNC_BASE_KEY) || "null") as StoredBase | null;
+    return stored && stored.roomId === roomId ? stored.base : undefined;
+  } catch { return undefined; }
+};
+const writeSyncBase = (roomId: string, base: SyncBase) => {
+  try { window.localStorage.setItem(SYNC_BASE_KEY, JSON.stringify({ roomId, base })); } catch { /* fără loc: rămâne comportamentul vechi, cu conflicte */ }
+};
 const loadFamilyCrypto = () => import("@/lib/family-crypto");
 const loadFamilyRecovery = () => import("@/lib/family-recovery");
 
@@ -193,7 +205,9 @@ export function useFamilySync(
         syncStopMovedRoom();
         return;
       }
-      const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
+      const roomForBase = syncRoomIdRef.current || "";
+      const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData, readSyncBase(roomForBase)));
+      writeSyncBase(roomForBase, crypto.syncBaseOf(remoteData));
       const mergedPortable = syncPortable(merged);
       if (mergedPortable === syncPortable(syncDataRef.current)) {
         setSyncLastSync(new Date().toISOString());
@@ -250,7 +264,7 @@ export function useFamilySync(
         return false;
       }
       const own = claimOwnMember(syncDataRef.current, remoteData, getOrCreateDeviceId());
-      merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData));
+      merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData, readSyncBase(roomId)));
     }
     if (isThisDeviceRevoked(merged)) {
       setData(merged);
@@ -268,6 +282,7 @@ export function useFamilySync(
     setData(merged);
     const envelope = await crypto.encryptFamilyData(merged, secret);
     await syncApi.pushFamilyEnvelope(roomId, envelope);
+    writeSyncBase(roomId, crypto.syncBaseOf(merged));
     syncRoomIdRef.current = roomId;
     syncSecretRef.current = secret;
     syncUnsubscribeRef.current?.();
@@ -445,7 +460,7 @@ export function useFamilySync(
               syncStopMovedRoom();
               return;
             }
-            toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData));
+            toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData, readSyncBase(roomId)));
             const mergedPortable = syncPortable(toPush);
             if (mergedPortable !== syncPortable(syncDataRef.current)) {
               syncLastPortableRef.current = mergedPortable;
@@ -454,6 +469,7 @@ export function useFamilySync(
           }
           const envelope = await crypto.encryptFamilyData(toPush, syncSecretRef.current);
           await syncApi.pushFamilyEnvelope(roomId, envelope);
+          writeSyncBase(roomId, crypto.syncBaseOf(toPush));
           syncLastPortableRef.current = syncPortable(toPush);
           setSyncLastSync(new Date().toISOString());
           setSyncNotice(t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));

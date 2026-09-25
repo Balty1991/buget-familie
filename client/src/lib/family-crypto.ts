@@ -19,6 +19,7 @@ import {
   type TransactionConflict,
 } from "@/lib/finance-data";
 import { type PlannedEvent } from "@/lib/planned-events";
+import { t } from "@/lib/i18n";
 
 export type EncryptedEnvelope = {
   version: 1;
@@ -81,9 +82,28 @@ export async function encryptFamilyData(data: AppData, secret: FamilySecret): Pr
       selfMemberId: undefined,
     },
   };
-  const plain = encoder.encode(JSON.stringify(shareable));
-  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain);
-  return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext: toBase64(new Uint8Array(ciphertext)) };
+  // Comprimat înainte de criptare (registrul scade de 5–8 ori): un document Firestore are cel mult 1 MiB.
+  const plain = await gzip(encoder.encode(JSON.stringify(shareable)));
+  const ciphertext = toBase64(new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain)));
+  if (ciphertext.length > SYNC_ENVELOPE_LIMIT) throw new Error(t("Registrul familiei a devenit prea mare pentru sincronizare ({size} KB). Șterge bonurile vechi sau fă o copie de siguranță și arhivează anii trecuți.", { size: Math.round(ciphertext.length / 1024) }));
+  return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext };
+}
+
+/** Sub limita de 1 MiB a unui document, cu loc pentru restul câmpurilor. */
+export const SYNC_ENVELOPE_LIMIT = 900_000;
+
+const GZIP_MAGIC = [0x1f, 0x8b];
+async function gzip(bytes: Uint8Array): Promise<Uint8Array> {
+  if (typeof CompressionStream === "undefined") return bytes;
+  const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function gunzipIfNeeded(bytes: Uint8Array): Promise<Uint8Array> {
+  // JSON-ul necomprimat (pachetele vechi) începe cu „{”, niciodată cu semnătura gzip.
+  if (bytes[0] !== GZIP_MAGIC[0] || bytes[1] !== GZIP_MAGIC[1]) return bytes;
+  if (typeof DecompressionStream === "undefined") throw new Error("gzip indisponibil");
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
 export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: FamilySecret): Promise<AppData> {
@@ -91,7 +111,7 @@ export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: Fam
   try {
     const key = await deriveKey(secret, fromBase64(envelope.salt));
     const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromBase64(envelope.iv) }, key, fromBase64(envelope.ciphertext));
-    return JSON.parse(decoder.decode(plain)) as AppData;
+    return JSON.parse(decoder.decode(await gunzipIfNeeded(new Uint8Array(plain)))) as AppData;
   } catch {
     throw new Error("Parola familiei este greșită sau pachetul nu poate fi decriptat.");
   }
@@ -195,6 +215,18 @@ function mergePaymentSources(local: PaymentSource[], remote: PaymentSource[]): P
 }
 
 /**
+ * Ce era în cameră la ultima sincronizare: suma fiecărui plic și „semnătura” fiecărei mișcări.
+ * Cu ea, o schimbare făcută doar pe un telefon trece la celălalt fără „conflict”; conflict
+ * rămâne doar când amândouă telefoanele au schimbat același lucru.
+ */
+export type SyncBase = { allocations: Record<string, number>; transactions: Record<string, string> };
+const txSignature = (item: Transaction) => [item.amount, item.kind, item.date, item.allocationId || "", item.sourceId || "", item.memberId || ""].join("|");
+export const syncBaseOf = (data: AppData): SyncBase => ({
+  allocations: Object.fromEntries(data.settings.salaryPlan.allocations.map((item) => [item.id, item.amount])),
+  transactions: Object.fromEntries(data.transactions.map((item) => [item.id, txSignature(item)])),
+});
+
+/**
  * Unește plicurile pe id. Dacă același id are sume diferite pe cele două telefoane,
  * păstrăm suma locală pentru continuitate pe telefonul curent și înregistrăm un conflict
  * — niciodată LWW tăcut pe bani.
@@ -203,6 +235,7 @@ function mergeAllocationsWithConflicts(
   localAllocations: BudgetAllocation[],
   remoteAllocations: BudgetAllocation[],
   previousConflicts: AllocationAmountConflict[],
+  base?: SyncBase,
 ): { allocations: BudgetAllocation[]; conflicts: AllocationAmountConflict[] } {
   const remoteById = new Map(remoteAllocations.map((item) => [item.id, item]));
   const localById = new Map(localAllocations.map((item) => [item.id, item]));
@@ -215,6 +248,10 @@ function mergeAllocationsWithConflicts(
     const localItem = localById.get(id);
     const remoteItem = remoteById.get(id);
     if (localItem && remoteItem) {
+      const before = base?.allocations[id];
+      // Doar un telefon a schimbat suma de la ultima sincronizare: schimbarea lui câștigă.
+      if (localItem.amount !== remoteItem.amount && before !== undefined && before === localItem.amount) { allocations.push(remoteItem); return; }
+      if (localItem.amount !== remoteItem.amount && before !== undefined && before === remoteItem.amount) { allocations.push(localItem); return; }
       if (localItem.amount !== remoteItem.amount) {
         allocations.push(localItem);
         freshConflicts.push({
@@ -264,6 +301,7 @@ function mergeTransactionsWithConflicts(
   remoteTx: Transaction[],
   deleted: DeletedRecord[],
   previousConflicts: TransactionConflict[],
+  base?: SyncBase,
 ): { transactions: Transaction[]; conflicts: TransactionConflict[] } {
   const tombstones = new Map(deleted.filter((item) => item.entity === "transactions").map((item) => [item.id, item]));
   const remoteById = new Map(remoteTx.map((item) => [item.id, item]));
@@ -283,6 +321,12 @@ function mergeTransactionsWithConflicts(
     };
     if (localItem && remoteItem) {
       if (!alive(localItem) && !alive(remoteItem)) return;
+      const before = base?.transactions[id];
+      if (before !== undefined && transactionMateriallyDiffers(localItem, remoteItem)) {
+        // O singură parte s-a schimbat de la ultima sincronizare: ea câștigă, fără conflict.
+        if (before === txSignature(localItem)) { if (alive(remoteItem)) transactions.push(remoteItem); return; }
+        if (before === txSignature(remoteItem)) { if (alive(localItem)) transactions.push(localItem); return; }
+      }
       if (transactionMateriallyDiffers(localItem, remoteItem) && alive(localItem)) {
         transactions.push(localItem);
         freshConflicts.push({
@@ -334,25 +378,34 @@ function mergePendingReviewMeta(localMeta: PendingReviewMeta[], remoteMeta: Pend
 }
 
 /** Unește două copii de familie fără a expedia imagini de bon și fără a reintroduce elemente șterse. */
-export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData {
+export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: SyncBase): AppData {
   const local = normalizeAppData(localRaw); const remote = normalizeAppData(remoteRaw);
-  const deletedAll = [...remote.deleted, ...local.deleted].reduce<DeletedRecord[]>((all, item) => {
-    const index = all.findIndex((entry) => deletionKey(entry) === deletionKey(item));
-    if (index < 0) return [...all, item];
-    if (Date.parse(item.deletedAt) > Date.parse(all[index].deletedAt)) all[index] = item;
-    return all;
-  }, []).sort((a, b) => a.deletedAt.localeCompare(b.deletedAt));
+  // O singură trecere (înainte era O(n²): 350 ms la 1.500 de ștergeri).
+  const newest = new Map<string, DeletedRecord>();
+  for (const item of [...remote.deleted, ...local.deleted]) {
+    const key = deletionKey(item);
+    const existing = newest.get(key);
+    if (!existing || Date.parse(item.deletedAt) > Date.parse(existing.deletedAt)) newest.set(key, item);
+  }
+  const deletedAll = Array.from(newest.values()).sort((a, b) => a.deletedAt.localeCompare(b.deletedAt));
   // Aceeași regulă ca la normalizare: vârsta ține locul numărului, ca o curățenie mare să
   // nu șteargă urmele ștergerilor dinainte și să le învie de pe celălalt telefon.
   const deleted = pruneTombstones(deletedAll);
+  const tombstoneOf = new Map(deleted.map((item) => [deletionKey(item), item]));
+  /** Rămâne dacă nu e șters, sau dacă a fost modificat (readus) după ștergere. */
+  const alive = (entity: DeletedRecord["entity"], id: string, stamp?: string) => {
+    const tombstone = tombstoneOf.get(`${entity}:${id}`);
+    return !tombstone || (Date.parse(stamp || "") || 0) > (Date.parse(tombstone.deletedAt) || 0);
+  };
   // Același membru pe ambele telefoane: câștigă ultima redenumire; fără marcaj rămâne varianta locală.
   const memberMap = new Map(remote.settings.members.map((item) => [item.id, item]));
   local.settings.members.forEach((item) => {
     const theirs = memberMap.get(item.id);
     if (!theirs || (Date.parse(item.updatedAt || "") || 0) >= (Date.parse(theirs.updatedAt || "") || 0)) memberMap.set(item.id, item);
   });
-  const paymentSources = mergePaymentSources(local.settings.paymentSources, remote.settings.paymentSources);
-  const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories]);
+  const members = Array.from(memberMap.values()).filter((item) => alive("members", item.id, item.updatedAt));
+  const paymentSources = mergePaymentSources(local.settings.paymentSources, remote.settings.paymentSources).filter((item) => alive("paymentSources", item.id, (item as { updatedAt?: string }).updatedAt));
+  const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories].filter((name) => alive("categories", name)));
   // Plan scalars follow LWW on the plan stamp, but plicuri / transferuri / reguli
   // se unesc pe id — altfel o modificare pe un telefon șterge plicul creat pe celălalt.
   const localPlan = local.settings.salaryPlan;
@@ -369,17 +422,20 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
     return Array.from(all.values());
   };
   const allocationHistory: AllocationHistoryEntry[] = [...(remotePlan.allocationHistory || []), ...(localPlan.allocationHistory || [])].reduce<AllocationHistoryEntry[]>((all, item) => all.some((entry) => entry.id === item.id) ? all : [...all, item], []).sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt)).slice(0, 400);
-  const { allocations, conflicts } = mergeAllocationsWithConflicts(
+  const merged = mergeAllocationsWithConflicts(
     localPlan.allocations || [],
     remotePlan.allocations || [],
     [...(local.allocationConflicts || []), ...(remote.allocationConflicts || [])],
+    base,
   );
+  const allocations = merged.allocations.filter((item) => alive("allocations", item.id, item.updatedAt));
+  const conflicts = merged.conflicts.filter((item) => allocations.some((allocation) => allocation.id === item.allocationId));
   const salaryPlan = {
     ...salaryPlanBase,
     allocations,
-    transfers: mergeById(localPlan.transfers || [], remotePlan.transfers || []),
-    weekTransfers: mergeById(localPlan.weekTransfers || [], remotePlan.weekTransfers || []),
-    salaryAllocationRules: mergeById(localPlan.salaryAllocationRules || [], remotePlan.salaryAllocationRules || []),
+    transfers: mergeById(localPlan.transfers || [], remotePlan.transfers || []).filter((item) => alive("transfers", item.id, item.createdAt)),
+    weekTransfers: mergeById(localPlan.weekTransfers || [], remotePlan.weekTransfers || []).filter((item) => alive("weekTransfers", item.id, item.createdAt)),
+    salaryAllocationRules: mergeById(localPlan.salaryAllocationRules || [], remotePlan.salaryAllocationRules || []).filter((item) => alive("salaryRules", item.id, item.updatedAt)),
     salaryAllocationApplications: mergeById(localPlan.salaryAllocationApplications || [], remotePlan.salaryAllocationApplications || []),
     needs: mergeById(localPlan.needs || [], remotePlan.needs || []),
     incomes: mergeById(localPlan.incomes || [], remotePlan.incomes || []),
@@ -401,13 +457,14 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       return { ...base, contributions: contributions.length ? contributions : undefined };
     }).slice(0, 80);
   };
-  const plannedEvents = mergePlannedEvents(local.settings.plannedEvents || [], remote.settings.plannedEvents || []);
+  const plannedEvents = mergePlannedEvents(local.settings.plannedEvents || [], remote.settings.plannedEvents || []).filter((item) => alive("plannedEvents", item.id, item.updatedAt));
   const syncDevices = mergeSyncDevices(local.settings.syncDevices || [], remote.settings.syncDevices || []);
   const { transactions, conflicts: txConflicts } = mergeTransactionsWithConflicts(
     local.transactions,
     remote.transactions,
     deleted,
     [...(local.transactionConflicts || []), ...(remote.transactionConflicts || [])],
+    base,
   );
   const localDraftIds = new Set(local.pendingReview.map((item) => item.id));
   const pendingReviewMeta = mergePendingReviewMeta(
@@ -433,7 +490,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
       familyName: local.settings.familyName || remote.settings.familyName,
       memberName: local.settings.memberName,
       familyCode: local.settings.familyCode || remote.settings.familyCode,
-      members: Array.from(memberMap.values()),
+      members,
       paymentSources,
       customCategories: Array.from(categorySet),
       quickTemplates: local.settings.quickTemplates,

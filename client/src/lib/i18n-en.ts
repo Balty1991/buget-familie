@@ -2324,6 +2324,7 @@ export const en: Record<string, string> = {
   "Vine fix în ziua asta.": "It arrives exactly on this day.",
   "Se stabilește singur din ziua declarată când notezi salariul. Îl poți alege și acum.": "It is set from the declared day when you record the salary. You can also choose it now.",
   "Data aproximativă": "Approximate date",
+  "Registrul familiei a devenit prea mare pentru sincronizare ({size} KB). Șterge bonurile vechi sau fă o copie de siguranță și arhivează anii trecuți.": "The family ledger has become too large to sync ({size} KB). Delete old receipts or make a backup and archive past years.",
   "Salariul {name}": "{name} salary",
   "TELEFONUL {name}": "PHONE OF {name}",
   "Bun venit, {name}!": "Welcome, {name}!",
