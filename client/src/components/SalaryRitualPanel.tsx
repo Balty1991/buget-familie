@@ -14,7 +14,7 @@ const money = lei;
 export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const plan = data.settings.salaryPlan;
   const rules = plan.salaryAllocationRules || [];
-  const applications = plan.salaryAllocationApplications || [];
+  const applications = (plan.salaryAllocationApplications || []).filter((item) => !item.revertedAt);
   const pending = unappliedSalaryIncomes(data).filter((item) => eligibleSalaryAllocationRules(data, item).length > 0).slice(0, 4);
   const [label, setLabel] = useState("");
   const [allocationId, setAllocationId] = useState(plan.allocations[0]?.id || "");

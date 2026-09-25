@@ -33,7 +33,10 @@ const restoreInto = <T extends { id: string }>(existing: T[], removed: T[] | und
   if (!removed?.length) return existing;
   // Dacă între timp a revenit prin sincronizare, nu o punem de două ori.
   const present = new Set(existing.map((item) => item.id));
-  return [...existing, ...removed.filter((item) => !present.has(item.id))];
+  // Rândul readus e „mai nou” decât ștergerea: dacă piatra de mormânt a apucat să plece
+  // spre celălalt telefon, la următoarea unire câștigă rândul, nu ștergerea.
+  const now = new Date().toISOString();
+  return [...existing, ...removed.filter((item) => !present.has(item.id)).map((item) => ({ ...item, updatedAt: now }))];
 };
 
 /** Construiește anularea pentru rândurile scoase; `undefined` dacă nu s-a scos nimic. */

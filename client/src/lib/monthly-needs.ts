@@ -10,6 +10,7 @@
  * ciclul curent (nu o adună peste cea de luna trecută), iar anularea pune la loc suma veche.
  */
 import {
+  activeSalaryApplications,
   addIsoDays,
   appendAllocationHistory,
   newId,
@@ -90,7 +91,7 @@ const fundedInCycle = (data: AppData, income: Transaction) => {
   const since = addIsoDays(income.date, -CYCLE_WINDOW_DAYS);
   const funded = new Map<string, number>();
   let cycleStart = income.date;
-  for (const application of data.settings.salaryPlan.salaryAllocationApplications || []) {
+  for (const application of activeSalaryApplications(data.settings.salaryPlan)) {
     if (application.origin !== "needs" || application.incomeId === income.id) continue;
     const other = incomeOf(data, application.incomeId);
     if (!other || other.date < since || other.date > income.date) continue;
@@ -132,7 +133,7 @@ const otherIncomeSoon = (data: AppData, income: Transaction): { label: string; a
     if (date < income.date) date = sameDayNextMonth(date, item.day);
     return { item, date };
   }).filter(({ date }) => date <= addIsoDays(income.date, CYCLE_WINDOW_DAYS));
-  const already = new Set((data.settings.salaryPlan.salaryAllocationApplications || []).filter((item) => item.origin === "needs").map((item) => incomeOf(data, item.incomeId)).filter((item) => item && item.date >= addIsoDays(income.date, -CYCLE_WINDOW_DAYS)).map((item) => item!.memberId));
+  const already = new Set(activeSalaryApplications(data.settings.salaryPlan).filter((item) => item.origin === "needs").map((item) => incomeOf(data, item.incomeId)).filter((item) => item && item.date >= addIsoDays(income.date, -CYCLE_WINDOW_DAYS)).map((item) => item!.memberId));
   const next = candidates.filter(({ item }) => !already.has(item.memberId)).sort((a, b) => a.date.localeCompare(b.date))[0];
   return next ? { label: next.item.label, amount: next.item.amount, date: next.date } : undefined;
 };
@@ -182,14 +183,14 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
   if (!income) return { ok: false, reason: "not-income", message: t("Alege un venit înregistrat.") };
   const source = data.settings.paymentSources.find((item) => item.id === income.sourceId);
   if (source?.kind === "meal") return { ok: false, reason: "meal", message: t("Tichetele de masă nu intră în repartizare: rămân pentru cheltuieli de moment.") };
-  if ((data.settings.salaryPlan.salaryAllocationApplications || []).some((item) => item.incomeId === income.id)) return { ok: false, reason: "applied", message: t("Acest venit a fost deja repartizat.") };
+  if (activeSalaryApplications(data.settings.salaryPlan).some((item) => item.incomeId === income.id)) return { ok: false, reason: "applied", message: t("Acest venit a fost deja repartizat.") };
   const needs = activeNeeds(data);
   if (!needs.length) return { ok: false, reason: "no-needs", message: t("Adaugă întâi cheltuielile lunare ale familiei.") };
 
   const { funded, cycleStart } = fundedInCycle(data, income);
   // Data aleasă de mână pentru ciclul în curs are întâietate; altfel, ziua declarată a venitului.
   const plan = data.settings.salaryPlan;
-  const opener = cycleStart === income.date ? income : incomeOf(data, (plan.salaryAllocationApplications || []).find((item) => item.origin === "needs" && incomeOf(data, item.incomeId)?.date === cycleStart)?.incomeId || "") || income;
+  const opener = cycleStart === income.date ? income : incomeOf(data, activeSalaryApplications(plan).find((item) => item.origin === "needs" && incomeOf(data, item.incomeId)?.date === cycleStart)?.incomeId || "") || income;
   const declaredDay = expectedIncomeFor(data, opener)?.day ?? Number(cycleStart.slice(8, 10));
   const manual = plan.periodStart && plan.periodStart <= cycleStart && plan.nextPayday && plan.nextPayday > addIsoDays(cycleStart, CYCLE_WINDOW_DAYS - 1) && !plan.horizonDays ? plan.nextPayday : "";
   const cycleEnd = manual || nextPaydayAfter(cycleStart, declaredDay);
@@ -309,7 +310,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     if (!created && previousAmount === next && line.amount <= 0) continue;
     // Plicul săptămânal primește și suma pe săptămână: tranșele din Plan sunt exact atât.
     allocations = allocations.map((item) => item.id === id ? { ...item, amount: next, ...(line.perWeek ? { weeklyAmount: line.perWeek, weeklyPace: true } : {}), updatedAt: now } : item);
-    lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount, ...(created ? { created: true } : {}) });
+    lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount, afterAmount: next, ...(created ? { created: true } : {}) });
   }
   if (!lines.some((item) => item.amount > 0)) return { data, error: t("Nu e nimic de repartizat din acest venit: cheltuielile ciclului sunt deja acoperite.") };
   const application: SalaryAllocationApplication = {
@@ -358,7 +359,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
 /** Venitul cel mai recent, nerepartizat, pe care merită propusă repartizarea (fără tichete). */
 export function pendingSplitIncome(data: AppData, asOf: string): Transaction | undefined {
   if (!activeNeeds(data).length) return undefined;
-  const applied = new Set((data.settings.salaryPlan.salaryAllocationApplications || []).map((item) => item.incomeId));
+  const applied = new Set(activeSalaryApplications(data.settings.salaryPlan).map((item) => item.incomeId));
   const meal = new Set(data.settings.paymentSources.filter((item) => item.kind === "meal").map((item) => item.id));
   return data.transactions
     .filter((item) => item.kind === "income" && !applied.has(item.id) && !meal.has(item.sourceId || "") && item.date >= addIsoDays(asOf, -10) && item.date <= asOf && item.amount >= 200)
@@ -446,7 +447,7 @@ export function matchExpectedIncome(data: AppData, income: { amount: number; dat
 /** Transferurile propuse la repartizările din ultimele 40 de zile, încă nebifate. */
 export function pendingTransfers(data: AppData, asOf: string) {
   const since = addIsoDays(asOf, -40);
-  return (data.settings.salaryPlan.salaryAllocationApplications || [])
+  return activeSalaryApplications(data.settings.salaryPlan)
     .filter((item) => item.origin === "needs" && item.appliedAt.slice(0, 10) >= since)
     .flatMap((item) => (item.transfers || []).filter((entry) => !entry.done).map((entry) => ({ applicationId: item.id, incomeTitle: item.incomeTitle, fromMemberId: item.memberId, ...entry })));
 }

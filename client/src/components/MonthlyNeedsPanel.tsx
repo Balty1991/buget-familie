@@ -152,7 +152,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
     updateIncome(income.id, { archived: true });
   };
   /** Repartizările făcute din listă, cele mai noi primele: fiecare se poate anula. */
-  const applications = (plan.salaryAllocationApplications || []).filter((item) => item.origin === "needs").slice(0, 6);
+  const applications = (plan.salaryAllocationApplications || []).filter((item) => item.origin === "needs" && !item.revertedAt).slice(0, 6);
   const undoApplication = async (id: string, title: string) => {
     if (!await askConfirm(t("Anulezi repartizarea „{title}”? Plicurile revin la sumele de dinainte, iar cele create acum, încă fără cheltuieli, se șterg. Venitul rămâne în registru și îl poți împărți din nou.", { title }), { confirmLabel: t("Anulează repartizarea") })) return;
     onChange(revertSalaryAllocationApplication(data, id));

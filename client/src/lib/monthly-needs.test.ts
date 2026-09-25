@@ -310,3 +310,32 @@ describe("cine plătește", () => {
     expect(split.ok && split.transfers).toEqual([]);
   });
 });
+
+describe("anularea repartizării, după raportul QA", () => {
+  it("anularea primului salariu, după al doilea, scade doar partea lui (BF-01)", () => {
+    let data = family();
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10"), income("s-sotia", "sotia", 2800, "2026-10-12")];
+    data = applyIncomeSplit(data, "s-eu").data;
+    data = applyIncomeSplit(data, "s-sotia").data;
+    const first = data.settings.salaryPlan.salaryAllocationApplications!.find((item) => item.incomeId === "s-eu")!;
+    data = revertSalaryAllocationApplication(data, first.id);
+    const envelope = (label: string) => data.settings.salaryPlan.allocations.find((item) => item.label === label);
+    // Mâncarea rămâne cu partea soției (843), taxiul cu 500; ratele, acoperite doar de primul, pleacă.
+    expect(envelope("Mâncare")?.amount).toBe(843);
+    expect(envelope("Taxi")?.amount).toBe(500);
+    expect(envelope("Rate bănci")).toBeUndefined();
+  });
+  it("a doua anulare nu mai scade nimic, iar repartizarea rămâne marcată", () => {
+    let data = family();
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10")];
+    data = applyIncomeSplit(data, "s-eu").data;
+    const application = data.settings.salaryPlan.salaryAllocationApplications![0];
+    data = revertSalaryAllocationApplication(data, application.id);
+    const once = JSON.stringify(data.settings.salaryPlan.allocations);
+    data = revertSalaryAllocationApplication(data, application.id);
+    expect(JSON.stringify(data.settings.salaryPlan.allocations)).toBe(once);
+    expect(data.settings.salaryPlan.salaryAllocationApplications![0].revertedAt).toBeTruthy();
+    // După anulare, venitul poate fi repartizat din nou.
+    expect(proposeIncomeSplit(data, "s-eu").ok).toBe(true);
+  });
+});
