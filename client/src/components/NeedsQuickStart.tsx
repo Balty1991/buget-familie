@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Check, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { formatDate, isoToday, newId, parseRomanianAmount, type AppData, type ExpectedIncome, type MonthlyNeed } from "@/lib/finance-data";
 import { t } from "@/lib/i18n";
+import { genitiveName } from "@/lib/member-mode";
 
 type IncomeDraft = { id: string; who: "me" | "partner"; label: string; amount: string; day: string };
 type NeedDraft = { label: string; category: string; cadence: "monthly" | "weekly"; priority: "fixed" | "flex" | "buffer"; amount: string; on: boolean };
@@ -72,7 +73,7 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
       partnerId = newId("member");
       members = [...members, { id: partnerId, name: partnerName.trim(), color: "#966E4A" }];
     }
-    const expected: ExpectedIncome[] = validIncomes.map((item) => ({ id: item.id, memberId: item.who === "partner" && partnerId ? partnerId : me.id, label: item.who === "partner" && item.label.trim() === t("Salariul partenerului") && partnerName.trim() ? t("Salariu {name}", { name: partnerName.trim() }) : item.label.trim() || t("Salariu"), amount: parseRomanianAmount(item.amount), day: Math.round(Number(item.day)), updatedAt: now }));
+    const expected: ExpectedIncome[] = validIncomes.map((item) => ({ id: item.id, memberId: item.who === "partner" && partnerId ? partnerId : me.id, label: item.who === "partner" && item.label.trim() === t("Salariul partenerului") && partnerName.trim() ? t("Salariul {name}", { name: genitiveName(partnerName.trim()) }) : item.label.trim() || t("Salariu"), amount: parseRomanianAmount(item.amount), day: Math.round(Number(item.day)), updatedAt: now }));
     const declared: MonthlyNeed[] = needs.filter((item) => item.on && parseRomanianAmount(item.amount) > 0).map((item) => {
       const amount = parseRomanianAmount(item.amount);
       return { id: newId("need"), label: item.label, category: item.category, cadence: item.cadence, min: amount, max: amount, reserve: "max", priority: item.priority, updatedAt: now };

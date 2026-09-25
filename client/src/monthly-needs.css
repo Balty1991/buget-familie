@@ -149,3 +149,15 @@
 .bf-member-mode-setup p { margin: 0; font-size: 13px; line-height: 1.5; }
 .bf-member-mode-setup select { width: 100%; min-height: 44px; }
 .bf-member-mode-setup button { justify-self: start; min-height: 44px; }
+.bf-member-mode-saved { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--cf-primary) 12%, transparent); font-size: 17px; }
+.bf-member-mode-saved button { min-height: 44px; margin-left: auto; border: 0; background: none; color: var(--cf-link); font-size: 16px; font-weight: 700; text-decoration: underline; }
+.bf-member-mode-form, .bf-member-mode-exit-form { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--cf-line); border-radius: 18px; background: var(--cf-surface); }
+.bf-member-mode-form label, .bf-member-mode-exit-form label { display: grid; gap: 6px; font-size: 16px; font-weight: 600; }
+.bf-member-mode-form input, .bf-member-mode-exit-form input { min-height: 56px; padding: 0 14px; border: 1px solid var(--cf-line); border-radius: 12px; color: var(--cf-ink); background: var(--cf-surface-alt); font-size: 22px; }
+.bf-member-mode-envelopes { display: flex; flex-wrap: wrap; gap: 8px; }
+.bf-member-mode-envelopes button { min-height: 48px; padding: 0 16px; border: 1px solid var(--cf-line); border-radius: 999px; background: var(--cf-surface); color: var(--cf-ink); font-size: 16px; }
+.bf-member-mode-envelopes button.active { border-color: var(--cf-primary); background: color-mix(in srgb, var(--cf-primary) 14%, transparent); font-weight: 700; }
+.bf-member-mode-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.bf-member-mode-actions button { min-height: 52px; padding: 0 20px; font-size: 17px; display: inline-flex; align-items: center; gap: 6px; }
+.bf-member-mode-pins { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bf-member-mode-pins input { width: 100%; min-height: 44px; }
