@@ -527,10 +527,11 @@ export const weekTooFast = (data: AppData, asOf = isoToday()): WeekTooFast[] => 
     const week = allocationWeekStatus(data, item, asOf);
     if (!week || week.budget <= 0 || week.spent <= 0) continue;
     const elapsed = Math.max(1, daysBetween(week.start, asOf) + 1);
-    const daysLeft = Math.max(0, week.days - elapsed);
+    // Zilele rămase includ ziua de azi: banii trebuie să ajungă și pentru ea.
+    const daysLeft = Math.max(0, week.days - elapsed + 1);
     const usage = week.spent / week.budget;
     const over = week.remaining < 0;
-    if (!over && (daysLeft < 1 || usage < 0.6 || usage < elapsed / week.days + 0.15)) continue;
+    if (!over && (daysLeft < 2 || usage < 0.6 || usage < elapsed / week.days + 0.15)) continue;
     out.push({ allocationId: item.id, label: item.label, weekIndex: week.index, spent: week.spent, budget: week.budget, remaining: week.remaining, daysLeft, perDay: daysLeft > 0 ? Math.floor(Math.max(0, week.remaining) / daysLeft) : 0, over });
   }
   return out.sort((a, b) => Number(b.over) - Number(a.over) || b.spent / b.budget - a.spent / a.budget);

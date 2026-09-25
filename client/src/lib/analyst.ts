@@ -10,6 +10,10 @@
  */
 import {
   addIsoDays,
+  allocationFromText,
+  allocationStatus,
+  allocationWeekStatus,
+  isWeeklyPaced,
   envelopeDecisionStatus,
   expenseCategories,
   foldRomanian,
@@ -25,9 +29,12 @@ import {
   planForecast,
   sourceBalance,
   type AppData,
+  type BudgetAllocation,
   type Transaction,
 } from "./finance-data";
 import { buildTodaySummary } from "./today-summary";
+import { daysLabel } from "./i18n";
+import { envelopeUntilPayday } from "./household-insights";
 import { selfMemberOf } from "./member-identity";
 
 export type AnalystRow = { label: string; value: string; hint?: string; share?: number };
@@ -926,6 +933,44 @@ const MATCHERS: Matcher[] = [
  * Încearcă să răspundă la o întrebare despre bani. `undefined` înseamnă
  * „nu este o întrebare de analiză” — mesajul merge mai departe pe celelalte căi.
  */
+/**
+ * „Cât mai am la mâncare?”, „cât pot cheltui azi pe taxi?”: răspunsul din plicul acela,
+ * nu din tot planul — cât a rămas, cât din săptămâna în curs și cât iese pe zi până la salariu.
+ */
+function answerEnvelopeLeft(data: AppData, envelope: BudgetAllocation, asOf: string): AnalystAnswer {
+  const status = allocationStatus(data, envelope);
+  const left = round(Math.max(0, status.remaining));
+  const week = isWeeklyPaced(envelope, data.settings.salaryPlan) ? allocationWeekStatus(data, envelope, asOf) : undefined;
+  const until = envelopeUntilPayday(data, envelope, asOf);
+  const weekDaysLeft = week ? Math.max(1, Math.round((new Date(`${week.end}T12:00:00`).valueOf() - new Date(`${asOf}T12:00:00`).valueOf()) / 86_400_000) + 1) : 0;
+  const weekLeft = week ? round(Math.max(0, week.remaining)) : 0;
+  const todayCap = week ? Math.floor(weekLeft / weekDaysLeft) : until ? until.perDay : undefined;
+  const headline = status.remaining < 0
+    ? `${envelope.label}: plicul e depășit cu ${money(-status.remaining)}.`
+    : week
+      ? `${envelope.label}: mai ai ${money(weekLeft)} săptămâna asta (S${week.index}) și ${money(left)} în tot plicul.`
+      : `${envelope.label}: mai ai ${money(left)} din ${money(status.budget)}.`;
+  const payday = until && until.days > 0 ? `Mai sunt ${daysLabel(until.days)} până la salariu (~${formatDate(until.typical, { day: "numeric", month: "long" })})` : "";
+  return {
+    kind: "envelope-left",
+    headline,
+    detail: sentences(
+      week && todayCap !== undefined && weekLeft > 0 ? `Ca să ajungă săptămâna, azi poți da cel mult ${money(todayCap)}` : "",
+      !week && todayCap !== undefined && left > 0 && until && until.days > 0 ? `Împărțit până la salariu, cam ${money(todayCap)} pe zi` : "",
+      payday,
+      `Ai cheltuit ${money(status.spent)} din ${money(status.budget)} în perioada asta`,
+    ),
+    rows: [
+      ...(week ? [{ label: `Săptămâna S${week.index}`, value: `${money(week.spent)} din ${money(week.budget)}`, hint: `rămân ${money(weekLeft)}` }] : []),
+      { label: "Tot plicul", value: `${money(status.spent)} din ${money(status.budget)}`, hint: `rămân ${money(left)}` },
+      ...(until && until.days > 0 ? [{ label: "Până la salariu", value: daysLabel(until.days) }] : []),
+    ],
+    followUps: ["Cât pot cheltui azi?", "Unde se duc banii?"],
+  };
+}
+
+const ASKS_ENVELOPE_LEFT = /\b(cat mai (am|avem|e|ramane)|ce mai (am|avem)|cat (mi|ne) a ramas|cat (a )?ramas|cati bani mai (am|avem)|cat (mai )?(pot|putem) (sa )?(cheltui|cheltuim|dau|dam|folosesc|folosim)|(imi|ne) (mai )?ajung|cat am in plic)\b/;
+
 export function analyze(raw: string, data: AppData, asOf = isoToday()): AnalystAnswer | undefined {
   const folded = foldRomanian(raw).replace(/[?!.,;]/g, " ").replace(/\s+/g, " ").trim();
   if (!folded) return undefined;
@@ -956,6 +1001,10 @@ export function analyze(raw: string, data: AppData, asOf = isoToday()): AnalystA
   const denies = /^(nu |n-?am |nu am |niciun|nicio)\b/.test(folded);
   if (statesAnAmount || asksHowItWorks || denies) return undefined;
 
+  if (ASKS_ENVELOPE_LEFT.test(folded)) {
+    const envelope = allocationFromText(data, folded.replace(ASKS_ENVELOPE_LEFT, " "));
+    if (envelope) return answerEnvelopeLeft(data, envelope, asOf);
+  }
   for (const matcher of MATCHERS) {
     if (matcher.test.test(folded)) return matcher.run(data, folded, asOf);
   }

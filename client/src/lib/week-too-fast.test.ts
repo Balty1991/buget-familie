@@ -11,7 +11,7 @@ const family = (spent: number, date: string) => {
 
 describe("săptămâna merge prea repede", () => {
   it("450 din 600 în a patra zi: avertizează, cu cât mai e pe zi", () => {
-    expect(weekTooFast(family(450, "2026-10-02"), "2026-10-04")[0]).toMatchObject({ weekIndex: 1, spent: 450, daysLeft: 3, perDay: 50, over: false });
+    expect(weekTooFast(family(450, "2026-10-02"), "2026-10-04")[0]).toMatchObject({ weekIndex: 1, spent: 450, daysLeft: 4, perDay: 37, over: false });
   });
   it("o cumpărătură normală nu sună alarma", () => {
     expect(weekTooFast(family(250, "2026-10-02"), "2026-10-04")).toEqual([]);
