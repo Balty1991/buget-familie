@@ -99,3 +99,15 @@
 .bf-needs-rare-actions button { min-height: 44px; }
 .bf-link-button { padding: 0; border: 0; background: none; color: var(--cf-link); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; min-height: 32px; }
 .bf-split-transfer { margin: 0; padding: 9px 11px; border-radius: 10px; background: color-mix(in srgb, var(--cf-info) 10%, transparent); font-size: 13px; line-height: 1.45; }
+
+/* Începutul „împarte-mi salariul”, în primul flux. */
+.bf-needs-start { display: grid; gap: 12px; }
+.bf-needs-start-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; border: 1px solid var(--cf-line); border-radius: 14px; }
+.bf-needs-start-row > .bf-field:first-child { grid-column: 1 / -1; }
+.bf-needs-start-row .bf-needs-remove { grid-column: 1 / -1; }
+.bf-needs-start-list { display: grid; gap: 6px; }
+.bf-needs-start-need { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 8px; align-items: center; min-height: 48px; padding: 6px 10px; border: 1px solid var(--cf-line); border-radius: 12px; }
+.bf-needs-start-need > label:first-child { display: flex; gap: 10px; align-items: center; min-height: 44px; cursor: pointer; }
+.bf-needs-start-need input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--cf-primary); }
+.bf-needs-start-need .bf-field { margin: 0; }
+.bf-needs-start-need.is-on { border-color: color-mix(in srgb, var(--cf-primary) 45%, var(--cf-line)); }

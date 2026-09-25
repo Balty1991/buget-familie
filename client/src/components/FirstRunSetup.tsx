@@ -14,12 +14,13 @@ import { markWhatsNewSeen } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
 import { hideNativeSplash } from "@/lib/native-splash";
 import { RoDateInput } from "@/components/RoDateInput";
+import { NeedsQuickStart } from "@/components/NeedsQuickStart";
 import { setSimpleMode } from "@/lib/ui-prefs";
 import { lei } from "@/lib/money-format";
 
 const money = lei;
 
-type Intent = "track" | "money" | "organize" | "family" | "simple";
+type Intent = "track" | "money" | "organize" | "family" | "simple" | "salary";
 
 /** `share`: partea din venitul lunar propusă pentru plic, când omul își scrie venitul. */
 const PRESETS = [
@@ -264,6 +265,11 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p>{t("Plicuri pe ciclul de salariu, fără bancă. Alege o intenție — poți schimba totul mai târziu, sau Mai târziu fără nicio pierdere.")}</p>
             <p className="bf-helper bf-first-run-legal">{t("Datele stau pe telefon. Sync-ul e opțional și criptat — fără login bancar.")}</p>
             <div className="bf-first-run-intents" role="group" aria-label={t("Intenții de start")}>
+              <button type="button" onClick={() => setIntent("salary")}>
+                <WalletCards size={20} />
+                <b>{t("Vreau ca aplicația să-mi împartă salariul.")}</b>
+                <small>{t("Scrii o dată veniturile și ce plătiți; la fiecare salariu primești împărțirea pe plicuri.")}</small>
+              </button>
               <button type="button" onClick={() => setIntent("simple")}>
                 <Eye size={20} />
                 <b>{t("Vreau doar să notez și să văd cât mai am.")}</b>
@@ -291,6 +297,10 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
               </button>
             </div>
           </div>
+        )}
+
+        {intent === "salary" && (
+          <NeedsQuickStart data={data} yourName={memberName} partnerName={partnerName} onPartnerName={setPartnerName} onFinish={(next) => { onChange(next); complete(); onGoPlan(); }} />
         )}
 
         {intent === "track" && (

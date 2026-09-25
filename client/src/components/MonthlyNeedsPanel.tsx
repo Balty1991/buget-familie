@@ -254,7 +254,8 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
  * la prima cheltuială adăugată, iar omul nu mai apuca să scrie suma.
  */
 export function MonthlyNeedsSection({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
-  const [open, setOpen] = useState(() => Boolean(pendingSplitIncome(data, isoToday())) || needAdjustments(data, isoToday()).length > 0);
+  // Deschis cât e ceva de făcut: o propunere, o ajustare, sau lista abia scrisă, încă fără primul salariu împărțit.
+  const [open, setOpen] = useState(() => Boolean(pendingSplitIncome(data, isoToday())) || needAdjustments(data, isoToday()).length > 0 || (activeNeeds(data).length > 0 && !(data.settings.salaryPlan.salaryAllocationApplications || []).some((item) => item.origin === "needs")));
   const count = activeNeeds(data).length;
   return (
     <details className="bf-plan-tools bf-needs-details" open={open} onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}>
