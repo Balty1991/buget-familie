@@ -88,7 +88,15 @@ export function rarePlan(data: AppData, cycleStart: string) {
 }
 
 const fundedInCycle = (data: AppData, income: Transaction) => {
-  const since = addIsoDays(income.date, -CYCLE_WINDOW_DAYS);
+  /**
+   * Venitul care cade în ciclul în curs (înainte de fereastra salariului următor) îl
+   * completează, oricât de departe ar fi de primul: salariile pe 1 și pe 25 sunt același
+   * ciclu. Fereastra de 20 de zile rămâne doar când planul nu spune nimic.
+   */
+  const plan = data.settings.salaryPlan;
+  const inCurrent = Boolean(plan.periodStart && plan.nextPayday && !plan.horizonDays && income.date >= plan.periodStart && income.date < addIsoDays(plan.nextPayday, -(plan.paydayFlexDays ?? 3)));
+  const windowStart = addIsoDays(income.date, -CYCLE_WINDOW_DAYS);
+  const since = inCurrent && plan.periodStart < windowStart ? plan.periodStart : windowStart;
   const funded = new Map<string, number>();
   let cycleStart = income.date;
   for (const application of activeSalaryApplications(data.settings.salaryPlan)) {
@@ -125,15 +133,15 @@ export const nextPaydayAfter = (start: string, day: number) => {
   return candidate;
 };
 
-/** Următorul venit așteptat al altui membru, dacă vine în același ciclu. */
-const otherIncomeSoon = (data: AppData, income: Transaction): { label: string; amount: number; date: string } | undefined => {
+/** Următorul venit așteptat al altui membru, dacă vine în același ciclu (până la salariul următor). */
+const otherIncomeSoon = (data: AppData, income: Transaction, cycleStart: string, cycleEnd: string): { label: string; amount: number; date: string } | undefined => {
   const incomes = activeIncomes(data).filter((item) => item.memberId !== income.memberId);
   const candidates = incomes.map((item) => {
     let date = `${income.date.slice(0, 8)}${String(item.day).padStart(2, "0")}`;
     if (date < income.date) date = sameDayNextMonth(date, item.day);
     return { item, date };
-  }).filter(({ date }) => date <= addIsoDays(income.date, CYCLE_WINDOW_DAYS));
-  const already = new Set(activeSalaryApplications(data.settings.salaryPlan).filter((item) => item.origin === "needs").map((item) => incomeOf(data, item.incomeId)).filter((item) => item && item.date >= addIsoDays(income.date, -CYCLE_WINDOW_DAYS)).map((item) => item!.memberId));
+  }).filter(({ date }) => date < cycleEnd);
+  const already = new Set(activeSalaryApplications(data.settings.salaryPlan).filter((item) => item.origin === "needs").map((item) => incomeOf(data, item.incomeId)).filter((item) => item && item.date >= cycleStart).map((item) => item!.memberId));
   const next = candidates.filter(({ item }) => !already.has(item.memberId)).sort((a, b) => a.date.localeCompare(b.date))[0];
   return next ? { label: next.item.label, amount: next.item.amount, date: next.date } : undefined;
 };
@@ -238,7 +246,7 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     free: money,
     // Rezerva de neprevăzute nu e o lipsă: dacă nu încape acum, nu înseamnă că venitul nu ajunge.
     uncovered: round2(lines.filter((item) => item.need.priority !== "buffer").reduce((sum, item) => sum + item.remaining, 0)),
-    nextIncome: otherIncomeSoon(data, income),
+    nextIncome: otherIncomeSoon(data, income, cycleStart, cycleEnd),
     transfers: splitTransfers(lines, income.memberId),
   };
 }
@@ -313,6 +321,10 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount, afterAmount: next, ...(created ? { created: true } : {}) });
   }
   if (!lines.some((item) => item.amount > 0)) return { data, error: t("Nu e nimic de repartizat din acest venit: cheltuielile ciclului sunt deja acoperite.") };
+  // Primul venit al unui ciclu nou deschide ciclul, dacă planul vechi s-a încheiat.
+  // Salariul poate veni cu câteva zile mai devreme: din prima zi a ferestrei, ciclul vechi s-a încheiat.
+  const expired = !plan.nextPayday || addIsoDays(plan.nextPayday, -(plan.paydayFlexDays ?? 3)) <= split.income.date;
+  const opensCycle = expired && split.cycleStart === split.income.date;
   const application: SalaryAllocationApplication = {
     id: newId("salary-application"),
     incomeId: split.income.id,
@@ -324,12 +336,11 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     allocations: lines,
     origin: "needs",
     ...(split.transfers.length ? { transfers: split.transfers } : {}),
+    ...(opensCycle ? { previousCycle: { periodStart: plan.periodStart, nextPayday: plan.nextPayday, earliestPayday: plan.earliestPayday, paydayFlexDays: plan.paydayFlexDays, transfers: plan.transfers || [], weekTransfers: plan.weekTransfers || [], openedPeriodStart: split.income.date } } : {}),
   };
-  // Primul venit al unui ciclu nou deschide ciclul, dacă planul vechi s-a încheiat.
-  // Salariul poate veni cu câteva zile mai devreme: din prima zi a ferestrei, ciclul vechi s-a încheiat.
-  const expired = !plan.nextPayday || addIsoDays(plan.nextPayday, -(plan.paydayFlexDays ?? 3)) <= split.income.date;
-  const firstOfCycle = split.cycleStart === split.income.date;
-  const cycle = expired && firstOfCycle ? { periodStart: split.income.date, nextPayday: split.cycleEnd, earliestPayday: undefined, paydayFlexDays: plan.paydayFlexDays ?? 3 } : {};
+  // Ciclul nou pornește curat, ca la „Pornește ciclul nou”: mutările între plicuri și între
+  // săptămâni erau ale ciclului vechi (altfel Mâncare avea 2.957 cu limita de 2.657).
+  const cycle = opensCycle ? { periodStart: split.income.date, nextPayday: split.cycleEnd, earliestPayday: undefined, paydayFlexDays: plan.paydayFlexDays ?? 3, transfers: [], weekTransfers: [] } : {};
   const next: AppData = {
     ...data,
     settings: {

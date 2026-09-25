@@ -816,9 +816,19 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   /** Un plan expirat nu mai are ce ritm să dea: cifra corectă e zero, iar motivul e altul. */
   const expired = planExpired(data.settings.salaryPlan, asOf);
   const forecast = planForecast(data, asOf);
-  const safe = liquidSafeToSpend(data, asOf);
-  const remainingDays = Math.max(1, forecast.remainingDays);
   const plan = data.settings.salaryPlan;
+  /**
+   * Salariul intrat în fereastra zilei de salariu e al ciclului următor. Fără scăderea asta,
+   * în ziua salariului Astăzi arăta „Poți folosi azi 5.200” — tot venitul, pe o zi.
+   */
+  const paydayRange = paydayWindow(plan);
+  const meal = new Set(data.settings.paymentSources.filter((item) => item.kind === "meal").map((item) => item.id));
+  const nextCycleIncome = hasPayday && !expired && paydayRange.earliest && asOf >= paydayRange.earliest
+    ? data.transactions.filter((item) => item.kind === "income" && item.date >= paydayRange.earliest && item.date <= asOf && item.amount >= 200 && !meal.has(item.sourceId || "")).reduce((sum, item) => sum + item.amount, 0)
+    : 0;
+  const liquid = liquidSafeToSpend(data, asOf);
+  const safe = { ...liquid, available: Math.max(0, liquid.available - nextCycleIncome) };
+  const remainingDays = Math.max(1, forecast.remainingDays);
   const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
   /** Partea de azi, socotită din banii de la începutul zilei; cheltuiala de azi o micșorează leu cu leu. */
   const dayShareLeft = (moneyNowAfterToday: number) => Math.max(0, (moneyNowAfterToday + spentToday) / remainingDays - spentToday);
@@ -827,7 +837,9 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
   const fromWeek = rhythm.hasWeekly ? Math.max(0, rhythm.todayLeft) : undefined;
   const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromPace, fromLiquid, safe.available)) : 0;
-  const reason = !hasPayday
+  const reason = nextCycleIncome > 0 && !expired && hasPayday
+    ? t("Venitul de azi e pentru ciclul următor: repartizează-l în plicuri. Cifra zilei vine din banii ciclului care se încheie.")
+    : !hasPayday
     ? t("Setează următorul venit sau, la venituri neregulate, câte zile să-ți ajungă banii (Plan), ca să calculăm cât poți cheltui azi.")
     : expired
       ? t("Ciclul s-a încheiat pe {date} — pornește ciclul nou ca să-ți spun din nou ritmul zilei.", { date: formatDate(planEndDate(data.settings.salaryPlan)) })

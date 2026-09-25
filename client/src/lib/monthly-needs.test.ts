@@ -339,3 +339,45 @@ describe("anularea repartizării, după raportul QA", () => {
     expect(proposeIncomeSplit(data, "s-eu").ok).toBe(true);
   });
 });
+
+describe("ciclul nou deschis de repartizare (BF-05)", () => {
+  it("golește mutările ciclului vechi; anularea le pune la loc, cu datele vechi", () => {
+    let data = family();
+    data.settings.salaryPlan.allocations = [{ id: "food", label: "Mâncare", amount: 2400, category: "Mâncare" }, { id: "fun", label: "Distracție", amount: 500, category: "Distracție" }];
+    data.settings.salaryPlan.transfers = [{ id: "tr", fromAllocationId: "fun", toAllocationId: "food", amount: 300, createdAt: "2026-09-20T10:00:00.000Z" }];
+    data.settings.salaryPlan.weekTransfers = [{ id: "wt", allocationId: "food", fromWeekIndex: 1, toWeekIndex: 4, amount: 400, createdAt: "2026-09-20T10:00:00.000Z" }];
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10")];
+    const applied = applyIncomeSplit(data, "s-eu").data;
+    expect(applied.settings.salaryPlan.periodStart).toBe("2026-10-10");
+    expect(applied.settings.salaryPlan.transfers).toEqual([]);
+    expect(applied.settings.salaryPlan.weekTransfers).toEqual([]);
+    const application = applied.settings.salaryPlan.salaryAllocationApplications![0];
+    data = revertSalaryAllocationApplication(applied, application.id);
+    expect(data.settings.salaryPlan.periodStart).toBe("2026-09-10");
+    expect(data.settings.salaryPlan.nextPayday).toBe("2026-10-10");
+    expect(data.settings.salaryPlan.transfers.map((item) => item.id)).toEqual(["tr"]);
+    expect(data.settings.salaryPlan.weekTransfers?.map((item) => item.id)).toEqual(["wt"]);
+  });
+});
+
+describe("salarii pe 1 și pe 25 (BF-02)", () => {
+  it("al doilea salariu completează același ciclu, fără să propună din nou chiria", () => {
+    let data = family();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-08-01", nextPayday: "2026-09-01", allocations: [],
+      incomes: [{ id: "i1", memberId: "eu", label: "Al meu", amount: 4000, day: 1 }, { id: "i2", memberId: "sotia", label: "Al ei", amount: 3000, day: 25 }],
+      needs: [need("chirie", "Chirie", 2500, 2500), need("lumina", "Lumină", 400, 400), need("mancare", "Mâncare", 600, 600, { cadence: "weekly", priority: "flex" })] };
+    data.transactions = [income("s1", "eu", 4000, "2026-09-01"), income("s2", "sotia", 3000, "2026-09-25")];
+    const first = proposeIncomeSplit(data, "s1");
+    expect(first.ok && first.nextIncome?.label).toBe("Al ei");
+    data = applyIncomeSplit(data, "s1").data;
+    expect(data.settings.salaryPlan.periodStart).toBe("2026-09-01");
+    const food = () => data.settings.salaryPlan.allocations.find((item) => item.label === "Mâncare")!.amount;
+    const before = food();
+    const second = proposeIncomeSplit(data, "s2");
+    expect(second.ok && second.cycleStart).toBe("2026-09-01");
+    expect(second.ok && second.lines.find((line) => line.need.id === "chirie")?.amount).toBe(0);
+    data = applyIncomeSplit(data, "s2").data;
+    expect(food()).toBeGreaterThanOrEqual(before);
+    expect(data.settings.salaryPlan.periodStart).toBe("2026-09-01");
+  });
+});

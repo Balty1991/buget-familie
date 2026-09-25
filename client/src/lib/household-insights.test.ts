@@ -704,3 +704,17 @@ describe("plata fixă (rată, factură)", () => {
     expect(envelopeUntilPayday(data, data.settings.salaryPlan.allocations[0], "2026-09-07")).toBeUndefined();
   });
 });
+
+describe("ziua salariului (BF-04)", () => {
+  it("salariul intrat azi nu devine „poți folosi azi” în ciclul care se încheie", () => {
+    const data = createEmptyAppData();
+    const card = data.settings.paymentSources[0];
+    data.settings.paymentSources = data.settings.paymentSources.map((item) => item.id === card.id ? { ...item, openingBalance: 500 } : item);
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-10", nextPayday: "2026-10-10", paydayFlexDays: 0, sourceIds: [card.id], allocations: [] };
+    const before = todayBrief(data, "2026-10-10").spendable;
+    data.transactions = [{ id: "sal", title: "Salariu", amount: 4700, kind: "income", category: "Venit", sourceId: card.id, source: card.name, person: "Eu", date: "2026-10-10" }];
+    const brief = todayBrief(data, "2026-10-10");
+    expect(brief.spendable).toBe(before);
+    expect(brief.spendable).toBeLessThanOrEqual(500);
+  });
+});
