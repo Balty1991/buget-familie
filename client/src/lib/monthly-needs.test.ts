@@ -257,3 +257,33 @@ describe("plățile rare în repartizare", () => {
     expect(data.settings.plannedEvents.find((item) => item.id === "xmas")?.contributions?.length).toBe(1);
   });
 });
+
+describe("neprevăzutele, din ce rămâne liber", () => {
+  it("vin ultimele și nu contează ca lipsă", () => {
+    const data = family();
+    data.settings.salaryPlan.needs = [...data.settings.salaryPlan.needs!, { id: "buf", label: "Neprevăzute", category: "Altele", cadence: "monthly", min: 400, max: 400, priority: "buffer" }];
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10")];
+    const split = proposeIncomeSplit(data, "s-eu");
+    if (!split.ok) throw new Error(split.message);
+    expect(split.lines.at(-1)).toMatchObject({ need: { id: "buf" }, amount: 0, remaining: 400 });
+    expect(split.uncovered).toBe(1343);
+  });
+  it("cu bani destui, primesc rezerva întreagă", () => {
+    const data = family();
+    data.settings.salaryPlan.needs = [...data.settings.salaryPlan.needs!, { id: "buf", label: "Neprevăzute", category: "Altele", cadence: "monthly", min: 400, max: 400, priority: "buffer" }];
+    data.transactions = [income("s-eu", "eu", 9000, "2026-10-10")];
+    const split = proposeIncomeSplit(data, "s-eu");
+    if (!split.ok) throw new Error(split.message);
+    expect(split.lines.at(-1)).toMatchObject({ need: { id: "buf" }, amount: 400, remaining: 0 });
+  });
+});
+
+describe("farmacia ajunge la neprevăzute", () => {
+  it("Catena → plicul Neprevăzute, dacă nu există unul mai potrivit", async () => {
+    const { allocationFromText } = await import("./finance-data");
+    const data = family();
+    data.settings.salaryPlan.allocations = [{ id: "n", label: "Neprevăzute", amount: 400, category: "Altele" }, { id: "m", label: "Mâncare", amount: 2400, category: "Alimente" }];
+    expect(allocationFromText(data, "Catena 45 lei")?.id).toBe("n");
+    expect(allocationFromText(data, "Lidl 120")?.id).toBe("m");
+  });
+});

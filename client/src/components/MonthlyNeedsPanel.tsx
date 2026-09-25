@@ -28,6 +28,7 @@ const PRESETS: Array<Pick<MonthlyNeed, "label" | "category" | "cadence" | "prior
   { label: "Abonamente", category: "Abonamente", cadence: "monthly", priority: "fixed" },
   { label: "Grădiniță", category: "Consumabile copil", cadence: "monthly", priority: "fixed" },
   { label: "Taxi / transport", category: "Transport", cadence: "monthly", priority: "flex" },
+  { label: "Neprevăzute", category: "Altele", cadence: "monthly", priority: "buffer" },
 ];
 
 /** O linie scurtă: „300–400 RON / lună · rezervă maximul · doar din venitul Soției”. */
@@ -39,6 +40,7 @@ function needSummary(need: MonthlyNeed, members: AppData["settings"]["members"])
   const payer = members.find((item) => item.id === need.payerId);
   if (payer) parts.push(t("doar din venitul lui {name}", { name: payer.name }));
   if (need.priority === "flex") parts.push(t("după obligații"));
+  if (need.priority === "buffer") parts.push(t("din ce rămâne liber"));
   return parts.join(" · ");
 }
 
@@ -94,9 +96,10 @@ function NeedRow({ need, members, categories, startOpen, onSave, onDelete }: { n
           <option value="">{t("din orice venit")}</option>
           {members.map((member) => <option key={member.id} value={member.id}>{t("doar din venitul lui {name}", { name: member.name })}</option>)}
         </select>
-        <select aria-label={t("Prioritate")} value={need.priority || "fixed"} onChange={(event) => onSave({ priority: event.target.value === "flex" ? "flex" : "fixed" })}>
+        <select aria-label={t("Prioritate")} value={need.priority || "fixed"} onChange={(event) => onSave({ priority: event.target.value === "flex" ? "flex" : event.target.value === "buffer" ? "buffer" : "fixed" })}>
           <option value="fixed">{t("obligație (întâi)")}</option>
           <option value="flex">{t("variabil (după obligații)")}</option>
+          <option value="buffer">{t("rezervă (din ce rămâne liber)")}</option>
         </select>
         <select aria-label={t("Categorie")} value={need.category} onChange={(event) => onSave({ category: event.target.value })}>
           {categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}

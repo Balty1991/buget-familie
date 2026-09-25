@@ -192,8 +192,9 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
   const cycleEnd = manual || nextPaydayAfter(cycleStart, declaredDay);
   const cycle = cycleWeeks(cycleStart, cycleEnd);
   let money = round2(income.amount);
-  const ordered = [...needs].sort((a, b) => Number(a.priority === "flex") - Number(b.priority === "flex"));
-  const lines: SplitLine[] = ordered.map((need) => {
+  const rank = (need: MonthlyNeed) => need.priority === "buffer" ? 2 : need.priority === "flex" ? 1 : 0;
+  const ordered = [...needs].sort((a, b) => rank(a) - rank(b));
+  const toLine = (need: MonthlyNeed): SplitLine => {
     const weekly = need.cadence === "weekly";
     const target = weekly ? weeklyTarget(reserveOf(need), cycle) : reserveOf(need);
     const weekInfo = weekly ? { weeks: cycle.weeks, extraDays: cycle.extraDays, perWeek: reserveOf(need) } : {};
@@ -205,7 +206,8 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     const amount = Math.min(open, money);
     money = round2(money - amount);
     return { need, target, ...weekInfo, fundedBefore, amount: round2(amount), remaining: round2(open - amount) };
-  });
+  };
+  const lines: SplitLine[] = ordered.filter((need) => need.priority !== "buffer").map(toLine);
   // Plățile rare vin la urmă: întâi traiul lunii, apoi ce se strânge pentru RCA sau Crăciun.
   const rare = rarePlan(data, cycleStart);
   if (rare.total > 0) {
@@ -217,6 +219,8 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     const note = rare.events.map((item) => `${item.event.name} (${item.date.slice(8, 10)}.${item.date.slice(5, 7)})`).join(", ");
     lines.push({ need, target: rare.total, fundedBefore, amount: round2(amount), remaining: round2(open - amount), note });
   }
+  // Neprevăzutele (farmacie, reparații) primesc doar ce rămâne liber după tot restul.
+  lines.push(...ordered.filter((need) => need.priority === "buffer").map(toLine));
   const covered = round2(lines.reduce((sum, item) => sum + item.amount, 0));
   return {
     ok: true,
@@ -228,7 +232,8 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     lines,
     covered,
     free: money,
-    uncovered: round2(lines.reduce((sum, item) => sum + item.remaining, 0)),
+    // Rezerva de neprevăzute nu e o lipsă: dacă nu încape acum, nu înseamnă că venitul nu ajunge.
+    uncovered: round2(lines.filter((item) => item.need.priority !== "buffer").reduce((sum, item) => sum + item.remaining, 0)),
     nextIncome: otherIncomeSoon(data, income),
   };
 }
