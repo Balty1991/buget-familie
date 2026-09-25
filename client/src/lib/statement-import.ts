@@ -26,6 +26,7 @@ import {
   type TransactionKind,
 } from "./finance-data";
 import { t } from "./i18n";
+import { matchExpectedIncome } from "./monthly-needs";
 
 export type StatementColumns = { date: number; description: number; amount?: number; debit?: number; credit?: number; /** Alte coloane cu text (Raiffeisen: beneficiar + detalii), lipite la descriere. */ details?: number[] };
 export type StatementRow = { line: number; date: string; description: string; amount: number; kind: TransactionKind };
@@ -488,10 +489,19 @@ export function statementDrafts(
       allocationId,
       createdAt: now,
     };
+    // Un venit care seamănă cu salariul declarat primește numele lui: după confirmare vine propunerea de repartizare.
+    const salary = row.kind === "income" ? matchExpectedIncome(data, { amount: base, date: row.date }) : undefined;
+    if (salary) {
+      transaction.title = salary.label;
+      const payer = data.settings.members.find((item) => item.id === salary.memberId);
+      if (payer && (!source.memberId || source.memberId === payer.id)) { transaction.memberId = payer.id; transaction.person = payer.name; }
+    }
     drafts.push({
       id: newId("review"),
       origin: "import",
-      reason: habitCategory
+      reason: salary
+        ? t("Rândul {line} din extras · pare {label}; după confirmare îți propun repartizarea", { line: row.line, label: salary.label })
+        : habitCategory
         ? t("Rândul {line} din extras · {category}, ca data trecută la {merchant}", { line: row.line, category: t(finalCategory), merchant })
         : t("Rândul {line} din extras · categorie propusă {category}", { line: row.line, category: t(finalCategory) }),
       createdAt: now,

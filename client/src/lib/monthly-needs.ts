@@ -349,3 +349,18 @@ export function needAdjustments(data: AppData, asOf: string): NeedAdjustment[] {
   }
   return out;
 }
+
+/**
+ * Pare un salariu declarat? Suma cam aceeași (±20%, cel puțin ±300 lei) și ziua în fereastra
+ * obișnuită (± zilele de variație plus două). Folosit la extrase și la textul băncii lipit în
+ * ghid, ca un „Încasare 4.700 RON” să fie recunoscut drept „Salariul meu”.
+ */
+export function matchExpectedIncome(data: AppData, income: { amount: number; date: string; memberId?: string }): ExpectedIncome | undefined {
+  const flex = (data.settings.salaryPlan.paydayFlexDays ?? 3) + 2;
+  const day = Number(income.date.slice(8, 10));
+  const gap = (item: ExpectedIncome) => { const raw = Math.abs(item.day - day); return Math.min(raw, 31 - raw); };
+  return activeIncomes(data)
+    .filter((item) => item.amount > 0 && Math.abs(item.amount - income.amount) <= Math.max(300, item.amount * 0.2) && gap(item) <= flex)
+    .filter((item) => !income.memberId || item.memberId === income.memberId || !data.settings.members.some((member) => member.id === income.memberId))
+    .sort((a, b) => Math.abs(a.amount - income.amount) - Math.abs(b.amount - income.amount) || gap(a) - gap(b))[0];
+}

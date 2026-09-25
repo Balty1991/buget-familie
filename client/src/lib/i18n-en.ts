@@ -2342,6 +2342,7 @@ export const en: Record<string, string> = {
   "Plătiți mai mult decât ai scris. Pun {range}?": "You pay more than you entered. Set {range}?",
   "Plătiți mai puțin decât ai scris. Pun {range}? Banii rămași pot merge în altă parte.": "You pay less than you entered. Set {range}? The money left can go elsewhere.",
   "Lasă cum e": "Leave as is",
+  "Rândul {line} din extras · pare {label}; după confirmare îți propun repartizarea": "Row {line} of the statement · looks like {label}; after you confirm, I will suggest the split",
   "Pune {range}": "Set {range}",
   "Săptămâna e depășită": "The week is overspent",
   "Săptămâna merge repede": "The week is going fast",

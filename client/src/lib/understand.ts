@@ -39,7 +39,7 @@ import { calendarBudget, periodDays, remainingPace, startedWeekShare } from "./c
 import { buildTodaySummary } from "./today-summary";
 import { plannedEventsPressure, upcomingPlannedEvents } from "./planned-events";
 import { proposeSplit } from "./split-proposal";
-import { activeIncomes, activeNeeds, pendingSplitIncome, proposeIncomeSplit, reserveOf, splitPreviewText } from "./monthly-needs";
+import { activeIncomes, activeNeeds, matchExpectedIncome, pendingSplitIncome, proposeIncomeSplit, reserveOf, splitPreviewText } from "./monthly-needs";
 import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
@@ -815,6 +815,7 @@ function namedSplitReading(raw: string, folded: string, data: AppData, altele: P
 
 /** „Am primit salariul”, „mi-a intrat leafa”, „cum împart salariul?” */
 const SALARY_TALK = /\b(salari\w*|leafa|lefuri\w*)\b/;
+const BANK_CREDIT = /\b(incasare|creditare|creditat|ati primit|ai primit|transfer (primit|intrat)|alimentare cont|plata primita|intrare fonduri)\b/;
 const SALARY_ARRIVED = /\b(am (primit|luat|incasat)|mi-?a (intrat|venit)|a (intrat|venit|primit|luat)|au intrat|am si eu)\b/;
 
 /**
@@ -826,11 +827,16 @@ function needsSplitReading(raw: string, data: AppData, asOf: string, said: Parse
   let intents = said;
   if (!activeNeeds(data).length) return undefined;
   const folded = foldRo(raw);
-  const aboutSalary = SALARY_TALK.test(folded) || /\bvenit\w*\b/.test(folded);
-  if (!aboutSalary || !(WANTS_SPLIT.test(folded) || SALARY_ARRIVED.test(folded))) return undefined;
-  // „Soția a primit salariul 2800”: fraza spune și cine, și suma, chiar dacă cititorul general n-a văzut un venit.
   const spoken = extractAmounts(extractDates(raw).masked).map((hit) => hit.value).filter((value) => value >= 100).sort((a, b) => b - a)[0];
-  if (!intents.some((item) => item.intent.kind === "income") && spoken && SALARY_ARRIVED.test(folded)) {
+  // Textul băncii lipit în ghid („Încasare 4.700,00 RON de la ACME SRL”): e salariul, dacă seamănă cu unul declarat.
+  const fromBank = BANK_CREDIT.test(folded) && spoken ? matchExpectedIncome(data, { amount: spoken, date: asOf }) : undefined;
+  const aboutSalary = Boolean(fromBank) || SALARY_TALK.test(folded) || /\bvenit\w*\b/.test(folded);
+  const arrived = Boolean(fromBank) || SALARY_ARRIVED.test(folded);
+  if (!aboutSalary || !(WANTS_SPLIT.test(folded) || arrived)) return undefined;
+  // „Soția a primit salariul 2800”: fraza spune și cine, și suma, chiar dacă cititorul general n-a văzut un venit.
+  if (fromBank) {
+    intents = [...intents.filter((item) => item.intent.kind !== "expense" && item.intent.kind !== "income"), { intent: { kind: "income", amount: spoken, title: fromBank.label, date: asOf }, segment: raw }];
+  } else if (!intents.some((item) => item.intent.kind === "income") && spoken && arrived) {
     intents = [...intents.filter((item) => item.intent.kind !== "expense"), { intent: { kind: "income", amount: spoken, title: "Salariu", date: asOf }, segment: raw }];
   }
   const incomeAt = intents.findIndex((item) => item.intent.kind === "income");
@@ -838,7 +844,7 @@ function needsSplitReading(raw: string, data: AppData, asOf: string, said: Parse
   if (incomeAt >= 0) {
     const said = intents[incomeAt];
     if (said.intent.kind !== "income") return undefined;
-    const memberId = memberIdFor(data, raw);
+    const memberId = fromBank?.memberId || memberIdFor(data, raw);
     const source = data.settings.paymentSources.find((item) => item.memberId === memberId && item.kind !== "meal") || data.settings.paymentSources.find((item) => item.kind !== "meal");
     const preview: Transaction = { id: "guide-preview-income", title: said.intent.title, amount: said.intent.amount, kind: "income", category: "Venit", source: source?.name || "", person: "", date: said.intent.date, sourceId: source?.id || "", memberId: memberId || "" };
     const split = proposeIncomeSplit({ ...data, transactions: [...data.transactions, preview] }, preview.id);

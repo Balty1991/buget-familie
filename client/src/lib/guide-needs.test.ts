@@ -68,3 +68,18 @@ describe("ghidul și „Ce plătim lunar”", () => {
     expect(context.expectedIncomes).toEqual([{ who: "Eu", label: "Salariul meu", amount: 4700, day: 10 }, { who: "Soția", label: "Salariul soției", amount: 2800, day: 12 }]);
   });
 });
+
+describe("salariul recunoscut din textul băncii", () => {
+  it("„Încasare 4.700,00 RON de la ACME SRL” e Salariul meu și vine cu repartizarea", () => {
+    const reading = top("Încasare 4.700,00 RON de la ACME SRL", family());
+    expect(reading.kind).toBe("intents");
+    if (reading.kind !== "intents") return;
+    const income = reading.intents[0].intent;
+    expect(income).toMatchObject({ kind: "income", amount: 4700, title: "Salariul meu", memberId: "eu" });
+    expect(reading.intents[1].intent.kind).toBe("income-split");
+  });
+  it("o încasare care nu seamănă cu niciun salariu nu e tratată ca salariu", () => {
+    const reading = top("Încasare 150 RON de la Ion", family());
+    expect(reading?.kind === "intents" && reading.intents.some((item) => item.intent.kind === "income-split")).toBe(false);
+  });
+});
