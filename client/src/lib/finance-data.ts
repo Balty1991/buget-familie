@@ -1291,8 +1291,17 @@ const envelopeFitsSourceAndMember = (data: AppData, allocation: BudgetAllocation
 
 const rankEnvelope = (data: AppData, item: BudgetAllocation) => (item.memberId ? 2 : 0) + (item.sourceId ? 2 : 0) + (allocationBudget(data, item) - allocationSpent(data, item) > 0 ? 1 : 0);
 
-const sourceCompatibleAllocations = (data: AppData, input: { sourceId?: string }) =>
-  data.settings.salaryPlan.allocations.filter((allocation) => !allocation.sourceId || !input.sourceId || allocationSourceIds(allocation).includes(input.sourceId));
+/**
+ * Tichetele de masă nu consumă plicurile din salariu: cumpărătura de 150 pe tichete scădea
+ * Mâncarea finanțată din salariu, deși pornirea spunea „tichetele nu intră”. Plată cu
+ * tichete merge doar într-un plic care are tichetele printre surse; altfel, în afara plicurilor.
+ */
+const sourceCompatibleAllocations = (data: AppData, input: { sourceId?: string }) => {
+  const meal = Boolean(input.sourceId && data.settings.paymentSources.find((item) => item.id === input.sourceId)?.kind === "meal");
+  return data.settings.salaryPlan.allocations.filter((allocation) => meal
+    ? allocationSourceIds(allocation).includes(input.sourceId!)
+    : !allocation.sourceId || !input.sourceId || allocationSourceIds(allocation).includes(input.sourceId));
+};
 
 export const matchingAllocationsForExpense = (data: AppData, input: { category: string; memberId?: string; sourceId?: string }) => {
   const pool = data.settings.salaryPlan.allocations;
@@ -1304,7 +1313,7 @@ export const matchingAllocationsForExpense = (data: AppData, input: { category: 
   const related = RELATED_ENVELOPE_CATEGORIES[input.category] || [];
   const kin = sort(sourceFit.filter((allocation) => related.includes(allocation.category || "") && fits(allocation)));
   if (kin.length) return kin;
-  if (pool.length === 1 && fits(pool[0])) return pool;
+  if (pool.length === 1 && sourceFit.includes(pool[0]) && fits(pool[0])) return pool;
   return [];
 };
 
@@ -1386,7 +1395,9 @@ export const adoptOutsideExpenses = (data: AppData): AppData => {
     if (item.outsideChosen) return item;
     if (!inPlanPeriod(item.date, data.settings.salaryPlan)) return item;
     const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
-    const target = matched || (allocations.length === 1 ? allocations[0] : undefined);
+    // Tichetele rămân în afara plicurilor din salariu, și când e un singur plic.
+    const paidWithMeal = data.settings.paymentSources.find((source) => source.id === item.sourceId)?.kind === "meal";
+    const target = matched || (allocations.length === 1 && !paidWithMeal ? allocations[0] : undefined);
     if (!target) return item;
     changed = true;
     return { ...item, allocationId: target.id, updatedAt: stamp };

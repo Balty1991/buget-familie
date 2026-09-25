@@ -489,3 +489,20 @@ describe("sursa spusă în frază", () => {
     expect(offer.choices.every((choice) => choice.update?.kind === "expense" && choice.update.sourceId === "tichete")).toBe(true);
   });
 });
+
+describe("reportul săptămânii (utilizator #19)", () => {
+  it("S2 arată 617,50 când S1 s-a încheiat cu 17,50 rămași", async () => {
+    const { vi } = await import("vitest");
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-17T10:00:00"));
+    try {
+      const data = createEmptyAppData();
+      data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-10-10", nextPayday: "2026-11-10", weekCarryOver: true, allocations: [{ id: "f", label: "Mâncare", amount: 2657, category: "Alimente", weeklyPace: true, weeklyAmount: 600 }] };
+      data.transactions = [{ id: "x", title: "Lidl", amount: 582.5, kind: "expense", category: "Alimente", sourceId: data.settings.paymentSources[0].id, source: "Card", person: "Eu", date: "2026-10-12", allocationId: "f" }];
+      const weeks = allocationWeeksStatus(data, data.settings.salaryPlan.allocations[0]);
+      expect(weeks[1]).toMatchObject({ index: 2, budget: 617.5, carry: 17.5 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

@@ -43,9 +43,12 @@ export function balanceCheckRows(data: AppData): BalanceCheckRow[] {
   return data.settings.paymentSources
     .filter((item) => folosite.has(item.id) || item.openingBalance > 0)
     // Bonurile de masă nu se verifică pe card: soldul lor se vede pe bon, nu în bancă.
-    .filter((item) => item.kind !== "meal")
-    .slice(0, 4)
-    .map((item) => ({ id: item.id, name: item.name, kind: item.kind, balance: Math.round(sourceBalance(data, item.id) * 100) / 100 }));
+    // Dar pe minus nu pot fi: atunci se întreabă cât e de fapt pe card.
+    .filter((item) => item.kind !== "meal" || sourceBalance(data, item.id) < -0.005)
+    .map((item) => ({ id: item.id, name: item.name, kind: item.kind, balance: Math.round(sourceBalance(data, item.id) * 100) / 100 }))
+    // Sursa pe minus se întreabă prima.
+    .sort((left, right) => Number(left.balance >= 0) - Number(right.balance >= 0))
+    .slice(0, 4);
 }
 
 /**
@@ -55,6 +58,9 @@ export function balanceCheckRows(data: AppData): BalanceCheckRow[] {
 export function balanceCheckDue(data: AppData, lastCheck: string | null, today = isoToday()): BalanceCheckPrompt {
   const rows = balanceCheckRows(data);
   const gol = { due: false, why: "", rows };
+  // O sursă pe minus (tichete sau cash de la 0) nu așteaptă verificarea săptămânală.
+  const minus = rows.find((row) => row.balance < -0.005);
+  if (minus && lastCheck !== today) return { due: true, why: t("„{name}” a ajuns pe minus. Spune cât ai de fapt și potrivesc soldul.", { name: minus.name }), rows };
   if (!rows.length || data.transactions.length < MISCARI_MINIME) return gol;
   const plan = data.settings.salaryPlan;
   if (!plan.periodStart || !planEndDate(plan)) return gol;

@@ -78,3 +78,21 @@ describe("verificarea soldului", () => {
     expect(applyDeclaredBalance(data, "inexistent", 100, "2026-09-21")).toBe(data);
   });
 });
+
+describe("tichete și cash pe minus (utilizator #10)", () => {
+  it("tichetele pe minus cer verificarea imediat, iar plata cu tichete nu consumă Mâncarea din salariu", async () => {
+    const { createEmptyAppData, matchingAllocationsForExpense } = await import("./finance-data");
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [
+      { id: "card", name: "Card", kind: "card", openingBalance: 3000 },
+      { id: "tichete", name: "Bonuri de masă", kind: "meal", openingBalance: 0 },
+    ];
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-10-01", allocations: [{ id: "food", label: "Mâncare", amount: 1200, category: "Alimente" }] };
+    data.transactions = [{ id: "t", title: "Lidl", amount: 150, kind: "expense", category: "Alimente", sourceId: "tichete", source: "Bonuri de masă", person: "Eu", date: "2026-09-05" }];
+    const prompt = balanceCheckDue(data, null, "2026-09-05");
+    expect(prompt.due).toBe(true);
+    expect(prompt.rows[0].id).toBe("tichete");
+    expect(matchingAllocationsForExpense(data, { category: "Alimente", sourceId: "tichete" })).toEqual([]);
+    expect(matchingAllocationsForExpense(data, { category: "Alimente", sourceId: "card" }).map((item) => item.id)).toEqual(["food"]);
+  });
+});
