@@ -178,8 +178,12 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const runOuts = useMemo(() => envelopeRunOut(data), [data]);
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
   // Același plic: „se termină pe …” spune mai mult decât „80% consumat”; și apare înainte de prag, dacă ritmul e prea repede.
-  const fastWeek = useMemo(() => weekTooFast(data), [data]).find((item) => !dismissedAlerts.includes(`week-${item.allocationId}-${item.weekIndex}`));
-  const runOutAlert = activeEnvelopeAlert?.state === "over" ? undefined : activeEnvelopeAlert ? runOuts.find((item) => item.allocationId === activeEnvelopeAlert.item.id) : runOuts.find((item) => !dismissedAlerts.includes(item.allocationId));
+  const fastWeeks = useMemo(() => weekTooFast(data), [data]).filter((item) => !dismissedAlerts.includes(`week-${item.allocationId}-${item.weekIndex}`));
+  const fastWeek = fastWeeks[0];
+  // „Se termină înainte de salariu” spune mai mult decât „aproape de limită”, oricare ar fi plicul
+  // (Taxi pe 3 oct. nu mai stă ascuns în spatele „Mâncare 83%”).
+  const liveRunOuts = runOuts.filter((item) => !dismissedAlerts.includes(item.allocationId) && !(activeEnvelopeAlert?.state === "over" && activeEnvelopeAlert.item.id === item.allocationId));
+  const runOutAlert = activeEnvelopeAlert?.state === "over" ? undefined : liveRunOuts[0];
   /**
    * O singură bandă despre plicuri, cea mai importantă: plic depășit, apoi săptămâna depășită
    * sau prea repede, apoi „se termină înainte de salariu”, apoi „aproape de limită”, apoi
@@ -192,7 +196,13 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     activeEnvelopeAlert && activeEnvelopeAlert.state !== "over" && !runOutAlert ? "envelope" : "",
   ].filter(Boolean);
   const topNotice = noticeOrder[0] || "";
-  const moreNotices = Math.max(0, noticeOrder.length - 1);
+  // Restul se numără pe plicuri, nu pe tipuri de bandă: trei plicuri depășite sunt „încă 2”.
+  const flaggedEnvelopes = new Set([
+    ...envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).map((item) => item.item.id),
+    ...fastWeeks.map((item) => item.allocationId),
+    ...liveRunOuts.map((item) => item.allocationId),
+  ]);
+  const moreNotices = Math.max(0, flaggedEnvelopes.size - (topNotice ? 1 : 0));
   const lastMoves = useMemo(() => {
     const today = isoToday();
     const cycleIds = data.settings.members.length < 2 ? [] : householdActivityInCycle(data, today).recent.map((item) => item.id);
