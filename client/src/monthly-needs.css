@@ -38,7 +38,7 @@
 .bf-income-split footer div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .bf-income-split footer button { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
 
-.bf-needs-item { border: 1px solid var(--cf-line); border-radius: 14px; background: var(--cf-surface-alt); }
+.bf-needs-item { position: relative; border: 1px solid var(--cf-line); border-radius: 14px; background: var(--cf-surface-alt); }
 .bf-needs-item > summary { display: grid; gap: 2px; min-height: 48px; padding: 10px 12px; cursor: pointer; list-style: none; }
 .bf-needs-item > summary::-webkit-details-marker { display: none; }
 .bf-needs-item > summary b { font-size: 15px; }
@@ -49,6 +49,8 @@
 .bf-needs-item > summary { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .bf-needs-summary-text { display: grid; gap: 2px; min-width: 0; }
 .bf-needs-summary-actions { display: flex; gap: 6px; }
+.bf-needs-item > .bf-needs-summary-actions { position: absolute; top: 6px; right: 8px; }
+.bf-needs-item > summary { padding-right: 112px; }
 .bf-needs-summary-actions button { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-ink); background: var(--cf-surface); }
 .bf-needs-summary-actions button.danger { color: var(--cf-danger); }
 .bf-needs-applied { display: grid; gap: 8px; }

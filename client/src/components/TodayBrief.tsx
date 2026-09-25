@@ -138,7 +138,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
       {cycleEndDone && !showCycleEnd && <aside className="bf-income-split-done" role="status"><span>{cycleEndDone}</span></aside>}
       {splitIncome && !splitDismissed && <IncomeSplitCard data={data} incomeId={splitIncome.id} onChange={(next) => { onChange(next); setJustSplit(next.settings.salaryPlan.salaryAllocationApplications?.[0]?.id || ""); }} onDismiss={() => setSplitDismissed(true)} />}
       {justApplied && (
-        <aside className="bf-income-split-done" role="status">
+        <aside className="bf-income-split-done" role="status" tabIndex={-1} ref={(node) => { if (node && justSplit && document.activeElement === document.body) node.focus(); }}>
           <span>{t("Am împărțit {title} în {count} plicuri.", { title: justApplied.incomeTitle, count: justApplied.allocations.length })}</span>
           <button type="button" className="bf-secondary" onClick={() => { onChange(revertSalaryAllocationApplication(data, justApplied.id)); closeSplitNote(justApplied.id); }}>{t("Anulează")}</button>
           <button type="button" className="bf-brief-check-later" onClick={() => closeSplitNote(justApplied.id)}>{t("E bine așa")}</button>

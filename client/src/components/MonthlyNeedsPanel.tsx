@@ -71,11 +71,13 @@ function NeedRow({ need, members, categories, startOpen, onSave, onDelete }: { n
           <b>{need.label}</b>
           <span>{needSummary(need, members)}</span>
         </span>
+      </summary>
+      {/* Butoanele stau lângă rând, nu în <summary>: un buton în buton era citit ca o singură comandă (BF-15). */}
         <span className="bf-needs-summary-actions">
           <button type="button" aria-label={t("Modifică {name}", { name: need.label })} onClick={(event) => { event.preventDefault(); setOpen(!open); }}><Pencil size={15} /></button>
           <button type="button" className="danger" aria-label={t("Șterge {name}", { name: need.label })} onClick={(event) => { event.preventDefault(); onDelete(); }}><Trash2 size={15} /></button>
         </span>
-      </summary>
+
       <div className="bf-needs-row">
         <input className="bf-needs-label" aria-label={t("Numele cheltuielii")} value={label} onChange={(event) => setLabel(event.target.value)} onBlur={() => { const next = label.trim(); if (next && next !== need.label) onSave({ label: next }); else setLabel(need.label); }} />
         <select aria-label={t("Cât de des")} value={need.cadence} onChange={(event) => onSave({ cadence: event.target.value === "weekly" ? "weekly" : "monthly" })}>
