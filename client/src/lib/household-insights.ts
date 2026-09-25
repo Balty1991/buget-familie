@@ -559,6 +559,51 @@ export const envelopeBurnPace = (data: AppData, asOf = isoToday()): EnvelopeBurn
 };
 
 
+export type EnvelopeRunOut = {
+  allocationId: string;
+  label: string;
+  remaining: number;
+  /** Media pe zi de la începutul ciclului. */
+  dailyRate: number;
+  /** Ziua în care, la ritmul ăsta, plicul ajunge la zero. */
+  runOutDate: string;
+  /** Câte zile rămân fără bani în plic până la salariu. */
+  daysShort: number;
+  /** Cât se poate cheltui pe zi, de azi până la salariu, ca plicul să ajungă. */
+  safeDaily: number;
+  payday: string;
+};
+
+/**
+ * Plicurile care, la ritmul de până acum, se golesc înainte de salariu. Alerta de prag spune
+ * „ai folosit 80%”; asta spune „pe 3 octombrie rămâi fără, cu 7 zile înainte de venit” — cu
+ * măcar 3 zile de ciclu scurse, ca un singur plin de cumpărături să nu sune alarma.
+ */
+export const envelopeRunOut = (data: AppData, asOf = isoToday()): EnvelopeRunOut[] => {
+  const track = paydayTrack(data, asOf);
+  if (!track || track.elapsed < 3 || track.remaining < 2) return [];
+  const out: EnvelopeRunOut[] = [];
+  for (const item of data.settings.salaryPlan.allocations) {
+    const status = allocationStatus(data, item);
+    if (status.spent <= 0 || status.remaining <= 0) continue;
+    const dailyRate = status.spent / track.elapsed;
+    const daysLeft = status.remaining / dailyRate;
+    const daysShort = Math.floor(track.remaining - daysLeft);
+    if (daysShort < 2) continue;
+    out.push({
+      allocationId: item.id,
+      label: item.label,
+      remaining: status.remaining,
+      dailyRate: Math.round(dailyRate * 100) / 100,
+      runOutDate: addIsoDays(asOf, Math.max(0, Math.floor(daysLeft))),
+      daysShort,
+      safeDaily: Math.floor((status.remaining / (track.remaining + 1)) * 100) / 100,
+      payday: track.end,
+    });
+  }
+  return out.sort((a, b) => b.daysShort - a.daysShort);
+};
+
 export type TodayDue = {
   id: string;
   kind: "recurring" | "debt";

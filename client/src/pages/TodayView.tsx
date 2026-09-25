@@ -12,7 +12,7 @@ import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
+import { envelopeRunOut, householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   dateText,
@@ -21,7 +21,7 @@ import {
   sourceKindName,
   type MainView,
 } from "@/pages/home-kit";
-import { getLocale, t } from "@/lib/i18n";
+import { daysLabel, getLocale, t } from "@/lib/i18n";
 import { weekdayShortLabels } from "@/lib/civil-weekday";
 import { useSimpleMode } from "@/hooks/useSimpleMode";
 import { usePlanCycle } from "@/hooks/usePlanCycle";
@@ -57,9 +57,15 @@ export function advisorSignals(data: AppData): AdvisorSignal[] {
     signals.push({ id: "next-recurring", tone: "watch", eyebrow: t("SCADENȚĂ REZERVATĂ"), title: t("{name} · {amount}", { name: pending[0].name, amount: money(pending[0].amount) }), detail: t("Este programată pentru {date} și este deja exclusă din suma disponibilă.", { date: dateText(pending[0].dueDate, true) }), action: "recurring", actionLabel: t("Deschide scadențele") });
   }
   const allocation = data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) })).sort((a, b) => b.usage - a.usage)[0];
-  if (allocation && allocation.state !== "healthy") {
+  const runOuts = envelopeRunOut(data);
+  // Pentru același plic, „se termină pe 3 octombrie” spune mai mult decât „aproape de limită”.
+  const runOut = runOuts.find((item) => item.allocationId === allocation?.item.id) || runOuts[0];
+  if (allocation && allocation.state !== "healthy" && !(allocation.state !== "over" && runOut?.allocationId === allocation.item.id)) {
     const over = allocation.state === "over";
     signals.push({ id: `allocation-${allocation.item.id}`, tone: over ? "risk" : "watch", eyebrow: over ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ"), title: t("{label}: {amount} rămași", { label: allocation.item.label, amount: money(Math.max(0, allocation.remaining)) }), detail: t("{spent} cheltuiți din limita ajustată de {budget} în perioada activă.", { spent: money(allocation.spent), budget: money(allocation.budget) }), action: "plan", actionLabel: t("Vezi plicul") });
+  }
+  if (runOut && !(allocation?.state === "over" && allocation.item.id === runOut.allocationId)) {
+    signals.push({ id: `runout-${runOut.allocationId}`, tone: "watch", eyebrow: t("SE TERMINĂ ÎNAINTE DE SALARIU"), title: t("{label} ajunge la zero pe {date}", { label: runOut.label, date: formatDate(runOut.runOutDate, { day: "numeric", month: "long" }) }), detail: t("La {rate} pe zi, rămâi {days} fără bani în plic până la venit. Ca să ajungă: cel mult {safe} pe zi.", { rate: money(runOut.dailyRate), days: daysLabel(runOut.daysShort), safe: money(runOut.safeDaily) }), action: "plan", actionLabel: t("Vezi plicul") });
   }
   const goal = data.savings.filter((item) => item.target > item.current).sort((a, b) => (b.target - b.current) - (a.target - a.current))[0];
   if (goal && signals.length < 3) signals.push({ id: `goal-${goal.id}`, tone: "good", eyebrow: t("OBIECTIV COMUN"), title: t("{amount} până la {name}", { amount: money(goal.target - goal.current), name: goal.name }), detail: t("Progres actual: {current} din {target}.", { current: money(goal.current), target: money(goal.target) }), action: "objectives", actionLabel: t("Vezi obiectivul") });
@@ -156,6 +162,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const summary = useTodaySummary(data);
   const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
   const signals = useMemo(() => advisorSignals(data), [data]);
+  // „Poți folosi azi” e deja cifra mare de sus; dacă un plic se golește înainte de salariu, aceea e recomandarea.
+  const nextStep = signals[0] && signals[0].id !== "daily-pace" ? signals[0] : signals.find((item) => item.id.startsWith("runout-"));
   const showHealthGauge = useMemo(() => calculateHealthScore(data).score !== null, [data]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [shownTrancheKey, setShownTrancheKey] = useState("");
@@ -165,7 +173,10 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [dayMore, setDayMore] = useState(false);
   const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) })), [data]);
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
+  const runOuts = useMemo(() => envelopeRunOut(data), [data]);
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
+  // Același plic: „se termină pe …” spune mai mult decât „80% consumat”; și apare înainte de prag, dacă ritmul e prea repede.
+  const runOutAlert = activeEnvelopeAlert?.state === "over" ? undefined : activeEnvelopeAlert ? runOuts.find((item) => item.allocationId === activeEnvelopeAlert.item.id) : runOuts.find((item) => !dismissedAlerts.includes(item.allocationId));
   const lastMoves = useMemo(() => {
     const today = isoToday();
     const cycleIds = data.settings.members.length < 2 ? [] : householdActivityInCycle(data, today).recent.map((item) => item.id);
@@ -221,7 +232,19 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button className="dismiss" aria-label={t("Ascunde alerta tranșei săptămânale")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
         </aside>
       )}
-      {activeEnvelopeAlert && (
+      {runOutAlert && (
+        <aside className="bf-envelope-live-notice watch" role="status" aria-live="polite">
+          <BellRing size={19} />
+          <div>
+            <p>{t("SE TERMINĂ ÎNAINTE DE SALARIU")}</p>
+            <strong>{runOutAlert.label}</strong>
+            <span>{t("Ajunge la zero pe {date}. Ca să țină până la salariu: cel mult {safe} pe zi (acum {rate}).", { date: formatDate(runOutAlert.runOutDate, { day: "numeric", month: "long" }), safe: money(runOutAlert.safeDaily), rate: money(runOutAlert.dailyRate) })}</span>
+          </div>
+          <button onClick={() => onGo("plan")}>{t("Vezi")}</button>
+          <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: runOutAlert.label })} onClick={() => setDismissedAlerts((current) => [...current, runOutAlert.allocationId])}><X size={16} /></button>
+        </aside>
+      )}
+      {activeEnvelopeAlert && !runOutAlert && (
         <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
@@ -425,7 +448,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           </button>
           {dayMore && (
             <>
-              {data.pendingReview.length === 0 && signals[0] && signals[0].id !== "daily-pace" && <NextStepCard signal={signals[0]} onOpen={() => signals[0] && openSignal(signals[0].action)} />}
+              {data.pendingReview.length === 0 && nextStep && <NextStepCard signal={nextStep} onOpen={() => openSignal(nextStep.action)} />}
               <div className="bf-today-explainers">
                 <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
                   <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}

@@ -92,3 +92,4 @@
 .bf-household-cats li em { color: var(--cf-muted); font-size: 12px; font-style: normal; font-variant-numeric: tabular-nums; text-align: right; }
 .bf-household-cats li em.up { color: var(--cf-danger); }
 .bf-household-cats li em.down { color: var(--cf-primary-strong); }
+.bf-envelope-runout { grid-column: 1 / -1; margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--cf-warning); border-radius: 8px; background: color-mix(in srgb, var(--cf-warning) 10%, transparent); color: var(--cf-ink); font-size: 13px; line-height: 1.45; }

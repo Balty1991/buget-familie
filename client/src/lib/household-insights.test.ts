@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
@@ -626,5 +626,28 @@ describe("vânătorul de abonamente nu ia orice repetiție drept abonament", () 
     const { data } = base();
     data.transactions = [tx("d1", "Digi", 60, "Casă & facturi", "2026-07-15"), tx("d2", "Digi", 62, "Casă & facturi", "2026-08-15")];
     expect(detectSubscriptions(data, "2026-08-20").map((item) => item.name)).toEqual(["Digi"]);
+  });
+});
+
+describe("plicul care se termină înainte de salariu", () => {
+  const setup = (spent: number) => {
+    const { data } = base();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-10", nextPayday: "2026-10-09", allocations: [{ id: "a1", label: "Alimente", amount: 1500, category: "Alimente" }] };
+    data.transactions = [{ id: "x", title: "Kaufland", amount: spent, kind: "expense", category: "Alimente", sourceId: "source-debit", source: "Card", memberId: "member-me", person: "Eu", date: "2026-09-15", allocationId: "a1" }];
+    return data;
+  };
+
+  it("spune ziua, câte zile lipsesc și cât se poate cheltui pe zi", () => {
+    // 10 zile scurse (10–19 sept.), 1.000 lei cheltuiți → 100 lei/zi; 500 rămași ajung 5 zile.
+    const [hit] = envelopeRunOut(setup(1000), "2026-09-19");
+    expect(hit).toMatchObject({ label: "Alimente", remaining: 500, dailyRate: 100, runOutDate: "2026-09-24", payday: "2026-10-09" });
+    expect(hit.daysShort).toBe(15);
+    expect(hit.safeDaily).toBe(23.8); // 500 / 21 zile, rotunjit în jos la bani
+  });
+
+  it("tace când plicul ajunge, la începutul ciclului și când e deja depășit", () => {
+    expect(envelopeRunOut(setup(300), "2026-09-19")).toEqual([]);
+    expect(envelopeRunOut(setup(1000), "2026-09-11")).toEqual([]);
+    expect(envelopeRunOut(setup(1600), "2026-09-19")).toEqual([]);
   });
 });
