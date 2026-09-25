@@ -1,0 +1,252 @@
+/**
+ * Cheltuielile lunare declarate și repartizarea lor la fiecare salariu.
+ *
+ * Familia știe dinainte ce plătește: „mâncare 600 pe săptămână”, „lumină 300–400”,
+ * „rate 1.300–1.400”. Când intră un salariu, aplicația propune cât merge în fiecare plic:
+ * întâi obligațiile (rate, facturi), apoi restul, până se termină banii. Ce nu încape
+ * rămâne pentru salariul următor, iar al doilea venit al ciclului completează doar ce lipsește.
+ *
+ * Plicurile sunt limite pe ciclu, nu solduri: repartizarea stabilește suma plicului pentru
+ * ciclul curent (nu o adună peste cea de luna trecută), iar anularea pune la loc suma veche.
+ */
+import {
+  addIsoDays,
+  appendAllocationHistory,
+  newId,
+  type AppData,
+  type BudgetAllocation,
+  type ExpectedIncome,
+  type MonthlyNeed,
+  type SalaryAllocationApplication,
+  type Transaction,
+} from "./finance-data";
+import { t } from "./i18n";
+
+/** Veniturile aceluiași ciclu vin la câteva zile unul de altul; o lună mai târziu e alt ciclu. */
+const CYCLE_WINDOW_DAYS = 20;
+
+const round2 = (value: number) => Math.round(value * 100) / 100;
+const atNoon = (iso: string) => new Date(`${iso}T12:00:00`);
+const toIso = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+export const activeNeeds = (data: AppData) => (data.settings.salaryPlan.needs || []).filter((item) => !item.archived);
+export const activeIncomes = (data: AppData) => (data.settings.salaryPlan.incomes || []).filter((item) => !item.archived);
+
+/** Suma aleasă din interval: maximul (prudent), media sau minimul. */
+export const reserveOf = (need: Pick<MonthlyNeed, "min" | "max" | "reserve">) =>
+  need.reserve === "min" ? need.min : need.reserve === "avg" ? round2((need.min + need.max) / 2) : need.max;
+
+/** Aceeași zi luna viitoare; 31 ianuarie → 28/29 februarie, nu 3 martie. */
+export const sameDayNextMonth = (iso: string, day = Number(iso.slice(8, 10))) => {
+  const date = atNoon(iso);
+  const target = new Date(date.getFullYear(), date.getMonth() + 1, 1, 12);
+  const last = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(day, last));
+  return toIso(target);
+};
+
+/** Câte săptămâni încep (lunea) în [start, end): 4 sau 5 într-o lună, fără fracții. */
+export const weeksInCycle = (start: string, endExclusive: string) => {
+  let count = 0;
+  for (let day = start; day < endExclusive; day = addIsoDays(day, 1)) if (atNoon(day).getDay() === 1) count += 1;
+  return Math.max(1, count);
+};
+
+const incomeOf = (data: AppData, id: string) => data.transactions.find((item) => item.id === id && item.kind === "income");
+
+/** Ce s-a repartizat deja pe fiecare cheltuială, în ciclul acestui venit, din alte venituri. */
+const fundedInCycle = (data: AppData, income: Transaction) => {
+  const since = addIsoDays(income.date, -CYCLE_WINDOW_DAYS);
+  const funded = new Map<string, number>();
+  let cycleStart = income.date;
+  for (const application of data.settings.salaryPlan.salaryAllocationApplications || []) {
+    if (application.origin !== "needs" || application.incomeId === income.id) continue;
+    const other = incomeOf(data, application.incomeId);
+    if (!other || other.date < since || other.date > income.date) continue;
+    if (other.date < cycleStart) cycleStart = other.date;
+    for (const line of application.allocations) {
+      const needId = line.ruleId.replace(/^need:/, "");
+      funded.set(needId, round2((funded.get(needId) || 0) + line.amount));
+    }
+  }
+  return { funded, cycleStart };
+};
+
+/** Următorul venit așteptat al altui membru, dacă vine în același ciclu. */
+const otherIncomeSoon = (data: AppData, income: Transaction): { label: string; amount: number; date: string } | undefined => {
+  const incomes = activeIncomes(data).filter((item) => item.memberId !== income.memberId);
+  const candidates = incomes.map((item) => {
+    let date = `${income.date.slice(0, 8)}${String(item.day).padStart(2, "0")}`;
+    if (date < income.date) date = sameDayNextMonth(date, item.day);
+    return { item, date };
+  }).filter(({ date }) => date <= addIsoDays(income.date, CYCLE_WINDOW_DAYS));
+  const already = new Set((data.settings.salaryPlan.salaryAllocationApplications || []).filter((item) => item.origin === "needs").map((item) => incomeOf(data, item.incomeId)).filter((item) => item && item.date >= addIsoDays(income.date, -CYCLE_WINDOW_DAYS)).map((item) => item!.memberId));
+  const next = candidates.filter(({ item }) => !already.has(item.memberId)).sort((a, b) => a.date.localeCompare(b.date))[0];
+  return next ? { label: next.item.label, amount: next.item.amount, date: next.date } : undefined;
+};
+
+export type SplitLine = {
+  need: MonthlyNeed;
+  /** Ținta pe ciclu: suma aleasă din interval, sau săptămânal × săptămânile ciclului. */
+  target: number;
+  weeks?: number;
+  fundedBefore: number;
+  amount: number;
+  /** Cât rămâne de acoperit după acest venit. */
+  remaining: number;
+  /** De ce nu primește nimic acum, dacă e cazul. */
+  skipped?: "other-payer";
+};
+
+export type IncomeSplit =
+  | { ok: false; reason: "not-income" | "meal" | "no-needs" | "applied"; message: string }
+  | {
+    ok: true;
+    income: Transaction;
+    cycleStart: string;
+    cycleEnd: string;
+    weeks: number;
+    lines: SplitLine[];
+    covered: number;
+    free: number;
+    uncovered: number;
+    nextIncome?: { label: string; amount: number; date: string };
+  };
+
+/**
+ * Propunerea pentru un venit: obligațiile întâi, apoi restul, cât ajung banii. Tichetele
+ * de masă nu intră — sunt pentru cheltuieli de moment, nu pentru plicurile lunii.
+ */
+export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit {
+  const income = incomeOf(data, incomeId);
+  if (!income) return { ok: false, reason: "not-income", message: t("Alege un venit înregistrat.") };
+  const source = data.settings.paymentSources.find((item) => item.id === income.sourceId);
+  if (source?.kind === "meal") return { ok: false, reason: "meal", message: t("Tichetele de masă nu intră în repartizare: rămân pentru cheltuieli de moment.") };
+  if ((data.settings.salaryPlan.salaryAllocationApplications || []).some((item) => item.incomeId === income.id)) return { ok: false, reason: "applied", message: t("Acest venit a fost deja repartizat.") };
+  const needs = activeNeeds(data);
+  if (!needs.length) return { ok: false, reason: "no-needs", message: t("Adaugă întâi cheltuielile lunare ale familiei.") };
+
+  const { funded, cycleStart } = fundedInCycle(data, income);
+  const cycleEnd = sameDayNextMonth(cycleStart);
+  const weeks = weeksInCycle(cycleStart, cycleEnd);
+  let money = round2(income.amount);
+  const ordered = [...needs].sort((a, b) => Number(a.priority === "flex") - Number(b.priority === "flex"));
+  const lines: SplitLine[] = ordered.map((need) => {
+    const target = need.cadence === "weekly" ? round2(reserveOf(need) * weeks) : reserveOf(need);
+    const fundedBefore = funded.get(need.id) || 0;
+    const open = Math.max(0, round2(target - fundedBefore));
+    if (need.payerId && need.payerId !== income.memberId) {
+      return { need, target, weeks: need.cadence === "weekly" ? weeks : undefined, fundedBefore, amount: 0, remaining: open, skipped: "other-payer" as const };
+    }
+    const amount = Math.min(open, money);
+    money = round2(money - amount);
+    return { need, target, weeks: need.cadence === "weekly" ? weeks : undefined, fundedBefore, amount: round2(amount), remaining: round2(open - amount) };
+  });
+  const covered = round2(lines.reduce((sum, item) => sum + item.amount, 0));
+  return {
+    ok: true,
+    income,
+    cycleStart,
+    cycleEnd,
+    weeks,
+    lines,
+    covered,
+    free: money,
+    uncovered: round2(lines.reduce((sum, item) => sum + item.remaining, 0)),
+    nextIncome: otherIncomeSoon(data, income),
+  };
+}
+
+/** Plicul unei cheltuieli: cel legat, altul cu același nume, sau unul nou. */
+const envelopeFor = (allocations: BudgetAllocation[], need: MonthlyNeed): BudgetAllocation | undefined =>
+  allocations.find((item) => item.id === need.allocationId)
+  || allocations.find((item) => item.label.trim().toLocaleLowerCase("ro-RO") === need.label.trim().toLocaleLowerCase("ro-RO"));
+
+/**
+ * Aplică propunerea: fiecare plic ajunge la ce s-a acoperit în ciclu (venitul de acum plus
+ * cele de dinainte), cu urmă în istoric și anulare care pune la loc suma veche. La primul
+ * venit al unui ciclu nou, dacă planul a expirat, ciclul pornește din ziua venitului.
+ */
+export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppData; error?: string } {
+  const split = proposeIncomeSplit(data, incomeId);
+  if (!split.ok) return { data, error: split.message };
+  const plan = data.settings.salaryPlan;
+  const now = new Date().toISOString();
+  let allocations = [...plan.allocations];
+  let needs = [...(plan.needs || [])];
+  const lines: SalaryAllocationApplication["allocations"] = [];
+  // Toate cheltuielile primesc plic de la primul venit, chiar cu 0 deocamdată: o cursă de
+  // taxi făcută înainte de al doilea salariu ajunge în plicul ei, nu în cel de mâncare.
+  for (const line of split.lines) {
+    if (line.target <= 0) continue;
+    let envelope = envelopeFor(allocations, line.need);
+    if (!envelope) {
+      envelope = { id: newId("allocation"), label: line.need.label, amount: 0, category: line.need.category, weeklyPace: line.need.cadence === "weekly", updatedAt: now };
+      allocations = [...allocations, envelope];
+    }
+    if (line.need.allocationId !== envelope.id) {
+      needs = needs.map((item) => item.id === line.need.id ? { ...item, allocationId: envelope!.id, updatedAt: now } : item);
+    }
+    const next = round2(line.fundedBefore + line.amount);
+    const previousAmount = envelope.amount;
+    const id = envelope.id;
+    if (previousAmount === next && line.amount <= 0) continue;
+    allocations = allocations.map((item) => item.id === id ? { ...item, amount: next, updatedAt: now } : item);
+    lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount });
+  }
+  if (!lines.some((item) => item.amount > 0)) return { data, error: t("Nu e nimic de repartizat din acest venit: cheltuielile ciclului sunt deja acoperite.") };
+  const application: SalaryAllocationApplication = {
+    id: newId("salary-application"),
+    incomeId: split.income.id,
+    incomeTitle: split.income.title,
+    incomeAmount: split.income.amount,
+    sourceId: split.income.sourceId,
+    memberId: split.income.memberId,
+    appliedAt: now,
+    allocations: lines,
+    origin: "needs",
+  };
+  // Primul venit al unui ciclu nou deschide ciclul, dacă planul vechi s-a încheiat.
+  const expired = !plan.nextPayday || plan.nextPayday <= split.income.date;
+  const firstOfCycle = split.cycleStart === split.income.date;
+  const cycle = expired && firstOfCycle ? { periodStart: split.income.date, nextPayday: split.cycleEnd, earliestPayday: undefined } : {};
+  const next: AppData = {
+    ...data,
+    settings: {
+      ...data.settings,
+      salaryPlan: {
+        ...plan,
+        ...cycle,
+        allocations,
+        needs,
+        salaryAllocationApplications: [application, ...(plan.salaryAllocationApplications || [])].slice(0, 80),
+        updatedAt: now,
+      },
+    },
+  };
+  return {
+    data: appendAllocationHistory(next, {
+      kind: "income-applied",
+      referenceId: application.id,
+      allocationLabel: lines.map((item) => allocations.find((entry) => entry.id === item.allocationId)?.label || "").filter(Boolean).join(", "),
+      amount: round2(lines.reduce((sum, item) => sum + item.amount, 0)),
+      note: t("Repartizare după cheltuielile lunare"),
+    }),
+  };
+}
+
+/** Venitul cel mai recent, nerepartizat, pe care merită propusă repartizarea (fără tichete). */
+export function pendingSplitIncome(data: AppData, asOf: string): Transaction | undefined {
+  if (!activeNeeds(data).length) return undefined;
+  const applied = new Set((data.settings.salaryPlan.salaryAllocationApplications || []).map((item) => item.incomeId));
+  const meal = new Set(data.settings.paymentSources.filter((item) => item.kind === "meal").map((item) => item.id));
+  return data.transactions
+    .filter((item) => item.kind === "income" && !applied.has(item.id) && !meal.has(item.sourceId || "") && item.date >= addIsoDays(asOf, -10) && item.date <= asOf && item.amount >= 200)
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+}
+
+/** Ce presupune familia că intră într-o lună, din veniturile așteptate. */
+export const expectedMonthlyIncome = (incomes: ExpectedIncome[]) => round2(incomes.reduce((sum, item) => sum + item.amount, 0));
+
+/** Ce presupun cheltuielile declarate într-o lună obișnuită (săptămânalele × 4,33). */
+export const expectedMonthlyNeeds = (needs: MonthlyNeed[]) => round2(needs.reduce((sum, item) => sum + (item.cadence === "weekly" ? reserveOf(item) * 52 / 12 : reserveOf(item)), 0));

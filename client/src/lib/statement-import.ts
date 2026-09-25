@@ -8,6 +8,7 @@
  * Detectăm formatul din conținut, nu îl cerem utilizatorului.
  */
 import {
+  allocationFromText,
   BASE_CURRENCY,
   exchangeRateFor,
   expenseCategories,
@@ -458,10 +459,13 @@ export function statementDrafts(
     const category = row.kind === "income"
       ? "Venit"
       : habitCategory || guessCategoryFromText(`${merchant} ${row.description}`, categories, rules) || "Altele";
+    // Plicul spus de text („Enel” → Lumină) aduce și categoria lui, dacă regula n-a spus alta.
+    const textEnvelope = row.kind === "expense" && !rule?.category ? allocationFromText(data, `${merchant} ${row.description}`, { memberId: member.id, sourceId: source.id }) : undefined;
+    const finalCategory = textEnvelope?.category && categories.includes(textEnvelope.category) ? textEnvelope.category : category;
     const allocationId = row.kind === "expense"
-      ? (guessAllocationFromText(data, `${merchant} ${row.description}`)
+      ? (textEnvelope?.id || guessAllocationFromText(data, `${merchant} ${row.description}`)
         || (habitCategory ? habit?.allocationId : undefined)
-        || matchingAllocationsForExpense(data, { category, memberId: member.id, sourceId: source.id })[0]?.id
+        || matchingAllocationsForExpense(data, { category: finalCategory, memberId: member.id, sourceId: source.id })[0]?.id
         || "outside")
       : undefined;
     const transaction: Transaction = {
@@ -472,7 +476,7 @@ export function statementDrafts(
       originalCurrency: foreign,
       exchangeRate: foreign ? rate : undefined,
       kind: row.kind,
-      category,
+      category: finalCategory,
       sourceId: source.id,
       source: source.name,
       memberId: member.id,
@@ -488,8 +492,8 @@ export function statementDrafts(
       id: newId("review"),
       origin: "import",
       reason: habitCategory
-        ? t("Rândul {line} din extras · {category}, ca data trecută la {merchant}", { line: row.line, category: t(category), merchant })
-        : t("Rândul {line} din extras · categorie propusă {category}", { line: row.line, category: t(category) }),
+        ? t("Rândul {line} din extras · {category}, ca data trecută la {merchant}", { line: row.line, category: t(finalCategory), merchant })
+        : t("Rândul {line} din extras · categorie propusă {category}", { line: row.line, category: t(finalCategory) }),
       createdAt: now,
       transaction,
     });

@@ -1,0 +1,47 @@
+/* „Ce plătim lunar” și propunerea de repartizare la salariu. */
+.bf-needs { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--cf-line); border-radius: 20px; background: var(--cf-surface); color: var(--cf-ink); }
+.bf-needs h2 { margin: 4px 0 0; font-size: 20px; line-height: 1.2; }
+.bf-needs h3 { margin: 8px 0 0; font-size: 15px; }
+.bf-needs-intro, .bf-needs-note { margin: 6px 0 0; color: var(--cf-ink); font-size: 13px; line-height: 1.5; }
+.bf-needs-note { padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--cf-warning) 12%, transparent); }
+.bf-needs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; border: 1px solid var(--cf-line); border-radius: 14px; background: var(--cf-surface-alt); }
+.bf-needs-row > input, .bf-needs-row > select { grid-column: span 2; }
+.bf-needs-row input, .bf-needs-row select { width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-ink); background: var(--cf-surface); font-size: 14px; }
+.bf-needs-row label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--cf-ink); }
+.bf-needs-label { font-weight: 700; }
+.bf-needs-remove { grid-column: span 2; justify-self: end; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-danger); background: var(--cf-surface); }
+.bf-needs-income > select, .bf-needs-income > input { grid-column: span 1; }
+.bf-needs-add { justify-self: start; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+.bf-needs-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.bf-needs-presets button { min-height: 40px; display: inline-flex; align-items: center; gap: 4px; padding: 0 12px; border: 1px dashed var(--cf-line); border-radius: 999px; color: var(--cf-ink); background: transparent; font-size: 13px; font-weight: 600; }
+.bf-needs-total { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--cf-primary) 10%, transparent); font-size: 13px; line-height: 1.5; }
+.bf-needs-total.is-over { background: color-mix(in srgb, var(--cf-danger) 12%, transparent); }
+@media (min-width: 760px) {
+  .bf-needs-row { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; }
+  .bf-needs-row > input, .bf-needs-row > select, .bf-needs-remove { grid-column: auto; }
+}
+
+.bf-income-split { display: grid; gap: 10px; padding: 16px; border: 1px solid color-mix(in srgb, var(--cf-primary) 45%, var(--cf-line)); border-radius: 18px; background: var(--cf-surface); color: var(--cf-ink); }
+.bf-income-split header { display: flex; gap: 10px; align-items: flex-start; }
+.bf-income-split header svg { flex: 0 0 auto; margin-top: 2px; color: var(--cf-primary); }
+.bf-income-split h3 { margin: 2px 0 0; font-size: 17px; line-height: 1.25; }
+.bf-income-split header p:not(.bf-kicker) { margin: 4px 0 0; font-size: 13px; line-height: 1.45; }
+.bf-income-split ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.bf-income-split li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--cf-line); }
+.bf-income-split li span { display: grid; gap: 2px; min-width: 0; }
+.bf-income-split li small { color: var(--cf-ink); font-size: 12px; line-height: 1.4; }
+.bf-income-split li strong { font-variant-numeric: tabular-nums; }
+.bf-income-split li.is-later strong { opacity: .75; }
+.bf-income-split li.is-partial small { color: var(--cf-ink); }
+.bf-income-split footer { display: grid; gap: 10px; }
+.bf-income-split footer p { margin: 0; font-size: 13px; line-height: 1.5; }
+.bf-income-split footer div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.bf-income-split footer button { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+
+.bf-needs-item { border: 1px solid var(--cf-line); border-radius: 14px; background: var(--cf-surface-alt); }
+.bf-needs-item > summary { display: grid; gap: 2px; min-height: 48px; padding: 10px 12px; cursor: pointer; list-style: none; }
+.bf-needs-item > summary::-webkit-details-marker { display: none; }
+.bf-needs-item > summary b { font-size: 15px; }
+.bf-needs-item > summary span { font-size: 13px; line-height: 1.4; color: var(--cf-ink); }
+.bf-needs-item[open] > summary { border-bottom: 1px solid var(--cf-line); }
+.bf-needs-item > .bf-needs-row { border: 0; border-radius: 0 0 14px 14px; }

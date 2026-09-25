@@ -381,6 +381,8 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData): AppData 
     weekTransfers: mergeById(localPlan.weekTransfers || [], remotePlan.weekTransfers || []),
     salaryAllocationRules: mergeById(localPlan.salaryAllocationRules || [], remotePlan.salaryAllocationRules || []),
     salaryAllocationApplications: mergeById(localPlan.salaryAllocationApplications || [], remotePlan.salaryAllocationApplications || []),
+    needs: mergeById(localPlan.needs || [], remotePlan.needs || []),
+    incomes: mergeById(localPlan.incomes || [], remotePlan.incomes || []),
     allocationHistory,
   };
   /**

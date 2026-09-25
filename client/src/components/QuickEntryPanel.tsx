@@ -8,7 +8,7 @@ import "../mobile-capture-pass.css";
 import "../receipt-form-fix.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, Ellipsis, HeartPulse, House, Plus, ShoppingCart, Ticket, Trash2, X } from "lucide-react";
-import { amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { allocationFromText, amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
@@ -190,6 +190,13 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
         const next = event.target.value;
         setMerchant(next);
         if (categoryTouched) return;
+        // Plicul spus de text („taxi”, „Enel”) bate categoria: Lumină și Apă au aceeași categorie.
+        const envelope = allocationFromText(data, next, { memberId, sourceId });
+        if (envelope) {
+          if (envelope.category && envelope.category !== category) setCategory(envelope.category);
+          setAllocationId(envelope.id);
+          return;
+        }
         const guessed = guessCategoryFromText(next, [...expenseCategories, ...data.settings.customCategories], data.settings.merchantRules || []);
         if (guessed && guessed !== category) { setCategory(guessed); setAllocationChoiceTouched(false); }
       }} placeholder={t("ex. Lidl")} /></label> : null}{kind === "expense" ? <label className="bf-field"><span>{t("Sau altă categorie")}</span><select value={category} onChange={(event) => { setCategory(event.target.value); setCategoryTouched(true); setAllocationChoiceTouched(false); }}>{[...expenseCategories, ...data.settings.customCategories].map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label> : <label className="bf-field"><span>{t("Ce venit?")}</span><input value={incomeLabel} onChange={(event) => setIncomeLabel(event.target.value)} placeholder={t("ex. Salariu, Bonus")} /></label>}{data.settings.members.length > 1 && <label className="bf-field"><span>{t("Cine a înregistrat")}</span><select value={memberId} onChange={(event) => { setMemberId(event.target.value); setAllocationChoiceTouched(false); }}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>}<label className="bf-field"><span>{kind === "expense" ? t("Plătit din") : t("Încasat în")}</span><select value={sourceId} onChange={(event) => { setSourceId(event.target.value); setAllocationChoiceTouched(false); }}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}{data.settings.members.length > 1 && source.memberId ? ` · ${sourceOwner(source.id)}` : ""} · {money.format(sourceBalance(data, source.id))}{source.currency ? ` (${source.currency})` : ""}</option>)}</select></label></div>{isForeign && <section className={`bf-currency-preview ${convertedPreview ? "" : "pending"}`}><p className="bf-kicker">{t("SE ÎNREGISTREAZĂ ÎN LEI")}</p>{convertedPreview ? <><b>{money.format(convertedPreview)}</b><span>{t("La cursul de {rate} lei pentru 1 {currency}, salvat în Setări.", { rate: entryRate?.toLocaleString(getLocale(), { maximumFractionDigits: 4 }) || "", currency: entryCurrency })}</span></> : <span>{entryRate ? t("Completează suma în {currency}.", { currency: entryCurrency }) : t("Adaugă în Setări cursul pentru {currency} înainte de a folosi această sursă.", { currency: entryCurrency })}</span>}</section>}

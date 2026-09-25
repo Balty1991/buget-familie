@@ -2,6 +2,8 @@ import { useState } from "react";
 import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
 import { cycleClose } from "@/lib/cycle-close";
+import { pendingSplitIncome } from "@/lib/monthly-needs";
+import { IncomeSplitCard } from "@/components/IncomeSplitCard";
 import { recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
@@ -28,6 +30,9 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const pendingIncome = unappliedSalaryIncomes(data).find((item) => eligibleSalaryAllocationRules(data, item).length > 0);
   const needsRitual = !rules.length && unappliedSalaryIncomes(data).length > 0 && data.settings.salaryPlan.allocations.length > 0;
   const [pendingHunt, setPendingHunt] = useState<SubscriptionDetection | null>(null);
+  // Cu cheltuielile lunare declarate, salariul primește propunerea completă, nu doar regulile.
+  const splitIncome = pendingSplitIncome(data, isoToday());
+  const [splitDismissed, setSplitDismissed] = useState(false);
   const pay = (id: string) => {
     // Suma variabilă (curent, gaz) se confirmă cu valoarea de pe factură, în Scadențe.
     if (data.recurring.find((item) => item.id === id)?.variable && onOpenRecurring) return onOpenRecurring();
@@ -84,7 +89,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const showHunts = brief.hunts.length > 0 || Boolean(pendingHunt);
   const showWeek = Boolean(week.shouldPrompt && !simpleMode && onOpenWeek);
   const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed));
-  if (!showStamp && !showIncome && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
+  if (!showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
 
   return (
     <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
@@ -98,7 +103,8 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
         </button>
       )}
 
-      {pendingIncome && (
+      {splitIncome && !splitDismissed && <IncomeSplitCard data={data} incomeId={splitIncome.id} onChange={onChange} onDismiss={() => setSplitDismissed(true)} />}
+      {pendingIncome && !splitIncome && (
         <button type="button" className="bf-brief-salary" onClick={fillEnvelopes}>
           <b>{t("A venit {title}", { title: pendingIncome.title })}</b>
           <small>{money(pendingIncome.amount)} — umple plicurile după regulile tale.</small>

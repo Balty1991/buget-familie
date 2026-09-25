@@ -13,6 +13,8 @@
 - Accesibilitate: zero probleme axe (WCAG 2.2 AA) pe 16 ecrane × 3 teme — etichete și „RON” mai lizibile, nume pentru câmpuri și butoane.
 - Performanță (Lighthouse mobil): 87 → 93; sigla ca WebP de 2,4 KB, încărcată o singură dată.
 - Versiunea în engleză nu mai are texte rămase în română; ecranul de eroare e mai liniștitor și ascunde detaliile tehnice.
+- „Ce plătim lunar” (Plan): veniturile familiei cu ziua lor și cheltuielile știute, cu interval (300–400) și alegerea cât se rezervă (maximul, media sau minimul), lunar sau pe săptămână, din orice venit sau doar din al unuia. Când intră un salariu, Astăzi propune repartizarea: obligațiile întâi, apoi restul; mâncarea = suma pe săptămână × săptămânile reale ale ciclului (4 sau 5, fără virgule); ce nu încape așteaptă al doilea salariu, care completează doar ce lipsește. Tichetele de masă nu intră. „Aplică repartizarea” creează plicurile și se poate anula.
+- Cheltuiala ajunge în plicul ei după ce scrii: „taxi”, „grădiniță”, „Enel” → Lumină, „Apa Nova” → Apă, „Bolt” → Taxi, „TBI” → Rate fără dobândă — și când plicurile au aceeași categorie. Merge la notare și la importul de extras.
 - Plicul care se termină înainte de salariu: Astăzi și Plan spun ziua în care ajunge la zero și cât poți cheltui pe zi ca să țină.
 - Obiectivele de economisire spun cât să pui deoparte pe lună (la timp pentru termen sau, fără termen, când ajungi), cu „Pune deoparte”.
 - Widget nou pe Android, „Poți cheltui azi”: cifra zilei și zilele până la salariu, cu „+ Notează”. E separat de widgetul rapid (care rămâne fără sume) și spune când cifra nu mai e de azi.
