@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BookOpen, BellRing, CalendarClock, CreditCard, Inbox, Info, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { calculateHealthScore, envelopeDecisionStatus, formatDate, inPlanPeriod, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
@@ -178,6 +179,19 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   // Același plic: „se termină pe …” spune mai mult decât „80% consumat”; și apare înainte de prag, dacă ritmul e prea repede.
   const fastWeek = useMemo(() => weekTooFast(data), [data]).find((item) => !dismissedAlerts.includes(`week-${item.allocationId}-${item.weekIndex}`));
   const runOutAlert = activeEnvelopeAlert?.state === "over" ? undefined : activeEnvelopeAlert ? runOuts.find((item) => item.allocationId === activeEnvelopeAlert.item.id) : runOuts.find((item) => !dismissedAlerts.includes(item.allocationId));
+  /**
+   * O singură bandă despre plicuri, cea mai importantă: plic depășit, apoi săptămâna depășită
+   * sau prea repede, apoi „se termină înainte de salariu”, apoi „aproape de limită”, apoi
+   * începutul tranșei. Celelalte se numără, ca să nu umple ecranul patru benzi deodată.
+   */
+  const noticeOrder = [
+    activeEnvelopeAlert?.state === "over" ? "envelope" : "",
+    fastWeek && !(activeEnvelopeAlert?.state === "over" && activeEnvelopeAlert.item.id === fastWeek.allocationId) ? "fast" : "",
+    runOutAlert ? "runout" : "",
+    activeEnvelopeAlert && activeEnvelopeAlert.state !== "over" && !runOutAlert ? "envelope" : "",
+  ].filter(Boolean);
+  const topNotice = noticeOrder[0] || "";
+  const moreNotices = Math.max(0, noticeOrder.length - 1);
   const lastMoves = useMemo(() => {
     const today = isoToday();
     const cycleIds = data.settings.members.length < 2 ? [] : householdActivityInCycle(data, today).recent.map((item) => item.id);
@@ -222,7 +236,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       )}
       <EnvelopeConflictBanner data={data} onChange={onChange} />
       <MovementConflictBanner data={data} onChange={onChange} />
-      {!simpleMode && showTrancheNotice && activeTranche && (
+      {!simpleMode && showTrancheNotice && activeTranche && !topNotice && (
         <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
           <CalendarClock size={19} />
           <div>
@@ -234,7 +248,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button className="dismiss" aria-label={t("Ascunde alerta tranșei săptămânale")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
         </aside>
       )}
-      {fastWeek && (
+      {fastWeek && topNotice === "fast" && (
         <aside className={`bf-envelope-live-notice ${fastWeek.over ? "over" : "watch"}`} role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
@@ -248,7 +262,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: fastWeek.label })} onClick={() => setDismissedAlerts((current) => [...current, `week-${fastWeek.allocationId}-${fastWeek.weekIndex}`])}><X size={16} /></button>
         </aside>
       )}
-      {runOutAlert && (
+      {runOutAlert && topNotice === "runout" && (
         <aside className="bf-envelope-live-notice watch" role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
@@ -260,7 +274,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: runOutAlert.label })} onClick={() => setDismissedAlerts((current) => [...current, runOutAlert.allocationId])}><X size={16} /></button>
         </aside>
       )}
-      {activeEnvelopeAlert && !runOutAlert && (
+      {activeEnvelopeAlert && topNotice === "envelope" && (
         <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
@@ -271,6 +285,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button onClick={() => onGo("plan")}>{t("Vezi")}</button>
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: activeEnvelopeAlert.item.label })} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
         </aside>
+      )}
+      {topNotice && moreNotices > 0 && (
+        <button type="button" className="bf-notice-more" onClick={() => onGo("plan")}>{moreNotices === 1 ? t("Încă o alertă la plicuri — vezi în Plan") : t("Încă {count} alerte la plicuri — vezi în Plan", { count: moreNotices })}</button>
       )}
       {data.pendingReview.length > 0 && (
         <aside className="bf-review-today-banner" role="status" aria-live="polite">

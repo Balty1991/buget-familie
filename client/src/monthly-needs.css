@@ -113,3 +113,4 @@
 .bf-needs-start-need.is-on { border-color: color-mix(in srgb, var(--cf-primary) 45%, var(--cf-line)); }
 .bf-envelope-weeks > .bf-week-transfer, .bf-envelope-weeks > .bf-week-started { margin: 0 12px 12px; }
 .bf-envelope-carry { font-size: 13px; }
+.bf-notice-more { justify-self: start; min-height: 40px; margin: -4px 0 4px; padding: 0 4px; border: 0; background: none; color: var(--cf-link); font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; }

@@ -2324,6 +2324,8 @@ export const en: Record<string, string> = {
   "Vine fix în ziua asta.": "It arrives exactly on this day.",
   "Se stabilește singur din ziua declarată când notezi salariul. Îl poți alege și acum.": "It is set from the declared day when you record the salary. You can also choose it now.",
   "Data aproximativă": "Approximate date",
+  "Încă o alertă la plicuri — vezi în Plan": "One more envelope alert — see Plan",
+  "Încă {count} alerte la plicuri — vezi în Plan": "{count} more envelope alerts — see Plan",
   "Vreau ca aplicația să-mi împartă salariul.": "I want the app to split my salary.",
   "Scrii o dată veniturile și ce plătiți; la fiecare salariu primești împărțirea pe plicuri.": "Write your incomes and bills once; with every salary you get the split into envelopes.",
   "PASUL {step} DIN 3": "STEP {step} OF 3",
