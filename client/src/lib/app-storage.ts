@@ -374,6 +374,15 @@ async function saveNatively(text: string, name: string, intent: BackupIntent): P
   }
 }
 
+/**
+ * Copia automată, pe Android: scrie direct în Descărcări, fără nicio fereastră. Dacă nu se
+ * poate, aruncă — nu deschide foaia de partajare peste ce face omul în aplicație.
+ */
+export async function saveBackupSilently(data: AppData, name = backupFileName()): Promise<string> {
+  if (!isNativeApp()) throw new Error("Doar pe telefon, în aplicație.");
+  return saveToPublicDownloads(JSON.stringify(makeBackup(data), null, 2), name);
+}
+
 export async function downloadBackup(data: AppData, intent: BackupIntent = "save"): Promise<BackupOutcome> {
   const name = backupFileName();
   const text = JSON.stringify(makeBackup(data), null, 2);

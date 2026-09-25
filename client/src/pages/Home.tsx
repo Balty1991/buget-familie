@@ -555,6 +555,8 @@ export default function Home() {
       stale: t("Cifra e de pe {date} — deschide aplicația pentru azi", { date: formatDate(today, { day: "numeric", month: "long" }) }),
     });
   }, [data]);
+  // Copia săptămânală, pe telefon: o dată la 7 zile, după ce omul a spus „da”.
+  useEffect(() => { void import("@/components/AutoBackupCard").then(({ runAutoBackupIfDue }) => runAutoBackupIfDue(data)).catch(() => undefined); }, [data]);
   useEffect(() => {
     const expense = data.settings.quickTemplates.filter((item) => item.kind !== "income").slice(0, 3);
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));

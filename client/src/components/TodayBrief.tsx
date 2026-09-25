@@ -6,6 +6,7 @@ import { pendingSplitIncome } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
 import { activeNeeds, markTransferDone, pendingTransfers } from "@/lib/monthly-needs";
 import { CycleEndCard } from "@/components/CycleEndCard";
+import { AutoBackupCard, autoBackupCardVisible, useAutoBackupPrefs } from "@/components/AutoBackupCard";
 import { cycleEndReport, recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
@@ -101,7 +102,9 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed && !cycleEndHandled));
   const showCycleEnd = !splitIncome && Boolean(cycleEndReport(data));
   const transfers = data.settings.members.length > 1 ? pendingTransfers(data, isoToday()) : [];
-  if (!transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
+  const backupPrefs = useAutoBackupPrefs();
+  const showBackup = autoBackupCardVisible(backupPrefs, data);
+  if (!showBackup && !transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
 
   return (
     <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
@@ -124,6 +127,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
           <button type="button" className="bf-secondary" onClick={() => { onChange(revertSalaryAllocationApplication(data, justApplied.id)); setJustSplit(""); }}>{t("Anulează")}</button>
         </aside>
       )}
+      {showBackup && <AutoBackupCard data={data} />}
       {transfers.map((entry) => (
         <aside key={`${entry.applicationId}-${entry.toMemberId}`} className="bf-income-split-done" role="status">
           <span>{t("De trimis: {amount} către {name}, pentru {labels} (din {title}).", { amount: money(entry.amount), name: data.settings.members.find((item) => item.id === entry.toMemberId)?.name || t("celălalt"), labels: entry.labels.join(", "), title: entry.incomeTitle })}</span>
