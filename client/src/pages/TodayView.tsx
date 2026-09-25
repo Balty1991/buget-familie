@@ -233,6 +233,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     [data],
   );
 
+  /** Pornirea în 3 pași e făcută: cheltuielile lunare sunt declarate, doar plicurile vin la primul salariu. */
+  const declaredNeeds = (data.settings.salaryPlan.needs || []).filter((item) => !item.archived).length;
+  const planDeclared = declaredNeeds > 0;
   const fresh = !data.transactions.length
     && !data.settings.salaryPlan.allocations.length
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
@@ -329,7 +332,19 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             <span>{new Date(`${todayIso}T12:00:00`).getFullYear()}</span>
           </div>
         </div>
-        {fresh ? (
+        {fresh && planDeclared ? (
+          <div className="os-start os-start-ready">
+            <p className="os-kicker-lg">{t("Gata")}</p>
+            <h1 className="os-start-title">{t("Planul e pregătit.")}</h1>
+            <p className="os-start-note">
+              {data.settings.salaryPlan.nextPayday
+                ? t("Când îți vine salariul (în jur de {date}), notează-l și îți propun împărțirea pe plicuri, după cele {count} cheltuieli declarate.", { date: formatDate(data.settings.salaryPlan.nextPayday, { day: "numeric", month: "long" }), count: declaredNeeds })
+                : t("Când îți vine salariul, notează-l și îți propun împărțirea pe plicuri, după cele {count} cheltuieli declarate.", { count: declaredNeeds })}
+            </p>
+            <button type="button" className="bf-primary os-start-cta" onClick={() => window.dispatchEvent(new Event("buget-familie:open-income"))}>{t("Notează salariul")}</button>
+            <button type="button" className="bf-secondary" onClick={onAdd}>{t("Notează o cheltuială")}</button>
+          </div>
+        ) : fresh ? (
           <div className="os-start">
             <p className="os-kicker-lg">{t("De unde începi")}</p>
             <h1 className="os-start-title">{t("Trei pași și cifrele devin ale tale.")}</h1>

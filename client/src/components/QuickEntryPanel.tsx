@@ -38,10 +38,10 @@ const CAPTURE_CATEGORIES: Array<[string, typeof ShoppingCart]> = [
   ["Altele", Ellipsis],
 ];
 
-type Props = { data: AppData; onSave: (item: Transaction, meta?: { fromWeekIndex?: number }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; };
+type Props = { data: AppData; onSave: (item: Transaction, meta?: { fromWeekIndex?: number }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; };
 
-export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId }: Props) {
-  const [kind, setKind] = useState<TransactionKind>("expense");
+export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind }: Props) {
+  const [kind, setKind] = useState<TransactionKind>(initialKind || "expense");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Alimente");
   const [incomeLabel, setIncomeLabel] = useState("");

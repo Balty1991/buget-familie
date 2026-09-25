@@ -99,7 +99,9 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const showWeek = Boolean(week.shouldPrompt && !simpleMode && onOpenWeek);
   // Raportul de final de lună spune deja „ce a rămas”; butonul vechi ar fi al doilea.
   const cycleEndHandled = data.settings.salaryPlan.cycleReportDone === data.settings.salaryPlan.nextPayday || Boolean(cycleEndReport(data));
-  const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed && !cycleEndHandled));
+  // Fără niciun plic nu există încă un ciclu de închis (imediat după pornire).
+  const hasEnvelopes = data.settings.salaryPlan.allocations.length > 0;
+  const showClose = Boolean(closed || (brief.closeSoon && hasEnvelopes && !simpleMode && !closed && !cycleEndHandled));
   const showCycleEnd = !splitIncome && Boolean(cycleEndReport(data));
   const transfers = data.settings.members.length > 1 ? pendingTransfers(data, isoToday()) : [];
   const backupPrefs = useAutoBackupPrefs();
@@ -227,7 +229,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
         </button>
       )}
 
-      {brief.closeSoon && !simpleMode && !closed && !cycleEndHandled && (
+      {brief.closeSoon && hasEnvelopes && !simpleMode && !closed && !cycleEndHandled && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("plan")}>
           {t("Ciclul se închide. Uită-te ce a rămas.")}
         </button>
