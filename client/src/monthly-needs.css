@@ -193,3 +193,6 @@
 .bf-envelope-more > *:not(summary) { margin-top: 8px; }
 html body .bf-envelope-list-first > .bf-plan-sheet-heading { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; }
 html body .bf-envelope-list-first .bf-allocation-list > article > .bf-allocation-list-total { align-self: start; }
+
+/* Astăzi: blocul de pași are un titlu, ca să se citească drept listă, nu carduri răzlețe. */
+.bf-today-brief .bf-today-brief-title { margin: 0 0 6px; }

@@ -1192,9 +1192,10 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
     const remaining = roundMoney(weekStatus ? weekStatus.remaining : planned - spent);
     const usage = planned > 0 ? spent / planned : spent > 0 ? 1 : 0;
     const alertThreshold = Math.min(95, Math.max(50, allocation.alertThreshold ?? 80));
-    if (isFixedEnvelope(plan, allocation)) {
-      // Factura sau rata: o singură plată pe ciclu. Se compară cu toată suma, nu cu o „săptămână”
-      // din ea — altfel rata plătită luni apare „1.094 lei peste plan”.
+    if (!weekStatus) {
+      // Plicul lunar (factură, rată sau „Distracție” fără ritm): se compară cu toată suma pe ciclu,
+      // nu cu o „săptămână” din ea. Cinema de 90 dintr-un plic lunar de 300 nu e „peste plan”,
+      // iar rata plătită luni nu e „1.094 lei peste plan”.
       const cycle = allocationStatus(data, allocation);
       return { id: allocation.id, label: allocation.label, planned: cycle.budget, spent: calendarSpent, remaining: cycle.remaining, usage: cycle.usage, state: cycle.remaining < 0 ? "over" as const : "healthy" as const };
     }

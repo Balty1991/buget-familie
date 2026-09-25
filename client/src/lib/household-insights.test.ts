@@ -150,8 +150,9 @@ describe("analize de gospodărie", () => {
     expect(check.shouldPrompt).toBe(true);
     const food = check.envelopes.find((item) => item.id === "al-food");
     const taxi = check.envelopes.find((item) => item.id === "al-taxi");
-    expect(food).toMatchObject({ spent: 180, planned: 100, state: "over" });
-    expect(taxi).toMatchObject({ spent: 30, planned: 50, state: "healthy" });
+    // Plicurile lunare se judecă pe tot ciclul: Alimente e depășit (1.080 din 400), taxiul nu.
+    expect(food).toMatchObject({ spent: 180, planned: 400, state: "over" });
+    expect(taxi).toMatchObject({ spent: 30, planned: 200, state: "healthy" });
     expect(check.members.find((item) => item.memberId === "member-me")?.expense).toBe(180);
     expect(check.members.find((item) => item.memberId === "member-partner")?.expense).toBe(30);
     expect(check.nextStep).toMatch(/Alimente/);

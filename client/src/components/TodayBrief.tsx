@@ -122,7 +122,8 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   if (!showBackup && !transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
 
   return (
-    <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
+    <section className="bf-today-brief" aria-labelledby="bf-today-brief-title">
+      <p className="bf-kicker bf-today-brief-title" id="bf-today-brief-title">{t("DE REZOLVAT")}</p>
       {!hideSpendStamp && (
         <button type="button" className={`bf-spend-stamp ${brief.hasPayday ? "" : "empty"} ${brief.spendable <= 0 && brief.hasPayday ? "tight" : ""}`} onClick={() => onGo("plan")}>
           <span className="bf-spend-stamp-top">
