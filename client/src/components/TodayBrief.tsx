@@ -4,7 +4,7 @@ import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBala
 import { cycleClose } from "@/lib/cycle-close";
 import { pendingSplitIncome } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
-import { markTransferDone, pendingTransfers } from "@/lib/monthly-needs";
+import { activeNeeds, markTransferDone, pendingTransfers } from "@/lib/monthly-needs";
 import { CycleEndCard } from "@/components/CycleEndCard";
 import { cycleEndReport, recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
 import { t } from "@/lib/i18n";
@@ -88,13 +88,17 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const closed = cycleClose(data);
   const showStamp = !hideSpendStamp;
   const showIncome = Boolean(pendingIncome);
-  const showRitual = needsRitual && !pendingIncome && !simpleMode;
+  // Cu „Ce plătim lunar”, propunerea vine de acolo: îndemnul spre regulile vechi ar fi a doua propunere.
+  const usesNeeds = activeNeeds(data).length > 0;
+  const showRitual = needsRitual && !pendingIncome && !simpleMode && !usesNeeds;
   const showCheck = Boolean(check.due && acum && !simpleMode);
   const showCheckOk = Boolean(confirmat && !showCheck);
   const showDues = brief.dues.length > 0;
   const showHunts = brief.hunts.length > 0 || Boolean(pendingHunt);
   const showWeek = Boolean(week.shouldPrompt && !simpleMode && onOpenWeek);
-  const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed));
+  // Raportul de final de lună spune deja „ce a rămas”; butonul vechi ar fi al doilea.
+  const cycleEndHandled = data.settings.salaryPlan.cycleReportDone === data.settings.salaryPlan.nextPayday || Boolean(cycleEndReport(data));
+  const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed && !cycleEndHandled));
   const showCycleEnd = !splitIncome && Boolean(cycleEndReport(data));
   const transfers = data.settings.members.length > 1 ? pendingTransfers(data, isoToday()) : [];
   if (!transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
@@ -133,7 +137,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
         </button>
       )}
 
-      {needsRitual && !pendingIncome && !simpleMode && (
+      {showRitual && (
         <button type="button" className="bf-brief-salary setup" onClick={() => onGo("plan")}>
           <b>{t("Setează ritualul de salariu")}</b>
           <small>{t("Când înregistrezi venitul, plicurile se umplu după regulile tale.")}</small>
@@ -219,7 +223,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
         </button>
       )}
 
-      {brief.closeSoon && !simpleMode && !closed && (
+      {brief.closeSoon && !simpleMode && !closed && !cycleEndHandled && (
         <button type="button" className="bf-brief-close" onClick={() => onGo("plan")}>
           {t("Ciclul se închide. Uită-te ce a rămas.")}
         </button>
