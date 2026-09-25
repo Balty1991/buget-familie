@@ -24,7 +24,7 @@ import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
-import { envelopeBurnPace, envelopeRunOut, envelopeUntilPayday, weekDayCap } from "@/lib/household-insights";
+import { envelopeBurnPace, envelopeMonthlyHistory, envelopeRunOut, envelopeUntilPayday, weekDayCap } from "@/lib/household-insights";
 import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
 import { activeIncomes } from "@/lib/monthly-needs";
 import "../monthly-needs.css";
@@ -659,6 +659,18 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           </div>}
           </details>}
           {(state === "over" || state === "watch") && <p className="bf-allocation-why"><b>{state === "over" ? t("De ce cere atenție") : t("De ce apare aici")}:</b> {state === "over" ? `Ai depășit limita cu ${money(Math.abs(remaining))}. Redu suma planificată sau revizuiește cheltuielile înainte de următorul venit.` : `${Math.round(usage * 100)}% din plic este consumat; mai ai ${money(Math.max(0, remaining))} pentru perioada aleasă.`}</p>}
+          {(() => {
+            const history = envelopeMonthlyHistory(data, item);
+            if (!history.fullMonths) return null;
+            const top = Math.max(1, ...history.months.map((entry) => entry.amount));
+            const monthName = (key: string) => new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1).toLocaleDateString(getLocale(), { month: "long" });
+            const gap = history.average !== undefined && budget > 0 ? history.average - budget : 0;
+            return <details className="bf-envelope-history">
+              <summary><span>{t("Pe luni · media {amount}", { amount: money(history.average || 0) })}</span><ChevronDown size={16} aria-hidden="true" /></summary>
+              <ol>{history.months.map((entry, index) => <li key={entry.month}><span>{monthName(entry.month)}{index === history.months.length - 1 ? ` ${t("(în curs)")}` : ""}</span><i aria-hidden="true"><em style={{ width: `${Math.round(entry.amount / top * 100)}%` }} /></i><b>{money(entry.amount)}</b></li>)}</ol>
+              {Math.abs(gap) >= Math.max(50, budget * 0.1) && <p>{gap > 0 ? t("De obicei cheltuiți cu {amount} mai mult decât are plicul acum.", { amount: money(gap) }) : t("De obicei cheltuiți cu {amount} mai puțin decât are plicul acum.", { amount: money(-gap) })}</p>}
+            </details>;
+          })()}
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> {t("Editează")}</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> {t("Șterge")}</button></div>
         </article>)}
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.")}</span></div>}

@@ -30,3 +30,18 @@ describe("rândurile adăugate la bilanțul familiei", () => {
     expect(lines[1]).toMatch(/Mâncare: 450 lei din 600 lei, cel mult 37,50 lei pe zi/);
   });
 });
+
+describe("istoricul pe luni al plicului", () => {
+  it("lunile cu cheltuieli, media doar pe lunile întregi", async () => {
+    const { envelopeMonthlyHistory } = await import("./household-insights");
+    const data = family(100, "2026-10-02");
+    data.transactions.push(
+      { id: "j", title: "Lidl", amount: 2700, kind: "expense", category: "Alimente", source: "", person: "", date: "2026-08-10", allocationId: "m" },
+      { id: "s", title: "Lidl", amount: 2450, kind: "expense", category: "Alimente", source: "", person: "", date: "2026-09-10", allocationId: "m" },
+      { id: "o", title: "Altceva", amount: 999, kind: "expense", category: "Transport", source: "", person: "", date: "2026-09-12" },
+    );
+    const history = envelopeMonthlyHistory(data, data.settings.salaryPlan.allocations[0], "2026-10-04");
+    expect(history.months).toEqual([{ month: "2026-08", amount: 2700 }, { month: "2026-09", amount: 2450 }, { month: "2026-10", amount: 100 }]);
+    expect(history).toMatchObject({ average: 2575, fullMonths: 2 });
+  });
+});

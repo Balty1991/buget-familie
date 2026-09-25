@@ -955,6 +955,28 @@ const matchesAllocation = (item: Transaction, allocation: BudgetAllocation) => {
     && (!allocation.sourceId || item.sourceId === allocation.sourceId);
 };
 
+export type EnvelopeMonth = { month: string; amount: number };
+
+/**
+ * Cât s-a cheltuit din plic în fiecare lună calendaristică, ultimele `count` luni (cea în curs
+ * inclusă, ultima în listă). Media se face doar pe lunile întregi cu cheltuieli, ca o lună
+ * abia începută sau una fără date să n-o strice.
+ */
+export const envelopeMonthlyHistory = (data: AppData, allocation: BudgetAllocation, asOf = isoToday(), count = 6) => {
+  const base = new Date(`${asOf}T12:00:00`);
+  const months: EnvelopeMonth[] = [];
+  for (let back = count - 1; back >= 0; back -= 1) {
+    const date = new Date(base.getFullYear(), base.getMonth() - back, 1, 12);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const amount = data.transactions.filter((item) => item.date.startsWith(key) && matchesAllocation(item, allocation)).reduce((sum, item) => sum + item.amount, 0);
+    months.push({ month: key, amount: roundMoney(amount) });
+  }
+  const full = months.slice(0, -1).filter((item) => item.amount > 0);
+  const average = full.length ? roundMoney(full.reduce((sum, item) => sum + item.amount, 0) / full.length) : undefined;
+  // Fără nicio cheltuială în afară de luna în curs, istoricul n-are ce arăta.
+  return { months: months.filter((item, index) => item.amount > 0 || index === months.length - 1 || months.slice(0, index).some((prev) => prev.amount > 0)), average, fullMonths: full.length };
+};
+
 export type WeeklyEnvelopeDayRhythm = {
   day: string;
   weekday: number;
