@@ -472,3 +472,20 @@ describe("„În afara plicurilor” ales de om", () => {
     expect(taxi?.updatedAt).toBeTruthy();
   });
 });
+
+describe("sursa spusă în frază", () => {
+  it("tichetele și cardul Anei ajung în propunere", async () => {
+    const { hintedSource } = await import("./understand");
+    const data = createEmptyAppData();
+    data.settings.members = [{ id: "eu", name: "Andrei" }, { id: "ana", name: "Ana" }];
+    data.settings.paymentSources = [
+      { id: "c-eu", name: "Card Andrei", kind: "card", memberId: "eu", openingBalance: 500 },
+      { id: "c-ana", name: "Card Ana", kind: "card", memberId: "ana", openingBalance: 500 },
+      { id: "tichete", name: "Bonuri de masă", kind: "meal", openingBalance: 400 },
+    ];
+    expect(hintedSource(data, "card", "Anei")?.id).toBe("c-ana");
+    expect(hintedSource(data, "meal")?.id).toBe("tichete");
+    const offer = buildExpenseOffer(data, { amount: 80, title: "Kaufland", category: "Alimente", date: "2026-09-20", sourceHint: "meal" }, emptyGuideMemory());
+    expect(offer.choices.every((choice) => choice.update?.kind === "expense" && choice.update.sourceId === "tichete")).toBe(true);
+  });
+});

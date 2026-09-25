@@ -22,7 +22,7 @@ const DIACRITICS: Record<string, string> = { "ă": "a", "â": "a", "î": "i", "�
 const fold = (value: string) => value.replace(/[ăâîșşțţĂÂÎȘŞȚŢ]/g, (char) => DIACRITICS[char] || char).toLowerCase();
 
 export type AssistantIntent =
-  | { kind: "expense"; amount: number; category: string; title: string; date: string }
+  | { kind: "expense"; amount: number; category: string; title: string; date: string; /** „pe tichete”, „cash”, „cu cardul”. */ sourceHint?: PaymentHint; /** „cardul Anei”: numele persoanei al cărei card a plătit. */ ownerHint?: string }
   | { kind: "income"; amount: number; title: string; date: string; /** Al cui e venitul, când fraza o spune („salariul soției”). */ memberId?: string }
   /**
    * Repartizarea unui salariu după „Ce plătim lunar”. Se aplică pe venitul din aceeași
@@ -540,13 +540,38 @@ function parsePayday(dates: DateHit[]): AssistantIntent | undefined {
   return { kind: "payday", date: hit.start, flexDays: flex };
 }
 
+export type PaymentHint = "meal" | "cash" | "card";
+
+/**
+ * De unde au ieșit banii, dacă fraza o spune: „pe tichete”, „cash”, „cu cardul Anei”. Se scoate
+ * și din titlu: „am plătit 55 la farmacie cu cardul Anei” e „Farmacie”, nu „Plătit farmacie cardul Anei”.
+ */
+export function readPaymentHint(segment: string): { rest: string; sourceHint?: PaymentHint; ownerHint?: string } {
+  let rest = segment;
+  let sourceHint: PaymentHint | undefined;
+  let ownerHint: string | undefined;
+  const meal = /\b(?:(?:pe|cu|din)\s+)?(?:tichete(?:le)?(?:\s+de\s+mas[aă])?|bonuri(?:le)?\s+de\s+mas[aă]|card(?:ul)?\s+de\s+mas[aă])\b/i;
+  const cash = /\b(?:(?:pe|cu|în|in|din)\s+)?(?:cash|numerar|bani\s+ghea[țt][aă]|cash-ul)\b/i;
+  const owner = /\b(?:(?:cu|pe|de\s+pe|din)\s+)?card(?:ul)?\s+(?:lui\s+)?(?!de\b|meu\b|mea\b|nostru\b|ei\b|lui\b)([A-ZĂÂÎȘȚ][A-Za-zĂÂÎȘȚăâîșțşţ-]+)/i;
+  const card = /\b(?:(?:cu|pe|de\s+pe|din)\s+)?card(?:ul)?\b/i;
+  if (meal.test(rest)) { sourceHint = "meal"; rest = rest.replace(meal, " "); }
+  else if (cash.test(rest)) { sourceHint = "cash"; rest = rest.replace(cash, " "); }
+  else {
+    const hit = rest.match(owner);
+    if (hit) { ownerHint = hit[1]; sourceHint = "card"; rest = rest.replace(owner, " "); }
+    else if (card.test(rest)) { sourceHint = "card"; rest = rest.replace(card, " "); }
+  }
+  return { rest, sourceHint, ownerHint };
+}
+
 function oneExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[], rules: MerchantRule[] = []): AssistantIntent | undefined {
   const amount = amounts[0];
   if (!amount) return undefined;
   const times = repeatFactor(segment);
   const category = guessCategoryFromText(segment, categories, rules) || "Altele";
-  const label = cleanLabel(segment.replace(/\b(am cheltuit|am dat|am platit|am luat|cheltuiala|plata de)\b/gi, ""));
-  return { kind: "expense", amount: Math.round(amount.value * times * 100) / 100, category, title: titleCase(label) || category, date: dates[0]?.start || asOf };
+  const hint = readPaymentHint(segment);
+  const label = cleanLabel(hint.rest.replace(/\b(am cheltuit|am dat|am pl[aă]tit|pl[aă]tit|am luat|cheltuiala|cheltuială|plata de|plată de)\b/gi, ""));
+  return { kind: "expense", amount: Math.round(amount.value * times * 100) / 100, category, title: titleCase(label) || category, date: dates[0]?.start || asOf, ...(hint.sourceHint ? { sourceHint: hint.sourceHint } : {}), ...(hint.ownerHint ? { ownerHint: hint.ownerHint } : {}) };
 }
 
 function parseExpense(segment: string, amounts: AmountHit[], dates: DateHit[], asOf: string, categories: string[], rules: MerchantRule[] = []): AssistantIntent[] {

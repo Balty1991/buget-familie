@@ -218,7 +218,10 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
       const head = `venit ${money(intent.amount)} · ${intent.title} · ${formatDate(intent.date)}`;
       if (!data) return head;
       const target = planIncome(data)[0];
-      return target ? `${head}\n  ↳ intră în ${target.source.name} (${money(target.balance)} acum)` : head;
+      const line = target ? `${head}\n  ↳ intră în ${target.source.name} (${money(target.balance)} acum)` : head;
+      // „am primit salariul 4700” a doua oară: întreabă, nu dubla venitul.
+      const twin = data.transactions.find((item) => item.kind === "income" && Math.abs(item.amount - intent.amount) < 0.005 && Math.abs(Date.parse(`${item.date}T12:00:00`) - Date.parse(`${intent.date}T12:00:00`)) <= 25 * 86_400_000);
+      return twin ? `${line}\n  ⚠ Ai deja ${twin.title} ${money(twin.amount)} pe ${formatDate(twin.date)}. E altul? Dacă nu, nu confirma.` : line;
     }
     case "envelope": {
       /**

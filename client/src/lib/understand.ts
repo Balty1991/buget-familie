@@ -16,6 +16,7 @@
  * Funcțiile de mai jos sunt mutate din componentă neschimbate; singura diferență
  * este că memoria obiceiurilor intră ca parametru, nu ca stare de modul.
  */
+import { genitiveName } from "./member-mode";
 import {
   allocationStatus,
   allocationWeekStatus,
@@ -33,8 +34,7 @@ import {
   planEndDate,
   sourceBalance,
   type AppData,
-  type Transaction,
-} from "./finance-data";
+  type Transaction, foldRomanian} from "./finance-data";
 import { calendarBudget, periodDays, remainingPace, startedWeekShare } from "./calendar-budget";
 import { buildTodaySummary } from "./today-summary";
 import { plannedEventsPressure, upcomingPlannedEvents } from "./planned-events";
@@ -44,7 +44,7 @@ import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
 import { spendGroupOf } from "./product-catalog";
-import { explicitSplitLines, extractAmounts, extractDates, parseAssistantMessage, repeatFactor, type AppScreen, type ParsedIntent } from "./assistant-intents";
+import { explicitSplitLines, extractAmounts, extractDates, parseAssistantMessage, readPaymentHint, repeatFactor, type AppScreen, type ParsedIntent } from "./assistant-intents";
 import { analyze, type AnalystAnswer } from "./analyst";
 import { selfMemberIdOf, selfMemberOf } from "./member-identity";
 
@@ -78,13 +78,18 @@ export type PhraseHabit = { key: string; title: string; category: string; alloca
 export type GuideMemory = { phrases: PhraseHabit[]; skippedOnline: number };
 export const emptyGuideMemory = (): GuideMemory => ({ phrases: [], skippedOnline: 0 });
 
-/** Cheltuiala/venitul din ghid cer plic (sau sursă) și o zi atinsă explicit — nu salvăm pe data ghicită. */
+/**
+ * Cheltuiala/venitul din ghid cer plic (sau sursă). Ziua are o valoare implicită vizibilă
+ * (cea din frază sau azi), bifată deja în rândul de zile: o atingere pe plic salvează, iar
+ * cine vrea altă zi o atinge întâi. Înainte, plicul ales înaintea zilei „nu se ținea”.
+ */
 export function isDatedSpendChoice(choice: ChatChoice): boolean {
   return choice.update.kind === "expense" || choice.update.kind === "income";
 }
 
-export function canCommitGuideSpend(sourcePicked: boolean, dateTapped: boolean): boolean {
-  return sourcePicked && dateTapped;
+export function canCommitGuideSpend(sourcePicked: boolean, _dateTapped?: boolean): boolean {
+  void _dateTapped;
+  return sourcePicked;
 }
 
 const money = (value: number) => `${Number(value.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
@@ -318,16 +323,32 @@ export function matchTransaction(data: AppData, hint: { title?: string; amount?:
 export const matchRecurring = (data: AppData, token: string) =>
   data.recurring.filter((item) => item.active !== false).find((item) => nameMatches(item.name, token));
 
+/** Sursa numită în frază: tichetele, cash-ul sau cardul unei persoane („cardul Anei”). */
+export function hintedSource(data: AppData, hint?: "meal" | "cash" | "card", owner?: string) {
+  if (!hint) return undefined;
+  const sources = data.settings.paymentSources;
+  if (hint === "meal") return sources.find((item) => item.kind === "meal");
+  if (hint === "cash") return sources.find((item) => item.kind === "cash");
+  if (owner) {
+    // „Anei”, „Mariei”, „lui Andrei”: numele sau genitivul lui, scris cu sau fără diacritice.
+    const key = foldRomanian(owner);
+    const person = data.settings.members.find((item) => [item.name, genitiveName(item.name).replace(/^lui\s+/i, "")].some((form) => foldRomanian(form) === key));
+    if (person) return sources.find((item) => item.memberId === person.id && item.kind !== "meal" && item.kind !== "cash") || sources.find((item) => item.memberId === person.id);
+  }
+  return undefined;
+}
+
 /** Locurile din care se poate scoate suma: plicuri (cu săptămâna) și, doar dacă a rămas liber, nealocat. */
 export function buildExpenseOffer(
   data: AppData,
-  spend: { amount: number; title: string; category: string; date: string },
+  spend: { amount: number; title: string; category: string; date: string; sourceHint?: "meal" | "cash" | "card"; ownerHint?: string },
   memory: GuideMemory = emptyGuideMemory(),
 ): { text: string; choices: ChatChoice[] } {
   const { amount, title, category, date } = spend;
   const when = dateCopy(date);
   const member = selfMemberOf(data);
   const fallbackSource = data.settings.paymentSources.find((item) => item.memberId === member?.id) || data.settings.paymentSources[0];
+  const named = hintedSource(data, spend.sourceHint, spend.ownerHint);
   const related = relatedCategories(category);
   const habit = findHabit(memory, title, title);
   const funded: Array<{ envelope: (typeof data.settings.salaryPlan.allocations)[number]; weekIndex?: number; left: number }> = [];
@@ -369,12 +390,13 @@ export function buildExpenseOffer(
       category,
       date,
       allocationId: envelope.id,
-      sourceId: envelope.sourceId || fallbackSource?.id,
-      memberId: envelope.memberId || member?.id,
+      // Sursa spusă în frază („pe tichete”, „cardul Anei”) are întâietate față de cea a plicului.
+      sourceId: named?.id || envelope.sourceId || fallbackSource?.id,
+      memberId: named?.memberId || envelope.memberId || member?.id,
       fromWeekIndex: weekIndex,
     },
   }));
-  data.settings.paymentSources.forEach((source) => {
+  data.settings.paymentSources.filter((source) => !named || source.id === named.id).forEach((source) => {
     const unrepartized = planAllocationMath(data).unrepartized;
     if (unrepartized < amount) return;
     const left = Math.round(Math.min(unrepartized, sourceBalance(data, source.id)) * 100) / 100;
@@ -407,7 +429,10 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   const amount = spendAmount(raw, extracted, parsed.amount) * (extracted?.amount ? 1 : repeatFactor(raw));
   if (!amount || amount <= 0) return undefined;
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const draftTitle = spendTitle(folded, extracted, parsed.category || "Altele");
+  // „pe tichete”, „cash”, „cu cardul Anei”: sursa, nu o parte din titlu.
+  const payment = readPaymentHint(raw);
+  const titleSource = payment.sourceHint ? payment.rest.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "") : folded;
+  const draftTitle = spendTitle(titleSource, extracted, parsed.category || "Altele");
   const habit = findHabit(memory, raw, draftTitle);
   /**
    * „Am 1800 lei de împărțit în plicuri până pe 9 octombrie” nu este o plată de 1.800 de lei.
@@ -428,7 +453,7 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   const category = (parsed.category && parsed.category !== "Altele") ? parsed.category : (habit?.category || extracted?.category || "Altele");
   const title = draftTitle === "Altele" && habit ? habit.title : draftTitle;
   const date = extracted?.date && /^20\d{2}-\d{2}-\d{2}$/.test(extracted.date) ? extracted.date : spendDate(raw);
-  const offer = buildExpenseOffer(data, { amount, title, category, date }, memory);
+  const offer = buildExpenseOffer(data, { amount, title, category, date, sourceHint: payment.sourceHint, ownerHint: payment.ownerHint }, memory);
   const extra = receiptDetails(extracted);
   if (!extra) return offer;
   return { ...offer, text: noDoubleStop(offer.text.replace(/\.\s/, `.${extra} `)) };

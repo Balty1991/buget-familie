@@ -370,9 +370,9 @@ describe("ghidul pe bon spune doar totalul", () => {
   });
 });
 
-describe("ghidul salvează cheltuiala doar după plic și zi", () => {
-  it("nu scrie dacă ai atins doar plicul sau doar ziua", () => {
-    expect(canCommitGuideSpend(true, false)).toBe(false);
+describe("ghidul salvează cheltuiala după alegerea plicului", () => {
+  it("ziua implicită e deja bifată; fără plic nu scrie nimic", () => {
+    expect(canCommitGuideSpend(true, false)).toBe(true);
     expect(canCommitGuideSpend(false, true)).toBe(false);
     expect(canCommitGuideSpend(false, false)).toBe(false);
     expect(canCommitGuideSpend(true, true)).toBe(true);

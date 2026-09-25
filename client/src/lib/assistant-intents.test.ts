@@ -286,3 +286,16 @@ describe("o frază, trei lucruri", () => {
     expect(at("am cash 500", "2026-09-21")[0].intent).toMatchObject({ kind: "funds", sourceHint: "cash" });
   });
 });
+
+describe("de unde au ieșit banii (utilizator #9)", () => {
+  it("„cu cardul Anei” și „pe tichete” devin sursă, nu titlu", () => {
+    const farmacie = at("am plătit 55 lei la farmacie cu cardul Anei")[0].intent;
+    expect(farmacie).toMatchObject({ kind: "expense", amount: 55, sourceHint: "card", ownerHint: "Anei" });
+    expect(farmacie.kind === "expense" && farmacie.title).toBe("Farmacie");
+    const kaufland = at("am dat 80 pe tichete la Kaufland")[0].intent;
+    expect(kaufland).toMatchObject({ kind: "expense", amount: 80, sourceHint: "meal" });
+    expect(kaufland.kind === "expense" && kaufland.title).toBe("Kaufland");
+    const paine = at("am dat 35 lei pe pâine cash")[0].intent;
+    expect(paine).toMatchObject({ sourceHint: "cash" });
+  });
+});

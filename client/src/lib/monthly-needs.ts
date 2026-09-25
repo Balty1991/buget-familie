@@ -419,7 +419,9 @@ export function splitPreviewText(split: Extract<IncomeSplit, { ok: true }>, mone
       ? t("rămân {amount} pentru {label} ({date})", { amount: money(split.uncovered), label: split.nextIncome.label, date: date(split.nextIncome.date) })
       : t("rămân neacoperiți {amount}", { amount: money(split.uncovered) })
     : split.free > 0 ? t("liberi {amount}", { amount: money(split.free) }) : "";
-  return [t("repartizează {amount} după Ce plătim lunar", { amount: money(split.income.amount) }) + ":", parts.join(" · ") + (tail ? ` · ${tail}` : "")].join(" ");
+  // Fără nimic de pus în plicuri (ciclul e deja acoperit), fraza spune asta, nu o listă goală „:  · liberi”.
+  if (!parts.length) return t("cheltuielile ciclului sunt deja acoperite; {amount} rămân liberi", { amount: money(split.free) });
+  return [t("repartizează {amount} după Ce plătim lunar", { amount: money(split.income.amount) }) + ":", [...parts, ...(tail ? [tail] : [])].join(" · ")].join(" ");
 }
 
 export type NeedAdjustment = { need: MonthlyNeed; months: Array<{ month: string; amount: number }>; min: number; max: number; direction: "up" | "down" };
