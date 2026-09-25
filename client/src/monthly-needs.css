@@ -111,3 +111,5 @@
 .bf-needs-start-need input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--cf-primary); }
 .bf-needs-start-need .bf-field { margin: 0; }
 .bf-needs-start-need.is-on { border-color: color-mix(in srgb, var(--cf-primary) 45%, var(--cf-line)); }
+.bf-envelope-weeks > .bf-week-transfer, .bf-envelope-weeks > .bf-week-started { margin: 0 12px 12px; }
+.bf-envelope-carry { font-size: 13px; }
