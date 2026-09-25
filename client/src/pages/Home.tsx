@@ -15,6 +15,7 @@ import { BrandMark } from "@/components/BrandMark";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { isAppLockEnabled } from "@/lib/app-lock";
 import { useToday } from "@/hooks/useToday";
+import { safeImport } from "@/lib/lazy-safe";
 import { observeQuickActions, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { hasQueuedFeedback } from "@/lib/feedback-queue";
 import { useMemberMode } from "@/lib/member-mode";
@@ -49,25 +50,25 @@ import { reloadToNewVersion, useUpdateAvailable } from "@/lib/update-check";
 
 export { recentActivityMoves } from "@/pages/TodayView";
 
-const PlanStudio = lazy(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio })));
-const MovementsJournal = lazy(() => import("@/components/MovementsJournal").then((module) => ({ default: module.MovementsJournal })));
-const QuickEntryPanel = lazy(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel })));
-const FirstWeekTour = lazy(() => import("@/components/FirstWeekTour").then((module) => ({ default: module.FirstWeekTour })));
-const FinancialCalendarView = lazy(() => import("@/components/FinancialCalendarView").then((module) => ({ default: module.FinancialCalendarView })));
-const ThemePicker = lazy(() => import("@/pages/ThemePicker").then((module) => ({ default: module.ThemePicker })));
-const QuickActionsPalette = lazy(() => import("@/pages/QuickActionsPalette").then((module) => ({ default: module.QuickActionsPalette })));
-const CalmOnboarding = lazy(() => import("@/pages/QuickActionsPalette").then((module) => ({ default: module.CalmOnboarding })));
-const TransactionForm = lazy(() => import("@/pages/TransactionForm").then((module) => ({ default: module.TransactionForm })));
-const GoalForm = lazy(() => import("@/pages/GoalForms").then((module) => ({ default: module.GoalForm })));
-const DebtPaymentForm = lazy(() => import("@/pages/GoalForms").then((module) => ({ default: module.DebtPaymentForm })));
-const ReceiptForm = lazy(() => import("@/pages/ReceiptForm").then((module) => ({ default: module.ReceiptForm })));
-const SpendingHabitsView = lazy(() => import("@/pages/HabitsGoals").then((module) => ({ default: module.SpendingHabitsView })));
-const LongTermGoalsView = lazy(() => import("@/pages/HabitsGoals").then((module) => ({ default: module.LongTermGoalsView })));
-const ObjectivesView = lazy(() => import("@/pages/ObjectivesView").then((module) => ({ default: module.ObjectivesView })));
-const InsightsView = lazy(() => import("@/pages/InsightsView").then((module) => ({ default: module.InsightsView })));
-const MoreViewScreen = lazy(() => import("@/pages/home-secondary").then((module) => ({ default: module.MoreView })));
-const FirstRunSetup = lazy(() => import("@/components/FirstRunSetup").then((module) => ({ default: module.FirstRunSetup })));
-const AICompanion = lazy(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion })));
+const PlanStudio = lazy(safeImport(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio }))));
+const MovementsJournal = lazy(safeImport(() => import("@/components/MovementsJournal").then((module) => ({ default: module.MovementsJournal }))));
+const QuickEntryPanel = lazy(safeImport(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel }))));
+const FirstWeekTour = lazy(safeImport(() => import("@/components/FirstWeekTour").then((module) => ({ default: module.FirstWeekTour }))));
+const FinancialCalendarView = lazy(safeImport(() => import("@/components/FinancialCalendarView").then((module) => ({ default: module.FinancialCalendarView }))));
+const ThemePicker = lazy(safeImport(() => import("@/pages/ThemePicker").then((module) => ({ default: module.ThemePicker }))));
+const QuickActionsPalette = lazy(safeImport(() => import("@/pages/QuickActionsPalette").then((module) => ({ default: module.QuickActionsPalette }))));
+const CalmOnboarding = lazy(safeImport(() => import("@/pages/QuickActionsPalette").then((module) => ({ default: module.CalmOnboarding }))));
+const TransactionForm = lazy(safeImport(() => import("@/pages/TransactionForm").then((module) => ({ default: module.TransactionForm }))));
+const GoalForm = lazy(safeImport(() => import("@/pages/GoalForms").then((module) => ({ default: module.GoalForm }))));
+const DebtPaymentForm = lazy(safeImport(() => import("@/pages/GoalForms").then((module) => ({ default: module.DebtPaymentForm }))));
+const ReceiptForm = lazy(safeImport(() => import("@/pages/ReceiptForm").then((module) => ({ default: module.ReceiptForm }))));
+const SpendingHabitsView = lazy(safeImport(() => import("@/pages/HabitsGoals").then((module) => ({ default: module.SpendingHabitsView }))));
+const LongTermGoalsView = lazy(safeImport(() => import("@/pages/HabitsGoals").then((module) => ({ default: module.LongTermGoalsView }))));
+const ObjectivesView = lazy(safeImport(() => import("@/pages/ObjectivesView").then((module) => ({ default: module.ObjectivesView }))));
+const InsightsView = lazy(safeImport(() => import("@/pages/InsightsView").then((module) => ({ default: module.InsightsView }))));
+const MoreViewScreen = lazy(safeImport(() => import("@/pages/home-secondary").then((module) => ({ default: module.MoreView }))));
+const FirstRunSetup = lazy(safeImport(() => import("@/components/FirstRunSetup").then((module) => ({ default: module.FirstRunSetup }))));
+const AICompanion = lazy(safeImport(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion }))));
 
 /**
  * Link direct către un ecran. Lista era scrisă de mână și rămăsese în urmă: „goals”,

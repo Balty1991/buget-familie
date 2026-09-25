@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { applySalaryAllocationRules, revertSalaryAllocationApplication, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
+import { applySalaryAllocationRules, activeSalaryApplications, revertSalaryAllocationApplication, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
 import { cycleClose } from "@/lib/cycle-close";
 import { pendingSplitIncome } from "@/lib/monthly-needs";
@@ -39,7 +39,20 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   /** Repartizarea abia aplicată: rămâne un rând cu „Anulează”, în caz că te răzgândești. */
   const [justSplit, setJustSplit] = useState("");
   const [cycleEndDone, setCycleEndDone] = useState("");
-  const justApplied = justSplit ? (data.settings.salaryPlan.salaryAllocationApplications || []).find((item) => item.id === justSplit && item.origin === "needs") : undefined;
+  /**
+   * „Am împărțit salariul · Anulează” rămâne pe Astăzi o zi, nu doar până la repornire: cine
+   * închide aplicația imediat după împărțire nu mai găsea anularea decât adânc în Plan.
+   */
+  const [splitNoteClosed, setSplitNoteClosed] = useState(() => { try { return window.localStorage.getItem("buget-familie:split-note-closed") || ""; } catch { return ""; } });
+  const recentSplit = activeSalaryApplications(data.settings.salaryPlan).find((item) => item.origin === "needs" && Date.now() - Date.parse(item.appliedAt) < 24 * 3_600_000);
+  const justApplied = justSplit
+    ? activeSalaryApplications(data.settings.salaryPlan).find((item) => item.id === justSplit && item.origin === "needs")
+    : recentSplit && recentSplit.id !== splitNoteClosed ? recentSplit : undefined;
+  const closeSplitNote = (id: string) => {
+    setJustSplit("");
+    setSplitNoteClosed(id);
+    try { window.localStorage.setItem("buget-familie:split-note-closed", id); } catch { /* doar pe sesiunea asta */ }
+  };
   const pay = (id: string) => {
     // Suma variabilă (curent, gaz) se confirmă cu valoarea de pe factură, în Scadențe.
     if (data.recurring.find((item) => item.id === id)?.variable && onOpenRecurring) return onOpenRecurring();
@@ -126,7 +139,8 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
       {justApplied && (
         <aside className="bf-income-split-done" role="status">
           <span>{t("Am împărțit {title} în {count} plicuri.", { title: justApplied.incomeTitle, count: justApplied.allocations.length })}</span>
-          <button type="button" className="bf-secondary" onClick={() => { onChange(revertSalaryAllocationApplication(data, justApplied.id)); setJustSplit(""); }}>{t("Anulează")}</button>
+          <button type="button" className="bf-secondary" onClick={() => { onChange(revertSalaryAllocationApplication(data, justApplied.id)); closeSplitNote(justApplied.id); }}>{t("Anulează")}</button>
+          <button type="button" className="bf-brief-check-later" onClick={() => closeSplitNote(justApplied.id)}>{t("E bine așa")}</button>
         </aside>
       )}
       {showBackup && <AutoBackupCard data={data} />}
