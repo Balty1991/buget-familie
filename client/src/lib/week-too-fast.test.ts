@@ -21,3 +21,12 @@ describe("săptămâna merge prea repede", () => {
     expect(weekTooFast(family(650, "2026-10-02"), "2026-10-07")[0]).toMatchObject({ over: true, remaining: -50 });
   });
 });
+
+describe("rândurile adăugate la bilanțul familiei", () => {
+  it("zilele până la salariu și săptămâna care merge repede", async () => {
+    const { familyWeekExtras } = await import("./household-insights");
+    const lines = familyWeekExtras(family(450, "2026-10-02"), "2026-10-04");
+    expect(lines[0]).toMatch(/Până la salariu: 24 de zile/);
+    expect(lines[1]).toMatch(/Mâncare: 450 lei din 600 lei, cel mult 37 lei pe zi/);
+  });
+});

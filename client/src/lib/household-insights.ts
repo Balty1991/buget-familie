@@ -39,6 +39,7 @@ import { lei as leiExact } from "./money-format";
 import { daysLabel, getLocale, t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
 import { selfMemberIdOf } from "./member-identity";
+import { pendingTransfers } from "./monthly-needs";
 
 const fold = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const daysBetween = (from: string, to: string) => Math.round((new Date(`${to}T12:00:00`).valueOf() - new Date(`${from}T12:00:00`).valueOf()) / 86_400_000);
@@ -1296,6 +1297,26 @@ export const weeklyDigestHeadline = (data: AppData, asOf = isoToday()) => {
     title: top ? t("Cel mai mult: {category} ({amount})", { category: top[0], amount: lei(Number(top[1])) }) : t("Săptămâna e în ritm"),
     detail: check.nextStep,
   };
+};
+
+/**
+ * Rândurile de adăugat la bilanțul trimis familiei: câte zile mai sunt până la salariu,
+ * ce plicuri merg prea repede săptămâna asta și ce transferuri mai sunt de făcut.
+ */
+export const familyWeekExtras = (data: AppData, asOf = isoToday()): string[] => {
+  const lines: string[] = [];
+  const until = untilPayday(data.settings.salaryPlan, asOf);
+  if (until && until.days > 0) lines.push(t("Până la salariu: {days} (~{date}).", { days: daysLabel(until.days), date: formatDate(until.typical, { day: "numeric", month: "long" }) }));
+  for (const item of weekTooFast(data, asOf).slice(0, 3)) {
+    lines.push(item.over
+      ? t("{label}: săptămâna e depășită cu {amount}.", { label: item.label, amount: lei(-item.remaining) })
+      : t("{label}: {spent} din {budget}, cel mult {perDay} pe zi până la capătul săptămânii.", { label: item.label, spent: lei(item.spent), budget: lei(item.budget), perDay: lei(item.perDay) }));
+  }
+  const members = data.settings.members;
+  for (const entry of members.length > 1 ? pendingTransfers(data, asOf) : []) {
+    lines.push(t("De trimis: {amount} către {name} ({labels}).", { amount: lei(entry.amount), name: members.find((item) => item.id === entry.toMemberId)?.name || "", labels: entry.labels.join(", ") }));
+  }
+  return lines;
 };
 
 export const formatWeeklyCheckInShare = (check: WeeklyCheckIn, rebalance?: CheckInRebalance) => {

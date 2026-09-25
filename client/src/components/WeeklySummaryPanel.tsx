@@ -7,7 +7,7 @@ import "../weekly-checkin.css";
 import { useState } from "react";
 import { ArrowDownRight, ArrowUpRight, ArrowLeftRight, CalendarDays, Check, ChevronRight, FileDown, Share2 } from "lucide-react";
 import { formatDate, transferBetweenEnvelopes, type AppData } from "@/lib/finance-data";
-import { checkInRebalance, formatWeeklyCheckInShare, weeklyCheckIn, weeklyDigestHeadline } from "@/lib/household-insights";
+import { checkInRebalance, familyWeekExtras, formatWeeklyCheckInShare, weeklyCheckIn, weeklyDigestHeadline } from "@/lib/household-insights";
 import { downloadWeeklyDigestPdf } from "@/lib/weekly-digest-pdf";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
@@ -28,8 +28,12 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
   const rebalance = checkInRebalance(data);
   const label = member ? member.name : collaborative ? t("Familie") : t("Personal");
   const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;
+  const shareText = () => {
+    const extras = familyWeekExtras(data);
+    return [formatWeeklyCheckInShare(check, rebalance), ...(extras.length ? ["", ...extras] : [])].join("\n");
+  };
   const share = async () => {
-    const text = formatWeeklyCheckInShare(check, rebalance);
+    const text = shareText();
     try {
       if (typeof navigator.share === "function") {
         await navigator.share({ title: t("Bilanț {family}", { family: check.familyName }), text });
@@ -143,6 +147,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
         <button type="button" className="bf-week-share" onClick={() => void share()}>
           <Share2 size={16} /> {shareState === "copied" ? t("Copiat în clipboard") : shareState === "shared" ? t("Trimis") : t("Trimite bilanțul")}
         </button>
+        <a className="bf-week-plan bf-week-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(shareText())}`} target="_blank" rel="noopener noreferrer">{t("Trimite pe WhatsApp")}</a>
         <button type="button" className="bf-week-plan" onClick={() => void downloadWeeklyDigestPdf(data).catch(() => undefined)}>
           <FileDown size={16} /> {t("PDF digest")}
         </button>

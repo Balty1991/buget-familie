@@ -317,6 +317,8 @@ type PlannedAlert = {
 
 const money = lei;
 
+const addIsoDaysLocal = (iso: string, days: number) => { const date = new Date(`${iso}T12:00:00`); date.setDate(date.getDate() + days); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; };
+
 function atLocalHour(daysFromToday: number, hour: number, minute = 0): Date {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
@@ -408,6 +410,13 @@ function buildAlerts(data: AppData): PlannedAlert[] {
       at: evening,
       tag: `week-fast-${fast.allocationId}-${fast.weekIndex}`,
     });
+  }
+
+  // Duminică seara: bilanțul săptămânii, de trimis familiei.
+  const sunday = (7 - new Date(`${today}T12:00:00`).getDay()) % 7;
+  const summaryAt = atLocalHour(sunday, 19, 30);
+  if (summaryAt.getTime() > Date.now() && data.transactions.some((item) => item.kind === "expense" && item.date >= addIsoDaysLocal(today, -7))) {
+    alerts.push({ id: id++, title: t("Bilanțul săptămânii e gata"), body: t("Vezi cât ați cheltuit și trimite-l familiei."), at: summaryAt, tag: `weekly-summary-${addIsoDaysLocal(today, sunday)}` });
   }
 
   // Ritmul zilnic: dacă proiecția arată că plicurile rămase nu ajung până la salariu
