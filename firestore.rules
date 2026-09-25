@@ -1,5 +1,8 @@
 rules_version = '2';
 
+// ETAPA 1 — nu mai e cea publicată. Din 25.09.2026, producția rulează firestore.auth.rules
+// (etapa 2, cu identitate anonimă). Fișierul rămâne ca revenire de urgență.
+
 // Reguli Firestore pentru Buget Familie — de lipit în Firebase Console →
 // Firestore Database → Rules, exact așa cum sunt aici.
 //

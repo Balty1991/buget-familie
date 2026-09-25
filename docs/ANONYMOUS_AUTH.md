@@ -32,7 +32,14 @@ singură dată) → **Sign-in method** → **Anonymous** → *Enable*.
 Verificare: Authentication → **Users** începe să arate utilizatori „Anonymous” după ce
 testerii deschid Sync sau ghidul online.
 
-### 2. Regulile de etapa 2 — de mână, mai târziu
+### 2. Regulile de etapa 2 — PUBLICATE (25.09.2026)
+
+Publicate din Firebase Console când nicio instalare din Play nu exista încă (aplicația nu era
+în magazin; telefoanele de test aveau o versiune veche, fără importanță). Verificat imediat:
+o citire fără identitate primește 403 `PERMISSION_DENIED`. `firebase.json` arată acum spre
+`firestore.auth.rules`, deci și o publicare din linia de comandă păstrează etapa 2.
+
+Ce era planificat, pentru istoric:
 
 Nu publica `firestore.auth.rules` până când **toți** testerii au 1.1.95 sau mai nouă.
 Versiunile vechi nu au identitate: s-ar opri din sincronizat (apare bannerul „sync oprit”).
