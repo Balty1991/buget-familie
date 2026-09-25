@@ -852,6 +852,7 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
       ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
       : fromWeek != null
         ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: stripLei(fromWeek, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(rhythm.remainingDays) })
+          + (rhythm.days[0] && rhythm.days[0].day < asOf ? ` ${t("Săptămâna plicului a început {day}, în ziua salariului.", { day: new Date(`${rhythm.days[0].day}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" }) })}` : "")
         : t("Ritm {pace} lei/zi, din {available} disponibili pe {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) });
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
@@ -1062,7 +1063,9 @@ export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): Wee
   const windowEnd = hasTranche ? trancheEnd : addIsoDays(gridStart, 6);
   const inside = (day: string) => day >= windowStart && day <= windowEnd;
   const listed: string[] = [];
-  const cursor = hasTranche ? asOf : windowStart;
+  // Toată săptămâna plicului, cu zilele trecute: o săptămână are 7 zile, chiar dacă a început ieri
+  // (în ziua salariului). Înainte, banda arăta doar zilele rămase și săptămâna părea de 6 zile.
+  const cursor = windowStart;
   const cursorEnd = hasTranche ? windowEnd : windowEnd;
   for (let day = cursor; day && day <= cursorEnd && listed.length < 14; day = addIsoDays(day, 1)) listed.push(day);
   const spentByDay = listed.map((day) => {

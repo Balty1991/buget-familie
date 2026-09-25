@@ -196,7 +196,10 @@ describe("analize de gospodărie", () => {
     expect(wednesday.todayShare).toBe(75);
     expect(wednesday.todayLeft).toBe(75);
     expect(wednesday.futureShare).toBe(75);
-    expect(wednesday.days[0]).toMatchObject({ day: "2026-09-09", left: 75, isToday: true, over: false });
+    // Banda arată toată săptămâna plicului (7 zile), cu luni și marți în urmă.
+    expect(wednesday.days).toHaveLength(7);
+    expect(wednesday.days[0].day).toBe("2026-09-07");
+    expect(wednesday.days.find((item) => item.isToday)).toMatchObject({ day: "2026-09-09", left: 75, isToday: true, over: false });
   });
 
   it("nu desenează bare false când nu există plic săptămânal", () => {
