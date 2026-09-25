@@ -18,6 +18,7 @@ import "./apk-safe-area.css";
 import "./display-fixes-pass.css";
 import "./ui-modern-pass.css";
 import "./tokens.css";
+import "./high-contrast.css";
 import "./today.css";
 import "./movements.css";
 import "./plan.css";

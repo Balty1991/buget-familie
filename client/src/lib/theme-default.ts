@@ -57,18 +57,19 @@ export const LEGACY_THEME_MAP: Record<string, ThemeId> = {
   sand: "white",
   sage: "white",
   slate: "white",
-  lagoon: "cyber",
-  forest: "cyber",
-  midnight: "aurora",
-  plum: "aurora",
+  // Aurora și Cyber au fost scoase din alegere: rămân Alb, Întunecat și Navy.
+  lagoon: "dark",
+  forest: "dark",
+  midnight: "navy",
+  plum: "navy",
   graphite: "dark",
   copper: "dark",
   rosewood: "dark",
   navy: "navy",
   white: "white",
   dark: "dark",
-  aurora: "aurora",
-  cyber: "cyber",
+  aurora: "navy",
+  cyber: "dark",
 };
 
 export type StorageLike = {

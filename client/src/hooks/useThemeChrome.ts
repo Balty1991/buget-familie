@@ -29,7 +29,12 @@ export function useThemeChrome() {
   });
   const previousBackgroundRef = useRef<BackgroundId>(background);
   const backgroundTransitionReady = useRef(false);
-  const [highContrast, setHighContrast] = useState(() => window.localStorage.getItem("buget-familie:high-contrast") === "true");
+  // Fără o alegere salvată, contrastul ridicat urmează setarea telefonului („Mărește contrastul”).
+  const [highContrast, setHighContrast] = useState(() => {
+    const saved = window.localStorage.getItem("buget-familie:high-contrast");
+    if (saved === "true" || saved === "false") return saved === "true";
+    try { return window.matchMedia("(prefers-contrast: more)").matches; } catch { return false; }
+  });
   const [scheduleTimes, setScheduleTimes] = useState<ThemeScheduleTimes>(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem("buget-familie:theme-schedule-times") || "null") as Partial<ThemeScheduleTimes> | null;
@@ -118,7 +123,10 @@ export function useThemeChrome() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("bf-high-contrast", highContrast);
-    safeSetItem(window.localStorage, "buget-familie:high-contrast", String(highContrast));
+    // Se salvează doar când diferă de setarea telefonului, ca să o urmeze dacă omul n-a ales altceva.
+    let system = false;
+    try { system = window.matchMedia("(prefers-contrast: more)").matches; } catch { /* fără media query */ }
+    if (highContrast !== system || window.localStorage.getItem("buget-familie:high-contrast") !== null) safeSetItem(window.localStorage, "buget-familie:high-contrast", String(highContrast));
   }, [highContrast]);
 
   useEffect(() => {

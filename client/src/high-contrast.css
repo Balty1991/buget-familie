@@ -1,0 +1,20 @@
+/**
+ * Contrast ridicat, pe bune: textul secundar devine cerneală, liniile se văd, texturile și
+ * umbrele decorative dispar. Pornește singur când telefonul cere „Mărește contrastul”.
+ */
+html.bf-high-contrast {
+  --os-muted: var(--os-ink, var(--cf-ink));
+  --os-line: color-mix(in srgb, var(--os-ink, var(--cf-ink)) 55%, transparent);
+  --cf-line: color-mix(in srgb, var(--cf-ink) 55%, var(--cf-surface));
+}
+html.bf-high-contrast body,
+html.bf-high-contrast .bf-app {
+  background-image: none;
+}
+html.bf-high-contrast :is(small, .bf-kicker, .os-hint, .bf-settings-copy small, .bf-movement-copy small) {
+  color: var(--cf-ink);
+  opacity: 1;
+}
+html.bf-high-contrast :is(.bf-plic-pace, .bf-allocation-state) {
+  outline: 1px solid currentColor;
+}

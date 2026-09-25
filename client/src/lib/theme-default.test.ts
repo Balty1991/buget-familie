@@ -49,10 +49,10 @@ describe("catalog teme White/Dark/extras", () => {
       ["sand", "white"],
       ["sage", "white"],
       ["slate", "white"],
-      ["lagoon", "cyber"],
-      ["forest", "cyber"],
-      ["midnight", "aurora"],
-      ["plum", "aurora"],
+      ["lagoon", "dark"],
+      ["forest", "dark"],
+      ["midnight", "navy"],
+      ["plum", "navy"],
       ["graphite", "dark"],
       ["copper", "dark"],
       ["rosewood", "dark"],
@@ -69,7 +69,7 @@ describe("catalog teme White/Dark/extras", () => {
   });
 
   it("după migrare, păstrează temele din catalog", () => {
-    for (const kept of ["white", "dark", "aurora", "navy", "cyber"]) {
+    for (const kept of ["white", "dark", "navy"]) {
       const storage = memory({
         [THEME_STORAGE_KEY]: kept,
         [THEME_MIGRATED_CATALOG_KEY]: "1",
@@ -80,8 +80,14 @@ describe("catalog teme White/Dark/extras", () => {
     }
   });
 
-  it("migrarea Atelier păstrează aurora/navy/cyber și dark", () => {
-    for (const kept of ["aurora", "navy", "cyber", "dark"]) {
+  it("Aurora și Cyber, scoase din alegere, trec pe Navy și Întunecat", () => {
+    const base = { [THEME_MIGRATED_CATALOG_KEY]: "1", [THEME_MIGRATED_ATELIER_KEY]: "1", [THEME_MIGRATED_PREMIUM_KEY]: "1" };
+    expect(resolveInitialTheme(memory({ ...base, [THEME_STORAGE_KEY]: "aurora" }))).toBe("navy");
+    expect(resolveInitialTheme(memory({ ...base, [THEME_STORAGE_KEY]: "cyber" }))).toBe("dark");
+  });
+
+  it("migrarea Atelier păstrează navy și dark", () => {
+    for (const kept of ["navy", "dark"]) {
       const storage = memory({
         [THEME_STORAGE_KEY]: kept,
         [THEME_MIGRATED_CATALOG_KEY]: "1",
@@ -127,7 +133,7 @@ describe("catalog teme White/Dark/extras", () => {
       "buget-familie:background": "aurora",
       "buget-familie:skin": "stale",
     });
-    expect(resolveInitialTheme(storage)).toBe("aurora");
+    expect(resolveInitialTheme(storage)).toBe("navy");
     expect(storage.getItem("buget-familie:background")).toBe("aurora");
     expect(storage.getItem("buget-familie:skin")).toBeNull();
   });
