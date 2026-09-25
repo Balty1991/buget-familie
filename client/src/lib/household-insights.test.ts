@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
+import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
@@ -649,5 +649,41 @@ describe("plicul care se termină înainte de salariu", () => {
     expect(envelopeRunOut(setup(300), "2026-09-19")).toEqual([]);
     expect(envelopeRunOut(setup(1000), "2026-09-11")).toEqual([]);
     expect(envelopeRunOut(setup(1600), "2026-09-19")).toEqual([]);
+  });
+});
+
+describe("cât să pui deoparte pentru un obiectiv", () => {
+  const tx = (id: string, amount: number, kind: "income" | "expense", date: string) => ({ id, title: kind === "income" ? "Salariu" : "Cumpărături", amount, kind, category: kind === "income" ? "Venit" : "Alimente", sourceId: "source-debit", source: "Card", memberId: "member-me", person: "Eu", date });
+  const withHistory = () => {
+    const { data } = base();
+    // Iulie și august: rămân 2.000 lei pe lună.
+    data.transactions = [tx("i7", 8000, "income", "2026-07-10"), tx("e7", 6000, "expense", "2026-07-20"), tx("i8", 8000, "income", "2026-08-10"), tx("e8", 6000, "expense", "2026-08-20")];
+    return data;
+  };
+  const goal = (extra: Partial<{ dueDate: string; current: number; target: number }> = {}) => ({ id: "g1", name: "Vacanță", current: 1000, target: 5000, due: "", tone: "forest" as const, ...extra });
+
+  it("media lunară a ce rămâne, din lunile întregi cu mișcări", () => {
+    expect(monthlySurplus(withHistory(), "2026-09-25")).toBe(2000);
+    expect(monthlySurplus(base().data, "2026-09-25")).toBeUndefined();
+  });
+
+  it("cu termen: ce lipsește împărțit la lunile rămase", () => {
+    const plan = savingsSuggestion(withHistory(), goal({ dueDate: "2027-01-25" }), "2026-09-25");
+    expect(plan).toMatchObject({ basis: "deadline", left: 4000, months: 4, monthly: 1000, eta: "2027-01", stretch: false });
+  });
+
+  it("spune când suma trece de ce rămâne de obicei", () => {
+    const plan = savingsSuggestion(withHistory(), goal({ dueDate: "2026-11-25" }), "2026-09-25");
+    expect(plan).toMatchObject({ months: 2, monthly: 2000, stretch: false });
+    expect(savingsSuggestion(withHistory(), goal({ dueDate: "2026-10-25" }), "2026-09-25")).toMatchObject({ monthly: 4000, stretch: true });
+  });
+
+  it("fără termen: 30% din ce rămâne de obicei și luna în care ajungi", () => {
+    expect(savingsSuggestion(withHistory(), goal(), "2026-09-25")).toMatchObject({ basis: "surplus", monthly: 600, months: 7, eta: "2027-04" });
+  });
+
+  it("tace când obiectivul e atins sau nu există istoric pentru o propunere", () => {
+    expect(savingsSuggestion(withHistory(), goal({ current: 5000 }), "2026-09-25")).toBeUndefined();
+    expect(savingsSuggestion(base().data, goal(), "2026-09-25")).toBeUndefined();
   });
 });

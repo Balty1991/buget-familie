@@ -28,6 +28,7 @@ import {
   type AppData,
   type BudgetAllocation,
   type RecurringPayment,
+  type SavingsGoal,
   type SalaryPlan,
   type Transaction,
   isoDate,
@@ -602,6 +603,62 @@ export const envelopeRunOut = (data: AppData, asOf = isoToday()): EnvelopeRunOut
     });
   }
   return out.sort((a, b) => b.daysShort - a.daysShort);
+};
+
+export type SavingsSuggestion = {
+  goalId: string;
+  left: number;
+  /** Suma propusă pe lună, rotunjită la leu (cu termen) sau la 10 lei (fără termen). */
+  monthly: number;
+  months: number;
+  /** Luna în care se atinge ținta la ritmul propus. */
+  eta: string;
+  /** Media lunară „venit − cheltuieli” din ultimele 3 luni întregi; lipsește fără date. */
+  surplus?: number;
+  /** Suma pe lună trece de ce rămâne de obicei în casă. */
+  stretch: boolean;
+  basis: "deadline" | "surplus";
+};
+
+/** Ce rămâne în medie pe lună (venit − cheltuieli) în ultimele 3 luni întregi cu mișcări. */
+export const monthlySurplus = (data: AppData, asOf = isoToday()): number | undefined => {
+  const months: number[] = [];
+  let month = previousMonth(asOf.slice(0, 7));
+  for (let step = 0; step < 3; step += 1) {
+    const range = monthRange(month);
+    const entries = data.transactions.filter((item) => item.date >= range.start && item.date <= range.end);
+    if (entries.length) months.push(entries.reduce((sum, item) => sum + (item.kind === "income" ? item.amount : item.kind === "expense" ? -item.amount : 0), 0));
+    month = previousMonth(month);
+  }
+  return months.length ? months.reduce((sum, value) => sum + value, 0) / months.length : undefined;
+};
+
+/**
+ * Cât să pui deoparte pe lună pentru un obiectiv. Cu termen: ce lipsește împărțit la lunile
+ * rămase. Fără termen: o sumă confortabilă — cam 30% din ce rămâne de obicei la final de lună —
+ * și luna în care ajungi. În ambele cazuri spune dacă suma trece de ce rămâne de obicei.
+ */
+export const savingsSuggestion = (data: AppData, goal: SavingsGoal, asOf = isoToday()): SavingsSuggestion | undefined => {
+  const left = Math.round((goal.target - goal.current) * 100) / 100;
+  if (left <= 0) return undefined;
+  const surplus = monthlySurplus(data, asOf);
+  const etaFor = (months: number) => {
+    const date = new Date(`${asOf}T12:00:00`);
+    date.setMonth(date.getMonth() + months);
+    return isoDate(date).slice(0, 7);
+  };
+  if (goal.dueDate && goal.dueDate > asOf) {
+    // Luni calendaristice întregi: 25 sept. → 25 ian. înseamnă 4, nu 122 / 30,44 zile.
+    const [y1, m1, d1] = asOf.split("-").map(Number);
+    const [y2, m2, d2] = goal.dueDate.split("-").map(Number);
+    const months = Math.max(1, (y2 - y1) * 12 + (m2 - m1) - (d2 < d1 ? 1 : 0));
+    const monthly = Math.ceil(left / months);
+    return { goalId: goal.id, left, monthly, months, eta: goal.dueDate.slice(0, 7), surplus, stretch: surplus !== undefined && monthly > Math.max(0, surplus), basis: "deadline" };
+  }
+  if (!surplus || surplus <= 0) return undefined;
+  const monthly = Math.min(Math.ceil(left), Math.max(50, Math.round((surplus * 0.3) / 10) * 10));
+  const months = Math.max(1, Math.ceil(left / monthly));
+  return { goalId: goal.id, left, monthly, months, eta: etaFor(months), surplus, stretch: false, basis: "surplus" };
 };
 
 export type TodayDue = {

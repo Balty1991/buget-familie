@@ -93,3 +93,7 @@
 .bf-household-cats li em.up { color: var(--cf-danger); }
 .bf-household-cats li em.down { color: var(--cf-primary-strong); }
 .bf-envelope-runout { grid-column: 1 / -1; margin: 8px 0 0; padding: 8px 10px; border-left: 3px solid var(--cf-warning); border-radius: 8px; background: color-mix(in srgb, var(--cf-warning) 10%, transparent); color: var(--cf-ink); font-size: 13px; line-height: 1.45; }
+.bf-saving-plan { display: grid; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--cf-primary) 8%, transparent); }
+.bf-saving-plan p { margin: 0; color: var(--cf-ink); font-size: 13px; line-height: 1.45; }
+.bf-saving-plan.is-stretch { background: color-mix(in srgb, var(--cf-warning) 12%, transparent); }
+.bf-saving-plan button { justify-self: start; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
