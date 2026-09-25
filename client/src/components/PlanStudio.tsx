@@ -10,7 +10,7 @@ import "../plan-studio.css";
 import "../envelope-source.css";
 import "../envelope-transfer.css";
 import "../envelope-insights.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
@@ -25,7 +25,8 @@ import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace, envelopeRunOut } from "@/lib/household-insights";
-import { MonthlyNeedsSection } from "@/components/MonthlyNeedsPanel";
+import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
+import { activeIncomes } from "@/lib/monthly-needs";
 import "../monthly-needs.css";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
@@ -105,6 +106,11 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const [weekTransferAmount, setWeekTransferAmount] = useState("");
   const [weekTransferError, setWeekTransferError] = useState("");
   const [allocationPeriod, setAllocationPeriod] = useState<"next-income" | "month" | "week" | "custom">("next-income");
+  // Data salariului se poate schimba și din „Ce plătim lunar” sau de la repartizare: câmpurile de aici o urmează.
+  useEffect(() => {
+    if (allocationPeriod !== "next-income") return;
+    setCycleStart(plan.periodStart); setCycleEnd(plan.nextPayday || ""); setCycleFlex(plan.paydayFlexDays ?? 3);
+  }, [plan.periodStart, plan.nextPayday, plan.paydayFlexDays, allocationPeriod]);
   const [allocationPreviewOpen, setAllocationPreviewOpen] = useState(false);
   const [planFlowOpen, setPlanFlowOpen] = useState(false);
   const [showGlossary, setShowGlossary] = useState(() => !hasSeenEnvelopeGlossary());
@@ -468,6 +474,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         </label>
         {plan.horizonDays ? <PlanField label={t("Vreau ca banii să-mi ajungă")}><select value={plan.horizonDays} onChange={(event) => { const days = Number(event.target.value); const today = isoToday(); updatePlan({ horizonDays: days, periodStart: today, nextPayday: addIsoDays(today, days - 1) }); }}>{[7, 14, 21, 30, 45, 60, 90].map((days) => <option key={days} value={days}>{t("{days} zile", { days })}</option>)}</select></PlanField> : null}
       </div>
+      {!plan.horizonDays && <NextPayday plan={plan} incomes={activeIncomes(data)} onSave={updatePlan} />}
       {!plan.horizonDays && <details className="bf-plan-period">
         <summary>{t("Perioada salariului, dacă vrei ritm săptămânal")}</summary>
       <div className="bf-cycle-setup-fields">

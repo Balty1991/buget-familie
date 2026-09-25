@@ -5,10 +5,11 @@
 import "../monthly-needs.css";
 import { useEffect, useRef, useState } from "react";
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
-import { appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, revertSalaryAllocationApplication, type AppData, type ExpectedIncome, type MonthlyNeed } from "@/lib/finance-data";
+import { appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, revertSalaryAllocationApplication, addIsoDays, paydayWindow, type AppData, type ExpectedIncome, type MonthlyNeed, type SalaryPlan } from "@/lib/finance-data";
 import { askConfirm } from "@/lib/confirm-dialog";
-import { activeIncomes, activeNeeds, expectedMonthlyIncome, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
+import { activeIncomes, activeNeeds, expectedMonthlyIncome, nextPaydayAfter, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
+import { RoDateInput } from "@/components/RoDateInput";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
 
@@ -111,7 +112,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
   const members = data.settings.members;
   const categories = [...expenseCategories, ...data.settings.customCategories];
   const now = () => new Date().toISOString();
-  const save = (patch: { needs?: MonthlyNeed[]; incomes?: ExpectedIncome[] }) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: now() } } });
+  const save = (patch: Partial<SalaryPlan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: now() } } });
   const updateNeed = (id: string, patch: Partial<MonthlyNeed>) => save({ needs: (plan.needs || []).map((item) => item.id === id ? { ...item, ...patch, updatedAt: now() } : item) });
   const updateIncome = (id: string, patch: Partial<ExpectedIncome>) => save({ incomes: (plan.incomes || []).map((item) => item.id === id ? { ...item, ...patch, updatedAt: now() } : item) });
   const [openNew, setOpenNew] = useState("");
@@ -173,6 +174,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
         </div>
       ))}
       <button type="button" className="bf-secondary bf-needs-add" onClick={addIncome}><Plus size={15} /> {t("Adaugă un venit")}</button>
+      {incomes.length > 0 && !plan.horizonDays && <NextPayday plan={plan} incomes={incomes} onSave={save} />}
 
       <h3>{t("Cheltuielile")}</h3>
       {needs.map((need) => (
@@ -222,5 +224,49 @@ export function MonthlyNeedsSection({ data, onChange }: { data: AppData; onChang
       <summary>{count ? t("Ce plătim lunar · {count} cheltuieli · {incomes} venituri", { count, incomes: activeIncomes(data).length }) : t("Ce plătim lunar — repartizare automată la salariu")}</summary>
       {open && <MonthlyNeedsPanel data={data} onChange={onChange} />}
     </details>
+  );
+}
+
+/**
+ * Data aproximativă a următorului salariu și cât poate varia. Tranșele merg până la data
+ * obișnuită, iar plicurile acoperă și zilele în care salariul poate întârzia.
+ */
+export function NextPayday({ plan, incomes, onSave }: { plan: SalaryPlan; incomes: ExpectedIncome[]; onSave: (patch: Partial<SalaryPlan>) => void }) {
+  const today = isoToday();
+  const active = Boolean(plan.nextPayday && plan.nextPayday >= today);
+  const flex = plan.paydayFlexDays ?? 3;
+  const guess = [...incomes].map((item) => nextPaydayAfter(today, item.day)).sort()[0] || "";
+  const shown = active ? plan.nextPayday : guess;
+  const range = paydayWindow({ ...plan, nextPayday: shown, periodStart: active ? plan.periodStart : today, earliestPayday: undefined, paydayFlexDays: flex });
+  const day = (iso: string) => formatDate(iso, { day: "numeric", month: "long" });
+  const setDate = (iso: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || iso <= today || iso === plan.nextPayday) return;
+    const periodStart = active && plan.periodStart && plan.periodStart < iso ? plan.periodStart : today;
+    const earliest = addIsoDays(iso, -flex);
+    onSave({ periodStart, nextPayday: iso, paydayFlexDays: flex, earliestPayday: earliest > periodStart ? earliest : periodStart });
+  };
+  const setFlex = (value: number) => {
+    if (!active) return onSave({ paydayFlexDays: value });
+    const earliest = addIsoDays(plan.nextPayday, -value);
+    onSave({ paydayFlexDays: value, earliestPayday: earliest > plan.periodStart ? earliest : plan.periodStart });
+  };
+  return (
+    <div className="bf-needs-payday">
+      <p>
+        <b>{shown ? t("Următorul salariu: ~{date}", { date: day(shown) }) : t("Când vine următorul salariu?")}</b>
+        {!shown && <span>{t("Alege data aproximativă: plicurile se împart pe săptămâni până atunci.")}</span>}
+        {shown && <span>{flex > 0
+          ? t("Poate veni între {from} și {to}. Săptămânile merg până pe {date}, iar plicurile ajung și dacă întârzie.", { from: day(range.earliest), to: day(range.latest), date: day(shown) })
+          : t("Vine fix în ziua asta.")}</span>}
+        {!active && shown && <span>{t("Se stabilește singur din ziua declarată când notezi salariul. Îl poți alege și acum.")}</span>}
+      </p>
+      <label><span>{t("Data aproximativă")}</span><RoDateInput min={addIsoDays(today, 1)} value={shown} onChange={(event) => setDate(event.target.value)} /></label>
+      <label><span>{t("Poate varia cu")}</span>
+        <select value={flex} onChange={(event) => setFlex(Number(event.target.value))}>
+          <option value={0}>{t("Nu variază")}</option>
+          {[1, 2, 3, 4, 5].map((days) => <option key={days} value={days}>{days === 1 ? t("± 1 zi") : t("± {days} zile", { days })}</option>)}
+        </select>
+      </label>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allocationFromText, createEmptyAppData, revertSalaryAllocationApplication, type AppData, type MonthlyNeed } from "./finance-data";
-import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, cycleWeeks, weeklyTarget } from "./monthly-needs";
+import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, cycleWeeks, weeklyTarget, nextPaydayAfter } from "./monthly-needs";
 
 const need = (id: string, label: string, min: number, max: number, extra: Partial<MonthlyNeed> = {}): MonthlyNeed => ({ id, label, category: label, cadence: "monthly", min, max, priority: "fixed", ...extra });
 
@@ -43,6 +43,13 @@ describe("săptămânile și zilele ciclului", () => {
     // 600 pe fiecare săptămână întreagă, iar zilele rămase primesc partea lor rotundă.
     expect(weeklyTarget(600, { weeks: 4, extraDays: 4 })).toBe(2743);
     expect(weeklyTarget(600, { weeks: 4, extraDays: 0 })).toBe(2400);
+  });
+  it("următorul salariu după ziua declarată, chiar dacă acesta a venit devreme sau târziu", () => {
+    expect(nextPaydayAfter("2026-10-10", 10)).toBe("2026-11-10");
+    expect(nextPaydayAfter("2026-10-08", 10)).toBe("2026-11-10"); // a venit cu 2 zile mai devreme
+    expect(nextPaydayAfter("2026-10-12", 10)).toBe("2026-11-10"); // a întârziat 2 zile
+    expect(nextPaydayAfter("2026-09-30", 1)).toBe("2026-11-01"); // pe 1 oct. ar fi a doua zi
+    expect(nextPaydayAfter("2026-11-02", 28)).toBe("2026-11-28");
   });
   it("aceeași zi luna viitoare, fără să sară în luna de după", () => {
     expect(sameDayNextMonth("2026-01-31")).toBe("2026-02-28");
@@ -100,6 +107,21 @@ describe("repartizarea la salariu", () => {
     expect(rate?.amount).toBe(1400);
     // Luna nouă, primul venit: ciclul pornește din ziua lui, după ce planul vechi s-a încheiat.
     expect(data.settings.salaryPlan).toMatchObject({ periodStart: "2026-11-10", nextPayday: "2026-12-10" });
+  });
+
+  it("salariul venit mai devreme păstrează data obișnuită a următorului, cu ± 3 zile", () => {
+    let data = family();
+    data.transactions = [income("s1", "eu", 4700, "2026-10-08")];
+    data = applyIncomeSplit(data, "s1").data;
+    expect(data.settings.salaryPlan).toMatchObject({ periodStart: "2026-10-08", nextPayday: "2026-11-10", paydayFlexDays: 3 });
+  });
+
+  it("data aleasă de mână pentru ciclul în curs are întâietate", () => {
+    const data = family();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-10-10", nextPayday: "2026-11-13" };
+    data.transactions = [income("s1", "eu", 4700, "2026-10-10")];
+    const split = proposeIncomeSplit(data, "s1");
+    expect(split.ok && split.cycleEnd).toBe("2026-11-13");
   });
 
   it("anularea pune la loc suma de dinainte a plicului", () => {

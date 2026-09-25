@@ -78,6 +78,27 @@ const fundedInCycle = (data: AppData, income: Transaction) => {
   return { funded, cycleStart };
 };
 
+/** Venitul declarat care se potrivește cu cel intrat: același membru, ziua cea mai apropiată. */
+export const expectedIncomeFor = (data: AppData, income: Pick<Transaction, "date" | "memberId">): ExpectedIncome | undefined => {
+  const all = activeIncomes(data);
+  const own = all.filter((item) => item.memberId === income.memberId);
+  const day = Number(income.date.slice(8, 10));
+  const gap = (item: ExpectedIncome) => { const raw = Math.abs(item.day - day); return Math.min(raw, 31 - raw); };
+  return [...(own.length ? own : all)].sort((a, b) => gap(a) - gap(b))[0];
+};
+
+/**
+ * Ziua următorului salariu, după ziua declarată, nu după ziua în care a intrat de fapt:
+ * dacă a venit pe 8 în loc de 10, următorul e tot pe 10. Cel puțin 20 de zile distanță,
+ * ca un salariu venit devreme (30 sept. în loc de 1 oct.) să nu închidă ciclul a doua zi.
+ */
+export const nextPaydayAfter = (start: string, day: number) => {
+  const sameMonth = (() => { const date = atNoon(start); const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(); date.setDate(Math.min(day, last)); return toIso(date); })();
+  let candidate = sameMonth;
+  for (let step = 0; step < 3 && cycleWeeks(start, candidate).days - 1 < CYCLE_WINDOW_DAYS; step += 1) candidate = sameDayNextMonth(candidate, day);
+  return candidate;
+};
+
 /** Următorul venit așteptat al altui membru, dacă vine în același ciclu. */
 const otherIncomeSoon = (data: AppData, income: Transaction): { label: string; amount: number; date: string } | undefined => {
   const incomes = activeIncomes(data).filter((item) => item.memberId !== income.memberId);
@@ -137,7 +158,12 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
   if (!needs.length) return { ok: false, reason: "no-needs", message: t("Adaugă întâi cheltuielile lunare ale familiei.") };
 
   const { funded, cycleStart } = fundedInCycle(data, income);
-  const cycleEnd = sameDayNextMonth(cycleStart);
+  // Data aleasă de mână pentru ciclul în curs are întâietate; altfel, ziua declarată a venitului.
+  const plan = data.settings.salaryPlan;
+  const opener = cycleStart === income.date ? income : incomeOf(data, (plan.salaryAllocationApplications || []).find((item) => item.origin === "needs" && incomeOf(data, item.incomeId)?.date === cycleStart)?.incomeId || "") || income;
+  const declaredDay = expectedIncomeFor(data, opener)?.day ?? Number(cycleStart.slice(8, 10));
+  const manual = plan.periodStart && plan.periodStart <= cycleStart && plan.nextPayday && plan.nextPayday > addIsoDays(cycleStart, CYCLE_WINDOW_DAYS - 1) && !plan.horizonDays ? plan.nextPayday : "";
+  const cycleEnd = manual || nextPaydayAfter(cycleStart, declaredDay);
   const cycle = cycleWeeks(cycleStart, cycleEnd);
   let money = round2(income.amount);
   const ordered = [...needs].sort((a, b) => Number(a.priority === "flex") - Number(b.priority === "flex"));
@@ -222,9 +248,10 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     origin: "needs",
   };
   // Primul venit al unui ciclu nou deschide ciclul, dacă planul vechi s-a încheiat.
-  const expired = !plan.nextPayday || plan.nextPayday <= split.income.date;
+  // Salariul poate veni cu câteva zile mai devreme: din prima zi a ferestrei, ciclul vechi s-a încheiat.
+  const expired = !plan.nextPayday || addIsoDays(plan.nextPayday, -(plan.paydayFlexDays ?? 3)) <= split.income.date;
   const firstOfCycle = split.cycleStart === split.income.date;
-  const cycle = expired && firstOfCycle ? { periodStart: split.income.date, nextPayday: split.cycleEnd, earliestPayday: undefined } : {};
+  const cycle = expired && firstOfCycle ? { periodStart: split.income.date, nextPayday: split.cycleEnd, earliestPayday: undefined, paydayFlexDays: plan.paydayFlexDays ?? 3 } : {};
   const next: AppData = {
     ...data,
     settings: {

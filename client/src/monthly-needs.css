@@ -74,3 +74,10 @@
 .bf-envelope-weeks li > strong { grid-column: 3; grid-row: 1 / span 2; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .bf-envelope-weeks li.is-current { background: color-mix(in srgb, var(--cf-primary) 10%, transparent); box-shadow: inset 3px 0 0 var(--cf-primary); }
 .bf-envelope-weeks li.is-over > strong { color: var(--cf-danger); }
+
+.bf-needs-payday { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; border: 1px solid color-mix(in srgb, var(--cf-primary) 40%, var(--cf-line)); border-radius: 14px; background: var(--cf-surface-alt); }
+.bf-needs-payday > p { grid-column: 1 / -1; display: grid; gap: 4px; margin: 0; font-size: 13px; line-height: 1.45; }
+.bf-needs-payday > p b { font-size: 15px; }
+.bf-needs-payday label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--cf-ink); }
+.bf-needs-payday input, .bf-needs-payday select { width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid var(--cf-line); border-radius: 10px; color: var(--cf-ink); background: var(--cf-surface); font-size: 14px; }
+.bf-envelope-weeks > summary > span { font-size: 14px; color: var(--cf-link); }
