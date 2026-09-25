@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { applySalaryAllocationRules, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
+import { applySalaryAllocationRules, revertSalaryAllocationApplication, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
 import { cycleClose } from "@/lib/cycle-close";
 import { pendingSplitIncome } from "@/lib/monthly-needs";
@@ -33,6 +33,9 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   // Cu cheltuielile lunare declarate, salariul primește propunerea completă, nu doar regulile.
   const splitIncome = pendingSplitIncome(data, isoToday());
   const [splitDismissed, setSplitDismissed] = useState(false);
+  /** Repartizarea abia aplicată: rămâne un rând cu „Anulează”, în caz că te răzgândești. */
+  const [justSplit, setJustSplit] = useState("");
+  const justApplied = justSplit ? (data.settings.salaryPlan.salaryAllocationApplications || []).find((item) => item.id === justSplit && item.origin === "needs") : undefined;
   const pay = (id: string) => {
     // Suma variabilă (curent, gaz) se confirmă cu valoarea de pe factură, în Scadențe.
     if (data.recurring.find((item) => item.id === id)?.variable && onOpenRecurring) return onOpenRecurring();
@@ -89,7 +92,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const showHunts = brief.hunts.length > 0 || Boolean(pendingHunt);
   const showWeek = Boolean(week.shouldPrompt && !simpleMode && onOpenWeek);
   const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed));
-  if (!showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
+  if (!showStamp && !showIncome && !(splitIncome && !splitDismissed) && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
 
   return (
     <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
@@ -103,7 +106,13 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
         </button>
       )}
 
-      {splitIncome && !splitDismissed && <IncomeSplitCard data={data} incomeId={splitIncome.id} onChange={onChange} onDismiss={() => setSplitDismissed(true)} />}
+      {splitIncome && !splitDismissed && <IncomeSplitCard data={data} incomeId={splitIncome.id} onChange={(next) => { onChange(next); setJustSplit(next.settings.salaryPlan.salaryAllocationApplications?.[0]?.id || ""); }} onDismiss={() => setSplitDismissed(true)} />}
+      {justApplied && (
+        <aside className="bf-income-split-done" role="status">
+          <span>{t("Am împărțit {title} în {count} plicuri.", { title: justApplied.incomeTitle, count: justApplied.allocations.length })}</span>
+          <button type="button" className="bf-secondary" onClick={() => { onChange(revertSalaryAllocationApplication(data, justApplied.id)); setJustSplit(""); }}>{t("Anulează")}</button>
+        </aside>
+      )}
       {pendingIncome && !splitIncome && (
         <button type="button" className="bf-brief-salary" onClick={fillEnvelopes}>
           <b>{t("A venit {title}", { title: pendingIncome.title })}</b>

@@ -180,6 +180,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
   for (const line of split.lines) {
     if (line.target <= 0) continue;
     let envelope = envelopeFor(allocations, line.need);
+    const created = !envelope;
     if (!envelope) {
       envelope = { id: newId("allocation"), label: line.need.label, amount: 0, category: line.need.category, weeklyPace: line.need.cadence === "weekly", updatedAt: now };
       allocations = [...allocations, envelope];
@@ -190,9 +191,9 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     const next = round2(line.fundedBefore + line.amount);
     const previousAmount = envelope.amount;
     const id = envelope.id;
-    if (previousAmount === next && line.amount <= 0) continue;
+    if (!created && previousAmount === next && line.amount <= 0) continue;
     allocations = allocations.map((item) => item.id === id ? { ...item, amount: next, updatedAt: now } : item);
-    lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount });
+    lines.push({ ruleId: `need:${line.need.id}`, allocationId: id, amount: line.amount, previousAmount, ...(created ? { created: true } : {}) });
   }
   if (!lines.some((item) => item.amount > 0)) return { data, error: t("Nu e nimic de repartizat din acest venit: cheltuielile ciclului sunt deja acoperite.") };
   const application: SalaryAllocationApplication = {

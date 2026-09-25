@@ -175,3 +175,19 @@ describe("cheltuiala ajunge în plicul ei după ce scrii", () => {
     expect(envelopeFor(data, "ab")).toBeUndefined();
   });
 });
+
+describe("te-ai răzgândit", () => {
+  it("anularea scoate plicurile create de repartizare, dacă n-au cheltuieli, și redeschide venitul", () => {
+    let data = family();
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10")];
+    data = applyIncomeSplit(data, "s-eu").data;
+    const lumina = data.settings.salaryPlan.allocations.find((item) => item.label === "Lumină")!;
+    // O cheltuială deja pusă pe Lumină: plicul acela rămâne, restul pleacă.
+    data.transactions.push({ id: "enel", title: "Enel", amount: 380, kind: "expense", category: "Casă & facturi", source: "Card", person: "", date: "2026-10-11", sourceId: "card", memberId: "eu", allocationId: lumina.id });
+    const application = data.settings.salaryPlan.salaryAllocationApplications![0];
+    data = revertSalaryAllocationApplication(data, application.id);
+    expect(data.settings.salaryPlan.allocations.map((item) => item.label)).toEqual(["Lumină"]);
+    expect(data.settings.salaryPlan.allocations[0].amount).toBe(0);
+    expect(pendingSplitIncome(data, "2026-10-11")?.id).toBe("s-eu");
+  });
+});

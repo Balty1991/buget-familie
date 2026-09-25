@@ -4,8 +4,9 @@
  */
 import "../monthly-needs.css";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { expenseCategories, isoToday, newId, parseRomanianAmount, type AppData, type ExpectedIncome, type MonthlyNeed } from "@/lib/finance-data";
+import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, revertSalaryAllocationApplication, type AppData, type ExpectedIncome, type MonthlyNeed } from "@/lib/finance-data";
+import { askConfirm } from "@/lib/confirm-dialog";
 import { activeIncomes, activeNeeds, expectedMonthlyIncome, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
 import { t } from "@/lib/i18n";
@@ -53,15 +54,21 @@ function AmountField({ label, value, onCommit }: { label: string; value: number;
  * Un rând din listă. Starea (deschis, ce scrii) e a lui: salvarea nu-l mai închide și nu-l
  * mai recreează, ca după „De la” să apuci și „Până la”.
  */
-function NeedRow({ need, members, categories, startOpen, onSave }: { need: MonthlyNeed; members: AppData["settings"]["members"]; categories: string[]; startOpen: boolean; onSave: (patch: Partial<MonthlyNeed>) => void }) {
+function NeedRow({ need, members, categories, startOpen, onSave, onDelete }: { need: MonthlyNeed; members: AppData["settings"]["members"]; categories: string[]; startOpen: boolean; onSave: (patch: Partial<MonthlyNeed>) => void; onDelete: () => void }) {
   const [open, setOpen] = useState(startOpen);
   const [label, setLabel] = useState(need.label);
   const per = need.cadence === "weekly" ? t("pe săptămână") : t("pe lună");
   return (
     <details className="bf-needs-item" open={open} onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}>
       <summary>
-        <b>{need.label}</b>
-        <span>{needSummary(need, members)}</span>
+        <span className="bf-needs-summary-text">
+          <b>{need.label}</b>
+          <span>{needSummary(need, members)}</span>
+        </span>
+        <span className="bf-needs-summary-actions">
+          <button type="button" aria-label={t("Modifică {name}", { name: need.label })} onClick={(event) => { event.preventDefault(); setOpen(!open); }}><Pencil size={15} /></button>
+          <button type="button" className="danger" aria-label={t("Șterge {name}", { name: need.label })} onClick={(event) => { event.preventDefault(); onDelete(); }}><Trash2 size={15} /></button>
+        </span>
       </summary>
       <div className="bf-needs-row">
         <input className="bf-needs-label" aria-label={t("Numele cheltuielii")} value={label} onChange={(event) => setLabel(event.target.value)} onBlur={() => { const next = label.trim(); if (next && next !== need.label) onSave({ label: next }); else setLabel(need.label); }} />
@@ -92,7 +99,6 @@ function NeedRow({ need, members, categories, startOpen, onSave }: { need: Month
         <select aria-label={t("Categorie")} value={need.category} onChange={(event) => onSave({ category: event.target.value })}>
           {categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}
         </select>
-        <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: need.label })} onClick={() => onSave({ archived: true })}><Trash2 size={15} /></button>
       </div>
     </details>
   );
@@ -109,6 +115,35 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
   const updateNeed = (id: string, patch: Partial<MonthlyNeed>) => save({ needs: (plan.needs || []).map((item) => item.id === id ? { ...item, ...patch, updatedAt: now() } : item) });
   const updateIncome = (id: string, patch: Partial<ExpectedIncome>) => save({ incomes: (plan.incomes || []).map((item) => item.id === id ? { ...item, ...patch, updatedAt: now() } : item) });
   const [openNew, setOpenNew] = useState("");
+  /**
+   * Ștergerea unei cheltuieli: plicul ei pleacă odată cu ea dacă n-a primit nicio cheltuială;
+   * altfel rămâne în Plan, cu istoricul lui, și se poate șterge de acolo.
+   */
+  const deleteNeed = async (need: MonthlyNeed) => {
+    const envelope = plan.allocations.find((item) => item.id === need.allocationId);
+    const used = Boolean(envelope && data.transactions.some((tx) => tx.allocationId === envelope.id));
+    const message = !envelope
+      ? t("Ștergi „{name}” din cheltuielile lunare?", { name: need.label })
+      : used
+        ? t("Ștergi „{name}” din cheltuielile lunare? Plicul „{envelope}” rămâne în Plan, fiindcă are cheltuieli; îl poți șterge de acolo.", { name: need.label, envelope: envelope.label })
+        : t("Ștergi „{name}” din cheltuielile lunare? Plicul lui, încă fără cheltuieli, se șterge și el.", { name: need.label });
+    if (!await askConfirm(message, { danger: true, confirmLabel: t("Șterge") })) return;
+    const stamp = now();
+    const nextNeeds = (plan.needs || []).map((item) => item.id === need.id ? { ...item, archived: true, updatedAt: stamp } : item);
+    const removeEnvelope = envelope && !used;
+    const next: AppData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, needs: nextNeeds, allocations: removeEnvelope ? plan.allocations.filter((item) => item.id !== envelope.id) : plan.allocations, updatedAt: stamp } } };
+    onChange(removeEnvelope ? appendAllocationHistory(next, { kind: "deleted", allocationId: envelope.id, allocationLabel: envelope.label, previousAmount: envelope.amount }) : next);
+  };
+  const deleteIncome = async (income: ExpectedIncome) => {
+    if (!await askConfirm(t("Ștergi venitul „{name}”? Salariile deja notate rămân în registru.", { name: income.label }), { danger: true, confirmLabel: t("Șterge") })) return;
+    updateIncome(income.id, { archived: true });
+  };
+  /** Repartizările făcute din listă, cele mai noi primele: fiecare se poate anula. */
+  const applications = (plan.salaryAllocationApplications || []).filter((item) => item.origin === "needs").slice(0, 6);
+  const undoApplication = async (id: string, title: string) => {
+    if (!await askConfirm(t("Anulezi repartizarea „{title}”? Plicurile revin la sumele de dinainte, iar cele create acum, încă fără cheltuieli, se șterg. Venitul rămâne în registru și îl poți împărți din nou.", { title }), { confirmLabel: t("Anulează repartizarea") })) return;
+    onChange(revertSalaryAllocationApplication(data, id));
+  };
   const addNeed = (preset: (typeof PRESETS)[number]) => { const id = newId("need"); setOpenNew(id); save({ needs: [...(plan.needs || []), { id, ...preset, min: 0, max: 0, reserve: "max", updatedAt: now() }] }); };
   const addIncome = () => save({ incomes: [...(plan.incomes || []), { id: newId("income"), memberId: members[incomes.length % Math.max(1, members.length)]?.id || members[0]?.id || "", label: t("Salariu"), amount: 0, day: 10, updatedAt: now() }] });
   const monthlyIn = expectedMonthlyIncome(incomes);
@@ -134,14 +169,14 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
           <input aria-label={t("Numele venitului")} defaultValue={income.label} onBlur={(event) => event.target.value.trim() !== income.label && updateIncome(income.id, { label: event.target.value.trim() || t("Salariu") })} />
           <AmountField label={t("Sumă")} value={income.amount} onCommit={(value) => updateIncome(income.id, { amount: value })} />
           <label><span>{t("Ziua")}</span><input inputMode="numeric" defaultValue={income.day} onBlur={(event) => { const day = Math.min(31, Math.max(1, Math.round(Number(event.target.value)) || income.day)); if (day !== income.day) updateIncome(income.id, { day }); }} /></label>
-          <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: income.label })} onClick={() => updateIncome(income.id, { archived: true })}><Trash2 size={15} /></button>
+          <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: income.label })} onClick={() => void deleteIncome(income)}><Trash2 size={15} /></button>
         </div>
       ))}
       <button type="button" className="bf-secondary bf-needs-add" onClick={addIncome}><Plus size={15} /> {t("Adaugă un venit")}</button>
 
       <h3>{t("Cheltuielile")}</h3>
       {needs.map((need) => (
-        <NeedRow key={need.id} need={need} members={members} categories={categories} startOpen={need.max <= 0 || openNew === need.id} onSave={(patch) => updateNeed(need.id, patch)} />
+        <NeedRow key={need.id} need={need} members={members} categories={categories} startOpen={need.max <= 0 || openNew === need.id} onSave={(patch) => updateNeed(need.id, patch)} onDelete={() => void deleteNeed(need)} />
       ))}
       <div className="bf-needs-presets" role="group" aria-label={t("Adaugă o cheltuială")}>
         {PRESETS.filter((preset) => !usedPresets.has(preset.label)).map((preset) => (
@@ -160,6 +195,17 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
         <p className="bf-needs-note">{t("În Scadențe ai deja: {list}. Sunt rezervate separat — nu le adăuga și aici, ca să nu se numere de două ori.", { list: recurring.slice(0, 6).map((item) => `${item.name} ${money(item.amount)}`).join(", ") })}</p>
       )}
       {pending && <IncomeSplitCard data={data} incomeId={pending.id} onChange={onChange} />}
+      {applications.length > 0 && (
+        <div className="bf-needs-applied">
+          <h3>{t("Repartizări făcute")}</h3>
+          {applications.map((item) => (
+            <div key={item.id} className="bf-needs-applied-row">
+              <span><b>{item.incomeTitle} · {money(item.incomeAmount)}</b><small>{formatDate(item.appliedAt.slice(0, 10), { day: "numeric", month: "long" })} · {t("{count} plicuri", { count: item.allocations.length })}</small></span>
+              <button type="button" className="bf-secondary" onClick={() => void undoApplication(item.id, item.incomeTitle)}><RotateCcw size={14} /> {t("Anulează")}</button>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
