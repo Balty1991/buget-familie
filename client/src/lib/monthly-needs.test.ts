@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allocationFromText, createEmptyAppData, revertSalaryAllocationApplication, type AppData, type MonthlyNeed } from "./finance-data";
-import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, cycleWeeks, weeklyTarget, nextPaydayAfter, rarePlan } from "./monthly-needs";
+import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, cycleWeeks, weeklyTarget, nextPaydayAfter, rarePlan, pendingTransfers, markTransferDone } from "./monthly-needs";
 
 const need = (id: string, label: string, min: number, max: number, extra: Partial<MonthlyNeed> = {}): MonthlyNeed => ({ id, label, category: label, cadence: "monthly", min, max, priority: "fixed", ...extra });
 
@@ -285,5 +285,28 @@ describe("farmacia ajunge la neprevăzute", () => {
     data.settings.salaryPlan.allocations = [{ id: "n", label: "Neprevăzute", amount: 400, category: "Altele" }, { id: "m", label: "Mâncare", amount: 2400, category: "Alimente" }];
     expect(allocationFromText(data, "Catena 45 lei")?.id).toBe("n");
     expect(allocationFromText(data, "Lidl 120")?.id).toBe("m");
+  });
+});
+
+describe("cine plătește", () => {
+  it("grădinița plătită de soție, acoperită din salariul meu: propune transferul", () => {
+    let data = family();
+    data.settings.salaryPlan.needs = data.settings.salaryPlan.needs!.map((item) => item.id === "gradinita" || item.id === "apa" ? { ...item, paidById: "sotia" } : item);
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10")];
+    const split = proposeIncomeSplit(data, "s-eu");
+    if (!split.ok) throw new Error(split.message);
+    expect(split.transfers).toEqual([{ toMemberId: "sotia", amount: 350, labels: ["Grădiniță", "Apă"] }]);
+    data = applyIncomeSplit(data, "s-eu").data;
+    expect(pendingTransfers(data, "2026-10-10")).toHaveLength(1);
+    const application = data.settings.salaryPlan.salaryAllocationApplications![0];
+    data = markTransferDone(data, application.id, "sotia");
+    expect(pendingTransfers(data, "2026-10-10")).toEqual([]);
+  });
+  it("din salariul celui care plătește nu e nimic de trimis", () => {
+    const data = family();
+    data.settings.salaryPlan.needs = data.settings.salaryPlan.needs!.map((item) => item.id === "gradinita" ? { ...item, paidById: "eu" } : item);
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10")];
+    const split = proposeIncomeSplit(data, "s-eu");
+    expect(split.ok && split.transfers).toEqual([]);
   });
 });

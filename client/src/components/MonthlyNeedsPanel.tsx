@@ -41,6 +41,8 @@ function needSummary(need: MonthlyNeed, members: AppData["settings"]["members"])
   if (payer) parts.push(t("doar din venitul lui {name}", { name: payer.name }));
   if (need.priority === "flex") parts.push(t("după obligații"));
   if (need.priority === "buffer") parts.push(t("din ce rămâne liber"));
+  const paidBy = members.find((item) => item.id === need.paidById);
+  if (paidBy) parts.push(t("o plătește {name}", { name: paidBy.name }));
   return parts.join(" · ");
 }
 
@@ -96,6 +98,12 @@ function NeedRow({ need, members, categories, startOpen, onSave, onDelete }: { n
           <option value="">{t("din orice venit")}</option>
           {members.map((member) => <option key={member.id} value={member.id}>{t("doar din venitul lui {name}", { name: member.name })}</option>)}
         </select>
+        {members.length > 1 && (
+          <select aria-label={t("Cine o plătește")} value={need.paidById || ""} onChange={(event) => onSave({ paidById: event.target.value || undefined })}>
+            <option value="">{t("o plătește oricine")}</option>
+            {members.map((member) => <option key={member.id} value={member.id}>{t("o plătește {name}, de pe cardul lui", { name: member.name })}</option>)}
+          </select>
+        )}
         <select aria-label={t("Prioritate")} value={need.priority || "fixed"} onChange={(event) => onSave({ priority: event.target.value === "flex" ? "flex" : event.target.value === "buffer" ? "buffer" : "fixed" })}>
           <option value="fixed">{t("obligație (întâi)")}</option>
           <option value="flex">{t("variabil (după obligații)")}</option>

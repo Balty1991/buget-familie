@@ -18,6 +18,7 @@ import {
   type ExpectedIncome,
   type MonthlyNeed,
   type SalaryAllocationApplication,
+  type SplitTransfer,
   type Transaction,
 } from "./finance-data";
 import { t } from "./i18n";
@@ -168,6 +169,8 @@ export type IncomeSplit =
     free: number;
     uncovered: number;
     nextIncome?: { label: string; amount: number; date: string };
+    /** Ce trebuie trimis celuilalt, pentru cheltuielile pe care le plătește el. */
+    transfers: SplitTransfer[];
   };
 
 /**
@@ -235,8 +238,23 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     // Rezerva de neprevăzute nu e o lipsă: dacă nu încape acum, nu înseamnă că venitul nu ajunge.
     uncovered: round2(lines.filter((item) => item.need.priority !== "buffer").reduce((sum, item) => sum + item.remaining, 0)),
     nextIncome: otherIncomeSoon(data, income),
+    transfers: splitTransfers(lines, income.memberId),
   };
 }
+
+/** Cheltuielile plătite de celălalt, acoperite din acest venit: se strâng pe persoană. */
+const splitTransfers = (lines: SplitLine[], memberId?: string): SplitTransfer[] => {
+  const byMember = new Map<string, SplitTransfer>();
+  for (const line of lines) {
+    const to = line.need.paidById;
+    if (!to || to === memberId || line.amount <= 0) continue;
+    const entry = byMember.get(to) || { toMemberId: to, amount: 0, labels: [] };
+    entry.amount = round2(entry.amount + line.amount);
+    entry.labels.push(line.need.label);
+    byMember.set(to, entry);
+  }
+  return Array.from(byMember.values());
+};
 
 /** Plicul unei cheltuieli: cel legat, altul cu același nume, sau unul nou. */
 const envelopeFor = (allocations: BudgetAllocation[], need: MonthlyNeed): BudgetAllocation | undefined =>
@@ -304,6 +322,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     appliedAt: now,
     allocations: lines,
     origin: "needs",
+    ...(split.transfers.length ? { transfers: split.transfers } : {}),
   };
   // Primul venit al unui ciclu nou deschide ciclul, dacă planul vechi s-a încheiat.
   // Salariul poate veni cu câteva zile mai devreme: din prima zi a ferestrei, ciclul vechi s-a încheiat.
@@ -422,4 +441,18 @@ export function matchExpectedIncome(data: AppData, income: { amount: number; dat
     .filter((item) => item.amount > 0 && Math.abs(item.amount - income.amount) <= Math.max(300, item.amount * 0.2) && gap(item) <= flex)
     .filter((item) => !income.memberId || item.memberId === income.memberId || !data.settings.members.some((member) => member.id === income.memberId))
     .sort((a, b) => Math.abs(a.amount - income.amount) - Math.abs(b.amount - income.amount) || gap(a) - gap(b))[0];
+}
+
+/** Transferurile propuse la repartizările din ultimele 40 de zile, încă nebifate. */
+export function pendingTransfers(data: AppData, asOf: string) {
+  const since = addIsoDays(asOf, -40);
+  return (data.settings.salaryPlan.salaryAllocationApplications || [])
+    .filter((item) => item.origin === "needs" && item.appliedAt.slice(0, 10) >= since)
+    .flatMap((item) => (item.transfers || []).filter((entry) => !entry.done).map((entry) => ({ applicationId: item.id, incomeTitle: item.incomeTitle, fromMemberId: item.memberId, ...entry })));
+}
+
+/** Bifează un transfer ca făcut. Nu e o mișcare în registru: banii rămân ai familiei. */
+export function markTransferDone(data: AppData, applicationId: string, toMemberId: string): AppData {
+  const plan = data.settings.salaryPlan;
+  return { ...data, settings: { ...data.settings, salaryPlan: { ...plan, salaryAllocationApplications: (plan.salaryAllocationApplications || []).map((item) => item.id === applicationId ? { ...item, transfers: (item.transfers || []).map((entry) => entry.toMemberId === toMemberId ? { ...entry, done: true } : entry) } : item), updatedAt: new Date().toISOString() } } };
 }

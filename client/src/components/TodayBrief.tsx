@@ -4,6 +4,7 @@ import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBala
 import { cycleClose } from "@/lib/cycle-close";
 import { pendingSplitIncome } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
+import { markTransferDone, pendingTransfers } from "@/lib/monthly-needs";
 import { CycleEndCard } from "@/components/CycleEndCard";
 import { cycleEndReport, recurringFromDetection, todayBrief, weeklyCheckIn, type SubscriptionDetection } from "@/lib/household-insights";
 import { t } from "@/lib/i18n";
@@ -95,7 +96,8 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const showWeek = Boolean(week.shouldPrompt && !simpleMode && onOpenWeek);
   const showClose = Boolean(closed || (brief.closeSoon && !simpleMode && !closed));
   const showCycleEnd = !splitIncome && Boolean(cycleEndReport(data));
-  if (!showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
+  const transfers = data.settings.members.length > 1 ? pendingTransfers(data, isoToday()) : [];
+  if (!transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
 
   return (
     <section className="bf-today-brief" aria-label={t("Reperul zilnic din plan")}>
@@ -118,6 +120,12 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
           <button type="button" className="bf-secondary" onClick={() => { onChange(revertSalaryAllocationApplication(data, justApplied.id)); setJustSplit(""); }}>{t("Anulează")}</button>
         </aside>
       )}
+      {transfers.map((entry) => (
+        <aside key={`${entry.applicationId}-${entry.toMemberId}`} className="bf-income-split-done" role="status">
+          <span>{t("De trimis: {amount} către {name}, pentru {labels} (din {title}).", { amount: money(entry.amount), name: data.settings.members.find((item) => item.id === entry.toMemberId)?.name || t("celălalt"), labels: entry.labels.join(", "), title: entry.incomeTitle })}</span>
+          <button type="button" className="bf-secondary" onClick={() => onChange(markTransferDone(data, entry.applicationId, entry.toMemberId))}>{t("Am trimis")}</button>
+        </aside>
+      ))}
       {pendingIncome && !splitIncome && (
         <button type="button" className="bf-brief-salary" onClick={fillEnvelopes}>
           <b>{t("A venit {title}", { title: pendingIncome.title })}</b>

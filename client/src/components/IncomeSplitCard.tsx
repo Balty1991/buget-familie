@@ -58,6 +58,9 @@ export function IncomeSplitCard({ data, incomeId, onChange, onDismiss }: { data:
             ? t("Rămân {amount} pentru {label} ({date}).", { amount: money(split.uncovered), label: split.nextIncome.label, date: formatDate(split.nextIncome.date, { day: "numeric", month: "long" }) })
             : t("Rămân neacoperiți {amount} — venitul nu ajunge pentru tot ce ai declarat.", { amount: money(split.uncovered) })}` : ""}
         </p>
+        {split.transfers.map((entry) => (
+          <p key={entry.toMemberId} className="bf-split-transfer">{t("De trimis după repartizare: {amount} către {name}, pentru {labels}.", { amount: money(entry.amount), name: data.settings.members.find((item) => item.id === entry.toMemberId)?.name || t("celălalt"), labels: entry.labels.join(", ") })}</p>
+        ))}
         {error && <p className="bf-form-error" role="alert">{error}</p>}
         <div>
           {onDismiss && <button type="button" className="bf-secondary" onClick={onDismiss}>{t("Nu acum")}</button>}

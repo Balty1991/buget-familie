@@ -98,3 +98,4 @@
 .bf-needs-rare-actions { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; }
 .bf-needs-rare-actions button { min-height: 44px; }
 .bf-link-button { padding: 0; border: 0; background: none; color: var(--cf-link); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; min-height: 32px; }
+.bf-split-transfer { margin: 0; padding: 9px 11px; border-radius: 10px; background: color-mix(in srgb, var(--cf-info) 10%, transparent); font-size: 13px; line-height: 1.45; }
