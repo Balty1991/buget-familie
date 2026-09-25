@@ -20,7 +20,7 @@ to{opacity:1;transform:translateY(0)}
 .os-shell .bf-today-workspace>*:nth-child(4){animation-delay:120ms}
 .os-shell .bf-today-workspace>*:nth-child(n+5){animation-delay:150ms}
 }
-@media (prefers-reduced-motion:reduce){.os-shell .os-hero, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty, .os-shell .bf-movement-day, .os-shell .bf-today-empty-activity, .os-shell .os-dock button{animation:none !important;transition:none !important}
+@media (prefers-reduced-motion:reduce){.os-shell .os-hero, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty, .os-shell .bf-today-empty-activity, .os-shell .os-dock button{animation:none !important;transition:none !important}
 }
 .os-shell .os-appbar.bf-appbar{padding-top:calc(8px+var(--os-inset-top,env(safe-area-inset-top,0px)));padding-left:max(16px,var(--os-inset-left,env(safe-area-inset-left,0px)));padding-right:max(16px,var(--os-inset-right,env(safe-area-inset-right,0px)))}
 .os-shell main,.os-shell .bf-page,.os-shell .bf-today-workspace,.os-shell .bf-movements-ledger,.os-shell .bf-plan-workspace{padding-bottom:calc(92px+var(--os-inset-bottom,env(safe-area-inset-bottom,0px)))}

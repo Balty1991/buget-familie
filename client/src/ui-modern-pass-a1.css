@@ -3,7 +3,7 @@
 .os-shell .os-amount{font-size:clamp(52px,15vw,76px) !important;letter-spacing:var(--ui-hero-tracking) !important;line-height:0.9 !important}
 @media (max-width:760px){.os-shell .os-amount{font-size:clamp(48px,14.5vw,64px)}
 }
-@media (max-width:760px){.os-shell .os-hero, .os-shell .bf-os-rhythm, .os-shell .bf-today-brief, .os-shell .bf-spend-stamp, .os-shell .bf-week-checkin, .os-shell .bf-movement-day, .os-shell .bf-plan-studio-header, .os-shell .bf-allocation-period, .os-shell .bf-allocation-progress-card, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty{border-radius:var(--ui-card-radius) !important}
+@media (max-width:760px){.os-shell .os-hero, .os-shell .bf-os-rhythm, .os-shell .bf-today-brief, .os-shell .bf-spend-stamp, .os-shell .bf-week-checkin, .os-shell .bf-plan-studio-header, .os-shell .bf-allocation-period, .os-shell .bf-allocation-progress-card, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty{border-radius:var(--ui-card-radius) !important}
 .os-shell .os-hero{padding:18px 16px 20px}
 .os-shell .bf-today-workspace{gap:16px}
 .os-shell .bf-os-rhythm{padding:14px 14px !important}

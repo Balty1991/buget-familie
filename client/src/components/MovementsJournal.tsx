@@ -3,6 +3,7 @@
  * iar căutarea, filtrele și exportul rămân un sertar secundar, accesibil.
  */
 import "../mobile-movements-pass.css";
+import "../movements-flat.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownRight, Download, FileUp, Pencil, Plus, ReceiptText, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { formatDate, isoDate, isoToday, newId, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";

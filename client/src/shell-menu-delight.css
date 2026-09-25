@@ -595,7 +595,6 @@ body .bf-command-palette,
 .os-shell .bf-more-group,
 .os-shell .bf-more-grid > button,
 .os-shell .bf-settings-row,
-.os-shell .bf-movement-day,
 .os-shell .bf-obligation-ledger article,
 .os-shell .bf-goal-card,
 .os-shell .bf-more-list article,
@@ -608,7 +607,7 @@ body .bf-command-palette,
 .bf-plan-sheet,
 .bf-journal-filter-sheet,
 .os-shell .os-dock button.is-on svg,
-.os-shell .os-dock button.active svg {
+.os-shell .os-dock button.active svg{
     animation: none !important;
     transition: none !important;
     filter: none !important;

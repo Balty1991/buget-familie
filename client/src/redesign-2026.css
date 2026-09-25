@@ -310,14 +310,13 @@
 .bf-movements-ledger .bf-movements-header > div::before { color: var(--cf-primary-strong, #0f3d35); border-left-color: var(--cf-primary, #185849); }
 .bf-journal-quickbar,
 .bf-journal-filter-sheet,
-.bf-movement-day,
 .bf-empty-state,
 .bf-journal-search,
 .bf-journal-filter-toggle,
 .bf-journal-export,
 .bf-journal-clear,
 .bf-journal-save-filter,
-.bf-journal-saved-list {
+.bf-journal-saved-list{
   border-color: var(--cf-line, rgba(16, 35, 31, .12)) !important;
   background: var(--cf-surface, #fffdf8) !important;
   color: var(--cf-ink, #10231f) !important;
@@ -352,14 +351,13 @@
 .dark .bf-page { background: var(--cf-bg, #10251f); }
 .dark .bf-journal-quickbar,
 .dark .bf-journal-filter-sheet,
-.dark .bf-movement-day,
 .dark .bf-empty-state,
 .dark .bf-journal-search,
 .dark .bf-journal-filter-toggle,
 .dark .bf-journal-export,
 .dark .bf-journal-clear,
 .dark .bf-journal-save-filter,
-.dark .bf-journal-saved-list { background: var(--cf-surface, #17352b) !important; }
+.dark .bf-journal-saved-list{ background: var(--cf-surface, #17352b) !important; }
 .dark .bf-journal-search input,
 .dark .bf-journal-filter-sheet input,
 .dark .bf-journal-filter-sheet select,

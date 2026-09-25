@@ -173,9 +173,8 @@ html body .os-shell .bf-plan-simulator,
 html body .os-shell .bf-plan-simulation,
 html body .bf-app .bf-plan-simulator,
 html body .bf-app .bf-plan-simulation,
-html body .bf-app .bf-movement-day,
 html body .bf-app .bf-allocation-period,
-html body .bf-app .bf-analysis-snapshot {
+html body .bf-app .bf-analysis-snapshot{
   --cf-glow: transparent !important;
   --os-glow: transparent !important;
 }
@@ -201,9 +200,8 @@ html body .os-shell .os-dock button.active {
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .os-shell .os-hero,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-plan-simulator,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-plan-simulation,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movement-day,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-allocation-period,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot {
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot{
   box-shadow:var(--bf-shadow-raise) !important;
   filter: none !important;
   outline: none !important;
@@ -226,15 +224,13 @@ html body .os-shell .bf-plan-simulator,
 html body .os-shell .bf-plan-simulation,
 html body .os-shell .bf-allocation-period,
 html body .os-shell .bf-allocation-progress-card,
-html body .os-shell .bf-movement-day,
 html body .os-shell .bf-analysis-snapshot,
 html body .os-shell .bf-analysis-control,
 html body .bf-app .bf-plan-studio-header,
 html body .bf-app .bf-plan-simulator,
 html body .bf-app .bf-plan-simulation,
 html body .bf-app .bf-allocation-period,
-html body .bf-app .bf-movement-day,
-html body .bf-app .bf-analysis-snapshot {
+html body .bf-app .bf-analysis-snapshot{
   padding: var(--ui-agg-card-pad) 18px !important;
   gap: var(--ui-agg-copy-gap) !important;
   border-radius: 1.15rem !important;
@@ -338,9 +334,8 @@ html body .os-shell .os-dock button svg {
 :is(html.theme-ink, html.theme-white) body .os-shell .os-hero,
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulator,
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulation,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-movement-day,
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-allocation-period,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-analysis-snapshot {
+:is(html.theme-ink, html.theme-white) body .bf-app .bf-analysis-snapshot{
   background: var(--os-surface, var(--cf-surface, #fffefa)) !important;
   border: 1px solid color-mix(in srgb, var(--os-line, #d8e0d8) 100%, transparent) !important;
   box-shadow:var(--bf-shadow-rest) !important;

@@ -60,7 +60,6 @@ html body .os-shell .bf-insights-header .bf-kicker {
 
 /* Cards / sections */
 html body .bf-app .bf-journal-quickbar,
-html body .bf-app .bf-movement-day,
 html body .bf-app .bf-obligation-ledger,
 html body .bf-app .bf-obligation-lane,
 html body .bf-app .bf-analysis-control,
@@ -72,7 +71,6 @@ html body .bf-app .bf-spend-compass,
 html body .bf-app .bf-analysis-watch,
 html body .bf-app .bf-analysis-balance,
 html body .os-shell .bf-journal-quickbar,
-html body .os-shell .bf-movement-day,
 html body .os-shell .bf-obligation-ledger,
 html body .os-shell .bf-obligation-lane,
 html body .os-shell .bf-analysis-control,
@@ -82,7 +80,7 @@ html body .os-shell .bf-analysis-month,
 html body .os-shell .bf-analysis-year,
 html body .os-shell .bf-spend-compass,
 html body .os-shell .bf-analysis-watch,
-html body .os-shell .bf-analysis-balance {
+html body .os-shell .bf-analysis-balance{
   padding: 18px 16px !important;
   border-radius: 1.1rem;
   border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 92%, transparent) !important;
@@ -212,7 +210,6 @@ html body .os-shell .bf-analysis h2 {
   }
 
   html body .bf-app .bf-journal-quickbar,
-html body .bf-app .bf-movement-day,
 html body .bf-app .bf-obligation-lane,
 html body .bf-app .bf-analysis-control,
 html body .bf-app .bf-analysis-snapshot,
@@ -221,7 +218,7 @@ html body .bf-app .bf-analysis-month,
 html body .bf-app .bf-analysis-year,
 html body .bf-app .bf-spend-compass,
 html body .bf-app .bf-analysis-watch,
-html body .bf-app .bf-analysis-balance {
+html body .bf-app .bf-analysis-balance{
     padding: 20px 16px !important;
     gap: 14px;
   }
@@ -236,12 +233,11 @@ html body .bf-app .bf-analysis-balance {
 /* ---- Dark themes: elevation, not violet bloom; coral only for alerts ---- */
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movements-header,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-insights-header,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movement-day,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligation-lane,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-control,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot,
 :is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-month,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero {
+:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero{
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-line, #22302a) 80%, transparent);
   border-color: color-mix(in srgb, var(--os-mint, #7cffc4) 12%, #1a2420) !important;
   outline: none;
