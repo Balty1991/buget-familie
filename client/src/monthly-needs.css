@@ -45,3 +45,4 @@
 .bf-needs-item > summary span { font-size: 13px; line-height: 1.4; color: var(--cf-ink); }
 .bf-needs-item[open] > summary { border-bottom: 1px solid var(--cf-line); }
 .bf-needs-item > .bf-needs-row { border: 0; border-radius: 0 0 14px 14px; }
+.bf-needs-hint { grid-column: 1 / -1; margin: 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--cf-warning) 12%, transparent); font-size: 12px; line-height: 1.45; }

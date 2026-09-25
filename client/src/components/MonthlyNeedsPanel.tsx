@@ -3,9 +3,10 @@
  * Din ele, la fiecare salariu, aplicația propune repartizarea (IncomeSplitCard).
  */
 import "../monthly-needs.css";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { expenseCategories, isoToday, newId, parseRomanianAmount, type AppData, type ExpectedIncome, type MonthlyNeed } from "@/lib/finance-data";
-import { activeIncomes, activeNeeds, expectedMonthlyIncome, expectedMonthlyNeeds, pendingSplitIncome } from "@/lib/monthly-needs";
+import { activeIncomes, activeNeeds, expectedMonthlyIncome, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
@@ -38,6 +39,65 @@ function needSummary(need: MonthlyNeed, members: AppData["settings"]["members"])
   return parts.join(" · ");
 }
 
+/** Un câmp de sumă care arată mereu ce e salvat, dar nu te întrerupe cât scrii. */
+function AmountField({ label, value, onCommit }: { label: string; value: number; onCommit: (value: number) => void }) {
+  const [draft, setDraft] = useState(value ? String(value).replace(".", ",") : "");
+  const editing = useRef(false);
+  useEffect(() => { if (!editing.current) setDraft(value ? String(value).replace(".", ",") : ""); }, [value]);
+  return (
+    <label><span>{label}</span><input inputMode="decimal" value={draft} placeholder="0" onFocus={() => { editing.current = true; }} onChange={(event) => setDraft(event.target.value)} onBlur={() => { editing.current = false; const next = Math.max(0, parseRomanianAmount(draft) || 0); if (next !== value) onCommit(next); }} /></label>
+  );
+}
+
+/**
+ * Un rând din listă. Starea (deschis, ce scrii) e a lui: salvarea nu-l mai închide și nu-l
+ * mai recreează, ca după „De la” să apuci și „Până la”.
+ */
+function NeedRow({ need, members, categories, startOpen, onSave }: { need: MonthlyNeed; members: AppData["settings"]["members"]; categories: string[]; startOpen: boolean; onSave: (patch: Partial<MonthlyNeed>) => void }) {
+  const [open, setOpen] = useState(startOpen);
+  const [label, setLabel] = useState(need.label);
+  const per = need.cadence === "weekly" ? t("pe săptămână") : t("pe lună");
+  return (
+    <details className="bf-needs-item" open={open} onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}>
+      <summary>
+        <b>{need.label}</b>
+        <span>{needSummary(need, members)}</span>
+      </summary>
+      <div className="bf-needs-row">
+        <input className="bf-needs-label" aria-label={t("Numele cheltuielii")} value={label} onChange={(event) => setLabel(event.target.value)} onBlur={() => { const next = label.trim(); if (next && next !== need.label) onSave({ label: next }); else setLabel(need.label); }} />
+        <select aria-label={t("Cât de des")} value={need.cadence} onChange={(event) => onSave({ cadence: event.target.value === "weekly" ? "weekly" : "monthly" })}>
+          <option value="monthly">{t("Suma e pe lună")}</option>
+          <option value="weekly">{t("Suma e pe săptămână")}</option>
+        </select>
+        <AmountField label={t("De la ({per})", { per })} value={need.min} onCommit={(min) => onSave({ min, max: Math.max(min, need.max) })} />
+        <AmountField label={t("Până la (opțional)")} value={need.max === need.min ? 0 : need.max} onCommit={(max) => onSave(max ? { max: Math.max(max, need.min), min: need.min || max } : { max: need.min })} />
+        {need.cadence === "weekly" && need.max > 0 && (
+          <p className="bf-needs-hint">{t("Pe lună ≈ {amount} (4,33 săptămâni). Dacă {typed} e suma pe lună, alege „Suma e pe lună”.", { amount: money(reserveOf(need) * 52 / 12), typed: money(reserveOf(need)) })}</p>
+        )}
+        {need.min !== need.max && (
+          <select aria-label={t("Cât rezervăm")} value={need.reserve || "max"} onChange={(event) => onSave({ reserve: event.target.value as MonthlyNeed["reserve"] })}>
+            <option value="max">{t("rezervă maximul")}</option>
+            <option value="avg">{t("rezervă media")}</option>
+            <option value="min">{t("rezervă minimul")}</option>
+          </select>
+        )}
+        <select aria-label={t("Din ce venit")} value={need.payerId || ""} onChange={(event) => onSave({ payerId: event.target.value || undefined })}>
+          <option value="">{t("din orice venit")}</option>
+          {members.map((member) => <option key={member.id} value={member.id}>{t("doar din venitul lui {name}", { name: member.name })}</option>)}
+        </select>
+        <select aria-label={t("Prioritate")} value={need.priority || "fixed"} onChange={(event) => onSave({ priority: event.target.value === "flex" ? "flex" : "fixed" })}>
+          <option value="fixed">{t("obligație (întâi)")}</option>
+          <option value="flex">{t("variabil (după obligații)")}</option>
+        </select>
+        <select aria-label={t("Categorie")} value={need.category} onChange={(event) => onSave({ category: event.target.value })}>
+          {categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}
+        </select>
+        <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: need.label })} onClick={() => onSave({ archived: true })}><Trash2 size={15} /></button>
+      </div>
+    </details>
+  );
+}
+
 export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const plan = data.settings.salaryPlan;
   const needs = activeNeeds(data);
@@ -48,9 +108,9 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
   const save = (patch: { needs?: MonthlyNeed[]; incomes?: ExpectedIncome[] }) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: now() } } });
   const updateNeed = (id: string, patch: Partial<MonthlyNeed>) => save({ needs: (plan.needs || []).map((item) => item.id === id ? { ...item, ...patch, updatedAt: now() } : item) });
   const updateIncome = (id: string, patch: Partial<ExpectedIncome>) => save({ incomes: (plan.incomes || []).map((item) => item.id === id ? { ...item, ...patch, updatedAt: now() } : item) });
-  const addNeed = (preset: (typeof PRESETS)[number]) => save({ needs: [...(plan.needs || []), { id: newId("need"), ...preset, min: 0, max: 0, reserve: "max", updatedAt: now() }] });
+  const [openNew, setOpenNew] = useState("");
+  const addNeed = (preset: (typeof PRESETS)[number]) => { const id = newId("need"); setOpenNew(id); save({ needs: [...(plan.needs || []), { id, ...preset, min: 0, max: 0, reserve: "max", updatedAt: now() }] }); };
   const addIncome = () => save({ incomes: [...(plan.incomes || []), { id: newId("income"), memberId: members[incomes.length % Math.max(1, members.length)]?.id || members[0]?.id || "", label: t("Salariu"), amount: 0, day: 10, updatedAt: now() }] });
-  const amount = (raw: string) => Math.max(0, parseRomanianAmount(raw) || 0);
   const monthlyIn = expectedMonthlyIncome(incomes);
   const monthlyOut = expectedMonthlyNeeds(needs);
   const pending = pendingSplitIncome(data, isoToday());
@@ -67,12 +127,12 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
 
       <h3>{t("Veniturile")}</h3>
       {incomes.map((income) => (
-        <div className="bf-needs-row bf-needs-income" key={`${income.id}-${income.updatedAt || ""}`}>
+        <div className="bf-needs-row bf-needs-income" key={income.id}>
           <select aria-label={t("Al cui venit")} value={income.memberId} onChange={(event) => updateIncome(income.id, { memberId: event.target.value })}>
             {members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
           </select>
           <input aria-label={t("Numele venitului")} defaultValue={income.label} onBlur={(event) => event.target.value.trim() !== income.label && updateIncome(income.id, { label: event.target.value.trim() || t("Salariu") })} />
-          <label><span>{t("Sumă")}</span><input inputMode="decimal" defaultValue={income.amount || ""} placeholder="0" onBlur={(event) => amount(event.target.value) !== income.amount && updateIncome(income.id, { amount: amount(event.target.value) })} /></label>
+          <AmountField label={t("Sumă")} value={income.amount} onCommit={(value) => updateIncome(income.id, { amount: value })} />
           <label><span>{t("Ziua")}</span><input inputMode="numeric" defaultValue={income.day} onBlur={(event) => { const day = Math.min(31, Math.max(1, Math.round(Number(event.target.value)) || income.day)); if (day !== income.day) updateIncome(income.id, { day }); }} /></label>
           <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: income.label })} onClick={() => updateIncome(income.id, { archived: true })}><Trash2 size={15} /></button>
         </div>
@@ -81,38 +141,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
 
       <h3>{t("Cheltuielile")}</h3>
       {needs.map((need) => (
-        <details className="bf-needs-item" key={`${need.id}-${need.updatedAt || ""}`} open={need.max <= 0 ? true : undefined}>
-        <summary>
-          <b>{need.label}</b>
-          <span>{needSummary(need, members)}</span>
-        </summary>
-        <div className="bf-needs-row">
-          <input className="bf-needs-label" aria-label={t("Numele cheltuielii")} defaultValue={need.label} onBlur={(event) => event.target.value.trim() && event.target.value.trim() !== need.label && updateNeed(need.id, { label: event.target.value.trim() })} />
-          <label><span>{t("De la")}</span><input inputMode="decimal" defaultValue={need.min || ""} placeholder="0" onBlur={(event) => { const min = amount(event.target.value); if (min !== need.min) updateNeed(need.id, { min, max: Math.max(min, need.max) }); }} /></label>
-          <label><span>{t("Până la")}</span><input inputMode="decimal" defaultValue={need.max || ""} placeholder="0" onBlur={(event) => { const max = amount(event.target.value); if (max !== need.max) updateNeed(need.id, { max, min: need.min > max ? max : need.min || max }); }} /></label>
-          <select aria-label={t("Cât de des")} value={need.cadence} onChange={(event) => updateNeed(need.id, { cadence: event.target.value === "weekly" ? "weekly" : "monthly" })}>
-            <option value="monthly">{t("pe lună")}</option>
-            <option value="weekly">{t("pe săptămână")}</option>
-          </select>
-          <select aria-label={t("Cât rezervăm")} value={need.reserve || "max"} onChange={(event) => updateNeed(need.id, { reserve: event.target.value as MonthlyNeed["reserve"] })}>
-            <option value="max">{t("rezervă maximul")}</option>
-            <option value="avg">{t("rezervă media")}</option>
-            <option value="min">{t("rezervă minimul")}</option>
-          </select>
-          <select aria-label={t("Din ce venit")} value={need.payerId || ""} onChange={(event) => updateNeed(need.id, { payerId: event.target.value || undefined })}>
-            <option value="">{t("din orice venit")}</option>
-            {members.map((member) => <option key={member.id} value={member.id}>{t("doar din venitul lui {name}", { name: member.name })}</option>)}
-          </select>
-          <select aria-label={t("Prioritate")} value={need.priority || "fixed"} onChange={(event) => updateNeed(need.id, { priority: event.target.value === "flex" ? "flex" : "fixed" })}>
-            <option value="fixed">{t("obligație (întâi)")}</option>
-            <option value="flex">{t("variabil (după obligații)")}</option>
-          </select>
-          <select aria-label={t("Categorie")} value={need.category} onChange={(event) => updateNeed(need.id, { category: event.target.value })}>
-            {categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}
-          </select>
-          <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: need.label })} onClick={() => updateNeed(need.id, { archived: true })}><Trash2 size={15} /></button>
-        </div>
-        </details>
+        <NeedRow key={need.id} need={need} members={members} categories={categories} startOpen={need.max <= 0 || openNew === need.id} onSave={(patch) => updateNeed(need.id, patch)} />
       ))}
       <div className="bf-needs-presets" role="group" aria-label={t("Adaugă o cheltuială")}>
         {PRESETS.filter((preset) => !usedPresets.has(preset.label)).map((preset) => (
@@ -132,5 +161,20 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
       )}
       {pending && <IncomeSplitCard data={data} incomeId={pending.id} onChange={onChange} />}
     </section>
+  );
+}
+
+/**
+ * Secțiunea din Plan. Starea deschis/închis e a ei: calculată din date, se închidea singură
+ * la prima cheltuială adăugată, iar omul nu mai apuca să scrie suma.
+ */
+export function MonthlyNeedsSection({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
+  const [open, setOpen] = useState(() => Boolean(pendingSplitIncome(data, isoToday())));
+  const count = activeNeeds(data).length;
+  return (
+    <details className="bf-plan-tools bf-needs-details" open={open} onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}>
+      <summary>{count ? t("Ce plătim lunar · {count} cheltuieli · {incomes} venituri", { count, incomes: activeIncomes(data).length }) : t("Ce plătim lunar — repartizare automată la salariu")}</summary>
+      {open && <MonthlyNeedsPanel data={data} onChange={onChange} />}
+    </details>
   );
 }

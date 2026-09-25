@@ -125,7 +125,8 @@ export function intentToUpdate(intent: AssistantIntent, data?: AppData, memory?:
       }
       return { kind: "expense", amount: intent.amount, title: intent.title, category: intent.category, date: intent.date };
     }
-    case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date };
+    case "income": return { kind: "income", amount: intent.amount, title: intent.title, date: intent.date, memberId: intent.memberId };
+    case "income-split": return { kind: "income-split" };
     case "envelope": return { kind: "allocation", label: intent.label, category: intent.category || intent.label, amount: intent.amount, weekly: intent.weeklyPace, weeklyAmount: intent.weeklyLimit, amountIsWeekly: intent.amountIsWeekly, delta: intent.delta };
     case "debt": return { kind: "debt", name: intent.name, remaining: intent.remaining };
     case "recurring": return { kind: "recurring", name: intent.name, amount: intent.amount, dueDay: intent.dueDay, category: intent.category };
@@ -297,6 +298,7 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
       const unde = intent.envelope ? `plicul „${intent.envelope}”` : `categoria ${intent.category}`;
       return `regulă: de fiecare dată când scrie „${intent.match}”, propun ${unde}`;
     }
+    case "income-split": return intent.preview;
     case "salary-rule": {
       const cat = intent.mode === "percent" ? `${intent.value}%` : money(intent.value);
       return `din fiecare venit, ${cat} merg în plicul „${intent.envelope}” — se aplică la venitul următor`;

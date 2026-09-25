@@ -250,3 +250,19 @@ export const expectedMonthlyIncome = (incomes: ExpectedIncome[]) => round2(incom
 
 /** Ce presupun cheltuielile declarate într-o lună obișnuită (săptămânalele × 4,33). */
 export const expectedMonthlyNeeds = (needs: MonthlyNeed[]) => round2(needs.reduce((sum, item) => sum + (item.cadence === "weekly" ? reserveOf(item) * 52 / 12 : reserveOf(item)), 0));
+
+/**
+ * Propunerea într-un rând, pentru ghid: „Rate bănci 1.400 RON · Lumină 400 RON · Mâncare
+ * 1.900 RON din 3.000 RON · rămân 1.600 RON pentru Salariul soției (12 octombrie)”.
+ */
+export function splitPreviewText(split: Extract<IncomeSplit, { ok: true }>, money: (value: number) => string, date: (iso: string) => string): string {
+  const parts = split.lines.filter((line) => line.amount > 0).map((line) => line.amount < line.target - line.fundedBefore
+    ? t("{label} {amount} din {target}", { label: line.need.label, amount: money(line.amount), target: money(line.target) })
+    : `${line.need.label} ${money(line.amount)}`);
+  const tail = split.uncovered > 0
+    ? split.nextIncome
+      ? t("rămân {amount} pentru {label} ({date})", { amount: money(split.uncovered), label: split.nextIncome.label, date: date(split.nextIncome.date) })
+      : t("rămân neacoperiți {amount}", { amount: money(split.uncovered) })
+    : split.free > 0 ? t("liberi {amount}", { amount: money(split.free) }) : "";
+  return [t("repartizează {amount} după Ce plătim lunar", { amount: money(split.income.amount) }) + ":", parts.join(" · ") + (tail ? ` · ${tail}` : "")].join(" ");
+}

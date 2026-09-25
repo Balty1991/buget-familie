@@ -22,6 +22,7 @@ import {
   allocationWeeksStatus,
   envelopeDecisionStatus,
   expenseCategories,
+  formatDate,
   inPlanPeriod,
   isoToday,
   isWeeklyPaced,
@@ -32,11 +33,13 @@ import {
   planEndDate,
   sourceBalance,
   type AppData,
+  type Transaction,
 } from "./finance-data";
 import { calendarBudget, periodDays, remainingPace, startedWeekShare } from "./calendar-budget";
 import { buildTodaySummary } from "./today-summary";
 import { plannedEventsPressure, upcomingPlannedEvents } from "./planned-events";
 import { proposeSplit } from "./split-proposal";
+import { activeIncomes, activeNeeds, pendingSplitIncome, proposeIncomeSplit, reserveOf, splitPreviewText } from "./monthly-needs";
 import { t } from "./i18n";
 import { dateCopy, noDoubleStop, shiftDay, today } from "./proposal-date";
 import { relatedCategories } from "./suggest-source";
@@ -65,6 +68,8 @@ export type FinancialUpdate =
   | { kind: "merchant-rule"; match: string; category?: string; allocationId?: string; envelopeLabel?: string }
   /** Repartizare automată din venitul următor, nu din banii de acum. */
   | { kind: "salary-rule"; allocationId: string; label: string; mode: "percent" | "fixed"; value: number }
+  /** Repartizarea ultimului salariu nerepartizat după cheltuielile lunare declarate. */
+  | { kind: "income-split" }
   | { kind: "delete-transaction"; id: string; title: string; amount: number }
   | { kind: "amend-transaction"; id: string; amount: number; title: string; was: number };
 
@@ -155,7 +160,13 @@ export function sourceTextSafe(raw: string) { return raw.replace(/data:[^ ]+/g, 
 export function memberIdFor(data: AppData, hint: string, index = 0) {
   const folded = hint.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const members = data.settings.members;
-  if (/sotie|sotiei|partenera|ea\b/.test(folded)) return members[1]?.id || members[0]?.id;
+  // Numele din familie întâi („Ana a primit salariul”), apoi felul în care se spune de obicei.
+  const named = members.find((member) => {
+    const name = member.name.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    return name.length >= 3 && new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(folded);
+  });
+  if (named) return named.id;
+  if (/\bsoti(e|a|ei)\b|nevast|partenera|\bea\b/.test(folded)) return members[1]?.id || members[0]?.id;
   if (/sot\b|sotul|el\b/.test(folded) && !/sotie/.test(folded)) return members[0]?.id;
   return (index ? members[index]?.id : undefined) || selfMemberIdOf(data) || members[0]?.id;
 }
@@ -802,6 +813,60 @@ function namedSplitReading(raw: string, folded: string, data: AppData, altele: P
   };
 }
 
+/** „Am primit salariul”, „mi-a intrat leafa”, „cum împart salariul?” */
+const SALARY_TALK = /\b(salari\w*|leafa|lefuri\w*)\b/;
+const SALARY_ARRIVED = /\b(am (primit|luat|incasat)|mi-?a (intrat|venit)|a (intrat|venit|primit|luat)|au intrat|am si eu)\b/;
+
+/**
+ * Salariul, când familia și-a scris „Ce plătim lunar”: propunerea vine din lista ei, nu din
+ * istoricul ultimelor 90 de zile. Cu suma în frază („am primit salariul 4700”), venitul și
+ * repartizarea se confirmă împreună; fără ea, se repartizează ultimul salariu nerepartizat.
+ */
+function needsSplitReading(raw: string, data: AppData, asOf: string, said: ParsedIntent[]): Reading | undefined {
+  let intents = said;
+  if (!activeNeeds(data).length) return undefined;
+  const folded = foldRo(raw);
+  const aboutSalary = SALARY_TALK.test(folded) || /\bvenit\w*\b/.test(folded);
+  if (!aboutSalary || !(WANTS_SPLIT.test(folded) || SALARY_ARRIVED.test(folded))) return undefined;
+  // „Soția a primit salariul 2800”: fraza spune și cine, și suma, chiar dacă cititorul general n-a văzut un venit.
+  const spoken = extractAmounts(extractDates(raw).masked).map((hit) => hit.value).filter((value) => value >= 100).sort((a, b) => b - a)[0];
+  if (!intents.some((item) => item.intent.kind === "income") && spoken && SALARY_ARRIVED.test(folded)) {
+    intents = [...intents.filter((item) => item.intent.kind !== "expense"), { intent: { kind: "income", amount: spoken, title: "Salariu", date: asOf }, segment: raw }];
+  }
+  const incomeAt = intents.findIndex((item) => item.intent.kind === "income");
+  const dateLabel = (iso: string) => formatDate(iso, { day: "numeric", month: "long" });
+  if (incomeAt >= 0) {
+    const said = intents[incomeAt];
+    if (said.intent.kind !== "income") return undefined;
+    const memberId = memberIdFor(data, raw);
+    const source = data.settings.paymentSources.find((item) => item.memberId === memberId && item.kind !== "meal") || data.settings.paymentSources.find((item) => item.kind !== "meal");
+    const preview: Transaction = { id: "guide-preview-income", title: said.intent.title, amount: said.intent.amount, kind: "income", category: "Venit", source: source?.name || "", person: "", date: said.intent.date, sourceId: source?.id || "", memberId: memberId || "" };
+    const split = proposeIncomeSplit({ ...data, transactions: [...data.transactions, preview] }, preview.id);
+    if (!split.ok) return undefined;
+    const withMember: ParsedIntent = { ...said, intent: { ...said.intent, memberId } };
+    return {
+      kind: "intents",
+      score: BASE.intents + 5,
+      why: "salariu, cu cheltuielile lunare declarate",
+      intents: [...intents.slice(0, incomeAt), withMember, ...intents.slice(incomeAt + 1), { intent: { kind: "income-split", preview: splitPreviewText(split, money, dateLabel) }, segment: raw }],
+      headline: t("Notez venitul și îl împart după „Ce plătim lunar”."),
+    };
+  }
+  const pending = pendingSplitIncome(data, asOf);
+  if (!pending) {
+    return { kind: "insight", score: BASE.intents + 1, why: "salariu fără sumă și fără venit nerepartizat", text: t("Nu văd un salariu nerepartizat în ultimele zile. Spune-mi suma — de exemplu „am primit salariul 4700” — și îl împart după „Ce plătim lunar”.") };
+  }
+  const split = proposeIncomeSplit(data, pending.id);
+  if (!split.ok) return { kind: "insight", score: BASE.intents + 1, why: "venitul nu se poate repartiza", text: split.message };
+  return {
+    kind: "intents",
+    score: BASE.intents + 5,
+    why: "salariu nerepartizat, cu cheltuielile lunare declarate",
+    intents: [{ intent: { kind: "income-split", preview: splitPreviewText(split, money, dateLabel) }, segment: raw }],
+    headline: t("Am găsit {title} din {date} ({amount}), încă nerepartizat.", { title: pending.title, date: dateLabel(pending.date), amount: money(pending.amount) }),
+  };
+}
+
 function splitReading(raw: string, data: AppData, asOf: string, alreadyNamed: boolean, altele: ParsedIntent[] = []): Reading | undefined {
   const folded = foldRo(raw);
   if (!WANTS_SPLIT.test(folded)) return undefined;
@@ -872,7 +937,7 @@ const intentAmounts = (intent: ParsedIntent["intent"]): number[] => {
     case "debt": return [intent.remaining, ...(intent.monthly ? [intent.monthly] : [])];
     case "goal": return [intent.target, ...(intent.current ? [intent.current] : [])];
     case "planned-event": return intent.estimate ? [intent.estimate] : [];
-    case "payday": case "envelope-delete": case "due-paid": case "open": case "merchant-rule": return [];
+    case "payday": case "envelope-delete": case "due-paid": case "open": case "merchant-rule": case "income-split": return [];
     case "transaction-delete": return intent.amount ? [intent.amount] : [];
     case "salary-rule": return intent.mode === "fixed" ? [intent.value] : [];
   }
@@ -928,8 +993,14 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
    * sumă pe care nimeni nu a folosit-o: acolo modelul are ce adăuga.
    */
   const guessy = soundsLikeCommand(raw) || (plansMoney(raw) && leavesMoneyUnread(raw, intents));
-  const split = splitReading(raw, data, ctx.asOf || isoToday(), intents.some((item) => item.intent.kind === "envelope"), intents);
-  if (split) {
+  const salary = needsSplitReading(raw, data, ctx.asOf || isoToday(), intents);
+  const split = salary ? undefined : splitReading(raw, data, ctx.asOf || isoToday(), intents.some((item) => item.intent.kind === "envelope"), intents);
+  if (salary) {
+    // Propunerea cuprinde și venitul spus în frază, deci înlocuiește citirea simplă.
+    const plain = readings.findIndex((item) => item.kind === "intents");
+    if (plain >= 0 && salary.kind === "intents") readings.splice(plain, 1);
+    readings.push(salary);
+  } else if (split) {
     /**
      * Propunerea de împărțire cuprinde și celelalte intenții, deci ea trebuie să câștige —
      * iar citirea simplă, din care s-a născut, iese din cursă. Lăsate amândouă, scorurile
@@ -1115,6 +1186,9 @@ export function compactGuideContext(data: AppData, extras: { view?: string; inco
     goals: data.savings.slice(0, 6).map((item) => ({ name: item.name, target: round(item.target), saved: round(item.current) })),
     debts: data.debts.filter((item) => item.remaining > 0).slice(0, 6).map((item) => ({ name: item.name, remaining: round(item.remaining), monthly: round(item.monthly || 0) })),
     events: plannedEventsContext(data),
+    /** „Ce plătim lunar”: cheltuielile știute (interval și cât se rezervă) și veniturile cu ziua lor. */
+    monthlyNeeds: activeNeeds(data).slice(0, 20).map((item) => ({ label: item.label, per: item.cadence === "weekly" ? "week" : "month", min: round(item.min), max: round(item.max), reserved: round(reserveOf(item)), payer: data.settings.members.find((member) => member.id === item.payerId)?.name || null, first: item.priority !== "flex" })),
+    expectedIncomes: activeIncomes(data).slice(0, 6).map((item) => ({ who: data.settings.members.find((member) => member.id === item.memberId)?.name || null, label: item.label, amount: round(item.amount), day: item.day })),
   };
 }
 

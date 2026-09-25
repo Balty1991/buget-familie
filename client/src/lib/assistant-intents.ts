@@ -23,7 +23,12 @@ const fold = (value: string) => value.replace(/[ăâîșşțţĂÂÎȘŞȚŢ]/g,
 
 export type AssistantIntent =
   | { kind: "expense"; amount: number; category: string; title: string; date: string }
-  | { kind: "income"; amount: number; title: string; date: string }
+  | { kind: "income"; amount: number; title: string; date: string; /** Al cui e venitul, când fraza o spune („salariul soției”). */ memberId?: string }
+  /**
+   * Repartizarea unui salariu după „Ce plătim lunar”. Se aplică pe venitul din aceeași
+   * propunere sau, fără el, pe ultimul salariu nerepartizat. `preview` e textul arătat.
+   */
+  | { kind: "income-split"; preview: string }
   /** `delta` = suma se adaugă sau se scade din plicul existent, nu îl înlocuiește. */
   | { kind: "envelope"; label: string; amount: number; category?: string; weeklyLimit?: number; weeklyPace: boolean; amountIsWeekly?: boolean; delta?: "increase" | "decrease" }
   | { kind: "debt"; name: string; remaining: number; monthly?: number }

@@ -25,8 +25,7 @@ import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { envelopeBurnPace, envelopeRunOut } from "@/lib/household-insights";
-import { activeIncomes, activeNeeds, pendingSplitIncome } from "@/lib/monthly-needs";
-import { MonthlyNeedsPanel } from "@/components/MonthlyNeedsPanel";
+import { MonthlyNeedsSection } from "@/components/MonthlyNeedsPanel";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { leiLabel } from "@/lib/chart-ui";
 import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-prefs";
@@ -639,10 +638,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       <EnvelopeTransferPanel data={data} onChange={onChange} />
       {!simpleMode && <details className="bf-plan-tools"><summary>{t("Ritual de salariu și istoric")}</summary><SalaryRitualPanel data={data} onChange={onChange} /><AllocationHistoryPanel data={data} /></details>}
     </section>
-    <details className="bf-plan-tools bf-needs-details" open={!activeNeeds(data).length ? undefined : Boolean(pendingSplitIncome(data, isoToday()))}>
-      <summary>{activeNeeds(data).length ? t("Ce plătim lunar · {count} cheltuieli · {incomes} venituri", { count: activeNeeds(data).length, incomes: activeIncomes(data).length }) : t("Ce plătim lunar — repartizare automată la salariu")}</summary>
-      <MonthlyNeedsPanel data={data} onChange={onChange} />
-    </details>
+    <MonthlyNeedsSection data={data} onChange={onChange} />
     {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} remainingById={Object.fromEntries(envelopes.map((envelope) => [envelope.item.id, Math.max(0, envelope.remaining)]))} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
     <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> {t("Instrumente pentru perioade repetate")}</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>{t("Un șablon reține doar durata perioadei; începi mereu următorul ciclu cu data aleasă de tine.")}</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={periodValid ? `ex. Salariu ${daysBetween(cycleStart, cycleEnd)} zile` : t("Completează mai întâi perioada")} disabled={!periodValid} /><button disabled={!periodValid} onClick={saveCycleTemplate}>{t("Salvează șablonul")}</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>{t("Salvează")}</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>{t("Anulează")}</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>{t("Nu ai șabloane salvate încă.")}</span>}</div></div></details>
   </div>;
