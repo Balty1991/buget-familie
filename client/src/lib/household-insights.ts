@@ -537,6 +537,56 @@ export const weekTooFast = (data: AppData, asOf = isoToday()): WeekTooFast[] => 
   return out.sort((a, b) => Number(b.over) - Number(a.over) || b.spent / b.budget - a.spent / a.budget);
 };
 
+export type CycleEndReport = {
+  payday: string;
+  daysLeft: number;
+  made: Array<{ id: string; label: string; left: number }>;
+  over: Array<{ id: string; label: string; over: number }>;
+  leftTotal: number;
+  /** Cât se poate muta fără grijă: plicuri de facturi deja plătite, surplusul mâncării peste zilele rămase. */
+  spare: number;
+  goal?: { id: string; name: string; left: number };
+};
+
+/**
+ * Raportul de la capătul ciclului, cu câteva zile înainte de salariu: ce plicuri au ajuns,
+ * care nu, cât a rămas și cât se poate pune deoparte fără să lipsească în zilele rămase.
+ * O factură încă neplătită își ține banii; mâncarea își ține partea pentru zilele rămase.
+ */
+export const cycleEndReport = (data: AppData, asOf = isoToday()): CycleEndReport | undefined => {
+  const plan = data.settings.salaryPlan;
+  const until = untilPayday(plan, asOf);
+  if (!until || until.days > 3 || !plan.allocations.length || plan.cycleReportDone === plan.nextPayday) return undefined;
+  const made: CycleEndReport["made"] = [];
+  const over: CycleEndReport["over"] = [];
+  let spare = 0;
+  const daysLeft = Math.max(0, until.latestDays);
+  for (const item of plan.allocations) {
+    const status = allocationStatus(data, item);
+    if (status.budget <= 0) continue;
+    if (status.remaining < 0) { over.push({ id: item.id, label: item.label, over: Math.round(-status.remaining * 100) / 100 }); continue; }
+    made.push({ id: item.id, label: item.label, left: Math.round(status.remaining * 100) / 100 });
+    if (isWeeklyPaced(item, plan)) {
+      const perDay = (item.weeklyAmount || status.budget / Math.max(1, daysBetween(plan.periodStart, until.typical) + 1) * 7) / 7;
+      spare += Math.max(0, status.remaining - perDay * daysLeft);
+    } else if (status.spent > 0) {
+      spare += status.remaining;
+    }
+  }
+  const leftTotal = made.reduce((sum, item) => sum + item.left, 0);
+  const goal = data.savings.filter((item) => item.target > item.current).sort((a, b) => (a.dueDate || "9999").localeCompare(b.dueDate || "9999"))[0];
+  return {
+    payday: until.typical,
+    daysLeft: until.days,
+    made: made.sort((a, b) => b.left - a.left),
+    over: over.sort((a, b) => b.over - a.over),
+    leftTotal: Math.round(leftTotal * 100) / 100,
+    // Ce s-a depășit într-un plic a fost luat din altă parte: se scade din surplus.
+    spare: Math.max(0, Math.floor((spare - over.reduce((sum, item) => sum + item.over, 0)) / 10) * 10),
+    goal: goal ? { id: goal.id, name: goal.name, left: Math.round((goal.target - goal.current) * 100) / 100 } : undefined,
+  };
+};
+
 export const envelopeLane = (data: AppData, asOf = isoToday()) => data.settings.salaryPlan.allocations
   .map((item) => ({ item, ...envelopeDecisionStatus(data, item, asOf) }))
   .sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.usage - left.usage)
