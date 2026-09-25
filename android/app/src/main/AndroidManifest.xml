@@ -46,6 +46,18 @@
                 android:resource="@xml/widget_quick_add_info" />
         </receiver>
 
+        <!-- Widget separat, cu suma zilei: îl adaugă doar cine vrea o sumă pe ecranul principal. -->
+        <receiver
+            android:name=".SpendTodayWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_spend_today_info" />
+        </receiver>
+
         <!-- Dala din Setări rapide; sistemul o pornește, de aceea este exportată. -->
         <service
             android:name=".QuickAddTileService"

@@ -19,6 +19,7 @@ const KNOWN = new Set(["expense", "receipt", "today"]);
 type NativeBridge = {
   consume?: () => string;
   publishTemplates?: (json: string) => void;
+  publishSpendToday?: (json: string) => void;
 };
 
 const bridge = (): NativeBridge | undefined => {
@@ -102,4 +103,19 @@ export function observeQuickActions(handle: (action: QuickAction) => void): () =
     window.removeEventListener("focus", check);
     window.removeEventListener("buget-familie:quick-action", check);
   };
+}
+
+export type SpendTodayWidget = { amount: string; caption: string; date: string; stale: string };
+
+/**
+ * Cifra zilei pentru widgetul „Poți cheltui azi”. Widgetul nu calculează nimic: arată ce
+ * publică aplicația, iar dacă data nu mai e azi, afișează `stale` în locul explicației.
+ * Pe web sau fără punte nativă nu face nimic.
+ */
+export function publishSpendToday(payload: SpendTodayWidget): void {
+  try {
+    bridge()?.publishSpendToday?.(JSON.stringify(payload));
+  } catch {
+    /* widgetul e opțional */
+  }
 }

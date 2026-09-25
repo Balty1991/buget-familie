@@ -316,6 +316,12 @@ public class MainActivity extends BridgeActivity {
       WidgetTemplates.saveJson(MainActivity.this.getApplicationContext(), json);
       QuickAddWidgetProvider.updateAll(MainActivity.this.getApplicationContext());
     }
+
+    @JavascriptInterface
+    public void publishSpendToday(String json) {
+      SpendTodayWidgetProvider.save(MainActivity.this.getApplicationContext(), json);
+      SpendTodayWidgetProvider.updateAll(MainActivity.this.getApplicationContext());
+    }
   }
 
   private void injectSafeArea(WebView webView, Insets bars) {

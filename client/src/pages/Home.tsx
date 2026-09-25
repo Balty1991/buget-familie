@@ -13,16 +13,18 @@ import { queueReceiptForReview } from "@/lib/receipt-review";
 import { safeSetItem } from "@/lib/safe-storage";
 import { BrandMark } from "@/components/BrandMark";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
-import { observeQuickActions, publishWidgetTemplates } from "@/lib/quick-action-bridge";
+import { observeQuickActions, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import {
   WhatsNewSheet,
+  fmtExact,
   money,
   type MainView,
   type MoreView,
 } from "@/pages/home-kit";
 import { markWhatsNewSeen, shouldShowWhatsNew } from "@/lib/theme-default";
 import { markFirstWeekTourSeen, shouldOfferFirstWeekTour } from "@/lib/first-week-tour";
-import { t } from "@/lib/i18n";
+import { daysLabel, t } from "@/lib/i18n";
+import { todayBrief } from "@/lib/household-insights";
 import { hideNativeSplash, syncAndroidChrome } from "@/lib/native-splash";
 import { ensureDeferredStyles } from "@/lib/ram-hygiene";
 import { useLanguage } from "@/hooks/use-language";
@@ -534,6 +536,17 @@ export default function Home() {
     }
     go("today");
   }), []);
+  useEffect(() => {
+    // Widgetul „Poți cheltui azi” arată aceeași cifră ca Astăzi; fără punte nativă nu face nimic.
+    const brief = todayBrief(data);
+    const today = isoToday();
+    publishSpendToday({
+      amount: fmtExact.format(brief.spendable),
+      caption: brief.hasPayday && !brief.expired ? t("până la salariu: {days}", { days: daysLabel(brief.remainingDays) }) : t("Setează data salariului în Plan."),
+      date: today,
+      stale: t("Cifra e de pe {date} — deschide aplicația pentru azi", { date: formatDate(today, { day: "numeric", month: "long" }) }),
+    });
+  }, [data]);
   useEffect(() => {
     const expense = data.settings.quickTemplates.filter((item) => item.kind !== "income").slice(0, 3);
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));
