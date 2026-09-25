@@ -34,41 +34,60 @@ Plicuri pe ciclu de salariu, sync familie criptat — fără login bancar.
 ```
 Buget Familie îți spune câți lei poți folosi azi, din plic, până la salariu. Nu e un jurnal de magazin și nu se leagă de bancă.
 
+Scrii o dată ce plătiți
+• „Ce plătim lunar”: veniturile (cu ziua lor) și cheltuielile știute — rate, facturi, grădiniță, mâncare pe săptămână — cu intervale (lumina 300–400).
+• Când notezi salariul, aplicația propune singură cât merge în fiecare plic: obligațiile întâi, apoi traiul, apoi plățile rare. Al doilea salariu completează doar ce lipsește. Orice repartizare se poate anula.
+• Plăți rare: RCA, impozite, Crăciun — se strâng puțin din fiecare salariu, ca luna lor să nu fie o lovitură.
+• Neprevăzute: un plic mic pentru farmacie sau reparații, umplut doar din ce rămâne liber.
+• Cine plătește: dacă o factură o plătește celălalt, aplicația îți spune cât să-i trimiți.
+
 Pe Astăzi
 • Un singur număr: cât poți folosi azi.
-• Intrat și ieșit în ciclul ăsta, sub număr.
-• Zilele săptămânii în aceeași fișă — vezi cât mai ține fiecare zi, nu un al doilea ecran.
-• Ultimele trei mișcări. Scorul, bilanțul și graficul stau la „Mai mult din ziua asta”.
-• Pe Astăzi, „Notează” deschide suma. Nu mai e un plus plutitor peste bară.
+• Săptămâna care merge prea repede: „450 din 600, mai sunt 4 zile — cel mult 37 pe zi”.
+• Cu trei zile înainte de salariu: ce plicuri au ajuns, ce a rămas și cât poți pune deoparte fără grijă.
 
 Plicuri
-• Fiecare plic arată cât s-a cheltuit din limită, pe săptămână sau pe tot ciclul.
-• Poți muta lei între plicuri și între săptămâni.
+• Fiecare plic arată câte zile mai sunt până la salariu și cât iese pe zi.
+• Mâncarea pe săptămână are exact suma ei în fiecare săptămână, fără virgule. Ce rămâne poate trece în săptămâna următoare.
+• Data salariului poate varia cu câteva zile; plicurile ajung și dacă întârzie.
 
 Casă
-• Până la 6 persoane, fără conturi separate. Sync opțional, o parolă, criptat; serverul nu vede sumele.
-• Obligații: chirie, rate, abonamente — nume și sumă, fără logo-uri.
-• Bonuri citite pe telefon. Pozele nu pleacă. Un extras CSV intră doar după ce confirmi.
+• Până la 6 persoane, fără conturi separate. Sync opțional, criptat; serverul nu vede sumele.
+• Bilanțul săptămânii, gata de trimis pe WhatsApp.
+• Ghidul răspunde la „cât mai am la mâncare?” din datele de pe telefon.
+• Bonuri citite pe telefon. Pozele nu pleacă. Un extras (CSV sau Excel) intră doar după ce confirmi; salariul din extras e recunoscut.
 
 Din afara aplicației
-• Widget pe ecranul principal: Cheltuială, Bon și până la 3 obiceiuri. Doar nume, nicio sumă pe ecranul de start.
-• Dală în Setări rapide: o cheltuială din trasarea de sus. Dacă aplicația era în fundal, foaia se deschide după ce revine, nu se pierde apăsarea.
+• Widget rapid: Cheltuială, Bon și până la 3 obiceiuri — fără sume pe ecranul de start.
+• Widget opțional „Poți cheltui azi”, pentru cine vrea cifra zilei pe ecranul principal.
+• Dală în Setări rapide: o cheltuială din trasarea de sus.
 
-Datele stau pe telefon. Fără reclame pe ecranele cu bani. Fără plată în magazin în versiunea asta — catalogul Casa / Familia se activează după testarea închisă.
+Datele stau pe telefon. Fără reclame. Fără plată în magazin în versiunea asta.
 
 Nu plătește facturi, nu dă credite și nu ține loc de consultant.
 ```
 
+## Ce e nou în 1.1.96 (≤500 caractere, pentru „Note de lansare”)
+
+```
+• „Ce plătim lunar”: scrii o dată cheltuielile, iar la fiecare salariu primești repartizarea pe plicuri.
+• Plăți rare (RCA, impozite, Crăciun) strânse lunar și plic de neprevăzute.
+• Mâncarea pe săptămână fără virgule; toate săptămânile pe plic.
+• Câte zile mai sunt până la salariu și cât iese pe zi.
+• Avertizare când săptămâna merge prea repede și raport înainte de salariu.
+• Bilanț pe WhatsApp și widget „Poți cheltui azi”.
+```
+
 ## Feature bullets
 
-1. Plicuri pe **ciclul vostru de salariu** (nu doar luna calendar) + tranșe săptămânale
-2. Fără login bancar — date pe telefon; sync familie opțional, AES-GCM
-3. Un număr clar pe Astăzi: ce poți cheltui azi, fără să strici perioada
-4. El și ea: până la 6 membri, cine a scos din ce plic
-5. Bon → De verificat → registru (poze doar pe telefon; OCR local)
-6. Import CSV bănci RO + dedupe (fără OAuth bancar)
-7. Conflict onest pe plicuri și mișcări (nu LWW tăcut pe bani)
-8. Widget / dală rapidă + PIN local + backup export/import
+1. **Repartizare automată la salariu** din „Ce plătim lunar” (două salarii, zile diferite, tichetele separat)
+2. Plicuri pe **ciclul vostru de salariu** (nu doar luna calendar), cu săptămâni exacte și zile până la salariu
+3. Plăți rare strânse lunar + plic de neprevăzute
+4. Fără login bancar — date pe telefon; sync familie opțional, AES-GCM
+5. Un număr clar pe Astăzi + avertizare când săptămâna merge repede
+6. El și ea: până la 6 membri, cine plătește ce, transferuri propuse
+7. Bon → De verificat → registru (poze doar pe telefon; OCR local); import extras CSV/Excel
+8. Widgeturi (rapid fără sume, opțional cu cifra zilei), dală, PIN local, backup
 
 > **Nu** lipi prețuri IAP (19,99 / 149 etc.) în store cât `BILLING_LIVE=false`. Vezi `BILLING_PLAY_PREP.md`.
 
@@ -85,6 +104,7 @@ Răspunsuri complete, mapate pe categorii Play: [`PLAY_CONSOLE_DATA_SAFETY.md`](
 - Ștergere: in-app Resetare + pagina publică de ștergere.
 - AI: rezumat opțional către Gemini, niciodată registrul întreg.
 - Bonuri: IndexedDB local, nu sync.
+- Bilanțul trimis pe WhatsApp: pleacă doar când omul apasă, prin aplicația lui de mesaje; dezvoltatorul nu primește nimic.
 
 ## Content rating
 

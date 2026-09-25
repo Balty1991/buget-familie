@@ -17,6 +17,25 @@ Nu putem testa widgetul / dala pe un dispozitiv fizic în mediul de build. Înai
 >
 > **Cod (1.1.67):** dacă aplicația e în fundal, WebView-ul e pauzat. Acțiunea se ține și JS e anunțat **după** `onResume`, nu din `onNewIntent` (evenimentul se pierdea). În prim-plan se anunță imediat. Tot trebuie bifat pe telefon.
 
+## Widget „Poți cheltui azi” (nou în 1.1.96)
+
+> Codul Java s-a compilat local față de API-ul Android, dar construcția completă (Gradle + SDK) se face doar în GitHub Actions. Rulează **Build Android APK** înainte de testare.
+
+- [ ] Adaugă widgetul „Poți cheltui azi” — arată cifra zilei și zilele până la salariu
+- [ ] După o cheltuială notată în aplicație, cifra de pe widget se schimbă
+- [ ] Dacă aplicația n-a fost deschisă azi, widgetul spune că cifra e de ieri (nu arată o sumă veche ca actuală)
+- [ ] Butonul de pe widget deschide captura de cheltuială; apăsarea pe widget deschide Astăzi
+
+## Ce plătim lunar și repartizarea (nou în 1.1.96)
+
+- [ ] Plan → „Ce plătim lunar”: două venituri (zile diferite), câteva cheltuieli, una pe săptămână
+- [ ] Notează primul salariu → pe Astăzi apare propunerea; „Aplică repartizarea” creează plicurile
+- [ ] Al doilea salariu completează doar ce a rămas; „Anulează” pune plicurile la loc
+- [ ] Plăți rare: adaugă „RCA”, apoi verifică rândul „Plăți rare” în propunere
+- [ ] O cheltuială „Bolt” ajunge în Taxi, „Catena” în Neprevăzute
+- [ ] Notificări: seara, pentru săptămâna care merge repede; duminică 19:30, bilanțul
+- [ ] „Trimite pe WhatsApp” din bilanț deschide WhatsApp cu textul gata
+
 ## Dala Setări rapide
 
 - [ ] Adaugă dala din Setări rapide → Editează → Buget Familie
@@ -61,7 +80,7 @@ Abonamentele Casa (gratuit) / Familia (19,99 lei/lună sau 149 lei/an) se adaug�
 
 Play cere testers reali, nu doar CI.
 
-- [ ] AAB semnat, `versionCode` 71 / `versionName` 1.1.69, pachet `ro.balty1991.bugetfamilie`
+- [ ] AAB semnat, `versionCode` 98 / `versionName` 1.1.96, pachet `ro.balty1991.bugetfamilie`
 - [ ] Privacy, terms, delete-data publicate pe GitHub Pages
 - [ ] Data safety completat (financiare pe dispozitiv, sync opțional AES-GCM, fără ads)
 - [ ] Financial features: evidență, nu sfat de investiții / credit / plăți
