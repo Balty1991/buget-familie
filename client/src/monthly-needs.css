@@ -172,3 +172,24 @@
 .os-start-ready .os-start-note { margin: 0; color: var(--cf-muted, #4d645d); font-size: 15px; line-height: 1.45; }
 .os-start-ready .os-start-cta { min-height: 48px; font-size: 16px; }
 .os-start-ready .bf-secondary { min-height: 44px; }
+
+/* Plicuri: lista întâi, cu „+ Plic” în antet. */
+.bf-envelope-list-first { display: grid; gap: 12px; margin: 0 0 16px; }
+.bf-envelope-list-first .bf-plan-sheet-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bf-envelope-list-first .bf-add-envelope { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 999px; white-space: nowrap; }
+.bf-envelope-list-first .bf-allocation-list { margin-top: 0; }
+.bf-plan-builder > summary { font-weight: 700; }
+
+/* Cartonașul de plic, compact: nume, o stare, rămas din total și bara. Restul la „Detalii”. */
+.bf-envelope-list-first .bf-allocation-list > article { gap: 6px 12px; padding: 12px 14px; }
+.bf-envelope-list-first .bf-envelope-portrait { display: none; }
+.bf-envelope-list-first .bf-allocation-state { margin-bottom: 2px; font-size: 12px; }
+.bf-envelope-list-first .bf-allocation-state.paid { color: var(--cf-primary-strong, #1f5c52); }
+.bf-envelope-list-first .bf-envelope-meter { grid-column: 1 / -1; }
+.bf-envelope-more { grid-column: 1 / -1; }
+.bf-envelope-more > summary { display: flex; align-items: center; gap: 6px; min-height: 44px; color: var(--cf-link, #1f5c52); font-size: 14px; font-weight: 700; cursor: pointer; list-style: none; }
+.bf-envelope-more > summary::-webkit-details-marker { display: none; }
+.bf-envelope-more[open] > summary svg { transform: rotate(180deg); }
+.bf-envelope-more > *:not(summary) { margin-top: 8px; }
+html body .bf-envelope-list-first > .bf-plan-sheet-heading { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; }
+html body .bf-envelope-list-first .bf-allocation-list > article > .bf-allocation-list-total { align-self: start; }
