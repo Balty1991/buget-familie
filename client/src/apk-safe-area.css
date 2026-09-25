@@ -30,7 +30,6 @@ html.is-android-standalone {
   right: 0 !important;
   bottom: 0 !important;
   z-index: 80 !important;
-  display: flex !important;
   align-items: center !important;
   padding-top: 6px !important;
   padding-left: 8px !important;
@@ -112,4 +111,12 @@ html.theme-dark .os-shell .os-dock {
 .bf-theme-picker-footer,
 .os-shell .bf-theme-picker-footer {
   padding-bottom: calc(14px + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
+}
+
+/* Bara de jos doar pe telefon. Pe ecran lat meniul e sus (os-desktop-nav); bara de jos era a
+   doua navigație pe toată lățimea, iar tastatura trecea de două ori prin aceleași file (BF-14). */
+@media (max-width: 760px) {
+  .os-dock, .os-shell .os-dock {
+    display: flex !important;
+  }
 }

@@ -81,7 +81,15 @@ async function phone(browser, { seed = true, theme = "white", extra = {}, time }
 }
 
 const ledger = (page) => page.evaluate(async () => (await (await import("/src/lib/app-storage.ts")).readAppData()));
-const nav = (page, name) => page.getByRole("button", { name: new RegExp(`^${name}$`) }).first().click();
+/** Meniul de jos: Astăzi · Plicuri · ＋ Notează · Mișcări · Mai mult. Obligațiile și Analiza se deschid din „Mai mult”. */
+const nav = async (page, name) => {
+  if (name === "Obligații" || name === "Analiză") {
+    await page.getByRole("button", { name: /^Mai mult$/ }).first().click();
+    await page.getByRole("button", { name: new RegExp(`^${name}`) }).first().click();
+    return;
+  }
+  await page.getByRole("button", { name: new RegExp(`^${name}$`) }).first().click();
+};
 
 async function main() {
   const vite = await startVite();
@@ -105,7 +113,7 @@ async function main() {
     step("Plan: „Pornește rapid” → plic nou");
     {
       const { page, context, errors } = await phone(browser);
-      await nav(page, "Plan");
+      await nav(page, "Plicuri");
       await page.waitForTimeout(800);
       const before = (await ledger(page)).settings.salaryPlan.allocations.length;
       const chip = page.locator(".bf-quick-envelope-chips button").first();
@@ -151,7 +159,7 @@ async function main() {
       await page.getByRole("button", { name: /Ciclu salariu/ }).click();
       await page.getByText("Ciclul de salariu are nevoie de data venitului").waitFor();
       await page.getByRole("button", { name: "Setează data salariului" }).click();
-      await waitFor(async () => (await page.locator("[aria-current=page]").first().innerText()).includes("Plan"), "ajunge în Plan");
+      await waitFor(async () => (await page.locator("[aria-current=page]").first().innerText()).includes("Plicuri"), "ajunge în Plicuri");
       allErrors.push(...errors);
       await context.close();
     }

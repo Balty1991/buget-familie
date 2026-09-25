@@ -41,11 +41,12 @@ const tab = (label) => async (page) => { await page.getByRole("tab", { name: lab
 const SCREENS = {
   "Astăzi": null,
   "Mișcări": click(/^Mișcări$/),
-  "Plan": click(/^Plan$/),
-  "Obligații": click(/^Obligații$/),
-  "Analiză": click(/^Analiză$/),
-  "Gospodărie": seq(click(/^Analiză$/), tab(/Gospodărie/)),
-  "Scadențe": seq(click(/^Obligații$/), click(/Scadențe programate/)),
+  // Pe telefon: Astăzi · Plicuri · ＋ · Mișcări · Mai mult; Obligații și Analiză sunt în „Mai mult”.
+  "Plicuri": click(/^Plicuri$/),
+  "Obligații": more(/^Obligații/),
+  "Analiză": more(/^Analiză/),
+  "Gospodărie": seq(more(/^Analiză/), tab(/Gospodărie/)),
+  "Scadențe": seq(more(/^Obligații/), click(/Scadențe programate/)),
   "Mai mult": click(/Deschide instrumentele/),
   "Setări": more(/^Setări/),
   "Sincronizare": more(/^Sincronizare/),

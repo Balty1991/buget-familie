@@ -4,7 +4,7 @@
 import "../mobile-settings-pass.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { MessageSquareWarning, BellRing, BrainCircuit, BookOpen, CalendarClock, Check, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Search, Palette, PiggyBank, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
+import { MessageSquareWarning, BarChart3, Bell, BellRing, BrainCircuit, BookOpen, CalendarClock, Check, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Search, Palette, PiggyBank, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
 import { createEmptyAppData, type AppData, type Debt, type Receipt, type SavingsGoal } from "@/lib/finance-data";
 import { clearReceiptImageStorage } from "@/lib/receipt-storage";
 import { setSimpleMode } from "@/lib/ui-prefs";
@@ -90,6 +90,14 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
         </>
       ) : (
         <>
+      {onGo && <section className="bf-more-group bf-more-screens" aria-labelledby="more-screens-title">
+        <p className="bf-kicker bf-more-section-label" id="more-screens-title">{t("ECRANE")}</p>
+        <div className="bf-more-grid bf-settings-group">
+          <button type="button" className="bf-settings-row" onClick={() => onGo("obligations")}><Bell size={20} /><span className="bf-settings-copy"><b>{t("Obligații")}</b><small>{t("scadențe, rate, datorii")}</small></span><ChevronRight className="bf-settings-chevron" size={18} /></button>
+          <button type="button" className="bf-settings-row" onClick={() => onGo("insights")}><BarChart3 size={20} /><span className="bf-settings-copy"><b>{t("Analiză")}</b><small>{t("unde se duc banii, lună de lună")}</small></span><ChevronRight className="bf-settings-chevron" size={18} /></button>
+          <button type="button" className="bf-settings-row" onClick={() => onGo("goals")}><PiggyBankIcon size={20} /><span className="bf-settings-copy"><b>{t("Obiective")}</b><small>{t("economii și ținte pe termen lung")}</small></span><ChevronRight className="bf-settings-chevron" size={18} /></button>
+        </div>
+      </section>}
       <section className="bf-more-group" aria-labelledby="more-daily-title">
         <p className="bf-kicker bf-more-section-label" id="more-daily-title">{t("DE REZOLVAT")}</p>
         <div className="bf-more-grid bf-settings-group">

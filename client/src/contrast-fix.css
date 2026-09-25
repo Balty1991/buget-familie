@@ -1224,3 +1224,9 @@ body .bf-cat-grid button span {
   line-height: 1.15;
   text-align: center;
 }
+
+/* Pe telefon „＋ Notează” stă în bara de jos; al doilea buton în cifra zilei era în plus.
+   Stă după regula de mai sus, cu același selector, ca să câștige pe ecran îngust. */
+@media (max-width: 760px) {
+  html body .os-shell .bf-today-add.bf-os-decide { display: none; }
+}

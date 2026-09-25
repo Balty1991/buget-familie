@@ -563,6 +563,34 @@ html.capacitor-android {
 
 .os-ghid { display: none; }
 
+/* „＋ Notează”, la mijlocul barei: disc plin, ridicat puțin peste bară, mereu în același loc. */
+.os-dock .os-dock-add {
+  flex: 1.15 1 0;
+  height: 56px;
+  min-height: 56px;
+  gap: 2px;
+  color: var(--os-ink, currentColor);
+  background: transparent;
+}
+.os-dock .os-dock-add .os-dock-add-disc {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-top: -18px;
+  border-radius: 999px;
+  color: var(--os-mint-fg, #fff);
+  background: var(--os-mint);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--os-mint) 40%, transparent), 0 0 0 4px var(--os-dock-bg, var(--os-surface));
+  transition: transform 120ms ease;
+}
+.os-dock .os-dock-add .os-dock-add-disc svg { width: 24px; height: 24px; }
+.os-dock .os-dock-add:active .os-dock-add-disc { transform: scale(0.94); }
+.os-dock.os-dock-v2 button svg { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  .os-dock .os-dock-add .os-dock-add-disc { transition: none; }
+}
+
 .os-shell main,
 .os-shell .bf-page,
 .os-shell .bf-today-workspace,
