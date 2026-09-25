@@ -718,8 +718,16 @@ export const revertSalaryAllocationApplication = (data: AppData, applicationId: 
   // Plicurile născute din această repartizare pleacă odată cu ea, dacă nu s-a cheltuit nimic din ele.
   const createdIds = new Set(application.allocations.filter((item) => item.created).map((item) => item.allocationId));
   const unused = (id: string) => !data.transactions.some((tx) => tx.allocationId === id);
-  const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: plan.allocations.filter((item) => !(createdIds.has(item.id) && unused(item.id))).map((item) => previous.has(item.id) ? { ...item, amount: roundedMoney(previous.get(item.id) || 0) } : amounts.has(item.id) ? { ...item, amount: roundedMoney(item.amount - (amounts.get(item.id) || 0)) } : item), salaryAllocationApplications: (plan.salaryAllocationApplications || []).filter((item) => item.id !== applicationId), updatedAt: new Date().toISOString() } } };
-  return appendAllocationHistory(nextData, { kind: "income-reverted", referenceId: application.id, allocationLabel: application.allocations.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat").join(", "), amount: application.allocations.reduce((sum, item) => sum + item.amount, 0), incomeId: application.incomeId, incomeTitle: application.incomeTitle, note: t("Repartizarea a fost anulată.") });
+  // Banii puși deoparte pentru plățile rare (evenimente) se scot înapoi din jurnalul fiecăruia.
+  const eventPuts = application.allocations.filter((item) => item.ruleId.startsWith("event:")).map((item) => item.ruleId.split(":"));
+  const plannedEvents = eventPuts.length ? data.settings.plannedEvents.map((event) => {
+    const drop = new Set(eventPuts.filter(([, eventId]) => eventId === event.id).map(([, , contributionId]) => contributionId));
+    if (!drop.size) return event;
+    const contributions = (event.contributions || []).filter((item) => !drop.has(item.id));
+    return { ...event, contributions: contributions.length ? contributions : undefined, updatedAt: new Date().toISOString() };
+  }) : data.settings.plannedEvents;
+  const nextData = { ...data, settings: { ...data.settings, plannedEvents, salaryPlan: { ...plan, allocations: plan.allocations.filter((item) => !(createdIds.has(item.id) && unused(item.id))).map((item) => previous.has(item.id) ? { ...item, amount: roundedMoney(previous.get(item.id) || 0) } : amounts.has(item.id) ? { ...item, amount: roundedMoney(item.amount - (amounts.get(item.id) || 0)) } : item), salaryAllocationApplications: (plan.salaryAllocationApplications || []).filter((item) => item.id !== applicationId), updatedAt: new Date().toISOString() } } };
+  return appendAllocationHistory(nextData, { kind: "income-reverted", referenceId: application.id, allocationLabel: Array.from(new Set(application.allocations.map((item) => item.ruleId.startsWith("event:") ? t("Plăți rare") : plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat"))).join(", "), amount: application.allocations.reduce((sum, item) => sum + item.amount, 0), incomeId: application.incomeId, incomeTitle: application.incomeTitle, note: t("Repartizarea a fost anulată.") });
 };
 
 /** Valuta unei surse; absența ei înseamnă lei. */

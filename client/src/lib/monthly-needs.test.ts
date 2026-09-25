@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allocationFromText, createEmptyAppData, revertSalaryAllocationApplication, type AppData, type MonthlyNeed } from "./finance-data";
-import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, cycleWeeks, weeklyTarget, nextPaydayAfter } from "./monthly-needs";
+import { applyIncomeSplit, pendingSplitIncome, proposeIncomeSplit, reserveOf, sameDayNextMonth, cycleWeeks, weeklyTarget, nextPaydayAfter, rarePlan } from "./monthly-needs";
 
 const need = (id: string, label: string, min: number, max: number, extra: Partial<MonthlyNeed> = {}): MonthlyNeed => ({ id, label, category: label, cadence: "monthly", min, max, priority: "fixed", ...extra });
 
@@ -214,5 +214,46 @@ describe("te-ai răzgândit", () => {
     expect(data.settings.salaryPlan.allocations.map((item) => item.label)).toEqual(["Lumină"]);
     expect(data.settings.salaryPlan.allocations[0].amount).toBe(0);
     expect(pendingSplitIncome(data, "2026-10-11")?.id).toBe("s-eu");
+  });
+});
+
+describe("plățile rare în repartizare", () => {
+  const withRare = () => {
+    const data = family();
+    data.settings.plannedEvents = [
+      { id: "rca", name: "RCA", date: "2027-03-10", estimate: 1200, kind: "other", repeat: "yearly" },
+      { id: "xmas", name: "Crăciun", date: "2026-12-25", estimate: 1500, kind: "holiday", repeat: "yearly", contributions: [{ id: "c0", amount: 300, date: "2026-09-01" }] },
+    ];
+    return data;
+  };
+  it("ce lipsește, împărțit pe lunile rămase, rotunjit la 10", () => {
+    const plan = rarePlan(withRare(), "2026-10-10");
+    // RCA: 1.200 în 151 de zile → ~240 pe lună; Crăciun: 1.200 lipsă în 76 de zile → ~480.
+    expect(plan.events.map((item) => [item.event.id, item.perCycle])).toEqual([["rca", 240], ["xmas", 480]]);
+    expect(plan.total).toBe(720);
+  });
+  it("vin după traiul lunii, iar al doilea salariu completează", () => {
+    let data = withRare();
+    data.transactions = [income("s-eu", "eu", 4700, "2026-10-10"), income("s-sotia", "sotia", 2800, "2026-10-12")];
+    const first = proposeIncomeSplit(data, "s-eu");
+    if (!first.ok) throw new Error(first.message);
+    expect(first.lines.at(-1)).toMatchObject({ need: { id: "rare" }, target: 720, amount: 0, remaining: 720 });
+    data = applyIncomeSplit(data, "s-eu").data;
+    const second = proposeIncomeSplit(data, "s-sotia");
+    if (!second.ok) throw new Error(second.message);
+    expect(second.lines.at(-1)).toMatchObject({ need: { id: "rare" }, amount: 720, remaining: 0 });
+    data = applyIncomeSplit(data, "s-sotia").data;
+    const saved = (id: string) => (data.settings.plannedEvents.find((item) => item.id === id)?.contributions || []).reduce((sum, item) => sum + item.amount, 0);
+    expect([saved("rca"), saved("xmas")]).toEqual([240, 780]);
+  });
+  it("anularea scoate banii puși deoparte", () => {
+    let data = withRare();
+    data.transactions = [income("s-eu", "eu", 9000, "2026-10-10")];
+    data = applyIncomeSplit(data, "s-eu").data;
+    expect(data.settings.plannedEvents.find((item) => item.id === "rca")?.contributions?.length).toBe(1);
+    const application = data.settings.salaryPlan.salaryAllocationApplications![0];
+    data = revertSalaryAllocationApplication(data, application.id);
+    expect(data.settings.plannedEvents.find((item) => item.id === "rca")?.contributions).toBeUndefined();
+    expect(data.settings.plannedEvents.find((item) => item.id === "xmas")?.contributions?.length).toBe(1);
   });
 });

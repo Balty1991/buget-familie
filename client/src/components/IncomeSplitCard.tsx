@@ -42,6 +42,7 @@ export function IncomeSplitCard({ data, incomeId, onChange, onDismiss }: { data:
                 {line.perWeek ? (line.extraDays
                   ? t("{weekly} × {weeks} săpt. + {days} zile = {target}", { weekly: money(line.perWeek), weeks: line.weeks ?? 0, days: line.extraDays, target: money(line.target) })
                   : t("{weekly} × {weeks} săpt. = {target}", { weekly: money(line.perWeek), weeks: line.weeks ?? 0, target: money(line.target) })) : money(line.target)}
+                {line.note ? ` · ${line.note}` : ""}
                 {line.fundedBefore > 0 ? ` · ${t("{amount} deja acoperiți", { amount: money(line.fundedBefore) })}` : ""}
                 {line.remaining > 0 ? ` · ${line.skipped === "other-payer" ? t("din celălalt salariu") : t("rămân {amount}", { amount: money(line.remaining) })}` : ""}
               </small>

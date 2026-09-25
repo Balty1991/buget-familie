@@ -90,3 +90,11 @@
 .bf-needs-adjust-row p b { font-size: 15px; }
 .bf-needs-adjust-row > div { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .bf-needs-adjust-row button { min-height: 44px; }
+.bf-needs-rare { display: grid; gap: 8px; }
+.bf-needs-rare-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--cf-line); border-radius: 12px; background: var(--cf-surface-alt); }
+.bf-needs-rare-row span { display: grid; gap: 2px; min-width: 0; }
+.bf-needs-rare-row small { font-size: 12px; line-height: 1.4; }
+.bf-needs-rare-row .bf-needs-remove { grid-column: auto; }
+.bf-needs-rare-actions { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; }
+.bf-needs-rare-actions button { min-height: 44px; }
+.bf-link-button { padding: 0; border: 0; background: none; color: var(--cf-link); font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; min-height: 32px; }

@@ -5,11 +5,12 @@
 import "../monthly-needs.css";
 import { useEffect, useRef, useState } from "react";
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
-import { appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, revertSalaryAllocationApplication, addIsoDays, paydayWindow, type AppData, type ExpectedIncome, type MonthlyNeed, type SalaryPlan } from "@/lib/finance-data";
+import { appendAllocationHistory, expenseCategories, formatDate, isoToday, newId, parseRomanianAmount, revertSalaryAllocationApplication, addIsoDays, paydayWindow, recurringNextDue, type AppData, type ExpectedIncome, type MonthlyNeed, type SalaryPlan } from "@/lib/finance-data";
 import { askConfirm } from "@/lib/confirm-dialog";
-import { activeIncomes, activeNeeds, expectedMonthlyIncome, needAdjustments, nextPaydayAfter, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
+import { activeIncomes, activeNeeds, expectedMonthlyIncome, needAdjustments, nextPaydayAfter, rarePlan, expectedMonthlyNeeds, pendingSplitIncome, reserveOf } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
 import { RoDateInput } from "@/components/RoDateInput";
+import { eventTraits, plannedEventStatus, type PlannedEvent } from "@/lib/planned-events";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
 
@@ -188,6 +189,8 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
         <button type="button" onClick={() => addNeed({ label: t("Altă cheltuială"), category: "Altele", cadence: "monthly", priority: "fixed" })}><Plus size={13} /> {t("Altă cheltuială")}</button>
       </div>
 
+      <RarePayments data={data} onChange={onChange} />
+
       {adjustments.length > 0 && (
         <div className="bf-needs-adjust">
           <h3>{t("Din ce ați plătit de fapt")}</h3>
@@ -290,6 +293,86 @@ export function NextPayday({ plan, incomes, onSave }: { plan: SalaryPlan; income
           {[1, 2, 3, 4, 5].map((days) => <option key={days} value={days}>{days === 1 ? t("± 1 zi") : t("± {days} zile", { days })}</option>)}
         </select>
       </label>
+    </div>
+  );
+}
+
+const RARE_PRESETS = ["RCA", "Impozit casă", "Impozit mașină", "Rovinietă", "ITP", "Crăciun", "Haine de sezon", "Rechizite"];
+
+/**
+ * Plățile care vin o dată pe an: se strâng puțin câte puțin din fiecare salariu, ca luna lor
+ * să nu fie o lovitură. Sunt evenimentele planificate ale familiei; aici doar se adaugă repede.
+ */
+function RarePayments({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
+  const today = isoToday();
+  const [draft, setDraft] = useState<{ name: string; amount: string; date: string } | null>(null);
+  const [error, setError] = useState("");
+  const events = data.settings.plannedEvents || [];
+  const plan = rarePlan(data, today);
+  const perCycle = new Map(plan.events.map((item) => [item.event.id, item.perCycle]));
+  const shown = events.map((event) => plannedEventStatus(event, today)).filter((status) => status.date && !status.passed && status.estimate > 0).sort((a, b) => a.date.localeCompare(b.date));
+  const names = new Set(events.map((event) => event.name.trim().toLocaleLowerCase("ro-RO")));
+  const yearly = data.recurring.filter((item) => item.active && item.frequency === "yearly" && !names.has(item.name.trim().toLocaleLowerCase("ro-RO")));
+  const day = (iso: string) => formatDate(iso, { day: "numeric", month: "long" });
+  const write = (next: PlannedEvent[]) => onChange({ ...data, settings: { ...data.settings, plannedEvents: next } });
+  const create = (name: string, amount: number, date: string) => {
+    const traits = eventTraits(name, today);
+    write([...events, { id: newId("event"), name, date, estimate: amount, kind: traits.kind, repeat: "yearly", ...(traits.anchor ? { anchor: traits.anchor } : {}), updatedAt: new Date().toISOString() }]);
+  };
+  const save = () => {
+    if (!draft) return;
+    const amount = parseRomanianAmount(draft.amount);
+    if (!draft.name.trim()) return setError(t("Scrie ce plată e."));
+    if (amount <= 0) return setError(t("Scrie cât costă."));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date) || draft.date <= today) return setError(t("Alege data următoarei plăți."));
+    create(draft.name.trim(), amount, draft.date);
+    setDraft(null); setError("");
+  };
+  const remove = async (event: PlannedEvent) => {
+    if (!await askConfirm(t("Ștergi „{name}” din plățile rare? Banii notați ca puși deoparte pentru ea se șterg și ei din jurnal.", { name: event.name }), { danger: true, confirmLabel: t("Șterge") })) return;
+    write(events.filter((item) => item.id !== event.id));
+  };
+  return (
+    <div className="bf-needs-rare">
+      <h3>{t("Plăți rare (o dată pe an)")}</h3>
+      <p className="bf-needs-intro">{t("RCA, impozite, Crăciunul: la fiecare salariu se pune deoparte o parte, ca în luna lor banii să fie gata. Intră la urmă în repartizare, după traiul lunii.")}</p>
+      {shown.map((status) => (
+        <div className="bf-needs-rare-row" key={status.event.id}>
+          <span>
+            <b>{status.event.name} · {money(status.estimate)}</b>
+            <small>{t("{date} · strânși {saved} · ~{per} pe lună", { date: day(status.date), saved: money(status.saved), per: money(perCycle.get(status.event.id) || 0) })}</small>
+          </span>
+          <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: status.event.name })} onClick={() => void remove(status.event)}><Trash2 size={15} /></button>
+        </div>
+      ))}
+      {yearly.map((item) => {
+        const due = recurringNextDue(item, today);
+        return due ? (
+          <p className="bf-needs-note" key={item.id}>
+            {t("În Scadențe ai „{name}” {amount} pe an, pe {date}.", { name: item.name, amount: money(item.amount), date: day(due) })}{" "}
+            <button type="button" className="bf-link-button" onClick={() => create(item.name, item.amount, due)}>{t("Strânge lunar pentru ea")}</button>
+          </p>
+        ) : null;
+      })}
+      {draft ? (
+        <div className="bf-needs-row">
+          <input aria-label={t("Ce plată")} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
+          <label><span>{t("Cât costă")}</span><input inputMode="decimal" value={draft.amount} onChange={(event) => setDraft({ ...draft, amount: event.target.value })} /></label>
+          <label><span>{t("Când (data)")}</span><RoDateInput min={addIsoDays(today, 1)} value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} /></label>
+          {error && <p className="bf-form-error" role="alert">{error}</p>}
+          <div className="bf-needs-rare-actions">
+            <button type="button" className="bf-secondary" onClick={() => { setDraft(null); setError(""); }}>{t("Renunță")}</button>
+            <button type="button" className="bf-primary" onClick={save}>{t("Adaugă")}</button>
+          </div>
+        </div>
+      ) : (
+        <div className="bf-needs-presets" role="group" aria-label={t("Adaugă o plată rară")}>
+          {RARE_PRESETS.filter((name) => !names.has(name.toLocaleLowerCase("ro-RO"))).map((name) => (
+            <button type="button" key={name} onClick={() => setDraft({ name: t(name), amount: "", date: "" })}><Plus size={13} /> {t(name)}</button>
+          ))}
+          <button type="button" onClick={() => setDraft({ name: "", amount: "", date: "" })}><Plus size={13} /> {t("Altă plată rară")}</button>
+        </div>
+      )}
     </div>
   );
 }

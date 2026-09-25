@@ -21,6 +21,7 @@ import {
   type Transaction,
 } from "./finance-data";
 import { t } from "./i18n";
+import { addContribution, daysBetween as eventDays, plannedEventStatus, type PlannedEvent } from "./planned-events";
 
 /** Veniturile aceluiași ciclu vin la câteva zile unul de altul; o lună mai târziu e alt ciclu. */
 const CYCLE_WINDOW_DAYS = 20;
@@ -61,6 +62,29 @@ export const weeklyTarget = (perWeek: number, cycle: { weeks: number; extraDays:
 const incomeOf = (data: AppData, id: string) => data.transactions.find((item) => item.id === id && item.kind === "income");
 
 /** Ce s-a repartizat deja pe fiecare cheltuială, în ciclul acestui venit, din alte venituri. */
+/** Plățile rare (RCA, impozit, Crăciun) sunt evenimentele planificate: un rând al repartizării, nu un plic. */
+export const RARE_ID = "rare";
+
+/**
+ * Cât trebuie pus deoparte în ciclul acesta pentru plățile rare: ce lipsește din fiecare,
+ * împărțit pe lunile rămase până la ea; dacă vine în ciclul acesta, tot ce lipsește.
+ * Se socotește din ziua în care a început ciclul, ca al doilea salariu să nu vadă o țintă
+ * deja micșorată de primul.
+ */
+export function rarePlan(data: AppData, cycleStart: string) {
+  const events = (data.settings.plannedEvents || []).map((event) => {
+    const status = plannedEventStatus(event, cycleStart);
+    if (!status.date || status.passed || status.estimate <= 0) return undefined;
+    const before = (event.contributions || []).filter((item) => item.date < cycleStart).reduce((sum, item) => sum + item.amount, 0);
+    const missing = round2(Math.max(0, status.estimate - before));
+    const days = Math.max(1, eventDays(cycleStart, status.date));
+    if (missing <= 0 || days > 366) return undefined;
+    const perCycle = days <= 31 ? missing : Math.ceil((missing * 30 / days) / 10) * 10;
+    return { event, date: status.date, missing, perCycle: Math.min(missing, perCycle) };
+  }).filter((item): item is { event: PlannedEvent; date: string; missing: number; perCycle: number } => Boolean(item));
+  return { events, total: round2(events.reduce((sum, item) => sum + item.perCycle, 0)) };
+}
+
 const fundedInCycle = (data: AppData, income: Transaction) => {
   const since = addIsoDays(income.date, -CYCLE_WINDOW_DAYS);
   const funded = new Map<string, number>();
@@ -71,7 +95,7 @@ const fundedInCycle = (data: AppData, income: Transaction) => {
     if (!other || other.date < since || other.date > income.date) continue;
     if (other.date < cycleStart) cycleStart = other.date;
     for (const line of application.allocations) {
-      const needId = line.ruleId.replace(/^need:/, "");
+      const needId = line.ruleId.startsWith("event:") ? RARE_ID : line.ruleId.replace(/^need:/, "");
       funded.set(needId, round2((funded.get(needId) || 0) + line.amount));
     }
   }
@@ -126,6 +150,8 @@ export type SplitLine = {
   remaining: number;
   /** De ce nu primește nimic acum, dacă e cazul. */
   skipped?: "other-payer";
+  /** La plățile rare: pentru ce se strâng banii. */
+  note?: string;
 };
 
 export type IncomeSplit =
@@ -180,6 +206,17 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     money = round2(money - amount);
     return { need, target, ...weekInfo, fundedBefore, amount: round2(amount), remaining: round2(open - amount) };
   });
+  // Plățile rare vin la urmă: întâi traiul lunii, apoi ce se strânge pentru RCA sau Crăciun.
+  const rare = rarePlan(data, cycleStart);
+  if (rare.total > 0) {
+    const need: MonthlyNeed = { id: RARE_ID, label: t("Plăți rare"), category: "Economii", cadence: "monthly", min: rare.total, max: rare.total, priority: "flex" };
+    const fundedBefore = funded.get(RARE_ID) || 0;
+    const open = Math.max(0, round2(rare.total - fundedBefore));
+    const amount = Math.min(open, money);
+    money = round2(money - amount);
+    const note = rare.events.map((item) => `${item.event.name} (${item.date.slice(8, 10)}.${item.date.slice(5, 7)})`).join(", ");
+    lines.push({ need, target: rare.total, fundedBefore, amount: round2(amount), remaining: round2(open - amount), note });
+  }
   const covered = round2(lines.reduce((sum, item) => sum + item.amount, 0));
   return {
     ok: true,
@@ -216,8 +253,24 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
   const lines: SalaryAllocationApplication["allocations"] = [];
   // Toate cheltuielile primesc plic de la primul venit, chiar cu 0 deocamdată: o cursă de
   // taxi făcută înainte de al doilea salariu ajunge în plicul ei, nu în cel de mâncare.
+  let plannedEvents = data.settings.plannedEvents || [];
   for (const line of split.lines) {
     if (line.target <= 0) continue;
+    if (line.need.id === RARE_ID) {
+      // Banii plăților rare merg la evenimentele lor, în proporția a ce cere fiecare în ciclu.
+      if (line.amount <= 0) continue;
+      const rare = rarePlan(data, split.cycleStart);
+      let left = line.amount;
+      rare.events.forEach((item, index) => {
+        const share = index === rare.events.length - 1 ? left : Math.min(left, round2(line.amount * item.perCycle / rare.total));
+        if (share <= 0) return;
+        left = round2(left - share);
+        const contributionId = newId("event-put");
+        plannedEvents = plannedEvents.map((event) => event.id === item.event.id ? addContribution(event, share, split.income.date, t("Din {title}", { title: split.income.title }), contributionId) : event);
+        lines.push({ ruleId: `event:${item.event.id}:${contributionId}`, allocationId: RARE_ID, amount: share });
+      });
+      continue;
+    }
     let envelope = envelopeFor(allocations, line.need);
     const created = !envelope;
     if (!envelope) {
@@ -256,6 +309,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     ...data,
     settings: {
       ...data.settings,
+      plannedEvents,
       salaryPlan: {
         ...plan,
         ...cycle,
@@ -270,7 +324,7 @@ export function applyIncomeSplit(data: AppData, incomeId: string): { data: AppDa
     data: appendAllocationHistory(next, {
       kind: "income-applied",
       referenceId: application.id,
-      allocationLabel: lines.map((item) => allocations.find((entry) => entry.id === item.allocationId)?.label || "").filter(Boolean).join(", "),
+      allocationLabel: Array.from(new Set(lines.map((item) => item.allocationId === RARE_ID ? t("Plăți rare") : allocations.find((entry) => entry.id === item.allocationId)?.label || ""))).filter(Boolean).join(", "),
       amount: round2(lines.reduce((sum, item) => sum + item.amount, 0)),
       note: t("Repartizare după cheltuielile lunare"),
     }),
