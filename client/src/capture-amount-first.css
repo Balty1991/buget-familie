@@ -1,0 +1,24 @@
+/**
+ * Notează: suma întâi. Cheltuială/Venit, apoi suma mare (cu tastatura deja deschisă) și
+ * magazinul; categoriile vin după, fiindcă plicul și categoria se aleg singure din magazin.
+ * Ordinea e doar vizuală (flex `order`); tab-ul urmează aceeași ordine prin DOM pentru
+ * câmpuri, iar suma are deja autoFocus.
+ */
+html body .bf-quick-entry-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+html body .bf-quick-entry-scroll > .bf-quick-entry-intro { display: none; }
+html body .bf-quick-entry-scroll > .bf-segment { order: -3; }
+html body .bf-quick-entry-scroll > .bf-declared-incomes { order: -2; }
+html body .bf-quick-entry-scroll > .bf-quick-entry-grid { order: -1; }
+html body .bf-quick-entry-scroll .bf-amount-field input {
+  min-height: 64px;
+  /* Regulile vechi pun 15px !important pe toate câmpurile; suma e singurul care trebuie să fie mare. */
+  font-size: 34px !important;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+/* „Cheltuială” e felul obișnuit al unei mișcări, nu o alarmă: fără roșu (culoarea e în clarity-rebuild.css). */
