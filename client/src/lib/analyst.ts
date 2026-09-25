@@ -454,10 +454,20 @@ function answerPace(data: AppData, asOf: string): AnalystAnswer {
     };
   }
   const summary = buildTodaySummary(data, asOf);
-  const spendable = round(summary.heroValue);
-  const forecast = planForecast(data, asOf);
-  const pace = round(forecast.paceDaily);
   const free = round(planAllocationMath(data).unrepartized);
+  if (summary.overPlan) {
+    return {
+      kind: "pace",
+      headline: `Azi nu mai ai bani liberi: planul e peste bani cu ${money(round(summary.heroValue))}.`,
+      detail: sentences("Plicurile au mai mulți lei decât sunt pe carduri și în cash", "Micșorează un plic sau notează banii care au intrat, apoi îți spun din nou cât poți cheltui pe zi"),
+      rows: [{ label: "Azi", value: money(0) }, { label: "Lipsesc", value: money(round(summary.heroValue)) }, { label: "Nerepartizat", value: money(free) }],
+      followUps: ["Unde se duc banii?"],
+    };
+  }
+  const spendable = round(summary.canSpendToday);
+  const forecast = planForecast(data, asOf);
+  // Ritmul de zi cu zi, fără rate și facturi: media cu chiria inclusă „certa” fără motiv.
+  const pace = round(forecast.dayToDayPace);
   const verdict = pace <= 0 ? "Încă nu ai cheltuit nimic în perioada asta."
     : pace <= spendable * 0.85 ? "Ești sub ritmul de azi."
     : pace <= spendable * 1.05 ? "Ești fix pe ritmul de azi."
@@ -465,7 +475,7 @@ function answerPace(data: AppData, asOf: string): AnalystAnswer {
   return {
     kind: "pace",
     headline: `Poți folosi azi ${money(Math.max(0, spendable))}, la fel ca pe Astăzi.`,
-    detail: sentences(summary.heroHint, verdict, pace > 0 ? `Până acum ai cheltuit în medie ${money(pace)} pe zi în acest ciclu` : ""),
+    detail: sentences(summary.heroHint, verdict, pace > 0 ? `Până acum ai cheltuit în medie ${money(pace)} pe zi în acest ciclu, fără rate și facturi` : ""),
     rows: [
       { label: "Azi", value: `${money(Math.max(0, spendable))}` },
       { label: "Ritmul tău", value: `${money(Math.max(0, pace))}/zi` },
@@ -608,9 +618,9 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
   const horizon = addIsoDays(asOf, 7);
   const dues = pendingRecurringInPlan(data).filter((item) => item.dueDate <= horizon).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   const summary = buildTodaySummary(data, asOf);
-  const spendable = round(summary.heroValue);
+  const spendable = round(summary.canSpendToday);
   const free = round(planAllocationMath(data).unrepartized);
-  const pace = round(forecast.paceDaily);
+  const pace = round(forecast.dayToDayPace);
   const safe = round(forecast.safeDaily);
 
   const rows: AnalystRow[] = [];

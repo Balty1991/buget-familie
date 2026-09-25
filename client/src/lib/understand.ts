@@ -1169,7 +1169,8 @@ export function compactGuideContext(data: AppData, extras: { view?: string; inco
   return {
     today: isoToday(),
     /** Aceeași cifră mare ca pe Astăzi. „Cât pot cheltui azi” pleacă de aici, nu din solduri împărțite la zile. */
-    todayCanUse: round(todayCard.heroValue),
+    todayCanUse: round(todayCard.canSpendToday),
+    overPlanBy: todayCard.overPlan ? round(todayCard.heroValue) : undefined,
     view: extras.view,
     period: planPeriodContext(data),
     month: { income: round(extras.income || 0), expense: round(extras.expense || 0) },

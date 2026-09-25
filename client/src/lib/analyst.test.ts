@@ -414,3 +414,37 @@ describe("formulări omenești pentru aceleași întrebări", () => {
     expect(raspunde("fa-mi plic Alimente 1800")).toBeUndefined();
   });
 });
+
+describe("cât pot cheltui azi, în ghid", () => {
+  const base = () => {
+    const data = createEmptyAppData();
+    const card = data.settings.paymentSources[0];
+    data.settings.paymentSources = data.settings.paymentSources.map((item) => item.id === card.id ? { ...item, openingBalance: 3000 } : item);
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-10-01", sourceIds: [card.id], allocations: [
+      { id: "rent", label: "Chirie", amount: 2000, category: "Casă & facturi", weeklyPace: false },
+      { id: "food", label: "Alimente", amount: 900, category: "Alimente", weeklyPace: false },
+    ] };
+    return { data, card };
+  };
+
+  it("planul depășit: 0 azi și cât lipsește, nu deficitul ca bani de cheltuit", () => {
+    const { data } = base();
+    data.settings.salaryPlan.allocations[1].amount = 5000;
+    const answer = analyze("cât mai pot cheltui azi?", data, "2026-09-10")!;
+    expect(answer.headline).toContain("nu mai ai bani liberi");
+    expect(answer.headline).not.toContain("Poți folosi azi");
+    expect(buildTodaySummary(data, "2026-09-10").canSpendToday).toBe(0);
+  });
+
+  it("ritmul din ghid nu include chiria", () => {
+    const { data, card } = base();
+    data.transactions = [
+      { id: "r", title: "Chirie", amount: 2000, kind: "expense", category: "Casă & facturi", sourceId: card.id, source: card.name, person: "Eu", date: "2026-09-02", allocationId: "rent" },
+      { id: "f", title: "Lidl", amount: 100, kind: "expense", category: "Alimente", sourceId: card.id, source: card.name, person: "Eu", date: "2026-09-03", allocationId: "food" },
+    ];
+    const forecast = planForecast(data, "2026-09-10");
+    expect(forecast.dayToDayPace).toBeCloseTo(10, 1);
+    const text = answerToText(analyze("cât pot cheltui pe zi?", data, "2026-09-10")!);
+    expect(text).toContain("fără rate și facturi");
+  });
+});

@@ -11,10 +11,10 @@ const exact = (value: number) => stripLei(value, getLocale());
  */
 export function buildTodaySummary(data: AppData, asOf?: string) {
   const math = planCycle(data);
-  const forecast = planForecast(data);
+  const forecast = planForecast(data, asOf);
   const brief = todayBrief(data, asOf);
   const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
-  const envelopes = data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) }));
+  const envelopes = data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item, asOf) }));
   const noMoneyYet = hasNoMoneyYet(data);
   const overPlan = math.remaining < 0 && !noMoneyYet;
   const daily = math.plan.nextPayday ? forecast.safeDaily : 0;
@@ -121,5 +121,11 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const todayRow = rhythm.days.find((row) => row.isToday);
   const todayStrip = todayRow ? dayStripFigure(todayRow, heroTracksWeek ? brief.spendable : todayRow.left, heroTracksWeek) : 0;
 
-  return { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
+  /**
+   * Cât se poate cheltui azi, ca sumă de bani. Când planul e depășit, cifra mare de pe
+   * Astăzi e deficitul („Peste limita planului”), nu bani de cheltuit — ghidul spunea
+   * „Poți folosi azi 4.457” exact când lipseau 4.457.
+   */
+  const canSpendToday = noMoneyYet || overPlan || !brief.hasPayday || brief.expired ? 0 : Math.max(0, brief.spendable);
+  return { overPlan, canSpendToday, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
 }

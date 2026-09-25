@@ -1633,10 +1633,17 @@ export const planForecast = (data: AppData, asOf = isoToday()) => {
   /** Reface soldul de la începutul perioadei: cheltuielile deja înregistrate nu trebuie scăzute de două ori, o dată din sold și o dată din proiecție. */
   const budget = Math.max(0, availableSources + spentToDate);
   const paceDaily = spentToDate / elapsedDays;
+  /**
+   * Ritmul de zi cu zi: fără rate, facturi și scadențe confirmate. Media cu chiria inclusă
+   * iese 350 lei/zi în prima săptămână și face ghidul să „certe” o familie care stă în plan.
+   */
+  const fixedIds = new Set(plan.allocations.filter((item) => isFixedEnvelope(plan, item)).map((item) => item.id));
+  const fixedSpent = data.transactions.filter((item) => item.kind === "expense" && item.date >= plan.periodStart && item.date <= asOf && inPlanPeriod(item.date, plan) && (item.recurringId || item.debtId || (item.allocationId && fixedIds.has(item.allocationId)))).reduce((sum, item) => sum + item.amount, 0);
+  const dayToDayPace = Math.max(0, spentToDate - fixedSpent) / elapsedDays;
   const projectedExpenses = paceDaily * (elapsedDays + remainingDays - 1);
   const projectedRemaining = budget - scheduled - projectedExpenses;
   const safeDaily = Math.max(0, (budget - scheduled - spentToDate) / remainingDays);
-  return { budget, scheduled, spentToDate, elapsedDays, remainingDays, paceDaily, safeDaily, projectedExpenses, projectedRemaining };
+  return { budget, scheduled, spentToDate, elapsedDays, remainingDays, paceDaily, dayToDayPace, safeDaily, projectedExpenses, projectedRemaining };
 };
 
 export type NaturalSpendScenario = { raw: string; amount: number; category?: string; timing: "azi" | "mâine" | "viitor" | "nespecificat"; title: string; understood: boolean };
