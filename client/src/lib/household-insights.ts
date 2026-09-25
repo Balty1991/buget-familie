@@ -512,6 +512,30 @@ export const envelopeUntilPayday = (data: AppData, allocation: BudgetAllocation,
   return { ...until, remaining, perDay, perWeek: Math.floor(remaining * 7 / days) };
 };
 
+export type WeekTooFast = { allocationId: string; label: string; weekIndex: number; spent: number; budget: number; remaining: number; daysLeft: number; perDay: number; over: boolean };
+
+/**
+ * Plicurile pe săptămâni în care tranșa curentă se duce mai repede decât zilele: „450 din 600,
+ * mai sunt 3 zile”. Cel puțin 60% folosit și cu 15 puncte peste partea de zile scursă,
+ * ca o singură cumpărătură mare de luni să nu sune alarma pentru orice.
+ */
+export const weekTooFast = (data: AppData, asOf = isoToday()): WeekTooFast[] => {
+  const plan = data.settings.salaryPlan;
+  const out: WeekTooFast[] = [];
+  for (const item of plan.allocations) {
+    if (!isWeeklyPaced(item, plan)) continue;
+    const week = allocationWeekStatus(data, item, asOf);
+    if (!week || week.budget <= 0 || week.spent <= 0) continue;
+    const elapsed = Math.max(1, daysBetween(week.start, asOf) + 1);
+    const daysLeft = Math.max(0, week.days - elapsed);
+    const usage = week.spent / week.budget;
+    const over = week.remaining < 0;
+    if (!over && (daysLeft < 1 || usage < 0.6 || usage < elapsed / week.days + 0.15)) continue;
+    out.push({ allocationId: item.id, label: item.label, weekIndex: week.index, spent: week.spent, budget: week.budget, remaining: week.remaining, daysLeft, perDay: daysLeft > 0 ? Math.floor(Math.max(0, week.remaining) / daysLeft) : 0, over });
+  }
+  return out.sort((a, b) => Number(b.over) - Number(a.over) || b.spent / b.budget - a.spent / a.budget);
+};
+
 export const envelopeLane = (data: AppData, asOf = isoToday()) => data.settings.salaryPlan.allocations
   .map((item) => ({ item, ...envelopeDecisionStatus(data, item, asOf) }))
   .sort((left, right) => (right.state === "over" ? 2 : right.state === "watch" ? 1 : 0) - (left.state === "over" ? 2 : left.state === "watch" ? 1 : 0) || right.usage - left.usage)

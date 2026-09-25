@@ -16,7 +16,8 @@ import {
   type AppData,
 } from "@/lib/finance-data";
 import { calendarBudget } from "@/lib/calendar-budget";
-import { getLocale, t } from "./i18n";
+import { daysLabel, getLocale, t } from "./i18n";
+import { weekTooFast } from "./household-insights";
 import { lei } from "@/lib/money-format";
 
 const PREF_KEY = "buget-familie:notifications-enabled";
@@ -392,6 +393,21 @@ function buildAlerts(data: AppData): PlannedAlert[] {
         tag: `env-warn-${alloc.id}`,
       });
     }
+  }
+
+  // Tranșa săptămânii se duce prea repede: o dată pe zi, seara, pentru plicul cel mai apăsat.
+  const fast = weekTooFast(data, today)[0];
+  const evening = atLocalHour(0, 19, 0);
+  if (fast && evening.getTime() > Date.now()) {
+    alerts.push({
+      id: id++,
+      title: fast.over ? t("Săptămâna e depășită") : t("Săptămâna merge repede"),
+      body: fast.over
+        ? t("{label}: {spent} din {budget} în S{index}, peste cu {amount}.", { label: fast.label, spent: money(fast.spent), budget: money(fast.budget), index: fast.weekIndex, amount: money(-fast.remaining) })
+        : t("{label}: {spent} din {budget}, mai sunt {days}. Ca să ajungă: cel mult {perDay} pe zi.", { label: fast.label, spent: money(fast.spent), budget: money(fast.budget), days: daysLabel(fast.daysLeft), perDay: money(fast.perDay) }),
+      at: evening,
+      tag: `week-fast-${fast.allocationId}-${fast.weekIndex}`,
+    });
   }
 
   // Ritmul zilnic: dacă proiecția arată că plicurile rămase nu ajung până la salariu

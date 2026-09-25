@@ -12,7 +12,7 @@ import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { envelopeRunOut, householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
+import { envelopeRunOut, weekTooFast, householdActivityInCycle, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   dateText,
@@ -176,6 +176,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const runOuts = useMemo(() => envelopeRunOut(data), [data]);
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
   // Același plic: „se termină pe …” spune mai mult decât „80% consumat”; și apare înainte de prag, dacă ritmul e prea repede.
+  const fastWeek = useMemo(() => weekTooFast(data), [data]).find((item) => !dismissedAlerts.includes(`week-${item.allocationId}-${item.weekIndex}`));
   const runOutAlert = activeEnvelopeAlert?.state === "over" ? undefined : activeEnvelopeAlert ? runOuts.find((item) => item.allocationId === activeEnvelopeAlert.item.id) : runOuts.find((item) => !dismissedAlerts.includes(item.allocationId));
   const lastMoves = useMemo(() => {
     const today = isoToday();
@@ -230,6 +231,20 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           </div>
           <button onClick={() => onGo("plan")}>{t("Plan")}</button>
           <button className="dismiss" aria-label={t("Ascunde alerta tranșei săptămânale")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
+        </aside>
+      )}
+      {fastWeek && (
+        <aside className={`bf-envelope-live-notice ${fastWeek.over ? "over" : "watch"}`} role="status" aria-live="polite">
+          <BellRing size={19} />
+          <div>
+            <p>{fastWeek.over ? t("SĂPTĂMÂNA E DEPĂȘITĂ") : t("SĂPTĂMÂNA MERGE REPEDE")}</p>
+            <strong>{t("{label} · S{index}", { label: fastWeek.label, index: fastWeek.weekIndex })}</strong>
+            <span>{fastWeek.over
+              ? t("{spent} din {budget}, peste cu {amount}. Se scade din ce rămâne în plic.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), amount: money(-fastWeek.remaining) })
+              : t("{spent} din {budget}, mai sunt {days}. Ca să ajungă: cel mult {perDay} pe zi.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), days: daysLabel(fastWeek.daysLeft), perDay: money(fastWeek.perDay) })}</span>
+          </div>
+          <button onClick={() => onGo("plan")}>{t("Vezi")}</button>
+          <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: fastWeek.label })} onClick={() => setDismissedAlerts((current) => [...current, `week-${fastWeek.allocationId}-${fastWeek.weekIndex}`])}><X size={16} /></button>
         </aside>
       )}
       {runOutAlert && (
