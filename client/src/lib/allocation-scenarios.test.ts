@@ -64,6 +64,7 @@ const addExpense = (data: AppData, amount: number, extra: Partial<AppData["trans
     memberId: me,
     date: extra.date || "2026-09-13",
     allocationId: extra.allocationId,
+    outsideChosen: extra.outsideChosen,
   });
 };
 
@@ -454,5 +455,20 @@ describe("mutarea între săptămâni, în ambele sensuri", () => {
     addIncome(data, 500);
     addEnvelope(data, 500);
     expect(transferBetweenWeeks(data, { allocationId: "env-food", fromWeekIndex: 1, toWeekIndex: 2, amount: 400 })).toBeUndefined();
+  });
+});
+
+describe("„În afara plicurilor” ales de om", () => {
+  it("rămâne în afara, iar cea implicită intră în plic cu updatedAt nou", () => {
+    const data = house();
+    addIncome(data);
+    addEnvelope(data);
+    addExpense(data, 20, { allocationId: "outside", outsideChosen: true, title: "Cadou" });
+    addExpense(data, 15, { allocationId: "outside", title: "Taxi" });
+    const next = adoptOutsideExpenses(data);
+    expect(next.transactions.find((item) => item.title === "Cadou")?.allocationId).toBe("outside");
+    const taxi = next.transactions.find((item) => item.title === "Taxi");
+    expect(taxi?.allocationId).toBe("env-food");
+    expect(taxi?.updatedAt).toBeTruthy();
   });
 });

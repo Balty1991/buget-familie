@@ -215,7 +215,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
                       </Field>
                       {transaction.kind === "expense" && (
                         <Field label={t("Plic")} hint={t("„În afara plicurilor” lasă cheltuiala fără să consume o limită.")}>
-                          <select value={selectedAllocation} onChange={(event) => patch(draft, { allocationId: event.target.value })}>
+                          <select value={selectedAllocation} onChange={(event) => patch(draft, { allocationId: event.target.value, outsideChosen: event.target.value === "outside" ? true : undefined })}>
                             {(!hideUnallocated || selectedAllocation === "outside") && <option value="outside">{t("În afara plicurilor")}</option>}
                             {envelopes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
                           </select>

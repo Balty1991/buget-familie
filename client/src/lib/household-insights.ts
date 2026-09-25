@@ -33,6 +33,7 @@ import {
   type SalaryPlan,
   type Transaction,
   isoDate,
+  foldRomanian,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
 import { lei as leiExact } from "./money-format";
@@ -41,7 +42,7 @@ import { safeSetItem } from "@/lib/safe-storage";
 import { selfMemberIdOf } from "./member-identity";
 import { pendingTransfers } from "./monthly-needs";
 
-const fold = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const fold = foldRomanian;
 const daysBetween = (from: string, to: string) => Math.round((new Date(`${to}T12:00:00`).valueOf() - new Date(`${from}T12:00:00`).valueOf()) / 86_400_000);
 const monthRange = (month: string) => {
   const [year, index] = month.split("-").map(Number);

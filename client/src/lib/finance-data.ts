@@ -3,6 +3,7 @@
  * Toate sumele sunt în RON, toate datele sunt ISO (YYYY-MM-DD), iar identitățile sunt stabile.
  */
 import { calendarBudget, periodDays, type CalendarBudget } from "./calendar-budget";
+import { memoString } from "./memo-string";
 import { type PlannedEvent, type PlannedEventKind, type PlannedEventRepeat } from "./planned-events";
 import { getLocale, t } from "./i18n";
 
@@ -26,6 +27,8 @@ export type Transaction = {
   memberId?: string;
   /** Plicul ales expres pentru această cheltuială; valoarea „outside” înseamnă că nu consumă niciun plic. */
   allocationId?: string;
+  /** Omul a ales el „În afara plicurilor”; „outside” fără bifa asta e doar valoarea implicită și poate fi pus în plic. */
+  outsideChosen?: boolean;
   receiptId?: string;
   /** Legătură cu plata recurentă care a generat mișcarea. */
   recurringId?: string;
@@ -237,8 +240,15 @@ export const deviceTimeZone = () => {
 };
 export const setFamilyTimeZone = (zone: string | undefined) => { familyTimeZone = isValidTimeZone(zone) ? zone : undefined; };
 /** Data calendaristică a unui moment într-un fus orar dat (yyyy-mm-dd). */
+/** Un formatter pe fus: construirea lui costă de ~100 de ori mai mult decât folosirea, iar isoToday() e chemat în bucle. */
+const zoneFormatters = new Map<string, Intl.DateTimeFormat>();
 export const isoDateInZone = (value: Date, zone: string) => {
-  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(value);
+  let formatter = zoneFormatters.get(zone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" });
+    zoneFormatters.set(zone, formatter);
+  }
+  const parts = formatter.formatToParts(value);
   const get = (type: string) => parts.find((part) => part.type === type)?.value || "";
   return `${get("year")}-${get("month")}-${get("day")}`;
 };
@@ -825,10 +835,17 @@ export const isWeeklyPaced = (allocation: Pick<BudgetAllocation, "weeklyPace">, 
 
 export const planCoverEndDate = (plan: SalaryPlan) => paydayWindow(plan).latest || planEndDate(plan) || addIsoDays(plan.periodStart, 31);
 export const prudentPlanEndDate = (plan: SalaryPlan) => paydayWindow(plan).earliest || planEndDate(plan);
+const addIsoDaysCache = new Map<string, string>();
 export const addIsoDays = (iso: string, days: number) => {
+  const key = `${iso}|${days}`;
+  const hit = addIsoDaysCache.get(key);
+  if (hit !== undefined) return hit;
   const date = new Date(`${iso}T12:00:00`);
   date.setDate(date.getDate() + days);
-  return isoDate(date);
+  const result = isoDate(date);
+  if (addIsoDaysCache.size >= 20_000) addIsoDaysCache.clear();
+  addIsoDaysCache.set(key, result);
+  return result;
 };
 export const paydayFlexDays = (plan: SalaryPlan) => Math.min(5, Math.max(0, Math.round(plan.paydayFlexDays ?? 0)));
 export const paydayWindow = (plan: SalaryPlan) => {
@@ -1065,6 +1082,16 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
   const cover = planCoverEndDate(plan);
   const lastIndex = calendar.weeks.length - 1;
   const today = isoToday();
+  /* O singură trecere prin jurnal: mișcările plicului, apoi fiecare tranșă își ia intervalul.
+     Înainte, fiecare săptămână filtra tot jurnalul (5 × 5.000 de rânduri pe plic, la fiecare randare). */
+  const first = calendar.weeks[0]?.start || "";
+  const last = cover > (calendar.weeks[lastIndex]?.end || "") ? cover : calendar.weeks[lastIndex]?.end || "";
+  const sourceIds = allocation.sourceId ? allocationSourceIds(allocation) : [];
+  const mine = data.transactions.filter((item) => {
+    if (item.kind !== "expense" || item.date < first || item.date > last) return false;
+    if (item.allocationId) return item.allocationId === allocation.id;
+    return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || !item.sourceId || sourceIds.includes(item.sourceId));
+  });
   let carryNext = 0;
   return calendar.weeks.map((week, index) => {
     const adjustment = weekTransfers.reduce((sum, item) => sum + (item.toWeekIndex === week.index ? item.amount : 0) - (item.fromWeekIndex === week.index ? item.amount : 0), 0);
@@ -1072,11 +1099,8 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
     const carry = plan.weekCarryOver ? carryNext : 0;
     const weekBudget = roundSigned(week.amount + adjustment + carry);
     const weekEnd = index === lastIndex && cover > week.end ? cover : week.end;
-    const spent = data.transactions.filter((item) => {
-      if (item.kind !== "expense" || item.date < week.start || item.date > weekEnd) return false;
-      if (item.allocationId) return item.allocationId === allocation.id;
-      return (!allocation.memberId || item.memberId === allocation.memberId) && (!allocation.category || item.category === allocation.category) && (!allocation.sourceId || !item.sourceId || allocationSourceIds(allocation).includes(item.sourceId));
-    }).reduce((sum, item) => sum + item.amount, 0);
+    let spent = 0;
+    for (const item of mine) if (item.date >= week.start && item.date <= weekEnd) spent += item.amount;
     const remaining = roundSigned(weekBudget - spent);
     const days = weekEnd === week.end ? week.days : periodDays(week.start, weekEnd);
     carryNext = weekEnd < today ? remaining : 0;
@@ -1319,16 +1343,18 @@ export const adoptOutsideExpenses = (data: AppData): AppData => {
   const allocations = data.settings.salaryPlan.allocations;
   if (!allocations.length) return data;
   let changed = false;
+  const stamp = new Date().toISOString();
   const transactions = data.transactions.map((item) => {
     if (item.kind !== "expense") return item;
     if (item.note === "decontare-intre-membri") return item;
     if (item.allocationId && item.allocationId !== "outside") return item;
+    if (item.outsideChosen) return item;
     if (!inPlanPeriod(item.date, data.settings.salaryPlan)) return item;
     const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
     const target = matched || (allocations.length === 1 ? allocations[0] : undefined);
     if (!target) return item;
     changed = true;
-    return { ...item, allocationId: target.id };
+    return { ...item, allocationId: target.id, updatedAt: stamp };
   });
   return changed ? { ...data, transactions } : data;
 };
@@ -1588,7 +1614,7 @@ export type NaturalSpendScenario = { raw: string; amount: number; category?: str
 export type SavingSuggestion = { id: string; tone: "good" | "watch" | "risk"; title: string; detail: string; potential?: number; basis?: string; nextStep?: string };
 export type BudgetQuestionAnswer = { kind: "daily-average" | "weekly-average" | "remaining-daily"; amount: number; days: number; result: number; category?: string; source: "declared" | "envelope" | "plan" };
 
-export const foldRomanian = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+export const foldRomanian = memoString((value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
 
 /** O singură listă de indicii, folosită și de simulatorul de scenarii, și de importul de extras. */
 const categoryAliases: Array<[RegExp, string]> = [

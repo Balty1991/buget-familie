@@ -4,7 +4,8 @@
  * tot cititorul de fișiere la pornire.
  */
 import { foldRomanian } from "./finance-data";
-import { t } from "./i18n";
+import { getLocale, t } from "./i18n";
+import { memoString } from "./memo-string";
 
 /** Orașele care apar la coada descrierilor POS („LIDL 0123 BUCURESTI RO”). */
 const CITY_TAIL = /\s+(bucuresti|bucharest|cluj[- ]?napoca|cluj|iasi|timisoara|constanta|brasov|craiova|galati|ploiesti|oradea|sibiu|arad|pitesti|bacau|suceava|baia mare|buzau|botosani|satu mare|ramnicu valcea|drobeta[- ]turnu severin|piatra neamt|targu mures|targu jiu|focsani|bistrita|tulcea|resita|slatina|calarasi|alba iulia|giurgiu|deva|hunedoara|zalau|sfantu gheorghe|slobozia|alexandria|voluntari|otopeni|popesti[- ]leordeni|chiajna|bragadiru|pantelimon|dublin|london|vilnius|amsterdam|luxembourg|sector\s*\d)$/i;
@@ -49,7 +50,13 @@ function cleanMerchantSegment(segment: string): string {
  * terminalul, orașul și coduri („Plata la POS non-BT cu card VISA; LIDL DISCOUNT 0123 BUCURESTI RO;
  * RRN: …” → „Lidl”). Dacă nu rămâne nimic sigur, întoarce descrierea așa cum era.
  */
+/** Același text de extras dă mereu același nume; se ține minte pe limbă (vezi memoString). */
+const merchantByKey = memoString((key: string) => merchantOf(key.slice(key.indexOf("|") + 1)));
 export function statementMerchant(description: string): string {
+  return merchantByKey(`${getLocale()}|${description}`);
+}
+
+function merchantOf(description: string): string {
   const raw = description.replace(/\s+/g, " ").trim();
   if (!raw) return raw;
   if (/retragere\s+numerar|\batm\b/i.test(raw)) return t("Retragere numerar");
