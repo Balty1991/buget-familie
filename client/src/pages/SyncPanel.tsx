@@ -4,10 +4,11 @@
  */
 import { useEffect, useState } from "react";
 import { Check, Cloud, Copy, KeyRound, RotateCcw, Send, ShieldAlert, Smartphone, UserRound, Users, X } from "lucide-react";
-import { checkFamilyPassword } from "@/lib/family-password";
+import { checkFamilyPassword, LEGACY_PASSWORD_UNTIL } from "@/lib/family-password";
 import { inviteLink, inviteMessage, parseInvite } from "@/lib/family-invite";
 import { InviteQr } from "@/components/InviteQr";
 import { isNativeApp } from "@/lib/app-storage";
+import { formatDate } from "@/lib/finance-data";
 import { Field, type SyncPanelProps } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
 import { canUseFamilySync } from "@/lib/entitlements";
@@ -302,6 +303,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         <button type="button" className="bf-link-button" aria-expanded={legacyOpen} onClick={() => setLegacyOpen((value) => !value)}>{t("Am o parolă de familie")}</button>
         {legacyOpen && <>
         <p className="bf-helper">{t("Doar pentru camerele create înainte de invitații. Trebuie să fie identică, literă cu literă, cu cea de pe celelalte telefoane.")}</p>
+        <p className="bf-form-error" role="note">{t("Intrarea cu parolă se închide pe {date}. După ce intri, mută familia pe invitație (buton „Mută familia”).", { date: formatDate(LEGACY_PASSWORD_UNTIL, { day: "numeric", month: "long", year: "numeric" }) })}</p>
         <Field label={t("Parola familiei")}>
           <input type={showGenerated ? "text" : "password"} value={password} onChange={(event) => { setPassword(event.target.value); setShowGenerated(false); }} placeholder={t("12+ caractere")} autoComplete="current-password" />
           {password.length > 0 && <PasswordMeter value={password} />}

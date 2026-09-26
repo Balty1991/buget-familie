@@ -4,8 +4,8 @@
  * Sesiunea se reia singură la pornire din cheia păstrată în family-session (nu din parolă).
  */
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { createEmptyAppData, newId, normalizeAppData, type AppData } from "@/lib/finance-data";
-import { checkFamilyPassword } from "@/lib/family-password";
+import { createEmptyAppData, isoToday, newId, normalizeAppData, type AppData } from "@/lib/finance-data";
+import { checkFamilyPassword, legacyPasswordClosed } from "@/lib/family-password";
 import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope, FamilySecret, SyncBase } from "@/lib/family-crypto";
@@ -310,6 +310,10 @@ export function useFamilySync(
   const syncConnect = async () => {
     if (isOfflineOnly()) {
       setSyncNotice(t("Modul „doar offline” este activ. Dezactivează-l din Setări ca să folosești Sync."));
+      return;
+    }
+    if (legacyPasswordClosed(isoToday())) {
+      setSyncNotice(t("Intrarea cu parolă s-a închis: parolele vechi se pot ghici. Cere unui telefon din familie să apese în Sync „Mută familia” și să-ți trimită invitația."));
       return;
     }
     const strength = checkFamilyPassword(syncPassword);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkFamilyPassword, generateFamilyPassword } from "./family-password";
+import { checkFamilyPassword, legacyPasswordClosed } from "./family-password";
 
 const verdict = (value: string) => checkFamilyPassword(value);
 
@@ -54,12 +54,9 @@ describe("parola de familie", () => {
   });
 });
 
-describe("generarea parolei", () => {
-  it("produce o parolă acceptabilă de cel puțin 12 caractere", () => {
-    for (let i = 0; i < 8; i += 1) {
-      const value = generateFamilyPassword();
-      expect(value.length).toBeGreaterThanOrEqual(12);
-      expect(checkFamilyPassword(value).ok).toBe(true);
-    }
+describe("camerele cu parolă", () => {
+  it("nu mai primesc conectări noi de la data limită", () => {
+    expect(legacyPasswordClosed("2026-12-31")).toBe(false);
+    expect(legacyPasswordClosed("2027-01-01")).toBe(true);
   });
 });

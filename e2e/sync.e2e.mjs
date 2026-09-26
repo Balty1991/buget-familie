@@ -166,58 +166,62 @@ async function main() {
     const ioanaMembers = (await ledger(ioana.page)).members.sort();
     if (JSON.stringify(ioanaMembers) !== JSON.stringify(["Ioana", "Radu"])) fail(`Membrii la Ioana: ${ioanaMembers}`);
 
-    step("Camera veche, cu parolă: doi părinți conectați cu parola");
-    const password = "pisicaVerdeSareGardul7";
-    const ana = await phone(browser, { name: "Ana", partner: "Mihai" });
-    // O cameră veche nu se mai poate crea din aplicație; o punem direct, cum ar fi rămas din versiunile trecute.
-    await ana.page.evaluate(async (password) => {
-      const crypto = await import("/src/lib/family-crypto.ts");
-      const sync = await import("/src/lib/realtime-sync.ts");
-      const data = await (await import("/src/lib/app-storage.ts")).readAppData();
-      await sync.pushFamilyEnvelope(await crypto.deriveFamilyRoomId(password), await crypto.encryptFamilyData(data, password));
-    }, password);
-    const connectWithPassword = async (page) => {
-      await openSync(page);
-      await page.getByRole("button", { name: "Am o parolă de familie" }).click();
-      await page.getByLabel("Parola familiei").fill(password);
-      await page.getByRole("button", { name: "Conectează cu parola" }).click();
-      await waitFor(() => connected(page), "conectat cu parola");
-    };
-    await connectWithPassword(ana.page);
-    const mihai = await phone(browser, { name: "Mihai" });
-    await connectWithPassword(mihai.page);
-    await addExpense(mihai.page, 99);
-    await waitFor(async () => (await ledger(ana.page)).transactions.some((item) => item.amount === 99 && item.person === "Mihai"), "99 lei ai lui Mihai la Ana, prin camera veche");
+    // Intrarea cu parolă se închide pe LEGACY_PASSWORD_UNTIL (family-password.ts); după aceea scenariul nu mai are sens.
+    let ana; let mihai;
+    if (Date.now() < Date.parse("2027-01-01T00:00:00")) {
+      step("Camera veche, cu parolă: doi părinți conectați cu parola");
+      const password = "pisicaVerdeSareGardul7";
+      ana = await phone(browser, { name: "Ana", partner: "Mihai" });
+      // O cameră veche nu se mai poate crea din aplicație; o punem direct, cum ar fi rămas din versiunile trecute.
+      await ana.page.evaluate(async (password) => {
+        const crypto = await import("/src/lib/family-crypto.ts");
+        const sync = await import("/src/lib/realtime-sync.ts");
+        const data = await (await import("/src/lib/app-storage.ts")).readAppData();
+        await sync.pushFamilyEnvelope(await crypto.deriveFamilyRoomId(password), await crypto.encryptFamilyData(data, password));
+      }, password);
+      const connectWithPassword = async (page) => {
+        await openSync(page);
+        await page.getByRole("button", { name: "Am o parolă de familie" }).click();
+        await page.getByLabel("Parola familiei").fill(password);
+        await page.getByRole("button", { name: "Conectează cu parola" }).click();
+        await waitFor(() => connected(page), "conectat cu parola");
+      };
+      await connectWithPassword(ana.page);
+      mihai = await phone(browser, { name: "Mihai" });
+      await connectWithPassword(mihai.page);
+      await addExpense(mihai.page, 99);
+      await waitFor(async () => (await ledger(ana.page)).transactions.some((item) => item.amount === 99 && item.person === "Mihai"), "99 lei ai lui Mihai la Ana, prin camera veche");
 
-    step("Ana mută familia pe invitație; Mihai se oprește și intră cu invitația nouă");
-    await openSync(ana.page);
-    await ana.page.getByRole("button", { name: "Mută familia" }).click();
-    await ana.page.getByRole("button", { name: "Da, mută familia" }).click();
-    await waitFor(async () => Boolean(await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite)), "Ana în camera nouă");
-    const moved = await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite);
-    await waitFor(async () => !(await mihai.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.roomId)), "Mihai iese din camera veche");
-    await waitFor(async () => (await mihai.page.locator(".bf-sync-off-banner").count()) > 0, "bannerul „sync oprit” la Mihai");
-    // Exact ce face omul: „Reconectează” din banner duce la Sync, unde scrie ce s-a întâmplat.
-    await mihai.page.locator(".bf-sync-off-banner button").first().click();
-    await mihai.page.locator(".bf-sync-session").waitFor();
-    await waitFor(async () => (await mihai.page.locator(".bf-notice").allInnerTexts()).some((text) => text.includes("Familia s-a mutat")), "Mihai află că familia s-a mutat");
-    const oldRoom = await ana.page.evaluate(async (password) => {
-      const crypto = await import("/src/lib/family-crypto.ts");
-      const sync = await import("/src/lib/realtime-sync.ts");
-      const envelope = await sync.fetchFamilyEnvelope(await crypto.deriveFamilyRoomId(password));
-      const data = await crypto.decryptFamilyData(envelope, password);
-      return { movedAt: data.settings.syncRoomMovedAt, transactions: data.transactions.length, hasInvite: JSON.stringify(data).includes("bf1.") };
-    }, password);
-    if (!oldRoom.movedAt || oldRoom.transactions || oldRoom.hasInvite) fail(`Camera veche nu a fost golită corect: ${JSON.stringify(oldRoom)}`);
-    await mihai.page.goto("about:blank");
-    await mihai.page.goto(`${BASE}#alatura=${moved}`);
-    await joinWithInvite(mihai.page);
-    await waitFor(() => connected(mihai.page), "Mihai în camera nouă");
-    await addExpense(mihai.page, 7);
-    await waitFor(async () => (await ledger(ana.page)).transactions.some((item) => item.amount === 7 && item.person === "Mihai"), "7 lei ai lui Mihai la Ana, prin camera nouă");
-    if (!(await ledger(mihai.page)).transactions.some((item) => item.amount === 99)) fail("Mihai a pierdut cheltuiala din camera veche");
+      step("Ana mută familia pe invitație; Mihai se oprește și intră cu invitația nouă");
+      await openSync(ana.page);
+      await ana.page.getByRole("button", { name: "Mută familia" }).click();
+      await ana.page.getByRole("button", { name: "Da, mută familia" }).click();
+      await waitFor(async () => Boolean(await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite)), "Ana în camera nouă");
+      const moved = await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite);
+      await waitFor(async () => !(await mihai.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.roomId)), "Mihai iese din camera veche");
+      await waitFor(async () => (await mihai.page.locator(".bf-sync-off-banner").count()) > 0, "bannerul „sync oprit” la Mihai");
+      // Exact ce face omul: „Reconectează” din banner duce la Sync, unde scrie ce s-a întâmplat.
+      await mihai.page.locator(".bf-sync-off-banner button").first().click();
+      await mihai.page.locator(".bf-sync-session").waitFor();
+      await waitFor(async () => (await mihai.page.locator(".bf-notice").allInnerTexts()).some((text) => text.includes("Familia s-a mutat")), "Mihai află că familia s-a mutat");
+      const oldRoom = await ana.page.evaluate(async (password) => {
+        const crypto = await import("/src/lib/family-crypto.ts");
+        const sync = await import("/src/lib/realtime-sync.ts");
+        const envelope = await sync.fetchFamilyEnvelope(await crypto.deriveFamilyRoomId(password));
+        const data = await crypto.decryptFamilyData(envelope, password);
+        return { movedAt: data.settings.syncRoomMovedAt, transactions: data.transactions.length, hasInvite: JSON.stringify(data).includes("bf1.") };
+      }, password);
+      if (!oldRoom.movedAt || oldRoom.transactions || oldRoom.hasInvite) fail(`Camera veche nu a fost golită corect: ${JSON.stringify(oldRoom)}`);
+      await mihai.page.goto("about:blank");
+      await mihai.page.goto(`${BASE}#alatura=${moved}`);
+      await joinWithInvite(mihai.page);
+      await waitFor(() => connected(mihai.page), "Mihai în camera nouă");
+      await addExpense(mihai.page, 7);
+      await waitFor(async () => (await ledger(ana.page)).transactions.some((item) => item.amount === 7 && item.person === "Mihai"), "7 lei ai lui Mihai la Ana, prin camera nouă");
+      if (!(await ledger(mihai.page)).transactions.some((item) => item.amount === 99)) fail("Mihai a pierdut cheltuiala din camera veche");
+    } else step("Intrarea cu parolă e închisă: sar peste camera veche");
 
-    const errors = [...radu.errors, ...ioana.errors, ...ana.errors, ...mihai.errors];
+    const errors = [...radu.errors, ...ioana.errors, ...(ana?.errors || []), ...(mihai?.errors || [])];
     if (errors.length) fail(`Erori în pagină: ${errors.join(" | ")}`);
     console.log("✓ Sincronizarea familiei merge cap-coadă (C2, C3, C4 și mutarea de pe parolă).");
   } finally {

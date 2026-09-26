@@ -97,23 +97,10 @@ export function checkFamilyPassword(raw: string): PasswordVerdict {
 }
 
 
-/** Generează o parolă de propoziție (afișată o singură dată pe ecranul Sync). */
-export function generateFamilyPassword(): string {
-  const words = [
-    "pisica", "gardul", "verde", "sare", "cafea", "ploaia", "muntele", "carte",
-    "fereastra", "soarele", "norul", "copacul", "strada", "lacul", "vântul", "podul",
-  ];
-  const pick = () => words[Math.floor(Math.random() * words.length)];
-  for (let attempt = 0; attempt < 24; attempt += 1) {
-    const a = pick();
-    let b = pick();
-    let c = pick();
-    while (b === a) b = pick();
-    while (c === a || c === b) c = pick();
-    const n = Math.floor(10 + Math.random() * 89);
-    const phrase = `${a}${b[0].toUpperCase()}${b.slice(1)}${c[0].toUpperCase()}${c.slice(1)}${n}`;
-    const candidate = phrase.length >= 12 ? phrase : `${phrase}Podul${n}`;
-    if (checkFamilyPassword(candidate).ok) return candidate;
-  }
-  return "pisicaVerdeSareGardul7";
-}
+/**
+ * Camerele vechi, cu parolă, au ID-ul făcut dintr-un hash rapid al parolei: cine vede ID-ul
+ * poate ghici parola offline. De la această zi nu se mai intră cu parolă; telefoanele deja
+ * conectate merg mai departe, iar familia se mută pe invitație din Sync.
+ */
+export const LEGACY_PASSWORD_UNTIL = "2027-01-01";
+export const legacyPasswordClosed = (today: string) => today >= LEGACY_PASSWORD_UNTIL;
