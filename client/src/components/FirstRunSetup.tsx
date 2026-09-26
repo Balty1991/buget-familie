@@ -267,7 +267,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <div className="bf-first-run-intents" role="group" aria-label={t("Intenții de start")}>
               <button type="button" onClick={() => setIntent("salary")}>
                 <WalletCards size={20} />
-                <b>{t("Vreau ca aplicația să-mi împartă salariul.")}</b>
+                <b>{t("Vreau ca aplicația să-mi împartă salariul.")} <span className="bf-first-run-recommended">{t("recomandat")}</span></b>
                 <small>{t("Scrii o dată veniturile și ce plătiți; la fiecare salariu primești împărțirea pe plicuri.")}</small>
               </button>
               <button type="button" onClick={() => setIntent("simple")}>
@@ -275,6 +275,16 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 <b>{t("Vreau doar să notez și să văd cât mai am.")}</b>
                 <small>{t("Ecran simplu, text mare. Fără plicuri; le poți porni oricând din Setări.")}</small>
               </button>
+              {/* Produs #6: partenerul invitat nu mai trece prin 6 opțiuni ca să ajungă la Sync. */}
+              <button type="button" onClick={() => { complete(); if (onOpenSync) onOpenSync(); }}>
+                <Users size={20} />
+                <b>{t("Mă alătur familiei.")}</b>
+                <small>{t("Am primit o invitație de la partener: deschide Sync și scrie codul.")}</small>
+              </button>
+            </div>
+            <details className="bf-first-run-more">
+              <summary>{t("Alte moduri de a începe")}</summary>
+              <div className="bf-first-run-intents" role="group" aria-label={t("Alte moduri de a începe")}>
               <button type="button" onClick={() => setIntent("track")}>
                 <ReceiptText size={20} />
                 <b>{t("Vreau doar să văd pe ce se duc banii.")}</b>
@@ -295,7 +305,8 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
                 <b>{t("Vreau un buget pentru familie.")}</b>
                 <small>{t("Persoane, surse, plan comun — apoi inviți partenerul în Sync.")}</small>
               </button>
-            </div>
+              </div>
+            </details>
           </div>
         )}
 

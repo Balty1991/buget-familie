@@ -469,3 +469,25 @@ html.theme-navy .os-shell .os-dock button.is-on {
     transition: none;
   }
 }
+
+/* Produs #6: trei intenții în față, restul la „Alte moduri de a începe”. */
+.bf-first-run-more { margin-top: 12px; }
+.bf-first-run-more > summary {
+  cursor: pointer;
+  padding: 10px 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cf-muted);
+}
+.bf-first-run-more > .bf-first-run-intents { margin-top: 6px; }
+.bf-first-run-recommended {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: middle;
+  background: color-mix(in srgb, var(--cf-primary) 14%, transparent);
+  color: var(--cf-primary);
+}

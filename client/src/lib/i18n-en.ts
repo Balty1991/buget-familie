@@ -3420,4 +3420,8 @@ export const en: Record<string, string> = {
   "Cât aveți acum, pe card și cash? (opțional)": "How much do you have now, on card and in cash? (optional)",
   "Din banii de acum, pe Astăzi vezi din prima zi cât poți cheltui pe zi până pe {date}.": "From the money you have now, Today shows from day one how much you can spend per day until {date}.",
   "ex. 1.250": "e.g. 1,250",
+  "recomandat": "recommended",
+  "Mă alătur familiei.": "I am joining my family.",
+  "Am primit o invitație de la partener: deschide Sync și scrie codul.": "I got an invite from my partner: open Sync and enter the code.",
+  "Alte moduri de a începe": "Other ways to start",
 };
