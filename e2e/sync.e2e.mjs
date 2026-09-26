@@ -166,6 +166,24 @@ async function main() {
     const ioanaMembers = (await ledger(ioana.page)).members.sort();
     if (JSON.stringify(ioanaMembers) !== JSON.stringify(["Ioana", "Radu"])) fail(`Membrii la Ioana: ${ioanaMembers}`);
 
+    step("Cine știe doar ID-ul camerei nu poate suprascrie pachetul familiei (lanțul de scriere)");
+    const raduRoom = await radu.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.roomId);
+    const intruder = await phone(browser, { name: "Străin" });
+    const intrusion = await intruder.page.evaluate(async (roomId) => {
+      const crypto = await import("/src/lib/family-crypto.ts");
+      const sync = await import("/src/lib/realtime-sync.ts");
+      const { createEmptyAppData } = await import("/src/lib/finance-data.ts");
+      const junk = await crypto.encryptFamilyData(createEmptyAppData(), "o-cheie-care-nu-e-a-familiei");
+      const attempts = {};
+      try { await sync.pushFamilyEnvelope(roomId, junk); attempts.plain = "scris"; } catch { attempts.plain = "refuzat"; }
+      try { await sync.pushFamilyEnvelope(roomId, junk, undefined, (seq) => crypto.writeChainToken("o-cheie-care-nu-e-a-familiei", roomId, seq)); attempts.chain = "scris"; } catch { attempts.chain = "refuzat"; }
+      return attempts;
+    }, raduRoom);
+    // Cu regulile etapei 2 (E2E_RULES=auth, cele publicate acum) scrierea fără lanț e încă permisă.
+    if (process.env.E2E_RULES !== "auth" && (intrusion.plain !== "refuzat" || intrusion.chain !== "refuzat")) fail(`Străinul a putut scrie în cameră: ${JSON.stringify(intrusion)}`);
+    await addExpense(radu.page, 12.5);
+    await waitFor(async () => (await ledger(ioana.page)).transactions.some((item) => item.amount === 12.5), "familia scrie mai departe după încercarea străinului");
+
     // Intrarea cu parolă se închide pe LEGACY_PASSWORD_UNTIL (family-password.ts); după aceea scenariul nu mai are sens.
     let ana; let mihai;
     if (Date.now() < Date.parse("2027-01-01T00:00:00")) {
@@ -177,7 +195,8 @@ async function main() {
         const crypto = await import("/src/lib/family-crypto.ts");
         const sync = await import("/src/lib/realtime-sync.ts");
         const data = await (await import("/src/lib/app-storage.ts")).readAppData();
-        await sync.pushFamilyEnvelope(await crypto.deriveFamilyRoomId(password), await crypto.encryptFamilyData(data, password));
+        const roomId = await crypto.deriveFamilyRoomId(password);
+        await sync.pushFamilyEnvelope(roomId, await crypto.encryptFamilyData(data, password), undefined, (seq) => crypto.writeChainToken(password, roomId, seq));
       }, password);
       const connectWithPassword = async (page) => {
         await openSync(page);
@@ -221,7 +240,7 @@ async function main() {
       if (!(await ledger(mihai.page)).transactions.some((item) => item.amount === 99)) fail("Mihai a pierdut cheltuiala din camera veche");
     } else step("Intrarea cu parolă e închisă: sar peste camera veche");
 
-    const errors = [...radu.errors, ...ioana.errors, ...(ana?.errors || []), ...(mihai?.errors || [])];
+    const errors = [...radu.errors, ...ioana.errors, ...intruder.errors.filter((text) => !/permission|insufficient/i.test(text)), ...(ana?.errors || []), ...(mihai?.errors || [])];
     if (errors.length) fail(`Erori în pagină: ${errors.join(" | ")}`);
     console.log("✓ Sincronizarea familiei merge cap-coadă (C2, C3, C4 și mutarea de pe parolă).");
   } finally {

@@ -281,7 +281,7 @@ export function useFamilySync(
     syncLastPortableRef.current = syncPortable(merged);
     setData(merged);
     const envelope = await crypto.encryptFamilyData(merged, secret);
-    await syncApi.pushFamilyEnvelope(roomId, envelope);
+    await syncApi.pushFamilyEnvelope(roomId, envelope, undefined, (seq) => crypto.writeChainToken(secret, roomId, seq));
     writeSyncBase(roomId, crypto.syncBaseOf(merged));
     syncRoomIdRef.current = roomId;
     syncSecretRef.current = secret;
@@ -402,7 +402,7 @@ export function useFamilySync(
     const syncApi = await loadFamilySync();
     const movedAt = new Date().toISOString();
     const stub = { ...createEmptyAppData(), settings: { ...createEmptyAppData().settings, members: [], paymentSources: [], syncRoomMovedAt: movedAt } };
-    await syncApi.pushFamilyEnvelope(oldRoomId, await crypto.encryptFamilyData(stub, oldSecret));
+    await syncApi.pushFamilyEnvelope(oldRoomId, await crypto.encryptFamilyData(stub, oldSecret), undefined, (seq) => crypto.writeChainToken(oldSecret, oldRoomId, seq));
     setSyncNotice(t("Familia s-a mutat în camera nouă, iar camera veche a fost golită. Trimite invitația celorlalte telefoane: ele se opresc până o primesc."));
   }, t("Mutarea nu a reușit. Camera veche a rămas neatinsă."));
 
@@ -477,7 +477,7 @@ export function useFamilySync(
             }
             const envelope = await crypto.encryptFamilyData(toPush, syncSecretRef.current);
             try {
-              await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null);
+              await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null, (seq) => crypto.writeChainToken(syncSecretRef.current!, roomId, seq));
               break;
             } catch (error) {
               if (attempt >= 3 || !(error instanceof syncApi.RealtimeSyncError) || error.kind !== "conflict") throw error;

@@ -1,6 +1,6 @@
 {
   "firestore": {
-    "rules": "firestore.chain.rules"
+    "rules": "firestore.auth.rules"
   },
   "emulators": {
     "firestore": {

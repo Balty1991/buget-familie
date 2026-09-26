@@ -56,6 +56,26 @@ async function deriveKey(secret: FamilySecret, salt: Uint8Array) {
   return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, material, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 }
 
+/**
+ * Lanțul de scriere al camerei: fiecare scriere dezvăluie `t_i = HMAC(k, cameră:i)` și lasă
+ * angajamentul SHA-256 al lui `t_{i+1}`. Regulile Firestore (etapa 3) verifică hash-ul, deci
+ * scrie doar cine are cheia familiei; cine vede doar ID-ul camerei vede tokenuri deja folosite.
+ * Cheia HMAC vine din aceeași cheie a familiei, cu altă sare, deci toate telefoanele o obțin la fel.
+ */
+const chainKeys = new WeakMap<object, Promise<CryptoKey>>();
+const chainKeysByPassword = new Map<string, Promise<CryptoKey>>();
+const chainKeyFor = (secret: FamilySecret) => {
+  const make = async () => crypto.subtle.deriveKey({ name: "PBKDF2", salt: encoder.encode("buget-familie:write-chain:v1"), iterations, hash: "SHA-256" }, typeof secret === "string" ? await importFamilyKeyMaterial(secret) : secret, { name: "HMAC", hash: "SHA-256", length: 256 }, false, ["sign"]);
+  if (typeof secret === "string") { if (!chainKeysByPassword.has(secret)) chainKeysByPassword.set(secret, make()); return chainKeysByPassword.get(secret)!; }
+  if (!chainKeys.has(secret)) chainKeys.set(secret, make());
+  return chainKeys.get(secret)!;
+};
+const hex = (buffer: ArrayBuffer) => Array.from(new Uint8Array(buffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
+export async function writeChainToken(secret: FamilySecret, roomId: string, seq: number): Promise<string> {
+  return hex(await crypto.subtle.sign("HMAC", await chainKeyFor(secret), encoder.encode(`buget-familie:write:${roomId}:${seq}`)));
+}
+export const sha256Hex = async (text: string) => hex(await crypto.subtle.digest("SHA-256", encoder.encode(text)));
+
 export async function encryptFamilyData(data: AppData, secret: FamilySecret): Promise<EncryptedEnvelope> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));

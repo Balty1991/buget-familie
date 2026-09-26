@@ -1,0 +1,104 @@
+rules_version = '2';
+
+// Etapa 3 a regulilor Firestore: etapa 2 (firestore.auth.rules) plus lanțul de scriere al camerei.
+// NEPUBLICATĂ. Se publică (Firebase Console → Firestore → Rules) după ce aplicația care scrie
+// lanțul (commit-ul „Sync: lanț de scriere…”) a ajuns la toată lumea: versiunile mai vechi nu
+// mai pot scrie în camerele care au deja lanț. Revenire de urgență: lipește firestore.auth.rules.
+//
+// Lanțul: fiecare scriere în familySync dezvăluie tokenul t_i = HMAC(cheia familiei, cameră:i)
+// („reveal”), al cărui SHA-256 a fost lăsat de scrierea precedentă („commit”), și lasă commit-ul
+// pentru t_{i+1}. Doar cine are cheia familiei poate calcula tokenul următor; cine vede doar ID-ul
+// camerei (consolă, loguri, un telefon cu invitația veche după „Mută familia”) nu mai poate
+// suprascrie pachetul. O cameră fără lanț îl primește la prima scriere (seq = 1).
+// Testul cap-coadă rulează pe aceste reguli: pnpm test:sync (firebase.e2e.json).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Telefonul are identitate anonimă Firebase (fără cont, fără date personale).
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function envelopeWriteOk() {
+      return request.resource.data.keys().hasOnly(['envelope', 'updatedAt'])
+        && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
+        && request.resource.data.envelope.version == 1
+        && request.resource.data.envelope.ciphertext is string
+        && request.resource.data.envelope.ciphertext.size() < 2000000
+        && request.resource.data.envelope.salt is string
+        && request.resource.data.envelope.salt.size() == 24
+        && request.resource.data.envelope.iv is string
+        && request.resource.data.envelope.iv.size() == 16;
+    }
+
+    // Camera familiei: același pachet, plus câmpurile lanțului.
+    function roomWriteOk() {
+      return request.resource.data.keys().hasOnly(['envelope', 'updatedAt', 'seq', 'commit', 'reveal'])
+        && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
+        && request.resource.data.envelope.version == 1
+        && request.resource.data.envelope.ciphertext is string
+        && request.resource.data.envelope.ciphertext.size() < 2000000
+        && request.resource.data.envelope.salt is string
+        && request.resource.data.envelope.salt.size() == 24
+        && request.resource.data.envelope.iv is string
+        && request.resource.data.envelope.iv.size() == 16;
+    }
+
+    function commitOk() {
+      return request.resource.data.seq is int
+        && request.resource.data.commit is string
+        && request.resource.data.commit.size() == 64;
+    }
+
+    // Prima scriere cu lanț (cameră nouă sau cameră veche fără lanț) pornește de la 1.
+    function chainStarts() {
+      return (resource == null || !('commit' in resource.data))
+        && request.resource.data.seq == 1;
+    }
+
+    // Scrierile următoare dezvăluie tokenul angajat de scrierea precedentă.
+    function chainContinues() {
+      return resource != null
+        && 'commit' in resource.data
+        && request.resource.data.seq == resource.data.seq + 1
+        && request.resource.data.reveal is string
+        && request.resource.data.reveal.size() == 64
+        && hashing.sha256(request.resource.data.reveal).toHexString().lower() == resource.data.commit;
+    }
+
+    match /familySync/{roomId} {
+      // `get`, nu `read`: `read` acoperă și interogarea colecției, așa că oricine
+      // putea descărca pachetele criptate ale tuturor familiilor și le putea ataca
+      // offline. Un `get` cere ID-ul camerei, adică deja cunoașterea parolei.
+      allow get: if signedIn() && roomId.size() == 64;
+      // `create, update`, nu `write`: `write` acoperă și `delete`, deci oricine
+      // ajungea la ID-ul camerei putea șterge pachetul familiei dintr-o singură
+      // cerere. Nu există niciun motiv legitim ca aplicația să șteargă documentul —
+      // o familie care vrea să se retragă schimbă parola, iar camera veche rămâne
+      // orfană. Ce poate face cineva rămâne astfel „strică”, nu „distruge”.
+      allow create, update: if signedIn() && roomId.size() == 64 && roomWriteOk() && commitOk() && (chainStarts() || chainContinues());
+    }
+
+    // Cod de recuperare: același format de pachet, ID derivat din cod (nu din parolă).
+    // Serverul vede doar parola de familie deja criptată cu codul. Fără list/delete.
+    match /familyRecovery/{recoveryId} {
+      allow get: if signedIn() && recoveryId.size() == 64;
+      allow create, update: if signedIn() && recoveryId.size() == 64 && envelopeWriteOk();
+    }
+
+    // Abonamentul Familia legat de o cameră. Îl scrie doar funcția verifyPlayPurchase
+    // (Admin SDK), după verificarea la Google Play; telefoanele din cameră doar îl citesc.
+    match /familyEntitlements/{roomId} {
+      allow get: if signedIn() && roomId.size() == 64;
+    }
+
+    // Achizițiile Play verificate. Doar serverul le vede.
+    match /playPurchases/{id} {
+      allow read, write: if false;
+    }
+
+    // Contor de abuz pentru ghidul online. Doar Admin SDK scrie aici.
+    match /aiGuideQuota/{id} {
+      allow read, write: if false;
+    }
+  }
+}

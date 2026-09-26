@@ -14,7 +14,7 @@ import { browserLocalPersistence, connectAuthEmulator, indexedDBLocalPersistence
 import { connectFirestoreEmulator, doc, getDoc, getFirestore, onSnapshot, runTransaction, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
 import { appCheckDebug, firebaseConfig, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
-import { deriveFamilyRoomId } from "@/lib/family-crypto";
+import { deriveFamilyRoomId, sha256Hex } from "@/lib/family-crypto";
 import { isOfflineOnly } from "@/lib/ui-prefs";
 
 export { deriveFamilyRoomId };
@@ -153,18 +153,41 @@ export async function fetchFamilyEnvelope(roomId: string): Promise<EncryptedEnve
  * Cu `expectedIv`, scrierea trece doar dacă documentul e tot cel citit înainte de unire (iv-ul
  * pachetului e unic la fiecare scriere). Altfel partenerul a scris între timp: `conflict`, iar
  * apelantul citește din nou, unește și reîncearcă, în loc să-i suprascrie scrierea.
+ *
+ * Cu `token`, scrierea poartă și lanțul camerei (vezi `writeChainToken`): dezvăluie tokenul
+ * angajat de scrierea precedentă și angajează următorul. Cât timp regulile publicate sunt cele
+ * vechi (care refuză câmpuri noi), un document fără lanț se scrie ca înainte.
  */
-export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnvelope, expectedIv?: string | null): Promise<void> {
+export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnvelope, expectedIv?: string | null, token?: (seq: number) => Promise<string>): Promise<void> {
   try {
     await signedInOrTimeout();
     const ref = roomRef(roomId);
-    if (expectedIv === undefined) await setDoc(ref, { envelope, updatedAt: serverTimestamp() });
-    else await runTransaction(db(), async (transaction) => {
+    let hadChain = false;
+    const write = (withChain: boolean) => runTransaction(db(), async (transaction) => {
       const snapshot = await transaction.get(ref);
-      const current = snapshot.exists() ? ((snapshot.data().envelope as EncryptedEnvelope | undefined)?.iv ?? null) : null;
-      if (current !== expectedIv) throw new RealtimeSyncError("conflict", "Familia a trimis între timp o schimbare; o unim și reîncercăm.");
-      transaction.set(ref, { envelope, updatedAt: serverTimestamp() });
+      const current = snapshot.exists() ? snapshot.data() : undefined;
+      const currentIv = (current?.envelope as EncryptedEnvelope | undefined)?.iv ?? null;
+      if (expectedIv !== undefined && currentIv !== expectedIv) throw new RealtimeSyncError("conflict", "Familia a trimis între timp o schimbare; o unim și reîncercăm.");
+      hadChain = typeof current?.commit === "string";
+      let chain: Record<string, unknown> = {};
+      if (withChain && token) {
+        const seq = hadChain ? Number(current!.seq) + 1 : 1;
+        const reveal = hadChain ? await token(Number(current!.seq)) : undefined;
+        if (reveal && (await sha256Hex(reveal)) !== current!.commit) throw new RealtimeSyncError("unavailable", "Camera familiei a fost scrisă de un telefon fără cheia familiei. Mută familia pe o invitație nouă din Sync.");
+        chain = { seq, commit: await sha256Hex(await token(seq)), ...(reveal ? { reveal } : {}) };
+      }
+      transaction.set(ref, { envelope, updatedAt: serverTimestamp(), ...chain });
     });
+    try {
+      await write(true);
+    } catch (error) {
+      const denied = (error as { code?: string } | undefined)?.code === "permission-denied";
+      // Reguli vechi: câmpurile lanțului nu sunt încă permise; scriem ca înainte.
+      if (token && denied && !hadChain) await write(false);
+      // Reguli noi, lanț existent: alt telefon a scris între timp; se citește din nou.
+      else if (token && denied && hadChain) throw new RealtimeSyncError("conflict", "Familia a trimis între timp o schimbare; o unim și reîncercăm.");
+      else throw error;
+    }
     void measureClockSkew(ref);
   } catch (error) {
     if (error instanceof RealtimeSyncError) throw error;

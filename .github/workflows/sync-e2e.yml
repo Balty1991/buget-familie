@@ -1,7 +1,8 @@
 name: Sync familie cap-coadă
 
 # Două „telefoane” pe aplicația reală, cu Firestore și Auth locale (emulatoare, fără date reale)
-# și regulile din etapa 2 (firestore.auth.rules):
+# de două ori: pe regulile etapei 3 (firestore.chain.rules, lanțul de scriere) și pe cele
+# publicate acum (etapa 2, firestore.auth.rules):
 # invitație, cine a cheltuit, reconectare după redeschidere, mutare de pe parolă.
 # Nu oprește publicarea site-ului; arată dacă sincronizarea s-a stricat.
 
@@ -13,8 +14,10 @@ on:
       - "e2e/**"
       - "firestore.rules"
       - "firestore.auth.rules"
+      - "firestore.chain.rules"
       - "firebase.json"
       - "firebase.e2e.json"
+      - "firebase.e2e.auth.json"
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/sync-e2e.yml"
@@ -24,6 +27,7 @@ on:
       - "e2e/**"
       - "firestore.rules"
       - "firestore.auth.rules"
+      - "firestore.chain.rules"
   workflow_dispatch:
 
 permissions:
@@ -60,3 +64,6 @@ jobs:
       - name: Test sync cap-coadă
         timeout-minutes: 12
         run: pnpm test:sync
+      - name: Aceeași aplicație pe regulile publicate acum (etapa 2)
+        timeout-minutes: 12
+        run: pnpm test:sync:current
