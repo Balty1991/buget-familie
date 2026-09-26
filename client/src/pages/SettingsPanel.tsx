@@ -6,7 +6,7 @@ import "../pocket.css";
 import { lazy, Suspense, useEffect, useState, type ChangeEvent } from "react";
 import { Check, ChevronRight, ClipboardPaste, Download, LockKeyhole, RotateCcw, Share2, Trash2, Upload, X } from "lucide-react";
 import { deviceTimeZone, BASE_CURRENCY, activeCurrencies, createFamilyCode, currenciesMissingRate, expenseCategories, newId, normalizeAppData, parseRomanianAmount, sourceBalance, sourceBalanceInCurrency, supportedCurrencies, type AppData, type PaymentKind } from "@/lib/finance-data";
-import { downloadBackup, parseBackup, type BackupIntent } from "@/lib/app-storage";
+import { downloadBackup, isNativeApp, parseBackup, type BackupIntent } from "@/lib/app-storage";
 import { AutoBackupToggle } from "@/components/AutoBackupToggle";
 import { MemberModeSetup } from "@/components/MemberModeSetup";
 import { BACKUP_SAVE_FALLBACK, BACKUP_SAVE_HELPER } from "@/lib/backup-ui-copy";
@@ -14,6 +14,7 @@ import { disableLocalAlerts, enableLocalAlerts, getNotificationPermission, isNot
 import { isOfflineOnly, setOfflineOnly, setSimpleMode } from "@/lib/ui-prefs";
 import { disableAppLock, hasAppLockPin, isAppLockEnabled, isValidPin, setAppLockPin } from "@/lib/app-lock";
 import { Field, dateText, money, sourceKindName } from "@/pages/home-kit";
+import { readSecureScreen, saveSecureScreen } from "@/lib/secure-screen";
 import { memberColor, memberColorName, nextMemberColor } from "@/lib/member-color";
 import { getLocale, languages, t } from "@/lib/i18n";
 import { canAddMember } from "@/lib/entitlements";
@@ -193,6 +194,7 @@ function AppLockSettings() {
   const [firstPin, setFirstPin] = useState("");
   const [pin, setPin] = useState("");
   const [notice, setNotice] = useState("");
+  const [secureScreen, setSecureScreen] = useState(() => readSecureScreen());
 
   const startCreate = () => { setMode("create"); setPin(""); setFirstPin(""); setNotice(""); };
   const cancel = () => { setMode("idle"); setPin(""); setFirstPin(""); };
@@ -234,6 +236,7 @@ function AppLockSettings() {
       <p className="bf-kicker">{t("SECURITATE")}</p>
       <h2>{t("Blocare cu PIN")}</h2>
       <p>{t("Un PIN de 4 cifre, doar pe acest telefon. Nu se salvează în clar, nu intră în backup și nu se sincronizează cu celelalte telefoane.")}</p>
+      {isNativeApp() && <label className="bf-settings-switch"><input type="checkbox" checked={secureScreen} onChange={(event) => { setSecureScreen(event.target.checked); void saveSecureScreen(event.target.checked); }} /><span><b>{t("Ascunde ecranul în capturi")}</b><small>{t("Fără capturi de ecran și fără previzualizare în aplicațiile recente, ca sumele să nu rămână în galerie sau să fie văzute peste umăr.")}</small></span></label>}
       {mode === "idle" && (
         enabled ? (
           <div className="bf-notification-actions">

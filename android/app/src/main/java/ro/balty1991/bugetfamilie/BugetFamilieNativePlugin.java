@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -36,6 +37,21 @@ public class BugetFamilieNativePlugin extends Plugin {
     if (activity == null || getBridge() == null) return;
     final WebView webView = getBridge().getWebView();
     activity.attachNativeBridges(webView);
+  }
+
+  /** Ecran protejat, ales din Setări: fără capturi, înregistrare sau previzualizare în recente. */
+  @PluginMethod
+  public void setSecureScreen(PluginCall call) {
+    final boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+    if (getActivity() == null) {
+      call.resolve();
+      return;
+    }
+    getActivity().runOnUiThread(() -> {
+      if (enabled) getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+      else getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+      call.resolve();
+    });
   }
 
   @PluginMethod

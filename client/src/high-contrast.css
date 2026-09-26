@@ -29,3 +29,8 @@ html.bf-high-contrast :is(.bf-plic-pace, .bf-allocation-state) {
 /* Culoarea membrului, în Setări: o bulină care se schimbă la atingere. */
 html body .bf-member-row:has(.bf-member-color) { grid-template-columns: auto minmax(0, 1fr) auto auto; }
 html body .bf-member-row .bf-member-color { flex: none; width: 44px; min-width: 44px; height: 44px; padding: 0; border: 3px solid var(--cf-surface); border-radius: 50%; box-shadow: 0 0 0 1px var(--cf-line); }
+/* Comutator simplu în Setări (ecran protejat). */
+.bf-settings-switch { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; margin: 10px 0; }
+.bf-settings-switch input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--cf-primary-strong); }
+.bf-settings-switch span { display: grid; gap: 2px; }
+.bf-settings-switch small { color: var(--cf-muted); font-size: 12px; line-height: 1.4; }

@@ -16,6 +16,7 @@ import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/A
 import { isAppLockEnabled } from "@/lib/app-lock";
 import { useToday } from "@/hooks/useToday";
 import { safeImport } from "@/lib/lazy-safe";
+import { applySecureScreen } from "@/lib/secure-screen";
 import { observeQuickActions, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { hasQueuedFeedback } from "@/lib/feedback-queue";
 import { useMemberMode } from "@/lib/member-mode";
@@ -562,6 +563,8 @@ export default function Home() {
     }
     go("today");
   }), []);
+  // Ecranul protejat (Setări → Securitate) se reaplică la fiecare pornire a aplicației.
+  useEffect(() => { void applySecureScreen(); }, []);
   useEffect(() => {
     // Widgetul „Poți cheltui azi” arată aceeași cifră ca Astăzi; fără punte nativă nu face nimic.
     const today = isoToday();
