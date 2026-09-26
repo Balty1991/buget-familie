@@ -212,3 +212,13 @@
   margin-top: 2px;
   color: var(--cf-muted);
 }
+
+.bf-needs-balance {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--cf-surface-2, rgba(0, 0, 0, .04));
+  font-size: 13px;
+  line-height: 1.4;
+}
+.bf-needs-balance.is-short b { color: var(--bf-alert, #b3261e); }

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Check, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { formatDate, isoToday, newId, parseRomanianAmount, type AppData, type ExpectedIncome, type MonthlyNeed } from "@/lib/finance-data";
 import { t } from "@/lib/i18n";
+import { lei as money } from "@/lib/money-format";
 import { genitiveName } from "@/lib/member-mode";
 
 type IncomeDraft = { id: string; who: "me" | "partner"; label: string; amount: string; day: string; /** Primește și tichete de masă: partenerul își are sursa lui, nu le pune pe ale mele. */ meal?: boolean };
@@ -47,6 +48,10 @@ export const nextDateForDay = (today: string, day: number) => {
   const here = make(0);
   return here > today ? here : make(1);
 };
+
+/** Totalul pe lună al cheltuielilor bifate: cele pe săptămână × 52/12. */
+export const monthlyNeedsTotal = (needs: Array<{ on: boolean; amount: string; cadence: "weekly" | "monthly" }>) =>
+  Math.round(needs.filter((item) => item.on).reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(item.amount) || 0) * (item.cadence === "weekly" ? 52 / 12 : 1), 0));
 
 export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, onFinish }: { data: AppData; yourName: string; partnerName: string; onPartnerName: (name: string) => void; onFinish: (next: AppData) => void }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -159,6 +164,19 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
               </div>
             ))}
           </div>
+          {(() => {
+            // Produs #4: omul vede aici, nu abia la repartizare, dacă cheltuielile încap în venit.
+            const income = validIncomes.reduce((sum, item) => sum + parseRomanianAmount(item.amount), 0);
+            const spend = monthlyNeedsTotal(needs);
+            if (!(spend > 0) || !(income > 0)) return null;
+            const gap = Math.round(income - spend);
+            return (
+              <p className={`bf-needs-balance${gap < 0 ? " is-short" : ""}`} role="status">
+                {t("Venituri {income} · cheltuieli ~{spend}", { income: money(income), spend: money(spend) })}
+                {" · "}<b>{gap < 0 ? t("lipsesc ~{amount}", { amount: money(-gap) }) : t("rămân ~{amount}", { amount: money(gap) })}</b>
+              </p>
+            );
+          })()}
         </>
       )}
       {step === 3 && (

@@ -3414,4 +3414,7 @@ export const en: Record<string, string> = {
   "partener": "partner",
   "Primește și tichete de masă": "Also gets meal vouchers",
   "+ tichete: {amount}": "+ meal vouchers: {amount}",
+  "Venituri {income} · cheltuieli ~{spend}": "Income {income} · spending ~{spend}",
+  "lipsesc ~{amount}": "~{amount} short",
+  "rămân ~{amount}": "~{amount} left",
 };
