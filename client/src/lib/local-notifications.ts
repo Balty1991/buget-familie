@@ -694,6 +694,7 @@ async function showNow(title: string, rawBody: string, tag: string) {
       body,
       tag,
       icon: notificationAssetUrl("icon-192.png"),
+      badge: notificationAssetUrl("notify-badge.png"),
     });
   } catch {
     /* ignore */

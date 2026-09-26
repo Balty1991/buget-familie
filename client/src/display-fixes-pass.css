@@ -27,10 +27,24 @@
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags:empty {
   display: none !important;
 }
+/* Eticheta de stare crește cu textul (mărire din setările telefonului) și împinge numele în jos;
+   cu înălțime fixă, „ÎN RITM” ajungea peste numele plicului. */
+.bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  height: auto;
+  margin: 0 0 6px;
+}
 .bf-allocation-list .bf-allocation-flags .bf-allocation-state {
   display: inline-flex;
   align-items: center;
   min-height: 18px;
+  margin: 0;
+  padding: 2px 4px;
+  font-size: 12px;
+  line-height: 1.3;
 }
 .bf-allocation-list .bf-allocation-flags .bf-plic-pace {
   max-width: 100%;
