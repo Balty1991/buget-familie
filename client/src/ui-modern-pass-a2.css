@@ -13,7 +13,7 @@ html:not(.dark) .os-shell .bf-empty-state p,html:not(.dark) .os-shell .bf-alloca
 @keyframes ui-modern-enter{from{opacity:0;transform:translateY(6px)}
 to{opacity:1;transform:translateY(0)}
 }
-@media (prefers-reduced-motion:no-preference){.os-shell .os-hero, .os-shell .bf-os-rhythm, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty, .os-shell .bf-movement-day, .os-shell .bf-today-empty-activity{animation:ui-modern-enter var(--ui-enter-ms) ease-out both}
+@media (prefers-reduced-motion:no-preference){.os-shell .os-hero, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty, .os-shell .bf-movement-day, .os-shell .bf-today-empty-activity{animation:ui-modern-enter var(--ui-enter-ms) ease-out both}
 .os-shell .bf-today-workspace>*:nth-child(1){animation-delay:0ms}
 .os-shell .bf-today-workspace>*:nth-child(2){animation-delay:40ms}
 .os-shell .bf-today-workspace>*:nth-child(3){animation-delay:80ms}

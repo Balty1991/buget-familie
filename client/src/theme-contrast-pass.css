@@ -116,7 +116,6 @@ html.bf-high-contrast {
 .bf-plan-header-stat small { color: var(--cf-muted); }
 
 /* Carduri Plan / ciclu / plicuri — suprafața temei, nu crem. */
-.bf-plan-sheet,
 .bf-cycle-setup,
 .bf-cycle-tools,
 .bf-plan-flow,
@@ -156,8 +155,7 @@ html.bf-high-contrast {
 .bf-recurring-card,
 .bf-advisor-studio,
 .bf-scenario-card,
-.bf-more-grid button,
-.bf-journal {
+.bf-more-grid button {
   color: var(--cf-ink) !important;
   background: var(--cf-surface) !important;
   border-color: var(--cf-line) !important;

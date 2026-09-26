@@ -547,7 +547,6 @@ body .bf-command-palette,
   .bf-whats-new,
   .bf-onboarding:not(.bf-first-run),
   .bf-command-palette,
-  .bf-plan-sheet,
   .bf-journal-filter-sheet {
     animation: bf-delight-sheet-spring 480ms var(--bf-delight-sheet) both !important;
   }
@@ -604,7 +603,6 @@ body .bf-command-palette,
 .bf-whats-new,
 .bf-onboarding,
 .bf-command-palette,
-.bf-plan-sheet,
 .bf-journal-filter-sheet,
 .os-shell .os-dock button.is-on svg,
 .os-shell .os-dock button.active svg{

@@ -81,8 +81,7 @@
 .os-shell .bf-obligation-ledger article b,
 .os-shell .bf-obligation-entry-main strong,
 .os-shell .bf-more-list article > strong,
-.os-shell .bf-receipt-list strong,
-.os-shell .bf-journal strong {
+.os-shell .bf-receipt-list strong {
   font-family: var(--font-ui) !important;
   font-weight: 720 !important;
   font-variant-numeric: tabular-nums !important;
@@ -685,8 +684,6 @@
   font-style: italic !important;
 }
 
-.os-shell .bf-plan-hero,
-.os-shell .analysis-hero,
 .os-shell .bf-plan-resource-band,
 .os-shell .bf-sync-hero {
   border-radius: var(--bf-chrome-radius-lg) !important;

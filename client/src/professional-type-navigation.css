@@ -9,9 +9,8 @@
 .bf-appbar nav { gap: 5px; }
 .bf-appbar nav button { min-height: 42px; padding-inline: 12px; border-radius:12px; font-size: .72rem; font-weight:600; letter-spacing: -.01em; }
 .bf-appbar nav button.active { box-shadow: inset 0 -2px 0 currentColor; }
-.bf-theme { border-radius:12px; }
 .bf-more-grid button { min-height: 108px; border-radius:12px; }
 .bf-more-grid b { font-size: .85rem; letter-spacing: -.015em; }
-.bf-segment button, .bf-journal-filter button { font-weight:600; }
+.bf-segment button { font-weight:600; }
 @media (max-width: 640px) { .bf-page { padding-inline: 18px; }.bf-topline { margin-bottom: 23px; }.bf-topline h1 { max-width: 14ch; font-size: clamp(2.12rem, 10.2vw, 2.72rem); letter-spacing: -.048em; }.bf-topline.compact h1 { max-width: 18ch; font-size: clamp(1.9rem, 9.2vw, 2.45rem); }.bf-topline > div > p:not(.bf-kicker) { font-size: .82rem; line-height: 1.55; }.bf-more-grid button { min-height: 100px; padding: 15px; } }
 @media (max-width: 370px) {.bf-page { padding-inline: 15px; } }

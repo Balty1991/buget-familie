@@ -1,10 +1,7 @@
 /* Buget Familie — suprafețe de lucru: structura de registru explică suma, contextul și următorul pas, fără ornamente gratuite. */
-.bf-upcoming, .bf-journal { position: relative; overflow: hidden; }
-.bf-upcoming::before { content: "URMĂTORUL ANGAJAMENT"; margin-bottom: 4px; color: #7f8061; font: 600 .6rem/1 "IBM Plex Sans", sans-serif; letter-spacing: .13em; }
 .bf-more-grid button { position: relative; overflow: hidden; background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(25,62,52,.06) 72.8%, transparent 73.6%), linear-gradient(145deg, #fffefa, #f8f6ef); }
 .bf-more-grid button::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: #4f8a74; opacity: .8; }
 .bf-more-grid button:nth-child(2n)::after { background: #5a9079; }
 .bf-more-grid button:nth-child(3n)::after { background: #73847b; }
-.bf-upcoming { border-left: 3px solid #c96855; background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 40px, rgba(201,104,85,.09) 41px, transparent 42px); }
 .dark .bf-more-grid button { background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(220,239,227,.09) 72.8%, transparent 73.6%), linear-gradient(145deg, #15372e, #102b23); }
 @media (max-width: 640px) { .bf-more-grid button::after { width: 2px; } }

@@ -14,10 +14,8 @@ html body .bf-app .bf-household-card,
 html body .bf-app .bf-more-grid {
   padding: 20px 18px !important; gap: 12px !important; border-radius: 1.15rem !important;
 }
-html body .bf-app .bf-plan-sheet,
 html body .bf-app .bf-journal-filter-sheet,
 html body .bf-app .bf-safe-spend-sheet,
-html body .bf-quick-entry,
 html body .bf-allocation-preview > div {
   padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
   gap: 14px !important;

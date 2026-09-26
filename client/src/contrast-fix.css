@@ -164,8 +164,7 @@ html .bf-plan-period .active {
 
 /* Filled danger — doar confirmări de plată, NU CTA-urile outline Adaugă/Creează. */
 html button.pay,
-html .bf-obligation-entry-actions .pay,
-html .bf-debt-pay {
+html .bf-obligation-entry-actions .pay {
   background-color: var(--cf-danger) !important;
   background-image: none !important;
   color: var(--cf-on-danger) !important;
@@ -817,9 +816,6 @@ html.theme-cyber .bf-goal-card,
 html.theme-aurora .bf-scenario-card,
 html.theme-navy .bf-scenario-card,
 html.theme-cyber .bf-scenario-card,
-html.theme-aurora .bf-debt-plan,
-html.theme-navy .bf-debt-plan,
-html.theme-cyber .bf-debt-plan,
 html.theme-aurora .bf-household article,
 html.theme-navy .bf-household article,
 html.theme-cyber .bf-household article,

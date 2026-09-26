@@ -90,13 +90,6 @@ html body .os-shell .bf-allocation-list {
   gap: 12px;
 }
 
-html body .bf-app .bf-plan-sheet,
-html body .os-shell .bf-plan-sheet {
-  padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
-  gap: 14px !important;
-  border-radius: 1.25rem 1.25rem 0 0 !important;
-}
-
 html body .bf-app .bf-plan-sheet-heading h2,
 html body .bf-app .bf-plan-sheet-heading h3 {
   font-family: "IBM Plex Sans", system-ui, sans-serif !important;
@@ -300,15 +293,7 @@ html body .os-shell .bf-household-card {
   line-height: var(--ui-scr-lh) !important;
 }
 
-html body .bf-app .advisor-panel,
-html body .bf-app .bf-advisor {
-  padding: 18px 16px !important;
-  gap: 12px !important;
-  border-radius: 1.15rem !important;
-}
-
 /* ========== Quick-add / sheets / overlays ========== */
-html body .bf-quick-entry,
 html body .bf-quick-entry-panel,
 html body .bf-safe-spend-sheet,
 html body .bf-allocation-preview > div {
@@ -317,7 +302,6 @@ html body .bf-allocation-preview > div {
   border-radius: 1.25rem 1.25rem 0 0 !important;
 }
 
-html body .bf-quick-entry .bf-primary,
 html body .bf-allocation-preview .bf-primary,
 html body .bf-safe-spend-sheet .bf-primary {
   min-height: 48px !important;

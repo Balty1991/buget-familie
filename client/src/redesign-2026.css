@@ -79,9 +79,6 @@
 }
 
 .bf-today-workspace { display: grid; gap: 18px; }
-.bf-today-explainer { position: relative; z-index: 2; }
-.bf-today-explainer summary { border-color: rgba(247, 255, 242, .28) !important; color: #f7fff2 !important; }
-.bf-today-explainer p { color: #e7f7e9 !important; border-color: rgba(216, 240, 110, .55) !important; }
 .bf-today-add { min-height: 50px; border-radius:20px; font-weight:600; transition: transform 180ms var(--neo-ease), box-shadow 180ms var(--neo-ease), background 180ms var(--neo-ease); }
 .bf-today-add { color: var(--neo-ink); background: var(--neo-lime); box-shadow:var(--bf-shadow-raise); }
 .bf-today-add:hover { transform: translateY(-2px); }
@@ -140,7 +137,6 @@
 .bf-plan-simulation,
 .bf-plan-simulator,
 .bf-more-grid,
-.bf-analysis-section,
 .bf-goals-overview,
 .bf-goals-list,
 .bf-calendar-card,
