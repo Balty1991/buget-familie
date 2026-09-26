@@ -134,8 +134,8 @@ export type WriteLocalSnapshotResult = {
  * Cache/meta în LS (hydrate rapid). IDB rămâne sursa primară.
  * La QuotaExceeded nu aruncă: eliberează snapshot-ul greu și păstrează doar meta.
  */
-export function writeLocalStorageSnapshot(serialized: string, savedAt = new Date().toISOString()): WriteLocalSnapshotResult {
-  const meta: AppStorageMeta = { savedAt, hash: hashAppPayload(serialized) };
+export function writeLocalStorageSnapshot(serialized: string, savedAt = new Date().toISOString(), hash = hashAppPayload(serialized)): WriteLocalSnapshotResult {
+  const meta: AppStorageMeta = { savedAt, hash };
   try {
     window.localStorage.setItem(APP_STORAGE_KEY, serialized);
     safeSetItem(window.localStorage, APP_STORAGE_META_KEY, JSON.stringify(meta));
@@ -246,9 +246,9 @@ export const localSnapshotText = (data: AppData) =>
     receipts: data.receipts.map(({ imageData: _one, imageData2: _two, ...rest }) => rest),
   });
 
-export async function writeAppData(data: AppData, savedAt = new Date().toISOString()): Promise<AppStorageMeta> {
+export async function writeAppData(data: AppData, savedAt = new Date().toISOString(), knownHash?: string): Promise<AppStorageMeta> {
   const db = await openDatabase();
-  const hash = hashAppPayload(localSnapshotText(data));
+  const hash = knownHash || hashAppPayload(localSnapshotText(data));
   const envelope: StoredEnvelope = { __bf: 1, savedAt, hash, data };
   return new Promise((resolve, reject) => {
     const request = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(envelope, DATA_KEY);

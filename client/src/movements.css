@@ -64,3 +64,9 @@
   white-space: normal;
   overflow: hidden;
 }
+
+/* Zilele din afara ecranului nu se desenează până nu ajungi la ele (jurnal cu mii de mișcări). */
+.bf-movement-timeline > .bf-movement-day {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}

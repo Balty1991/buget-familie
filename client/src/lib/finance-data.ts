@@ -2,6 +2,7 @@
  * Atelierul Financiar 2.0 — registru financiar local, normalizat și portabil.
  * Toate sumele sunt în RON, toate datele sunt ISO (YYYY-MM-DD), iar identitățile sunt stabile.
  */
+import { tickMemo } from "@/lib/tick-cache";
 import { calendarBudget, periodDays, type CalendarBudget } from "./calendar-budget";
 import { memoString } from "./memo-string";
 import { type PlannedEvent, type PlannedEventKind, type PlannedEventRepeat } from "./planned-events";
@@ -1126,7 +1127,7 @@ export const plannedEnvelopeReserved = (allocations: BudgetAllocation[], remaini
 const roundSigned = money2;
 
 /** Situația fiecărei tranșe calendaristice a unui plic, cu ajustările din transferurile între săptămâni. */
-export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocation) => {
+const allocationWeeksStatusUncached = (data: AppData, allocation: BudgetAllocation) => {
   const plan = data.settings.salaryPlan;
   const end = planEndDate(plan);
   const budget = allocationBudget(data, allocation);
@@ -1167,7 +1168,7 @@ export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocatio
  * Tranșele de pe Plan, după transferurile „de azi”. calendarBudget pe suma plicurilor
  * ignoră echilibrarea și arată 480 pe S1 inclusiv zilele deja trecute.
  */
-export const planWeeklyCycle = (data: AppData): CalendarBudget | undefined => {
+const planWeeklyCycleUncached = (data: AppData): CalendarBudget | undefined => {
   const plan = data.settings.salaryPlan;
   const end = planEndDate(plan);
   const paced = plan.allocations.filter((item) => isWeeklyPaced(item, plan));
@@ -2105,3 +2106,8 @@ export const healthScoreStory = (data: AppData, asOf = isoToday(), cycles = 3): 
   return { current, series, moved: moved.slice(0, 3) };
 };
 
+
+/** Tranșele unui plic și ciclul pe săptămâni: chemate din multe locuri în aceeași randare, socotite o dată. */
+export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocation): ReturnType<typeof allocationWeeksStatusUncached> =>
+  tickMemo([data, allocation], `weeks:${isoToday()}`, () => allocationWeeksStatusUncached(data, allocation));
+export const planWeeklyCycle = (data: AppData): CalendarBudget | undefined => tickMemo([data], `planWeeklyCycle:${isoToday()}`, () => planWeeklyCycleUncached(data));

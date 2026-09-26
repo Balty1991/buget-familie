@@ -2,6 +2,8 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { safeSetItem } from "@/lib/safe-storage";
+import { tickMemo } from "@/lib/tick-cache";
 import { useCountUp } from "@/hooks/useCountUp";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
@@ -85,6 +87,8 @@ export function advisorSignals(data: AppData): AdvisorSignal[] {
 }
 
 /** Luni → duminică, aceeași ordine în orice fus orar. */
+const SEEN_TRANCHES_KEY = "buget-familie:seen-tranches";
+const readSeenTranches = (): string[] => { try { const value = JSON.parse(window.localStorage.getItem(SEEN_TRANCHES_KEY) || "[]"); return Array.isArray(value) ? value.map(String) : []; } catch { return []; } };
 export const weekdayShort = () => weekdayShortLabels(getLocale());
 
 export function openHouseholdGuide() {
@@ -171,22 +175,22 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const summary = useTodaySummary(data);
   const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
   const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0);
-  const signals = useMemo(() => advisorSignals(data), [data]);
+  const signals = useMemo(() => tickMemo([data], `signals:${isoToday()}`, () => advisorSignals(data)), [data]);
   // „Poți folosi azi” e deja cifra mare de sus; dacă un plic se golește înainte de salariu, aceea e recomandarea.
   const nextStep = signals[0] && signals[0].id !== "daily-pace" ? signals[0] : signals.find((item) => item.id.startsWith("runout-"));
-  const showHealthGauge = useMemo(() => calculateHealthScore(data).score !== null, [data]);
+  const showHealthGauge = useMemo(() => tickMemo([data], `health:${isoToday()}`, () => calculateHealthScore(data).score !== null), [data]);
   const [dismissedAlerts, setDismissedAlerts] = useState<string[]>([]);
   const [shownTrancheKey, setShownTrancheKey] = useState("");
   const [openHint, setOpenHint] = useState(false);
   const [safeSheetOpen, setSafeSheetOpen] = useState(false);
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
   const [dayMore, setDayMore] = useState(false);
-  const envelopes = useMemo(() => data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) })), [data]);
+  const envelopes = useMemo(() => tickMemo([data], `envelopes:${isoToday()}`, () => data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) }))), [data]);
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
   const runOuts = useMemo(() => envelopeRunOut(data), [data]);
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
   // Același plic: „se termină pe …” spune mai mult decât „80% consumat”; și apare înainte de prag, dacă ritmul e prea repede.
-  const fastWeeks = useMemo(() => weekTooFast(data), [data]).filter((item) => !dismissedAlerts.includes(`week-${item.allocationId}-${item.weekIndex}`));
+  const fastWeeks = useMemo(() => tickMemo([data], `weekTooFast:${isoToday()}`, () => weekTooFast(data)), [data]).filter((item) => !dismissedAlerts.includes(`week-${item.allocationId}-${item.weekIndex}`));
   const fastWeek = fastWeeks[0];
   // „Se termină înainte de salariu” spune mai mult decât „aproape de limită”, oricare ar fi plicul
   // (Taxi pe 3 oct. nu mai stă ascuns în spatele „Mâncare 83%”).
@@ -223,9 +227,13 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : "";
   const showTrancheNotice = Boolean(activeTranche && shownTrancheKey === activeTrancheKey);
   useEffect(() => {
-    if (!activeTranche || !activeTrancheKey || data.settings.seenWeeklyPlanTranches.includes(activeTrancheKey) || shownTrancheKey === activeTrancheKey) return;
+    if (!activeTranche || !activeTrancheKey || shownTrancheKey === activeTrancheKey) return;
+    // Ținut în preferințele telefonului, nu în registru: altfel prima intrare din fiecare
+    // săptămână rescria tot registrul (1 MB) doar pentru un semn „văzut”.
+    const seen = readSeenTranches();
+    if (seen.includes(activeTrancheKey) || data.settings.seenWeeklyPlanTranches.includes(activeTrancheKey)) return;
     setShownTrancheKey(activeTrancheKey);
-    window.dispatchEvent(new CustomEvent("buget-familie:local-settings", { detail: { seenWeeklyPlanTranches: [...data.settings.seenWeeklyPlanTranches, activeTrancheKey].slice(-80) } }));
+    try { safeSetItem(window.localStorage, SEEN_TRANCHES_KEY, JSON.stringify([...seen, activeTrancheKey].slice(-80))); } catch { /* fără stocare: anunțul poate reapărea */ }
   }, [activeTranche, activeTrancheKey, data.settings.seenWeeklyPlanTranches, shownTrancheKey]);
   const openSignal = (action: AdvisorAction) => {
     if (action === "plan") onGo("plan");

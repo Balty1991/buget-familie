@@ -8,6 +8,7 @@ import { adjustDebtsForLedgerEdits, autoPostDueRecurring, adoptOutsideExpenses, 
 import {
   APP_STORAGE_KEY,
   LEGACY_STORAGE_KEY,
+  hashAppPayload,
   localSnapshotText,
   readAppDataRecord,
   readLocalStorageSnapshot,
@@ -35,6 +36,7 @@ export function usePersistAppData(
   const storageHydrated = useRef(false);
   const editedBeforeHydrate = useRef(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
+  const lastSavedHash = useRef("");
 
   const applyData: typeof setData = (value) => {
     if (!storageHydrated.current) editedBeforeHydrate.current = true;
@@ -48,6 +50,14 @@ export function usePersistAppData(
     void readAppDataRecord()
       .then((indexed) => {
         if (!active) return;
+        // Copia din localStorage (deja în memorie) e identică cu IndexedDB: nu mai normalizăm și nu
+        // mai randăm tot o dată; altfel, cu registru mare, pornirea făcea de 2–3 ori lucrul greu.
+        const lsNow = readLocalStorageSnapshot();
+        const inlineImages = (indexed.data?.receipts || []).some((item) => item.imageData || item.imageData2);
+        if (!editedBeforeHydrate.current && !inlineImages && indexed.hash && lsNow.data && lsNow.hash === indexed.hash) {
+          lastSavedHash.current = indexed.hash;
+          return;
+        }
         setData((current) => {
           const local = readLocalStorageSnapshot();
           const picked = resolveHydrateMerge({
@@ -74,23 +84,49 @@ export function usePersistAppData(
     };
   }, [setData]);
 
+  /**
+   * Salvarea nu mai stă în cadrul clicului („Gata” la o cheltuială): textul, hash-ul și scrierea
+   * de ~1 MB în localStorage costau ~100 ms pe un telefon slab, lipiți de atingere. Scriem imediat
+   * după; dacă aplicația trece în fundal înainte, scriem pe loc. Un registru neschimbat nu se rescrie.
+   */
+  const pendingSave = useRef<(() => void) | undefined>(undefined);
   useEffect(() => {
     if (!storageHydrated.current) return;
-    const serialized = localSnapshotText(data);
     const savedAt = new Date().toISOString();
-    const lsWrite = writeLocalStorageSnapshot(serialized, savedAt);
-    if (lsWrite.quotaExceeded || !lsWrite.wroteFull) {
-      setStorageNotice(
-        t("Spațiul local este aproape plin. Fotografiile bonurilor rămân în stocarea dedicată; exportă un backup dacă problema continuă."),
-      );
-    }
-    const timer = window.setTimeout(() => {
-      void writeAppData(data, savedAt).then(() => channelRef.current?.postMessage(savedAt)).catch(() =>
+    const save = () => {
+      pendingSave.current = undefined;
+      const serialized = localSnapshotText(data);
+      const hash = hashAppPayload(serialized);
+      if (hash === lastSavedHash.current) return;
+      lastSavedHash.current = hash;
+      const lsWrite = writeLocalStorageSnapshot(serialized, savedAt, hash);
+      if (lsWrite.quotaExceeded || !lsWrite.wroteFull) {
+        setStorageNotice(
+          t("Spațiul local este aproape plin. Fotografiile bonurilor rămân în stocarea dedicată; exportă un backup dacă problema continuă."),
+        );
+      }
+      void writeAppData(data, savedAt, hash).then(() => channelRef.current?.postMessage(savedAt)).catch(() =>
         setStorageNotice(t("Datele sunt păstrate în fallback-ul browserului; stocarea modernă nu a confirmat salvarea.")),
       );
-    }, 280);
-    return () => window.clearTimeout(timer);
+    };
+    pendingSave.current = save;
+    const timer = window.setTimeout(save, 120);
+    return () => {
+      window.clearTimeout(timer);
+      // O schimbare nouă o înlocuiește pe asta; nu pierdem nimic, doar nu scriem de două ori.
+      if (pendingSave.current === save) pendingSave.current = undefined;
+    };
   }, [data]);
+  useEffect(() => {
+    const flush = () => { if (document.visibilityState === "hidden") pendingSave.current?.(); };
+    const flushNow = () => pendingSave.current?.();
+    document.addEventListener("visibilitychange", flush);
+    window.addEventListener("pagehide", flushNow);
+    return () => {
+      document.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("pagehide", flushNow);
+    };
+  }, []);
 
   /**
    * Aplicația deschisă în două file (web): fiecare scria starea ei întreagă și o cheltuială

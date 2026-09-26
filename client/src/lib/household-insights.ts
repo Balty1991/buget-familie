@@ -2,6 +2,7 @@
  * Analize de gospodărie calculate numai din registrul local.
  * Nu persistă nimic în AppData și nu ating pachetul Firebase.
  */
+import { tickMemo } from "@/lib/tick-cache";
 import {
   addIsoDays,
   allocationBudget,
@@ -729,7 +730,7 @@ export type EnvelopeRunOut = {
  * „ai folosit 80%”; asta spune „pe 3 octombrie rămâi fără, cu 7 zile înainte de venit” — cu
  * măcar 3 zile de ciclu scurse, ca un singur plin de cumpărături să nu sune alarma.
  */
-export const envelopeRunOut = (data: AppData, asOf = isoToday()): EnvelopeRunOut[] => {
+const envelopeRunOutUncached = (data: AppData, asOf: string): EnvelopeRunOut[] => {
   const track = paydayTrack(data, asOf);
   if (!track || track.elapsed < 3 || track.remaining < 2) return [];
   const out: EnvelopeRunOut[] = [];
@@ -842,7 +843,7 @@ export type TodayBrief = {
  * Mâine, ce a rămas se reîmparte. Când există plicuri cu ritm, banii sunt cei din plicul
  * săptămânii; fără plicuri, lichidul prudent până la venit (după scadențe și rate).
  */
-export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
+const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
   const hasPayday = Boolean(data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday);
   /** Un plan expirat nu mai are ce ritm să dea: cifra corectă e zero, iar motivul e altul. */
   const expired = planExpired(data.settings.salaryPlan, asOf);
@@ -1107,7 +1108,7 @@ export function stripLei(value: number, locale: string): string {
  * nu săptămâna calendaristică luni–duminică. Restul se împarte pe zilele rămase
  * din aceeași tranșă, ca suma căsuțelor de azi și de mâine să fie plicul rămas.
  */
-export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): WeeklyEnvelopeRhythm => {
+const weeklyEnvelopeDailyRhythmUncached = (data: AppData, asOf: string): WeeklyEnvelopeRhythm => {
   const plan = data.settings.salaryPlan;
   const weekly = plan.allocations.filter((item) => isWeeklyPaced(item, plan));
   const packs = weekly.map((allocation) => {
@@ -1550,3 +1551,12 @@ export const monthVsAverage = (data: AppData, asOf = isoToday()): { rows: MonthV
     .slice(0, 6);
   return { rows, months: used.length, share };
 };
+
+/** Aceeași socoteală chemată de mai multe componente în aceeași randare se face o singură dată. */
+export const envelopeRunOut = (data: AppData, asOf = isoToday()): EnvelopeRunOut[] => tickMemo([data], `envelopeRunOut:${asOf}`, () => envelopeRunOutUncached(data, asOf));
+
+/** Aceeași socoteală chemată de mai multe componente în aceeași randare se face o singură dată. */
+export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => tickMemo([data], `todayBrief:${asOf}`, () => todayBriefUncached(data, asOf));
+
+/** Aceeași socoteală chemată de mai multe componente în aceeași randare se face o singură dată. */
+export const weeklyEnvelopeDailyRhythm = (data: AppData, asOf = isoToday()): WeeklyEnvelopeRhythm => tickMemo([data], `weeklyEnvelopeDailyRhythm:${asOf}`, () => weeklyEnvelopeDailyRhythmUncached(data, asOf));
