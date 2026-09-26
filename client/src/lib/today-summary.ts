@@ -1,4 +1,4 @@
-import { envelopeDecisionStatus, formatDate, inPlanPeriod, isoToday, planEndDate, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
+import { envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, planEndDate, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
 import { projectCashflow } from "@/lib/cashflow-projection";
 import { daysBetween } from "@/lib/planned-events";
 import { dayStripFigure, stripLei, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
@@ -24,7 +24,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const monthlyEnvelopesRemaining = envelopes.filter((entry) => entry.scope === "cycle").reduce((sum, entry) => sum + entry.remaining, 0);
   const envelopeTotalRemaining = Math.max(0, weeklyEnvelopesRemaining + monthlyEnvelopesRemaining);
   const todayIso = asOf || isoToday();
-  const periodIncome = data.transactions.filter((item) => item.kind === "income" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
+  const periodIncome = data.transactions.filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const sourceRows = data.settings.paymentSources.map((source) => sourceBalance(data, source.id));
   const liquidNow = sourceRows.reduce((sum, balance) => sum + Math.max(0, balance), 0);
   const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === todayIso).reduce((sum, item) => sum + item.amount, 0);

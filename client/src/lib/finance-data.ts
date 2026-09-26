@@ -26,6 +26,8 @@ export type Transaction = {
   note?: string;
   sourceId?: string;
   memberId?: string;
+  /** Corecție de sold („Sold real = X”): mută soldul sursei, dar nu e venit sau cheltuială în rapoarte. */
+  adjustment?: boolean;
   /** Plicul ales expres pentru această cheltuială; valoarea „outside” înseamnă că nu consumă niciun plic. */
   allocationId?: string;
   /** Omul a ales el „În afara plicurilor”; „outside” fără bifa asta e doar valoarea implicită și poate fi pus în plic. */
@@ -1263,11 +1265,14 @@ export const transferBetweenEnvelopes = (data: AppData, input: { fromAllocationI
   return { ...data, settings: { ...data.settings, salaryPlan: { ...plan, transfers: [transfer, ...plan.transfers], updatedAt: transfer.createdAt } } };
 };
 
+/** Corecția de sold („Bani disponibili” / „Corecție de sold”): contează la soldul sursei, nu la venituri și cheltuieli. */
+export const isBalanceAdjustment = (item: Pick<Transaction, "id" | "adjustment">) => item.adjustment === true || item.id.startsWith("balance-check");
+
 /** Venituri încă nerepartizate prin ritualul de salariu. */
 export const unappliedSalaryIncomes = (data: AppData) => {
   const applied = new Set(activeSalaryApplications(data.settings.salaryPlan).map((item) => item.incomeId));
   return data.transactions
-    .filter((item) => item.kind === "income" && !applied.has(item.id))
+    .filter((item) => item.kind === "income" && !applied.has(item.id) && !isBalanceAdjustment(item))
     .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || "").localeCompare(a.createdAt || ""));
 };
 
@@ -1512,12 +1517,12 @@ export const suggestWeeklyAllocationsFromCashflow = (data: AppData, asOf = isoTo
   };
 };
 
-export const financialBalance = (data: AppData, start?: string, end?: string, memberId?: string) => { const entries = data.transactions.filter((item) => (!start || item.date >= start) && (!end || item.date <= end) && (!memberId || item.memberId === memberId)); const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const scopedDebts = data.debts.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const scopedSavings = data.savings.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const monthlyRates = scopedDebts.reduce((sum, item) => sum + item.monthly, 0); const debtRemaining = scopedDebts.reduce((sum, item) => sum + item.remaining, 0); const savingsCurrent = scopedSavings.reduce((sum, item) => sum + item.current, 0); const sources = data.settings.paymentSources.filter((source) => !memberId || !source.memberId || source.memberId === memberId); const liquidFunds = sources.reduce((sum, source) => sum + sourceBalance(data, source.id), 0); return { income, expense, cashflow: income - expense, monthlyRates, debtRemaining, savingsCurrent, liquidFunds, netLiquidPosition: liquidFunds - debtRemaining, memberId }; };
+export const financialBalance = (data: AppData, start?: string, end?: string, memberId?: string) => { const entries = data.transactions.filter((item) => !isBalanceAdjustment(item) && (!start || item.date >= start) && (!end || item.date <= end) && (!memberId || item.memberId === memberId)); const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const scopedDebts = data.debts.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const scopedSavings = data.savings.filter((item) => !memberId || !item.memberId || item.memberId === memberId); const monthlyRates = scopedDebts.reduce((sum, item) => sum + item.monthly, 0); const debtRemaining = scopedDebts.reduce((sum, item) => sum + item.remaining, 0); const savingsCurrent = scopedSavings.reduce((sum, item) => sum + item.current, 0); const sources = data.settings.paymentSources.filter((source) => !memberId || !source.memberId || source.memberId === memberId); const liquidFunds = sources.reduce((sum, source) => sum + sourceBalance(data, source.id), 0); return { income, expense, cashflow: income - expense, monthlyRates, debtRemaining, savingsCurrent, liquidFunds, netLiquidPosition: liquidFunds - debtRemaining, memberId }; };
 
 /** Recapitulare locală luni–duminică. Perspectiva unui membru include numai mișcările lui. */
 export const weeklySummary = (data: AppData, asOf = isoToday(), memberId?: string) => {
   const basis = new Date(`${safeDate(asOf)}T12:00:00`); const shift = (basis.getDay() + 6) % 7; const start = new Date(basis); start.setDate(basis.getDate() - shift); const end = new Date(start); end.setDate(start.getDate() + 6); const startIso = isoDate(start); const endIso = isoDate(end);
-  const transactions = data.transactions.filter((item) => item.date >= startIso && item.date <= endIso && (!memberId || item.memberId === memberId)); const income = transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const categories = Object.entries(transactions.filter((item) => item.kind === "expense").reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {})).sort(([, left], [, right]) => right - left).slice(0, 3);
+  const transactions = data.transactions.filter((item) => !isBalanceAdjustment(item) && item.date >= startIso && item.date <= endIso && (!memberId || item.memberId === memberId)); const income = transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const expense = transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0); const categories = Object.entries(transactions.filter((item) => item.kind === "expense").reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {})).sort(([, left], [, right]) => right - left).slice(0, 3);
   return { start: startIso, end: endIso, income, expense, cashflow: income - expense, categories, transactionCount: transactions.length, memberId };
 };
 
@@ -1890,7 +1895,7 @@ export const savingSuggestions = (data: AppData, asOf = isoToday()): SavingSugge
   const spendingByCategory = Object.entries(currentExpenses.reduce<Record<string, number>>((all, item) => ({ ...all, [item.category]: (all[item.category] || 0) + item.amount }), {})).sort((a, b) => b[1] - a[1]);
   const suggestions: SavingSuggestion[] = [];
   if (balance.debtRemaining > 0 && balance.netLiquidPosition < 0) suggestions.push({ id: "net-position", tone: "risk", title: t("Datoria depășește lichiditatea actuală"), detail: t("Poziția lichidă netă este {amount} RON. Nu presupune că economiile urmărite sunt disponibile pentru cheltuieli; verifică planul și obligațiile apropiate.", { amount: Math.round(balance.netLiquidPosition) }), potential: Math.abs(balance.netLiquidPosition), basis: t("Solduri utilizabile {funds} RON − datorii rămase {debts} RON", { funds: Math.round(balance.liquidFunds), debts: Math.round(balance.debtRemaining) }), nextStep: t("Revizuiește ratele și planul") });
-  const incomeLast30 = data.transactions.filter((item) => item.kind === "income" && item.date >= daysBefore(asOf, 29) && item.date <= asOf).reduce((sum, item) => sum + item.amount, 0);
+  const incomeLast30 = data.transactions.filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && item.date >= daysBefore(asOf, 29) && item.date <= asOf).reduce((sum, item) => sum + item.amount, 0);
   if (balance.monthlyRates > 0 && incomeLast30 > 0 && balance.monthlyRates / incomeLast30 >= 0.35) { const share = Math.round(balance.monthlyRates / incomeLast30 * 100); suggestions.push({ id: "rate-pressure", tone: "watch", title: t("Ratele apasă vizibil în veniturile recente"), detail: t("Ratele declarate reprezintă {share}% din veniturile înregistrate în ultimele 30 de zile. Include-le în limita planului înainte de cheltuielile flexibile.", { share }), potential: balance.monthlyRates, basis: t("{rates} RON rate/lună din {income} RON venituri în 30 zile", { rates: Math.round(balance.monthlyRates), income: Math.round(incomeLast30) }), nextStep: t("Deschide scadențele") }); }
   if (plan.nextPayday && forecast.projectedRemaining < 0) suggestions.push({ id: "pace", tone: "risk", title: t("Ritmul actual depășește planul"), detail: t("Estimarea indică un minus de {amount} RON până la următorul venit. Orice reducere a cheltuielilor flexibile micșorează direct această diferență.", { amount: Math.round(Math.abs(forecast.projectedRemaining)) }), potential: Math.abs(forecast.projectedRemaining), basis: t("{spent} RON cheltuiți în {elapsed} zile; orizont {remaining} zile", { spent: Math.round(forecast.spentToDate), elapsed: forecast.elapsedDays, remaining: forecast.remainingDays }), nextStep: t("Compară ritmul cu planul") });
   const recentStart = daysBefore(asOf, 6); const previousStart = daysBefore(asOf, 13); const previousEnd = daysBefore(asOf, 7);

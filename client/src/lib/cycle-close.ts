@@ -20,6 +20,7 @@ import {
   type AllocationHistoryEntry,
   type AppData,
   type BudgetAllocation,
+  isBalanceAdjustment,
 } from "./finance-data";
 
 export type EnvelopeOutcome = {
@@ -102,7 +103,7 @@ export function cycleClose(data: AppData, today = isoToday()): CycleClose | unde
   const periodEnd = planEndDate(plan);
   if (!plan.periodStart || !periodEnd || today <= periodEnd) return undefined;
   const days = Math.max(1, Math.round((new Date(`${periodEnd}T12:00:00`).getTime() - new Date(`${plan.periodStart}T12:00:00`).getTime()) / 86400000) + 1);
-  const inCycle = data.transactions.filter((item) => inPlanPeriod(item.date, plan));
+  const inCycle = data.transactions.filter((item) => inPlanPeriod(item.date, plan) && !isBalanceAdjustment(item));
   const income = round(inCycle.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0));
   const spent = round(inCycle.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0));
 

@@ -21,6 +21,7 @@ import {
   type SalaryAllocationApplication,
   type SplitTransfer,
   type Transaction,
+  isBalanceAdjustment,
 } from "./finance-data";
 import { t } from "./i18n";
 import { addContribution, daysBetween as eventDays, plannedEventStatus, type PlannedEvent } from "./planned-events";
@@ -418,7 +419,7 @@ export function pendingSplitIncome(data: AppData, asOf: string): Transaction | u
   const applied = new Set(activeSalaryApplications(data.settings.salaryPlan).map((item) => item.incomeId));
   const meal = new Set(data.settings.paymentSources.filter((item) => item.kind === "meal").map((item) => item.id));
   return data.transactions
-    .filter((item) => item.kind === "income" && !applied.has(item.id) && !meal.has(item.sourceId || "") && item.date >= addIsoDays(asOf, -10) && item.date <= asOf && item.amount >= 200)
+    .filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && !applied.has(item.id) && !meal.has(item.sourceId || "") && item.date >= addIsoDays(asOf, -10) && item.date <= asOf && item.amount >= 200)
     .sort((a, b) => b.date.localeCompare(a.date))[0];
 }
 

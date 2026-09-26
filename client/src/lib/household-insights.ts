@@ -38,6 +38,7 @@ import {
   foldRomanian,
   isFixedEnvelope,
   expenseBelongsTo,
+  isBalanceAdjustment,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
 import { floorCents, lei as leiExact, perDay } from "./money-format";
@@ -178,7 +179,7 @@ export type HouseholdActivity = {
 
 export const householdActivity = (data: AppData, month = currentMonthKey()): HouseholdActivity => {
   const range = monthRange(month);
-  const monthTx = data.transactions.filter((item) => item.date >= range.start && item.date <= range.end);
+  const monthTx = data.transactions.filter((item) => !isBalanceAdjustment(item) && item.date >= range.start && item.date <= range.end);
   const familyExpense = monthTx.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
   const members = data.settings.members.map((member) => {
     const entries = monthTx.filter((item) => item.memberId === member.id);
@@ -196,7 +197,7 @@ export const householdActivityInCycle = (data: AppData, asOf = isoToday()): Hous
   const start = plan.periodStart || `${asOf.slice(0, 7)}-01`;
   const cover = planCoverEndDate(plan);
   const end = cover && cover >= start ? cover : asOf;
-  const cycleTx = data.transactions.filter((item) => item.date >= start && item.date <= end && transactionShareScope(item) !== "personal");
+  const cycleTx = data.transactions.filter((item) => !isBalanceAdjustment(item) && item.date >= start && item.date <= end && transactionShareScope(item) !== "personal");
   const familyExpense = cycleTx.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
   const members = data.settings.members.map((member) => {
     const entries = cycleTx.filter((item) => item.memberId === member.id);
@@ -476,7 +477,7 @@ export const lastDaysPulse = (data: AppData, days = 7, asOf = isoToday()) => {
     const date = new Date(basis);
     date.setDate(basis.getDate() - (days - 1 - index));
     const iso = isoDate(date);
-    const entries = data.transactions.filter((item) => item.date === iso);
+    const entries = data.transactions.filter((item) => item.date === iso && !isBalanceAdjustment(item));
     const expense = entries.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
     const income = entries.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
     return {
@@ -598,7 +599,7 @@ export const nextCycleIncomeArrived = (data: AppData, asOf = isoToday()) => {
   const range = paydayWindow(plan);
   if (!range.earliest || asOf < range.earliest || planExpired(plan, asOf)) return 0;
   const meal = new Set(data.settings.paymentSources.filter((item) => item.kind === "meal").map((item) => item.id));
-  return data.transactions.filter((item) => item.kind === "income" && item.date >= range.earliest! && item.date <= asOf && item.amount >= 200 && !meal.has(item.sourceId || "")).reduce((sum, item) => sum + item.amount, 0);
+  return data.transactions.filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && item.date >= range.earliest! && item.date <= asOf && item.amount >= 200 && !meal.has(item.sourceId || "")).reduce((sum, item) => sum + item.amount, 0);
 };
 
 export const cycleEndReport = (data: AppData, asOf = isoToday()): CycleEndReport | undefined => {
@@ -778,7 +779,7 @@ export const monthlySurplus = (data: AppData, asOf = isoToday()): number | undef
   let month = previousMonth(asOf.slice(0, 7));
   for (let step = 0; step < 3; step += 1) {
     const range = monthRange(month);
-    const entries = data.transactions.filter((item) => item.date >= range.start && item.date <= range.end);
+    const entries = data.transactions.filter((item) => item.date >= range.start && item.date <= range.end && !isBalanceAdjustment(item));
     if (entries.length) months.push(entries.reduce((sum, item) => sum + (item.kind === "income" ? item.amount : item.kind === "expense" ? -item.amount : 0), 0));
     month = previousMonth(month);
   }
@@ -1242,7 +1243,7 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
   const plan = data.settings.salaryPlan;
   const end = planEndDate(plan);
   const planDays = end ? Math.max(1, daysBetween(plan.periodStart, end) + 1) : 7;
-  const weekTx = data.transactions.filter((item) => item.date >= summary.start && item.date <= summary.end && (!memberId || item.memberId === memberId));
+  const weekTx = data.transactions.filter((item) => !isBalanceAdjustment(item) && item.date >= summary.start && item.date <= summary.end && (!memberId || item.memberId === memberId));
   // Aceeași regulă ca avertizarea de pe Astăzi: o săptămână care merge prea repede e „atenție”, nu „în ritm”.
   const fastIds = new Set(weekTooFast(data, asOf).map((item) => item.allocationId));
   const envelopes = plan.allocations.map((allocation) => {

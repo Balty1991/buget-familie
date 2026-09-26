@@ -10,7 +10,7 @@ import "../analysis-studio.css";
 import "../mobile-analysis-pass.css";
 import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowDownRight, Info, ArrowUpRight, CalendarDays, Download, Landmark, PiggyBank, TrendingDown, TrendingUp, WalletCards } from "lucide-react";
-import { allocationStatus, financialBalance, formatDate, isoToday, transactionShareScope, type AppData, type ShareScope } from "@/lib/finance-data";
+import { allocationStatus, financialBalance, formatDate, isBalanceAdjustment, isoToday, transactionShareScope, type AppData, type ShareScope } from "@/lib/finance-data";
 import { analysisCompareWindow } from "@/lib/household-insights";
 import { EmptyMark } from "@/components/LedgerArt";
 import { ChartEmpty, ChartTip, ChartYAxis } from "@/components/ChartFrame";
@@ -59,7 +59,7 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
   const selectedMember = data.settings.members.find((member) => member.id === scope);
   const perspective = selectedMember?.name || (isCollaborative ? t("Familie") : t("Personal"));
   const memberId = selectedMember?.id;
-  const scopedTransactions = useMemo(() => data.transactions.filter((item) => (!memberId || item.memberId === memberId) && (shareScope === "all" || transactionShareScope(item) === shareScope)), [data.transactions, memberId, shareScope]);
+  const scopedTransactions = useMemo(() => data.transactions.filter((item) => !isBalanceAdjustment(item) && (!memberId || item.memberId === memberId) && (shareScope === "all" || transactionShareScope(item) === shareScope)), [data.transactions, memberId, shareScope]);
   const compare = analysisCompareWindow(data.settings.salaryPlan, focusMonth, cycleReady && windowMode === "cycle" ? "cycle" : "calendar");
   const range = { start: compare.start, end: compare.end };
   const selected = scopedTransactions.filter((item) => item.date >= compare.start && item.date <= compare.end);

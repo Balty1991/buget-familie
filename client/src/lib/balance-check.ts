@@ -89,9 +89,10 @@ export function applyDeclaredBalance(data: AppData, sourceId: string, amount: nu
   const persoana = data.settings.members.find((item) => item.id === target.memberId) || data.settings.members[0];
   const miscare: Transaction = {
     id: newId("balance-check"),
-    title: urcare ? t("Bani disponibili") : t("Corecție de sold"),
+    title: t("Corecție de sold"),
     amount: Math.abs(diferenta),
     kind: urcare ? "income" : "expense",
+    adjustment: true,
     category: urcare ? "Venit" : "Altele",
     sourceId: target.id,
     source: target.name,

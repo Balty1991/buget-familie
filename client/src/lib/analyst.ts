@@ -29,6 +29,7 @@ import {
   type AppData,
   type BudgetAllocation,
   type Transaction,
+  isBalanceAdjustment,
 } from "./finance-data";
 import { buildTodaySummary } from "./today-summary";
 import { daysLabel } from "./i18n";
@@ -125,8 +126,8 @@ export function readPeriod(folded: string, asOf: string): Period {
 const nextPaydayOf = (data: AppData) => data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday || "";
 
 const inPeriod = (item: Transaction, period: Period) => item.date >= period.start && item.date <= period.end;
-const expensesIn = (data: AppData, period: Period) => data.transactions.filter((item) => item.kind === "expense" && inPeriod(item, period));
-const incomeIn = (data: AppData, period: Period) => data.transactions.filter((item) => item.kind === "income" && inPeriod(item, period));
+const expensesIn = (data: AppData, period: Period) => data.transactions.filter((item) => item.kind === "expense" && !isBalanceAdjustment(item) && inPeriod(item, period));
+const incomeIn = (data: AppData, period: Period) => data.transactions.filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && inPeriod(item, period));
 
 const totalOf = (items: Transaction[]) => round(items.reduce((sum, item) => sum + item.amount, 0));
 

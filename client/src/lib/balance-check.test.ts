@@ -3,7 +3,7 @@
  * case care abia a început. Iar răspunsul nu are voie să rescrie soldul pe ascuns.
  */
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, sourceBalance, type AppData } from "./finance-data";
+import { createEmptyAppData, financialBalance, sourceBalance, unappliedSalaryIncomes, type AppData } from "./finance-data";
 import { applyDeclaredBalance, balanceCheckDue, balanceCheckRows } from "./balance-check";
 
 const casa = (miscari = 6): AppData => {
@@ -64,7 +64,16 @@ describe("verificarea soldului", () => {
 
   it("mai mulți bani decât știe aplicația intră ca intrare", () => {
     const next = applyDeclaredBalance(casa(), "card", 1900, "2026-09-21");
-    expect(next.transactions[0]).toMatchObject({ kind: "income", amount: 200 });
+    expect(next.transactions[0]).toMatchObject({ kind: "income", amount: 200, adjustment: true });
+  });
+
+  it("corecția mută soldul, dar nu e venit în bilanț și nu cere repartizare", () => {
+    const data = casa();
+    const before = financialBalance(data, "2026-09-01", "2026-09-30");
+    const next = applyDeclaredBalance(data, "card", 2600, "2026-09-21");
+    expect(sourceBalance(next, "card")).toBe(2600);
+    expect(financialBalance(next, "2026-09-01", "2026-09-30").income).toBe(before.income);
+    expect(unappliedSalaryIncomes(next).some((item) => item.id === next.transactions[0].id)).toBe(false);
   });
 
   it("același sold spus a doua oară nu mai scrie nimic", () => {
