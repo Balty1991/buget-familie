@@ -752,3 +752,15 @@ describe("graficul plicului pe ciclu", () => {
     expect(chart.runOutIndex).toBe(14);
   });
 });
+
+describe("luna aceasta față de medie", () => {
+  it("compară cu media lunilor trecute, scalată la zilele scurse", async () => {
+    const { monthVsAverage } = await import("./household-insights");
+    const data = createEmptyAppData();
+    const tx = (id: string, amount: number, date: string, category = "Alimente") => ({ id, title: id, amount, kind: "expense" as const, category, source: "Card", person: "Eu", date });
+    data.transactions = [tx("a", 1500, "2026-06-10"), tx("b", 1500, "2026-07-10"), tx("c", 1500, "2026-08-10"), tx("d", 900, "2026-09-10")];
+    const result = monthVsAverage(data, "2026-09-15");
+    expect(result.months).toBe(3);
+    expect(result.rows[0]).toMatchObject({ category: "Alimente", thisMonth: 900, average: 750, delta: 150 });
+  });
+});

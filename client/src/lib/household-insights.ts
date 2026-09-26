@@ -1455,3 +1455,36 @@ export const envelopeBurndown = (data: AppData, allocation: BudgetAllocation, as
   const runOutIndex = pace > 0 && left > 0 && todayIndex + left / pace < days - 1 ? Math.floor(todayIndex + left / pace) : left <= 0 ? todayIndex : undefined;
   return { start, end, days, budget: roundMoney(budget), actual, runOutIndex, todayIndex };
 };
+
+export type MonthVsAverageRow = { category: string; thisMonth: number; average: number; delta: number };
+
+/**
+ * Luna aceasta față de media ultimelor 3 luni întregi cu mișcări, pe categorii (cel mult 6).
+ * Luna în curs se compară cu media scalată la zilele scurse, ca pe 10 ale lunii să nu pară „sub medie”.
+ */
+export const monthVsAverage = (data: AppData, asOf = isoToday()): { rows: MonthVsAverageRow[]; months: number; share: number } => {
+  const month = asOf.slice(0, 7);
+  const [y, m] = month.split("-").map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const share = Math.min(1, Number(asOf.slice(8, 10)) / daysInMonth);
+  const previous = [1, 2, 3].map((back) => { const d = new Date(y, m - 1 - back, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; });
+  const expenses = data.transactions.filter((item) => item.kind === "expense");
+  const used = previous.filter((key) => expenses.some((item) => item.date.startsWith(key)));
+  const byCategory = new Map<string, { now: number; past: number }>();
+  for (const item of expenses) {
+    const key = item.date.slice(0, 7);
+    const isNow = key === month && item.date <= asOf;
+    if (!isNow && !used.includes(key)) continue;
+    const row = byCategory.get(item.category) || { now: 0, past: 0 };
+    if (isNow) row.now += item.amount; else row.past += item.amount;
+    byCategory.set(item.category, row);
+  }
+  if (!used.length) return { rows: [], months: 0, share };
+  const rows = Array.from(byCategory.entries()).map(([category, value]) => {
+    const average = roundMoney(value.past / used.length * share);
+    return { category, thisMonth: roundMoney(value.now), average, delta: roundMoney(value.now - average) };
+  }).filter((row) => row.thisMonth > 0 || row.average > 0)
+    .sort((a, b) => Math.max(b.thisMonth, b.average) - Math.max(a.thisMonth, a.average))
+    .slice(0, 6);
+  return { rows, months: used.length, share };
+};
