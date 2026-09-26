@@ -159,7 +159,7 @@ export function recentActivityMoves<T extends ActivityRow>(transactions: T[], cy
     .slice(0, 5);
 }
 
-export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings, onOpenRecurring, coach }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void; coach?: ReactNode }) {
+export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings: _onOpenSettings, onOpenRecurring, coach }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void; coach?: ReactNode }) {
   const { simpleMode } = useSimpleMode();
   const math = usePlanCycle(data);
   const summary = useTodaySummary(data);
@@ -244,12 +244,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
 
   return (
     <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "")}>
-      {simpleMode && (
-        <aside className="bf-simple-mode-top-banner" role="status">
-          <span>{t("Mod simplu activ — Dezactivează în Setări")}</span>
-          <button type="button" onClick={onOpenSettings}>{t("Setări")}</button>
-        </aside>
-      )}
+      {/* Modul simplu nu mai are bandă permanentă de avertizare: se oprește din „Mai mult” → Setări. */}
       <EnvelopeConflictBanner data={data} onChange={onChange} />
       <MovementConflictBanner data={data} onChange={onChange} />
       {!simpleMode && showTrancheNotice && activeTranche && !topNotice && (
@@ -264,7 +259,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button className="dismiss" aria-label={t("Ascunde anunțul săptămânii")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
         </aside>
       )}
-      {fastWeek && topNotice === "fast" && (
+      {!simpleMode && fastWeek && topNotice === "fast" && (
         <aside className={`bf-envelope-live-notice ${fastWeek.over ? "over" : "watch"}`} role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
@@ -278,7 +273,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: fastWeek.label })} onClick={() => setDismissedAlerts((current) => [...current, `week-${fastWeek.allocationId}-${fastWeek.weekIndex}`])}><X size={16} /></button>
         </aside>
       )}
-      {runOutAlert && topNotice === "runout" && (
+      {!simpleMode && runOutAlert && topNotice === "runout" && (
         <aside className="bf-envelope-live-notice watch" role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
@@ -290,7 +285,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: runOutAlert.label })} onClick={() => setDismissedAlerts((current) => [...current, runOutAlert.allocationId])}><X size={16} /></button>
         </aside>
       )}
-      {activeEnvelopeAlert && topNotice === "envelope" && (
+      {activeEnvelopeAlert && topNotice === "envelope" && (!simpleMode || activeEnvelopeAlert.state === "over") && (
         <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
@@ -401,7 +396,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             <div className="bf-os-actions">
               <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
             </div>
-            {!rhythm.hasWeekly || brief.expired ? null : (
+            {simpleMode || !rhythm.hasWeekly || brief.expired ? null : (
               <div className="bf-hero-week" aria-label={t("Pe zi")}>
                 <div className="bf-os-rhythm-grid" style={{ ["--bf-rhythm-days" as string]: String(Math.max(1, rhythm.days.length)) }}>
                   {rhythm.days.map((row) => {
@@ -449,7 +444,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       </section>
       {coach}
 
-      <OpeningBalanceCard data={data} onChange={onChange} />
+      {!simpleMode && <OpeningBalanceCard data={data} onChange={onChange} />}
 
       <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenRecurring={onOpenRecurring} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => { setDayMore(true); window.setTimeout(() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }} />
 

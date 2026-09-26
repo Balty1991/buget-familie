@@ -120,7 +120,7 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const showCycleEnd = !splitIncome && Boolean(cycleEndReport(data));
   const transfers = data.settings.members.length > 1 ? pendingTransfers(data, isoToday()) : [];
   const backupPrefs = useAutoBackupPrefs();
-  const showBackup = autoBackupCardVisible(backupPrefs, data);
+  const showBackup = !simpleMode && autoBackupCardVisible(backupPrefs, data);
   const [reviewOpen, setReviewOpen] = useState(() => { try { return reviewPromptDue(window.localStorage, data.transactions.length, Capacitor.isNativePlatform()); } catch { return false; } });
   const answerReview = (answer: "done" | "never" | "later") => { answerReviewPrompt(window.localStorage, answer); setReviewOpen(false); if (answer === "done") window.open(PLAY_STORE_URL, "_blank", "noopener"); };
   if (!reviewOpen && !showBackup && !transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
