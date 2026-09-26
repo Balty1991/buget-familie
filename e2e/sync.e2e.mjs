@@ -179,6 +179,13 @@ async function main() {
     const ioanaMembers = (await ledger(ioana.page)).members.sort();
     if (JSON.stringify(ioanaMembers) !== JSON.stringify(["Ioana", "Radu"])) fail(`Membrii la Ioana: ${ioanaMembers}`);
 
+    // D1 din auditul 26.09: o cheltuială notată chiar când sosea pachetul partenerului rămânea netrimisă.
+    step("Radu și Ioana notează în aceeași clipă: ambele cheltuieli ajung pe ambele telefoane");
+    await Promise.all([addExpense(radu.page, 71.1), addExpense(ioana.page, 83.2)]);
+    for (const [who, page] of [["Radu", radu.page], ["Ioana", ioana.page]]) {
+      await waitFor(async () => { const list = (await ledger(page)).transactions; return list.some((item) => item.amount === 71.1) && list.some((item) => item.amount === 83.2); }, `ambele cheltuieli simultane la ${who}`);
+    }
+
     step("Cine știe doar ID-ul camerei nu poate suprascrie pachetul familiei (lanțul de scriere)");
     const raduRoom = await radu.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.roomId);
     const intruder = await phone(browser, { name: "Străin" });

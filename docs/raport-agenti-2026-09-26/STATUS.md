@@ -20,7 +20,7 @@
 | D13 | Cifra „pe zi” cu 5 reguli de rotunjire | ✅ `c29cfac` |
 | D14 | Contor zilnic AI într-un singur document | ✅ `33f7b6e` |
 | D15 | Teste fără verificare de tipuri, CI incomplet, firebase-tools nefixat | ✅ `2bab932`, `3e874ab` |
-| D16 | Fișiere mari, teste lipsă pentru sync | ⏳ test cap-coadă pentru D1 |
+| D16 | Fișiere mari, teste lipsă pentru sync | ✅ test cap-coadă pentru D1; ⏳ extragerea `sync-engine.ts` |
 
 ## Securitate (security-report.md)
 | # | Constatare | Stare |
@@ -28,8 +28,8 @@
 | S1 | CSP permite tot jsDelivr | ✅ `2bab932` |
 | S2 | Cod OCR de pe CDN; destinatari nedeclarați | ✅ declarați `2bab932`; Open Food Facts doar la cerere `3fa74bc` |
 | S3 | Plafonul AI se golește ușor | ✅ IPv6 /64, shard-uri `33f7b6e`; cererile fără App Check au 1/5 din plafon `3fa74bc`; 👤 Play Integrity |
-| S4 | Telefonul revocat are încă cheia | ⏳ |
-| S5 | Invitația în clar pe web | ⏳; 👤 domeniu propriu |
+| S4 | Telefonul revocat are încă cheia | ✅ `368d921` |
+| S5 | Invitația în clar pe web | ✅ `f13b9b8`; 👤 domeniu propriu |
 | S6 | Lanțul de aprovizionare în CI | ✅ firebase-tools fixat, pnpm 10.34.5 `3fa74bc`; 👤 Workload Identity, acțiuni fixate pe SHA |
 | S7 | Ghidul AI scrie fără confirmare pe calea veche | ✅ `3fa74bc` |
 | S8 | Codul de recuperare se poate suprascrie | ✅ `2bab932` |
