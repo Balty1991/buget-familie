@@ -214,17 +214,39 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
   let money = round2(income.amount);
   const rank = (need: MonthlyNeed) => need.priority === "buffer" ? 2 : need.priority === "flex" ? 1 : 0;
   const ordered = [...needs].sort((a, b) => rank(a) - rank(b));
+  const targetOf = (need: MonthlyNeed) => need.cadence === "weekly" ? weeklyTarget(reserveOf(need), cycle) : reserveOf(need);
+  const payerElsewhere = (need: MonthlyNeed) => Boolean(need.payerId && need.payerId !== income.memberId);
+  /**
+   * Două salarii în zile diferite: până vine celălalt (Ioana pe 25, eu pe 10), casa tot
+   * mănâncă. Zilele până atunci primesc partea lor din cheltuielile pe săptămână înaintea
+   * facturilor; restul lunii vine din salariul următor. Altfel primul salariu mergea tot în
+   * facturi și mâncarea avea 0 lei două săptămâni.
+   */
+  const nextIncome = otherIncomeSoon(data, income, cycleStart, cycleEnd);
+  const bridge = new Map<string, number>();
+  if (nextIncome && nextIncome.date > income.date) {
+    const untilNext = cycleWeeks(income.date, addIsoDays(nextIncome.date, -1));
+    for (const need of ordered) {
+      if (need.cadence !== "weekly" || need.priority === "buffer" || payerElsewhere(need)) continue;
+      const open = Math.max(0, round2(targetOf(need) - (funded.get(need.id) || 0)));
+      const amount = round2(Math.min(weeklyTarget(reserveOf(need), untilNext), open, money));
+      if (amount <= 0) continue;
+      bridge.set(need.id, amount);
+      money = round2(money - amount);
+    }
+  }
   const toLine = (need: MonthlyNeed): SplitLine => {
     const weekly = need.cadence === "weekly";
-    const target = weekly ? weeklyTarget(reserveOf(need), cycle) : reserveOf(need);
+    const target = targetOf(need);
     const weekInfo = weekly ? { weeks: cycle.weeks, extraDays: cycle.extraDays, perWeek: reserveOf(need) } : {};
     const fundedBefore = funded.get(need.id) || 0;
     const open = Math.max(0, round2(target - fundedBefore));
-    if (need.payerId && need.payerId !== income.memberId) {
+    if (payerElsewhere(need)) {
       return { need, target, ...weekInfo, fundedBefore, amount: 0, remaining: open, skipped: "other-payer" as const };
     }
-    const amount = Math.min(open, money);
-    money = round2(money - amount);
+    const early = bridge.get(need.id) || 0;
+    const amount = early + Math.min(Math.max(0, open - early), money);
+    money = round2(money - (amount - early));
     return { need, target, ...weekInfo, fundedBefore, amount: round2(amount), remaining: round2(open - amount) };
   };
   const lines: SplitLine[] = ordered.filter((need) => need.priority !== "buffer").map(toLine);
@@ -254,7 +276,7 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     free: money,
     // Rezerva de neprevăzute nu e o lipsă: dacă nu încape acum, nu înseamnă că venitul nu ajunge.
     uncovered: round2(lines.filter((item) => item.need.priority !== "buffer").reduce((sum, item) => sum + item.remaining, 0)),
-    nextIncome: otherIncomeSoon(data, income, cycleStart, cycleEnd),
+    nextIncome,
     transfers: splitTransfers(lines, income.memberId),
   };
 }

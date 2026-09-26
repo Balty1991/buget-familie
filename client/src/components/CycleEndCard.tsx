@@ -26,7 +26,7 @@ export function CycleEndCard({ data, onChange, onDone }: { data: AppData; onChan
     const next = { ...data, savings: data.savings.map((item) => item.id === goalId ? { ...item, current: Math.round((item.current + toGoal) * 100) / 100, updatedAt: new Date().toISOString() } : item) };
     close(next, t("Am pus {amount} la {name}.", { amount: money(toGoal), name: report.goal.name }));
   };
-  const when = report.daysLeft > 0 ? t("Salariul vine peste {days} (~{date}).", { days: daysLabel(report.daysLeft), date: formatDate(report.payday, { day: "numeric", month: "long" }) }) : t("Salariul e așteptat azi.");
+  const when = report.incomeArrived ? t("Salariul a intrat; repartizează-l ca să pornească ciclul nou.") : report.daysLeft > 0 ? t("Salariul vine peste {days} (~{date}).", { days: daysLabel(report.daysLeft), date: formatDate(report.payday, { day: "numeric", month: "long" }) }) : t("Salariul e așteptat azi.");
   return (
     <section className="bf-income-split bf-cycle-end" aria-labelledby="cycle-end-title">
       <header>

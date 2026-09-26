@@ -3377,4 +3377,7 @@ export const en: Record<string, string> = {
   "Săptămâna asta mai ai {left}, toți pentru azi.": "This week you have {left} left, all for today.",
   "Azi poți {pace} lei. În plicurile de cheltuieli curente mai sunt {available} lei pentru {days}.": "Today you can spend {pace} lei. Your everyday envelopes still hold {available} lei for {days}.",
   "Azi poți {pace} lei. Mai sunt {available} lei liberi pentru {days}.": "Today you can spend {pace} lei. There are {available} lei free for {days}.",
+  "Salariul a intrat; repartizează-l ca să pornească ciclul nou.": "The salary is in; split it to start the new cycle.",
+  "se acoperă când vine {label} pe {date} ({amount})": "covered when {label} arrives on {date} ({amount})",
+  "Așteaptă venitul următor": "Waiting for the next income",
 };

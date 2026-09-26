@@ -1,4 +1,6 @@
-import { envelopeDecisionStatus, inPlanPeriod, isoToday, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
+import { envelopeDecisionStatus, formatDate, inPlanPeriod, isoToday, planEndDate, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
+import { projectCashflow } from "@/lib/cashflow-projection";
+import { daysBetween } from "@/lib/planned-events";
 import { dayStripFigure, stripLei, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
 import { daysLabel, getLocale, t } from "@/lib/i18n";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
@@ -28,10 +30,23 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === todayIso).reduce((sum, item) => sum + item.amount, 0);
   const trackHero = trackModeHero({ periodIncome, liquidNow, spentToday });
 
+  /**
+   * Plicurile cer mai mult decât e acum pe card, dar mai vine un venit declarat în ciclu
+   * (salariul Ioanei pe 25): nu e o depășire, e o așteptare. O spunem așa, cu data și suma.
+   */
+  const upcomingIncome = (() => {
+    if (!overPlan) return undefined;
+    const end = planEndDate(math.plan);
+    if (!end || end <= todayIso) return undefined;
+    const days = projectCashflow(data, todayIso, daysBetween(todayIso, end) + 1).days;
+    const incomes = days.flatMap((day) => day.items.filter((item) => item.kind === "income").map((item) => ({ ...item, date: day.date })));
+    return incomes.length ? { first: incomes[0], total: incomes.reduce((sum, item) => sum + item.amount, 0) } : undefined;
+  })();
+  const waitingForIncome = Boolean(upcomingIncome && upcomingIncome.total >= Math.abs(math.remaining) - 0.009);
   const heroLabel = noMoneyYet
     ? t("Pune banii de azi")
     : overPlan
-    ? t("Peste limita planului")
+    ? waitingForIncome ? t("Așteaptă venitul următor") : t("Peste limita planului")
     : brief.hasPayday
       ? t("Poți folosi azi")
       : data.settings.salaryPlan.allocations.length
@@ -72,7 +87,9 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const heroHint = noMoneyYet
     ? t("Scrie cât ai acum pe card și în numerar (Setări → Surse și sold inițial). Apoi îți spunem cât poți folosi pe zi.")
     : overPlan
-    ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
+    ? waitingForIncome && upcomingIncome
+      ? t("se acoperă când vine {label} pe {date} ({amount})", { label: upcomingIncome.first.title, date: formatDate(upcomingIncome.first.date, { day: "numeric", month: "long" }), amount: exact(upcomingIncome.first.amount) })
+      : t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : weekEmpty
       ? planHelp
         ? t("Plicul săptămânii s-a terminat până {until}. În Plan mai ai {free} nerepartizați: poți pune o parte în plic.", { until: untilName, free: exact(freeInPlan) })

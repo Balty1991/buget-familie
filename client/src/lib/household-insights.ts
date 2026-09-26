@@ -575,6 +575,8 @@ export const weekTooFast = (data: AppData, asOf = isoToday()): WeekTooFast[] => 
 export type CycleEndReport = {
   payday: string;
   daysLeft: number;
+  /** Salariul a intrat deja (e al ciclului următor). */
+  incomeArrived: boolean;
   made: Array<{ id: string; label: string; left: number }>;
   over: Array<{ id: string; label: string; over: number }>;
   leftTotal: number;
@@ -588,6 +590,18 @@ export type CycleEndReport = {
  * care nu, cât a rămas și cât se poate pune deoparte fără să lipsească în zilele rămase.
  * O factură încă neplătită își ține banii; mâncarea își ține partea pentru zilele rămase.
  */
+/**
+ * Venitul intrat deja în fereastra zilei de salariu: e al ciclului următor. Pe el se sprijină
+ * cifra zilei (nu intră în ea) și textele de final de ciclu („Salariul a intrat”, nu „e așteptat azi”).
+ */
+export const nextCycleIncomeArrived = (data: AppData, asOf = isoToday()) => {
+  const plan = data.settings.salaryPlan;
+  const range = paydayWindow(plan);
+  if (!range.earliest || asOf < range.earliest || planExpired(plan, asOf)) return 0;
+  const meal = new Set(data.settings.paymentSources.filter((item) => item.kind === "meal").map((item) => item.id));
+  return data.transactions.filter((item) => item.kind === "income" && item.date >= range.earliest! && item.date <= asOf && item.amount >= 200 && !meal.has(item.sourceId || "")).reduce((sum, item) => sum + item.amount, 0);
+};
+
 export const cycleEndReport = (data: AppData, asOf = isoToday()): CycleEndReport | undefined => {
   const plan = data.settings.salaryPlan;
   const until = untilPayday(plan, asOf);
@@ -613,6 +627,7 @@ export const cycleEndReport = (data: AppData, asOf = isoToday()): CycleEndReport
   return {
     payday: until.typical,
     daysLeft: until.days,
+    incomeArrived: nextCycleIncomeArrived(data, asOf) > 0,
     made: made.sort((a, b) => b.left - a.left),
     over: over.sort((a, b) => b.over - a.over),
     leftTotal: Math.round(leftTotal * 100) / 100,
@@ -837,11 +852,7 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
    * Salariul intrat în fereastra zilei de salariu e al ciclului următor. Fără scăderea asta,
    * în ziua salariului Astăzi arăta „Poți folosi azi 5.200” — tot venitul, pe o zi.
    */
-  const paydayRange = paydayWindow(plan);
-  const meal = new Set(data.settings.paymentSources.filter((item) => item.kind === "meal").map((item) => item.id));
-  const nextCycleIncome = hasPayday && !expired && paydayRange.earliest && asOf >= paydayRange.earliest
-    ? data.transactions.filter((item) => item.kind === "income" && item.date >= paydayRange.earliest && item.date <= asOf && item.amount >= 200 && !meal.has(item.sourceId || "")).reduce((sum, item) => sum + item.amount, 0)
-    : 0;
+  const nextCycleIncome = hasPayday ? nextCycleIncomeArrived(data, asOf) : 0;
   const liquid = liquidSafeToSpend(data, asOf);
   const safe = { ...liquid, available: Math.max(0, liquid.available - nextCycleIncome) };
   const remainingDays = Math.max(1, forecast.remainingDays);

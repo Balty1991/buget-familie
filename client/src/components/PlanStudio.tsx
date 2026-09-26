@@ -24,7 +24,7 @@ import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { amountInput, allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
-import { envelopeBurnPace, envelopeMonthlyHistory, envelopeRunOut, envelopeUntilPayday, weekDayCap, envelopeBurndown} from "@/lib/household-insights";
+import { nextCycleIncomeArrived, envelopeBurnPace, envelopeMonthlyHistory, envelopeRunOut, envelopeUntilPayday, weekDayCap, envelopeBurndown} from "@/lib/household-insights";
 import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
 import { EnvelopeBurndownChart } from "@/components/EnvelopeBurndownChart";
 import { WeekBand } from "@/components/WeekBand";
@@ -458,7 +458,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             const date = (iso: string) => formatDate(iso, { day: "numeric", month: "long" });
             const head = until.days > 0
               ? t("Mai ai nevoie de bani {days}, până la salariu (~{date}).", { days: daysLabel(until.days), date: date(until.typical) })
-              : t("Salariul e așteptat azi.");
+              : nextCycleIncomeArrived(data) > 0 ? t("Salariul a intrat; repartizează-l ca să pornească ciclul nou.") : t("Salariul e așteptat azi.");
             // Pe plicurile pe săptămâni, cifra de azi e a tranșei — aceeași ca în avertizare și în ghid.
             const cap = weekDayCap(data, item);
             const tail = until.remaining <= 0

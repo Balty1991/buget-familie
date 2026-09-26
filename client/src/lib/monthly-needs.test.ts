@@ -369,13 +369,16 @@ describe("salarii pe 1 și pe 25 (BF-02)", () => {
     data.transactions = [income("s1", "eu", 4000, "2026-09-01"), income("s2", "sotia", 3000, "2026-09-25")];
     const first = proposeIncomeSplit(data, "s1");
     expect(first.ok && first.nextIncome?.label).toBe("Al ei");
+    // Mâncarea până pe 25 (3 săpt. + 3 zile) vine înaintea facturilor; ce lipsește din chirie vine din salariul ei.
+    expect(first.ok && first.lines.find((line) => line.need.id === "mancare")?.amount).toBe(2057);
+    const rentLeft = first.ok ? first.lines.find((line) => line.need.id === "chirie")!.remaining : -1;
     data = applyIncomeSplit(data, "s1").data;
     expect(data.settings.salaryPlan.periodStart).toBe("2026-09-01");
     const food = () => data.settings.salaryPlan.allocations.find((item) => item.label === "Mâncare")!.amount;
     const before = food();
     const second = proposeIncomeSplit(data, "s2");
     expect(second.ok && second.cycleStart).toBe("2026-09-01");
-    expect(second.ok && second.lines.find((line) => line.need.id === "chirie")?.amount).toBe(0);
+    expect(second.ok && second.lines.find((line) => line.need.id === "chirie")?.amount).toBe(rentLeft);
     data = applyIncomeSplit(data, "s2").data;
     expect(food()).toBeGreaterThanOrEqual(before);
     expect(data.settings.salaryPlan.periodStart).toBe("2026-09-01");
