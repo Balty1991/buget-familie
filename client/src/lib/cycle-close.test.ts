@@ -104,4 +104,24 @@ describe("închiderea ciclului", () => {
     expect(nextMonthSameDay("2026-01-31")).toBe("2026-02-28");
     expect(nextMonthSameDay("2026-12-15")).toBe("2027-01-15");
   });
+
+  it("propune pe plic, nu pe categorie: facturile din aceeași categorie nu primesc suma întregii categorii", () => {
+    const data = casa();
+    data.settings.salaryPlan.allocations = [
+      { id: "env-rent", label: "Chirie", category: "Casă & facturi", amount: 2000, sourceId: "card" },
+      { id: "env-power", label: "Lumină", category: "Casă & facturi", amount: 250, sourceId: "card" },
+      { id: "env-food", label: "Alimente", category: "Alimente", amount: 2000, sourceId: "card" },
+    ];
+    data.transactions = [
+      cheltuiala("r1", 2000, "2026-06-15", "Casă & facturi", "env-rent"),
+      cheltuiala("r2", 2000, "2026-07-15", "Casă & facturi", "env-rent"),
+      cheltuiala("r3", 2000, "2026-08-15", "Casă & facturi", "env-rent"),
+      cheltuiala("p1", 240, "2026-06-15", "Casă & facturi", "env-power"),
+      cheltuiala("p2", 250, "2026-07-15", "Casă & facturi", "env-power"),
+      cheltuiala("p3", 260, "2026-08-15", "Casă & facturi", "env-power"),
+    ];
+    const close = cycleClose(data, "2026-09-10")!;
+    expect(close.lessons.find((item) => item.allocationId === "env-power")).toBeUndefined();
+    expect(close.lessons.find((item) => item.allocationId === "env-rent")).toBeUndefined();
+  });
 });

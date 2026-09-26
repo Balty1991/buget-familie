@@ -13,11 +13,13 @@ import {
   addIsoDays,
   allocationStatus,
   inPlanPeriod,
+  isFixedEnvelope,
   isoToday,
   newId,
   planEndDate,
   type AllocationHistoryEntry,
   type AppData,
+  type BudgetAllocation,
 } from "./finance-data";
 
 export type EnvelopeOutcome = {
@@ -74,10 +76,15 @@ export function nextMonthSameDay(iso: string): string {
  *
  * Scadențele nu se numără: ele au ritmul lor și ar strica media.
  */
-function spentPerCycle(data: AppData, category: string, today: string, cycleDays: number, days = 90) {
+function spentPerCycle(data: AppData, allocation: BudgetAllocation, today: string, cycleDays: number, days = 90) {
   const from = addIsoDays(today, -days);
+  const category = allocation.category || allocation.label;
+  // Pe plic, nu pe categorie: Chirie, Lumină și Gaz au aceeași categorie, dar nu aceeași sumă.
+  // Categoria ajută doar când e a unui singur plic și mișcările vechi n-au plicul trecut.
+  const soleOfCategory = data.settings.salaryPlan.allocations.filter((item) => (item.category || item.label) === category).length === 1;
   const rows = data.transactions.filter((item) =>
-    item.kind === "expense" && !item.recurringId && item.date >= from && item.date <= today && item.category === category);
+    item.kind === "expense" && !item.recurringId && item.date >= from && item.date <= today
+    && (item.allocationId ? item.allocationId === allocation.id : soleOfCategory && item.category === category));
   if (!rows.length) return { total: 0, count: 0 };
   const inceput = rows.reduce((cel, item) => item.date < cel ? item.date : cel, rows[0].date);
   const observate = Math.min(days, Math.max(14, Math.round((new Date(`${today}T12:00:00`).getTime() - new Date(`${inceput}T12:00:00`).getTime()) / 86400000) + 1));
@@ -104,10 +111,15 @@ export function cycleClose(data: AppData, today = isoToday()): CycleClose | unde
     return { id: item.id, label: item.label, budget: round(status.budget), spent: round(status.spent), left: round(status.remaining) };
   });
 
+  const nextStart = periodEnd >= addIsoDays(today, -15) ? periodEnd : today;
+  const nextPayday = nextMonthSameDay(nextStart);
+  // Propunerea e pentru ciclul care începe, deci pe lungimea lui, nu a celui încheiat (poate fi de 15 zile).
+  const nextDays = Math.max(1, Math.round((new Date(`${nextPayday}T12:00:00`).getTime() - new Date(`${nextStart}T12:00:00`).getTime()) / 86400000));
   const lessons: CycleLesson[] = [];
   for (const allocation of plan.allocations) {
-    const category = allocation.category || allocation.label;
-    const istoric = spentPerCycle(data, category, today, days);
+    // Facturile și ratele au suma de pe factură, nu din obicei.
+    if (isFixedEnvelope(plan, allocation)) continue;
+    const istoric = spentPerCycle(data, allocation, today, nextDays);
     // Sub trei mișcări nu e un obicei, e o întâmplare. Nu se învață din ea.
     if (istoric.count < 3 || allocation.amount <= 0) continue;
     const propus = laZece(istoric.total);
@@ -124,7 +136,6 @@ export function cycleClose(data: AppData, today = isoToday()): CycleClose | unde
    * mai târziu, banii tot atunci au intrat. Doar o întârziere mare mută startul pe azi,
    * ca planul să nu se nască deja pe jumătate consumat.
    */
-  const nextStart = periodEnd >= addIsoDays(today, -15) ? periodEnd : today;
   return {
     periodStart: plan.periodStart,
     periodEnd,
@@ -135,7 +146,7 @@ export function cycleClose(data: AppData, today = isoToday()): CycleClose | unde
     envelopes: envelopes.sort((left, right) => right.budget - left.budget),
     lessons,
     nextStart,
-    nextPayday: nextMonthSameDay(nextStart),
+    nextPayday,
   };
 }
 

@@ -18,10 +18,11 @@ const zi = (iso: string) => formatDate(iso, { day: "2-digit", month: "short" });
 
 export function CycleClosePanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const close = cycleClose(data);
-  const [refuzate, setRefuzate] = useState<string[]>([]);
+  // Propunerile se aleg una câte una: nimic nu schimbă planul fără o bifă pusă de om.
+  const [acceptate, setAcceptate] = useState<string[]>([]);
   if (!close) return null;
-  const alese = close.lessons.filter((item) => !refuzate.includes(item.allocationId)).map((item) => item.allocationId);
-  const comuta = (id: string) => setRefuzate((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  const alese = close.lessons.filter((item) => acceptate.includes(item.allocationId)).map((item) => item.allocationId);
+  const comuta = (id: string) => setAcceptate((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
 
   return (
     <section className="bf-cycle-close" aria-labelledby="bf-cycle-close-title">
@@ -49,10 +50,10 @@ export function CycleClosePanel({ data, onChange }: { data: AppData; onChange: (
         <div className="bf-cycle-close-lessons">
           <b>{t("Ce arată cheltuielile tale")}</b>
           {close.lessons.map((item) => (
-            <label key={item.allocationId} className={refuzate.includes(item.allocationId) ? "off" : ""}>
+            <label key={item.allocationId} className={acceptate.includes(item.allocationId) ? "" : "off"}>
               <input
                 type="checkbox"
-                checked={!refuzate.includes(item.allocationId)}
+                checked={acceptate.includes(item.allocationId)}
                 onChange={() => comuta(item.allocationId)}
               />
               <span>
