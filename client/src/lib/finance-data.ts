@@ -1024,7 +1024,8 @@ const allocationPlanSlice = (data: AppData, item: BudgetAllocation) => {
 
 export const planAllocationMath = (data: AppData) => {
   const plan = data.settings.salaryPlan;
-  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.map((source) => source.id);
+  // Tichetele de masă nu se pun în plicuri: fără surse alese, ele nu intră în „nerepartizați”.
+  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.filter((source) => source.kind !== "meal").map((source) => source.id);
   const availableSources = data.settings.paymentSources
     .filter((source) => sourceIds.includes(source.id))
     .reduce((sum, source) => sum + sourceBalance(data, source.id), 0);

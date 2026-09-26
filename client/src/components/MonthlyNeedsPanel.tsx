@@ -162,7 +162,9 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
   const addNeed = (preset: (typeof PRESETS)[number]) => { const id = newId("need"); setOpenNew(id); save({ needs: [...(plan.needs || []), { id, ...preset, min: 0, max: 0, reserve: "max", updatedAt: now() }] }); };
   const addIncome = () => save({ incomes: [...(plan.incomes || []), { id: newId("income"), memberId: members[incomes.length % Math.max(1, members.length)]?.id || members[0]?.id || "", label: t("Salariu"), amount: 0, day: 10, updatedAt: now() }] });
   const monthlyIn = expectedMonthlyIncome(incomes);
-  const monthlyOut = expectedMonthlyNeeds(needs);
+  /** Plățile rare (RCA, impozit, Crăciun) se strâng și ele lunar: intră în „pleacă”. */
+  const monthlyRare = rarePlan(data, isoToday()).total;
+  const monthlyOut = expectedMonthlyNeeds(needs) + monthlyRare;
   const pending = pendingSplitIncome(data, isoToday());
   const adjustments = needAdjustments(data, isoToday());
   const recurring = data.recurring.filter((item) => item.active);
@@ -228,7 +230,9 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
       )}
       {(monthlyIn > 0 || monthlyOut > 0) && (
         <p className={`bf-needs-total${monthlyOut > monthlyIn && monthlyIn > 0 ? " is-over" : ""}`}>
-          {t("Într-o lună obișnuită: intră {income}, pleacă ~{needs} (mâncarea socotită pe 4,33 săptămâni).", { income: money(monthlyIn), needs: money(monthlyOut) })}{" "}
+          {monthlyRare > 0
+            ? t("Într-o lună obișnuită: intră {income}, pleacă ~{needs}, cu ~{rare} strânși pentru plăți rare (mâncarea socotită pe 4,33 săptămâni).", { income: money(monthlyIn), needs: money(monthlyOut), rare: money(monthlyRare) })
+            : t("Într-o lună obișnuită: intră {income}, pleacă ~{needs} (mâncarea socotită pe 4,33 săptămâni).", { income: money(monthlyIn), needs: money(monthlyOut) })}{" "}
           {monthlyIn > 0 ? (monthlyOut > monthlyIn ? t("Lipsesc ~{amount}: revizuiește cheltuielile sau rezervă media.", { amount: money(monthlyOut - monthlyIn) }) : t("Rămân ~{amount} liberi.", { amount: money(monthlyIn - monthlyOut) })) : ""}
         </p>
       )}

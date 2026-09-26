@@ -22,6 +22,7 @@ import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 import { useLanguage } from "@/hooks/use-language";
 import { askConfirm, showNotice } from "@/lib/confirm-dialog";
 import { getActiveFamilyRoom } from "@/lib/billing";
+import { writeAutoBackup } from "@/lib/auto-backup";
 
 const TrustCenter = lazy(() => import("@/components/TrustCenter").then((module) => ({ default: module.TrustCenter })));
 const PremiumStudio = lazy(() => import("@/components/PremiumStudio").then((module) => ({ default: module.PremiumStudio })));
@@ -333,6 +334,8 @@ export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onCh
    * omului. „Salvat” trebuie să spună unde, altfel butonul pare că n-a făcut nimic.
    */
   const exportBackup = (intent: BackupIntent) => downloadBackup(data, intent).then((result) => {
+    // Orice copie reușită ține loc de copia săptămânii: mementoul de pe Astăzi nu mai rămâne.
+    if (result.how === "shared" || result.how === "saved" || result.how === "downloaded") writeAutoBackup({ lastAt: new Date().toISOString(), lastError: undefined });
     if (result.how === "shared") void showNotice(result.fallback ? t(BACKUP_SAVE_FALLBACK) : t("Backupul a fost trimis către aplicația aleasă."));
     else if (result.how === "saved") void showNotice(t("Backupul a fost scris în {path}. Îl găsești cu aplicația Fișiere.", { path: result.path }));
     else if (result.how === "downloaded") void showNotice(t("Backupul a fost salvat în descărcări."));

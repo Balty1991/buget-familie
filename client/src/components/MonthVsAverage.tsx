@@ -6,7 +6,8 @@ import { lei } from "@/lib/money-format";
 
 export function MonthVsAverage({ data }: { data: AppData }) {
   const { rows, months } = monthVsAverage(data);
-  if (!rows.length) return null;
+  // O singură lună (poate de câteva zile) nu e o medie: totul ieșea roșu. Apare de la două luni.
+  if (!rows.length || months < 2) return null;
   const top = Math.max(1, ...rows.flatMap((row) => [row.thisMonth, row.average]));
   return (
     <section className="bf-month-vs-average" aria-labelledby="bf-mva-title">

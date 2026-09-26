@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BellRing, BookOpen, CalendarClock, CalendarDays, ChevronRight, Goal, LayoutDashboard, Search, PiggyBank, Plus, ReceiptText, WalletCards, X } from "lucide-react";
-import { type AppData } from "@/lib/finance-data";
+import { formatDate, type AppData } from "@/lib/finance-data";
+import { lei } from "@/lib/money-format";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { type MainView } from "@/pages/home-kit";
@@ -27,18 +28,18 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
   ];
   const dockDuplicates = new Set(["plan", "goals", "journal", "obligations", "insights", "habits", "calendar"]);
   const visible = actions.filter((action) => matchCommandQuery(`${action.label} ${action.detail}`, query) && (query.trim() || !dockDuplicates.has(action.id)));
+  const envelopeLabel = (item: { allocationId?: string }) => data?.settings.salaryPlan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "";
   const ledgerHits = query.trim()
-    ? searchLedgerHits(data?.transactions || [], query, 6)
-    : (data?.transactions || []).slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5).map((item) => ({ id: item.id, title: item.title, category: item.category, person: item.person }));
+    ? searchLedgerHits(data?.transactions || [], query, 6, envelopeLabel)
+    : (data?.transactions || []).slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   const openLedger = (term: string) => {
     writeJournalQuery(window.sessionStorage, term);
     onGo("journal");
     onClose();
   };
   useEffect(() => {
-    const desktop = window.matchMedia("(pointer: fine)").matches;
-    if (desktop) inputRef.current?.focus();
-    else dialogRef.current?.focus();
+    // Câmpul primește focusul direct: cine deschide căutarea vrea să scrie.
+    inputRef.current?.focus();
   }, []);
   const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget | null }) => {
     if (event.target === event.currentTarget) onClose();
@@ -49,7 +50,7 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
         <header>
           <div>
             <p className="bf-kicker">{t("CĂUTARE")}</p>
-            <h2 id="bf-command-title">{query.trim() ? t("Ce vrei să faci?") : t("Caută o mișcare")}</h2>
+            <h2 id="bf-command-title">{t("Caută o mișcare")}</h2>
           </div>
           <button type="button" className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button>
         </header>
@@ -72,7 +73,7 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
           {ledgerHits.map((item) => (
             <button key={item.id} type="button" role="option" onClick={() => openLedger(item.title)}>
               <span className="bf-command-icon"><ReceiptText size={17} /></span>
-              <span><b>{item.title}</b><small>{item.category}{item.person ? ` · ${item.person}` : ""}</small></span>
+              <span><b>{item.title} · {item.kind === "income" ? "+" : "−"}{lei(item.amount)}</b><small>{formatDate(item.date, { day: "numeric", month: "short" })} · {t(item.category)}{item.person ? ` · ${item.person}` : ""}</small></span>
               <ChevronRight size={16} />
             </button>
           ))}

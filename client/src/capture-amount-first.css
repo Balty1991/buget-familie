@@ -9,6 +9,8 @@ html body .bf-quick-entry-scroll {
   flex-direction: column;
   gap: 12px;
 }
+/* Coloana nu strânge copiii: scurtăturile de salariu (derulare orizontală) ajungeau la 4 px înălțime. */
+html body .bf-quick-entry-scroll > * { flex-shrink: 0; }
 html body .bf-quick-entry-scroll > .bf-quick-entry-intro { display: none; }
 html body .bf-quick-entry-scroll > .bf-segment { order: -3; }
 html body .bf-quick-entry-scroll > .bf-declared-incomes { order: -2; }

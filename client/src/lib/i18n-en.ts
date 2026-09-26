@@ -3382,4 +3382,5 @@ export const en: Record<string, string> = {
   "Așteaptă venitul următor": "Waiting for the next income",
   "Suma e mai mică de un ban.": "The amount is less than one ban.",
   "Hârtie de registru": "Ledger paper",
+  "Într-o lună obișnuită: intră {income}, pleacă ~{needs}, cu ~{rare} strânși pentru plăți rare (mâncarea socotită pe 4,33 săptămâni).": "In a typical month: {income} comes in, ~{needs} goes out, including ~{rare} set aside for rare payments (food counted over 4.33 weeks).",
 };

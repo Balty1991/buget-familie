@@ -29,12 +29,21 @@ export type LedgerSearchItem = {
   date?: string;
 };
 
-export function searchLedgerHits<T extends LedgerSearchItem>(items: T[], query: string, limit = 6): T[] {
-  const needle = query.trim();
+/**
+ * Caută în registru și după plic (`extra`, de exemplu „Mâncare”), fără diacritice. Se oprește la
+ * primele rezultate, cele mai noi întâi: normalizarea întregului registru la fiecare tastă costa
+ * ~0,6 s pe un telefon slab.
+ */
+export function searchLedgerHits<T extends LedgerSearchItem>(items: T[], query: string, limit = 6, extra?: (item: T) => string): T[] {
+  const needle = foldRo(query.trim());
   if (!needle) return [];
-  return items.filter((item) =>
-    matchCommandQuery([item.title, item.category, item.person || "", String(item.amount), item.note || ""].join(" "), needle),
-  ).slice(0, limit);
+  const sorted = items.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const hits: T[] = [];
+  for (const item of sorted) {
+    if (foldRo([item.title, item.category, item.person || "", String(item.amount), item.note || "", extra?.(item) || ""].join(" ")).includes(needle)) hits.push(item);
+    if (hits.length >= limit) break;
+  }
+  return hits;
 }
 
 export function writeJournalQuery(storage: StorageLike, query: string) {
