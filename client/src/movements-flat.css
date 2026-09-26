@@ -109,3 +109,9 @@ html body .os-shell .bf-movements-ledger .bf-journal-quickbar {
   padding: 10px;
 }
 html body .os-shell .bf-movements-ledger .bf-journal-quickbar > .bf-movement-kind { grid-column: 1 / -1; }
+/* Glisarea pentru ștergere: rândul se mută, iar sub el apare roșul doar când e destul de departe. */
+html body .os-shell .bf-movements-ledger .bf-movement-day > div > article { touch-action: pan-y; }
+html body .os-shell .bf-movements-ledger .bf-movement-day > div > article.is-swipe-armed { box-shadow: inset -6px 0 0 var(--cf-danger, #a44e3e); }
+@media (prefers-reduced-motion: reduce) {
+  html body .os-shell .bf-movements-ledger .bf-movement-day > div > article { transition: none; }
+}
