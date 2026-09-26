@@ -25,6 +25,16 @@ const START_NEEDS: NeedDraft[] = [
   { label: "Neprevăzute", category: "Altele", cadence: "monthly", priority: "buffer", amount: "", on: false },
 ];
 
+/**
+ * Șabloane de gospodărie: o atingere bifează și completează sume orientative (lei, România 2026),
+ * pe care omul le corectează. Pornirea de la zero cerea 10 decizii înainte de primul rezultat.
+ */
+const HOUSEHOLD_TEMPLATES: Array<{ id: string; label: string; amounts: Record<string, string> }> = [
+  { id: "single", label: "Singur", amounts: { "Mâncare": "350", "Chirie": "1800", "Lumină": "150", "Abonamente": "80", "Taxi / transport": "200", "Neprevăzute": "200" } },
+  { id: "couple", label: "Cuplu", amounts: { "Mâncare": "600", "Chirie": "2200", "Lumină": "250", "Gaz": "150", "Apă": "80", "Abonamente": "120", "Taxi / transport": "300", "Neprevăzute": "300" } },
+  { id: "kids", label: "Familie cu copii", amounts: { "Mâncare": "900", "Rate bancă": "1400", "Lumină": "350", "Gaz": "200", "Apă": "120", "Abonamente": "150", "Grădiniță": "800", "Taxi / transport": "400", "Neprevăzute": "400" } },
+];
+
 /** Ziua următorului salariu: în luna asta, dacă n-a trecut, altfel luna viitoare. */
 export const nextDateForDay = (today: string, day: number) => {
   const base = new Date(`${today}T12:00:00`);
@@ -124,6 +134,15 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
         <>
           <h2 id="bf-setup-title">{t("Ce plătiți")} <em>{t("de obicei?")}</em></h2>
           <p>{t("Bifează ce aveți și scrie cam cât. Mâncarea e pe săptămână. Intervalele (300–400) le poți pune după, în Plan.")}</p>
+          <div className="bf-quick-category-picks bf-household-templates" role="group" aria-label={t("Pornește de la un șablon")}>
+            <span>{t("Pornește de la")}</span>
+            {HOUSEHOLD_TEMPLATES.map((template) => (
+              <button type="button" key={template.id} onClick={() => setNeeds((current) => current.map((item) => {
+                const amount = template.amounts[START_NEEDS.find((start) => t(start.label) === item.label)?.label || item.label];
+                return amount ? { ...item, on: true, amount } : { ...item, on: false, amount: "" };
+              }))}>{t(template.label)}</button>
+            ))}
+          </div>
           <div className="bf-needs-start-list">
             {needs.map((item, index) => (
               <div className={`bf-needs-start-need${item.on ? " is-on" : ""}`} key={item.label}>

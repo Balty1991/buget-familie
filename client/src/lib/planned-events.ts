@@ -279,6 +279,9 @@ export function plannedEventSuggestions(today: string): PlannedEventSuggestion[]
     { id: "suggest-1-iunie", name: t("1 Iunie"), date: fixed(6, 1), kind: "holiday", repeat: "yearly" },
     { id: "suggest-scoala", name: t("Început de școală"), date: fixed(9, 8), kind: "school", repeat: "yearly" },
     { id: "suggest-black-friday", name: t("Vinerea Neagră"), date: blackFriday(), kind: "other", repeat: "yearly" },
+    // Calendarul anual al unei gospodării din România: impozitul local are bonificație până pe 31 martie.
+    { id: "suggest-impozit", name: t("Impozit casă și mașină"), date: fixed(3, 31), kind: "other", repeat: "yearly" },
+    { id: "suggest-vacanta", name: t("Vacanța de vară"), date: fixed(7, 15), kind: "other", repeat: "yearly" },
   ];
 }
 
