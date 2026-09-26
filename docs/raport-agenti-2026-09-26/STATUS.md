@@ -17,9 +17,9 @@
 | D10 | Redenumirea familiei nu se propagă | ✅ `33f7b6e` |
 | D11 | Pietre de mormânt tăiate la 500 | ✅ `33f7b6e` |
 | D12 | adoptOutsideExpenses la fiecare randare | ✅ `33f7b6e` |
-| D13 | Cifra „pe zi” cu 5 reguli de rotunjire | ⏳ |
+| D13 | Cifra „pe zi” cu 5 reguli de rotunjire | ✅ `c29cfac` |
 | D14 | Contor zilnic AI într-un singur document | ✅ `33f7b6e` |
-| D15 | Teste fără verificare de tipuri, CI incomplet, firebase-tools nefixat | parțial ✅ `2bab932`, ⏳ tipurile din teste |
+| D15 | Teste fără verificare de tipuri, CI incomplet, firebase-tools nefixat | ✅ `2bab932`, `3e874ab` |
 | D16 | Fișiere mari, teste lipsă pentru sync | ⏳ test cap-coadă pentru D1 |
 
 ## Securitate (security-report.md)
@@ -52,13 +52,13 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | 2 | Două salarii în zile diferite | ✅ `256cd3f` |
 | 3 | Benzina în Mâncare | ✅ `7bb943d` |
 | 4 | 358 lei/zi cu Mâncare 0 | ✅ `7bb943d` |
-| 5 | Calendarul fără facturi | ⏳ |
+| 5 | Calendarul fără facturi | ✅ `d4b7559` |
 | 6 | Scurtături de salariu tăiate | ✅ `3df805e` |
 | 7 | „bani liberi” | ✅ `7bb943d` |
-| 8 | Ajustarea de sold ca venit | ⏳ |
+| 8 | Ajustarea de sold ca venit | ✅ `112502d` |
 | 9 | Tichetele în „nerepartizați” | ✅ `3df805e`; ⏳ tichete pe membru |
-| 10 | Două cifre pe zi (banner) | ⏳ |
-| 11 | Săptămâni de 9 zile, S1 fantomă | ⏳ |
+| 10 | Două cifre pe zi (banner) | ✅ `7bb943d` |
+| 11 | Săptămâni de 9 zile, S1 fantomă | ✅ `357780e` |
 | 12 | Plăți rare în rezumat | ✅ `3df805e` |
 | 13 | Analiză după o lună | ✅ `3df805e` |
 | 14 | Căutarea | ✅ `3df805e` |
