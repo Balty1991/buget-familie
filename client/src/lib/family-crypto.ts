@@ -3,6 +3,7 @@
  * Parola nu se persistă; doar un pachet AES-GCM deja criptat părăsește telefonul.
  * Pe telefon poate rămâne cheia PBKDF2 neexportabilă (vezi family-session.ts).
  */
+import { mergePlanScalars } from "@/lib/plan-scalars";
 import {
   buildPendingReviewMeta,
   normalizeAppData,
@@ -432,6 +433,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
   const conflicts = merged.conflicts.filter((item) => allocations.some((allocation) => allocation.id === item.allocationId));
   const salaryPlan = {
     ...salaryPlanBase,
+    ...mergePlanScalars(localPlan, remotePlan),
     allocations,
     transfers: mergeById(localPlan.transfers || [], remotePlan.transfers || []).filter((item) => alive("transfers", item.id, item.createdAt)),
     weekTransfers: mergeById(localPlan.weekTransfers || [], remotePlan.weekTransfers || []).filter((item) => alive("weekTransfers", item.id, item.createdAt)),

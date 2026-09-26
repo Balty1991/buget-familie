@@ -2,6 +2,7 @@
  * Hydrate LS↔IDB + persist debounce — extras din Home ca să rămână orchestrator.
  */
 import { recordRemovals } from "@/lib/sync-removals";
+import { stampPlanScalars } from "@/lib/plan-scalars";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { autoPostDueRecurring, adoptOutsideExpenses, createEmptyAppData, normalizeAppData, type AppData } from "@/lib/finance-data";
 import {
@@ -37,7 +38,7 @@ export function usePersistAppData(
   const applyData: typeof setData = (value) => {
     if (!storageHydrated.current) editedBeforeHydrate.current = true;
     // Ce dispare din plan sau din setări lasă piatră de mormânt, ca sincronizarea să nu-l readucă.
-    setData((previous) => recordRemovals(previous, typeof value === "function" ? value(previous) : value));
+    setData((previous) => { const next = typeof value === "function" ? value(previous) : value; return stampPlanScalars(previous, recordRemovals(previous, next)); });
   };
 
   useEffect(() => {
