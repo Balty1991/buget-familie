@@ -69,11 +69,22 @@ export function useThemeChrome() {
   useEffect(() => {
     const root = document.documentElement;
     const previous = previousThemeRef.current;
-    root.classList.remove(...ALL_THEME_CLASS_IDS.map((id) => `theme-${id}`));
-    root.classList.add(`theme-${activeTheme}`);
-    root.classList.toggle("dark", !LIGHT_THEMES.includes(activeTheme));
-    syncAndroidChrome();
-    if (themeTransitionReady.current && previous !== activeTheme) {
+    const apply = () => {
+      root.classList.remove(...ALL_THEME_CLASS_IDS.map((id) => `theme-${id}`));
+      root.classList.add(`theme-${activeTheme}`);
+      root.classList.toggle("dark", !LIGHT_THEMES.includes(activeTheme));
+      syncAndroidChrome();
+    };
+    const changing = themeTransitionReady.current && previous !== activeTheme;
+    // Unde browserul știe View Transitions, tema nouă se topește peste cea veche dintr-o singură bucată.
+    const viewTransition = (document as Document & { startViewTransition?: (update: () => void) => unknown }).startViewTransition;
+    if (changing && viewTransition && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      viewTransition.call(document, apply);
+      previousThemeRef.current = activeTheme;
+      return;
+    }
+    apply();
+    if (changing) {
       root.classList.remove("theme-transitioning");
       root.classList.add("theme-transitioning");
       const timer = window.setTimeout(() => root.classList.remove("theme-transitioning"), 420);

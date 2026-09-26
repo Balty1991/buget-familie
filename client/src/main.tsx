@@ -20,6 +20,7 @@ import "./ui-modern-pass.css";
 import "./tokens.css";
 import "./high-contrast.css";
 import "./a11y-floor.css";
+import "./motion.css";
 import "./today.css";
 import "./movements.css";
 import "./plan.css";

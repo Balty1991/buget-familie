@@ -4,6 +4,7 @@ import { CashNote, PaydayStrip } from "@/components/LedgerArt";
 import { envelopeBurnPace, envelopeLane, lastDaysPulse, liquidSafeToSpend, paydayTrack } from "@/lib/household-insights";
 import { type AppData } from "@/lib/finance-data";
 import { t } from "@/lib/i18n";
+import { PaidCheck } from "@/components/PaidCheck";
 import { ChartTip } from "@/components/ChartFrame";
 import { chartBarHeight, leiLabel } from "@/lib/chart-ui";
 import { lei } from "@/lib/money-format";
@@ -104,7 +105,7 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
                       <span>{t("din {amount}", { amount: money(entry.budget) })}{entry.scope === "week" && entry.weekIndex ? ` · ${t("săptămâna {index}", { index: entry.weekIndex })}` : ""}</span>
                     </small>
                     {entry.fixed && entry.state !== "over" ? (
-                      <span className={`bf-plic-pace ${entry.paid ? "pace-paid" : "pace-due"}`}>{entry.paid ? t("✓ Plătit") : t("de plătit")}</span>
+                      <span className={`bf-plic-pace ${entry.paid ? "pace-paid" : "pace-due"}`}>{entry.paid ? <PaidCheck /> : t("de plătit")}</span>
                     ) : burn && (
                       <span className={`bf-plic-pace pace-${burn.pace}`} title={burn.reason}>
                         {paceLabel(burn.pace)}

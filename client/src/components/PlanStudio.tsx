@@ -31,6 +31,7 @@ import { WeekBand } from "@/components/WeekBand";
 import { activeIncomes } from "@/lib/monthly-needs";
 import "../monthly-needs.css";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
+import { PaidCheck } from "@/components/PaidCheck";
 import { leiLabel } from "@/lib/chart-ui";
 import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-prefs";
 import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/EnvelopeConflictBanner";
@@ -403,12 +404,12 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     <section className="bf-envelope-list-first" aria-labelledby="bf-envelope-list-title">
       <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">{t("PLICURILE TALE")}</p><h2 id="bf-envelope-list-title">{envelopesLabel(envelopes.length)} · {money(allocated)}</h2></div><button type="button" className="bf-primary bf-add-envelope" onClick={() => { resetAllocationBuilder(); openBuilder(); }}><Plus size={17} /> {t("Plic")}</button></div>
       <div className="bf-allocation-list bf-envelope-desk" aria-live="polite">
-        {envelopes.map(({ item, budget, remaining, spent, usage, state, week, weeks, fixed, paid }) => <article key={item.id} className={state}>
+        {envelopes.map(({ item, budget, remaining, spent, usage, state, week, weeks, fixed, paid }, index) => <article key={item.id} className={state} style={{ "--bf-i": Math.min(index, 8) } as React.CSSProperties}>
           <div className="bf-envelope-portrait" aria-hidden="true"><EnvelopeMark remaining={Math.max(0, 1 - usage)} state={state} size={58} /></div>
           <div className="bf-allocation-list-heading"><div className="bf-allocation-flags">{(() => {
             // O singură etichetă, nu două care se contrazic: fixele au „de plătit / ✓ Plătit”, restul „în ritm / în urmă / atenție / depășit”.
             const burn = fixed ? undefined : burnById.get(item.id);
-            const label = state === "over" ? t("depășit") : paid ? t("✓ Plătit") : fixed ? t("de plătit") : state === "watch" ? t("atenție") : burn?.pace === "behind" ? t("în urmă") : t("în ritm");
+            const label = state === "over" ? t("depășit") : paid ? <PaidCheck /> : fixed ? t("de plătit") : state === "watch" ? t("atenție") : burn?.pace === "behind" ? t("în urmă") : t("în ritm");
             const tone = state === "over" ? "over" : paid ? "healthy paid" : state === "watch" || burn?.pace === "behind" ? "watch" : "healthy";
             return <span className={`bf-allocation-state ${tone}`} title={burn?.reason}>{label}</span>;
           })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>

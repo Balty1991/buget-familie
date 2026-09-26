@@ -1,0 +1,17 @@
+/*
+ * Mișcări mici, cu sens: plicurile se umplu în cascadă, bifa „Plătit” se desenează,
+ * tema nouă se topește peste cea veche. Toate se opresc la „reduce motion”.
+ */
+@keyframes bf-envelope-fill { from { transform: scaleX(0); } }
+.bf-envelope-list-first .bf-envelope-meter em { transform-origin: left center; animation: bf-envelope-fill 600ms cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--bf-i, 0) * 70ms); }
+
+.bf-paid-check { display: inline-flex; align-items: center; gap: 3px; color: inherit; }
+.bf-paid-check svg { flex: none; overflow: visible; }
+.bf-paid-check path { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 16; stroke-dashoffset: 0; animation: bf-check-draw 420ms ease-out 80ms both; }
+@keyframes bf-check-draw { from { stroke-dashoffset: 16; } }
+
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 320ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bf-envelope-list-first .bf-envelope-meter em, .bf-paid-check path { animation: none; }
+}

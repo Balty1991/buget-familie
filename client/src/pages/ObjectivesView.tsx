@@ -9,6 +9,7 @@ import { allocationStatus, debtPaymentHistory, isoDate, isoToday, pendingRecurri
 import { BudgetBar, dateText, money } from "@/pages/home-kit";
 import { amortize, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type PayoffStrategy } from "@/lib/debt-plan";
 import { getLocale, monthsLabel, t } from "@/lib/i18n";
+import { PaidCheck } from "@/components/PaidCheck";
 import { monthTitle, savingsSuggestion } from "@/lib/household-insights";
 import { upcomingPlannedEvents } from "@/lib/planned-events";
 import { activeNeeds, reserveOf } from "@/lib/monthly-needs";
@@ -245,7 +246,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
               <li key={need.id}>
                 <span><b>{need.label}</b><small>{money(reserveOf(need))} {t("pe lună")}</small></span>
                 <strong className={status?.paid ? "paid" : status && status.remaining < 0 ? "over" : ""}>
-                  {!status ? t("fără plic încă") : status.paid ? t("✓ Plătit") : status.remaining < 0 ? t("depășit") : status.spent > 0 ? t("mai sunt {amount}", { amount: money(status.remaining) }) : t("de plătit")}
+                  {!status ? t("fără plic încă") : status.paid ? <PaidCheck /> : status.remaining < 0 ? t("depășit") : status.spent > 0 ? t("mai sunt {amount}", { amount: money(status.remaining) }) : t("de plătit")}
                 </strong>
               </li>
             ))}
