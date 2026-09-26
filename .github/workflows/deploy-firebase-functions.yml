@@ -121,8 +121,10 @@ jobs:
           set -uo pipefail
           for group in aiGuideQuota playVerifyQuota playRtdnQuota; do
             gcloud firestore fields ttls update expireAt --collection-group="$group" --enable-ttl --async --project "$FIREBASE_PROJECT_ID" --quiet \
-              || echo "::warning::TTL pentru $group nu s-a putut porni (rolul Cloud Datastore Owner / Firestore: Firebase Console → Firestore → TTL)."
+              || echo "::warning::TTL pentru $group nu s-a putut porni (rolul Cloud Datastore Index Admin pe contul de serviciu, sau Firebase Console → Firestore → TTL)."
           done
+          echo "Politici TTL active:"
+          gcloud firestore fields ttls list --project "$FIREBASE_PROJECT_ID" --quiet || true
 
       - name: Deploy Firebase Functions
         run: npx --yes firebase-tools@latest deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
