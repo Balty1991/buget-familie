@@ -20,9 +20,10 @@ const toIso = (ms: number) => {
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 /**
- * Tranșele unui plic pe felii de 7 zile. Cu `weekly` (plicul are o sumă pe săptămână, „600”),
- * fiecare săptămână întreagă primește exact atât, în lei întregi, iar ultima tranșă ia restul
- * (fără 541,94 pe săptămână). Fără ea, suma se împarte pe zile, ca până acum.
+ * Tranșele unui plic pe săptămâni calendaristice, de luni până duminică (așa gândește familia
+ * săptămâna). Cu `weekly` (plicul are o sumă pe săptămână, „600”), fiecare săptămână întreagă
+ * primește exact atât, în lei întregi; o săptămână începută (salariul vine vineri) primește
+ * partea zilelor ei, iar ultima tranșă ia restul. Fără `weekly`, suma se împarte pe zile.
  */
 export function calendarBudget(total: number, start: string, end: string, weekly?: number): CalendarBudget | undefined {
   const first = atNoon(start); const last = atNoon(end); const safeTotal = Number.isFinite(total) ? Math.max(0, total) : 0;
@@ -34,7 +35,9 @@ export function calendarBudget(total: number, start: string, end: string, weekly
   let cursor = first;
   let distributed = 0;
   while (cursor <= last) {
-    const sliceEnd = Math.min(cursor + 6 * dayMs, last);
+    // Săptămâni calendaristice, luni–duminică: prima și ultima pot fi scurte și primesc partea lor pe zile.
+    const toSunday = (7 - new Date(cursor).getUTCDay()) % 7;
+    const sliceEnd = Math.min(cursor + toSunday * dayMs, last);
     const sliceDays = Math.round((sliceEnd - cursor) / dayMs) + 1;
     const amount = sliceEnd === last
       ? roundMoney(Math.max(0, safeTotal - distributed))

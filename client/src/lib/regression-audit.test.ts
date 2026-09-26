@@ -172,9 +172,9 @@ describe("aceeași cifră pe plic", () => {
   it("plicul cu ritm săptămânal arată restul tranșei, nu tot ciclul", () => {
     const data = createEmptyAppData();
     const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente" };
-    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-09-28", allocations: [food] };
-    data.transactions = [{ id: "t1", title: "Lidl", amount: 350, kind: "expense", category: "Alimente", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: "2026-09-02", allocationId: "food" }];
-    const shown = envelopeDecisionStatus(data, food, "2026-09-02");
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-08-31", nextPayday: "2026-09-27", allocations: [food] };
+    data.transactions = [{ id: "t1", title: "Lidl", amount: 350, kind: "expense", category: "Alimente", source: "Card debit", sourceId: "source-debit", person: "Eu", memberId: "member-me", date: "2026-09-01", allocationId: "food" }];
+    const shown = envelopeDecisionStatus(data, food, "2026-09-01");
     expect(shown.scope).toBe("week");
     expect(shown.remaining).toBe(-50);
     expect(allocationStatus(data, food).remaining).toBe(850);

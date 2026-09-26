@@ -32,13 +32,13 @@ const me = "member-me";
 const house = (): AppData => {
   const data = createEmptyAppData();
   data.settings.paymentSources = [{ id: "card", name: "Card debit", kind: "card", memberId: me, openingBalance: 0 }];
-  data.settings.salaryPlan.periodStart = "2026-09-12";
-  data.settings.salaryPlan.nextPayday = "2026-09-25";
+  data.settings.salaryPlan.periodStart = "2026-09-14";
+  data.settings.salaryPlan.nextPayday = "2026-09-27";
   data.settings.salaryPlan.sourceIds = ["card"];
   return data;
 };
 
-const addIncome = (data: AppData, amount = 500, date = "2026-09-13") => {
+const addIncome = (data: AppData, amount = 500, date = "2026-09-15") => {
   data.transactions.push({
     id: `in-${amount}`, title: "Venit rapid", amount, kind: "income", category: "Venit",
     source: "Card debit", sourceId: "card", person: "Eu", memberId: me, date,
@@ -62,7 +62,7 @@ const addExpense = (data: AppData, amount: number, extra: Partial<AppData["trans
     sourceId: "card",
     person: "Eu",
     memberId: me,
-    date: extra.date || "2026-09-13",
+    date: extra.date || "2026-09-15",
     allocationId: extra.allocationId,
     outsideChosen: extra.outsideChosen,
   });
@@ -70,7 +70,7 @@ const addExpense = (data: AppData, amount: number, extra: Partial<AppData["trans
 
 describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
   it("împarte 500 pe 2 săptămâni de 250, fără să creeze un nume-gunoi", () => {
-    const [intent] = parseAssistantMessage("Împarte cei 500 disponibili în plicuri de alimente pe 2 săptămâni", { asOf: "2026-09-13" });
+    const [intent] = parseAssistantMessage("Împarte cei 500 disponibili în plicuri de alimente pe 2 săptămâni", { asOf: "2026-09-15" });
     expect(intent.intent).toMatchObject({ kind: "envelope", label: "Alimente", amount: 500, weeklyLimit: 250, weeklyPace: true });
   });
 
@@ -105,11 +105,11 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     const data = house();
     addIncome(data);
     addEnvelope(data);
-    const { winner } = decide(understand("cheltuieli taxi 20 lei", data, { asOf: "2026-09-13" }));
+    const { winner } = decide(understand("cheltuieli taxi 20 lei", data, { asOf: "2026-09-15" }));
     expect(["expense", "intents"]).toContain(winner?.kind);
     const fromIntent = winner?.kind === "intents" && winner.intents[0].intent.kind === "expense"
       ? winner.intents[0].intent
-      : { amount: 20, title: "Taxi", category: "Transport", date: "2026-09-13" };
+      : { amount: 20, title: "Taxi", category: "Transport", date: "2026-09-15" };
     const offer = winner?.kind === "expense" ? winner.proposal : buildExpenseOffer(data, fromIntent, emptyGuideMemory());
     const labels = offer.choices.map((item) => item.label).join(" | ");
     expect(labels).not.toMatch(/nealocat|afara/i);
@@ -130,7 +130,7 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     const data = house();
     addIncome(data);
     addEnvelope(data);
-    const offer = buildExpenseOffer(data, { amount: 20, title: "Taxi", category: "Transport", date: "2026-09-20" }, emptyGuideMemory());
+    const offer = buildExpenseOffer(data, { amount: 20, title: "Taxi", category: "Transport", date: "2026-09-22" }, emptyGuideMemory());
     expect(offer.choices[0].update.kind === "expense" && offer.choices[0].update.fromWeekIndex).toBe(2);
     expect(offer.choices.some((item) => item.update.kind === "expense" && item.update.fromWeekIndex === 1)).toBe(true);
     expect(offer.choices[0].label).toMatch(/S2/);
@@ -140,7 +140,7 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     const data = house();
     addIncome(data);
     addEnvelope(data);
-    addExpense(data, 20, { allocationId: "env-food", date: "2026-09-13" });
+    addExpense(data, 20, { allocationId: "env-food", date: "2026-09-15" });
     const food = data.settings.salaryPlan.allocations[0];
     expect(sourceBalance(data, "card")).toBe(480);
     expect(allocationStatus(data, food)).toMatchObject({ budget: 500, spent: 20, remaining: 480 });
@@ -173,7 +173,7 @@ describe("scenariul casei: 500 lei, plic Alimente pe 2 săptămâni", () => {
     addIncome(data);
     addEnvelope(data);
     const moved = transferBetweenWeeks(data, { allocationId: "env-food", fromWeekIndex: 2, toWeekIndex: 1, amount: 20 })!;
-    addExpense(moved, 20, { allocationId: "env-food", date: "2026-09-13" });
+    addExpense(moved, 20, { allocationId: "env-food", date: "2026-09-15" });
     const weeks = allocationWeeksStatus(moved, moved.settings.salaryPlan.allocations[0]);
     expect(weeks[0]).toMatchObject({ index: 1, budget: 270, spent: 20, remaining: 250 });
     expect(weeks[1]).toMatchObject({ index: 2, budget: 230, spent: 0, remaining: 230 });
@@ -266,13 +266,13 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     const data = house();
     addIncome(data);
     addEnvelope(data);
-    addExpense(data, 300, { allocationId: "env-food", category: "Alimente", title: "Lidl", date: "2026-09-13" });
+    addExpense(data, 300, { allocationId: "env-food", category: "Alimente", title: "Lidl", date: "2026-09-15" });
     const food = data.settings.salaryPlan.allocations[0];
     const weeks = allocationWeeksStatus(data, food);
     expect(weeks[0].remaining).toBe(-50);
     expect(weeks[1].remaining).toBe(250);
     expect(allocationStatus(data, food).remaining).toBe(200);
-    const shown = envelopeDecisionStatus(data, food, "2026-09-13");
+    const shown = envelopeDecisionStatus(data, food, "2026-09-15");
     expect(shown.scope).toBe("week");
     expect(shown.remaining).toBe(-50);
     expect(planAllocationMath(data).unrepartized).toBe(0);
@@ -285,7 +285,7 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
       id: "env-flex", label: "Taxi ocazional", category: "Transport", amount: 500, sourceId: "card", memberId: me, weeklyPace: false,
     }];
     addExpense(data, 20, { allocationId: "env-flex", category: "Transport" });
-    const shown = envelopeDecisionStatus(data, data.settings.salaryPlan.allocations[0], "2026-09-13");
+    const shown = envelopeDecisionStatus(data, data.settings.salaryPlan.allocations[0], "2026-09-15");
     expect(shown.scope).toBe("cycle");
     expect(shown.remaining).toBe(480);
     expect(planAllocationMath(data).unrepartized).toBe(0);
@@ -295,8 +295,8 @@ describe("ritmul săptămânal nu se amestecă cu totalul plicului", () => {
     const data = house();
     addIncome(data);
     addEnvelope(data);
-    addExpense(data, 30, { id: "a", allocationId: "env-food", category: "Alimente", title: "Pâine", date: "2026-09-13" });
-    addExpense(data, 20, { id: "b", allocationId: "env-food", category: "Alimente", title: "Lapte", date: "2026-09-14" });
+    addExpense(data, 30, { id: "a", allocationId: "env-food", category: "Alimente", title: "Pâine", date: "2026-09-15" });
+    addExpense(data, 20, { id: "b", allocationId: "env-food", category: "Alimente", title: "Lapte", date: "2026-09-16" });
     const weeks = allocationWeeksStatus(data, data.settings.salaryPlan.allocations[0]);
     expect(weeks[0]).toMatchObject({ spent: 50, remaining: 200 });
     expect(weeks[1]).toMatchObject({ spent: 0, remaining: 250 });
@@ -494,11 +494,11 @@ describe("reportul săptămânii (utilizator #19)", () => {
   it("S2 arată 617,50 când S1 s-a încheiat cu 17,50 rămași", async () => {
     const { vi } = await import("vitest");
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-10-17T10:00:00"));
+    vi.setSystemTime(new Date("2026-10-19T10:00:00"));
     try {
       const data = createEmptyAppData();
-      data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-10-10", nextPayday: "2026-11-10", weekCarryOver: true, allocations: [{ id: "f", label: "Mâncare", amount: 2657, category: "Alimente", weeklyPace: true, weeklyAmount: 600 }] };
-      data.transactions = [{ id: "x", title: "Lidl", amount: 582.5, kind: "expense", category: "Alimente", sourceId: data.settings.paymentSources[0].id, source: "Card", person: "Eu", date: "2026-10-12", allocationId: "f" }];
+      data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-10-12", nextPayday: "2026-11-12", weekCarryOver: true, allocations: [{ id: "f", label: "Mâncare", amount: 2657, category: "Alimente", weeklyPace: true, weeklyAmount: 600 }] };
+      data.transactions = [{ id: "x", title: "Lidl", amount: 582.5, kind: "expense", category: "Alimente", sourceId: data.settings.paymentSources[0].id, source: "Card", person: "Eu", date: "2026-10-14", allocationId: "f" }];
       const weeks = allocationWeeksStatus(data, data.settings.salaryPlan.allocations[0]);
       expect(weeks[1]).toMatchObject({ index: 2, budget: 617.5, carry: 17.5 });
     } finally {

@@ -259,7 +259,7 @@ describe("registrul financiar Buget Familie", () => {
     const data = createEmptyAppData();
     const [card] = data.settings.paymentSources;
     const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente", sourceId: card.id, weeklyPace: true as const };
-    data.settings.salaryPlan = { periodStart: "2026-09-01", nextPayday: "2026-09-28", sourceIds: [card.id], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-31", nextPayday: "2026-09-27", sourceIds: [card.id], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
     const before = allocationWeeksStatus(data, food);
     expect(before[0]).toMatchObject({ index: 1, remaining: 300 });
     expect(before[1]).toMatchObject({ index: 2, remaining: 300 });
@@ -273,7 +273,7 @@ describe("registrul financiar Buget Familie", () => {
       source: card.name,
       memberId: "member-me",
       person: "Eu",
-      date: "2026-09-13",
+      date: "2026-09-12",
       allocationId: food.id,
     }, 1);
     expect(next.transactions[0]).toMatchObject({ id: "taxi", amount: 20, allocationId: food.id });
@@ -287,7 +287,7 @@ describe("registrul financiar Buget Familie", () => {
     const data = createEmptyAppData();
     const [card] = data.settings.paymentSources;
     const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente", sourceId: card.id, weeklyPace: true as const };
-    data.settings.salaryPlan = { periodStart: "2026-09-01", nextPayday: "2026-09-28", sourceIds: [card.id], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-31", nextPayday: "2026-09-27", sourceIds: [card.id], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
     const spend = {
       id: "taxi-over",
       title: "Taxi",
@@ -298,7 +298,7 @@ describe("registrul financiar Buget Familie", () => {
       source: card.name,
       memberId: "member-me",
       person: "Eu",
-      date: "2026-09-13",
+      date: "2026-09-12",
       allocationId: food.id,
     };
     expect(() => commitLedgerEntry(data, spend, 1)).toThrow(/destui bani rămași/i);
@@ -342,8 +342,8 @@ describe("registrul financiar Buget Familie", () => {
   it("mută bani dintr-o tranșă săptămânală în alta a aceluiași plic, fără să depășească ce a mai rămas", () => {
     const data = createEmptyAppData(); const [card] = data.settings.paymentSources;
     const food = { id: "food", label: "Alimente", amount: 1200, category: "Alimente", sourceId: card.id };
-    data.settings.salaryPlan = { periodStart: "2026-09-01", nextPayday: "2026-09-28", sourceIds: [], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
-    data.transactions = [{ id: "week1-spend", title: "Alimente", amount: 350, kind: "expense", category: "Alimente", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-09-02", allocationId: food.id }];
+    data.settings.salaryPlan = { periodStart: "2026-08-31", nextPayday: "2026-09-27", sourceIds: [], totalLimit: 1200, weeklyLimit: 0, allocations: [food], transfers: [] };
+    data.transactions = [{ id: "week1-spend", title: "Alimente", amount: 350, kind: "expense", category: "Alimente", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-09-01", allocationId: food.id }];
     const weeksBefore = allocationWeeksStatus(data, food);
     expect(weeksBefore).toHaveLength(4);
     expect(weeksBefore[0]).toMatchObject({ index: 1, budget: 300, spent: 350, remaining: -50, state: "over" });
@@ -643,18 +643,18 @@ describe("registrul financiar Buget Familie", () => {
     ]);
   });
   it("împarte un venit în patru săptămâni calendaristice egale", () => {
-    const plan = calendarBudget(2400, "2026-09-01", "2026-09-28");
+    const plan = calendarBudget(2400, "2026-08-31", "2026-09-27");
     expect(plan).toMatchObject({ total: 2400, days: 28, exactWeeks: 4, weeklyAmount: 600 });
     expect(plan?.weeks).toHaveLength(4);
     expect(plan?.weeks.map((week) => week.amount)).toEqual([600, 600, 600, 600]);
   });
   it("împarte transparent patru săptămâni și jumătate, păstrând totalul exact", () => {
-    const plan = calendarBudget(2400, "2026-09-01", "2026-10-02");
+    const plan = calendarBudget(2400, "2026-08-31", "2026-10-01");
     expect(plan).toMatchObject({ days: 32, exactWeeks: 32 / 7, weeklyAmount: 525 });
     expect(plan?.weeks).toHaveLength(5);
     expect(plan?.weeks.at(-1)).toMatchObject({ days: 4, amount: 300 });
     expect(plan?.weeks.reduce((sum, week) => sum + week.amount, 0)).toBe(2400);
-    expect(calendarBudget(2400, "2026-10-02", "2026-09-01")).toBeUndefined();
+    expect(calendarBudget(2400, "2026-10-01", "2026-08-31")).toBeUndefined();
   });
   it("normalizează șabloanele locale de ciclu și marcajele alertei fără a le confunda cu date financiare", () => {
     const data = normalizeAppData({ version: 8, settings: { memberName: "Eu", salaryCycleTemplates: [{ id: "valid", label: " Salariu lunar ", amount: "2400", durationDays: 30 }, { id: "invalid", label: "", amount: 0, durationDays: 2 }], seenWeeklyPlanTranches: ["2026-09-01:2026-09-07:1", "nevalid"] } });
@@ -672,10 +672,10 @@ describe("registrul financiar Buget Familie", () => {
     expect(roomId).toMatch(/^[0-9a-f]{64}$/);
   });
   it("identifică o singură tranșă curentă și construiește snapshotul PDF fără mișcări", () => {
-    const active = currentCalendarBudgetWeek(2400, "2026-09-01", "2026-09-28", "2026-09-12");
-    expect(active).toMatchObject({ index: 2, start: "2026-09-08", end: "2026-09-14", amount: 600 });
-    expect(calendarBudgetWeekKey(active!)).toBe("2026-09-08:2026-09-14:2");
-    const report = calendarPlanPdfSnapshot(calendarBudget(2400, "2026-09-01", "2026-09-28")!, "Familia mea");
+    const active = currentCalendarBudgetWeek(2400, "2026-08-31", "2026-09-27", "2026-09-11");
+    expect(active).toMatchObject({ index: 2, start: "2026-09-07", end: "2026-09-13", amount: 600 });
+    expect(calendarBudgetWeekKey(active!)).toBe("2026-09-07:2026-09-13:2");
+    const report = calendarPlanPdfSnapshot(calendarBudget(2400, "2026-08-31", "2026-09-27")!, "Familia mea");
     expect(report).toMatchObject({ familyName: "Familia mea", total: 2400, days: 28 });
     expect(report.weeks).toHaveLength(4);
   });

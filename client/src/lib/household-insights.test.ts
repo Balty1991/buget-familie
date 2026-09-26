@@ -270,11 +270,11 @@ describe("analize de gospodărie", () => {
     expect(brief.reason).toContain("plicul săptămânii");
   });
 
-  it("perioada începută marți nu împarte restul până duminică și nu uită cheltuiala din tranșă", () => {
+  it("săptămâna de luni până duminică nu uită cheltuiala din săptămână și se încheie duminică", () => {
     const { data, source } = base();
     source.openingBalance = 8000;
-    data.settings.salaryPlan.periodStart = "2026-09-15";
-    data.settings.salaryPlan.nextPayday = "2026-10-15";
+    data.settings.salaryPlan.periodStart = "2026-09-14";
+    data.settings.salaryPlan.nextPayday = "2026-10-14";
     data.settings.salaryPlan.sourceIds = [source.id];
     data.settings.salaryPlan.allocations = [
       { id: "food", label: "Alimente", category: "Alimente", amount: 2100, sourceId: source.id, weeklyPace: true },
@@ -286,13 +286,13 @@ describe("analize de gospodărie", () => {
         memberId: "member-me", person: "Eu", date, allocationId,
       });
     };
-    spend("lidl", 80, "Alimente", "food", "2026-09-16");
-    spend("enel", 400, "Casă & facturi", "house", "2026-09-16");
-    const leveled = levelStartedWeek(data, "food", "2026-09-17");
+    spend("lidl", 80, "Alimente", "food", "2026-09-15");
+    spend("enel", 400, "Casă & facturi", "house", "2026-09-15");
+    const leveled = levelStartedWeek(data, "food", "2026-09-16");
     const food = leveled.settings.salaryPlan.allocations[0];
-    const thursday = "2026-09-17";
+    const thursday = "2026-09-16";
     const week = allocationWeekStatus(leveled, food, thursday)!;
-    expect(week.end).toBe("2026-09-21");
+    expect(week.end).toBe("2026-09-20");
     expect(week.spent).toBe(80);
     const rhythm = weeklyEnvelopeDailyRhythm(leveled, thursday);
     const brief = todayBrief(leveled, thursday);
@@ -303,16 +303,16 @@ describe("analize de gospodărie", () => {
     expect(brief.spendable).toBeCloseTo(rhythm.todayLeft, 2);
     expect(rhythm.todayLeft + rhythm.futureShare * (rhythm.remainingDays - 1)).toBeCloseTo(rhythm.remaining, 1);
 
-    spend("lidl-2", 40, "Alimente", "food", "2026-09-21");
-    const monday = "2026-09-21";
+    spend("lidl-2", 40, "Alimente", "food", "2026-09-20");
+    const monday = "2026-09-20";
     const leveledMonday = levelStartedWeek(data, "food", monday);
     const endWeek = allocationWeekStatus(leveledMonday, food, monday)!;
     const endRhythm = weeklyEnvelopeDailyRhythm(leveledMonday, monday);
     expect(endWeek.spent).toBe(120);
     expect(endRhythm.remainingDays).toBe(1);
     expect(endRhythm.todayLeft).toBeCloseTo(Math.max(0, endWeek.remaining), 2);
-    expect(endRhythm.days.every((row) => row.day >= "2026-09-15" && row.day <= "2026-09-21")).toBe(true);
-    expect(endRhythm.days.find((row) => row.day === "2026-09-22")).toBeUndefined();
+    expect(endRhythm.days.every((row) => row.day >= "2026-09-14" && row.day <= "2026-09-20")).toBe(true);
+    expect(endRhythm.days.find((row) => row.day === "2026-09-21")).toBeUndefined();
     const shown = endRhythm.days.reduce((sum, row) => sum + (row.isToday || row.isFuture ? row.left : 0), 0);
     expect(shown).toBeCloseTo(endRhythm.remaining, 1);
     const check = weeklyCheckIn(leveledMonday, monday);
@@ -320,11 +320,12 @@ describe("analize de gospodărie", () => {
     expect(row.spent).toBeCloseTo(endWeek.spent, 2);
     expect(row.remaining).toBeCloseTo(endWeek.remaining, 2);
     const house = check.envelopes.find((item) => item.id === "house")!;
-    expect(house.spent).toBe(0);
+    // Enel e în aceeași săptămână luni–duminică; plicul lunar se judecă pe tot ciclul.
+    expect(house.spent).toBe(400);
     expect(house.remaining).toBeGreaterThan(0);
   });
 
-  it("banda urmează tranșa miercuri–marți, nu săptămâna până duminică", () => {
+  it("perioada începută miercuri: prima săptămână e miercuri–duminică, apoi luni–duminică", () => {
     const { data, source } = base();
     source.openingBalance = 5000;
     data.settings.salaryPlan.periodStart = "2026-09-23";
@@ -336,12 +337,11 @@ describe("analize de gospodărie", () => {
     const asOf = "2026-09-23";
     const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
     expect(rhythm.days.map((row) => row.day)).toEqual([
-      "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27", "2026-09-28", "2026-09-29",
+      "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27",
     ]);
-    expect(rhythm.remainingDays).toBe(7);
+    expect(rhythm.remainingDays).toBe(5);
     const summary = buildTodaySummary(data, asOf);
-    expect(summary.rhythmNote).toMatch(/marți/i);
-    expect(summary.rhythmNote).not.toMatch(/duminică/i);
+    expect(summary.rhythmNote).toMatch(/duminică/i);
 
     data.transactions.push({
       id: "lidl", title: "Lidl", amount: 250.5, kind: "expense", category: "Alimente",
@@ -351,11 +351,11 @@ describe("analize de gospodărie", () => {
     const afterSummary = buildTodaySummary(data, asOf);
     const boxes = after.days.reduce((sum, row) => sum + (row.isToday || row.isFuture ? row.left : 0), 0);
     expect(boxes).toBeCloseTo(after.remaining, 1);
-    expect(after.days.filter((row) => row.day > asOf)).toHaveLength(6);
-    expect(after.days.some((row) => row.day === "2026-09-28" || row.day === "2026-09-29")).toBe(true);
+    expect(after.days.filter((row) => row.day > asOf)).toHaveLength(4);
+    expect(after.days.some((row) => row.day === "2026-09-28")).toBe(false);
     expect(afterSummary.heroValue).toBeCloseTo(afterSummary.brief.spendable, 2);
     expect(afterSummary.heroHint).toContain(stripLei(after.remaining, "ro-RO"));
-    expect(afterSummary.rhythmNote).toMatch(/marți/i);
+    expect(afterSummary.rhythmNote).toMatch(/duminică/i);
   });
 });
 
@@ -636,7 +636,7 @@ describe("vânătorul de abonamente nu ia orice repetiție drept abonament", () 
 describe("plicul care se termină înainte de salariu", () => {
   const setup = (spent: number) => {
     const { data } = base();
-    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-10", nextPayday: "2026-10-09", allocations: [{ id: "a1", label: "Alimente", amount: 1500, category: "Alimente" }] };
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-10", nextPayday: "2026-10-09", allocations: [{ id: "a1", label: "Alimente", amount: 1500, category: "Alimente", weeklyPace: false }] };
     data.transactions = [{ id: "x", title: "Kaufland", amount: spent, kind: "expense", category: "Alimente", sourceId: "source-debit", source: "Card", memberId: "member-me", person: "Eu", date: "2026-09-15", allocationId: "a1" }];
     return data;
   };
