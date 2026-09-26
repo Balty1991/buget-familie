@@ -50,6 +50,8 @@ export type PayoffPlan = {
   totalInterest: number;
   /** Luna (1, 2…) în care se închide fiecare datorie. */
   closedAt: Record<string, number>;
+  /** Totalul datoriilor la sfârșitul fiecărei luni, pentru grafic (primul element e azi). */
+  totals: number[];
 };
 
 export const orderDebts = (debts: Debt[], strategy: PayoffStrategy) =>
@@ -69,6 +71,7 @@ export function payoffPlan(debts: Debt[], extra: number, strategy: PayoffStrateg
   const budget = open.reduce((sum, debt) => sum + Math.max(0, debt.monthly), 0) + Math.max(0, extra);
   let totalInterest = 0;
   let month = 0;
+  const totals = [cents(open.reduce((sum, debt) => sum + debt.remaining, 0))];
   while (Array.from(balance.values()).some((value) => value > 0.004) && month < MAX_MONTHS) {
     month += 1;
     let available = budget;
@@ -98,9 +101,10 @@ export function payoffPlan(debts: Debt[], extra: number, strategy: PayoffStrateg
     for (const debt of order) {
       if (!(debt.id in closedAt) && (balance.get(debt.id) || 0) <= 0.004) closedAt[debt.id] = month;
     }
+    totals.push(cents(Array.from(balance.values()).reduce((sum, value) => sum + Math.max(0, value), 0)));
   }
   const done = Array.from(balance.values()).every((value) => value <= 0.004);
-  return { strategy, order, months: done ? month : null, totalInterest, closedAt };
+  return { strategy, order, months: done ? month : null, totalInterest, closedAt, totals };
 }
 
 /** Avalanșa costă cel mai puțin când știm dobânzile; fără ele, mingea de zăpadă. */

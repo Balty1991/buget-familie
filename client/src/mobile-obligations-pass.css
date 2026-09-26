@@ -165,3 +165,14 @@
 .bf-declared-bills li strong.paid { color: var(--cf-primary-strong, #1f5c52); }
 .bf-declared-bills li strong.over { color: var(--cf-danger, #a44e3e); }
 .bf-declared-bills-note { margin: 4px 0 0; font-size: 13px; color: var(--cf-muted); }
+
+/* Graficul de achitare: doar ratele (punctat) față de ratele plus suma în plus. */
+.bf-payoff-chart { margin: 10px 0 0; }
+.bf-payoff-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.bf-payoff-chart .zero { stroke: var(--cf-line); stroke-width: 1; }
+.bf-payoff-chart polyline { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+.bf-payoff-chart polyline.base { stroke: var(--cf-muted, #6e7c76); stroke-dasharray: 3 4; }
+.bf-payoff-chart polyline.extra { stroke: var(--cf-primary-strong, #1f5c52); }
+.bf-payoff-chart figcaption { display: flex; gap: 12px; margin-top: 4px; font-size: 12px; color: var(--cf-muted); }
+.bf-payoff-chart figcaption i { display: inline-block; width: 14px; margin-right: 4px; vertical-align: middle; border-top: 2px solid var(--cf-primary-strong, #1f5c52); }
+.bf-payoff-chart figcaption i.base { border-top: 2px dashed var(--cf-muted, #6e7c76); }

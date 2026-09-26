@@ -48,6 +48,24 @@ function DebtSchedule({ data, debt, onPay }: { data: AppData; debt: Debt; onPay:
   return <div className="bf-debt-schedule"><div className="bf-debt-schedule-head"><div><p>{t("SCADENȚAR COMPLET")}</p><b>{t("{paid} din {total} rate bifate", { paid: paidCount, total: rows.length })}</b>{plan.totalInterest > 0 && <small>{t("Dobândă de plătit până la final: {amount}", { amount: money(plan.totalInterest) })}</small>}</div><span>{t("{amount} rămas", { amount: money(debt.remaining) })}</span></div><div className="bf-debt-schedule-list">{visible.map((row) => <div className={"bf-debt-schedule-row " + (row.paid ? "paid" : "")} key={`${row.index}-${row.date}`}><button type="button" className="bf-schedule-check" aria-label={row.paid ? "Rata " + row.index + t(" achitată") : t("Confirmă rata ") + row.index} onClick={row.paid ? undefined : onPay}>{row.paid ? <Check size={15} /> : <span />}</button><span><b>Rata {String(row.index).padStart(2, "0")}</b><small>{dateText(row.date, true)}{row.paid ? t(" · plătită la ") + dateText(row.paid.date, true) : row.interest ? t(" · din care dobândă {amount}", { amount: money(row.interest) }) : t(" · neplătită")}</small></span><strong>{money(row.paid?.amount || row.amount)}</strong></div>)}</div>{rows.length > 6 && <button type="button" className="bf-schedule-more" onClick={() => setExpanded((value) => !value)}>{expanded ? t("Arată mai puține") : t("Arată toate cele ") + rows.length + " rate"}</button>}</div>;
 }
 const monthYear = (date: Date) => new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(date);
+
+/** Soldul total al datoriilor lună de lună: linia fără bani în plus și linia cu banii în plus. */
+function PayoffChart({ base, withExtra }: { base: number[]; withExtra: number[] }) {
+  const months = Math.max(base.length, withExtra.length) - 1;
+  if (months < 2 || !base[0]) return null;
+  const W = 300; const H = 90; const P = 6;
+  const x = (index: number) => P + index / months * (W - P * 2);
+  const y = (value: number) => P + (1 - value / base[0]) * (H - P * 2);
+  const line = (values: number[]) => values.map((value, index) => `${x(index).toFixed(1)},${y(value).toFixed(1)}`).join(" ");
+  return <figure className="bf-payoff-chart">
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("Datoriile scad la zero în {base} luni fără bani în plus și în {extra} cu ei.", { base: base.length - 1, extra: withExtra.length - 1 })}>
+      <line className="zero" x1={P} x2={W - P} y1={y(0)} y2={y(0)} />
+      <polyline className="base" points={line(base)} />
+      <polyline className="extra" points={line(withExtra)} />
+    </svg>
+    <figcaption><span><i className="base" aria-hidden="true" /> {t("doar ratele")}</span><span><i className="extra" aria-hidden="true" /> {t("cu suma în plus")}</span></figcaption>
+  </figure>;
+}
 /** Simulatorul: cu dobândă, în ordinea care costă cel mai puțin, și data în care scapi de datorii. */
 function DebtPayoffSimulator({ data }: { data: AppData }) {
   const [extra, setExtra] = useState(0);
@@ -65,6 +83,7 @@ function DebtPayoffSimulator({ data }: { data: AppData }) {
   return <section className="bf-debt-simulator"><div className="bf-debt-simulator-head"><div><p className="bf-kicker">{t("SIMULATOR DE DECIZIE")}</p><h2>{t("Dacă plătești")} <em>{t("în plus")}</em>?</h2><span>{t("Testează un efort lunar suplimentar. Nu schimbă datele tale, doar îți arată scenariul.")}</span></div><div className="bf-debt-simulator-result"><strong>{savedMonths ? "−" + savedMonths : "0"}</strong><small>{t("luni câștigate")}</small></div></div>
     <div className="bf-debt-strategy" role="radiogroup" aria-label={t("Ordinea de plată")}><button type="button" role="radio" aria-checked={strategy === "avalanche"} className={strategy === "avalanche" ? "active" : ""} onClick={() => setStrategy("avalanche")}><b>{t("Avalanșă")}</b><small>{t("întâi dobânda cea mai mare")}</small></button><button type="button" role="radio" aria-checked={strategy === "snowball"} className={strategy === "snowball" ? "active" : ""} onClick={() => setStrategy("snowball")}><b>{t("Minge de zăpadă")}</b><small>{t("întâi soldul cel mai mic")}</small></button></div>
     <div className="bf-debt-slider"><div><span>{t("Sumă extra / lună")}</span><b>{money(extra)}</b></div><input type="range" min="0" max={maxExtra} step="50" value={extra} onChange={(event) => setExtra(Number(event.target.value))} aria-label={t("Sumă suplimentară lunară")} /><div className="bf-debt-slider-labels"><small>0 RON</small><small>{money(maxExtra)}</small></div></div>
+    {base.months !== null && withExtra.months !== null && extra > 0 && <PayoffChart base={base.totals} withExtra={withExtra.totals} />}
     {withExtra.months === null
       ? <p className="bf-form-error" role="alert">{t("Cu plățile acestea, dobânzile cresc mai repede decât scad datoriile. Mărește efortul lunar.")}</p>
       : <><p className="bf-debt-freedom"><b>{t("Scapi de datorii în {date}", { date: monthYear(monthAfter(withExtra.months)) })}</b>{hasRates ? <span>{t(" · dobândă totală {amount}", { amount: money(withExtra.totalInterest) })}{savedInterest > 0 ? t(" · economisești {amount}", { amount: money(savedInterest) }) : ""}</span> : <span>{t(" · scrie dobânzile în fiecare datorie pentru costul real")}</span>}</p>

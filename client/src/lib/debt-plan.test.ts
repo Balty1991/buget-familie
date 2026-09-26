@@ -56,3 +56,12 @@ describe("ordinea de plată", () => {
     expect(recommendedStrategy([debt("a", 100, 10), debt("b", 200, 10)])).toBe("snowball");
   });
 });
+
+describe("soldul lună de lună pentru grafic", () => {
+  it("pornește de la totalul de azi și ajunge la zero în luna în care se închide ultima datorie", () => {
+    const debts = [{ id: "a", name: "Card", remaining: 1000, monthly: 250, annualRate: 0, due: "", tone: "coral" as const }];
+    const plan = payoffPlan(debts, 0, "snowball");
+    expect(plan.totals).toEqual([1000, 750, 500, 250, 0]);
+    expect(plan.totals.length - 1).toBe(plan.months);
+  });
+});
