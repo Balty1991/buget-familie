@@ -113,6 +113,17 @@ jobs:
           sync_secret GEMINI_API_KEY "$GEMINI_API_KEY"
           sync_secret GROQ_API_KEY "$GROQ_API_KEY"
 
+      # Contoarele de limită (aiGuide, Play) au câmpul expireAt; Firestore le șterge singur după el.
+      # Dacă contul de serviciu nu are drept pe câmpuri, pasul avertizează și nu oprește publicarea.
+      - name: Politică TTL pe contoarele de limită
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          for group in aiGuideQuota playVerifyQuota playRtdnQuota; do
+            gcloud firestore fields ttls update expireAt --collection-group="$group" --enable-ttl --async --project "$FIREBASE_PROJECT_ID" --quiet \
+              || echo "::warning::TTL pentru $group nu s-a putut porni (rolul Cloud Datastore Owner / Firestore: Firebase Console → Firestore → TTL)."
+          done
+
       - name: Deploy Firebase Functions
         run: npx --yes firebase-tools@latest deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
 

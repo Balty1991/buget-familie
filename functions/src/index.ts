@@ -2,7 +2,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { createHash } from "node:crypto";
 import { getApps, initializeApp } from "firebase-admin/app";
-import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getAppCheck } from "firebase-admin/app-check";
 import { getAuth } from "firebase-admin/auth";
 import cors from "cors";
@@ -543,7 +543,8 @@ async function takeQuota(collection: string, key: string, limit: number, extra: 
       const snap = await tx.get(ref);
       const count = snap.exists ? Number(snap.get("n") || 0) : 0;
       if (count >= limit) return false;
-      tx.set(ref, { n: count + 1, bucket, ...extra, at: FieldValue.serverTimestamp() }, { merge: true });
+      // expireAt: politica TTL a colecției șterge contoarele vechi (se trec două zile, cât ține cel mai lung „bucket”).
+      tx.set(ref, { n: count + 1, bucket, ...extra, at: FieldValue.serverTimestamp(), expireAt: Timestamp.fromMillis(Date.now() + 2 * 86_400_000) }, { merge: true });
       return true;
     });
   } catch (error) {
