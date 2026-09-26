@@ -780,6 +780,11 @@ export const verifyPlayPurchase = onRequest(
         response.status(405).json({ error: "Method not allowed" });
         return;
       }
+      // Fiecare cerere cheamă API-ul Google Play: fără limită, oricine putea consuma cota proiectului.
+      if (!(await takeQuota("playVerifyQuota", `ip|${clientIp(request)}`, 30, {}, { failOpen: false }))) {
+        response.status(429).json({ error: "Prea multe verificări. Încearcă peste o oră." });
+        return;
+      }
       const body = (request.body || {}) as { purchaseToken?: unknown; productId?: unknown; roomId?: unknown };
       const purchaseToken = typeof body.purchaseToken === "string" ? body.purchaseToken : "";
       if (!purchaseToken || purchaseToken.length > 4096 || (typeof body.productId === "string" && !PLAY_SKUS.has(body.productId))) {
@@ -809,7 +814,9 @@ export const playRtdn = onRequest(
       const data = (request.body as { message?: { data?: string } } | undefined)?.message?.data;
       const decoded = data ? JSON.parse(Buffer.from(data, "base64").toString("utf8")) as { packageName?: string; subscriptionNotification?: { purchaseToken?: string } } : undefined;
       const purchaseToken = decoded?.subscriptionNotification?.purchaseToken;
-      if (decoded?.packageName === PLAY_PACKAGE && purchaseToken) await syncPlayPurchase(purchaseToken);
+      // Plafon zilnic: un apel fals nu poate da Familia (tokenul se reverifică la Google), dar fără
+      // plafon ar putea face mii de apeluri spre API-ul Play pe costul proiectului.
+      if (decoded?.packageName === PLAY_PACKAGE && purchaseToken && await takeQuota("playRtdnQuota", "global-day", 5000, {}, { failOpen: false, perDay: true })) await syncPlayPurchase(purchaseToken);
     } catch (error) {
       console.error("playRtdn", error instanceof Error ? error.message : error);
     }
