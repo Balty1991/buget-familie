@@ -207,8 +207,8 @@ export type SyncDevice = {
 };
 export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
-export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Timp liber", "Rate produse", "Altele"];
-export const categoryColors: Record<string, string> = { Alimente: "#176B54", "Consumabile copil": "#3E8F74", Abonamente: "#C4A15A", "Casă & facturi": "#2F6F5E", Transport: "#8C6A3D", "Timp liber": "#4F8F9A", Sănătate: "#1F6B62", "Rate produse": "#A68445", Altele: "#6E7C76" };
+export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Educație", "Timp liber", "Credite", "Rate produse", "Altele"];
+export const categoryColors: Record<string, string> = { Alimente: "#176B54", "Consumabile copil": "#3E8F74", Abonamente: "#C4A15A", "Casă & facturi": "#2F6F5E", Transport: "#8C6A3D", "Timp liber": "#4F8F9A", Sănătate: "#1F6B62", "Rate produse": "#A68445", Credite: "#8A5A3C", Educație: "#5B7FA6", Altele: "#6E7C76" };
 
 /**
  * Data calendaristică a telefonului, nu cea UTC. `toISOString()` ar întoarce ziua
@@ -953,7 +953,7 @@ export const allocationSpent = (data: AppData, allocation: BudgetAllocation) => 
 
 export const allocationBudget = (data: AppData, allocation: BudgetAllocation) => allocation.amount + data.settings.salaryPlan.transfers.reduce((sum, transfer) => sum + (transfer.toAllocationId === allocation.id ? transfer.amount : 0) - (transfer.fromAllocationId === allocation.id ? transfer.amount : 0), 0);
 /** Categoriile care, într-un plic lunar, înseamnă o plată fixă: se plătește o dată, nu se cheltuie pe zile. */
-const FIXED_CATEGORIES = new Set(["Casă & facturi", "Rate produse", "Abonamente"]);
+const FIXED_CATEGORIES = new Set(["Casă & facturi", "Rate produse", "Credite", "Abonamente", "Educație"]);
 
 /**
  * Plicul unei plăți fixe (factură, rată, chirie, abonament): lunar, fără ritm pe săptămâni,
@@ -1680,7 +1680,10 @@ const categoryAliases: Array<[RegExp, string]> = [
   [/\b(film|joc|iesire|concert|timp liber|cinema|netflix|spotify|steam|hbo|disney)\b/, "Timp liber"],
   [/\b(abonament|subscription)\b/, "Abonamente"],
   [/\b(tigar|tutun|vape)\b/, "Altele"],
-  [/\b(rata|credit|imprumut|leasing)\b/, "Rate produse"],
+  // Grădinița și școala nu sunt „consumabile copil”, iar rata la bancă nu e o „rată de produs”.
+  [/\b(gradinit\w*|scoal\w*|creșa|cresa|after ?school|meditati\w*|rechizit\w*|universitat\w*|taxa scolara)\b/, "Educație"],
+  [/\b(rata (la )?banca|credit|imprumut|ipotecar|bcr|brd|bt|ing|raiffeisen|cec|unicredit|garanti|leasing)\b/, "Credite"],
+  [/\b(rata|rate)\b/, "Rate produse"],
 ];
 
 /** Prima regulă locală al cărei text apare în titlu/descriere (fără autosave). */

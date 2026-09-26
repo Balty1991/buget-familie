@@ -781,3 +781,13 @@ describe("money2 + invarianti pe mutatori", () => {
     expect(sourceBalance(paid!, source.id)).toBe(469.44);
   });
 });
+
+describe("categoriile ghicite din text (utilizator #18)", () => {
+  it("grădinița e Educație, rata la bancă e Credite, farmacia e Sănătate", async () => {
+    const { guessCategoryFromText, expenseCategories } = await import("./finance-data");
+    expect(guessCategoryFromText("Grădiniță Albinuța", expenseCategories)).toBe("Educație");
+    expect(guessCategoryFromText("Rata BCR", expenseCategories)).toBe("Credite");
+    expect(guessCategoryFromText("Farmacia Catena", expenseCategories)).toBe("Sănătate");
+    expect(guessCategoryFromText("rata telefon eMAG", expenseCategories)).toBe("Rate produse");
+  });
+});

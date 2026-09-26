@@ -148,7 +148,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
   };
   /** „Ce plătim lunar” și Obligații erau două lumi: rata declarată nu apărea aici („Nu ai datorii”). */
   const fixedNeeds = activeNeeds(data)
-    .filter((need) => need.priority === "fixed" || (!need.priority && ["Casă & facturi", "Rate produse", "Abonamente"].includes(need.category)))
+    .filter((need) => need.priority === "fixed" || (!need.priority && ["Casă & facturi", "Rate produse", "Credite", "Abonamente", "Educație"].includes(need.category)))
     .map((need) => {
       const envelope = data.settings.salaryPlan.allocations.find((item) => item.id === need.allocationId);
       return { need, status: envelope ? allocationStatus(data, envelope) : undefined };

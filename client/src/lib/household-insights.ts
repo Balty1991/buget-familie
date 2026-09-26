@@ -240,7 +240,7 @@ export type SubscriptionDetection = {
 const isPriceRise = (from: number, to: number) => to - from >= Math.max(2, from * 0.04);
 
 const groceryCategories = new Set(["Alimente", "Consumabile copil", "Dulciuri", "Băuturi", "Apă"]);
-const billCategories = new Set(["Casă & facturi", "Rate produse"]);
+const billCategories = new Set(["Casă & facturi", "Rate produse", "Credite", "Educație"]);
 const FUEL = /\b(omv|mol|petrom|rompetrol|lukoil|socar|gazprom|benzina|motorina|carburant|combustibil|shell)\b/;
 
 /** Detectează comercianți care se repetă lunar, fără a crea scadențe până la confirmare. */

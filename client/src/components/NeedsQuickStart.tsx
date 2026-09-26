@@ -15,12 +15,12 @@ type NeedDraft = { label: string; category: string; cadence: "monthly" | "weekly
 const START_NEEDS: NeedDraft[] = [
   { label: "Mâncare", category: "Alimente", cadence: "weekly", priority: "flex", amount: "", on: true },
   { label: "Chirie", category: "Casă & facturi", cadence: "monthly", priority: "fixed", amount: "", on: false },
-  { label: "Rate bancă", category: "Rate produse", cadence: "monthly", priority: "fixed", amount: "", on: false },
+  { label: "Rate bancă", category: "Credite", cadence: "monthly", priority: "fixed", amount: "", on: false },
   { label: "Lumină", category: "Casă & facturi", cadence: "monthly", priority: "fixed", amount: "", on: true },
   { label: "Gaz", category: "Casă & facturi", cadence: "monthly", priority: "fixed", amount: "", on: false },
   { label: "Apă", category: "Casă & facturi", cadence: "monthly", priority: "fixed", amount: "", on: false },
   { label: "Abonamente", category: "Abonamente", cadence: "monthly", priority: "fixed", amount: "", on: false },
-  { label: "Grădiniță", category: "Consumabile copil", cadence: "monthly", priority: "fixed", amount: "", on: false },
+  { label: "Grădiniță", category: "Educație", cadence: "monthly", priority: "fixed", amount: "", on: false },
   { label: "Taxi / transport", category: "Transport", cadence: "monthly", priority: "flex", amount: "", on: false },
   { label: "Neprevăzute", category: "Altele", cadence: "monthly", priority: "buffer", amount: "", on: false },
 ];

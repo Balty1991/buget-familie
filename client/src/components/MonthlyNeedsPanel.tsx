@@ -20,13 +20,13 @@ const money = lei;
 const PRESETS: Array<Pick<MonthlyNeed, "label" | "category" | "cadence" | "priority">> = [
   { label: "Mâncare", category: "Alimente", cadence: "weekly", priority: "flex" },
   { label: "Chirie", category: "Casă & facturi", cadence: "monthly", priority: "fixed" },
-  { label: "Rate bancă", category: "Rate produse", cadence: "monthly", priority: "fixed" },
+  { label: "Rate bancă", category: "Credite", cadence: "monthly", priority: "fixed" },
   { label: "Rate fără dobândă", category: "Rate produse", cadence: "monthly", priority: "fixed" },
   { label: "Lumină", category: "Casă & facturi", cadence: "monthly", priority: "fixed" },
   { label: "Gaz", category: "Casă & facturi", cadence: "monthly", priority: "fixed" },
   { label: "Apă", category: "Casă & facturi", cadence: "monthly", priority: "fixed" },
   { label: "Abonamente", category: "Abonamente", cadence: "monthly", priority: "fixed" },
-  { label: "Grădiniță", category: "Consumabile copil", cadence: "monthly", priority: "fixed" },
+  { label: "Grădiniță", category: "Educație", cadence: "monthly", priority: "fixed" },
   { label: "Taxi / transport", category: "Transport", cadence: "monthly", priority: "flex" },
   { label: "Neprevăzute", category: "Altele", cadence: "monthly", priority: "buffer" },
 ];
