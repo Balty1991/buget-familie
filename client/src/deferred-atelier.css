@@ -3447,6 +3447,10 @@ html.dark .bf-today-envelopes {
 .bf-background-grid button:not(.selected) {
   opacity: .88;
 }
+/* Număr impar de texturi: ultima ocupă tot rândul pe telefon. */
+.bf-background-grid button:last-child:nth-child(odd) {
+  grid-column: span 2;
+}
 .bf-background-swatch {
   display: block;
   height: 36px;
@@ -3553,7 +3557,70 @@ html.background-paper .bf-app::before {
   opacity: .1 !important;
 }
 
+/* Trei texturi readuse la cerere: grilă, auroră, ceață fină. Stau în spatele cardurilor. */
+html.background-grid .bf-app,
+html[class*="theme-"].background-grid body .os-shell.bf-app,
+html[class*="theme-"].background-grid body .bf-app.bf-app {
+  background-color: var(--cf-bg);
+  background-image:
+    radial-gradient(860px 480px at 100% -8%, color-mix(in srgb, var(--cf-primary) 22%, transparent), transparent 56%),
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 10%, transparent) 1px, transparent 1px);
+  background-size: auto, 44px 44px, 44px 44px;
+  background-blend-mode: normal;
+}
+html.background-aurora .bf-app,
+html[class*="theme-"].background-aurora body .os-shell.bf-app,
+html[class*="theme-"].background-aurora body .bf-app.bf-app {
+  background-color: var(--cf-bg);
+  background-image:
+    radial-gradient(640px 420px at 88% 6%, color-mix(in srgb, var(--cf-primary) 38%, transparent), transparent 62%),
+    radial-gradient(520px 360px at 8% 92%, color-mix(in srgb, var(--cf-info) 30%, transparent), transparent 58%),
+    radial-gradient(380px 260px at 72% 72%, color-mix(in srgb, var(--cf-warning) 16%, transparent), transparent 55%);
+  background-size: auto;
+  background-blend-mode: normal;
+}
+html.background-dots .bf-app,
+html[class*="theme-"].background-dots body .os-shell.bf-app,
+html[class*="theme-"].background-dots body .bf-app.bf-app {
+  background-color: var(--cf-bg);
+  background-image:
+    radial-gradient(720px 420px at 12% 0, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 50%),
+    radial-gradient(color-mix(in srgb, var(--cf-primary) 28%, transparent) 1.15px, transparent 1.7px);
+  background-size: auto, 18px 18px;
+  background-blend-mode: normal;
+}
+html.background-grid .bf-app::before,
+html.background-dots .bf-app::before {
+  opacity: .1;
+}
+.bf-background-swatch.grid {
+  background-color: var(--cf-bg);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+.bf-background-swatch.aurora {
+  background:
+    radial-gradient(circle at 80% 18%, var(--cf-primary), transparent 46%),
+    radial-gradient(circle at 18% 84%, var(--cf-info), var(--cf-bg) 62%);
+}
+.bf-background-swatch.dots {
+  background-color: var(--cf-bg);
+  background-image:
+    radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--cf-primary) 40%, transparent), transparent 50%),
+    radial-gradient(var(--cf-primary) 1px, transparent 1.5px);
+  background-size: auto, 8px 8px;
+}
+
 @media (min-width: 641px) {
+  .bf-background-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .bf-background-grid button:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
   .bf-background-grid button {
     min-height: 108px;
   }

@@ -274,7 +274,7 @@
           var known = { white: 1, dark: 1, navy: 1 };
           if (!known[theme]) theme = "white";
           var background = localStorage.getItem("buget-familie:background") || "plain";
-          if (!{ plain: 1, paper: 1 }[background]) background = "plain";
+          if (!{ plain: 1, paper: 1, grid: 1, aurora: 1, dots: 1 }[background]) background = "plain";
           root.classList.add("theme-" + theme, "background-" + background);
           var dark = theme !== "white";
           if (dark) root.classList.add("dark");

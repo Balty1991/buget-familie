@@ -16,13 +16,15 @@ export type ThemeId = "white" | "dark" | "navy";
 /** „system”: Alb sau Întunecat, după setarea telefonului (implicit pentru cei noi). */
 export type ThemeSchedule = "manual" | "auto" | "system";
 export type ThemeScheduleTimes = { dayStart: string; eveningStart: string; nightStart: string };
-/** Două texturi rămase din cinci; o alegere veche (grilă, auroră, puncte) revine la „Lumină curată”. */
-export type BackgroundId = "plain" | "paper";
+export type BackgroundId = "plain" | "paper" | "grid" | "aurora" | "dots";
 export const LIGHT_THEMES: ThemeId[] = ["white"];
 
 export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: string }> = [
   { id: "plain", name: t("Lumină curată"), detail: t("Halo-uri moi, fără grilă") },
   { id: "paper", name: t("Hârtie de registru"), detail: t("Fibre calde, ca o coală") },
+  { id: "grid", name: t("Hartă discretă"), detail: t("Grilă largă, aproape invizibilă") },
+  { id: "aurora", name: t("Auroră profundă"), detail: t("Trei pete de lumină") },
+  { id: "dots", name: t("Ceață fină"), detail: t("Puncte moi, adâncime") },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
   { id: "white", name: t("Alb"), detail: t("Atelier Platinum — hârtie caldă, pin, citire de zi. Implicit."), mood: "ZI · PLATINUM" },
