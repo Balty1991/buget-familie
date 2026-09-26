@@ -110,7 +110,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
     if (item.dueDate) return item.dueDate;
     const day = Number(String(item.due || "").match(/\d{1,2}/)?.[0]);
     if (!Number.isFinite(day) || day < 1 || day > 31) return "";
-    const now = new Date();
+    const now = new Date(`${today}T12:00:00`);
     const lastThis = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const thisMonth = isoDate(new Date(now.getFullYear(), now.getMonth(), Math.min(day, lastThis), 12));
     if (thisMonth >= today) return thisMonth;

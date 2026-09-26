@@ -34,7 +34,8 @@ function CashflowLine({ projection, selected, onSelect }: { projection: Cashflow
 }
 
 export function FinancialCalendarView({ data, onOpenEvents }: { data: AppData; onOpenEvents?: () => void }) {
-  const today = new Date();
+  // „Azi” al familiei (fusul din Setări), la amiază ca să nu sară ziua.
+  const today = new Date(`${isoToday()}T12:00:00`);
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(keyFor(today));
   const [filter, setFilter] = useState<CalendarFilter>("all");

@@ -238,6 +238,7 @@ export const deviceTimeZone = () => {
     return undefined;
   }
 };
+export const getFamilyTimeZone = () => familyTimeZone;
 export const setFamilyTimeZone = (zone: string | undefined) => { familyTimeZone = isValidTimeZone(zone) ? zone : undefined; };
 /** Data calendaristică a unui moment într-un fus orar dat (yyyy-mm-dd). */
 /** Un formatter pe fus: construirea lui costă de ~100 de ori mai mult decât folosirea, iar isoToday() e chemat în bucle. */

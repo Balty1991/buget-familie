@@ -9,6 +9,7 @@ import android.widget.RemoteViews;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 import org.json.JSONObject;
 
 /**
@@ -17,7 +18,8 @@ import org.json.JSONObject;
  * pe care omul îl adaugă doar dacă vrea; cel rapid rămâne fără sume.
  *
  * Nu calculează nimic singur: dacă aplicația n-a mai fost deschisă azi, spune că cifra e
- * de ieri (sau mai veche), în loc să arate o sumă care nu mai e adevărată.
+ * de ieri (sau mai veche), în loc să arate o sumă care nu mai e adevărată. Android îl
+ * reîmprospătează la 30 de minute (updatePeriodMillis), ca eticheta să apară și după miezul nopții.
  */
 public class SpendTodayWidgetProvider extends AppWidgetProvider {
   private static final String PREFS = "buget_familie_widget";
@@ -53,16 +55,21 @@ public class SpendTodayWidgetProvider extends AppWidgetProvider {
     String caption = "";
     String date = "";
     String stale = "";
+    String zone = "";
     try {
       final JSONObject row = new JSONObject(prefs.getString(KEY, "{}"));
       amount = row.optString("amount", "");
       caption = row.optString("caption", "");
       date = row.optString("date", "");
       stale = row.optString("stale", "");
+      zone = row.optString("zone", "");
     } catch (Exception ignored) {
       /* fără date: mesajul de mai jos */
     }
-    final String today = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+    // Ziua familiei (fusul ales în aplicație), aceeași cu care aplicația a scris „date”.
+    final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    if (!zone.isEmpty()) format.setTimeZone(TimeZone.getTimeZone(zone));
+    final String today = format.format(new Date());
     if (amount.isEmpty()) {
       views.setTextViewText(R.id.widget_spend_amount, "—");
       views.setTextViewText(R.id.widget_spend_caption, context.getString(R.string.widget_spend_empty));

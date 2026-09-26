@@ -1,18 +1,19 @@
 import { useMemo, useState } from "react";
 import { TrendingUp } from "lucide-react";
-import { type AllocationHistoryEntry } from "@/lib/finance-data";
+import { isoDate, isoToday, type AllocationHistoryEntry } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 import { ChartTip } from "@/components/ChartFrame";
 import { leiLabel } from "@/lib/chart-ui";
 
 const monthLabel = (key: string) => new Intl.DateTimeFormat(getLocale(), { month: "short" }).format(new Date(`${key}-01T12:00:00`)).replace(".", "");
-const monthKey = (value: string) => value.slice(0, 7);
+/** Luna locală a unui marcaj: pe 1 ale lunii, între 00:00 și 03:00, UTC ar spune încă luna trecută. */
+const monthKey = (value: string) => { const parsed = new Date(value); return Number.isNaN(parsed.getTime()) ? value.slice(0, 7) : isoDate(parsed).slice(0, 7); };
+/** Lunile se numără pe an și lună, fără toISOString (care mută ziua în fusurile UTC+12/+13). */
 const monthSequence = (endKey: string, count: number) => {
-  const end = new Date(`${endKey}-01T12:00:00`);
+  const [year, month] = endKey.split("-").map(Number);
   return Array.from({ length: count }, (_, index) => {
-    const date = new Date(end);
-    date.setMonth(end.getMonth() - (count - index - 1));
-    return date.toISOString().slice(0, 7);
+    const total = year * 12 + (month - 1) - (count - index - 1);
+    return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, "0")}`;
   });
 };
 
@@ -36,7 +37,7 @@ export function AllocationHistoryChart({ entries, allocationFilter }: { entries:
       return [entry.allocationId, entry.fromAllocationId, entry.toAllocationId].includes(allocationFilter);
     }).filter((entry) => entry.kind !== "week-transfer");
     if (!relevant.length) return undefined;
-    const lastEntryMonth = relevant.reduce((latest, entry) => entry.createdAt.slice(0, 7) > latest ? entry.createdAt.slice(0, 7) : latest, new Date().toISOString().slice(0, 7));
+    const lastEntryMonth = relevant.reduce((latest, entry) => monthKey(entry.createdAt) > latest ? monthKey(entry.createdAt) : latest, isoToday().slice(0, 7));
     const months = monthSequence(lastEntryMonth, 12);
     const labels = Array.from(new Set(relevant.map(eventSeries))).filter(Boolean);
     const ranked = labels.map((label) => ({ label, total: relevant.filter((entry) => eventSeries(entry) === label).reduce((sum, entry) => sum + Math.abs(eventDelta(entry)), 0) })).sort((left, right) => right.total - left.total);

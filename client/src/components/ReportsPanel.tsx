@@ -10,7 +10,7 @@ import "../analysis-studio.css";
 import "../mobile-analysis-pass.css";
 import { useMemo, useState } from "react";
 import { AlertTriangle, ArrowDownRight, Info, ArrowUpRight, CalendarDays, Download, Landmark, PiggyBank, TrendingDown, TrendingUp, WalletCards } from "lucide-react";
-import { allocationStatus, categoryColors, financialBalance, formatDate, transactionShareScope, type AppData, type ShareScope } from "@/lib/finance-data";
+import { allocationStatus, categoryColors, financialBalance, formatDate, isoToday, transactionShareScope, type AppData, type ShareScope } from "@/lib/finance-data";
 import { analysisCompareWindow } from "@/lib/household-insights";
 import { EmptyMark } from "@/components/LedgerArt";
 import { ChartEmpty, ChartTip, ChartYAxis } from "@/components/ChartFrame";
@@ -25,8 +25,9 @@ const months = ["I", "F", "M", "A", "M", "I", "I", "A", "S", "O", "N", "D"];
 const titleFor = (month: string) => { const [year, index] = month.split("-").map(Number); return new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(new Date(year, index - 1, 1)); };
 
 export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: MainView) => void }) {
-  const year = new Date().getFullYear();
-  const currentMonth = `${year}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+  // Luna familiei (fusul ales în Setări), aceeași ca „azi” din restul aplicației.
+  const currentMonth = isoToday().slice(0, 7);
+  const year = Number(currentMonth.slice(0, 4));
   /**
    * Lunile de ales: de la prima mișcare (cel mult 5 ani în urmă) până la luna curentă. Un <select>
    * cu numele lunilor în limba aplicației, nu <input type="month">, pe care unele telefoane îl

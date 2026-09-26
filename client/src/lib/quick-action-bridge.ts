@@ -105,7 +105,8 @@ export function observeQuickActions(handle: (action: QuickAction) => void): () =
   };
 }
 
-export type SpendTodayWidget = { amount: string; caption: string; date: string; stale: string };
+/** `zone`: fusul familiei, ca widgetul să schimbe ziua odată cu aplicația, nu cu ceasul telefonului. */
+export type SpendTodayWidget = { amount: string; caption: string; date: string; stale: string; zone?: string };
 
 /**
  * Cifra zilei pentru widgetul „Poți cheltui azi”. Widgetul nu calculează nimic: arată ce
