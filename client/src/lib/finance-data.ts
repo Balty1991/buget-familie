@@ -346,10 +346,21 @@ export function resolveReceiptLines(
   return normalized;
 }
 
-export const formatDate = (iso?: string, options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short" }) => {
+/** P2-7: un Intl.DateTimeFormat nou la fiecare dată costa zeci de ms pe Plicuri; se refolosește pe limbă + opțiuni. */
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+const DEFAULT_DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short" };
+export const formatDate = (iso?: string, options: Intl.DateTimeFormatOptions = DEFAULT_DATE_OPTIONS) => {
   if (!iso) return "Nespecificat";
   const date = new Date(`${iso}T12:00:00`);
-  return Number.isNaN(date.valueOf()) ? iso : new Intl.DateTimeFormat(getLocale(), options).format(date);
+  if (Number.isNaN(date.valueOf())) return iso;
+  const locale = getLocale();
+  const key = `${locale}|${options === DEFAULT_DATE_OPTIONS ? "" : JSON.stringify(options)}`;
+  let format = dateFormatters.get(key);
+  if (!format) {
+    format = new Intl.DateTimeFormat(locale, options);
+    dateFormatters.set(key, format);
+  }
+  return format.format(date);
 };
 
 /**

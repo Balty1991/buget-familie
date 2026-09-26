@@ -6,7 +6,7 @@ import {
   applyTransactionConflictChoice,
   undoTransactionConflictChoice,
   activeTransactionConflicts,
-} from "@/lib/family-crypto";
+} from "@/lib/sync-conflicts";
 import type { AppData } from "@/lib/finance-data";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";

@@ -5,7 +5,7 @@
 import "../mobile-movements-pass.css";
 import "../movements-flat.css";
 import { swipeToDelete } from "@/lib/swipe-delete";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownRight, Download, FileUp, Pencil, Plus, ReceiptText, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
 import { formatDate, isoDate, isoToday, newId, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadJournalCsv } from "@/lib/journal-csv";
@@ -53,17 +53,30 @@ export function revealAddedMovement(filters: { focusDay: string; fromDate: strin
   return { focusDay: dropDay ? "" : filters.focusDay, fromDate: dropRange ? "" : filters.fromDate, toDate: dropRange ? "" : filters.toDate };
 }
 
+/** Textul în care se caută, făcut o dată pe mișcare (obiectele din registru nu se modifică pe loc). */
+const haystacks = new WeakMap<Transaction, string>();
+const haystackOf = (item: Transaction) => {
+  let text = haystacks.get(item);
+  if (text === undefined) {
+    text = [item.title, item.category, item.source, item.person, String(item.amount), item.note || ""].join(" ").toLocaleLowerCase("ro-RO");
+    haystacks.set(item, text);
+  }
+  return text;
+};
+
 export function MovementsJournal({ data, onEdit, onDelete, onAdd, onOpenReview, onChange }: { data: AppData; onEdit: (item: Transaction) => void; onDelete: (id: string) => void; onAdd: () => void; onOpenReview?: () => void; onChange?: (next: AppData) => void }) {
   const [kind, setKind] = useState<"all" | TransactionKind>("all"); const [member, setMember] = useState("all"); const [source, setSource] = useState("all"); const [shareScope, setShareScope] = useState<"all" | ShareScope>("all"); const [query, setQuery] = useState(() => (typeof window === "undefined" ? "" : takeJournalQuery(window.sessionStorage))); const [fromDate, setFromDate] = useState(""); const [toDate, setToDate] = useState(""); const [focusDay, setFocusDay] = useState(""); const [filtersOpen, setFiltersOpen] = useState(false); const [showSaved, setShowSaved] = useState(false); const [saveName, setSaveName] = useState(""); const [renamingId, setRenamingId] = useState<string | null>(null); const [renameValue, setRenameValue] = useState("");
-  const normalizedQuery = query.trim().toLocaleLowerCase("ro-RO"); const invalidRange = Boolean(fromDate && toDate && fromDate > toDate);
-  const matchesQuery = (item: Transaction) => !normalizedQuery || [item.title, item.category, item.source, item.person, String(item.amount), item.note || ""].join(" ").toLocaleLowerCase("ro-RO").includes(normalizedQuery);
+  // P2-5: lista se refiltrează după tastare, nu la fiecare tastă; textul căutat al fiecărei mișcări se face o dată.
+  const deferredQuery = useDeferredValue(query);
+  const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ro-RO"); const invalidRange = Boolean(fromDate && toDate && fromDate > toDate);
+  const matchesQuery = (item: Transaction) => !normalizedQuery || haystackOf(item).includes(normalizedQuery);
   const clearFilters = () => { setKind("all"); setMember("all"); setSource("all"); setShareScope("all"); setQuery(""); setFromDate(""); setToDate(""); setFocusDay(""); };
   // Pe telefon filtrele sunt o foaie peste listă; Escape o închide ca pe orice foaie.
   useEffect(() => { if (!filtersOpen) return; const root = document.documentElement; root.classList.add("bf-journal-sheet-open"); const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setFiltersOpen(false); }; window.addEventListener("keydown", onKey); return () => { root.classList.remove("bf-journal-sheet-open"); window.removeEventListener("keydown", onKey); }; }, [filtersOpen]);
   const filtersActive = [kind !== "all", member !== "all", source !== "all", shareScope !== "all", Boolean(query), Boolean(fromDate), Boolean(toDate), Boolean(focusDay)].filter(Boolean).length;
   const narrowed = useMemo(() => data.transactions.filter((item) => (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && (!fromDate || item.date >= fromDate) && (!toDate || item.date <= toDate) && matchesQuery(item)).sort((a, b) => b.date.localeCompare(a.date) || String(b.createdAt || "").localeCompare(String(a.createdAt || ""))), [data.transactions, fromDate, kind, member, normalizedQuery, shareScope, source, toDate]);
   const list = useMemo(() => focusDay ? narrowed.filter((item) => item.date === focusDay) : narrowed, [focusDay, narrowed]);
-  const today = isoToday(); const todayMoves = data.transactions.filter((item) => item.date === today && (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && matchesQuery(item)); const todayIncome = todayMoves.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const todayExpense = todayMoves.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+  const today = isoToday(); const todayMoves = useMemo(() => data.transactions.filter((item) => item.date === today && (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && matchesQuery(item)), [data.transactions, today, kind, member, source, shareScope, normalizedQuery]); const todayIncome = todayMoves.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0); const todayExpense = todayMoves.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
   const knownIds = useRef("");
   useEffect(() => {
     const signature = data.transactions.map((item) => item.id).join("\n");

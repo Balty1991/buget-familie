@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { isQuotaExceededError, freeHeavyLocalCache } from "@/lib/safe-storage";
 import { AlertTriangle, RotateCcw, Trash2 } from "lucide-react";
 import { Component, ReactNode } from "react";
@@ -136,4 +135,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
+
+/** Clase unite simplu: tailwind-merge (24 KB) intra în pachetul de pornire doar pentru asta (P3-12). */
+const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" ");
 export default ErrorBoundary;
