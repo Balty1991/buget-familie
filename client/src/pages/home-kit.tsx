@@ -55,6 +55,8 @@ export type SyncPanelProps = {
   sessionRemembered: boolean;
   /** Codul invitației camerei curente; gol la camerele vechi, cu parolă. */
   invite: string;
+  /** Camera e cu invitație, chiar dacă pe web codul nu e păstrat după repornire (S5). */
+  inviteRoom?: boolean;
   inviteDraft: string;
   setInviteDraft: (value: string) => void;
   onCreateRoom: () => void;

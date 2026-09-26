@@ -3,6 +3,7 @@
  * Pozele bonurilor rămân pe telefon; pachetul trimis e fără imageData.
  * Sesiunea se reia singură la pornire din cheia păstrată în family-session (nu din parolă).
  */
+import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createEmptyAppData, isoToday, newId, normalizeAppData, type AppData } from "@/lib/finance-data";
 import { checkFamilyPassword, legacyPasswordClosed } from "@/lib/family-password";
@@ -46,6 +47,10 @@ const writeClosed = (closed: boolean) => {
 };
 
 /** Serializare fără poze — același format pentru localStorage și push familie. */
+
+/** Pe Android aplicația are stocarea ei; pe web originea e comună, deci codul invitației nu se păstrează (S5). */
+const keepInviteOnDevice = () => { try { return Capacitor.isNativePlatform(); } catch { return false; } };
+
 export const syncPortable = (value: AppData) =>
   JSON.stringify({
     ...value,
@@ -70,6 +75,7 @@ export function useFamilySync(
   const [syncHasSession, setSyncHasSession] = useState(false);
   /** Codul invitației camerei curente; lipsește la camerele vechi, cu parolă. */
   const [syncInvite, setSyncInvite] = useState("");
+  const [syncInviteRoom, setSyncInviteRoom] = useState(false);
   /** Invitație primită prin link, pusă deja în câmp ca omul doar să confirme. */
   const [syncInviteDraft, setSyncInviteDraft] = useState("");
   const [online, setOnline] = useState(() => typeof navigator === "undefined" ? true : navigator.onLine);
@@ -270,7 +276,7 @@ export function useFamilySync(
    * Intră în cameră: unește pachetul existent, își ia membrul propriu la prima intrare,
    * trimite și ascultă. `password` lipsește la reluarea automată (parola nu e păstrată).
    */
-  const syncOpenRoom = async (roomId: string, secret: FamilySecret, options: { password?: string; invite?: string; mode: "create" | "join" | "resume" }) => {
+  const syncOpenRoom = async (roomId: string, secret: FamilySecret, options: { password?: string; invite?: string; inviteRoom?: boolean; mode: "create" | "join" | "resume" }) => {
     const crypto = await loadFamilyCrypto();
     const syncApi = await loadFamilySync();
     let prepared: AppData | undefined;
@@ -336,12 +342,13 @@ export function useFamilySync(
     setActiveFamilyRoom(roomId);
     void refreshRoomEntitlement(roomId);
     setSyncInvite(options.invite || "");
+    setSyncInviteRoom(Boolean(options.invite || options.inviteRoom));
     setSyncLastSync(new Date().toISOString());
     writeClosed(false);
     if ("code" in recovery && recovery.code) setSyncRecoveryReveal(recovery.code);
     setSyncNotice(
       // Camerele vechi, cu parolă, se pot ataca offline: la fiecare intrare cerem mutarea pe invitație.
-      !options.invite && !("code" in recovery && recovery.code)
+      !options.invite && !options.inviteRoom && !("code" in recovery && recovery.code)
         ? t("Familia e încă într-o cameră cu parolă, mai ușor de ghicit. Apasă „Mută familia” ca să treceți pe invitație; datele rămân.")
         : ("warning" in recovery && recovery.warning)
         || ("code" in recovery && recovery.code
@@ -387,7 +394,7 @@ export function useFamilySync(
     const code = formatInvite(invite);
     const material = await crypto.importFamilyKeyMaterial(invite.key);
     if (!(await syncOpenRoom(invite.roomId, material, { invite: code, mode }))) return false;
-    setSyncHasSession(await saveFamilySession(invite.roomId, material, code));
+    setSyncHasSession(await saveFamilySession(invite.roomId, material, code, { keepInvite: keepInviteOnDevice() }));
     return true;
   };
 
@@ -477,7 +484,9 @@ export function useFamilySync(
       setSyncHasSession(true);
       setSyncBusy(true);
       try {
-        await syncOpenRoom(session.roomId, session.material, { invite: session.invite, mode: "resume" });
+        // Sesiunile web salvate înainte de S5 aveau codul invitației: îl scoatem din IndexedDB.
+        if (session.invite && !keepInviteOnDevice()) await saveFamilySession(session.roomId, session.material, session.invite, { keepInvite: false });
+        await syncOpenRoom(session.roomId, session.material, { invite: keepInviteOnDevice() ? session.invite : undefined, inviteRoom: Boolean(session.invite || session.inviteRoom), mode: "resume" });
       } catch (error) {
         setSyncNotice(error instanceof Error ? error.message : t("Sincronizarea nu a putut fi reluată."));
       } finally {
@@ -577,6 +586,7 @@ export function useFamilySync(
     stopped: syncStopped,
     sessionRemembered: syncHasSession,
     invite: syncInvite,
+    inviteRoom: syncInviteRoom,
     inviteDraft: syncInviteDraft,
     setInviteDraft: setSyncInviteDraft,
     onCreateRoom: () => void syncCreateRoom(),

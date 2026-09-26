@@ -106,7 +106,7 @@ function SelfMemberPicker({ members, selfMemberId, needsChoice, onChoose, onAdd 
   );
 }
 
-export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, invite, inviteDraft, setInviteDraft, onCreateRoom, onJoinInvite, onMoveToInvite, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, invite, inviteRoom, inviteDraft, setInviteDraft, onCreateRoom, onJoinInvite, onMoveToInvite, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -230,6 +230,23 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
               <button type="button" className="bf-link-button" disabled={busy || !online} onClick={() => setMoveConfirm(true)}>{t("Invitația a ajuns unde nu trebuia? Schimb-o")}</button>
             )}
           </div>
+        ) : inviteRoom ? (
+          <div className="bf-sync-invite" role="note">
+            <p className="bf-kicker">{t("INVITĂ UN TELEFON")}</p>
+            <p>{t("Pe web nu păstrăm codul invitației după repornire: e chiar cheia familiei. Trimite invitația de pe un telefon cu aplicația Android sau lipește codul mai jos.")}</p>
+            <div className="bf-sync-invite-actions">
+              <input className="bf-sync-invite-paste" aria-label={t("Codul invitației")} value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} placeholder="bf1.…" />
+              <button type="button" className="bf-secondary" disabled={!parseInvite(inviteDraft)} onClick={() => void shareInvite(inviteDraft).then((shared) => { if (!shared) void copySecret(inviteMessage(parseInvite(inviteDraft)!)); })}><Send size={16} /> {t("Trimite invitația")}</button>
+            </div>
+            {moveConfirm ? (
+              <div className="bf-sync-invite-actions">
+                <button type="button" className="bf-primary" disabled={busy || !online} onClick={() => { setMoveConfirm(false); onMoveToInvite(); }}>{t("Da, schimbă invitația")}</button>
+                <button type="button" className="bf-secondary" onClick={() => setMoveConfirm(false)}>{t("Anulează")}</button>
+              </div>
+            ) : (
+              <button type="button" className="bf-link-button" disabled={busy || !online} onClick={() => setMoveConfirm(true)}>{t("Nu mai ai codul? Fă o invitație nouă")}</button>
+            )}
+          </div>
         ) : (
           <div className="bf-sync-move" role="note">
             <p className="bf-kicker">{t("CAMERĂ CU PAROLĂ")}</p>
@@ -255,7 +272,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
           </div>
         )}
         <div className="bf-sync-recovery-actions">
-          {!invite && <button type="button" className="bf-link-button" onClick={() => setShowSessionPassword((value) => !value)}>
+          {!invite && !inviteRoom && <button type="button" className="bf-link-button" onClick={() => setShowSessionPassword((value) => !value)}>
             {showSessionPassword ? t("Ascunde parola acestei sesiuni") : t("Arată parola acestei sesiuni")}
           </button>}
           <button type="button" className="bf-link-button" onClick={onIssueRecovery} disabled={busy}>

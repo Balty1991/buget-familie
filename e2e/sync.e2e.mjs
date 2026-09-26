@@ -50,7 +50,7 @@ async function startVite() {
 
 /** Un telefon nou: onboarding închis, un nume și 2.500 lei pe card, scrise prin stocarea aplicației. */
 async function phone(browser, { name, partner }) {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, permissions: ["clipboard-read", "clipboard-write"] });
   await context.addInitScript(() => {
     try {
       localStorage.setItem("buget-familie:setup-complete", "true");
@@ -83,6 +83,17 @@ const ledger = (page) => page.evaluate(async () => {
   const data = await (await import("/src/lib/app-storage.ts")).readAppData();
   return { transactions: data.transactions.map((item) => ({ amount: item.amount, person: item.person, memberId: item.memberId })), members: data.settings.members.map((item) => item.name) };
 });
+
+/**
+ * Codul invitației, luat ca de om: „Copiază invitația” din Sync. Pe web el nu mai stă în
+ * IndexedDB (S5): sesiunea păstrează doar cheia neexportabilă și `inviteRoom`.
+ */
+async function copiedInvite(page) {
+  await openSync(page);
+  await page.getByRole("button", { name: "Copiază invitația" }).click();
+  const text = await page.evaluate(() => navigator.clipboard.readText());
+  return text.match(/bf1\.[A-Za-z0-9_.-]+/)?.[0];
+}
 
 async function openSync(page) {
   if (await page.locator(".bf-sync-session").count()) return;
@@ -131,8 +142,10 @@ async function main() {
     await openSync(radu.page);
     await radu.page.getByRole("button", { name: "Creează camera" }).click();
     await waitFor(() => connected(radu.page), "Radu conectat");
-    const invite = await radu.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite);
-    if (!invite?.startsWith("bf1.")) fail(`Invitația nu a fost păstrată: ${invite}`);
+    const stored = await radu.page.evaluate(async () => { const session = await (await import("/src/lib/family-session.ts")).loadFamilySession(); return { invite: session?.invite, inviteRoom: session?.inviteRoom }; });
+    if (stored.invite || !stored.inviteRoom) fail(`Pe web sesiunea trebuie să țină doar cheia, fără codul invitației: ${JSON.stringify(stored)}`);
+    const invite = await copiedInvite(radu.page);
+    if (!invite?.startsWith("bf1.")) fail(`Invitația nu se poate copia: ${invite}`);
     const raduUid = await radu.page.evaluate(async () => (await import("/src/lib/realtime-sync.ts")).ensureSignedIn());
     if (!raduUid) fail("Telefonul lui Radu nu are identitate anonimă");
 
@@ -215,8 +228,8 @@ async function main() {
       await openSync(ana.page);
       await ana.page.getByRole("button", { name: "Mută familia" }).click();
       await ana.page.getByRole("button", { name: "Da, mută familia" }).click();
-      await waitFor(async () => Boolean(await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite)), "Ana în camera nouă");
-      const moved = await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.invite);
+      await waitFor(async () => Boolean(await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.inviteRoom)), "Ana în camera nouă");
+      const moved = await copiedInvite(ana.page);
       await waitFor(async () => !(await mihai.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.roomId)), "Mihai iese din camera veche");
       await waitFor(async () => (await mihai.page.locator(".bf-sync-off-banner").count()) > 0, "bannerul „sync oprit” la Mihai");
       // Exact ce face omul: „Reconectează” din banner duce la Sync, unde scrie ce s-a întâmplat.

@@ -3434,4 +3434,7 @@ export const en: Record<string, string> = {
   "Am scos cash sau am mutat bani între carduri": "I withdrew cash or moved money between cards",
   "Rândul {line} din extras · pare o mutare între conturile voastre, nu o cheltuială": "Statement line {line} · looks like a move between your own accounts, not spending",
   "Pe {name} sunt acum {amount}.": "{name} holds {amount} now.",
+  "Pe web nu păstrăm codul invitației după repornire: e chiar cheia familiei. Trimite invitația de pe un telefon cu aplicația Android sau lipește codul mai jos.": "On the web we do not keep the invite code after a restart: it is the family key itself. Send the invite from a phone with the Android app or paste the code below.",
+  "Codul invitației": "Invite code",
+  "Nu mai ai codul? Fă o invitație nouă": "No longer have the code? Make a new invite",
 };
