@@ -1,4 +1,5 @@
 /* Buget Familie — export PDF local: rezumat lunar explicabil, generat exclusiv din datele din browser. */
+import { saveExport } from "@/lib/save-export";
 import { financialBalance, type AppData } from "@/lib/finance-data";
 import { getLocale } from "./i18n";
 
@@ -33,5 +34,5 @@ export const downloadMonthlyBalancePdf = async (data: AppData, month: string, me
   report.debts.forEach((debt) => { page(); write(`${debt.name} - datorie ramasa ${money(debt.remaining)}`, margin, 5, { size: 9, color: [142, 62, 51], style: "bold" }); write(`Rata declarata: ${money(debt.monthly)} / luna | Scadenta: ${debt.due}`, margin, 6, { size: 8, color: [104, 124, 111] }); });
   report.savings.forEach((saving) => { page(); write(`${saving.name} - ${money(saving.current)} din ${money(saving.target)}`, margin, 5, { size: 9, color: [36, 108, 91], style: "bold" }); write(`Termen: ${saving.due}`, margin, 6, { size: 8, color: [104, 124, 111] }); });
   const pages = doc.getNumberOfPages(); for (let index = 1; index <= pages; index += 1) { doc.setPage(index); doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(104, 124, 111); doc.text(`Generat local la ${new Date().toLocaleString("ro-RO")} | Buget Familie | Pagina ${index}/${pages}`, margin, 287); }
-  doc.save(`bilant-${report.month}-${plain(report.perspective).toLocaleLowerCase("ro-RO").replace(/\s+/g, "-")}.pdf`);
+  await saveExport(`bilant-${report.month}-${plain(report.perspective).toLocaleLowerCase("ro-RO").replace(/\s+/g, "-")}.pdf`, doc.output("blob"));
 };

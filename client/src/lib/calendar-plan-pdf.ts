@@ -1,4 +1,5 @@
 /** Ledger Flow — PDF local pentru tranșele calendaristice; datele nu părăsesc browserul. */
+import { saveExport } from "@/lib/save-export";
 import type { CalendarBudget } from "@/lib/calendar-budget";
 import { formatDate } from "@/lib/finance-data";
 import { getLocale, t } from "./i18n";
@@ -117,5 +118,5 @@ export const downloadCalendarPlanPdf = async (plan: CalendarBudget, familyName: 
     doc.setTextColor(101, 122, 112);
     doc.text(plain(`${t("Generat local")} ${new Date(report.createdAt).toLocaleString(getLocale())} · Buget Familie · ${index}/${pages}`), margin, 287);
   }
-  doc.save(`plan-calendaristic-${report.start}-${report.end}.pdf`);
+  await saveExport(`plan-calendaristic-${report.start}-${report.end}.pdf`, doc.output("blob"));
 };

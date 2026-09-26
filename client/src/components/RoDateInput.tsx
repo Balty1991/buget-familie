@@ -12,7 +12,7 @@ function roToIso(text: string): string | null {
   const day = Number(match[1]);
   const month = Number(match[2]);
   const year = Number(match[3]);
-  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900) return null;
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) return null;
   const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const check = new Date(`${iso}T12:00:00`);
   if (check.getFullYear() !== year || check.getMonth() + 1 !== month || check.getDate() !== day) return null;
@@ -36,6 +36,9 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "onC
   onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
 };
 
+/** Un câmp de dată rămas cu o dată care nu se poate citi: formularul nu salvează data veche pe tăcute. */
+export const hasInvalidRoDate = () => typeof document !== "undefined" && Boolean(document.querySelector('[data-ro-date][aria-invalid="true"]'));
+
 /** zz.ll.aaaa pe ecran, yyyy-mm-dd în date. Nu depinde de limba telefonului. */
 export function RoDateInput({ value = "", min, onChange, onBlur, placeholder, ...rest }: Props) {
   const [draft, setDraft] = useState<string | null>(null);
@@ -57,6 +60,7 @@ export function RoDateInput({ value = "", min, onChange, onBlur, placeholder, ..
       placeholder={placeholder || "zz.ll.aaaa"}
       value={shown}
       aria-invalid={invalid || undefined}
+      data-ro-date=""
       onChange={(event) => {
         const next = formatDateDraft(event.target.value);
         setDraft(next);

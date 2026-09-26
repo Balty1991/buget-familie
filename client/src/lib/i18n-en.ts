@@ -3370,4 +3370,5 @@ export const en: Record<string, string> = {
   "Telefonul e conectat la familie, deci backup-ul nu înlocuiește datele: adaugă doar ce nu există acum (mișcări, plicuri, datorii). Ce există rămâne cum e, pe toate telefoanele. Ca să înlocuiești tot, închide întâi sesiunea din Sync.": "This phone is connected to the family, so the backup does not replace the data: it only adds what is missing now (movements, envelopes, debts). What exists stays as it is, on every phone. To replace everything, close the session in Sync first.",
   "Unești backup-ul cu familia?": "Merge the backup with the family?",
   "Da, unește": "Yes, merge",
+  "Data nu există în calendar. Scrie-o ca zz.ll.aaaa, de exemplu 05.10.2026.": "That date does not exist. Write it as dd.mm.yyyy, for example 05.10.2026.",
 };

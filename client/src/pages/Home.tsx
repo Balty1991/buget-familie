@@ -11,6 +11,7 @@ import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
 import { safeSetItem } from "@/lib/safe-storage";
+import { closeTopDialog } from "@/hooks/use-focus-trap";
 import { BrandMark } from "@/components/BrandMark";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { isAppLockEnabled } from "@/lib/app-lock";
@@ -286,6 +287,30 @@ export default function Home() {
       accept((await App.getLaunchUrl().catch(() => undefined))?.url);
       const handle = await App.addListener("appUrlOpen", (event) => accept(event.url));
       remove = () => void handle.remove();
+    }).catch(() => undefined);
+    return () => remove?.();
+  }, []);
+  /**
+   * Înapoi pe Android: întâi dialogul de sus, apoi fereastra, apoi „Mai mult”, apoi Astăzi.
+   * Doar de pe Astăzi iese din aplicație; altfel o ciornă scrisă se pierdea dintr-o atingere.
+   */
+  const backStateRef = useRef({ modal, view, more });
+  backStateRef.current = { modal, view, more };
+  useEffect(() => {
+    let remove: (() => void) | undefined;
+    void import("@capacitor/core").then(({ Capacitor }) => {
+      if (!Capacitor.isNativePlatform()) return;
+      return import("@capacitor/app").then(async ({ App }) => {
+        const handle = await App.addListener("backButton", () => {
+          const state = backStateRef.current;
+          if (closeTopDialog()) return;
+          if (state.modal) { setModal(null); return; }
+          if (state.view === "utilities" && state.more !== "overview") { setMore("overview"); return; }
+          if (state.view !== "today") { go("today"); return; }
+          void App.exitApp();
+        });
+        remove = () => void handle.remove();
+      });
     }).catch(() => undefined);
     return () => remove?.();
   }, []);

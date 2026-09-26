@@ -2,9 +2,10 @@
  * Atelierul Financiar — export CSV local pentru rândurile deja filtrate în Jurnal.
  * Nu trimite date în rețea; formează un fișier UTF-8 compatibil cu Excel și foi de calcul.
  */
+import { csvSafe, saveExport } from "@/lib/save-export";
 import type { AppData, Transaction } from "./finance-data";
 
-const quote = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+const quote = csvSafe;
 
 const envelopeLabel = (data: AppData | undefined, allocationId?: string) => {
   if (!allocationId || allocationId === "outside") return "În afara plicurilor";
@@ -29,6 +30,5 @@ export const journalCsvSnapshot = (transactions: Transaction[], data?: AppData) 
 
 export const downloadJournalCsv = (transactions: Transaction[], filename = "jurnal-buget-familie.csv", data?: AppData) => {
   const csv = `\uFEFF${journalCsvSnapshot(transactions, data)}`;
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  const anchor = document.createElement("a"); anchor.href = url; anchor.download = filename; anchor.click(); URL.revokeObjectURL(url);
+  void saveExport(filename, new Blob([csv], { type: "text/csv;charset=utf-8" }));
 };

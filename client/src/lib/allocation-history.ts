@@ -1,3 +1,4 @@
+import { csvSafe, saveExport } from "@/lib/save-export";
 import { formatDate, isoToday, type AllocationHistoryEntry, type AppData } from "./finance-data";
 
 const labelsFor = (data: AppData) => new Map(data.settings.salaryPlan.allocations.map((item) => [item.id, item.label]));
@@ -20,7 +21,7 @@ export function allocationHistorySnapshot(data: AppData): AllocationHistoryEntry
   return [...explicit, ...legacyTransfers, ...legacyWeekTransfers, ...legacySalaryApplications].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
 }
 
-const csvCell = (value: string | number | undefined) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+const csvCell = (value: string | number | undefined) => csvSafe(value);
 const kindLabel = (kind: AllocationHistoryEntry["kind"]) => ({ created: "Plic creat", updated: "Plic modificat", deleted: "Plic șters", "income-applied": "Repartizare din venit", "income-reverted": "Repartizare anulată", "envelope-transfer": "Realocare între plicuri", "week-transfer": "Transfer între săptămâni" })[kind];
 
 export function downloadAllocationHistoryCsv(data: AppData, entries = allocationHistorySnapshot(data)): void {
@@ -36,10 +37,5 @@ export function downloadAllocationHistoryCsv(data: AppData, entries = allocation
     ].map((value) => csvCell(value)).join(";")),
   ];
   const blob = new Blob(["\uFEFF" + rows.map((row) => Array.isArray(row) ? row.join(";") : row).join("\n")], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `istoric-repartizari-${isoToday()}.csv`;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  void saveExport(`istoric-repartizari-${isoToday()}.csv`, blob);
 }

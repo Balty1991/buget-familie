@@ -8,7 +8,7 @@ import { Check, Plus, Trash2 } from "lucide-react";
 import { amountInput, allocationFromText, amountError, BASE_CURRENCY, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, exchangeRateFor, expenseCategories, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseRomanianAmount, pickerAllocationsForExpense, planAllocationMath, resolveReceiptLines, sourceBalance, sourceCurrency, toBaseAmount, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { Field, Modal, fmtExact, money } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
-import { RoDateInput } from "@/components/RoDateInput";
+import { hasInvalidRoDate, RoDateInput } from "@/components/RoDateInput";
 
 export function TransactionForm({ data, initial, onSave, onClose }: { data: AppData; initial?: Transaction; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => void; onClose: () => void }) {
   const [kind, setKind] = useState<TransactionKind>(initial?.kind || "expense");
@@ -87,6 +87,7 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
     const numeric = parseRomanianAmount(amount);
     const source = data.settings.paymentSources.find((item) => item.id === sourceId);
     const member = data.settings.members.find((item) => item.id === memberId);
+    if (hasInvalidRoDate()) return setError(t("Data nu există în calendar. Scrie-o ca zz.ll.aaaa, de exemplu 05.10.2026."));
     if (!title.trim()) return setError(t("Scrie o denumire pentru mișcare."));
     if (!numeric || numeric <= 0) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
     if (!source || !member || !date) return setError(t("Alege data, membrul și sursa de plată."));

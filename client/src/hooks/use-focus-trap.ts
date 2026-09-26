@@ -9,10 +9,23 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea:not([disab
  * Nu mută focusul pe primul buton: pe Android, .focus() e tratat ca :focus-visible
  * și primul card din First Run părea bifat fără să-l fi atins.
  */
+/** Dialogurile deschise, ultimul deasupra: butonul Înapoi de pe Android îl închide pe cel de sus. */
+const openDialogs: Array<{ current: () => void }> = [];
+export function closeTopDialog(): boolean {
+  const top = openDialogs[openDialogs.length - 1];
+  if (!top) return false;
+  top.current();
+  return true;
+}
+
 export function useFocusTrap<T extends HTMLElement>(onClose: () => void): RefObject<T | null> {
   const containerRef = useRef<T>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
+  useEffect(() => {
+    openDialogs.push(onCloseRef);
+    return () => { const index = openDialogs.lastIndexOf(onCloseRef); if (index >= 0) openDialogs.splice(index, 1); };
+  }, []);
   // Capturat în timpul primului render, înainte ca autoFocus-ul din dialog să fure focusul din pagină.
   const [previouslyFocused] = useState<HTMLElement | null>(() => document.activeElement as HTMLElement | null);
 

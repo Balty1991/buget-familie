@@ -1,4 +1,5 @@
 /** Digest săptămânal PDF — generat local din check-in, fără rețea. */
+import { saveExport } from "@/lib/save-export";
 import type { AppData } from "@/lib/finance-data";
 import { formatDate } from "@/lib/finance-data";
 import { checkInRebalance, formatWeeklyCheckInShare, weeklyCheckIn, weeklyDigestHeadline } from "@/lib/household-insights";
@@ -164,5 +165,5 @@ export const downloadWeeklyDigestPdf = async (data: AppData, asOf?: string) => {
       287,
     );
   }
-  doc.save(`digest-saptamanal-${report.start}-${report.end}.pdf`);
+  await saveExport(`digest-saptamanal-${report.start}-${report.end}.pdf`, doc.output("blob"));
 };
