@@ -1,6 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin } from "vite";
 
@@ -70,15 +71,23 @@ function vitePluginCsp(): Plugin {
         // Doar pentru web: în Android, Capacitor injectează la rulare un script inline (puntea nativă)
         // care ar fi blocat. Acolo pagina vine oricum din pachetul aplicației, nu de pe internet.
         if (process.env.GITHUB_PAGES !== "true") return html;
+        // jsDelivr servește orice pachet npm: permitem doar căile exacte, cu versiune, ale cititorului de bonuri.
+        const pkg = (name: string) => JSON.parse(readFileSync(path.resolve(import.meta.dirname, "node_modules", name, "package.json"), "utf8")) as { version: string; dependencies?: Record<string, string> };
+        const tesseract = pkg("tesseract.js");
+        const coreVersion = String(tesseract.dependencies?.["tesseract.js-core"] || "").replace(/^[^0-9]*/, "");
+        const ocrScripts = `https://cdn.jsdelivr.net/npm/tesseract.js@v${tesseract.version}/ https://cdn.jsdelivr.net/npm/tesseract.js-core@v${coreVersion}/`;
+        const ocrData = "https://cdn.jsdelivr.net/npm/@tesseract.js-data/";
         const hashes = Array.from(html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g))
           .map((match) => `'sha256-${createHash("sha256").update(match[1]).digest("base64")}'`);
         const policy = [
           "default-src 'self'",
-          `script-src 'self' 'wasm-unsafe-eval' ${hashes.join(" ")} https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://cdn.jsdelivr.net`,
+          `script-src 'self' 'wasm-unsafe-eval' ${hashes.join(" ")} https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ ${ocrScripts}`,
           "style-src 'self' 'unsafe-inline'",
-          "img-src 'self' data: blob: https:",
+          // Pozele bonurilor sunt locale; din afară vin doar imaginile reCAPTCHA.
+          "img-src 'self' data: blob: https://www.gstatic.com https://www.google.com",
           "font-src 'self' data:",
-          "connect-src 'self' data: blob: https://*.googleapis.com https://*.cloudfunctions.net https://*.firebaseio.com wss://*.firebaseio.com https://www.google.com https://cdn.jsdelivr.net https://search.openfoodfacts.org",
+          // Doar serviciile folosite: Firestore, Auth, App Check, funcțiile din europe-central2, reCAPTCHA, OCR și Open Food Facts.
+          `connect-src 'self' data: blob: https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://europe-central2-buget-familie-a6a0d.cloudfunctions.net https://www.google.com ${ocrScripts} ${ocrData} https://search.openfoodfacts.org https://world.openfoodfacts.org https://world.openproductsfacts.org`,
           "frame-src https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com",
           "worker-src 'self' blob:",
           "manifest-src 'self'",
@@ -130,8 +139,8 @@ export default defineConfig(({ command }) => {
     server: {
       port: 3000,
       strictPort: false, // Will find next available port if 3000 is busy
-      host: true,
-      allowedHosts: true,
+      // Doar pe acest calculator; fără listă de gazde deschisă (o pagină web ar putea citi sursele prin DNS rebinding).
+      host: "127.0.0.1",
       fs: {
         strict: true,
         deny: ["**/.*"],

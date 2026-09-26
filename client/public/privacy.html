@@ -17,7 +17,7 @@
 </head>
 <body>
   <main>
-    <p class="meta">Buget Familie · versiunea 1.1.96 · actualizat 25 septembrie 2026</p>
+    <p class="meta">Buget Familie · versiunea 1.1.96 · actualizat 26 septembrie 2026</p>
     <h1>Politică de confidențialitate</h1>
     <p>Buget Familie este o aplicație de evidență financiară personală sau de familie, publicată de dezvoltatorul Balty1991. Contact: <a href="mailto:contact.vanzo@gmail.com">contact.vanzo@gmail.com</a>. Pachet Android: <code>ro.balty1991.bugetfamilie</code>.</p>
     <p>Nu creăm conturi de utilizator, nu cerem date bancare și nu vindem informații. Tu ești operatorul datelor din registrul tău.</p>
@@ -33,7 +33,7 @@
     <p>Fotografiile bonurilor nu pleacă niciodată de pe telefon: nici la sincronizare, nici la ghidul AI, nici la noi.</p>
 
     <h2>2. Sincronizarea de familie (opțională)</h2>
-    <p>Dacă o pornești, registrul este comprimat și criptat AES-GCM pe telefon, apoi salvat în Google Firebase Firestore, într-o cameră cu ID aleator. Cheia camerei stă doar pe telefoanele familiei și ajunge la partener prin invitație (link sau cod QR); camerele vechi, create cu parolă de familie, au ca ID hash-ul SHA-256 al parolei. Nici cheia, nici parola nu ajung pe server. Serverul nu poate citi sume, nume sau note.</p>
+    <p>Dacă o pornești, registrul este comprimat și criptat AES-GCM pe telefon, apoi salvat în Google Firebase Firestore, într-o cameră cu ID aleator. Cheia camerei stă doar pe telefoanele familiei și ajunge la partener prin invitație (link sau cod QR); camerele vechi, create cu parolă de familie, au ca ID hash-ul SHA-256 al parolei. Cheia și parola nu ajung pe server în clar. Singura excepție e codul de recuperare, dacă îl folosești: cheia camerei (sau parola) este salvată pe server criptată cu acest cod, pe care serverul nu îl are, ca să poți reveni în familie de pe un telefon nou. Serverul nu poate citi sume, nume sau note.</p>
     <p>Nu se sincronizează: fotografiile bonurilor, șabloanele rapide, filtrele, tema, codul de blocare și jurnalul de sincronizare al telefonului.</p>
 
     <h2>3. Identitate anonimă și protecție la abuz</h2>
@@ -70,7 +70,7 @@
     <p>Datele locale rămân până le ștergi (Setări → Resetare) sau dezinstalezi aplicația. Nu există cont de șters; identificatorul anonim nu e legat de numele tău, iar la cerere îl ștergem, împreună cu mesajele de feedback. Contoarele de limită se suprascriu singure. Pachetul criptat al camerei rămâne pe server fără cheie, deci nu poate fi citit; dacă vrei să dispară, scrie-ne și îl ștergem. Instrucțiuni: <a href="./delete-data.html">Cum ștergi datele</a>.</p>
 
     <h2>10. Destinatari și transferuri</h2>
-    <p>Google (Firebase Authentication, Firestore, Cloud Functions, App Check/reCAPTCHA, Gemini) primește identificatorul anonim, pachetul criptat dacă sincronizezi, cererile către ghid și mesajele de feedback. Groq, Inc. (SUA) primește cererile către ghid doar când Gemini nu răspunde. Transferurile în afara UE se fac în baza clauzelor contractuale standard ale acestor furnizori. GitHub Pages servește interfața web, nu registrul tău. Nu folosim procesatori de plăți în această versiune.</p>
+    <p>Google (Firebase Authentication, Firestore, Cloud Functions, App Check/reCAPTCHA, Gemini) primește identificatorul anonim, pachetul criptat dacă sincronizezi, cererile către ghid și mesajele de feedback. Groq, Inc. (SUA) primește cererile către ghid doar când Gemini nu răspunde. Transferurile în afara UE se fac în baza clauzelor contractuale standard ale acestor furnizori. GitHub Pages servește interfața web, nu registrul tău. La prima citire a unui bon, telefonul descarcă de la jsDelivr (CDN public) programul de recunoaștere a textului și datele de limbă; jsDelivr vede doar adresa IP și momentul descărcării, nu fotografia, care rămâne pe telefon. Dacă folosești căutarea de produse din catalog, cuvântul căutat (fără alte date) pleacă la Open Food Facts și Open Products Facts, baze de date publice și gratuite. Nu folosim procesatori de plăți în această versiune.</p>
 
     <h2>11. Drepturile tale</h2>
     <p>Poți accesa, exporta și șterge datele din aplicație. Ai dreptul la acces, rectificare, ștergere, restricționare, portabilitate și opoziție, și poți depune plângere la ANSPDCP (<a href="https://www.dataprotection.ro">dataprotection.ro</a>). Pentru întrebări: <a href="mailto:contact.vanzo@gmail.com">contact.vanzo@gmail.com</a>. Răspundem în maximum 30 de zile.</p>

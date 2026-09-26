@@ -825,8 +825,9 @@ export const verifyPlayPurchase = onRequest(
  * Notificările Play (RTDN) vin prin Pub/Sub push, care trimite un token OIDC semnat de Google
  * pentru contul de serviciu ales pe abonament. Fără token valid cererea e ignorată: altfel oricine
  * cunoaște adresa funcției o putea apela (R9 din raport).
- * Audiența: adresa funcției (implicit la Pub/Sub) sau PLAY_RTDN_AUDIENCE; contul: orice cont de
- * serviciu Google, sau exact PLAY_RTDN_SERVICE_ACCOUNT dacă e setat. Vezi docs/BILLING_PLAY_PREP.md.
+ * Audiența: adresa funcției (implicit la Pub/Sub) sau PLAY_RTDN_AUDIENCE; contul: exact
+ * PLAY_RTDN_SERVICE_ACCOUNT, obligatoriu (orice proiect GCP poate emite un token pentru adresa
+ * funcției, deci „orice cont de serviciu” nu oprește pe nimeni). Vezi docs/BILLING_PLAY_PREP.md.
  */
 const rtdnVerifier = new OAuth2Client();
 const RTDN_AUDIENCES = [
@@ -843,7 +844,8 @@ async function fromPubSub(header: string | undefined): Promise<boolean> {
     const claims = ticket.getPayload();
     const email = String(claims?.email || "");
     const expected = process.env.PLAY_RTDN_SERVICE_ACCOUNT;
-    return claims?.email_verified === true && (expected ? email === expected : email.endsWith(".gserviceaccount.com"));
+    if (!expected) console.error("playRtdn: PLAY_RTDN_SERVICE_ACCOUNT lipsește; notificarea e refuzată");
+    return claims?.email_verified === true && Boolean(expected) && email === expected;
   } catch {
     return false;
   }

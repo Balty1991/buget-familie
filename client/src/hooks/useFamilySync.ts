@@ -241,7 +241,7 @@ export function useFamilySync(
       if (isThisDeviceRevoked(merged)) {
         setData(merged);
         syncDisconnect();
-        setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
+        setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare, sau cere o invitație nouă."));
         return;
       }
       if (!localPending) syncLastPortableRef.current = mergedPortable;
@@ -302,7 +302,7 @@ export function useFamilySync(
           setData(merged);
           await clearFamilySession();
           setSyncHasSession(false);
-          setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
+          setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare, sau cere o invitație nouă."));
           return false;
         }
         merged = touchSyncDevice(merged);
@@ -420,7 +420,10 @@ export function useFamilySync(
      * La intrare, tot registrul de pe telefon pleacă în camera aceea; întrebăm limpede înainte.
      */
     const current = syncDataRef.current;
-    const hasLocalData = current.transactions.length > 0 || current.debts.length > 0 || current.savings.length > 0 || current.settings.salaryPlan.allocations.length > 0 || current.settings.paymentSources.some((source) => source.openingBalance > 0);
+    // Orice în afară de un registru literalmente gol pleacă în camera invitației: întrebăm mereu.
+    const hasLocalData = current.transactions.length > 0 || current.debts.length > 0 || current.savings.length > 0 || current.recurring.length > 0 || current.receipts.length > 0
+      || current.settings.salaryPlan.allocations.length > 0 || (current.settings.salaryPlan.incomes || []).length > 0 || current.settings.plannedEvents.length > 0
+      || current.settings.members.length > 1 || current.settings.paymentSources.some((source) => source.openingBalance > 0);
     if (hasLocalData && !(await askConfirm(
       t("Tot ce e pe acest telefon (mișcări, plicuri, datorii) va fi trimis și văzut în camera din invitație. Intră doar dacă invitația e de la cineva din casa ta."),
       { title: t("Intri în această familie?"), confirmLabel: t("Da, intru") },
@@ -635,7 +638,7 @@ export function useFamilySync(
     onRevokeDevice: async (deviceId: string) => {
       if (deviceId === getOrCreateDeviceId()) {
         const confirmed = await askConfirm(
-          t("Ieși din cameră pe acest telefon. Ca să revii, un alt telefon trebuie să te reactiveze — sau schimbați parola familiei."),
+          t("Ieși din cameră pe acest telefon. Ca să revii, un alt telefon trebuie să te reactiveze sau să-ți trimită o invitație nouă."),
         );
         if (!confirmed) return;
       }

@@ -10,7 +10,7 @@
     "cap:sync": "vite build && cap sync android",
     "cap:android": "pnpm run cap:sync && cap open android",
     "start": "NODE_ENV=production node dist/index.js",
-    "preview": "vite preview --host",
+    "preview": "vite preview --host 127.0.0.1",
     "check": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run",

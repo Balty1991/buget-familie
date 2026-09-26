@@ -23,6 +23,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Verifică tipurile
         run: pnpm check
+      - name: Verifică stilul codului
+        run: pnpm lint
       - name: Rulează testele
         run: pnpm test
       - name: Construiește bundle-ul Android

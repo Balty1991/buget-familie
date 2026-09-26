@@ -127,7 +127,7 @@ jobs:
           gcloud firestore fields ttls list --project "$FIREBASE_PROJECT_ID" --quiet || true
 
       - name: Deploy Firebase Functions
-        run: npx --yes firebase-tools@latest deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
+        run: npx --yes firebase-tools@15.31.0 deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
 
       - name: Check aiGuide endpoint
         run: |

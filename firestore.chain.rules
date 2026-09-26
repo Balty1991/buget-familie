@@ -24,7 +24,7 @@ service cloud.firestore {
         && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
         && request.resource.data.envelope.version == 1
         && request.resource.data.envelope.ciphertext is string
-        && request.resource.data.envelope.ciphertext.size() < 2000000
+        && request.resource.data.envelope.ciphertext.size() <= 950000
         && request.resource.data.envelope.salt is string
         && request.resource.data.envelope.salt.size() == 24
         && request.resource.data.envelope.iv is string
@@ -37,7 +37,7 @@ service cloud.firestore {
         && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
         && request.resource.data.envelope.version == 1
         && request.resource.data.envelope.ciphertext is string
-        && request.resource.data.envelope.ciphertext.size() < 2000000
+        && request.resource.data.envelope.ciphertext.size() <= 950000
         && request.resource.data.envelope.salt is string
         && request.resource.data.envelope.salt.size() == 24
         && request.resource.data.envelope.iv is string
@@ -81,9 +81,10 @@ service cloud.firestore {
 
     // Cod de recuperare: același format de pachet, ID derivat din cod (nu din parolă).
     // Serverul vede doar parola de familie deja criptată cu codul. Fără list/delete.
+    // Doar `create`: fiecare cod nou are alt ID, iar cine află ID-ul unui cod existent nu-l mai poate strica.
     match /familyRecovery/{recoveryId} {
       allow get: if signedIn() && recoveryId.size() == 64;
-      allow create, update: if signedIn() && recoveryId.size() == 64 && envelopeWriteOk();
+      allow create: if signedIn() && recoveryId.size() == 64 && envelopeWriteOk();
     }
 
     // Abonamentul Familia legat de o cameră. Îl scrie doar funcția verifyPlayPurchase

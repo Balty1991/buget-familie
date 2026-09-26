@@ -74,7 +74,7 @@ jobs:
         run: |
           set -uo pipefail
           for try in 1 2 3; do
-            if npx --yes firebase-tools@latest deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive --force; then exit 0; fi
+            if npx --yes firebase-tools@15.31.0 deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive --force; then exit 0; fi
             echo "Încercarea $try nu a reușit; aștept 60 s."
             sleep 60
           done

@@ -23,8 +23,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Verifică tipurile
         run: pnpm check
-      - name: Rulează testele financiare
-        run: pnpm exec vitest run client/src/lib/finance-data.test.ts
+      - name: Verifică stilul codului
+        run: pnpm lint
+      - name: Rulează testele
+        run: pnpm test
       - name: Construiește bundle-ul Android
         run: pnpm run cap:sync
       - uses: actions/setup-java@v5

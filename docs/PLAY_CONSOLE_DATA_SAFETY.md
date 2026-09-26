@@ -61,7 +61,7 @@ OCR-ul rulează local; la ghidul online pleacă doar magazinul, data, totalul ș
 | Colectat? | **Da** — ID anonim Firebase Authentication, când folosești sync, ghidul online sau feedbackul |
 | Partajat? | **Nu** |
 | Scopuri | **Funcționalitatea aplicației**, **Prevenirea fraudei, securitate și conformitate** (acces la camere, limite pe telefon) |
-| Ce ajunge pe server la sync | ID cameră aleator + ciphertext AES-GCM; cheia camerei **nu** pleacă de pe telefoane |
+| Ce ajunge pe server la sync | ID cameră aleator + ciphertext AES-GCM; cheia camerei pleacă doar împachetată cu codul de recuperare (dacă familia îl folosește), pe care serverul nu îl are |
 
 ```
 Telefonul primește un identificator anonim aleator (Firebase Authentication), fără nume,
@@ -93,6 +93,8 @@ Ce pleacă, exact: întrebarea, ultimele 8 mesaje, `compactGuideContext` (plicur
 surse cu sold, categorii, scadențe, recurente, datorii, obiective, evenimente, venituri așteptate
 cu ziua lor, numele membrilor, totalurile lunii, data salariului) și, la bon, magazin/dată/total/produse.
 Nu pleacă jurnalul de mișcări, pozele, cheia sau parola camerei.
+
+Alți destinatari, fără date personale: jsDelivr (CDN) servește programul OCR și datele de limbă la prima citire a unui bon (vede doar IP-ul); Open Food Facts / Open Products Facts primesc doar cuvântul căutat în catalogul de produse.
 
 ```
 Ghidul răspunde întâi de pe telefon. Dacă nu înțelege, întrebarea, ultimele mesaje și un rezumat
@@ -140,7 +142,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 | Utilizatorii pot solicita ștergerea | **Da** |
 | Cum | 1) In-app: Setări → Resetare → „Resetează datele locale” · 2) Public: https://balty1991.github.io/buget-familie/delete-data.html · 3) Dezinstalare |
 | Cont de șters la dezvoltator | **Nu există** cont Buget Familie |
-| Cameră familie | Schimbați parola (≥12 caractere) pe telefoanele rămase; camera veche rămâne indescifrabilă |
+| Cameră familie | Pe un telefon rămas: Sync → Revocă telefonul pierdut, apoi „Mută familia” (invitație nouă); camera veche e golită |
 | Backup Android | **Dezactivat**: `android:allowBackup="false"` și `dataExtractionRules` exclud backup-ul cloud și transferul pe telefon nou |
 | Copie automată (opțională) | JSON necriptat în Descărcări, pe telefon; nu pleacă la noi. Dezvăluit în politică |
 
