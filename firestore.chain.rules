@@ -28,7 +28,10 @@ service cloud.firestore {
         && request.resource.data.envelope.salt is string
         && request.resource.data.envelope.salt.size() == 24
         && request.resource.data.envelope.iv is string
-        && request.resource.data.envelope.iv.size() == 16;
+        && request.resource.data.envelope.iv.size() == 16
+        && request.resource.data.envelope.createdAt is string
+        && request.resource.data.envelope.createdAt.size() < 40
+        && request.resource.data.updatedAt == request.time;
     }
 
     // Camera familiei: același pachet, plus câmpurile lanțului.
@@ -41,7 +44,10 @@ service cloud.firestore {
         && request.resource.data.envelope.salt is string
         && request.resource.data.envelope.salt.size() == 24
         && request.resource.data.envelope.iv is string
-        && request.resource.data.envelope.iv.size() == 16;
+        && request.resource.data.envelope.iv.size() == 16
+        && request.resource.data.envelope.createdAt is string
+        && request.resource.data.envelope.createdAt.size() < 40
+        && request.resource.data.updatedAt == request.time;
     }
 
     function commitOk() {

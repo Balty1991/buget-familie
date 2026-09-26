@@ -91,7 +91,13 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
     return () => window.removeEventListener("buget-familie:open-catalog", onOpen);
   }, []);
 
+  /**
+   * Catalogul online se întreabă doar la cerere: înainte, fiecare tastă pleca la Open Food Facts.
+   * Acum pleacă doar denumirea pentru care omul apasă „Caută și online”.
+   */
+  const [onlineQuery, setOnlineQuery] = useState("");
   useEffect(() => {
+    const query = onlineQuery;
     if (offline || query.trim().length < 3) {
       setOnlineHits([]);
       setOnlineBusy(false);
@@ -110,12 +116,13 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
           setOnlineError(true);
         })
         .finally(() => { if (!controller.signal.aborted) setOnlineBusy(false); });
-    }, 380);
+    }, 0);
     return () => {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [query, offline]);
+  }, [onlineQuery, offline]);
+  useEffect(() => { if (onlineQuery && foldRomanian(onlineQuery) !== foldRomanian(query)) setOnlineQuery(""); }, [query]);
 
   const shownHits = useMemo(() => {
     const merged = [...hits];
@@ -242,6 +249,7 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
                 <Plus size={14} />
               </button>
             ))}
+            {!offline && query.trim().length >= 3 && onlineQuery !== query && <button type="button" className="bf-link-button" onClick={() => setOnlineQuery(query)}>{t("Caută și online (Open Food Facts)")}</button>}
             {onlineBusy ? <p className="bf-helper">{t("Căutăm în catalogul online…")}</p> : null}
             {onlineError ? <p className="bf-helper">{t("Catalogul online n-a răspuns. Rămân rezultatele de pe telefon — poți adăuga denumirea tu.")}</p> : null}
             {!shownHits.some((hit) => foldRomanian(hit.name) === foldRomanian(query)) ? (

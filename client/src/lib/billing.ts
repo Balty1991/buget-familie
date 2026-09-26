@@ -43,6 +43,8 @@ const remember = (result: VerifyResponse, roomId?: string) => {
   return false;
 };
 
+const roomAccountId = async (roomId: string) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`bf-room:${roomId}`))), (byte) => byte.toString(16).padStart(2, "0")).join("");
+
 const unavailable = (): BillingResult | undefined => {
   if (!BILLING_LIVE) return { ok: false, message: t("Abonamentele nu sunt încă active. În perioada de testare, Familia e deschisă pentru toți.") };
   if (!isNativeApp()) return { ok: false, message: t("Abonamentul se cumpără din aplicația de pe Android (Google Play).") };
@@ -60,6 +62,8 @@ export async function buyFamilie(period: "month" | "year", roomId = activeRoomId
       planIdentifier: PLAY_BASE_PLANS[productId],
       productType: PURCHASE_TYPE.SUBS,
       quantity: 1,
+      // Amprenta camerei (fără date personale): serverul refuză mutarea abonamentului în altă cameră.
+      ...(roomId ? { appAccountToken: await roomAccountId(roomId) } : {}),
     });
     if (!transaction.purchaseToken) return { ok: false, message: t("Google Play nu a trimis confirmarea cumpărării.") };
     const active = remember(await verifyOnServer(transaction.purchaseToken, productId, roomId), roomId);

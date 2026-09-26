@@ -24,6 +24,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import com.getcapacitor.BridgeActivity;
@@ -178,8 +179,15 @@ public class MainActivity extends BridgeActivity {
    * WebView-ul ține JS-ul, timer-ele și rasterul pornite în fundal dacă nu
    * îl pauzăm. Asta e memoria care umflă aplicația când treci la alt ecran.
    */
+  /** Omul a cerut „Ascunde ecranul în capturi” (FLAG_SECURE permanent). Setat din plugin. */
+  static volatile boolean userSecureScreen = false;
+
   @Override
   public void onPause() {
+    /* Sub Android 13 nu există setRecentsScreenshotEnabled: ascundem ecranul cât aplicația e în
+       fundal, ca lista de aplicații recente să nu arate registrul. La revenire scoatem steagul,
+       dacă omul nu l-a cerut permanent (capturile rămân ale lui). */
+    if (Build.VERSION.SDK_INT < 33) getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView != null) {
       webView.onPause();
@@ -192,6 +200,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onResume() {
     super.onResume();
+    if (Build.VERSION.SDK_INT < 33 && !userSecureScreen) getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView != null) {
       webView.resumeTimers();

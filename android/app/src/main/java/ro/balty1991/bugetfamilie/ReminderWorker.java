@@ -75,7 +75,16 @@ public class ReminderWorker extends Worker {
       .setContentIntent(content)
       .setAutoCancel(true)
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-      .setCategory(NotificationCompat.CATEGORY_REMINDER);
+      .setCategory(NotificationCompat.CATEGORY_REMINDER)
+      /* Pe ecranul blocat apare doar „Buget Familie”: titlurile pot avea sume sau nume. */
+      .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+      .setPublicVersion(new NotificationCompat.Builder(context, CHANNEL_ID)
+        .setSmallIcon(R.drawable.ic_stat_notify)
+        .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
+        .setContentTitle(context.getString(R.string.app_name))
+        .setContentText("Ai o notificare nouă.")
+        .setContentIntent(content)
+        .build());
     final Bitmap large = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher_round);
     if (large != null) {
       builder.setLargeIcon(large);

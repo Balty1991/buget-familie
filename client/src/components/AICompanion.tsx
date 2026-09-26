@@ -13,7 +13,6 @@ import { dominantReceiptCategory, looksLikeProductSearch } from "@/lib/product-c
 import { buildSuggestions } from "@/lib/suggestions";
 import { RoDateInput } from "@/components/RoDateInput";
 import {
-  claimsSaved,
   decide,
   expenseProposal,
   foldRo,
@@ -701,7 +700,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
           return;
         }
         const updates = updatesFromGuide(payload.intent, payload.extracted, raw, data, messages);
-        const saveNow = updates.length > 0 && (!payload.needsConfirmation || isConfirm(raw) || claimsSaved(payload.reply || "") || payload.intent === "allocation" || payload.intent === "debt");
+        // Se scrie în registru doar când omul a confirmat el („da”). Modelul citește și texte pe care nu
+        // le-a scris omul (bonuri, numele puse de partener), deci nu poate decide singur o scriere.
+        const saveNow = updates.length > 0 && isConfirm(raw);
         if (saveNow) applyGuide(updates);
         addMessage({
           role: "assistant",

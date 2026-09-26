@@ -43,6 +43,7 @@ public class BugetFamilieNativePlugin extends Plugin {
   @PluginMethod
   public void setSecureScreen(PluginCall call) {
     final boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+    MainActivity.userSecureScreen = enabled;
     if (getActivity() == null) {
       call.resolve();
       return;

@@ -340,7 +340,10 @@ export function useFamilySync(
     writeClosed(false);
     if ("code" in recovery && recovery.code) setSyncRecoveryReveal(recovery.code);
     setSyncNotice(
-      ("warning" in recovery && recovery.warning)
+      // Camerele vechi, cu parolă, se pot ataca offline: la fiecare intrare cerem mutarea pe invitație.
+      !options.invite && !("code" in recovery && recovery.code)
+        ? t("Familia e încă într-o cameră cu parolă, mai ușor de ghicit. Apasă „Mută familia” ca să treceți pe invitație; datele rămân.")
+        : ("warning" in recovery && recovery.warning)
         || ("code" in recovery && recovery.code
           ? t("Sesiunea e activă. Notează codul de recuperare pe hârtie — nu îl mai arătăm.")
           : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală.")),

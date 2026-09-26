@@ -3398,4 +3398,6 @@ export const en: Record<string, string> = {
   "Ziua se schimbă la miezul nopții, la fel pe toate telefoanele familiei ({zone}).": "The day changes at midnight, the same on every family phone ({zone}).",
   "Acum:": "Right now:",
   "totul e deblocat gratuit, fără limită de plicuri sau membri. Limitele de mai jos pornesc abia când abonamentul apare în Google Play.": "everything is unlocked for free, with no limit on envelopes or members. The limits below only start once the subscription is live in Google Play.",
+  "Caută și online (Open Food Facts)": "Also search online (Open Food Facts)",
+  "Familia e încă într-o cameră cu parolă, mai ușor de ghicit. Apasă „Mută familia” ca să treceți pe invitație; datele rămân.": "Your family is still in a password room, which is easier to guess. Tap “Move the family” to switch to an invitation; your data stays.",
 };
