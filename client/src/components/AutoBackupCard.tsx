@@ -60,7 +60,7 @@ export function AutoBackupCard({ data }: { data: AppData }) {
             <p className="bf-kicker">{t("COPIE DE SIGURANȚĂ")}</p>
             <h3 id="auto-backup-title">{t("Păstrez o copie săptămânală?")}</h3>
             <p>{native
-              ? t("O dată pe săptămână pun un fișier cu datele în Descărcări. Dacă se strică telefonul, îl încarci din Setări → „Alege backup”. Fișierul are sumele în clar: nu-l trimite nimănui.")
+              ? t("O dată pe săptămână pun un fișier cu datele în Descărcări. Dacă se strică telefonul, îl încarci din Setări → „Alege backup”. Fișierul are sumele în clar: nu-l trimite nimănui.") + " " + t("Rămân doar ultimele 4 copii; cele mai vechi se șterg singure.")
               : t("În browser nu pot salva singur: o dată pe săptămână îți amintesc să descarci copia. Dacă pierzi datele, o încarci din Setări → „Alege backup”.")}</p>
           </div>
         </header>

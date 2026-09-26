@@ -1,7 +1,9 @@
 package ro.balty1991.bugetfamilie;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -16,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 /**
  * Adaugă punțile JS înainte ca pagina să se încarce. addJavascriptInterface
@@ -50,11 +53,46 @@ public class BugetFamilieNativePlugin extends Plugin {
     }
     try {
       final String path = writePublicDownload(safeName, data);
+      if (safeName.startsWith(AUTO_PREFIX)) pruneAutoBackups(safeName);
       final JSObject result = new JSObject();
       result.put("path", path);
       call.resolve(result);
     } catch (Exception error) {
       call.reject(error.getMessage() != null ? error.getMessage() : "salvare eșuată", error);
+    }
+  }
+
+  /** Copiile automate au nume cu data; rămân doar ultimele KEEP_AUTO, ca să nu se adune în Descărcări. */
+  private static final String AUTO_PREFIX = "buget-familie-copie-";
+  private static final int KEEP_AUTO = 4;
+
+  private void pruneAutoBackups(String justWritten) {
+    try {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        final ContentResolver resolver = getContext().getContentResolver();
+        final String[] projection = { MediaStore.Downloads._ID, MediaStore.Downloads.DISPLAY_NAME };
+        // Pe Android 10+ interogarea fără permisiuni întoarce doar fișierele scrise de aplicație.
+        try (Cursor cursor = resolver.query(MediaStore.Downloads.EXTERNAL_CONTENT_URI, projection, MediaStore.Downloads.DISPLAY_NAME + " LIKE ?", new String[] { AUTO_PREFIX + "%.json" }, MediaStore.Downloads.DISPLAY_NAME + " DESC")) {
+          if (cursor == null) return;
+          int seen = 0;
+          while (cursor.moveToNext()) {
+            seen += 1;
+            if (seen <= KEEP_AUTO) continue;
+            final long id = cursor.getLong(0);
+            resolver.delete(ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id), null, null);
+          }
+        }
+        return;
+      }
+      final File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+      final File[] files = dir == null ? null : dir.listFiles((folder, fileName) -> fileName.startsWith(AUTO_PREFIX) && fileName.endsWith(".json"));
+      if (files == null || files.length <= KEEP_AUTO) return;
+      Arrays.sort(files, (left, right) -> right.getName().compareTo(left.getName()));
+      for (int index = KEEP_AUTO; index < files.length; index += 1) {
+        if (!files[index].getName().equals(justWritten)) files[index].delete();
+      }
+    } catch (Exception ignored) {
+      // Rotația e o curățenie; copia nouă e deja scrisă.
     }
   }
 

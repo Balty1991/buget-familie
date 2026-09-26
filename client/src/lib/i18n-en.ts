@@ -2337,6 +2337,7 @@ export const en: Record<string, string> = {
   "Codul adultului": "Adult's code",
   "Cod greșit.": "Wrong code.",
   "Prea multe încercări. Mai așteaptă {seconds} secunde.": "Too many attempts. Wait {seconds} more seconds.",
+  "Rămân doar ultimele 4 copii; cele mai vechi se șterg singure.": "Only the last 4 copies are kept; older ones are deleted automatically.",
   "Ceasul telefonului e cu aproximativ {minutes} minute {direction}. Pune ora automată din setările telefonului; altfel, la unire, schimbările de aici pot câștiga sau pierde pe nedrept.": "This phone’s clock is about {minutes} minutes {direction}. Turn on automatic time in the phone settings; otherwise changes made here can wrongly win or lose when merging.",
   "înainte": "ahead",
   "Culoarea lui {name}: {color}. Atinge pentru alta.": "{name}’s colour: {color}. Tap for another.",
