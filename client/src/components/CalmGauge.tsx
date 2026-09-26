@@ -47,7 +47,7 @@ export function CalmGauge({ value }: { value: number | null }) {
         />
       ))}
       <text x="50" y="52" textAnchor="middle" className="bf-calm-score" style={{ fill: "var(--os-fg, var(--cf-ink, #f2f7ff))" }}>{unknown ? "—" : clamped}</text>
-      <text x="50" y="66" textAnchor="middle" className="bf-calm-label" style={{ fill: "var(--os-muted, var(--cf-muted, #9aa8a1))" }}>{label}</text>
+      <text x="50" y="67" textAnchor="middle" className="bf-calm-label" style={{ fill: "var(--os-muted, var(--cf-muted, #9aa8a1))" }}>{label}</text>
     </svg>
   );
 }

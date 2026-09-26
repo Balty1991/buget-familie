@@ -435,9 +435,10 @@ html:not(.dark) .bf-os-decide {
 .bf-calm-label {
   fill: #9aa8a1;
   font-family: "IBM Plex Sans", sans-serif;
-  font-size:12px;
+  /* Unități SVG (desenul are 100 de unități): 8,2 ≈ 12 px pe ecran, în interiorul arcului. */
+  font-size: 8.2px;
   font-weight: 600;
-  letter-spacing: .22em;
+  letter-spacing: .06em;
 }
 
 .dark .bf-health-sheet-ring-wrap { max-width: 260px; margin: 0 auto; }

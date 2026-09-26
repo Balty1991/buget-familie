@@ -433,9 +433,10 @@ html.capacitor-android {
 .bf-calm-label {
   fill: var(--os-muted);
   font-family: "IBM Plex Sans", sans-serif;
-  font-size:12px;
+  /* Unități SVG (desenul are 100 de unități): 8,2 ≈ 12 px pe ecran, în interiorul arcului. */
+  font-size: 8.2px;
   font-weight: 500;
-  letter-spacing: .22em;
+  letter-spacing: .06em;
 }
 
 /* ---- Ghid: bară plină deasupra dock-ului ---- */
@@ -898,7 +899,7 @@ html:not(.dark) .os-shell .ai-chat-row.user .ai-chat-bubble {
 }
 
 .os-shell .ai-chat-input { border-top: 1px solid var(--os-line); }
-.os-shell .ai-chat-input label { color: var(--os-muted); font-family: "IBM Plex Sans", sans-serif; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.os-shell .ai-chat-input label { color: var(--os-muted); font-family: "IBM Plex Sans", sans-serif; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .os-shell .ai-natural-form input,
 .os-shell .ai-chat-input input {
   border: 0;
@@ -1140,7 +1141,7 @@ body .bf-command-palette .bf-icon-button,
   font-family: "IBM Plex Sans", sans-serif;
   font-size:12px;
   font-weight: 600;
-  letter-spacing: .08em;
+  letter-spacing: .06em;
 }
 
 .os-shell .bf-field input,
