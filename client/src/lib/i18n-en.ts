@@ -3401,4 +3401,8 @@ export const en: Record<string, string> = {
   "Caută și online (Open Food Facts)": "Also search online (Open Food Facts)",
   "Familia e încă într-o cameră cu parolă, mai ușor de ghicit. Apasă „Mută familia” ca să treceți pe invitație; datele rămân.": "Your family is still in a password room, which is easier to guess. Tap “Move the family” to switch to an invitation; your data stays.",
   "Dacă salariul întârzie, mai acoperă {count} zile.": "If the salary is late, it covers {count} more days.",
+  "Ziua plății": "Payment day",
+  "ziua plății: oricând în lună": "payment day: any time in the month",
+  "se plătește pe {day}": "paid on the {day}",
+  "Ce plătim lunar": "What we pay monthly",
 };

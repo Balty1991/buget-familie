@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { projectCashflow } from "./cashflow-projection";
+import { nextNeedDue, projectCashflow } from "./cashflow-projection";
 import { createEmptyAppData, type AppData } from "./finance-data";
 
 const ASOF = "2026-09-24";
@@ -38,5 +38,23 @@ describe("soldul estimat în calendar", () => {
     ];
     const october = projectCashflow(data, "2026-10-03", 5);
     expect(october.days.flatMap((day) => day.items)).toEqual([]);
+  });
+
+  it("scade și „Ce plătim lunar”: cu ziua plății la data ei, fără zi pe 1; nu dublează recurentele", () => {
+    const data = family();
+    data.recurring = [];
+    data.settings.salaryPlan.needs = [
+      { id: "rent", label: "Chirie", category: "Casă & facturi", cadence: "monthly", min: 1800, max: 1800, priority: "fixed", dueDay: 1 },
+      { id: "rata", label: "Rate bancă", category: "Credite", cadence: "monthly", min: 1100, max: 1100, priority: "fixed" },
+      { id: "food", label: "Mâncare", category: "Alimente", cadence: "weekly", min: 400, max: 400, priority: "flex" },
+    ];
+    const days = projectCashflow(data, ASOF, 45).days;
+    const oct1 = days.find((day) => day.date === "2026-10-01")!;
+    expect(oct1.items.map((item) => item.title).sort()).toEqual(["Chirie", "Rate bancă"]);
+    expect(days[0].items.some((item) => item.title === "Rate bancă" && item.undated)).toBe(true);
+    expect(days.flatMap((day) => day.items).some((item) => item.title === "Mâncare")).toBe(false);
+    expect(nextNeedDue(data, data.settings.salaryPlan.needs[0], ASOF)?.date).toBe("2026-09-01");
+    data.transactions = [{ id: "p", title: "Chirie septembrie", amount: 1800, kind: "expense", category: "Casă & facturi", source: "Card", sourceId: "source-debit", person: "Eu", date: "2026-09-02" }];
+    expect(nextNeedDue(data, data.settings.salaryPlan.needs[0], ASOF)?.date).toBe("2026-10-01");
   });
 });

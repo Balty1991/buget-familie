@@ -1,6 +1,7 @@
 /**
  * Ecranul Obligații. Se încarcă singur, fără Setări, Sync sau bon.
  */
+import { nextNeedDue } from "@/lib/cashflow-projection";
 import "../objective-edit.css";
 import "../mobile-obligations-pass.css";
 import { useState } from "react";
@@ -159,8 +160,13 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
       amount: item.amount,
       onConfirm: () => onPayRecurring(item.id),
     })),
+    // Chiria sau rata din „Ce plătim lunar”, cu ziua plății aleasă, fără plată recurentă separată.
+    ...(data.settings.salaryPlan.needs || []).filter((need) => !data.recurring.some((item) => item.active && item.name.trim().toLowerCase() === need.label.trim().toLowerCase())).flatMap((need) => {
+      const due = nextNeedDue(data, need, today);
+      return due ? [{ id: `need-${need.id}`, kind: "need" as const, date: due.date, label: need.label, detail: need.category, amount: due.amount, onConfirm: onOpenCalendar }] : [];
+    }),
   ].filter((entry) => !laterIds.includes(entry.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
-  const kindLabel = (kind: "debt" | "saving" | "recurring" | "event") => kind === "debt" ? t("Rată") : kind === "saving" ? t("Obiectiv") : kind === "event" ? t("Eveniment") : t("Factură / abonament");
+  const kindLabel = (kind: "debt" | "saving" | "recurring" | "event" | "need") => kind === "debt" ? t("Rată") : kind === "saving" ? t("Obiectiv") : kind === "event" ? t("Eveniment") : kind === "need" ? t("Ce plătim lunar") : t("Factură / abonament");
   const whenLabel = (date: string) => {
     if (date < today) return t("Întârziată");
     if (date === today) return t("Azi");
@@ -212,7 +218,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
             {upcoming.map((entry, index) => (
               <article key={entry.id} className={`bf-upcoming-item kind-${entry.kind}${index === 0 ? " is-next" : ""}${entry.date < today ? " is-overdue" : ""}`}>
                 <div className="bf-upcoming-item-main">
-                  <span>{entry.kind === "saving" ? <PiggyBank size={17} /> : entry.kind === "recurring" ? <CalendarClock size={17} /> : entry.kind === "event" ? <Gift size={17} /> : <BellRing size={17} />}</span>
+                  <span>{entry.kind === "saving" ? <PiggyBank size={17} /> : entry.kind === "recurring" || entry.kind === "need" ? <CalendarClock size={17} /> : entry.kind === "event" ? <Gift size={17} /> : <BellRing size={17} />}</span>
                   <div>
                     <b>{entry.label}</b>
                     <small>{kindLabel(entry.kind)} · {whenLabel(entry.date)} · {entry.detail}</small>
@@ -220,7 +226,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
                   <strong>{money(entry.amount)}</strong>
                 </div>
                 <div className="bf-upcoming-actions">
-                  <button type="button" className="pay" onClick={entry.onConfirm}><Check size={16} /> {entry.kind === "saving" || entry.kind === "event" ? t("Deschide") : t("Confirmă plata")}</button>
+                  <button type="button" className="pay" onClick={entry.onConfirm}><Check size={16} /> {entry.kind === "saving" || entry.kind === "event" || entry.kind === "need" ? t("Deschide") : t("Confirmă plata")}</button>
                   <button type="button" onClick={() => setLaterIds((current) => [...current, entry.id])}>{t("Mai târziu")}</button>
                 </div>
               </article>

@@ -96,6 +96,12 @@ function NeedRow({ need, members, categories, startOpen, onSave, onDelete }: { n
             <option value="min">{t("rezervă minimul")}</option>
           </select>
         )}
+        {need.cadence === "monthly" && (need.priority || "fixed") === "fixed" && (
+          <select aria-label={t("Ziua plății")} value={need.dueDay || ""} onChange={(event) => onSave({ dueDay: Number(event.target.value) || undefined })}>
+            <option value="">{t("ziua plății: oricând în lună")}</option>
+            {Array.from({ length: 31 }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{t("se plătește pe {day}", { day })}</option>)}
+          </select>
+        )}
         <select aria-label={t("Din ce venit")} value={need.payerId || ""} onChange={(event) => onSave({ payerId: event.target.value || undefined })}>
           <option value="">{t("din orice venit")}</option>
           {members.map((member) => <option key={member.id} value={member.id}>{t("doar din venitul lui {name}", { name: member.name })}</option>)}

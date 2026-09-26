@@ -2,10 +2,10 @@
  * Soldul estimat zi de zi: banii de acum, plus veniturile declarate, minus facturile,
  * ratele și evenimentele care vin. Nu include cumpărăturile zilnice; calendarul spune asta.
  */
-import { addIsoDays, isoDate, recurringOccursInMonth, sourceBalance, type AppData } from "@/lib/finance-data";
+import { addIsoDays, foldRomanian, isBalanceAdjustment, isoDate, recurringOccursInMonth, sourceBalance, type AppData, type MonthlyNeed } from "@/lib/finance-data";
 import { occurrenceInMonth } from "@/lib/planned-events";
 
-export type CashflowItem = { title: string; amount: number; kind: "income" | "due" | "event" };
+export type CashflowItem = { title: string; amount: number; kind: "income" | "due" | "event"; /** Cheltuială lunară fără zi: pusă la începutul lunii (sau azi, dacă luna a început și nu e plătită). */ undated?: boolean };
 export type CashflowDay = { date: string; balance: number; items: CashflowItem[] };
 export type CashflowProjection = { start: number; days: CashflowDay[]; lowest: { date: string; balance: number } };
 
@@ -15,6 +15,29 @@ const dayGap = (a: string, b: string) => Math.abs(Date.parse(`${a}T12:00:00Z`) -
 
 /** Un venit declarat e deja intrat dacă a venit unul de la același membru la cel mult 10 zile de ziua lui. */
 const INCOME_WINDOW = 10;
+
+const reserve = (need: MonthlyNeed) => need.reserve === "min" ? need.min : need.reserve === "avg" ? (need.min + need.max) / 2 : need.max;
+const near = (a: number, b: number) => b > 0 && Math.abs(a - b) <= b * 0.1;
+
+/** O cheltuială lunară e plătită în luna dată dacă există o cheltuială din categoria ei, cu numele ei sau cu suma ei (±10%). */
+export const needPaidInMonth = (data: AppData, need: MonthlyNeed, month: string) => {
+  const label = foldRomanian(need.label);
+  const amount = reserve(need);
+  return data.transactions.some((tx) => tx.kind === "expense" && !isBalanceAdjustment(tx) && tx.date.slice(0, 7) === month && tx.category === need.category && (foldRomanian(tx.title).includes(label) || near(tx.amount, amount)));
+};
+
+/** Scadența lunii pentru o cheltuială cu ziua plății: luna aceasta dacă n-a trecut, altfel luna viitoare. */
+export const nextNeedDue = (data: AppData, need: MonthlyNeed, asOf: string) => {
+  if (!need.dueDay || need.archived || need.cadence !== "monthly") return undefined;
+  const base = new Date(`${asOf}T12:00:00`);
+  for (let offset = 0; offset < 2; offset += 1) {
+    const date = dayIn(base.getFullYear(), base.getMonth() + offset, need.dueDay);
+    if (needPaidInMonth(data, need, date.slice(0, 7))) continue;
+    // Ziua trecută fără plată se arată ca întârziată, nu dispare (la fel ca facturile recurente).
+    return { date, amount: round2(reserve(need)) };
+  }
+  return undefined;
+};
 
 export function projectCashflow(data: AppData, asOf: string, horizonDays = 45): CashflowProjection {
   const end = addIsoDays(asOf, horizonDays - 1);
@@ -52,8 +75,27 @@ export function projectCashflow(data: AppData, asOf: string, horizonDays = 45): 
     if (income.archived) continue;
     for (const month of months) {
       const due = dayIn(month.getFullYear(), month.getMonth(), income.day);
-      const received = data.transactions.some((tx) => tx.kind === "income" && (!income.memberId || tx.memberId === income.memberId) && dayGap(tx.date, due) <= INCOME_WINDOW);
+      const received = data.transactions.some((tx) => tx.kind === "income" && !isBalanceAdjustment(tx) && (!income.memberId || tx.memberId === income.memberId) && dayGap(tx.date, due) <= INCOME_WINDOW);
       if (!received) add(due, { title: income.label, amount: income.amount, kind: "income" });
+    }
+  }
+
+  /*
+   * Ce plătim lunar (chirie, rată, facturi): fără ele, soldul estimat urca luni la rând,
+   * doar cu salariile. Obligațiile fără zi se pun pe 1 (luna în curs: azi, dacă nu sunt plătite).
+   * Nu dublăm o plată recurentă care are deja ziua ei.
+   */
+  for (const need of data.settings.salaryPlan.needs || []) {
+    if (need.archived || need.cadence !== "monthly" || (need.priority && need.priority !== "fixed")) continue;
+    const amount = round2(reserve(need));
+    if (!(amount > 0)) continue;
+    const label = foldRomanian(need.label);
+    const coveredByRecurring = data.recurring.some((item) => item.active && (foldRomanian(item.name) === label || (item.category === need.category && near(item.amount, amount))));
+    if (coveredByRecurring) continue;
+    for (const month of months) {
+      const firstDay = dayIn(month.getFullYear(), month.getMonth(), 1);
+      const due = need.dueDay ? dayIn(month.getFullYear(), month.getMonth(), need.dueDay) : firstDay < asOf && monthKey(firstDay) === monthKey(asOf) ? asOf : firstDay;
+      if (!needPaidInMonth(data, need, monthKey(due))) add(due, { title: need.label, amount, kind: "due", ...(need.dueDay ? {} : { undated: true }) });
     }
   }
 
