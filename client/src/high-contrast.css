@@ -18,3 +18,11 @@ html.bf-high-contrast :is(small, .bf-kicker, .os-hint, .bf-settings-copy small, 
 html.bf-high-contrast :is(.bf-plic-pace, .bf-allocation-state) {
   outline: 1px solid currentColor;
 }
+
+/* Alegerea nuanței din Aspect. */
+.bf-theme-tint { display: grid; gap: 8px; padding: 12px 0 0; }
+.bf-theme-tint > span { display: grid; gap: 2px; }
+.bf-theme-tint > span small { color: var(--cf-muted); font-size: 12px; }
+.bf-theme-tint > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.bf-theme-tint > div button { min-height: 44px; border: 1px solid var(--cf-line); border-radius: 12px; color: var(--cf-ink); background: var(--cf-surface); font-weight: 600; }
+.bf-theme-tint > div button.active { border-color: var(--cf-primary-strong); color: var(--cf-on-forest); background: var(--cf-primary-strong); }

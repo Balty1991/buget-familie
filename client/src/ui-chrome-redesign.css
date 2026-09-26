@@ -713,7 +713,7 @@
 :is(html.theme-ink, html.theme-white) .os-shell .bf-obligation-ai > button,
 :is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
   color: #ffffff;
-  background: linear-gradient(180deg, #1d8064, #0e4f3e);
+  background: linear-gradient(180deg, var(--bf-tint-primary-hi, #1d8064), var(--bf-tint-strong, #0e4f3e));
 }
 
 /* Dark / aurora / navy / cyber keep legibility */

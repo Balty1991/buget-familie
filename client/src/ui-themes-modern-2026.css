@@ -72,7 +72,7 @@ background:linear-gradient(165deg,#fffcf8,#f7f5f0)!important;border:1px solid #d
 box-shadow:var(--bf-shadow-raise) !important}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock{background:#eef1ef;box-shadow:0 -8px 22px rgba(26,36,32,.12)!important;filter:none}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.is-on,
-:is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#fff!important;background:#176b54!important}
+:is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#fff!important;background:var(--bf-tint-primary,#176b54)!important}
 /* tokens.css */
 html.theme-dark body,html.theme-dark body .os-shell.bf-app{background:#0c0d0f;color:#eceff3}
 html.theme-dark body .os-shell .os-hero,

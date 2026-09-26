@@ -4,11 +4,13 @@ import { createPortal } from "react-dom";
 import { Check, X } from "lucide-react";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { automaticTheme, backgroundOptions, currentLocalMinutes, themeOptions, timeToMinutes, visibleThemeOptions, type BackgroundId, type ThemeId, type ThemeSchedule, type ThemeScheduleTimes } from "@/pages/home-kit";
+import { readTint, saveTint, type ThemeTint } from "@/lib/theme-tint";
 import { t } from "@/lib/i18n";
 
 export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, background, onChange, onScheduleChange, onScheduleTimesChange, onContrastChange, onBackgroundChange, onClose }: { theme: ThemeId; schedule: ThemeSchedule; scheduleTimes: ThemeScheduleTimes; highContrast: boolean; background: BackgroundId; onChange: (theme: ThemeId) => void; onScheduleChange: (schedule: ThemeSchedule) => void; onScheduleTimesChange: (times: ThemeScheduleTimes) => void; onContrastChange: (active: boolean) => void; onBackgroundChange: (background: BackgroundId) => void; onClose: () => void }) {
   const [preview, setPreview] = useState<ThemeId>(theme);
   const [previewBackground, setPreviewBackground] = useState<BackgroundId>(background);
+  const [tint, setTint] = useState<ThemeTint>(() => readTint());
   const previewOption = themeOptions.find((option) => option.id === preview) || themeOptions[0];
   const shownThemes = visibleThemeOptions.some((option) => option.id === preview) ? visibleThemeOptions : [...visibleThemeOptions, previewOption];
   const scheduleIsValid = timeToMinutes(scheduleTimes.dayStart, -1) < timeToMinutes(scheduleTimes.eveningStart, -1) && timeToMinutes(scheduleTimes.eveningStart, -1) < timeToMinutes(scheduleTimes.nightStart, -1);
@@ -125,6 +127,10 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
             </span>
             <i aria-hidden="true" />
           </button>
+          <div className="bf-theme-tint" role="group" aria-labelledby="bf-theme-tint-title">
+            <span id="bf-theme-tint-title"><b>{t("Nuanța temei Alb")}</b><small>{t("Sepia e caldă și fără albastru, bună seara. Copil e mai veselă, cu albastru.")}</small></span>
+            <div>{([["none", t("Standard")], ["sepia", t("Sepia")], ["kid", t("Copil")]] as const).map(([id, label]) => <button key={id} type="button" aria-pressed={tint === id} className={tint === id ? "active" : ""} onClick={() => { setTint(id); saveTint(id); if (id !== "none" && theme !== "white") onChange("white"); }}>{label}</button>)}</div>
+          </div>
         </section>
         </div>
         <div className="bf-theme-picker-footer">

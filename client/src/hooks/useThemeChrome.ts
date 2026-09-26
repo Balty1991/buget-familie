@@ -16,6 +16,7 @@ import {
 import { ALL_THEME_CLASS_IDS, resolveInitialTheme } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
 import { syncAndroidChrome } from "@/lib/native-splash";
+import { applyTint, readTint } from "@/lib/theme-tint";
 
 export function useThemeChrome() {
   const [themePickerOpen, setThemePickerOpen] = useState(false);
@@ -139,6 +140,8 @@ export function useThemeChrome() {
     try { system = window.matchMedia("(prefers-contrast: more)").matches; } catch { /* fără media query */ }
     if (highContrast !== system || window.localStorage.getItem("buget-familie:high-contrast") !== null) safeSetItem(window.localStorage, "buget-familie:high-contrast", String(highContrast));
   }, [highContrast]);
+
+  useEffect(() => { applyTint(readTint()); }, []);
 
   useEffect(() => {
     const openTheme = () => setThemePickerOpen(true);

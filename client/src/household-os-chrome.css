@@ -1386,7 +1386,7 @@ html.dark .bf-onboarding.bf-first-run {
 }
 .os-shell .bf-first-run-intents button svg,
 .bf-first-run-intents button svg {
-  color: #176b54 !important;
+  color: var(--bf-tint-primary, #176b54) !important;
 }
 
 .os-shell .bf-guide-hero {

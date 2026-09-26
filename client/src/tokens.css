@@ -14,7 +14,7 @@
   --bf-hit: 44px;
 }
 
-:is(html.theme-white, html.theme-ink) {
+:is(html.theme-white, html.theme-ink):not(.bf-tint-sepia, .bf-tint-kid) {
   --cf-bg: #e8ece9 !important;
   --cf-surface: #fafbfa !important;
   --cf-surface-alt: #eef1ef !important;
@@ -118,4 +118,68 @@ html.theme-cyber {
   --os-mint: #7cffc4;
   --os-mint-fg: var(--cf-on-forest);
   --os-line: var(--cf-line);
+}
+
+/* Nuanțele temei Alb (Aspect → Nuanța temei Alb). Același set de tokeni ca Alb, alte culori. */
+html.theme-white.bf-tint-sepia {
+  --cf-bg: #ece3d3;
+  --cf-surface: #fbf6ec;
+  --cf-surface-alt: #f2e9d8;
+  --cf-ink: #2b2118;
+  --cf-muted: #65543f;
+  --cf-line: #d9c9ae;
+  --cf-primary: #8a5a2b;
+  --cf-primary-strong: #6c441d;
+  --cf-on-forest: #fffaf2;
+  --cf-glow: transparent;
+  --lu-paper: #ece3d3;
+  --lu-card: #fbf6ec;
+  --lu-ink: #2b2118;
+  --lu-muted: #65543f;
+  --lu-line: #d9c9ae;
+  --lu-accent: #6c441d;
+  --lu-accent-fg: #fffaf2;
+}
+html.theme-white.bf-tint-kid {
+  --cf-bg: #e6f0fa;
+  --cf-surface: #ffffff;
+  --cf-surface-alt: #edf5fd;
+  --cf-ink: #14233a;
+  --cf-muted: #475a74;
+  --cf-line: #c8dcef;
+  --cf-primary: #2f6fd6;
+  --cf-primary-strong: #2256ad;
+  --cf-on-forest: #ffffff;
+  --cf-glow: transparent;
+  --lu-paper: #e6f0fa;
+  --lu-card: #ffffff;
+  --lu-ink: #14233a;
+  --lu-muted: #475a74;
+  --lu-line: #c8dcef;
+  --lu-accent: #2256ad;
+  --lu-accent-fg: #ffffff;
+  --bf-radius-card: 1.5rem;
+}
+:is(html.bf-tint-sepia, html.bf-tint-kid).theme-white,
+:is(html.bf-tint-sepia, html.bf-tint-kid).theme-white :is(.os-shell.bf-app, .bf-today-workspace) {
+  --os-subtle: var(--cf-muted);
+  --os-ink: var(--cf-ink);
+  --os-mint-dim: color-mix(in srgb, var(--cf-primary) 22%, var(--cf-surface));
+  --os-line-strong: var(--cf-primary);
+  --bf-tint-primary: var(--cf-primary);
+  --bf-tint-strong: var(--cf-primary-strong);
+  --bf-tint-primary-hi: color-mix(in srgb, var(--cf-primary) 85%, #fff);
+  --cf-glow: color-mix(in srgb, var(--cf-primary) 16%, transparent);
+  --os-bg: var(--cf-bg);
+  --os-surface: var(--cf-surface);
+  --os-surface-2: var(--cf-surface-alt);
+  --os-fg: var(--cf-ink);
+  --os-muted: var(--cf-muted);
+  --os-mint: var(--cf-primary);
+  --os-mint-fg: var(--cf-on-forest);
+  --os-line: var(--cf-line);
+}
+html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) body,
+html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) body .os-shell.bf-app {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cf-bg) 88%, var(--cf-primary)) 0, var(--cf-bg) 160px), var(--cf-bg);
 }
