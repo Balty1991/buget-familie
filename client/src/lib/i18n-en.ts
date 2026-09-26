@@ -3409,4 +3409,5 @@ export const en: Record<string, string> = {
   "{amount} de cheltuit": "{amount} to spend",
   "{amount} cheltuiți": "{amount} spent",
   "Zilele trecute: cheltuit · de azi: cât poți cheltui": "Past days: spent · from today: what you can spend",
+  "Următoarele: {list}. Dacă pot veni cu câteva zile mai devreme sau mai târziu, plicurile se socotesc să ajungă și atunci.": "Next: {list}. If they can come a few days early or late, the envelopes are sized to last then too.",
 };

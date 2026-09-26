@@ -134,8 +134,9 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
         <>
           <h2 id="bf-setup-title">{t("Ce plătiți")} <em>{t("de obicei?")}</em></h2>
           <p>{t("Bifează ce aveți și scrie cam cât. Mâncarea e pe săptămână. Intervalele (300–400) le poți pune după, în Plicuri.")}</p>
+          {/* Eticheta stă deasupra rândului care derulează: în el era tăiată („rnește de la”). */}
+          <p className="bf-needs-templates-label">{t("Pornește de la")}</p>
           <div className="bf-quick-category-picks bf-household-templates" role="group" aria-label={t("Pornește de la un șablon")}>
-            <span>{t("Pornește de la")}</span>
             {HOUSEHOLD_TEMPLATES.map((template) => (
               <button type="button" key={template.id} onClick={() => setNeeds((current) => current.map((item) => {
                 const amount = template.amounts[START_NEEDS.find((start) => t(start.label) === item.label)?.label || item.label];
@@ -156,7 +157,11 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
       {step === 3 && (
         <>
           <h2 id="bf-setup-title">{t("Salariul vine")} <em>{t("mereu în aceeași zi?")}</em></h2>
-          <p>{firstDay ? t("Următorul: ~{date}. Dacă poate veni cu câteva zile mai devreme sau mai târziu, plicurile se socotesc să ajungă și atunci.", { date: formatDate(firstDay, { day: "numeric", month: "long" }) }) : ""}</p>
+          {validIncomes.length > 1 ? (
+            <p>{t("Următoarele: {list}. Dacă pot veni cu câteva zile mai devreme sau mai târziu, plicurile se socotesc să ajungă și atunci.", { list: validIncomes.map((item) => ({ label: item.label, date: nextDateForDay(today, Math.round(Number(item.day))) })).sort((a, b) => a.date.localeCompare(b.date)).map((item) => `${item.label} ~${formatDate(item.date, { day: "numeric", month: "long" })}`).join(", ") })}</p>
+          ) : (
+            <p>{firstDay ? t("Următorul: ~{date}. Dacă poate veni cu câteva zile mai devreme sau mai târziu, plicurile se socotesc să ajungă și atunci.", { date: formatDate(firstDay, { day: "numeric", month: "long" }) }) : ""}</p>
+          )}
           <label className="bf-field"><span>{t("Poate varia cu")}</span>
             <select value={flex} onChange={(event) => setFlex(Number(event.target.value))}>
               <option value={0}>{t("Nu variază")}</option>
