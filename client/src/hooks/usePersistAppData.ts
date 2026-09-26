@@ -34,6 +34,7 @@ export function usePersistAppData(
   const [storageReady, setStorageReady] = useState(false);
   const storageHydrated = useRef(false);
   const editedBeforeHydrate = useRef(false);
+  const channelRef = useRef<BroadcastChannel | null>(null);
 
   const applyData: typeof setData = (value) => {
     if (!storageHydrated.current) editedBeforeHydrate.current = true;
@@ -55,7 +56,12 @@ export function usePersistAppData(
             memory: current,
             editedBeforeHydrate: editedBeforeHydrate.current,
           });
-          return picked ? adoptOutsideExpenses(normalizeAppData(picked)) : current;
+          // O copie stricată nu blochează pornirea: încercăm cealaltă copie, apoi ce e în memorie.
+          for (const candidate of [picked, indexed.data, local.data]) {
+            if (!candidate) continue;
+            try { return adoptOutsideExpenses(normalizeAppData(candidate)); } catch { /* următoarea copie */ }
+          }
+          return current;
         });
       })
       .catch(() => setStorageNotice(t("Stocarea modernă nu este disponibilă; folosim fallback-ul local al browserului.")))
@@ -79,12 +85,37 @@ export function usePersistAppData(
       );
     }
     const timer = window.setTimeout(() => {
-      void writeAppData(data, savedAt).catch(() =>
+      void writeAppData(data, savedAt).then(() => channelRef.current?.postMessage(savedAt)).catch(() =>
         setStorageNotice(t("Datele sunt păstrate în fallback-ul browserului; stocarea modernă nu a confirmat salvarea.")),
       );
     }, 280);
     return () => window.clearTimeout(timer);
   }, [data]);
+
+  /**
+   * Aplicația deschisă în două file (web): fiecare scria starea ei întreagă și o cheltuială
+   * notată în cealaltă filă se pierdea. Acum fila anunță salvarea, iar celelalte unesc registrul.
+   */
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel("buget-familie:data");
+    channelRef.current = channel;
+    channel.onmessage = () => {
+      void (async () => {
+        const record = await readAppDataRecord().catch(() => null);
+        if (!record?.data) return;
+        const { mergeFamilyData } = await import("@/lib/family-crypto");
+        const other = normalizeAppData(record.data);
+        setData((current) => {
+          const merged = mergeFamilyData(current, other);
+          const images = new Map([...other.receipts, ...current.receipts].map((item) => [item.id, item]));
+          const withImages = { ...merged, receipts: merged.receipts.map((item) => { const source = images.get(item.id); return source ? { ...item, imageData: source.imageData, imageData2: source.imageData2, imageKeys: source.imageKeys } : item; }) };
+          return localSnapshotText(withImages) === localSnapshotText(current) ? current : withImages;
+        });
+      })();
+    };
+    return () => { channel.close(); channelRef.current = null; };
+  }, [setData]);
 
   useEffect(() => {
     if (!storageReady) return;
