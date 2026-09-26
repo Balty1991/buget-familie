@@ -13,9 +13,12 @@ import { lei } from "@/lib/money-format";
 
 const money = lei;
 
+/** „Anulează” rămâne o zi; rezolvarea în sine se ține mai mult, ca să ajungă la toate telefoanele. */
+const justResolved = (resolvedAt?: string) => !resolvedAt || Date.now() - (Date.parse(resolvedAt) || 0) < 86_400_000;
+
 export function EnvelopeConflictBanner({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const open = activeAllocationConflicts(data);
-  const recent = (data.allocationConflicts || []).filter((item) => item.resolvedChoice && item.previousAmount !== undefined).slice(0, 3);
+  const recent = (data.allocationConflicts || []).filter((item) => item.resolvedChoice && item.previousAmount !== undefined && justResolved(item.resolvedAt)).slice(0, 3);
   if (!open.length && !recent.length) return null;
 
   return (
@@ -75,7 +78,7 @@ export function EnvelopeConflictBadge({ allocationId, data }: { allocationId: st
 
 export function MovementConflictBanner({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const open = activeTransactionConflicts(data);
-  const recent = (data.transactionConflicts || []).filter((item) => item.resolvedChoice && item.previousSnapshot).slice(0, 3);
+  const recent = (data.transactionConflicts || []).filter((item) => item.resolvedChoice && item.previousSnapshot && justResolved(item.resolvedAt)).slice(0, 3);
   if (!open.length && !recent.length) return null;
 
   return (

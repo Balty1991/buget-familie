@@ -77,9 +77,9 @@ export async function writeChainToken(secret: FamilySecret, roomId: string, seq:
 export const sha256Hex = async (text: string) => hex(await crypto.subtle.digest("SHA-256", encoder.encode(text)));
 
 export async function encryptFamilyData(data: AppData, secret: FamilySecret): Promise<EncryptedEnvelope> {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const salt = keyCacheFor(secret).sessionSalt;
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(secret, salt);
+  const key = await cachedFamilyKey(secret, salt);
   // Preferințele de viteză și de lectură rămân pe telefon; registrul financiar rămâne partea sincronizată.
   // Propunerile de verificat rămân pe telefonul care le-a creat: fără ele, o propunere
   // ignorată pe un telefon ar fi readusă de celălalt la următoarea unire.
@@ -129,12 +129,43 @@ async function gunzipIfNeeded(bytes: Uint8Array): Promise<Uint8Array> {
 export async function decryptFamilyData(envelope: EncryptedEnvelope, secret: FamilySecret): Promise<AppData> {
   if (envelope.version !== 1) throw new Error("Format de pachet necunoscut.");
   try {
-    const key = await deriveKey(secret, fromBase64(envelope.salt));
+    const key = await cachedFamilyKey(secret, fromBase64(envelope.salt));
     const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromBase64(envelope.iv) }, key, fromBase64(envelope.ciphertext));
     return JSON.parse(decoder.decode(await gunzipIfNeeded(new Uint8Array(plain)))) as AppData;
   } catch {
     throw new Error("Parola familiei este greșită sau pachetul nu poate fi decriptat.");
   }
+}
+
+/**
+ * PBKDF2 cu 250.000 de iterații costă ~1 s pe un telefon mediu. Cheia pachetului depinde doar
+ * de secret și de sare, deci o ținem minte: scriem cu aceeași sare toată sesiunea (IV-ul rămâne
+ * nou la fiecare scriere, deci AES-GCM rămâne sigur) și derivăm o singură dată pentru fiecare
+ * sare primită de la partener.
+ */
+type KeyCache = { sessionSalt: Uint8Array; keys: Map<string, Promise<CryptoKey>> };
+const keyCacheByObject = new WeakMap<object, KeyCache>();
+const keyCacheByPassword = new Map<string, KeyCache>();
+const keyCacheFor = (secret: FamilySecret): KeyCache => {
+  const fresh = () => ({ sessionSalt: crypto.getRandomValues(new Uint8Array(16)), keys: new Map<string, Promise<CryptoKey>>() });
+  if (typeof secret === "string") {
+    if (!keyCacheByPassword.has(secret)) keyCacheByPassword.set(secret, fresh());
+    return keyCacheByPassword.get(secret)!;
+  }
+  if (!keyCacheByObject.has(secret)) keyCacheByObject.set(secret, fresh());
+  return keyCacheByObject.get(secret)!;
+};
+function cachedFamilyKey(secret: FamilySecret, salt: Uint8Array): Promise<CryptoKey> {
+  const cache = keyCacheFor(secret);
+  const id = toBase64(salt);
+  const known = cache.keys.get(id);
+  if (known) return known;
+  const pending = deriveKey(secret, salt);
+  pending.catch(() => cache.keys.delete(id));
+  cache.keys.set(id, pending);
+  // Câteva telefoane înseamnă câteva sări; păstrăm doar ultimele.
+  if (cache.keys.size > 8) cache.keys.delete(cache.keys.keys().next().value!);
+  return pending;
 }
 
 /** Text scurt (parolă de familie) încuiat cu un alt secret — folosit de codul de recuperare. */
@@ -246,35 +277,87 @@ export const syncBaseOf = (data: AppData): SyncBase => ({
   transactions: Object.fromEntries(data.transactions.map((item) => [item.id, txSignature(item)])),
 });
 
+type AnyConflict = { detectedAt: string; resolvedChoice?: "local" | "remote"; resolvedAt?: string };
+const conflictTime = (item: AnyConflict) => Date.parse(item.resolvedChoice ? item.resolvedAt || item.detectedAt : item.detectedAt) || 0;
+/** Rezolvările se țin 30 de zile, cât să ajungă și la un telefon rămas fără internet. */
+const staleResolution = (item: AnyConflict) => Boolean(item.resolvedChoice) && Date.now() - conflictTime(item) > 30 * 86_400_000;
+/** Același conflict pe două telefoane: câștigă ultimul pas (detectare, rezolvare sau redeschidere). */
+function latestConflict<T extends AnyConflict>(left?: T, right?: T): T | undefined {
+  if (!left) return right;
+  if (!right) return left;
+  return conflictTime(left) >= conflictTime(right) ? left : right;
+}
+function conflictsBy<T extends AnyConflict>(items: T[], key: (item: T) => string): Map<string, T> {
+  const map = new Map<string, T>();
+  items.forEach((item) => map.set(key(item), latestConflict(map.get(key(item)), item)!));
+  return map;
+}
+/**
+ * Ce face un conflict deschis sau rezolvat pe un id prezent pe ambele telefoane:
+ * - „remote”/„local”: o rezolvare de pe un telefon închide conflictul încă deschis pe celălalt, cu suma aleasă;
+ * - „open”: cât timp e deschis, nu se aplică nicio regulă automată; fiecare telefon își ține suma;
+ * - undefined: nu e conflict deschis; se unește normal.
+ */
+function conflictOutcome<T extends AnyConflict>(localConflict?: T, remoteConflict?: T): { chosen?: T; take?: "local" | "remote" | "open" } {
+  const chosen = latestConflict(localConflict, remoteConflict);
+  if (!chosen) return {};
+  if (!chosen.resolvedChoice) return { chosen, take: "open" };
+  if (chosen === remoteConflict && localConflict && !localConflict.resolvedChoice) return { chosen, take: "remote" };
+  if (chosen === localConflict && remoteConflict && !remoteConflict.resolvedChoice) return { chosen, take: "local" };
+  return { chosen };
+}
+
 /**
  * Unește plicurile pe id. Dacă același id are sume diferite pe cele două telefoane,
  * păstrăm suma locală pentru continuitate pe telefonul curent și înregistrăm un conflict
- * — niciodată LWW tăcut pe bani.
+ * — niciodată LWW tăcut pe bani. Conflictul are sumele văzute de telefonul curent
+ * („la mine”/„la partener”), iar cât e deschis blochează unirea automată a plicului.
  */
 function mergeAllocationsWithConflicts(
   localAllocations: BudgetAllocation[],
   remoteAllocations: BudgetAllocation[],
-  previousConflicts: AllocationAmountConflict[],
+  localConflicts: AllocationAmountConflict[],
+  remoteConflicts: AllocationAmountConflict[],
   base?: SyncBase,
 ): { allocations: BudgetAllocation[]; conflicts: AllocationAmountConflict[] } {
   const remoteById = new Map(remoteAllocations.map((item) => [item.id, item]));
   const localById = new Map(localAllocations.map((item) => [item.id, item]));
+  const localConflictById = conflictsBy(localConflicts, (item) => item.allocationId);
+  const remoteConflictById = conflictsBy(remoteConflicts, (item) => item.allocationId);
   const ids = new Set([...Array.from(localById.keys()), ...Array.from(remoteById.keys())]);
   const allocations: BudgetAllocation[] = [];
-  const freshConflicts: AllocationAmountConflict[] = [];
+  const conflicts: AllocationAmountConflict[] = [];
   const now = new Date().toISOString();
 
   ids.forEach((id) => {
     const localItem = localById.get(id);
     const remoteItem = remoteById.get(id);
     if (localItem && remoteItem) {
+      const localConflict = localConflictById.get(id);
+      const { chosen, take } = conflictOutcome(localConflict, remoteConflictById.get(id));
+      if (chosen && take === "remote") {
+        // Partenerul a ales: suma lui închide conflictul și aici. Anularea rămâne pe telefonul lui.
+        allocations.push(remoteItem);
+        conflicts.push({ ...chosen, previousAmount: undefined });
+        return;
+      }
+      if (chosen && take === "local") { allocations.push(localItem); conflicts.push(chosen); return; }
+      if (chosen && take === "open") {
+        allocations.push(localItem);
+        if (localItem.amount !== remoteItem.amount) {
+          conflicts.push({ ...chosen, localAmount: localItem.amount, remoteAmount: remoteItem.amount, localUpdatedAt: localItem.updatedAt, remoteUpdatedAt: remoteItem.updatedAt });
+        }
+        return;
+      }
+      // Stub-ul „Anulează” rămâne doar pe telefonul care a ales.
+      if (chosen && chosen === localConflict) conflicts.push(chosen);
       const before = base?.allocations[id];
       // Doar un telefon a schimbat suma de la ultima sincronizare: schimbarea lui câștigă.
       if (localItem.amount !== remoteItem.amount && before !== undefined && before === localItem.amount) { allocations.push(remoteItem); return; }
       if (localItem.amount !== remoteItem.amount && before !== undefined && before === remoteItem.amount) { allocations.push(localItem); return; }
       if (localItem.amount !== remoteItem.amount) {
         allocations.push(localItem);
-        freshConflicts.push({
+        conflicts.push({
           id: `conflict-${id}`,
           allocationId: id,
           label: localItem.label || remoteItem.label || "Plic",
@@ -293,9 +376,8 @@ function mergeAllocationsWithConflicts(
     allocations.push((localItem || remoteItem)!);
   });
 
-  const openPrevious = previousConflicts.filter((item) => !item.resolvedChoice && allocations.some((allocation) => allocation.id === item.allocationId));
   const byAllocation = new Map<string, AllocationAmountConflict>();
-  [...openPrevious, ...freshConflicts].forEach((item) => byAllocation.set(item.allocationId, item));
+  conflicts.filter((item) => !staleResolution(item)).forEach((item) => byAllocation.set(item.allocationId, item));
   return { allocations, conflicts: Array.from(byAllocation.values()).slice(0, 40) };
 }
 
@@ -320,16 +402,36 @@ function mergeTransactionsWithConflicts(
   localTx: Transaction[],
   remoteTx: Transaction[],
   deleted: DeletedRecord[],
-  previousConflicts: TransactionConflict[],
+  localConflicts: TransactionConflict[],
+  remoteConflicts: TransactionConflict[],
   base?: SyncBase,
 ): { transactions: Transaction[]; conflicts: TransactionConflict[] } {
   const tombstones = new Map(deleted.filter((item) => item.entity === "transactions").map((item) => [item.id, item]));
   const remoteById = new Map(remoteTx.map((item) => [item.id, item]));
   const localById = new Map(localTx.map((item) => [item.id, item]));
   const ids = new Set([...Array.from(localById.keys()), ...Array.from(remoteById.keys())]);
+  const localConflictById = conflictsBy(localConflicts, (item) => item.transactionId);
+  const remoteConflictById = conflictsBy(remoteConflicts, (item) => item.transactionId);
   const transactions: Transaction[] = [];
   const freshConflicts: TransactionConflict[] = [];
   const now = new Date().toISOString();
+  const conflictOf = (localItem: Transaction, remoteItem: Transaction, id: string, detectedAt: string): TransactionConflict => ({
+    id,
+    transactionId: localItem.id,
+    label: localItem.title || remoteItem.title || "Mișcare",
+    localAmount: localItem.amount,
+    remoteAmount: remoteItem.amount,
+    localKind: localItem.kind,
+    remoteKind: remoteItem.kind,
+    localDate: localItem.date,
+    remoteDate: remoteItem.date,
+    localTitle: localItem.title,
+    remoteTitle: remoteItem.title,
+    localUpdatedAt: localItem.updatedAt || localItem.createdAt,
+    remoteUpdatedAt: remoteItem.updatedAt || remoteItem.createdAt,
+    remoteSnapshot: remoteItem,
+    detectedAt,
+  });
 
   ids.forEach((id) => {
     const localItem = localById.get(id);
@@ -341,6 +443,16 @@ function mergeTransactionsWithConflicts(
     };
     if (localItem && remoteItem) {
       if (!alive(localItem) && !alive(remoteItem)) return;
+      const localConflict = localConflictById.get(id);
+      const { chosen, take } = alive(localItem) && alive(remoteItem) ? conflictOutcome(localConflict, remoteConflictById.get(id)) : {};
+      if (chosen && take === "remote") { transactions.push(remoteItem); freshConflicts.push({ ...chosen, previousSnapshot: undefined }); return; }
+      if (chosen && take === "local") { transactions.push(localItem); freshConflicts.push(chosen); return; }
+      if (chosen && take === "open") {
+        transactions.push(localItem);
+        if (transactionMateriallyDiffers(localItem, remoteItem)) freshConflicts.push({ ...conflictOf(localItem, remoteItem, chosen.id, chosen.detectedAt), label: chosen.label });
+        return;
+      }
+      if (chosen && chosen === localConflict) freshConflicts.push(chosen);
       const before = base?.transactions[id];
       if (before !== undefined && transactionMateriallyDiffers(localItem, remoteItem)) {
         // O singură parte s-a schimbat de la ultima sincronizare: ea câștigă, fără conflict.
@@ -349,23 +461,7 @@ function mergeTransactionsWithConflicts(
       }
       if (transactionMateriallyDiffers(localItem, remoteItem) && alive(localItem)) {
         transactions.push(localItem);
-        freshConflicts.push({
-          id: `tx-conflict-${id}`,
-          transactionId: id,
-          label: localItem.title || remoteItem.title || "Mișcare",
-          localAmount: localItem.amount,
-          remoteAmount: remoteItem.amount,
-          localKind: localItem.kind,
-          remoteKind: remoteItem.kind,
-          localDate: localItem.date,
-          remoteDate: remoteItem.date,
-          localTitle: localItem.title,
-          remoteTitle: remoteItem.title,
-          localUpdatedAt: localItem.updatedAt || localItem.createdAt,
-          remoteUpdatedAt: remoteItem.updatedAt || remoteItem.createdAt,
-          remoteSnapshot: remoteItem,
-          detectedAt: now,
-        });
+        freshConflicts.push(conflictOf(localItem, remoteItem, `tx-conflict-${id}`, now));
         return;
       }
       const winner = timestamp(localItem) >= timestamp(remoteItem) ? localItem : remoteItem;
@@ -376,11 +472,8 @@ function mergeTransactionsWithConflicts(
     if (alive(only)) transactions.push(only);
   });
 
-  const openPrevious = previousConflicts.filter(
-    (item) => !item.resolvedChoice && transactions.some((tx) => tx.id === item.transactionId),
-  );
   const byTx = new Map<string, TransactionConflict>();
-  [...openPrevious, ...freshConflicts].forEach((item) => byTx.set(item.transactionId, item));
+  freshConflicts.filter((item) => !staleResolution(item)).forEach((item) => byTx.set(item.transactionId, item));
   return { transactions, conflicts: Array.from(byTx.values()).slice(0, 40) };
 }
 
@@ -425,7 +518,9 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
   });
   const members = Array.from(memberMap.values()).filter((item) => alive("members", item.id, item.updatedAt));
   const paymentSources = mergePaymentSources(local.settings.paymentSources, remote.settings.paymentSources).filter((item) => alive("paymentSources", item.id, (item as { updatedAt?: string }).updatedAt));
-  const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories].filter((name) => alive("categories", name)));
+  const categoryRevivedAt = { ...(remote.settings.categoryRevivedAt || {}) };
+  Object.entries(local.settings.categoryRevivedAt || {}).forEach(([name, at]) => { if (!categoryRevivedAt[name] || at > categoryRevivedAt[name]) categoryRevivedAt[name] = at; });
+  const categorySet = new Set([...remote.settings.customCategories, ...local.settings.customCategories].filter((name) => alive("categories", name, categoryRevivedAt[name])));
   // Plan scalars follow LWW on the plan stamp, but plicuri / transferuri / reguli
   // se unesc pe id — altfel o modificare pe un telefon șterge plicul creat pe celălalt.
   const localPlan = local.settings.salaryPlan;
@@ -445,7 +540,8 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
   const merged = mergeAllocationsWithConflicts(
     localPlan.allocations || [],
     remotePlan.allocations || [],
-    [...(local.allocationConflicts || []), ...(remote.allocationConflicts || [])],
+    local.allocationConflicts || [],
+    remote.allocationConflicts || [],
     base,
   );
   const allocations = merged.allocations.filter((item) => alive("allocations", item.id, item.updatedAt));
@@ -474,6 +570,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       const theirs = right.find((item) => item.id === id);
       const base = !theirs ? mine! : !mine ? theirs : itemTime(mine) >= itemTime(theirs) ? mine : theirs;
       const contributions = mergeById([...(mine?.contributions || [])], [...(theirs?.contributions || [])], (item) => Date.parse(item.date) || 0)
+        .filter((item) => alive("eventContributions", `${id}:${item.id}`))
         .sort((first, second) => first.date.localeCompare(second.date));
       return { ...base, contributions: contributions.length ? contributions : undefined };
     }).slice(0, 80);
@@ -484,7 +581,8 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
     local.transactions,
     remote.transactions,
     deleted,
-    [...(local.transactionConflicts || []), ...(remote.transactionConflicts || [])],
+    local.transactionConflicts || [],
+    remote.transactionConflicts || [],
     base,
   );
   const localDraftIds = new Set(local.pendingReview.map((item) => item.id));
@@ -514,6 +612,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       members,
       paymentSources,
       customCategories: Array.from(categorySet),
+      categoryRevivedAt: Object.keys(categoryRevivedAt).length ? categoryRevivedAt : undefined,
       quickTemplates: local.settings.quickTemplates,
       archivedQuickTemplates: local.settings.archivedQuickTemplates,
       savedJournalFilters: local.settings.savedJournalFilters,
@@ -569,6 +668,7 @@ export function applyAllocationConflictChoice(data: AppData, conflictId: string,
     ...conflict,
     previousAmount,
     resolvedChoice: choice,
+    resolvedAt: new Date().toISOString(),
     localAmount: conflict.localAmount,
     remoteAmount: conflict.remoteAmount,
   };
@@ -602,6 +702,7 @@ export function undoAllocationConflictChoice(data: AppData, conflictId: string):
     ...conflict,
     previousAmount: undefined,
     resolvedChoice: undefined,
+    resolvedAt: undefined,
     detectedAt: new Date().toISOString(),
   };
   return {
@@ -642,6 +743,7 @@ export function applyTransactionConflictChoice(data: AppData, conflictId: string
     ...conflict,
     previousSnapshot,
     resolvedChoice: choice,
+    resolvedAt: new Date().toISOString(),
   };
   return {
     ...data,
@@ -657,6 +759,7 @@ export function undoTransactionConflictChoice(data: AppData, conflictId: string)
     ...conflict,
     previousSnapshot: undefined,
     resolvedChoice: undefined,
+    resolvedAt: undefined,
     detectedAt: new Date().toISOString(),
   };
   return {

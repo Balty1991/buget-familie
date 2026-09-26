@@ -22,6 +22,7 @@ const TRACKED: Tracked[] = [
   { entity: "categories", ids: (data) => data.settings.customCategories },
   { entity: "paymentSources", ids: (data) => data.settings.paymentSources.map((item) => item.id) },
   { entity: "exchangeRates", ids: (data) => (data.settings.exchangeRates || []).map((item) => item.currency) },
+  { entity: "eventContributions", ids: (data) => (data.settings.plannedEvents || []).flatMap((event) => (event.contributions || []).map((item) => `${event.id}:${item.id}`)) },
 ];
 
 const MAX_REMOVED = 10;
@@ -45,5 +46,13 @@ export function recordRemovals(previous: AppData, next: AppData, now = new Date(
   const kept = next.deleted.filter((item) => !revived.has(`${item.entity}:${item.id}`) && !added.some((entry) => entry.entity === item.entity && entry.id === item.id));
   const deleted = [...kept, ...added];
   if (deleted.length === next.deleted.length && !added.length) return next;
+  // Categoriile n-au marcaj propriu: ținem minte când a fost creată din nou una ștearsă,
+  // altfel piatra venită de la partener ar scoate-o iar.
+  const revivedCategories = next.deleted.filter((item) => item.entity === "categories" && revived.has(`categories:${item.id}`)).map((item) => item.id);
+  if (revivedCategories.length) {
+    const stamps = { ...(next.settings.categoryRevivedAt || {}) };
+    revivedCategories.forEach((name) => { stamps[name] = now; });
+    return { ...next, deleted, settings: { ...next.settings, categoryRevivedAt: stamps } };
+  }
   return { ...next, deleted };
 }

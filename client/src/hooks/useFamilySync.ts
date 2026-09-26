@@ -94,8 +94,22 @@ export function useFamilySync(
   const syncResumeTriedRef = useRef(false);
   const syncRoomIdRef = useRef<string | undefined>(undefined);
   const syncUnsubscribeRef = useRef<(() => void) | undefined>(undefined);
+  /** Ultima stare trimisă în cameră (sau identică cu ea): până la ea nu e nimic de trimis. */
   const syncLastPortableRef = useRef("");
   const syncPushTimerRef = useRef<number | undefined>(undefined);
+  /** Pachetele primite și trimiterile rulează pe rând: altfel un pachet vechi terminat ultimul întoarce starea. */
+  const syncQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const syncEnqueue = (job: () => Promise<void>) => {
+    const next = syncQueueRef.current.then(job, job);
+    syncQueueRef.current = next.catch(() => undefined);
+    return next;
+  };
+  /** IV-ul ultimului pachet văzut (trimis de noi sau deja unit): ecoul propriei scrieri nu se mai decriptează. */
+  const syncLastIvRef = useRef("");
+  /** După o trimitere eșuată reîncercăm singuri: 5 s, 30 s, apoi la 2 minute. */
+  const [syncRetryTick, setSyncRetryTick] = useState(0);
+  const syncFailuresRef = useRef(0);
+  const syncRetryTimerRef = useRef<number | undefined>(undefined);
 
   const syncAppendJournal = (entry: Omit<SyncJournalEntry, "id">) =>
     setSyncJournal((current) => {
@@ -174,6 +188,8 @@ export function useFamilySync(
     syncRoomIdRef.current = undefined;
     syncSecretRef.current = "";
     window.clearTimeout(syncPushTimerRef.current);
+    window.clearTimeout(syncRetryTimerRef.current);
+    syncLastIvRef.current = "";
     setSyncConnected(false);
     setSyncPassword("");
     setSyncInvite("");
@@ -191,13 +207,16 @@ export function useFamilySync(
     syncRoomIdRef.current = undefined;
     syncSecretRef.current = "";
     window.clearTimeout(syncPushTimerRef.current);
+    window.clearTimeout(syncRetryTimerRef.current);
+    syncLastIvRef.current = "";
     setSyncConnected(false);
     setSyncHasSession(false);
     void clearFamilySession();
     setSyncNotice(t("Familia s-a mutat într-o cameră nouă, cu invitație. Cere invitația de pe telefonul care a mutat-o și lipește-o la „Am primit o invitație”. Datele de pe acest telefon rămân și se unesc la intrare."));
   };
 
-  const syncHandleRemoteEnvelope = async (envelope: EncryptedEnvelope) => {
+  const syncHandleRemoteEnvelope = (envelope: EncryptedEnvelope) => syncEnqueue(async () => {
+    if (!syncSecretRef.current || envelope.iv === syncLastIvRef.current) return;
     try {
       const crypto = await loadFamilyCrypto();
       const remoteData = normalizeAppData(await crypto.decryptFamilyData(envelope, syncSecretRef.current));
@@ -205,23 +224,29 @@ export function useFamilySync(
         syncStopMovedRoom();
         return;
       }
+      syncLastIvRef.current = envelope.iv;
       const roomForBase = syncRoomIdRef.current || "";
-      const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData, readSyncBase(roomForBase)));
+      const local = syncDataRef.current;
+      /** Schimbări de aici încă netrimise: după unire trebuie să plece, deci nu marcăm rezultatul ca trimis. */
+      const localPending = syncPortable(local) !== syncLastPortableRef.current;
+      const base = readSyncBase(roomForBase);
+      const merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(local, remoteData, base));
       writeSyncBase(roomForBase, crypto.syncBaseOf(remoteData));
       const mergedPortable = syncPortable(merged);
-      if (mergedPortable === syncPortable(syncDataRef.current)) {
+      if (mergedPortable === syncPortable(local)) {
         setSyncLastSync(new Date().toISOString());
         return;
       }
-      const previous = syncDataRef.current;
+      const previous = local;
       if (isThisDeviceRevoked(merged)) {
         setData(merged);
         syncDisconnect();
         setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
         return;
       }
-      syncLastPortableRef.current = mergedPortable;
-      setData(merged);
+      if (!localPending) syncLastPortableRef.current = mergedPortable;
+      // O schimbare făcută aici chiar acum (încă neajunsă în ref) se unește și ea, nu se pierde.
+      setData((current) => current === local ? merged : syncRetainLocalReceiptImages(crypto.mergeFamilyData(current, remoteData, base)));
       setSyncLastSync(new Date().toISOString());
       void import("@/lib/local-notifications").then(({ notifyFamilyEnvelopeChanges }) => notifyFamilyEnvelopeChanges(previous, merged)).catch(() => undefined);
       syncAppendJournal({
@@ -239,7 +264,7 @@ export function useFamilySync(
       });
       setSyncNotice(error instanceof Error ? error.message : "Un pachet primit nu a putut fi decriptat.");
     }
-  };
+  });
 
   /**
    * Intră în cameră: unește pachetul existent, își ia membrul propriu la prima intrare,
@@ -248,47 +273,63 @@ export function useFamilySync(
   const syncOpenRoom = async (roomId: string, secret: FamilySecret, options: { password?: string; invite?: string; mode: "create" | "join" | "resume" }) => {
     const crypto = await loadFamilyCrypto();
     const syncApi = await loadFamilySync();
-    const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
-    let merged = syncDataRef.current;
-    if (!remoteEnvelope && options.mode === "join") {
-      // Nu facem camere noi din parolă sau dintr-o invitație greșită: ar fi o cameră goală, separată de familie.
-      setSyncNotice(options.invite
-        ? t("Nu am găsit camera din această invitație. Verifică să fi copiat tot codul sau cere o invitație nouă.")
-        : t("Nu există nicio cameră cu această parolă. Camerele noi se fac cu „Creează camera”, iar partenerul intră cu invitația."));
-      return false;
-    }
-    if (remoteEnvelope) {
-      const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, secret));
-      if (remoteData.settings.syncRoomMovedAt) {
-        syncStopMovedRoom();
+    let prepared: AppData | undefined;
+    let recovery: Awaited<ReturnType<typeof issueRecoveryIfNeeded>> | { data: AppData } = { data: syncDataRef.current };
+    // Scrierea cere ca documentul să fie tot cel citit: dacă partenerul a scris între timp, citim și unim din nou.
+    for (let attempt = 1; ; attempt += 1) {
+      const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
+      let merged = prepared || syncDataRef.current;
+      if (!remoteEnvelope && options.mode === "join") {
+        // Nu facem camere noi din parolă sau dintr-o invitație greșită: ar fi o cameră goală, separată de familie.
+        setSyncNotice(options.invite
+          ? t("Nu am găsit camera din această invitație. Verifică să fi copiat tot codul sau cere o invitație nouă.")
+          : t("Nu există nicio cameră cu această parolă. Camerele noi se fac cu „Creează camera”, iar partenerul intră cu invitația."));
         return false;
       }
-      const own = claimOwnMember(syncDataRef.current, remoteData, getOrCreateDeviceId());
-      merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData, readSyncBase(roomId)));
-    }
-    if (isThisDeviceRevoked(merged)) {
+      if (remoteEnvelope) {
+        const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, secret));
+        if (remoteData.settings.syncRoomMovedAt) {
+          syncStopMovedRoom();
+          return false;
+        }
+        const own = claimOwnMember(merged, remoteData, getOrCreateDeviceId());
+        merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData, readSyncBase(roomId)));
+        // Ce am unit conține deja camera: la o nouă încercare, strămoșul comun e pachetul acesta.
+        writeSyncBase(roomId, crypto.syncBaseOf(remoteData));
+      }
+      if (!prepared) {
+        if (isThisDeviceRevoked(merged)) {
+          setData(merged);
+          await clearFamilySession();
+          setSyncHasSession(false);
+          setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
+          return false;
+        }
+        merged = touchSyncDevice(merged);
+        // Codul de recuperare încuie parola (camere vechi) sau codul invitației (camere noi).
+        const recoverable = options.invite || options.password;
+        recovery = recoverable ? await issueRecoveryIfNeeded(merged, recoverable, options.mode === "create") : { data: merged };
+        merged = recovery.data;
+      }
+      prepared = merged;
+      syncLastPortableRef.current = syncPortable(merged);
       setData(merged);
-      await clearFamilySession();
-      setSyncHasSession(false);
-      setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare — sau schimbați parola familiei."));
-      return false;
+      const envelope = await crypto.encryptFamilyData(merged, secret);
+      try {
+        await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null, (seq) => crypto.writeChainToken(secret, roomId, seq));
+        syncLastIvRef.current = envelope.iv;
+        break;
+      } catch (error) {
+        if (attempt >= 3 || !(error instanceof syncApi.RealtimeSyncError) || error.kind !== "conflict") throw error;
+      }
     }
-    merged = touchSyncDevice(merged);
-    // Codul de recuperare încuie parola (camere vechi) sau codul invitației (camere noi).
-    const recoverable = options.invite || options.password;
-    const recovery = recoverable ? await issueRecoveryIfNeeded(merged, recoverable, options.mode === "create") : { data: merged };
-    merged = recovery.data;
-    syncLastPortableRef.current = syncPortable(merged);
-    setData(merged);
-    const envelope = await crypto.encryptFamilyData(merged, secret);
-    await syncApi.pushFamilyEnvelope(roomId, envelope, undefined, (seq) => crypto.writeChainToken(secret, roomId, seq));
-    writeSyncBase(roomId, crypto.syncBaseOf(merged));
+    writeSyncBase(roomId, crypto.syncBaseOf(prepared));
     syncRoomIdRef.current = roomId;
     syncSecretRef.current = secret;
     syncUnsubscribeRef.current?.();
     syncUnsubscribeRef.current = syncApi.subscribeFamilyRoom(
       roomId,
-      (incoming) => void syncHandleRemoteEnvelope(incoming),
+      (incoming) => { void syncHandleRemoteEnvelope(incoming); },
       (error) => setSyncNotice(error.message),
     );
     setSyncConnected(true);
@@ -451,7 +492,9 @@ export function useFamilySync(
     if (currentPortable === syncLastPortableRef.current) return;
     window.clearTimeout(syncPushTimerRef.current);
     syncPushTimerRef.current = window.setTimeout(() => {
-      void (async () => {
+      void syncEnqueue(async () => {
+        if (!syncRoomIdRef.current || syncPortable(syncDataRef.current) === syncLastPortableRef.current) return;
+        const pushedBefore = syncLastPortableRef.current;
         try {
           const crypto = await loadFamilyCrypto();
           const syncApi = await loadFamilySync();
@@ -470,6 +513,9 @@ export function useFamilySync(
                 return;
               }
               toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData, readSyncBase(roomId)));
+              // Camera e acum în `toPush`: la o nouă încercare, strămoșul comun e pachetul acesta.
+              writeSyncBase(roomId, crypto.syncBaseOf(remoteData));
+              syncLastIvRef.current = remoteEnvelope.iv;
               const mergedPortable = syncPortable(toPush);
               if (mergedPortable !== syncPortable(syncDataRef.current)) {
                 syncLastPortableRef.current = mergedPortable;
@@ -480,6 +526,7 @@ export function useFamilySync(
             lastEnvelopeSize = envelope.ciphertext.length;
             try {
               await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null, (seq) => crypto.writeChainToken(syncSecretRef.current!, roomId, seq));
+              syncLastIvRef.current = envelope.iv;
               break;
             } catch (error) {
               if (attempt >= 3 || !(error instanceof syncApi.RealtimeSyncError) || error.kind !== "conflict") throw error;
@@ -487,6 +534,7 @@ export function useFamilySync(
           }
           writeSyncBase(roomId, crypto.syncBaseOf(toPush));
           syncLastPortableRef.current = syncPortable(toPush);
+          syncFailuresRef.current = 0;
           setSyncLastSync(new Date().toISOString());
           const skew = Number(window.localStorage.getItem(syncApi.CLOCK_SKEW_KEY) || 0);
           // Un pachet ține cam 27.000 de mișcări (măsurat); avertizăm cu mult înainte de limită.
@@ -497,12 +545,18 @@ export function useFamilySync(
             ? t("Ceasul telefonului e cu aproximativ {minutes} minute {direction}. Pune ora automată din setările telefonului; altfel, la unire, schimbările de aici pot câștiga sau pierde pe nedrept.", { minutes: Math.round(Math.abs(skew) / 60_000), direction: skew > 0 ? t("înainte") : t("în urmă") })
             : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
         } catch (error) {
+          // Nimic nu a plecat: starea rămâne „de trimis” și reîncercăm singuri, fără să aștepte o nouă editare.
+          syncLastPortableRef.current = pushedBefore;
+          const delay = [5_000, 30_000, 120_000][Math.min(syncFailuresRef.current, 2)];
+          syncFailuresRef.current += 1;
+          window.clearTimeout(syncRetryTimerRef.current);
+          syncRetryTimerRef.current = window.setTimeout(() => setSyncRetryTick((tick) => tick + 1), delay);
           setSyncNotice(error instanceof Error ? error.message : t("Actualizarea nu a putut fi trimisă."));
         }
-      })();
+      });
     }, 800);
     return () => window.clearTimeout(syncPushTimerRef.current);
-  }, [data, syncConnected, online]);
+  }, [data, syncConnected, online, syncRetryTick]);
 
   useEffect(() => () => syncUnsubscribeRef.current?.(), []);
 
