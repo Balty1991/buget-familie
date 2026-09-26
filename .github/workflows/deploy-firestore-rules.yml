@@ -69,8 +69,17 @@ jobs:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/setup-gcloud@v3
 
+      # Un rol IAM proaspăt dat contului de serviciu are nevoie de câteva minute ca să se aplice.
       - name: Publică regulile
-        run: npx --yes firebase-tools@latest deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive --force
+        run: |
+          set -uo pipefail
+          for try in 1 2 3; do
+            if npx --yes firebase-tools@latest deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive --force; then exit 0; fi
+            echo "Încercarea $try nu a reușit; aștept 60 s."
+            sleep 60
+          done
+          echo "::error::Contul de serviciu are nevoie de rolul Firebase Rules Admin (Google Cloud → IAM)."
+          exit 1
 
       - name: Verifică regula publicată
         run: |
