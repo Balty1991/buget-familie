@@ -3437,4 +3437,5 @@ export const en: Record<string, string> = {
   "Pe web nu păstrăm codul invitației după repornire: e chiar cheia familiei. Trimite invitația de pe un telefon cu aplicația Android sau lipește codul mai jos.": "On the web we do not keep the invite code after a restart: it is the family key itself. Send the invite from a phone with the Android app or paste the code below.",
   "Codul invitației": "Invite code",
   "Nu mai ai codul? Fă o invitație nouă": "No longer have the code? Make a new invite",
+  "Telefonul revocat are încă cheia familiei. Mut familia acum pe o invitație nouă? Celelalte telefoane intră din nou cu ea; datele nu se pierd.": "The revoked phone still has the family key. Move the family to a new invite now? The other phones join again with it; no data is lost.",
 };

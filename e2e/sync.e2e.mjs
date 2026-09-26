@@ -230,7 +230,6 @@ async function main() {
       await ana.page.getByRole("button", { name: "Da, mută familia" }).click();
       await waitFor(async () => Boolean(await ana.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.inviteRoom)), "Ana în camera nouă");
       const moved = await copiedInvite(ana.page);
-      await waitFor(async () => !(await mihai.page.evaluate(async () => (await (await import("/src/lib/family-session.ts")).loadFamilySession())?.roomId)), "Mihai iese din camera veche");
       await waitFor(async () => (await mihai.page.locator(".bf-sync-off-banner").count()) > 0, "bannerul „sync oprit” la Mihai");
       // Exact ce face omul: „Reconectează” din banner duce la Sync, unde scrie ce s-a întâmplat.
       await mihai.page.locator(".bf-sync-off-banner button").first().click();

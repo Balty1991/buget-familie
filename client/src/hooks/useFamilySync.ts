@@ -216,8 +216,9 @@ export function useFamilySync(
     window.clearTimeout(syncRetryTimerRef.current);
     syncLastIvRef.current = "";
     setSyncConnected(false);
-    setSyncHasSession(false);
-    void clearFamilySession();
+    // S4: sesiunea nu se mai șterge singură. Un pachet „mutat” poate veni și de la un telefon
+    // revocat, care încă are cheia; ștergerea lăsa toată familia fără cameră. Invitația nouă
+    // o înlocuiește oricum, iar până atunci telefonul doar stă oprit.
     setSyncNotice(t("Familia s-a mutat într-o cameră nouă, cu invitație. Cere invitația de pe telefonul care a mutat-o și lipește-o la „Am primit o invitație”. Datele de pe acest telefon rămân și se unesc la intrare."));
   };
 
@@ -663,6 +664,8 @@ export function useFamilySync(
         setSyncNotice(t("Ai revocat acest telefon. Sesiunea s-a închis."));
       } else {
         setSyncNotice(t("Dispozitivul a fost marcat ca revocat. Se propagă la următoarea sincronizare."));
+        // S4: semnul de revocare nu ia cheia de pe telefonul acela. Doar o invitație nouă îl scoate de tot.
+        if (await askConfirm(t("Telefonul revocat are încă cheia familiei. Mut familia acum pe o invitație nouă? Celelalte telefoane intră din nou cu ea; datele nu se pierd."))) void syncMoveToInvite();
       }
     },
     onRestoreDevice: (deviceId: string) => {
