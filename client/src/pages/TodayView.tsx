@@ -160,6 +160,12 @@ export function recentActivityMoves<T extends ActivityRow>(transactions: T[], cy
 }
 
 export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings: _onOpenSettings, onOpenRecurring, coach }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void; coach?: ReactNode }) {
+  // „Astăzi pictat”: prima dată când ecranul cu cifra zilei e pe ecran. Splash-ul e LCP-ul real,
+  // deci Lighthouse arată mai bine decât e; scripts/lighthouse.mjs raportează și acest semn.
+  useEffect(() => {
+    if (typeof performance === "undefined" || performance.getEntriesByName("bf-today-painted").length) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => performance.mark("bf-today-painted")));
+  }, []);
   const { simpleMode } = useSimpleMode();
   const math = usePlanCycle(data);
   const summary = useTodaySummary(data);

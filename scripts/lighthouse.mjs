@@ -36,6 +36,11 @@ try {
   const report = result.lhr;
   const scores = Object.fromEntries(Object.entries(report.categories).map(([key, category]) => [key, Math.round((category.score || 0) * 100)]));
   const metrics = Object.fromEntries(Object.entries(report.audits).filter(([key]) => ["first-contentful-paint", "largest-contentful-paint", "total-blocking-time", "cumulative-layout-shift", "speed-index", "interactive"].includes(key)).map(([key, audit]) => [key, { displayValue: audit.displayValue, numericValue: audit.numericValue }]));
+  // Semnul propriu pus de Astăzi (TodayView): când cifra zilei e chiar pe ecran, nu splash-ul.
+  const todayMark = (report.audits["user-timings"]?.details?.items || []).find((item) => item.name === "bf-today-painted");
+  if (todayMark) metrics["bf-today-painted"] = { displayValue: `${Math.round(todayMark.startTime)} ms`, numericValue: todayMark.startTime };
+  const maxTodayMs = Number(process.env.LH_MAX_TODAY_MS || 0);
+  if (maxTodayMs && (!todayMark || todayMark.startTime > maxTodayMs)) process.exitCode = 3;
   await mkdir("reports", { recursive: true });
   await writeFile("reports/lighthouse-mobile.json", JSON.stringify(report, null, 2));
   await writeFile("reports/lighthouse-mobile-summary.json", JSON.stringify({ generatedAt: new Date().toISOString(), url, scores, metrics }, null, 2));
