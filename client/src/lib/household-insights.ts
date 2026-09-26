@@ -1413,3 +1413,45 @@ export const formatWeeklyCheckInShare = (check: WeeklyCheckIn, rebalance?: Check
 };
 
 
+
+export type EnvelopeBurndown = {
+  start: string;
+  end: string;
+  days: number;
+  budget: number;
+  /** Cât a rămas la sfârșitul fiecărei zile, de la început până azi. */
+  actual: number[];
+  /** Ziua (index) în care, la ritmul de până acum, plicul ajunge la zero; lipsă dacă ajunge. */
+  runOutIndex?: number;
+  todayIndex: number;
+};
+
+/**
+ * Cum se golește plicul pe ciclu: linia ideală (de la limită la zero până la salariu), linia reală
+ * (rămasul la finalul fiecărei zile) și unde duce ritmul de până acum. Aceleași mișcări ca plicul.
+ */
+export const envelopeBurndown = (data: AppData, allocation: BudgetAllocation, asOf = isoToday()): EnvelopeBurndown | undefined => {
+  const plan = data.settings.salaryPlan;
+  const start = plan.periodStart;
+  const end = planCoverEndDate(plan);
+  if (!start || !end || end < start) return undefined;
+  const days = daysBetween(start, end) + 1;
+  const budget = allocationBudget(data, allocation);
+  if (budget <= 0 || days < 2) return undefined;
+  const todayIndex = Math.max(0, Math.min(days - 1, daysBetween(start, asOf)));
+  const spentByDay = new Array(days).fill(0) as number[];
+  for (const item of data.transactions) {
+    if (item.date < start || item.date > end || !expenseBelongsTo(plan, item, allocation)) continue;
+    spentByDay[daysBetween(start, item.date)] += item.amount;
+  }
+  const actual: number[] = [];
+  let left = budget;
+  for (let index = 0; index <= todayIndex; index += 1) {
+    left -= spentByDay[index];
+    actual.push(roundMoney(left));
+  }
+  const spent = budget - left;
+  const pace = spent / (todayIndex + 1);
+  const runOutIndex = pace > 0 && left > 0 && todayIndex + left / pace < days - 1 ? Math.floor(todayIndex + left / pace) : left <= 0 ? todayIndex : undefined;
+  return { start, end, days, budget: roundMoney(budget), actual, runOutIndex, todayIndex };
+};

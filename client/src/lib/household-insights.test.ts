@@ -737,3 +737,18 @@ describe("cheltuiala fără plic, pe o categorie comună (BF-12)", () => {
     expect(allocationStatus(data, apa).state).not.toBe("over");
   });
 });
+
+describe("graficul plicului pe ciclu", () => {
+  it("linia reală scade cu cheltuielile, iar ritmul prea mare arată ziua în care se golește", async () => {
+    const { envelopeBurndown } = await import("./household-insights");
+    const data = createEmptyAppData();
+    const card = data.settings.paymentSources[0];
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-09-30", paydayFlexDays: 0, allocations: [{ id: "f", label: "Mâncare", amount: 900, category: "Alimente", weeklyPace: false }] };
+    data.transactions = [{ id: "a", title: "Lidl", amount: 300, kind: "expense", category: "Alimente", sourceId: card.id, source: card.name, person: "Eu", date: "2026-09-03", allocationId: "f" }];
+    const chart = envelopeBurndown(data, data.settings.salaryPlan.allocations[0], "2026-09-05")!;
+    expect(chart.days).toBe(30);
+    expect(chart.actual).toEqual([900, 900, 600, 600, 600]);
+    // 300 în 5 zile = 60/zi; 600 rămași ajung 10 zile → se golește pe la ziua 14, înainte de salariu.
+    expect(chart.runOutIndex).toBe(14);
+  });
+});

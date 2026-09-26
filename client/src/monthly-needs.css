@@ -198,3 +198,19 @@ html body .bf-envelope-list-first .bf-allocation-list > article > .bf-allocation
 
 /* Astăzi: blocul de pași are un titlu, ca să se citească drept listă, nu carduri răzlețe. */
 .bf-today-brief .bf-today-brief-title { margin: 0 0 6px; }
+
+/* Graficul plicului pe ciclu. */
+.bf-burndown { margin: 4px 0 0; }
+.bf-burndown svg { display: block; width: 100%; height: auto; overflow: visible; }
+.bf-burndown-zero { stroke: var(--cf-line, rgba(0, 0, 0, 0.15)); stroke-width: 1; }
+.bf-burndown-ideal { stroke: var(--cf-muted, #6e7c76); stroke-width: 1.5; stroke-dasharray: 2 4; }
+.bf-burndown-projection { stroke: var(--cf-warning, #c4a15a); stroke-width: 2; stroke-dasharray: 6 4; }
+.bf-burndown-actual { fill: none; stroke: var(--cf-primary-strong, #1f5c52); stroke-width: 2.5; stroke-linejoin: round; }
+.bf-burndown-actual.is-over { stroke: var(--cf-danger, #a44e3e); }
+.bf-burndown-today { fill: var(--cf-primary-strong, #1f5c52); }
+.bf-burndown figcaption { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 12px; color: var(--cf-muted); }
+.bf-burndown figcaption i { display: inline-block; width: 14px; height: 0; margin-right: 4px; vertical-align: middle; border-top: 2px solid; }
+.bf-burndown figcaption i.ideal { border-top: 2px dotted var(--cf-muted, #6e7c76); }
+.bf-burndown figcaption i.actual { border-color: var(--cf-primary-strong, #1f5c52); }
+.bf-burndown figcaption i.projection { border-top: 2px dashed var(--cf-warning, #c4a15a); }
+html body .os-shell .bf-burndown figcaption, html body .os-shell .bf-burndown figcaption span { font-size: 12px; }
