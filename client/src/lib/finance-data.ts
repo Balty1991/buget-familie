@@ -462,7 +462,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     // Un rând fără marcaj de timp îl primește din ziua lui, nu din clipa normalizării:
     // altfel un rând vechi venit de pe celălalt telefon s-ar naște „acum”, ar învinge
     // urma ștergerii și ar reapărea în registru după ce a fost șters.
-    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: Math.max(0, parseRomanianAmount(item.amount)), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope };
+    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: money2(Math.min(MAX_AMOUNT, Math.max(0, parseRomanianAmount(item.amount)))), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope };
   };
   const transactions = realRows<Partial<Transaction>>(old.transactions).map((entry, index) => normalizeTransaction(entry, index, "legacy-tx"));
   const transactionIds = new Set(transactions.map((item) => item.id));
@@ -707,6 +707,10 @@ export const appendAllocationHistory = (data: AppData, entry: Omit<AllocationHis
 };
 
 /** Rotunjire unică la 2 zecimale pentru ledger (semnat). */
+/** Peste un miliard de lei e o greșeală de tastare, nu o cheltuială. */
+export const MAX_AMOUNT = 999_999_999;
+/** Suma pusă într-un câmp de editare: cu virgulă, ca „12.345” să nu fie citit drept douăsprezece mii. */
+export const amountInput = (value: number) => String(money2(value)).replace(".", ",");
 export const money2 = (value: number) => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 /** Alias istoric: rotunjire non-negativă la 2 zecimale. */
 const roundedMoney = (value: number) => money2(Math.max(0, value));
@@ -1385,7 +1389,8 @@ export const commitLedgerEntry = (data: AppData, entry: Transaction, fromWeekInd
       });
     }
   }
-  const stamped = { ...entry, updatedAt: new Date().toISOString() };
+  // La bani: „12,345” ar fi reapărut la corectură ca „12.345”, adică 12.345 lei.
+  const stamped = { ...entry, amount: money2(Math.min(MAX_AMOUNT, Math.max(0, entry.amount))), updatedAt: new Date().toISOString() };
   const transactions = ledger.transactions.some((row) => row.id === stamped.id)
     ? ledger.transactions.map((row) => row.id === stamped.id ? stamped : row)
     : [stamped, ...ledger.transactions];
@@ -1517,6 +1522,43 @@ export const recordDebtPayment = (data: AppData, input: { debtId: string; amount
 };
 
 /**
+ * Plata unei rate corectată sau ștearsă din Mișcări (sau readusă cu Anulează) mută și soldul
+ * datoriei cu diferența. Plata nouă, din „Plătește rata”, schimbă singură soldul în același pas;
+ * atunci nu mai atingem nimic. Doar pentru schimbările făcute pe acest telefon, nu la sync.
+ */
+export const adjustDebtsForLedgerEdits = (previous: AppData, next: AppData): AppData => {
+  if (previous.transactions === next.transactions || !next.debts.length) return next;
+  const paid = (data: AppData) => {
+    const byId = new Map<string, Transaction>();
+    data.transactions.forEach((item) => { if (item.debtId && item.kind === "expense") byId.set(item.id, item); });
+    return byId;
+  };
+  const before = paid(previous);
+  const after = paid(next);
+  if (!before.size && !after.size) return next;
+  const delta = new Map<string, number>();
+  const add = (debtId: string, value: number) => delta.set(debtId, (delta.get(debtId) || 0) + value);
+  before.forEach((item, id) => {
+    const now = after.get(id);
+    if (!now) add(item.debtId!, item.amount);
+    else if (now.amount !== item.amount || now.debtId !== item.debtId) { add(item.debtId!, item.amount); add(now.debtId!, -now.amount); }
+  });
+  after.forEach((item, id) => { if (!before.has(id)) add(item.debtId!, -item.amount); });
+  if (!Array.from(delta.values()).some((value) => Math.abs(value) >= 0.005)) return next;
+  const now = new Date().toISOString();
+  const previousDebt = new Map(previous.debts.map((item) => [item.id, item]));
+  return {
+    ...next,
+    debts: next.debts.map((debt) => {
+      const change = delta.get(debt.id) || 0;
+      const old = previousDebt.get(debt.id);
+      if (Math.abs(change) < 0.005 || !old || old.remaining !== debt.remaining) return debt;
+      return { ...debt, remaining: money2(Math.max(0, debt.remaining + change)), updatedAt: now };
+    }),
+  };
+};
+
+/**
  * Venit neregulat (testare cu utilizatori, M6): „vreau ca banii să-mi ajungă N zile”.
  * Perioada pornește azi și ține N zile, mutându-se în fiecare zi, ca cifra zilei să fie
  * banii de acum împărțiți pe N zile, fără o dată de salariu care nu există.
@@ -1639,7 +1681,8 @@ export const autoPostDueRecurring = (data: AppData, asOf = isoToday()): AppData 
     if (!source || !member) return;
     const id = `recurring-auto-${item.id}-${dueDate}`;
     const exists = data.transactions.some((transaction) => transaction.id === id || (transaction.recurringId === item.id && transaction.date === dueDate));
-    if (exists) return;
+    // Ștearsă de om: luna asta n-a plătit-o așa. Nu o readucem la fiecare pornire.
+    if (exists || data.deleted.some((entry) => entry.entity === "transactions" && entry.id === id)) return;
     const matched = matchingAllocationsForExpense(data, { category: item.category, memberId: item.memberId, sourceId: item.sourceId })[0];
     additions.push({ id, recurringId: item.id, title: item.name, amount: item.amount, kind: "expense", category: item.category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: dueDate, note: t("Adăugată automat din scadență recurentă"), allocationId: matched?.id || "outside", createdAt: `${asOf}T12:00:00.000Z` });
   });

@@ -202,7 +202,7 @@ export function resolveHydrateMerge(options: {
   memory: AppData;
   editedBeforeHydrate: boolean;
 }): AppData | null {
-  const memoryHash = hashAppPayload(JSON.stringify(options.memory));
+  const memoryHash = hashAppPayload(localSnapshotText(options.memory));
   if (options.editedBeforeHydrate) {
     const stamped = {
       data: options.memory,
@@ -235,9 +235,20 @@ export async function readAppDataRecord(): Promise<{ data: AppData | null; saved
   });
 }
 
+/**
+ * Textul copiei din localStorage: fără pozele propriu-zise (stau în stocarea lor), dar cu
+ * `imageKeys`, care le leagă de bon. Hash-ul IndexedDB se face pe același text, ca la
+ * ștampile egale cele două copii să fie recunoscute ca identice.
+ */
+export const localSnapshotText = (data: AppData) =>
+  JSON.stringify({
+    ...data,
+    receipts: data.receipts.map(({ imageData: _one, imageData2: _two, ...rest }) => rest),
+  });
+
 export async function writeAppData(data: AppData, savedAt = new Date().toISOString()): Promise<AppStorageMeta> {
   const db = await openDatabase();
-  const hash = hashAppPayload(JSON.stringify(data));
+  const hash = hashAppPayload(localSnapshotText(data));
   const envelope: StoredEnvelope = { __bf: 1, savedAt, hash, data };
   return new Promise((resolve, reject) => {
     const request = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).put(envelope, DATA_KEY);

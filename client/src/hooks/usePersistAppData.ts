@@ -4,10 +4,11 @@
 import { recordRemovals } from "@/lib/sync-removals";
 import { stampPlanScalars } from "@/lib/plan-scalars";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { autoPostDueRecurring, adoptOutsideExpenses, createEmptyAppData, normalizeAppData, type AppData } from "@/lib/finance-data";
+import { adjustDebtsForLedgerEdits, autoPostDueRecurring, adoptOutsideExpenses, createEmptyAppData, normalizeAppData, type AppData } from "@/lib/finance-data";
 import {
   APP_STORAGE_KEY,
   LEGACY_STORAGE_KEY,
+  localSnapshotText,
   readAppDataRecord,
   readLocalStorageSnapshot,
   resolveHydrateMerge,
@@ -15,7 +16,6 @@ import {
   writeLocalStorageSnapshot,
 } from "@/lib/app-storage";
 import { t } from "@/lib/i18n";
-import { syncPortable } from "@/hooks/useFamilySync";
 
 export function readInitialAppData(): AppData {
   try {
@@ -38,7 +38,7 @@ export function usePersistAppData(
   const applyData: typeof setData = (value) => {
     if (!storageHydrated.current) editedBeforeHydrate.current = true;
     // Ce dispare din plan sau din setări lasă piatră de mormânt, ca sincronizarea să nu-l readucă.
-    setData((previous) => { const next = typeof value === "function" ? value(previous) : value; return stampPlanScalars(previous, recordRemovals(previous, next)); });
+    setData((previous) => { const next = typeof value === "function" ? value(previous) : value; return stampPlanScalars(previous, recordRemovals(previous, adjustDebtsForLedgerEdits(previous, next))); });
   };
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export function usePersistAppData(
 
   useEffect(() => {
     if (!storageHydrated.current) return;
-    const serialized = syncPortable(data);
+    const serialized = localSnapshotText(data);
     const savedAt = new Date().toISOString();
     const lsWrite = writeLocalStorageSnapshot(serialized, savedAt);
     if (lsWrite.quotaExceeded || !lsWrite.wroteFull) {

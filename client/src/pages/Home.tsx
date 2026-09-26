@@ -208,7 +208,7 @@ export default function Home() {
     // Doar când se schimbă plicurile sau numărul de mișcări, nu la fiecare randare.
   }, [storageReady, data.settings.salaryPlan.allocations, data.transactions.length]);
 
-  const { undo, setUndo, runUndo, deleteWithUndo, offerUndo } = useUndo(data, setData);
+  const { undo, setUndo, runUndo, deleteWithUndo, offerUndo } = useUndo(data, applyData);
   const go = (next: MainView) => { preloadView(next); if (next !== "utilities") setMoreReturn(null); startTransition(() => setView(next)); };
   useEffect(() => {
     if (view !== "today" || modal) void ensureDeferredStyles();

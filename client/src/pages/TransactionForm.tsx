@@ -5,7 +5,7 @@ import "../currency.css";
 import "../transaction-envelope-picker.css";
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { allocationFromText, amountError, BASE_CURRENCY, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, exchangeRateFor, expenseCategories, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseRomanianAmount, pickerAllocationsForExpense, planAllocationMath, resolveReceiptLines, sourceBalance, sourceCurrency, toBaseAmount, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { amountInput, allocationFromText, amountError, BASE_CURRENCY, allocationBudget, allocationSpent, allocationWeekStatus, allocationWeeksStatus, exchangeRateFor, expenseCategories, isoToday, isWeeklyPaced, matchingAllocationsForExpense, newId, parseRomanianAmount, pickerAllocationsForExpense, planAllocationMath, resolveReceiptLines, sourceBalance, sourceCurrency, toBaseAmount, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { Field, Modal, fmtExact, money } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
 import { RoDateInput } from "@/components/RoDateInput";
@@ -13,7 +13,7 @@ import { RoDateInput } from "@/components/RoDateInput";
 export function TransactionForm({ data, initial, onSave, onClose }: { data: AppData; initial?: Transaction; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => void; onClose: () => void }) {
   const [kind, setKind] = useState<TransactionKind>(initial?.kind || "expense");
   const [title, setTitle] = useState(initial?.title || "");
-  const [amount, setAmount] = useState(initial ? String(initial.amount) : "");
+  const [amount, setAmount] = useState(initial ? amountInput(initial.amount) : "");
   const [date, setDate] = useState(initial?.date || isoToday());
   const [memberId, setMemberId] = useState(initial?.memberId || data.settings.members.find((member) => member.name === initial?.person)?.id || data.settings.members[0]?.id || "");
   const [shareScope, setShareScope] = useState<ShareScope>(transactionShareScope(initial));
@@ -28,7 +28,7 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
   const [originalAmountInput, setOriginalAmountInput] = useState(initial?.originalAmount ? String(initial.originalAmount) : "");
   const [splitOpen, setSplitOpen] = useState(false);
   const [lines, setLines] = useState<Array<{ id: string; category: string; amount: string; label: string }>>([
-    { id: newId("split-line"), category: initial?.category || "Alimente", amount: initial ? String(initial.amount) : "", label: "" },
+    { id: newId("split-line"), category: initial?.category || "Alimente", amount: initial ? amountInput(initial.amount) : "", label: "" },
   ]);
   /**
    * O încasare poate veni în altă valută decât a sursei (factură în EUR plătită în contul în

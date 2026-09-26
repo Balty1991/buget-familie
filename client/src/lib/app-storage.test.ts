@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createEmptyAppData } from "./finance-data";
-import { downloadBackup, makeBackup, parseBackup } from "./app-storage";
+import { createEmptyAppData, type AppData } from "./finance-data";
+import { chooseFresherAppData, downloadBackup, hashAppPayload, localSnapshotText, makeBackup, parseBackup } from "./app-storage";
 
 /** Plugin-urile Capacitor nu există în Node; le înlocuim o singură dată, controlabil. */
 const native = vi.hoisted(() => ({
@@ -313,5 +313,21 @@ describe("backup cap-coadă, cu registru bogat", () => {
     expect(restored.recurring.find((item) => item.id === "rc2")).toMatchObject({ frequency: "yearly", month: 3 });
     expect(restored.recurring.find((item) => item.id === "rc3")).toMatchObject({ variable: true });
     expect(restored.settings.merchantRules).toHaveLength(1);
+  });
+});
+
+describe("copia din localStorage și bonurile", () => {
+  it("păstrează imageKeys și are același hash ca IndexedDB", () => {
+    const data = createEmptyAppData();
+    data.receipts = [{ id: "r1", vendor: "Lidl", date: "2026-09-26", total: 10, imageKeys: ["receipt-img-r1-0"], imageData: "data:image/jpeg;base64,AAAA" } as AppData["receipts"][number]];
+    const text = localSnapshotText(data);
+    expect(JSON.parse(text).receipts[0].imageKeys).toEqual(["receipt-img-r1-0"]);
+    expect(JSON.parse(text).receipts[0].imageData).toBeUndefined();
+    const saved = "2026-09-26T10:00:00.000Z";
+    const chosen = chooseFresherAppData(
+      { data: JSON.parse(text) as AppData, savedAt: saved, hash: hashAppPayload(text) },
+      { data, savedAt: saved, hash: hashAppPayload(localSnapshotText(data)) },
+    );
+    expect(chosen).toBe(data);
   });
 });
