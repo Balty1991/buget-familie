@@ -79,6 +79,11 @@ html.theme-dark .os-shell .os-dock {
   opacity: 1;
 }
 
+/* Pe desktop nu e bară de navigare Android și nici dock: fâșia acoperea ultimul rând din liste. */
+@media (min-width: 1024px) {
+  html:not(.is-android-standalone) .os-nav-fill { display: none; }
+}
+
 .os-shell main,
 .os-shell .bf-page,
 .os-shell .bf-today-workspace,
