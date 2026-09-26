@@ -6,7 +6,9 @@
   care a făcut butonul de backup să pară că nu funcționează.
 -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="." />
+    <!-- Doar folderele în care aplicația chiar scrie (Documente, Descărcări), nu tot spațiul extern. -->
+    <external-path name="documents" path="Documents/" />
+    <external-path name="downloads" path="Download/" />
     <cache-path name="my_cache_images" path="." />
     <files-path name="app_files" path="." />
     <external-files-path name="app_external_files" path="." />

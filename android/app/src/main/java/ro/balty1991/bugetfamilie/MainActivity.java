@@ -68,6 +68,11 @@ public class MainActivity extends BridgeActivity {
     if (Build.VERSION.SDK_INT >= 29) {
       getWindow().setNavigationBarContrastEnforced(false);
     }
+    /* În lista de aplicații recente, captura aplicației arăta sumele și numele. Pe Android 13+
+       sistemul pune în loc o imagine goală; capturile de ecran făcute de om rămân permise. */
+    if (Build.VERSION.SDK_INT >= 33) {
+      setRecentsScreenshotEnabled(false);
+    }
     applyChrome(Color.parseColor(launchDark ? "#12161C" : "#EEF1EF"), !launchDark);
     pendingQuickAction = readQuickAction(getIntent());
     if (getBridge() != null) attachNativeBridges(getBridge().getWebView());
