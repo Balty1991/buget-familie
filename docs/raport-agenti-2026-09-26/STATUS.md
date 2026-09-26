@@ -56,7 +56,7 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | 6 | Scurtături de salariu tăiate | ✅ `3df805e` |
 | 7 | „bani liberi” | ✅ `7bb943d` |
 | 8 | Ajustarea de sold ca venit | ✅ `112502d` |
-| 9 | Tichetele în „nerepartizați” | ✅ `3df805e`; ⏳ tichete pe membru |
+| 9 | Tichetele în „nerepartizați” | ✅ `3df805e`, tichete pe membru `946f34e` |
 | 10 | Două cifre pe zi (banner) | ✅ `7bb943d` |
 | 11 | Săptămâni de 9 zile, S1 fantomă | ✅ `357780e` |
 | 12 | Plăți rare în rezumat | ✅ `3df805e` |
@@ -86,12 +86,12 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 ## Produs (product-report.md)
 | # | Constatare | Stare |
 |---|---|---|
-| 1 | Nimic util până la primul salariu | ⏳ |
-| 2 | Transferuri numărate drept cheltuieli | ⏳ |
+| 1 | Nimic util până la primul salariu | ✅ `85eff2b` |
+| 2 | Transferuri numărate drept cheltuieli | ✅ `df711bd` |
 | 3 | Fără măsurare | 👤 decizie (telemetrie) |
-| 4 | Pornirea nu compară cu venitul | ⏳ |
-| 5 | Cererea de recenzie | ⏳ |
-| 6 | 6 intenții, lipsește „Mă alătur familiei” | ⏳ |
-| 7 | Materiale de lansare vechi | ⏳ |
+| 4 | Pornirea nu compară cu venitul | ✅ `677b675` |
+| 5 | Cererea de recenzie | ✅ `21b3d5c` (👤 un build APK/AAB ca să intre pluginul Play Review) |
+| 6 | 6 intenții, lipsește „Mă alătur familiei” | ✅ `4403de5` |
+| 7 | Materiale de lansare vechi | ✅ `7e6b1ab` (👤 capturile noi) |
 | 8 | „Închide anul” | ⏳ |
 | — | Preț, probă, ASO | 👤 decizie |
