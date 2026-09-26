@@ -26,18 +26,18 @@
 | # | Constatare | Stare |
 |---|---|---|
 | S1 | CSP permite tot jsDelivr | ✅ `2bab932` |
-| S2 | Cod OCR de pe CDN; destinatari nedeclarați | ✅ declarați `2bab932`; ⏳ căutare Open Food Facts doar la cerere |
-| S3 | Plafonul AI se golește ușor | ✅ IPv6 /64, shard-uri `33f7b6e`; ⏳ rezervă pentru cererile verificate; 👤 Play Integrity |
+| S2 | Cod OCR de pe CDN; destinatari nedeclarați | ✅ declarați `2bab932`; Open Food Facts doar la cerere `3fa74bc` |
+| S3 | Plafonul AI se golește ușor | ✅ IPv6 /64, shard-uri `33f7b6e`; cererile fără App Check au 1/5 din plafon `3fa74bc`; 👤 Play Integrity |
 | S4 | Telefonul revocat are încă cheia | ⏳ |
 | S5 | Invitația în clar pe web | ⏳; 👤 domeniu propriu |
-| S6 | Lanțul de aprovizionare în CI | ✅ firebase-tools fixat; ⏳ pnpm; 👤 Workload Identity |
-| S7 | Ghidul AI scrie fără confirmare pe calea veche | ⏳ |
+| S6 | Lanțul de aprovizionare în CI | ✅ firebase-tools fixat, pnpm 10.34.5 `3fa74bc`; 👤 Workload Identity, acțiuni fixate pe SHA |
+| S7 | Ghidul AI scrie fără confirmare pe calea veche | ✅ `3fa74bc` |
 | S8 | Codul de recuperare se poate suprascrie | ✅ `2bab932` |
-| S9 | Reguli: 2 MB, câmpuri fără tip | ✅ 950 KB `2bab932`; ⏳ tipuri; 👤 App Check Enforce |
-| S10 | Camere vechi cu parolă după 2027 | ⏳ |
+| S9 | Reguli: 2 MB, câmpuri fără tip | ✅ 950 KB `2bab932`, tipuri `3fa74bc`; 👤 App Check Enforce |
+| S10 | Camere vechi cu parolă după 2027 | ✅ îndemn la fiecare intrare `3fa74bc` |
 | S11 | playRtdn acceptă orice cont Google | ✅ `2bab932`; 👤 variabila la pornirea Billing |
-| S12 | verifyPlayPurchase nelegat de cumpărător | ⏳ |
-| S13 | FLAG_SECURE sub Android 13, titluri de notificare | ⏳ |
+| S12 | verifyPlayPurchase nelegat de cumpărător | ✅ `3fa74bc` |
+| S13 | FLAG_SECURE sub Android 13, titluri de notificare | ✅ `3fa74bc` |
 | S14 | Invitație-capcană | ✅ `2bab932` |
 | S15 | Server de dezvoltare, dependențe | ✅ `2bab932` |
 | S16 | Politică / Data safety | ✅ `2bab932` |
@@ -63,7 +63,7 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | 13 | Analiză după o lună | ✅ `3df805e` |
 | 14 | Căutarea | ✅ `3df805e` |
 | 15 | Mementoul de backup | ✅ `3df805e` |
-| 16 | Mărunțișuri (texte, limită plan gratuit, bandă de zile) | ⏳ |
+| 16 | Mărunțișuri (texte, limită plan gratuit, bandă de zile) | ✅ `4a90313`, `6c55981`, `19a0ab9`, `7dd03af` |
 
 ## Performanță (perf-report.md)
 | # | Constatare | Stare |
@@ -80,7 +80,7 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | D9 | Fâșia de pe desktop | ✅ `a58e0f2` |
 | D10 | Layout de desktop | ⏳ |
 | D11–D18 | Plicuri, Obligații, Analiză, Setări, + Plic, „Cum se citește”, Mișcări | ⏳ |
-| D19–D23 | Text mic, gri, ghid, first-run, sync | ⏳ |
+| D19–D23 | Text mic, gri, ghid, first-run, sync | ✅ D19, D20 `09fe9b5`; ⏳ D21–D23 |
 | D24 | Straturi CSS | ⏳ continuu |
 
 ## Produs (product-report.md)
