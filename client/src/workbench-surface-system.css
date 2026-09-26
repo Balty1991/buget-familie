@@ -1,7 +1,0 @@
-/* Buget Familie — suprafețe de lucru: structura de registru explică suma, contextul și următorul pas, fără ornamente gratuite. */
-.bf-more-grid button { position: relative; overflow: hidden; background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(25,62,52,.06) 72.8%, transparent 73.6%), linear-gradient(145deg, #fffefa, #f8f6ef); }
-.bf-more-grid button::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: #4f8a74; opacity: .8; }
-.bf-more-grid button:nth-child(2n)::after { background: #5a9079; }
-.bf-more-grid button:nth-child(3n)::after { background: #73847b; }
-.dark .bf-more-grid button { background-image: linear-gradient(to bottom, transparent 0, transparent 72%, rgba(220,239,227,.09) 72.8%, transparent 73.6%), linear-gradient(145deg, #15372e, #102b23); }
-@media (max-width: 640px) { .bf-more-grid button::after { width: 2px; } }

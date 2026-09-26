@@ -1,7 +1,598 @@
 /* ui-modern-pass — additive layer (Household OS / Plan breathing room) */
-@import "./ui-modern-pass-a1.css";
-@import "./ui-modern-pass-a2.css";
-@import "./ui-modern-pass-b1.css";
-@import "./ui-modern-pass-b2.css";
-@import "./ui-modern-pass-c1.css";
-@import "./ui-modern-pass-c2.css";
+/* ── fost ui-modern-pass-a1.css ── */
+.os-shell.bf-app{--ui-hero-tracking:-0.045em;--ui-card-radius:1.15rem;--ui-card-pad:18px;--ui-card-gap:14px;--ui-enter-ms:220ms;--ui-tap:var(--os-tap,44px)}
+.os-shell .os-amount, .os-shell .os-amount span, .os-shell .bf-spend-stamp strong, .os-shell .bf-plan-header-stat b, .os-shell .bf-allocation-period-summary b, .os-shell .bf-os-source-list strong, .os-shell .bf-os-day b{font-variant-numeric:tabular-nums !important;font-feature-settings:"tnum" 1,"lnum" 1 !important}
+.os-shell .os-amount{font-size:clamp(52px,15vw,76px) !important;letter-spacing:var(--ui-hero-tracking) !important;line-height:0.9 !important}
+@media (max-width:760px){.os-shell .os-amount{font-size:clamp(48px,14.5vw,64px)}
+}
+@media (max-width:760px){.os-shell .os-hero, .os-shell .bf-today-brief, .os-shell .bf-spend-stamp, .os-shell .bf-week-checkin, .os-shell .bf-plan-studio-header, .os-shell .bf-allocation-period, .os-shell .bf-allocation-progress-card, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty{border-radius:var(--ui-card-radius) !important}
+.os-shell .os-hero{padding:18px 16px 20px}
+.os-shell .bf-today-workspace{gap:16px}
+.os-shell .bf-movements-ledger,.os-shell .bf-today-workspace,.os-shell .bf-plan-workspace{padding-left:max(14px,var(--os-inset-left,0px)) !important;padding-right:max(14px,var(--os-inset-right,0px)) !important}
+}
+.os-shell .os-dock{padding:8px 10px max(12px,var(--os-inset-bottom,env(safe-area-inset-bottom,0px)));box-shadow:0 -6px 18px color-mix(in srgb,#000 12%,transparent)}
+.os-shell .os-dock button{min-width:0;min-height:max(48px,var(--ui-tap));height:max(48px,var(--ui-tap));gap:2px;padding:6px 4px;border-radius:12px;font-size:12px;font-weight:600;letter-spacing:0.01em;color:var(--os-muted,var(--cf-muted));background:transparent;box-shadow:none;transition:color 160ms ease,background-color 160ms ease,transform 160ms ease}
+.os-shell .os-dock button svg{width:18px;height:18px}
+.os-shell .os-dock button.is-on,.os-shell .os-dock button.active{color:var(--os-mint-fg,var(--cf-on-forest,#fff)) !important;background:var(--os-mint,var(--cf-primary,#176b54)) !important;box-shadow:0 4px 12px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 28%,transparent) !important}
+.os-shell .os-dock button:active{transform:scale(0.97)}
+.os-shell .os-tool{min-width:var(--ui-tap);min-height:var(--ui-tap)}
+.os-shell .bf-empty-state,.os-shell .bf-allocation-empty,.os-shell .bf-today-empty-activity{position:relative;overflow:hidden;text-align:center}
+.os-shell .bf-empty-state,.os-shell .bf-allocation-empty{display:grid !important;justify-items:center;gap:10px !important;margin:12px 0 !important;padding:28px 18px 24px !important;border:1px dashed color-mix(in srgb,var(--os-line,var(--cf-line)) 85%,transparent) !important;border-radius:var(--ui-card-radius) !important;background:radial-gradient(circle at 50% 18%,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 14%,transparent),transparent 58%),var(--os-surface,var(--cf-surface)) !important;box-shadow:none !important}
+.os-shell .bf-empty-state::before,.os-shell .bf-allocation-empty::before{content:"" !important;display:block !important;width:56px !important;height:56px !important;margin-bottom:4px;border-radius:20px !important;background:linear-gradient(135deg,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 22%,transparent),transparent 62%),linear-gradient(45deg,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 12%,transparent) 25%,transparent 25% 50%,color-mix(in srgb,var(--os-mint,var(--cf-primary)) 12%,transparent) 50% 75%,transparent 75%),color-mix(in srgb,var(--os-surface-2,var(--cf-surface-alt)) 88%,var(--os-mint,var(--cf-primary)));background-size:auto,10px 10px,auto;box-shadow:0 0 0 1px color-mix(in srgb,var(--os-line,var(--cf-line)) 70%,transparent)}
+.os-shell .bf-empty-state>svg,.os-shell .bf-allocation-empty>svg{position:absolute !important;width:22px !important;height:22px !important;top:44px !important;left:50% !important;transform:translateX(-50%) !important;color:var(--os-mint,var(--cf-primary)) !important;opacity:0.92 !important}
+/* ── sfârșit ui-modern-pass-a1.css ── */
+/* ── fost ui-modern-pass-a2.css ── */
+.os-shell .bf-empty-state h2,.os-shell .bf-allocation-empty b{margin:8px 0 0 !important;color:var(--os-fg,var(--cf-ink)) !important;font-family:Fraunces,Georgia,serif !important;font-size:1.15rem !important;font-weight:560 !important;letter-spacing:-0.02em !important;line-height:1.25 !important}
+.os-shell .bf-empty-state p,.os-shell .bf-allocation-empty span{max-width:32ch;margin:0 !important;color:var(--os-muted,var(--cf-muted)) !important;font-size:0.92rem !important;line-height:1.45 !important}
+.os-shell .bf-empty-state .bf-primary,.os-shell .bf-allocation-empty+.bf-primary,.os-shell .bf-empty-state button.bf-primary{min-height:var(--ui-tap) !important;margin-top:6px !important;padding-inline:18px !important;border-radius:999px !important;font-weight:600 !important}
+.os-shell .bf-today-empty-activity{display:flex !important;align-items:center !important;gap:12px !important;width:100% !important;min-height:64px !important;padding:14px 16px !important;border:1px dashed color-mix(in srgb,var(--os-line,var(--cf-line)) 80%,transparent) !important;border-radius:var(--ui-card-radius) !important;color:var(--os-fg,var(--cf-ink)) !important;background:color-mix(in srgb,var(--os-mint,var(--cf-primary)) 6%,var(--os-surface,var(--cf-surface))) !important;text-align:left !important}
+.os-shell .bf-today-empty-activity b{display:block;font-family:Fraunces,Georgia,serif;font-weight:560;letter-spacing:-0.02em}
+.os-shell .bf-today-empty-activity small{color:var(--os-muted,var(--cf-muted));font-size:0.86rem;line-height:1.4}
+.os-shell .bf-page,.os-shell .bf-today-workspace,.os-shell .bf-movements-ledger,.os-shell .bf-plan-workspace{color:var(--os-fg,var(--cf-ink,#0c1612))}
+html:not(.dark) .os-shell .bf-empty-state h2,html:not(.dark) .os-shell .bf-allocation-empty b,html:not(.dark) .os-shell .bf-today-empty-activity b{color:#0c1612 !important}
+html:not(.dark) .os-shell .bf-empty-state p,html:not(.dark) .os-shell .bf-allocation-empty span,html:not(.dark) .os-shell .bf-today-empty-activity small{color:#4a5852 !important}
+:is(html.dark,html.theme-dark,html.theme-navy) .os-shell .bf-empty-state h2,:is(html.dark,html.theme-dark,html.theme-navy) .os-shell .bf-allocation-empty b,:is(html.dark,html.theme-dark,html.theme-navy) .os-shell .bf-today-empty-activity b{color:var(--cf-ink,#e8eeea) !important}
+:is(html.dark,html.theme-dark,html.theme-navy) .os-shell .bf-empty-state p,:is(html.dark,html.theme-dark,html.theme-navy) .os-shell .bf-allocation-empty span,:is(html.dark,html.theme-dark,html.theme-navy) .os-shell .bf-today-empty-activity small{color:color-mix(in srgb,var(--cf-muted,#8a968f) 92%,#fff) !important}
+.os-shell .os-dock button:focus-visible,.os-shell .os-tool:focus-visible,.os-shell .bf-primary:focus-visible,.os-shell .bf-empty-state .bf-primary:focus-visible,.os-shell .bf-today-empty-activity:focus-visible{outline:2px solid var(--os-mint,var(--cf-primary)) !important;outline-offset:2px !important}
+@keyframes ui-modern-enter{from{opacity:0;transform:translateY(6px)}
+to{opacity:1;transform:translateY(0)}
+}
+@media (prefers-reduced-motion:no-preference){.os-shell .os-hero, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty, .os-shell .bf-movement-day, .os-shell .bf-today-empty-activity{animation:ui-modern-enter var(--ui-enter-ms) ease-out both}
+.os-shell .bf-today-workspace>*:nth-child(1){animation-delay:0ms}
+.os-shell .bf-today-workspace>*:nth-child(2){animation-delay:40ms}
+.os-shell .bf-today-workspace>*:nth-child(3){animation-delay:80ms}
+.os-shell .bf-today-workspace>*:nth-child(4){animation-delay:120ms}
+.os-shell .bf-today-workspace>*:nth-child(n+5){animation-delay:150ms}
+}
+@media (prefers-reduced-motion:reduce){.os-shell .os-hero, .os-shell .bf-empty-state, .os-shell .bf-allocation-empty, .os-shell .bf-today-empty-activity, .os-shell .os-dock button{animation:none !important;transition:none !important}
+}
+.os-shell .os-appbar.bf-appbar{padding-top:calc(8px+var(--os-inset-top,env(safe-area-inset-top,0px)));padding-left:max(16px,var(--os-inset-left,env(safe-area-inset-left,0px)));padding-right:max(16px,var(--os-inset-right,env(safe-area-inset-right,0px)))}
+.os-shell main,.os-shell .bf-page,.os-shell .bf-today-workspace,.os-shell .bf-movements-ledger,.os-shell .bf-plan-workspace{padding-bottom:calc(92px+var(--os-inset-bottom,env(safe-area-inset-bottom,0px)))}
+html.capacitor-android .os-shell .os-dock,html.is-android-standalone .os-shell .os-dock{padding-bottom:max(12px,var(--os-inset-bottom,env(safe-area-inset-bottom,0px))) !important}
+/* ── sfârșit ui-modern-pass-a2.css ── */
+/* ── fost ui-modern-pass-b1.css ── */
+@media (max-width:760px){.bf-first-run-intents{display:grid;gap:10px}
+.bf-first-run-intents>button,.bf-onboarding .bf-first-run-intents>button{min-height:64px;padding:14px 14px;border-radius:20px;text-align:left}
+}
+.os-shell .bf-today-empty-activity,.os-shell button.bf-today-empty-activity{display:flex !important;align-items:center !important;gap:12px !important;width:100% !important;min-height:64px !important;padding:14px 16px !important;border:1px dashed color-mix(in srgb,var(--os-line,var(--cf-line)) 80%,transparent) !important;border-radius:var(--ui-card-radius) !important;color:var(--os-fg,var(--cf-ink)) !important;background:color-mix(in srgb,var(--os-mint,var(--cf-primary)) 6%,var(--os-surface,var(--cf-surface))) !important;text-align:left !important}
+.bf-first-run-intents{display:grid !important;gap:10px !important}
+.bf-first-run-intents>button{min-height:64px !important;padding:14px 14px !important;border-radius:20px !important;text-align:left !important}
+html body .bf-app .bf-plan-workspace,html body .bf-app .bf-salary-cycle-plan,html body .os-shell .bf-plan-workspace,html body .os-shell .bf-salary-cycle-plan{display:grid;gap:18px;padding-top:8px !important}
+html body .bf-app .bf-salary-cycle-plan .bf-plan-studio-header, html body .bf-app .bf-plan-simulator, html body .bf-app .bf-plan-simulation, html body .bf-app .bf-plan-cashflow-suggest, html body .bf-app .bf-plan-cashflow-panel, html body .bf-app .bf-cycle-setup, html body .bf-app .bf-cycle-tools, html body .bf-app .bf-allocation-empty, html body .os-shell .bf-plan-studio-header, html body .os-shell .bf-plan-simulator, html body .os-shell .bf-plan-simulation, html body .os-shell .bf-plan-cashflow-suggest, html body .os-shell .bf-plan-cashflow-panel, html body .os-shell .bf-allocation-empty{padding:18px 16px !important;border-radius:1.1rem !important;border:1px solid color-mix(in srgb,var(--os-line,var(--cf-line,#2a3832)) 92%,transparent) !important;background:var(--os-surface,var(--cf-surface,#10151a)) !important;background-image:none !important;box-shadow:var(--bf-shadow-raise) !important;filter:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important}
+html body .bf-app .bf-plan-studio-header.bf-plan-hero-glass,html body .os-shell .bf-plan-studio-header.bf-plan-hero-glass{gap:16px !important}
+html body .bf-app .bf-plan-hero-copy,html body .bf-app .bf-plan-simulator-copy,html body .bf-app .bf-plan-simulation-heading,html body .bf-app .bf-plan-sheet-heading,html body .os-shell .bf-plan-hero-copy,html body .os-shell .bf-plan-simulator-copy,html body .os-shell .bf-plan-simulation-heading,html body .os-shell .bf-plan-sheet-heading{display:grid !important;gap:12px !important;align-content:start !important}
+html body .bf-app .bf-plan-workspace .bf-kicker,html body .bf-app .bf-salary-cycle-plan .bf-kicker,html body .os-shell .bf-plan-workspace .bf-kicker{margin:0;opacity:0.82}
+html body .bf-app .bf-plan-workspace h1,html body .bf-app .bf-plan-workspace h2,html body .bf-app .bf-salary-cycle-plan h1,html body .bf-app .bf-salary-cycle-plan h2,html body .bf-app .bf-plan-simulator h2,html body .bf-app .bf-plan-simulation h2,html body .os-shell .bf-plan-workspace h1,html body .os-shell .bf-plan-workspace h2,html body .os-shell .bf-plan-simulator h2,html body .os-shell .bf-plan-simulation h2{margin:0 !important;line-height:1.28 !important;letter-spacing:-0.02em !important}
+html body .bf-app .bf-plan-workspace p,html body .bf-app .bf-salary-cycle-plan p,html body .bf-app .bf-plan-simulator p,html body .bf-app .bf-plan-simulation p,html body .bf-app .bf-plan-simulation-note,html body .bf-app .bf-allocation-empty span,html body .bf-app .bf-allocation-intro,html body .os-shell .bf-plan-workspace p,html body .os-shell .bf-plan-simulation-note{margin:0 !important;line-height:1.5 !important;color:var(--os-muted,var(--cf-muted)) !important}
+html body .bf-app .bf-plan-simulator,html body .bf-app .bf-plan-simulation,html body .os-shell .bf-plan-simulator,html body .os-shell .bf-plan-simulation{display:grid !important;gap:16px !important}
+html body .bf-app .bf-plan-simulation-list,html body .os-shell .bf-plan-simulation-list{display:grid !important;gap:12px !important;margin:0 !important}
+html body .bf-app .bf-plan-simulation-list label,html body .os-shell .bf-plan-simulation-list label{display:grid !important;gap:8px !important;padding:12px 14px !important;border-radius:12px !important;border:1px solid color-mix(in srgb,var(--os-line,var(--cf-line)) 80%,transparent) !important;background:color-mix(in srgb,var(--os-bg,var(--cf-bg,#07090c)) 55%,transparent) !important;box-shadow:none !important}
+html body .bf-app .bf-plan-simulation-note,html body .os-shell .bf-plan-simulation-note{margin-top:4px !important;line-height:1.5 !important}
+html body .bf-app .bf-plan-simulation footer,html body .os-shell .bf-plan-simulation footer{display:flex !important;flex-wrap:wrap !important;gap:12px !important;margin-top:4px !important;padding-top:8px !important}
+/* ── sfârșit ui-modern-pass-b1.css ── */
+/* ── fost ui-modern-pass-b2.css ── */
+html body .bf-app .bf-plan-simulator-action,html body .bf-app .bf-secondary.bf-plan-simulator-action,html body .bf-app .bf-plan-simulation .bf-primary,html body .bf-app .bf-plan-cashflow-panel .bf-primary,html body .bf-app .bf-plan-cashflow-suggest .bf-primary,html body .bf-app .bf-allocation-builder-actions .bf-primary,html body .os-shell .bf-plan-simulator-action,html body .os-shell .bf-secondary.bf-plan-simulator-action,html body .os-shell .bf-plan-simulation .bf-primary{min-height:48px !important;margin-top:2px !important;padding:0 18px !important;border:0 !important;border-radius:999px !important;color:var(--os-mint-fg,var(--cf-on-forest,#04140e)) !important;background:var(--os-mint,var(--cf-primary,#7cffc4)) !important;box-shadow:0 6px 16px color-mix(in srgb,var(--os-mint,var(--cf-primary,#7cffc4)) 26%,transparent) !important;font-weight:600 !important}
+html body .bf-app .bf-plan-simulation footer .bf-ghost,html body .os-shell .bf-plan-simulation footer .bf-ghost{min-height:48px !important;padding-inline:16px !important;border-radius:999px !important}
+html body .bf-app .bf-plan-workspace [class*="bf-plan"],html body .bf-app .bf-salary-cycle-plan>section,html body .bf-app .bf-salary-cycle-plan>div,html body .os-shell .bf-plan-workspace [class*="bf-plan"]{--cf-glow:transparent}
+:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator,:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulation,:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-cashflow-suggest,:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-cashflow-panel,:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-studio-header{box-shadow:var(--bf-shadow-raise) !important;border-color:color-mix(in srgb,var(--os-mint,#7cffc4) 12%,#1a2420) !important;outline:none !important;filter:none !important}
+:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator,:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulation,:is(html.dark,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-cashflow-panel{box-shadow:0 12px 28px rgba(0,0,0,0.38),0 0 0 1px color-mix(in srgb,var(--os-line,#22302a) 80%,transparent) !important}
+html body .bf-app .bf-plan-workspace *:not(svg):not(path),html body .bf-app .bf-salary-cycle-plan *:not(svg):not(path){text-shadow:none}
+@media (max-width:760px){html body .bf-app .bf-plan-workspace h1, html body .bf-app .bf-plan-workspace h2, html body .bf-app .bf-salary-cycle-plan h1, html body .bf-app .bf-salary-cycle-plan h2, html body .bf-app .bf-plan-simulator h2, html body .bf-app .bf-plan-simulation h2, html body .bf-app .bf-cycle-setup h2, html body .os-shell .bf-plan-workspace h1, html body .os-shell .bf-plan-workspace h2, html body .os-shell .bf-plan-simulator h2{font-family:"IBM Plex Sans", system-ui,sans-serif !important;font-weight:600;font-size:clamp(1.12rem,4.5vw,1.4rem) !important}
+html body .bf-app .bf-plan-studio-header h1,html body .bf-app .bf-salary-cycle-plan .bf-plan-studio-header h1{font-size:clamp(1.28rem,5vw,1.65rem);font-weight:600;max-width:none}
+html body .bf-app .bf-plan-workspace,html body .bf-app .bf-salary-cycle-plan{gap:16px}
+html body .bf-app .bf-plan-simulator, html body .bf-app .bf-plan-simulation, html body .bf-app .bf-cycle-setup, html body .bf-app .bf-plan-studio-header, html body .bf-app .bf-plan-cashflow-panel, html body .bf-app .bf-plan-cashflow-suggest{padding:20px 16px !important;gap:16px !important}
+html body .bf-app .bf-plan-hero-copy,html body .bf-app .bf-plan-simulator-copy,html body .bf-app .bf-plan-simulation-heading{gap:14px !important}
+html body .bf-app .bf-plan-workspace p,html body .bf-app .bf-plan-simulator p,html body .bf-app .bf-plan-simulation p{line-height:1.55 !important}
+}
+html body .bf-app .bf-allocation-empty,html body .os-shell .bf-allocation-empty{display:grid !important;justify-items:center !important;gap:12px !important;text-align:center !important;padding:28px 18px !important}
+html body .bf-app .bf-allocation-empty b,html body .os-shell .bf-allocation-empty b{margin:0 !important;line-height:1.3 !important;font-family:"IBM Plex Sans", system-ui,sans-serif !important;font-weight:600 !important}
+html body .bf-app .bf-allocation-empty span,html body .os-shell .bf-allocation-empty span{max-width:36ch;line-height:1.5 !important}
+/* ── sfârșit ui-modern-pass-b2.css ── */
+/* ── fost ui-modern-pass-c1.css ── */
+/* ui-modern-pass-c1 — Astăzi hero air, header declutter, dock refine */
+/* Additive only; prefers-reduced-motion respected; no TS/clarity rewrite. */
+
+/* ---- Shared spacing tokens (extend a1 without bloating it) ---- */
+.os-shell.bf-app {
+  --ui-stack-gap: 16px;
+  --ui-copy-gap: 12px;
+  --ui-card-pad-lg: 20px;
+  --ui-body-lh: 1.55;
+}
+
+/* ---- Astăzi / Today hero: air around decision number ---- */
+@media (max-width: 760px) {
+  .os-shell .os-hero {
+    padding: 22px 18px 24px;
+    gap: 0;
+  }
+
+  .os-shell .os-hero-top {
+    margin-bottom: 4px;
+  }
+
+  .os-shell .os-kicker-lg {
+    margin-top: 28px !important;
+    margin-bottom: 0;
+    letter-spacing: 0.18em !important;
+    font-size:12px;
+    font-weight: 600;
+    opacity: 0.88;
+    line-height: 1.35 !important;
+  }
+
+  .os-shell .os-amount {
+    margin-top: 14px !important;
+    margin-bottom: 0;
+    gap: 10px !important;
+    font-size: clamp(50px, 14.8vw, 68px) !important;
+    letter-spacing: -0.05em !important;
+    line-height: 0.92 !important;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+
+  .os-shell .os-amount span {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+  }
+
+  .os-shell .os-amount small {
+    letter-spacing: 0.16em !important;
+    font-size:14px !important;
+    opacity: 0.78;
+    align-self: flex-end;
+    padding-bottom: 6px;
+  }
+
+  .os-shell .os-hint {
+    margin-top: 18px;
+    max-width: 34ch !important;
+    font-size:14px !important;
+    line-height: var(--ui-body-lh);
+    letter-spacing: 0;
+  }
+
+  .os-shell .bf-today-explainers {
+    margin-top: 18px;
+    gap: 10px;
+  }
+
+  .os-shell .os-explainer {
+    margin-top: 0;
+    min-height: 44px;
+    padding: 0 14px;
+    font-size:14px;
+  }
+
+  .os-shell .os-explainer-body {
+    margin-top: 12px !important;
+    line-height: var(--ui-body-lh) !important;
+  }
+
+  .os-shell .os-gauge {
+    margin-top: 22px !important;
+    padding: 14px !important;
+  }
+
+  .os-shell .os-chip {
+    letter-spacing: 0.12em;
+    font-size:12px;
+    min-height: 26px;
+    padding: 3px 10px;
+  }
+
+  .os-shell .os-date {
+    gap: 3px;
+  }
+
+  .os-shell .os-date b {
+    letter-spacing: 0.14em;
+    font-size:12px;
+  }
+
+  .os-shell .os-date span {
+    letter-spacing: 0.12em;
+    font-size:12px;
+    opacity: 0.85;
+  }
+
+  /* Situation card (legacy Astăzi path) */
+
+  .os-shell .bf-today-workspace {
+    gap: 18px;
+  }
+
+  .os-shell .bf-today-brief,
+.os-shell .bf-spend-stamp,
+.os-shell .bf-week-checkin,
+.os-shell .bf-today-activity {
+    padding: 18px 16px !important;
+    border-radius: var(--ui-card-radius, 1.15rem) !important;
+  }
+
+  .os-shell .bf-today-brief p,
+.os-shell .bf-spend-stamp p {
+    line-height: var(--ui-body-lh) !important;
+    margin: 0 !important;
+  }
+}
+
+/* ---- Header: less clutter, better hit targets ---- */
+@media (max-width: 760px) {
+  .os-shell .os-appbar.bf-appbar {
+    gap: 8px !important;
+    min-height: 60px;
+    padding-bottom: 10px;
+    border-bottom-width: 1px;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .os-shell .os-brand {
+    gap: 10px !important;
+    min-width: 0;
+  }
+
+  .os-shell .os-brand-copy {
+    line-height: 1.1;
+  }
+
+  .os-shell .os-brand-copy b {
+    font-size:15px;
+    letter-spacing: -0.025em;
+  }
+
+  .os-shell .os-brand-copy i {
+    font-size:12px;
+    opacity: 0.9;
+  }
+
+  .os-shell .os-tools {
+    gap: 8px;
+  }
+
+  .os-shell .os-tool {
+    width: 46px;
+    height: 46px;
+    min-width: 46px !important;
+    min-height: 46px;
+    border-radius:12px;
+    background: var(--os-surface, var(--cf-surface));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 85%, transparent);
+    filter: none;
+  }
+
+  .os-shell .os-tool.is-on,
+  html.ai-guide-open .os-shell .os-tools .os-tool:last-child {
+    color: var(--os-mint-fg, var(--cf-on-forest));
+    background: var(--os-mint, var(--cf-primary)) !important;
+    box-shadow: none !important;
+  }
+
+  .os-shell .os-tool svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ---- Bottom dock refine ---- */
+.os-shell .os-dock {
+  padding: 8px 8px max(14px, var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)));
+  border-top: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 90%, transparent);
+  background: color-mix(in srgb, var(--os-dock-bg, var(--os-surface, var(--cf-surface))) 96%, transparent);
+  box-shadow: 0 -4px 16px color-mix(in srgb, #000 10%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none !important;
+}
+
+.os-shell .os-dock button {
+  min-height: max(50px, var(--ui-tap, 44px));
+  height: max(50px, var(--ui-tap, 44px));
+  gap: 3px;
+  padding: 6px 2px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  color: var(--os-muted, var(--cf-muted));
+  background: transparent;
+  box-shadow: none;
+}
+
+.os-shell .os-dock button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.os-shell .os-dock button.is-on,
+.os-shell .os-dock button.active {
+  color: var(--os-mint-fg, var(--cf-on-forest, #fff)) !important;
+  background: var(--os-mint, var(--cf-primary, #176b54)) !important;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent) !important;
+  font-weight:600;
+}
+
+html.capacitor-android .os-shell .os-dock,
+html.is-android-standalone .os-shell .os-dock {
+  padding-bottom: max(14px, var(--os-inset-bottom, env(safe-area-inset-bottom, 0px))) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-shell .os-dock button,
+.os-shell .os-tool,
+.os-shell .os-hero {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+/* ── sfârșit ui-modern-pass-c1.css ── */
+/* ── fost ui-modern-pass-c2.css ── */
+/* ui-modern-pass-c2 — Mișcări / Obligații / Analiză spacing + CTA + dark elevation */
+/* Match Plan pass (b1/b2): line-height, card pad, stack gaps, filled primary, anti-neon. */
+
+/* ---- Workspace stack (same system as Plan) ---- */
+html body .bf-app .bf-movements-ledger,
+html body .bf-app .bf-obligations-workspace,
+html body .bf-app .bf-insights-workspace,
+html body .bf-app .bf-analysis,
+html body .os-shell .bf-movements-ledger,
+html body .os-shell .bf-obligations-workspace,
+html body .os-shell .bf-insights-workspace,
+html body .os-shell .bf-analysis {
+  display: grid;
+  gap: 16px;
+  padding-top: 8px !important;
+}
+
+html body .bf-app .bf-movements-header,
+html body .bf-app .bf-insights-header,
+html body .os-shell .bf-movements-header,
+html body .os-shell .bf-insights-header {
+  display: grid;
+  gap: 14px;
+  padding: 18px 16px !important;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line, #2a3832)) 92%, transparent) !important;
+  background: var(--os-surface, var(--cf-surface, #10151a)) !important;
+  background-image: none !important;
+  box-shadow:var(--bf-shadow-raise);
+  filter: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none !important;
+}
+
+html body .bf-app .bf-movements-header h1,
+html body .bf-app .bf-insights-header h1,
+html body .os-shell .bf-movements-header h1,
+html body .os-shell .bf-insights-header h1 {
+  margin: 0 !important;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+}
+
+html body .bf-app .bf-movements-header p,
+html body .bf-app .bf-insights-header p,
+html body .os-shell .bf-movements-header p,
+html body .os-shell .bf-insights-header p {
+  margin: 0 !important;
+  line-height: 1.55;
+  color: var(--os-muted, var(--cf-muted));
+}
+
+html body .bf-app .bf-movements-header .bf-kicker,
+html body .bf-app .bf-insights-header .bf-kicker,
+html body .os-shell .bf-movements-header .bf-kicker,
+html body .os-shell .bf-insights-header .bf-kicker {
+  margin: 0 !important;
+  opacity: 0.82 !important;
+}
+
+/* Cards / sections */
+html body .bf-app .bf-journal-quickbar,
+html body .bf-app .bf-obligation-ledger,
+html body .bf-app .bf-obligation-lane,
+html body .bf-app .bf-analysis-control,
+html body .bf-app .bf-analysis-snapshot,
+html body .bf-app .bf-analysis-next-step,
+html body .bf-app .bf-analysis-month,
+html body .bf-app .bf-analysis-year,
+html body .bf-app .bf-spend-compass,
+html body .bf-app .bf-analysis-watch,
+html body .bf-app .bf-analysis-balance,
+html body .os-shell .bf-journal-quickbar,
+html body .os-shell .bf-obligation-ledger,
+html body .os-shell .bf-obligation-lane,
+html body .os-shell .bf-analysis-control,
+html body .os-shell .bf-analysis-snapshot,
+html body .os-shell .bf-analysis-next-step,
+html body .os-shell .bf-analysis-month,
+html body .os-shell .bf-analysis-year,
+html body .os-shell .bf-spend-compass,
+html body .os-shell .bf-analysis-watch,
+html body .os-shell .bf-analysis-balance{
+  padding: 18px 16px !important;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--os-line, var(--cf-line)) 92%, transparent) !important;
+  background: var(--os-surface, var(--cf-surface)) !important;
+  background-image: none !important;
+  box-shadow:var(--bf-shadow-rest);
+  filter: none;
+  --cf-glow: transparent;
+}
+
+html body .bf-app .bf-movement-day > header,
+html body .os-shell .bf-movement-day > header {
+  padding: 14px 16px;
+}
+
+html body .bf-app .bf-movement-day > div > article,
+html body .os-shell .bf-movement-day > div > article {
+  padding: 14px 16px;
+  min-height: 72px;
+}
+
+html body .bf-app .bf-obligation-entry,
+html body .os-shell .bf-obligation-entry {
+  padding: 14px;
+  gap: 12px;
+  border-radius:12px;
+  box-shadow: none;
+}
+
+html body .bf-app .bf-analysis-snapshot,
+html body .os-shell .bf-analysis-snapshot {
+  display: grid;
+  gap: 16px;
+}
+
+html body .bf-app .bf-analysis-snapshot-copy,
+html body .os-shell .bf-analysis-snapshot-copy {
+  display: grid;
+  gap: 12px;
+}
+
+html body .bf-app .bf-analysis h2,
+html body .bf-app .bf-insights-workspace h2,
+html body .bf-app .bf-obligations-workspace h2,
+html body .bf-app .bf-movements-ledger h2,
+html body .os-shell .bf-analysis h2,
+html body .os-shell .bf-insights-workspace h2,
+html body .os-shell .bf-obligations-workspace h2,
+html body .os-shell .bf-movements-ledger h2 {
+  margin: 0 !important;
+  line-height: 1.28 !important;
+  letter-spacing: -0.02em !important;
+}
+
+html body .bf-app .bf-analysis p,
+html body .bf-app .bf-insights-workspace p,
+html body .bf-app .bf-obligations-workspace p,
+html body .bf-app .bf-movements-ledger p,
+html body .os-shell .bf-analysis p,
+html body .os-shell .bf-insights-workspace p,
+html body .os-shell .bf-obligations-workspace p,
+html body .os-shell .bf-movements-ledger p {
+  line-height: 1.55 !important;
+}
+
+/* Filled primary CTAs (outline pills → solid mint) */
+html body .bf-app .bf-movement-add,
+html body .bf-app .bf-movements-ledger .bf-primary,
+html body .bf-app .bf-obligations-workspace .bf-primary,
+html body .bf-app .bf-obligation-actions .bf-primary,
+html body .bf-app .bf-analysis-next-step .bf-primary,
+html body .bf-app .bf-analysis-next-step button.bf-primary,
+html body .bf-app .bf-insights-workspace .bf-primary,
+html body .bf-app .bf-empty-state .bf-primary,
+html body .os-shell .bf-movement-add,
+html body .os-shell .bf-movements-ledger .bf-primary,
+html body .os-shell .bf-obligations-workspace .bf-primary,
+html body .os-shell .bf-analysis-next-step .bf-primary,
+html body .os-shell .bf-insights-workspace .bf-primary {
+  min-height: 48px !important;
+  padding: 0 18px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: var(--os-mint-fg, var(--cf-on-forest, #04140e)) !important;
+  background: var(--os-mint, var(--cf-primary, #7cffc4)) !important;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--os-mint, var(--cf-primary, #7cffc4)) 24%, transparent) !important;
+  font-weight: 600 !important;
+  filter: none !important;
+}
+
+/* Tabular money in journals / obligations / analysis */
+.os-shell .bf-movement-day article strong,
+.os-shell .bf-obligation-entry-main strong,
+.os-shell .bf-analysis-snapshot-stats b,
+.os-shell .bf-analysis-month-heading > span,
+.os-shell .bf-analysis-flow article strong {
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1, "lnum" 1 !important;
+}
+
+/* Mobile sans titles (dense feeds — same as Plan) */
+@media (max-width: 760px) {
+  html body .bf-app .bf-movements-header h1,
+html body .bf-app .bf-insights-header h1,
+html body .bf-app .bf-movements-ledger h2,
+html body .bf-app .bf-obligations-workspace h2,
+html body .bf-app .bf-insights-workspace h2,
+html body .bf-app .bf-analysis h2,
+html body .bf-app .bf-analysis-snapshot-copy h2,
+html body .bf-app .bf-analysis-section-heading h2,
+html body .os-shell .bf-movements-header h1,
+html body .os-shell .bf-insights-header h1,
+html body .os-shell .bf-analysis h2 {
+    font-family: "IBM Plex Sans", system-ui, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: clamp(1.2rem, 5vw, 1.55rem) !important;
+    max-width: none !important;
+  }
+
+  html body .bf-app .bf-movements-ledger,
+  html body .bf-app .bf-obligations-workspace,
+  html body .bf-app .bf-insights-workspace,
+  html body .bf-app .bf-analysis {
+    gap: 16px;
+    padding-left: max(14px, var(--os-inset-left, 0px)) !important;
+    padding-right: max(14px, var(--os-inset-right, 0px)) !important;
+  }
+
+  html body .bf-app .bf-journal-quickbar,
+html body .bf-app .bf-obligation-lane,
+html body .bf-app .bf-analysis-control,
+html body .bf-app .bf-analysis-snapshot,
+html body .bf-app .bf-analysis-next-step,
+html body .bf-app .bf-analysis-month,
+html body .bf-app .bf-analysis-year,
+html body .bf-app .bf-spend-compass,
+html body .bf-app .bf-analysis-watch,
+html body .bf-app .bf-analysis-balance{
+    padding: 20px 16px !important;
+    gap: 14px;
+  }
+
+  html body .bf-app .bf-movements-header > div > p:last-child {
+    max-width: 38ch !important;
+    font-size:14px !important;
+    line-height: 1.55 !important;
+  }
+}
+
+/* ---- Dark themes: elevation, not violet bloom; coral only for alerts ---- */
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-movements-header, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-insights-header, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-obligation-lane, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-control, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-snapshot, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-month, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .os-hero{
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-line, #22302a) 80%, transparent);
+  border-color: color-mix(in srgb, var(--os-mint, #7cffc4) 12%, #1a2420) !important;
+  outline: none;
+  filter: none;
+  --cf-glow: transparent;
+  text-shadow: none;
+}
+
+/* Kill violet bloom / neon halos on shell surfaces */
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-movements-ledger *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-obligations-workspace *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-insights-workspace *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-today-workspace *:not(svg):not(path) {
+  text-shadow: none;
+}
+
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-movements-ledger, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-obligations-workspace, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-insights-workspace, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-today-workspace {
+  --cf-glow: transparent;
+}
+
+/* Coral / danger only for alert / risk / overdue — not ambient glow */
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .os-hero.is-risk, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-snapshot.risk {
+  border-color: color-mix(in srgb, var(--os-out, var(--cf-danger, #ff8a7a)) 42%, transparent) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-out, var(--cf-danger, #ff8a7a)) 22%, transparent) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body .bf-app .bf-movement-day > div > article,
+  html body .bf-app .bf-movement-add,
+  html body .bf-app .bf-analysis-next-step button {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+/* ── sfârșit ui-modern-pass-c2.css ── */

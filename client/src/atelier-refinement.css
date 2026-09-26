@@ -1,5 +1,0 @@
-/* Atelierul Financiar — strat de rafinare: fișe, rigle, etichete perforate și note de creion. */
-@layer utilities {
-  .brand > div:last-child > span { position: relative; width: max-content; }
-  .brand > div:last-child > span::after { content: ""; position: absolute; height: 2px; width: 22px; border-radius: 99px; background: #e6b84a; opacity: .7; left: 1px; bottom: -4px; transform: rotate(-2deg); }
-}
