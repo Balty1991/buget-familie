@@ -59,6 +59,29 @@ export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onC
           </div>
         )}
 
+        {sheet.waterfall.length > 0 && (
+          <figure className="bf-waterfall" aria-label={t("Cum se calculează cifra zilei")}>
+            <figcaption>{t("Cum se calculează cifra zilei")}</figcaption>
+            <ol>
+              {sheet.waterfall.map((step, index) => {
+                const top = Math.max(1, sheet.waterfall[0].total);
+                const previous = index ? sheet.waterfall[index - 1].total : step.total;
+                const width = (value: number) => `${Math.max(0, Math.min(100, (value / top) * 100))}%`;
+                return (
+                  <li key={step.label} className={`is-${step.kind}`}>
+                    <span>{step.label}</span>
+                    <strong>{money(step.total)}</strong>
+                    <i aria-hidden="true">
+                      {step.kind !== "start" && step.kind !== "result" && previous > step.total && <em className="drop" style={{ left: width(step.total), width: width(previous - step.total) }} />}
+                      <em className="bar" style={{ width: width(step.total) }} />
+                    </i>
+                  </li>
+                );
+              })}
+            </ol>
+          </figure>
+        )}
+
         <ol className="bf-safe-spend-steps">
           {sheet.steps.map((step) => (
             <li key={step.label}>

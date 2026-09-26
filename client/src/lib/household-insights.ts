@@ -918,6 +918,8 @@ export type SafeSpendBreakdown = {
   safeDaily: number;
   fromLiquidDaily: number;
   steps: Array<{ label: string; amount: number; note?: string }>;
+  /** Cascada „cum se calculează cifra zilei”: fiecare pas, cu totalul după el. Gol fără dată de salariu. */
+  waterfall: Array<{ label: string; total: number; kind: "start" | "minus" | "divide" | "result" }>;
   summary: string;
 };
 
@@ -944,6 +946,28 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
       { label: t("Ritm sigur din plan"), amount: forecast.safeDaily, note: t("Ce rămâne după plicuri și cheltuieli, pe zi") },
       { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} până la venit", { days: daysLabel(remainingDays) }) },
     ];
+  // Cascada folosește aceleași numere ca cifra zilei (todayBrief / ritmul săptămânii).
+  const waterfall: SafeSpendBreakdown["waterfall"] = [];
+  if (brief.hasPayday && !brief.expired) {
+    if (rhythm.hasWeekly) {
+      const start = roundMoney(rhythm.remaining + rhythm.todayOut);
+      waterfall.push({ label: t("În plicurile săptămânii, la începutul zilei"), total: start, kind: "start" });
+      waterfall.push({ label: t("Împărțit la {days}", { days: daysLabel(rhythm.remainingDays) }), total: Math.max(0, rhythm.todayShare), kind: "divide" });
+      if (rhythm.todayOut > 0.009) waterfall.push({ label: t("Cheltuit azi din plicuri"), total: Math.max(0, rhythm.todayLeft), kind: "minus" });
+    } else {
+      const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && inPlanPeriod(item.date, data.settings.salaryPlan)).reduce((sum, item) => sum + item.amount, 0);
+      const start = roundMoney(safe.liquidFunds + spentToday);
+      waterfall.push({ label: t("Bani în surse, la începutul zilei"), total: start, kind: "start" });
+      if (safe.reservedRecurring > 0.009) waterfall.push({ label: t("Scadențe și rate rezervate"), total: roundMoney(Math.max(0, start - safe.reservedRecurring)), kind: "minus" });
+      const share = roundMoney(Math.max(0, start - safe.reservedRecurring) / remainingDays);
+      waterfall.push({ label: t("Împărțit la {days}", { days: daysLabel(remainingDays) }), total: share, kind: "divide" });
+      if (spentToday > 0.009) waterfall.push({ label: t("Cheltuit azi"), total: roundMoney(Math.max(0, share - spentToday)), kind: "minus" });
+    }
+    const last = waterfall[waterfall.length - 1]?.total ?? 0;
+    // Plafonul: nu mai mult decât banii liberi din surse (sau venitul ciclului următor scos).
+    if (brief.spendable < last - 0.009) waterfall.push({ label: t("Plafonat la banii liberi din surse"), total: brief.spendable, kind: "minus" });
+    waterfall.push({ label: t("Poți folosi azi"), total: brief.spendable, kind: "result" });
+  }
   const summary = !brief.hasPayday
     ? t("Fără data salariului nu putem calcula cifra zilei. Setează salariul în Plicuri.")
     : rhythm.hasWeekly
@@ -961,6 +985,7 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
     safeDaily: forecast.safeDaily,
     fromLiquidDaily,
     steps,
+    waterfall,
     summary,
   };
 };

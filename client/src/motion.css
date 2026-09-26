@@ -15,3 +15,7 @@
 @media (prefers-reduced-motion: reduce) {
   .bf-envelope-list-first .bf-envelope-meter em, .bf-paid-check path { animation: none; }
 }
+
+/* Marcajul „aici ar trebui să fii azi” pe bara plicului: o liniuță verticală. */
+.bf-envelope-meter i { position: relative; overflow: visible; }
+.bf-envelope-meter i u { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--cf-ink); opacity: .55; text-decoration: none; }

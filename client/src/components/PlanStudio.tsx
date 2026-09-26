@@ -53,6 +53,15 @@ const QUICK_ENVELOPE_PRESETS = [
   { category: "Timp liber", amount: "300", weekly: true },
 ] as const;
 
+/** Cât din perioadă a trecut până la sfârșitul zilei de azi: marcajul „aici ar trebui să fii azi” de pe bara plicului. */
+function todayMark(start: string | undefined, end: string | undefined, today = isoToday()) {
+  if (!start || !end || end < start) return undefined;
+  const total = (Date.parse(`${end}T12:00:00Z`) - Date.parse(`${start}T12:00:00Z`)) / 86_400_000 + 1;
+  const done = (Date.parse(`${today}T12:00:00Z`) - Date.parse(`${start}T12:00:00Z`)) / 86_400_000 + 1;
+  if (!(total > 0) || done <= 0 || done > total) return undefined;
+  return Math.round((done / total) * 1000) / 10;
+}
+
 function PlanField({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return <label className="bf-plan-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>;
 }
@@ -414,7 +423,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             return <span className={`bf-allocation-state ${tone}`} title={burn?.reason}>{label}</span>;
           })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>{t("rămași din {amount}", { amount: money(budget) })}</small></div>
-          <div className={`bf-envelope-meter${(week ? week.state : state) === "over" ? " is-over" : ""}`}><span>{week ? `${t("Săptămâna asta")} · S${week.index}` : t("Tot plicul")}</span><b>{money(week ? week.spent : spent)} <small>/ {money(week ? week.budget : budget)}</small></b><i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.max(0, ((week ? week.budget : budget) > 0 ? (week ? week.spent : spent) / (week ? week.budget : budget) : 0) * 100))}%` }} /></i></div>
+          <div className={`bf-envelope-meter${(week ? week.state : state) === "over" ? " is-over" : ""}`}><span>{week ? `${t("Săptămâna asta")} · S${week.index}` : t("Tot plicul")}</span><b>{money(week ? week.spent : spent)} <small>/ {money(week ? week.budget : budget)}</small></b><i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.max(0, ((week ? week.budget : budget) > 0 ? (week ? week.spent : spent) / (week ? week.budget : budget) : 0) * 100))}%` }} />{!fixed && (() => { const mark = todayMark(week ? week.start : plan.periodStart, week ? week.end : plan.nextPayday); return mark === undefined ? null : <u className="bf-meter-today" style={{ left: `${mark}%` }} title={t("Aici ar trebui să fii azi")} />; })()}</i></div>
           <details className="bf-envelope-more"><summary>{t("Detalii")}<ChevronDown size={15} aria-hidden="true" /></summary>
           {(() => { const chart = fixed ? undefined : envelopeBurndown(data, item); return chart ? <EnvelopeBurndownChart chart={chart} /> : null; })()}
           {(() => {
