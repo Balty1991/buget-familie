@@ -40,7 +40,7 @@ import {
   expenseBelongsTo,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
-import { lei as leiExact } from "./money-format";
+import { floorCents, lei as leiExact, perDay } from "./money-format";
 import { daysLabel, getLocale, t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
 import { selfMemberIdOf } from "./member-identity";
@@ -516,8 +516,7 @@ export const envelopeUntilPayday = (data: AppData, allocation: BudgetAllocation,
   if (isFixedEnvelope(data.settings.salaryPlan, allocation)) return undefined;
   const remaining = Math.max(0, allocationStatus(data, allocation).remaining);
   const days = Math.max(1, until.latestDays);
-  const perDay = Math.floor(remaining / days);
-  return { ...until, remaining, perDay, perWeek: Math.floor(remaining * 7 / days) };
+  return { ...until, remaining, perDay: perDay(remaining, days), perWeek: floorCents(remaining * 7 / days) };
 };
 
 /**
@@ -531,7 +530,6 @@ export const weekDayCap = (data: AppData, allocation: BudgetAllocation, asOf = i
   if (!week) return undefined;
   const daysLeft = Math.max(1, daysBetween(asOf, week.end) + 1);
   // La bani, ca cifra de pe Astăzi (37,50), rotunjit în jos ca să nu promită mai mult.
-  const floorCents = (value: number) => Math.floor(Math.max(0, value) * 100) / 100;
   // Aceeași socoteală ca ritmul de pe Astăzi: partea zilei din banii de la începutul zilei,
   // minus ce s-a dus azi; zilele următoare împart restul.
   const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && expenseBelongsTo(data.settings.salaryPlan, item, allocation)).reduce((sum, item) => sum + item.amount, 0);
@@ -752,7 +750,7 @@ const envelopeRunOutUncached = (data: AppData, asOf: string): EnvelopeRunOut[] =
       dailyRate: Math.round(dailyRate * 100) / 100,
       runOutDate: addIsoDays(asOf, Math.max(0, Math.floor(daysLeft))),
       daysShort,
-      safeDaily: Math.floor((status.remaining / (track.remaining + 1)) * 100) / 100,
+      safeDaily: perDay(status.remaining, track.remaining + 1),
       payday: track.end,
     });
   }

@@ -27,7 +27,7 @@ describe("ghidul și plicurile", () => {
     const answer = analyze("cât pot cheltui azi pe taxi?", family(), "2026-10-08")!;
     expect(answer.kind).toBe("envelope-left");
     expect(answer.headline).toMatch(/Taxi: mai ai 380 RON din 500 RON/);
-    expect(answer.detail).toMatch(/cam 15 RON pe zi/);
+    expect(answer.detail).toMatch(/cam 15,83 RON pe zi/);
   });
   it("fără plic numit, rămâne răspunsul general", () => {
     expect(analyze("cât pot cheltui azi?", family(), "2026-10-08")?.kind).not.toBe("envelope-left");

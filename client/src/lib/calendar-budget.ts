@@ -2,6 +2,8 @@
  * Ledger Flow — planificare locală a unui venit pe intervale calendaristice reale.
  * Nu atinge surse, tranzacții sau sincronizare; oferă doar ritmul și tranșele de limită pentru confirmare.
  */
+import { perDay } from "@/lib/money-format";
+
 export type CalendarBudgetWeek = { index: number; start: string; end: string; days: number; amount: number };
 export type CalendarBudget = { total: number; start: string; end: string; days: number; exactWeeks: number; weeklyAmount: number; weeks: CalendarBudgetWeek[] };
 
@@ -92,7 +94,7 @@ export type RemainingPace = { amount: number; daysLeft: number; perDay: number; 
 export const remainingPace = (remaining: number, end: string, today: string): RemainingPace | undefined => {
   const daysLeft = periodDays(today, end);
   if (!daysLeft || !Number.isFinite(remaining) || remaining <= 0) return undefined;
-  return { amount: roundMoney(remaining), daysLeft, perDay: roundMoney(remaining / daysLeft), weekly: roundMoney(remaining * 7 / daysLeft) };
+  return { amount: roundMoney(remaining), daysLeft, perDay: perDay(remaining, daysLeft), weekly: roundMoney(remaining * 7 / daysLeft) };
 };
 
 /**

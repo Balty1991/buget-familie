@@ -21,3 +21,12 @@ export function lei(value: number): string {
   if (Object.is(amount, -0)) amount = 0;
   return formatter(getLocale(), !Number.isInteger(amount)).format(amount);
 }
+
+/** Rotunjit în jos la ban: o cifră de cheltuit nu promite niciodată mai mult decât există. */
+export const floorCents = (value: number) => (Number.isFinite(value) && value > 0 ? Math.floor(value * 100 + 1e-6) / 100 : 0);
+
+/**
+ * Singura regulă pentru „pe zi”: banii rămași împărțiți la zile, rotunjit în jos la ban.
+ * Plicul, ritmul săptămânii, calendarul și ghidul o folosesc toate, ca să spună aceeași cifră.
+ */
+export const perDay = (remaining: number, days: number) => floorCents(remaining / Math.max(1, days));

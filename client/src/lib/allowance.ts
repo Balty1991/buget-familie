@@ -7,6 +7,7 @@
  * prezintă în termeni pe care un copil îi înțelege — cât mai am, cât am cheltuit,
  * peste câte zile se reumple.
  */
+import { perDay } from "@/lib/money-format";
 import {
   allocationBudget,
   allocationSpent,
@@ -94,7 +95,7 @@ export function childPocket(data: AppData, memberId: string, asOf = isoToday()):
     refillsOn,
     daysLeft,
     // Ziua de azi se numără: cu o zi rămasă, tot ce e în plic se poate cheltui azi.
-    perDay: remaining > 0 ? round2(remaining / Math.max(1, daysLeft + 1)) : 0,
+    perDay: perDay(remaining, daysLeft + 1),
     recent,
   };
 }

@@ -52,7 +52,7 @@ describe("buzunarul copilului", () => {
     expect(pocket.refillsOn).toBe("2026-09-30");
     expect(pocket.daysLeft).toBe(20);
     // 90 lei peste 21 de zile, ziua de azi inclusă.
-    expect(pocket.perDay).toBe(4.29);
+    expect(pocket.perDay).toBe(4.28);
   });
 
   it("nu propune nimic pe zi când plicul este gol", () => {
