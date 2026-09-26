@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { answerReviewPrompt, PLAY_STORE_URL, reviewPromptDue } from "@/lib/review-prompt";
 import { applySalaryAllocationRules, activeSalaryApplications, revertSalaryAllocationApplication, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
-import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
+import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, retireIgnoredBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
 import { cycleClose } from "@/lib/cycle-close";
 import { pendingSplitIncome } from "@/lib/monthly-needs";
 import { IncomeSplitCard } from "@/components/IncomeSplitCard";
@@ -78,7 +78,11 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
    * Verificarea soldului. Se întreabă pe rând, o sursă o dată, fiindcă răspunsul cere
    * omului să se uite în bancă sau în portofel — o listă lungă ar fi închisă din prima.
    */
-  const [lastCheck, setLastCheck] = useState<string | null>(() => readLastBalanceCheck());
+  const [lastCheck, setLastCheck] = useState<string | null>(() => {
+    const last = readLastBalanceCheck();
+    // Întrebarea lăsată fără răspuns 3 zile se retrage singură (ca „Mai târziu”).
+    return balanceCheckDue(data, last).due && retireIgnoredBalanceCheck() ? isoToday() : last;
+  });
   const [checkedNow, setCheckedNow] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
   const [confirmat, setConfirmat] = useState<{ name: string; amount: number } | null>(null);

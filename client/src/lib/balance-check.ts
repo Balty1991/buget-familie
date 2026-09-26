@@ -22,6 +22,9 @@ import {
 import { t } from "./i18n";
 
 const CHECK_KEY = "buget-familie:last-balance-check";
+const SHOWN_KEY = "buget-familie:balance-check-shown";
+/** Întrebarea ignorată atâtea zile se retrage singură, ca „Mai târziu” (stătea 11 zile pe Astăzi). */
+const ZILE_AFISATA = 3;
 /** O tranșă are șapte zile; mai des de atât, întrebarea devine zgomot. */
 const ZILE_INTRE_VERIFICARI = 7;
 /** Sub atâtea mișcări, registrul e prea tânăr ca să fi apucat să se abată de la realitate. */
@@ -117,8 +120,29 @@ export function readLastBalanceCheck(): string | null {
   }
 }
 
+/**
+ * Notează prima zi în care întrebarea a fost pe ecran. Dacă a stat ZILE_AFISATA zile fără
+ * răspuns, o închidem ca „Mai târziu”; revine la următoarea verificare săptămânală.
+ * Întoarce true când a fost retrasă acum.
+ */
+export function retireIgnoredBalanceCheck(today = isoToday()): boolean {
+  try {
+    const shown = window.localStorage.getItem(SHOWN_KEY);
+    if (!shown || !/^\d{4}-\d{2}-\d{2}$/.test(shown)) {
+      window.localStorage.setItem(SHOWN_KEY, today);
+      return false;
+    }
+    if (zile(shown, today) < ZILE_AFISATA) return false;
+    markBalanceChecked(today);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function markBalanceChecked(today = isoToday()): void {
   try {
+    window.localStorage.removeItem(SHOWN_KEY);
     window.localStorage.setItem(CHECK_KEY, today);
   } catch {
     // Fără localStorage întrebarea revine la următoarea deschidere; nu e o pagubă.
