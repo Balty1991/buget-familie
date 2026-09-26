@@ -21,6 +21,7 @@ const TRACKED: Tracked[] = [
   { entity: "members", ids: (data) => data.settings.members.map((item) => item.id) },
   { entity: "categories", ids: (data) => data.settings.customCategories },
   { entity: "paymentSources", ids: (data) => data.settings.paymentSources.map((item) => item.id) },
+  { entity: "exchangeRates", ids: (data) => (data.settings.exchangeRates || []).map((item) => item.currency) },
 ];
 
 const MAX_REMOVED = 10;

@@ -76,7 +76,6 @@ export async function encryptFamilyData(data: AppData, secret: FamilySecret): Pr
       archivedQuickTemplates: [],
       savedJournalFilters: [],
       salaryCycleTemplates: [],
-      exchangeRates: [],
       seenWeeklyPlanTranches: [],
       basketProducts: [],
       merchantRules: [],
@@ -499,7 +498,12 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       archivedQuickTemplates: local.settings.archivedQuickTemplates,
       savedJournalFilters: local.settings.savedJournalFilters,
       salaryCycleTemplates: local.settings.salaryCycleTemplates,
-      exchangeRates: local.settings.exchangeRates,
+      // Cursurile se împart cu familia: soldul unei surse în euro trebuie să fie același pe ambele telefoane.
+      exchangeRates: Array.from([...remote.settings.exchangeRates, ...local.settings.exchangeRates].reduce((all, item) => {
+        const existing = all.get(item.currency);
+        if (!existing || (Date.parse(item.updatedAt) || 0) >= (Date.parse(existing.updatedAt) || 0)) all.set(item.currency, item);
+        return all;
+      }, new Map<string, (typeof local.settings.exchangeRates)[number]>()).values()).filter((item) => alive("exchangeRates", item.currency, item.updatedAt)).slice(0, 12),
       seenWeeklyPlanTranches: local.settings.seenWeeklyPlanTranches,
       basketProducts: local.settings.basketProducts,
       merchantRules: local.settings.merchantRules || [],
