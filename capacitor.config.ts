@@ -10,6 +10,11 @@ const config: CapacitorConfig = {
     adjustMarginsForEdgeToEdge: "disable",
   },
   plugins: {
+    // Iconul mic al notificării: silueta plicului aplicației, colorată ca în launcher.
+    LocalNotifications: {
+      smallIcon: "ic_stat_notify",
+      iconColor: "#1B4F42",
+    },
     SystemBars: {
       insetsHandling: "css",
       style: "DARK",

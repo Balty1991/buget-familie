@@ -552,6 +552,9 @@ export function buildLocalAlerts(data: AppData) {
   return buildAlerts(data).map((item) => ({ id: item.id, title: item.title, body: item.body, tag: item.tag, at: item.at.toISOString() }));
 }
 
+/** Culoarea siluetei din bara de stare (aceeași cu R.color.colorPrimary din ReminderWorker). */
+const NOTIFY_ICON_COLOR = "#1B4F42";
+
 async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
   if (!alerts.length) return false;
   try {
@@ -568,6 +571,8 @@ async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
         schedule: { at: alert.at, allowWhileIdle: true },
         // Inexact: fără el, pe Android 14 fiecare programare deschidea setarea „Alarme și mementouri”.
         isExactNotification: false,
+        smallIcon: "ic_stat_notify",
+        iconColor: NOTIFY_ICON_COLOR,
         extra: { tag: alert.tag },
       })),
     });
@@ -680,7 +685,7 @@ async function showNow(title: string, rawBody: string, tag: string) {
       const LocalNotifications = await loadNativeNotifications();
       const permission = await LocalNotifications.checkPermissions();
       if (permission.display !== "granted") return;
-      await LocalNotifications.schedule({ notifications: [{ id: Math.floor(Math.random() * 100000) + 5000, title, body, isExactNotification: false, extra: { tag } }] });
+      await LocalNotifications.schedule({ notifications: [{ id: Math.floor(Math.random() * 100000) + 5000, title, body, isExactNotification: false, smallIcon: "ic_stat_notify", iconColor: NOTIFY_ICON_COLOR, extra: { tag } }] });
       return;
     } catch {
       /* cădem pe Notification API */
