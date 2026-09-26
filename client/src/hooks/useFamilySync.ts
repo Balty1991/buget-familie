@@ -459,6 +459,7 @@ export function useFamilySync(
           // Fetch+merge înainte de push; scrierea cere ca documentul să fie tot cel citit.
           // Dacă partenerul a scris între timp, citim din nou și unim (de cel mult 3 ori).
           let toPush = syncDataRef.current;
+          let lastEnvelopeSize = 0;
           for (let attempt = 1; ; attempt += 1) {
             const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
             toPush = syncDataRef.current;
@@ -476,6 +477,7 @@ export function useFamilySync(
               }
             }
             const envelope = await crypto.encryptFamilyData(toPush, syncSecretRef.current);
+            lastEnvelopeSize = envelope.ciphertext.length;
             try {
               await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null, (seq) => crypto.writeChainToken(syncSecretRef.current!, roomId, seq));
               break;
@@ -487,7 +489,11 @@ export function useFamilySync(
           syncLastPortableRef.current = syncPortable(toPush);
           setSyncLastSync(new Date().toISOString());
           const skew = Number(window.localStorage.getItem(syncApi.CLOCK_SKEW_KEY) || 0);
-          setSyncNotice(Math.abs(skew) > 120_000
+          // Un pachet ține cam 27.000 de mișcări (măsurat); avertizăm cu mult înainte de limită.
+          const usage = lastEnvelopeSize / crypto.SYNC_ENVELOPE_LIMIT;
+          setSyncNotice(usage > 0.7
+            ? t("Registrul familiei ocupă {percent}% din spațiul de sincronizare. Fă o copie de siguranță, apoi șterge mișcările din anii încheiați, ca sincronizarea să nu se oprească.", { percent: Math.round(usage * 100) })
+            : Math.abs(skew) > 120_000
             ? t("Ceasul telefonului e cu aproximativ {minutes} minute {direction}. Pune ora automată din setările telefonului; altfel, la unire, schimbările de aici pot câștiga sau pierde pe nedrept.", { minutes: Math.round(Math.abs(skew) / 60_000), direction: skew > 0 ? t("înainte") : t("în urmă") })
             : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
         } catch (error) {

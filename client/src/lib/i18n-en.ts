@@ -2337,6 +2337,7 @@ export const en: Record<string, string> = {
   "Codul adultului": "Adult's code",
   "Cod greșit.": "Wrong code.",
   "Prea multe încercări. Mai așteaptă {seconds} secunde.": "Too many attempts. Wait {seconds} more seconds.",
+  "Registrul familiei ocupă {percent}% din spațiul de sincronizare. Fă o copie de siguranță, apoi șterge mișcările din anii încheiați, ca sincronizarea să nu se oprească.": "The family ledger uses {percent}% of the sync space. Make a backup, then delete movements from finished years so sync does not stop.",
   "Intrarea cu parolă s-a închis: parolele vechi se pot ghici. Cere unui telefon din familie să apese în Sync „Mută familia” și să-ți trimită invitația.": "Joining with a password is closed: old passwords can be guessed. Ask a phone in the family to tap “Move family” in Sync and send you the invite.",
   "Intrarea cu parolă se închide pe {date}. După ce intri, mută familia pe invitație (buton „Mută familia”).": "Joining with a password closes on {date}. Once you are in, move the family to an invite (“Move family” button).",
   "Se face o cameră nouă, cu invitație nouă, iar cea veche se golește. Celelalte telefoane se opresc până primesc invitația nouă; datele lor nu se pierd.": "A new room with a new invite is made and the old one is emptied. Other phones pause until they get the new invite; their data is not lost.",
