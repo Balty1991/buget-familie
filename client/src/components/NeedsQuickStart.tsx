@@ -9,7 +9,7 @@ import { formatDate, isoToday, newId, parseRomanianAmount, type AppData, type Ex
 import { t } from "@/lib/i18n";
 import { genitiveName } from "@/lib/member-mode";
 
-type IncomeDraft = { id: string; who: "me" | "partner"; label: string; amount: string; day: string };
+type IncomeDraft = { id: string; who: "me" | "partner"; label: string; amount: string; day: string; /** Primește și tichete de masă: partenerul își are sursa lui, nu le pune pe ale mele. */ meal?: boolean };
 type NeedDraft = { label: string; category: string; cadence: "monthly" | "weekly"; priority: "fixed" | "flex" | "buffer"; amount: string; on: boolean };
 
 const START_NEEDS: NeedDraft[] = [
@@ -88,6 +88,11 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
       const amount = parseRomanianAmount(item.amount);
       return { id: newId("need"), label: item.label, category: item.category, cadence: item.cadence, min: amount, max: amount, reserve: "max", priority: item.priority, updatedAt: now };
     });
+    // Tichetele fiecăruia pe sursa lui: ale partenerului ajungeau la „Eu” (utilizator #9).
+    let paymentSources = data.settings.paymentSources;
+    if (partnerId && incomes.some((item) => item.who === "partner" && item.meal) && !paymentSources.some((source) => source.kind === "meal" && source.memberId === partnerId)) {
+      paymentSources = [...paymentSources, { id: newId("source"), name: t("Bonuri de masă · {name}", { name: partnerName.trim() || t("partener") }), kind: "meal", memberId: partnerId, openingBalance: 0 }];
+    }
     const plan = data.settings.salaryPlan;
     const earliest = firstDay && flex > 0 ? (() => { const date = new Date(`${firstDay}T12:00:00`); date.setDate(date.getDate() - flex); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; })() : undefined;
     onFinish({
@@ -96,6 +101,7 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
         ...data.settings,
         memberName: yourName.trim() || data.settings.memberName,
         members,
+        paymentSources,
         salaryPlan: {
           ...plan,
           incomes: [...(plan.incomes || []), ...expected],
@@ -123,6 +129,7 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
               <label className="bf-field"><span>{item.who === "partner" ? t("Al partenerului") : t("Al tău")}</span><input value={item.label} onChange={(event) => setIncome(item.id, { label: event.target.value })} /></label>
               <label className="bf-field"><span>{t("Suma")}</span><input inputMode="decimal" value={item.amount} onChange={(event) => setIncome(item.id, { amount: event.target.value })} placeholder={t("ex. 4.700")} /></label>
               <label className="bf-field"><span>{t("Ziua din lună")}</span><input inputMode="numeric" value={item.day} onChange={(event) => setIncome(item.id, { day: event.target.value.replace(/\D/g, "").slice(0, 2) })} placeholder={t("ex. 10")} /></label>
+              {item.who === "partner" && <label className="bf-needs-meal"><input type="checkbox" checked={Boolean(item.meal)} onChange={(event) => setIncome(item.id, { meal: event.target.checked })} /> {t("Primește și tichete de masă")}</label>}
               {incomes.length > 1 && <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: item.label })} onClick={() => setIncomes((current) => current.filter((entry) => entry.id !== item.id))}><Trash2 size={15} /></button>}
             </div>
           ))}

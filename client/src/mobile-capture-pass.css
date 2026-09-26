@@ -198,3 +198,17 @@
   font-weight: 700;
   color: var(--cf-muted);
 }
+
+.bf-needs-meal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+  font-size: 13px;
+}
+
+.bf-allocation-list-total .bf-allocation-meal {
+  display: block;
+  margin-top: 2px;
+  color: var(--cf-muted);
+}

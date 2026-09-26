@@ -3410,4 +3410,8 @@ export const en: Record<string, string> = {
   "{amount} cheltuiți": "{amount} spent",
   "Zilele trecute: cheltuit · de azi: cât poți cheltui": "Past days: spent · from today: what you can spend",
   "Următoarele: {list}. Dacă pot veni cu câteva zile mai devreme sau mai târziu, plicurile se socotesc să ajungă și atunci.": "Next: {list}. If they can come a few days early or late, the envelopes are sized to last then too.",
+  "Bonuri de masă · {name}": "Meal vouchers · {name}",
+  "partener": "partner",
+  "Primește și tichete de masă": "Also gets meal vouchers",
+  "+ tichete: {amount}": "+ meal vouchers: {amount}",
 };

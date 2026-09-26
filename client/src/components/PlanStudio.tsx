@@ -23,7 +23,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { amountInput, allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { amountInput, sourceBalance, allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { nextCycleIncomeArrived, envelopeBurnPace, envelopeMonthlyHistory, envelopeRunOut, envelopeUntilPayday, weekDayCap, envelopeBurndown} from "@/lib/household-insights";
 import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
 import { EnvelopeBurndownChart } from "@/components/EnvelopeBurndownChart";
@@ -162,6 +162,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const weekSpentByIndex = envelopes.reduce((all, envelope) => { envelope.weeks.forEach((week) => all.set(week.index, (all.get(week.index) || 0) + week.spent)); return all; }, new Map<number, number>());
   const { availableSources, scheduled, scheduledInEnvelopes, reservedInEnvelopes, unrepartized } = planAllocationMath(data);
+  // Tichetele nu intră în plicuri, dar sunt tot bani de mâncare: se arată lângă plicul de alimente (utilizator #9).
+  const mealLeft = data.settings.paymentSources.filter((source) => source.kind === "meal").reduce((sum, source) => sum + Math.max(0, sourceBalance(data, source.id)), 0);
+  const isFoodCategory = (category?: string) => category === "Alimente" || category === "Mâncare";
   /**
    * Suma scrisă poate fi totalul pe perioadă sau ritmul unei săptămâni întregi. Plicul
    * păstrează mereu totalul — ritmul e doar felul în care îl scrii, tradus pe zile.
@@ -448,7 +451,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             const tone = state === "over" ? "over" : paid ? "healthy paid" : state === "watch" || burn?.pace === "behind" ? "watch" : "healthy";
             return <span className={`bf-allocation-state ${tone}`} title={burn?.reason}>{label}</span>;
           })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><b>{item.label}</b><small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small></div>
-          <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>{t("rămași din {amount}", { amount: money(budget) })}</small></div>
+          <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>{t("rămași din {amount}", { amount: money(budget) })}</small>{mealLeft > 0 && isFoodCategory(item.category) && <small className="bf-allocation-meal">{t("+ tichete: {amount}", { amount: money(mealLeft) })}</small>}</div>
           <div className={`bf-envelope-meter${(week ? week.state : state) === "over" ? " is-over" : ""}`}><span>{week ? `${t("Săptămâna asta")} · S${week.index}` : t("Tot plicul")}{" · "}{t("cheltuit")}</span><b>{money(week ? week.spent : spent)} <small>/ {money(week ? week.budget : budget)}</small></b><i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.max(0, ((week ? week.budget : budget) > 0 ? (week ? week.spent : spent) / (week ? week.budget : budget) : 0) * 100))}%` }} />{!fixed && (() => { const mark = todayMark(week ? week.start : plan.periodStart, week ? week.end : plan.nextPayday); return mark === undefined ? null : <u className="bf-meter-today" style={{ left: `${mark}%` }} title={t("Aici ar trebui să fii azi")} />; })()}</i></div>
           <details className="bf-envelope-more"><summary>{t("Detalii")}<ChevronDown size={15} aria-hidden="true" /></summary>
           {(() => { const chart = fixed ? undefined : envelopeBurndown(data, item); return chart ? <EnvelopeBurndownChart chart={chart} /> : null; })()}
