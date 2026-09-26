@@ -376,10 +376,11 @@ html:not(.dark) .bf-os-decide {
   color: #ff8a7a;
 }
 
+/* Rândurile iau suprafața temei (Navy rămâne albastru), nu negrul fix al vechii teme OLED. */
 .dark .bf-movement-timeline article,
 .dark .bf-today-activity-list article {
-  border-color: color-mix(in srgb, #7cffc4 10%, transparent) !important;
-  background: #07090c;
+  border-color: color-mix(in srgb, var(--cf-line, #22302a) 80%, transparent) !important;
+  background: color-mix(in srgb, var(--cf-surface, #10151a) 70%, var(--cf-bg, #07090c));
   border-radius: 1.1rem;
 }
 

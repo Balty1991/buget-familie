@@ -22,12 +22,12 @@ export const LIGHT_THEMES: ThemeId[] = ["white"];
 
 export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: string }> = [
   { id: "plain", name: t("Lumină curată"), detail: t("Halo-uri moi, fără grilă") },
-  { id: "paper", name: "In de registru", detail: t("Fibre calde, ca o coală") },
+  { id: "paper", name: t("Hârtie de registru"), detail: t("Fibre calde, ca o coală") },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
   { id: "white", name: t("Alb"), detail: t("Atelier Platinum — hârtie caldă, pin, citire de zi. Implicit."), mood: "ZI · PLATINUM" },
   { id: "dark", name: t("Întunecat"), detail: t("Noapte cu accent verde de pădure."), mood: "NOAPTE · VERDE" },
-  { id: "navy", name: t("Navy"), detail: t("Bleumarin profund, auriu discret. Cabinet modern."), mood: "NOAPTE · OLED" },
+  { id: "navy", name: t("Navy"), detail: t("Bleumarin profund, auriu discret. Cabinet modern."), mood: "NOAPTE · AURIU" },
 ];
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };

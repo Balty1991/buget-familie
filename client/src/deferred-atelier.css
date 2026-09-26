@@ -3447,9 +3447,6 @@ html.dark .bf-today-envelopes {
 .bf-background-grid button:not(.selected) {
   opacity: .88;
 }
-.bf-background-grid button:last-child {
-  grid-column: span 2;
-}
 .bf-background-swatch {
   display: block;
   height: 36px;
@@ -3557,12 +3554,6 @@ html.background-paper .bf-app::before {
 }
 
 @media (min-width: 641px) {
-  .bf-background-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-  .bf-background-grid button:last-child {
-    grid-column: auto;
-  }
   .bf-background-grid button {
     min-height: 108px;
   }

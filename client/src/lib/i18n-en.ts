@@ -3381,4 +3381,5 @@ export const en: Record<string, string> = {
   "se acoperă când vine {label} pe {date} ({amount})": "covered when {label} arrives on {date} ({amount})",
   "Așteaptă venitul următor": "Waiting for the next income",
   "Suma e mai mică de un ban.": "The amount is less than one ban.",
+  "Hârtie de registru": "Ledger paper",
 };
