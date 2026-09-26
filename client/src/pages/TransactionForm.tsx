@@ -89,7 +89,7 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
     const member = data.settings.members.find((item) => item.id === memberId);
     if (hasInvalidRoDate()) return setError(t("Data nu există în calendar. Scrie-o ca zz.ll.aaaa, de exemplu 05.10.2026."));
     if (!title.trim()) return setError(t("Scrie o denumire pentru mișcare."));
-    if (!numeric || numeric <= 0) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
+    if (!numeric || numeric < 0.005) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
     if (!source || !member || !date) return setError(t("Alege data, membrul și sursa de plată."));
     if (isForeign && !(activeRate > 0)) return setError(t("Introdu cursul pentru {currency}: câți lei face o unitate.", { currency: entryCurrency }));
     const stored = isForeign ? toBaseAmount(numeric, activeRate) : numeric;

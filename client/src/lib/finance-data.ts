@@ -304,7 +304,8 @@ export const parseRomanianAmount = (raw: string | number | null | undefined) => 
 /** Mesajul pentru o sumă greșită: „format neclar” când s-a scris ceva, nu „mai mare decât zero”. */
 export const amountError = (raw: string) => {
   const value = parseRomanianAmount(raw);
-  if (value > 0) return undefined;
+  if (value >= 0.005) return undefined;
+  if (value > 0) return t("Suma e mai mică de un ban.");
   return /\d/.test(raw) && value === 0 && !/^[\s0.,]*(?:lei|ron)?$/i.test(raw)
     ? t("Format neclar. Scrie suma cu cifre, de exemplu 1.500,50.")
     : t("Introdu o sumă mai mare decât zero.");

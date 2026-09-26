@@ -160,7 +160,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   };
   const save = () => {
     const numeric = parseRomanianAmount(amount); const member = data.settings.members.find((item) => item.id === memberId); const source = data.settings.paymentSources.find((item) => item.id === sourceId);
-    if (numeric <= 0) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
+    if (numeric < 0.005) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
     if (!member || !source) return setError(t("Alege un membru și o sursă de plată."));
     // Suma tastată este în valuta sursei; fără curs nu o putem trece în registru, care e în lei.
     const foreign = source.currency && source.currency !== BASE_CURRENCY ? source.currency : undefined;
