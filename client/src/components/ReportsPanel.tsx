@@ -2,6 +2,7 @@
  * Atelierul Financiar — Analiză istorică calculată exclusiv din registrul local real.
  * Graficul de distribuție este o hartă de decizie: categorie, valoare și pondere rămân accesibile și verificabile.
  */
+import { categoryColor } from "@/lib/category-color";
 import "../report-balance.css";
 import "../balance-scope.css";
 import "../reports.css";
@@ -77,7 +78,11 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
   const maxCategory = Math.max(1, ...categories.map(([, value]) => value));
   const categoryTotal = categories.reduce((sum, [, value]) => sum + value, 0);
   let cursor = 0;
-  const categorySlices = categories.map(([name, value]) => { const share = categoryTotal ? value / categoryTotal * 100 : 0; const start = cursor; cursor += share; return { name, value, share, start, end: cursor, color: categoryColors[name] || "#73847b" }; });
+  // Cel mult 6 felii: primele 5 categorii și „Altele” pentru rest, ca donutul să rămână lizibil.
+  const donutCategories: Array<[string, number]> = categories.length > 6
+    ? [...categories.slice(0, 5), ["Altele", categories.slice(5).reduce((sum, [, value]) => sum + value, 0)]]
+    : categories;
+  const categorySlices = donutCategories.map(([name, value]) => { const share = categoryTotal ? value / categoryTotal * 100 : 0; const start = cursor; cursor += share; return { name, value, share, start, end: cursor, color: categoryColor(name) }; });
   const categoryGradient = categorySlices.length ? `conic-gradient(${categorySlices.map((slice) => `${slice.color} ${slice.start}% ${slice.end}%`).join(", ")})` : "conic-gradient(var(--cf-line) 0 100%)";
   const activeCategory = categorySlices.find((slice) => slice.name === selectedCategory) || categorySlices[0];
   const alerts = data.settings.salaryPlan.allocations.map((item) => ({ item, ...allocationStatus(data, item) })).filter((entry) => entry.state !== "healthy" && (!memberId || entry.item.memberId === memberId));
