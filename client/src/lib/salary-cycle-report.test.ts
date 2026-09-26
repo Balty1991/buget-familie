@@ -18,7 +18,7 @@ const awaitingIncome = (data: AppData, month: string) => {
   const income = inMonth.filter((item) => item.kind === "income").reduce((sum, item) => sum + item.amount, 0);
   const expense = inMonth.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
   const payday = data.settings.salaryPlan.nextPayday || data.settings.salaryPlan.earliestPayday;
-  return income === 0 && expense > 0 && Boolean(payday) && payday >= range.start && payday <= range.end;
+  return income === 0 && expense > 0 && !!payday && payday >= range.start && payday <= range.end;
 };
 
 const house = (): AppData => {

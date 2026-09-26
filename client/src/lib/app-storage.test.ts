@@ -194,7 +194,7 @@ describe("backup Buget Familie", () => {
 });
 
 
-import { chooseFresherAppData, hashAppPayload, normalizeSavedAt, resolveHydrateMerge } from "./app-storage";
+import { normalizeSavedAt, resolveHydrateMerge } from "./app-storage";
 
 describe("stocare LS ↔ IndexedDB", () => {
   const sample = (familyName: string) => {
@@ -290,7 +290,7 @@ describe("backup cap-coadă, cu registru bogat", () => {
     const data = createEmptyAppData();
     data.settings.familyName = "Familia Pop";
     data.settings.members = [{ id: "m1", name: "Ana" }, { id: "m2", name: "Mihai" }];
-    data.settings.exchangeRates = [{ code: "EUR", rate: 4.97, updatedAt: "2026-09-01T10:00:00.000Z" }] as typeof data.settings.exchangeRates;
+    data.settings.exchangeRates = [{ code: "EUR", rate: 4.97, updatedAt: "2026-09-01T10:00:00.000Z" }] as unknown as typeof data.settings.exchangeRates;
     data.settings.merchantRules = [{ id: "r1", match: "decathlon", category: "Timp liber", updatedAt: "2026-09-02T10:00:00.000Z" }];
     data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-10", nextPayday: "2026-10-10", allocations: [{ id: "a1", label: "Alimente", amount: 1500, category: "Alimente", weeklyPace: true, alertThreshold: 80 }] };
     data.transactions = [
@@ -319,7 +319,7 @@ describe("backup cap-coadă, cu registru bogat", () => {
 describe("copia din localStorage și bonurile", () => {
   it("păstrează imageKeys și are același hash ca IndexedDB", () => {
     const data = createEmptyAppData();
-    data.receipts = [{ id: "r1", vendor: "Lidl", date: "2026-09-26", total: 10, imageKeys: ["receipt-img-r1-0"], imageData: "data:image/jpeg;base64,AAAA" } as AppData["receipts"][number]];
+    data.receipts = [{ id: "r1", vendor: "Lidl", date: "2026-09-26", total: 10, imageKeys: ["receipt-img-r1-0"], imageData: "data:image/jpeg;base64,AAAA" } as unknown as AppData["receipts"][number]];
     const text = localSnapshotText(data);
     expect(JSON.parse(text).receipts[0].imageKeys).toEqual(["receipt-img-r1-0"]);
     expect(JSON.parse(text).receipts[0].imageData).toBeUndefined();

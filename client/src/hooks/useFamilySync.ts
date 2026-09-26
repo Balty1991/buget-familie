@@ -486,6 +486,7 @@ export function useFamilySync(
       }
     })();
     // syncOpenRoom citește starea curentă prin ref-uri; reluarea rulează o singură dată.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [online, storageReady]);
 
   useEffect(() => {
@@ -562,7 +563,7 @@ export function useFamilySync(
       });
     }, 800);
     return () => window.clearTimeout(syncPushTimerRef.current);
-  }, [data, syncConnected, online, syncRetryTick]);
+  }, [data, setData, syncConnected, online, syncRetryTick]);
 
   useEffect(() => () => syncUnsubscribeRef.current?.(), []);
 

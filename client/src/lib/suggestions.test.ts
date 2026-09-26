@@ -56,7 +56,7 @@ describe("sugestiile vin din situația reală", () => {
 
   it("cu datorii, întreabă", () => {
     const data = base();
-    data.debts = [{ id: "d1", name: "Card credit", remaining: 3400, monthly: 350 }];
+    data.debts = [{ id: "d1", name: "Card credit", remaining: 3400, monthly: 350, due: "", tone: "coral" }];
     expect(buildSuggestions(data, AZI).map((item) => item.text).join(" ")).toMatch(/datorii/);
   });
 
@@ -88,8 +88,8 @@ describe("orice sugestie propusă primește un răspuns", () => {
     ["gospodărie obișnuită", base()],
     ["cu datorii și obiective", (() => {
       const data = base();
-      data.debts = [{ id: "d1", name: "Card credit", remaining: 3400, monthly: 350 }];
-      data.savings = [{ id: "s1", name: "Concediu", current: 500, target: 5000 }];
+      data.debts = [{ id: "d1", name: "Card credit", remaining: 3400, monthly: 350, due: "", tone: "coral" }];
+      data.savings = [{ id: "s1", name: "Concediu", current: 500, target: 5000, due: "", tone: "forest" }];
       data.recurring = [{ id: "r1", name: "Chirie", amount: 1500, dueDay: 5, category: "Casă & facturi", sourceId: "card", memberId: "member-me", active: true }];
       return data;
     })()],

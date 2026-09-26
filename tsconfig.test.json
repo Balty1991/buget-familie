@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
+  "exclude": ["node_modules", "build", "dist"],
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo.test",
+    "target": "ES2022",
+    "types": ["node", "vite/client", "vitest/globals"]
+  }
+}

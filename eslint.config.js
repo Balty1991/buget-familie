@@ -36,6 +36,12 @@ export default tseslint.config(
     },
   },
   {
+    // Hook-urile noastre țin logica de sync și persistență: acolo o dependență uitată
+    // înseamnă date netrimise (D1, D9, D12 din auditul din 26.09).
+    files: ["client/src/hooks/**/*.{ts,tsx}"],
+    rules: { "react-hooks/exhaustive-deps": "warn" },
+  },
+  {
     files: ["client/public/sw.js"],
     languageOptions: { globals: { ...globals.serviceworker } },
   },

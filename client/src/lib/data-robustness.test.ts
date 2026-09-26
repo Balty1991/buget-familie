@@ -15,7 +15,7 @@ describe("sume scrise de om", () => {
     ["12,345", 12.345], ["1.000", 1000], ["  99  ", 99], [NaN, 0], [Infinity, 0],
   ];
   for (const [input, expected] of cases) {
-    it(`„${String(input)}” → ${expected}`, () => expect(parseRomanianAmount(input)).toBeCloseTo(expected, 3));
+    it(`„${String(input)}” → ${expected}`, () => expect(parseRomanianAmount(input as string)).toBeCloseTo(expected, 3));
   }
 });
 

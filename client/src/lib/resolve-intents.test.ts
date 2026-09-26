@@ -20,7 +20,7 @@ const house = (): AppData => {
     { id: "env-food", label: "Alimente", category: "Alimente", amount: 900, sourceId: "card" },
     { id: "env-trans", label: "Transport", category: "Transport", amount: 400, sourceId: "card" },
   ];
-  data.settings.plannedEvents = [{ id: "ev-craciun", name: "Crăciun", date: "2026-12-25", estimate: 1200, repeat: "yearly" }];
+  data.settings.plannedEvents = [{ id: "ev-craciun", name: "Crăciun", date: "2026-12-25", estimate: 1200, repeat: "yearly", kind: "holiday" }];
   data.recurring = [{ id: "rec-chirie", name: "Chirie", amount: 1500, dueDay: 5, category: "Casă & facturi", sourceId: "card", memberId: me.id, active: true }];
   return data;
 };

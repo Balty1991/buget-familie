@@ -49,7 +49,7 @@ describe("registrul financiar Buget Familie", () => {
   it("separă fluxul perioadei de ratele declarate și datoria rămasă în bilanț", () => {
     const data = createEmptyAppData(); const source = data.settings.paymentSources[0]; source.openingBalance = 1000;
     data.transactions = [{ id: "income", title: "Salariu", amount: 3000, kind: "income", category: "Venit", source: source.name, sourceId: source.id, person: "Eu", memberId: "member-me", date: "2026-08-01" }, { id: "expense", title: "Alimente", amount: 900, kind: "expense", category: "Alimente", source: source.name, sourceId: source.id, person: "Eu", memberId: "member-me", date: "2026-08-02" }];
-    data.debts = [{ id: "loan", name: "Credit", remaining: 38000, monthly: 650, due: "29 august" }]; data.savings = [{ id: "fund", name: "Fond", current: 2000, target: 5000, due: "Decembrie", tone: "honey" }];
+    data.debts = [{ id: "loan", name: "Credit", remaining: 38000, monthly: 650, due: "29 august", tone: "forest" }]; data.savings = [{ id: "fund", name: "Fond", current: 2000, target: 5000, due: "Decembrie", tone: "honey" }];
     expect(financialBalance(data, "2026-08-01", "2026-08-31")).toMatchObject({ income: 3000, expense: 900, cashflow: 2100, monthlyRates: 650, debtRemaining: 38000, savingsCurrent: 2000, liquidFunds: 3100, netLiquidPosition: -34900 });
   });
 
@@ -124,7 +124,7 @@ describe("registrul financiar Buget Familie", () => {
 
   it("calculează cheltuiala pentru alocarea de categorie doar în perioada activă", () => {
     const data = createEmptyAppData();
-    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [], transfers: [] };
     const source = data.settings.paymentSources[0];
     data.transactions = [
       { id: "1", title: "Taxi", amount: 100, kind: "expense", category: "Taxi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-04" },
@@ -135,7 +135,7 @@ describe("registrul financiar Buget Familie", () => {
 
   it("consumă plicul de transport numai din sursa aleasă", () => {
     const data = createEmptyAppData(); const [card, cash] = data.settings.paymentSources;
-    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [], transfers: [] };
     data.transactions = [
       { id: "card-taxi", title: "Taxi card", amount: 120, kind: "expense", category: "Transport", sourceId: card.id, source: card.name, memberId: "member-me", person: "Eu", date: "2026-08-04" },
       { id: "cash-taxi", title: "Taxi cash", amount: 80, kind: "expense", category: "Transport", sourceId: cash.id, source: cash.name, memberId: "member-me", person: "Eu", date: "2026-08-05" },
@@ -462,7 +462,7 @@ describe("registrul financiar Buget Familie", () => {
   it("rezervă o scadență activă și o scoate din plan după confirmarea plății", () => {
     const data = createEmptyAppData();
     const source = data.settings.paymentSources[0];
-    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-20", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-20", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [], transfers: [] };
     data.recurring = [{ id: "internet", name: "Internet", amount: 60, category: "Casă & facturi", sourceId: source.id, memberId: "member-me", dueDay: 15, active: true }];
     expect(pendingRecurringInPlan(data)).toHaveLength(1);
     data.transactions = [{ id: "paid", recurringId: "internet", title: "Internet", amount: 60, kind: "expense", category: "Casă & facturi", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-15" }];
@@ -480,7 +480,7 @@ describe("registrul financiar Buget Familie", () => {
   it("proiectează explicit ritmul actual până la următorul venit", () => {
     const data = createEmptyAppData();
     const source = data.settings.paymentSources[0];
-    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [], transfers: [] };
     data.transactions = [
       { id: "pace-income", title: "Salariu", amount: 1000, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-01" },
       { id: "pace-1", title: "Alimente", amount: 100, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-01" },
@@ -523,7 +523,7 @@ describe("registrul financiar Buget Familie", () => {
 
   it("propune economisire doar din plan și mișcările reale", () => {
     const data = createEmptyAppData(); const source = data.settings.paymentSources[0];
-    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [] };
+    data.settings.salaryPlan = { periodStart: "2026-08-01", nextPayday: "2026-08-10", sourceIds: [], totalLimit: 1000, weeklyLimit: 0, allocations: [], transfers: [] };
     data.transactions = [{ id: "food", title: "Alimente", amount: 400, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-02" }];
     const suggestions = savingSuggestions(data, "2026-08-02");
     expect(suggestions.some((item) => item.id === "category" && item.potential === 40)).toBe(true);
@@ -532,7 +532,7 @@ describe("registrul financiar Buget Familie", () => {
 
   it("explică presiunea bilanțului și a ratelor din istoricul personal", () => {
     const data = createEmptyAppData(); const source = data.settings.paymentSources[0]; source.openingBalance = 300;
-    data.debts = [{ id: "credit", name: "Credit", remaining: 2600, monthly: 500, due: "28 august" }];
+    data.debts = [{ id: "credit", name: "Credit", remaining: 2600, monthly: 500, due: "28 august", tone: "forest" }];
     data.transactions = [{ id: "salary", title: "Salariu", amount: 1200, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-08-10" }];
     const suggestions = savingSuggestions(data, "2026-08-20");
     expect(suggestions.find((item) => item.id === "net-position")).toMatchObject({ tone: "risk", potential: 1100, nextStep: "Revizuiește ratele și planul" });
@@ -774,7 +774,7 @@ describe("money2 + invarianti pe mutatori", () => {
     const data = createEmptyAppData();
     const source = data.settings.paymentSources[0];
     source.openingBalance = 500;
-    data.debts = [{ id: "d1", name: "Credit", remaining: 100, monthly: 20, due: "1" }];
+    data.debts = [{ id: "d1", name: "Credit", remaining: 100, monthly: 20, due: "1", tone: "forest" }];
     const paid = recordDebtPayment(data, { debtId: "d1", amount: 30.555, sourceId: source.id, memberId: data.settings.members[0].id, date: isoToday() });
     expect(paid).toBeTruthy();
     expect(paid!.debts[0].remaining).toBe(69.44);
