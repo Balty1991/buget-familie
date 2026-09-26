@@ -133,3 +133,6 @@ html body .os-shell .bf-movements-ledger .bf-journal-quickbar > .bf-journal-filt
 html body .os-shell .bf-movements-ledger .bf-journal-quickbar > .bf-journal-search { grid-column: auto; }
 /* Meniul de jos stă peste pagină; cât e deschisă foaia de filtre, se ascunde ca să nu o acopere. */
 @media (max-width: 760px) { html.bf-journal-sheet-open body .os-shell .os-dock { visibility: hidden; } }
+
+/* Punctul cu culoarea membrului, înaintea numelui. */
+.bf-member-dot { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; vertical-align: 1px; }

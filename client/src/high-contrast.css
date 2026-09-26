@@ -26,3 +26,6 @@ html.bf-high-contrast :is(.bf-plic-pace, .bf-allocation-state) {
 .bf-theme-tint > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .bf-theme-tint > div button { min-height: 44px; border: 1px solid var(--cf-line); border-radius: 12px; color: var(--cf-ink); background: var(--cf-surface); font-weight: 600; }
 .bf-theme-tint > div button.active { border-color: var(--cf-primary-strong); color: var(--cf-on-forest); background: var(--cf-primary-strong); }
+/* Culoarea membrului, în Setări: o bulină care se schimbă la atingere. */
+html body .bf-member-row:has(.bf-member-color) { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+html body .bf-member-row .bf-member-color { flex: none; width: 44px; min-width: 44px; height: 44px; padding: 0; border: 3px solid var(--cf-surface); border-radius: 50%; box-shadow: 0 0 0 1px var(--cf-line); }

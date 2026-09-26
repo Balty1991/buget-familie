@@ -29,4 +29,4 @@
 .bf-member-row b{color:var(--cf-ink);font:750 12px/1.3 "IBM Plex Sans",sans-serif;overflow-wrap:anywhere}
 .bf-member-row label{display:inline-flex;align-items:center;gap:6px;margin:0;color:var(--cf-muted);font:600 10px/1 "IBM Plex Sans",sans-serif;white-space:nowrap}
 .bf-member-row input[type=checkbox]{width:17px;height:17px;min-height:0!important;margin:0;accent-color:var(--cf-primary-strong)}
-.bf-member-row button{display:grid!important;place-items:center!important;width:32px!important;height:32px!important;min-height:0!important;padding:0!important;border:1px solid var(--cf-line)!important;border-radius:12px !important;color:#a34a38!important;background:var(--cf-surface)!important}
+.bf-member-row button:not(.bf-member-color){display:grid!important;place-items:center!important;width:32px!important;height:32px!important;min-height:0!important;padding:0!important;border:1px solid var(--cf-line)!important;border-radius:12px !important;color:#a34a38!important;background:var(--cf-surface)!important}
