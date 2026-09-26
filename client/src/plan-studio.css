@@ -336,3 +336,17 @@
 .bf-envelope-meter i { grid-column: 1 / -1; display: block; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--cf-line, #dce6dd) 80%, #fff); overflow: hidden; }
 .bf-envelope-meter em { display: block; height: 100%; border-radius: inherit; background: var(--cf-primary, #256b5b); }
 .bf-envelope-meter.is-over em { background: var(--cf-danger, #c45b45); }
+
+/* Banda S1–S5: coloane umplute cât s-a cheltuit din fiecare tranșă. */
+.bf-week-band { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; margin: 4px 0 8px; padding: 0; list-style: none; }
+.bf-week-band li { display: grid; justify-items: center; gap: 3px; padding: 6px 2px; border: 1px solid transparent; border-radius: 12px; }
+.bf-week-band li.is-current { border-color: var(--cf-primary); background: color-mix(in srgb, var(--cf-primary) 8%, transparent); }
+.bf-week-band-bar { position: relative; display: block; width: 18px; height: 52px; overflow: hidden; border-radius: 6px; background: color-mix(in srgb, var(--cf-ink) 9%, transparent); }
+.bf-week-band-bar i { position: absolute; right: 0; bottom: 0; left: 0; border-radius: 6px; background: var(--cf-primary); transition: height .32s ease; }
+.bf-week-band li.is-past .bf-week-band-bar i { background: color-mix(in srgb, var(--cf-primary) 55%, var(--cf-muted)); }
+.bf-week-band li.is-over .bf-week-band-bar i { background: var(--cf-coral); }
+.bf-week-band b { font-size: 12px; }
+.bf-week-band small { color: var(--cf-muted); font-size: 12px; white-space: nowrap; }
+.bf-week-band li.is-over small { color: var(--cf-coral); }
+.bf-week-band em { color: var(--cf-primary-strong); font-size: 12px; font-style: normal; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .bf-week-band-bar i { transition: none; } }
