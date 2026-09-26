@@ -11,7 +11,7 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, type AppCheck } from "firebase/app-check";
 import { browserLocalPersistence, connectAuthEmulator, indexedDBLocalPersistence, initializeAuth, signInAnonymously, type Auth } from "firebase/auth";
-import { connectFirestoreEmulator, doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
+import { connectFirestoreEmulator, doc, getDoc, getFirestore, onSnapshot, runTransaction, serverTimestamp, setDoc, type Firestore, type Unsubscribe } from "firebase/firestore";
 import { appCheckDebug, firebaseConfig, isFirebaseConfigured, recaptchaSiteKey } from "@/lib/firebase-config";
 import type { EncryptedEnvelope } from "@/lib/family-crypto";
 import { deriveFamilyRoomId } from "@/lib/family-crypto";
@@ -20,7 +20,7 @@ import { isOfflineOnly } from "@/lib/ui-prefs";
 export { deriveFamilyRoomId };
 
 export class RealtimeSyncError extends Error {
-  constructor(public readonly kind: "not-configured" | "unavailable" | "offline-only", message: string) { super(message); }
+  constructor(public readonly kind: "not-configured" | "unavailable" | "offline-only" | "conflict", message: string) { super(message); }
 }
 
 let app: FirebaseApp | undefined;
@@ -149,14 +149,45 @@ export async function fetchFamilyEnvelope(roomId: string): Promise<EncryptedEnve
   }
 }
 
-export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnvelope): Promise<void> {
+/**
+ * Cu `expectedIv`, scrierea trece doar dacă documentul e tot cel citit înainte de unire (iv-ul
+ * pachetului e unic la fiecare scriere). Altfel partenerul a scris între timp: `conflict`, iar
+ * apelantul citește din nou, unește și reîncearcă, în loc să-i suprascrie scrierea.
+ */
+export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnvelope, expectedIv?: string | null): Promise<void> {
   try {
     await signedInOrTimeout();
-    await setDoc(roomRef(roomId), { envelope, updatedAt: serverTimestamp() });
+    const ref = roomRef(roomId);
+    if (expectedIv === undefined) await setDoc(ref, { envelope, updatedAt: serverTimestamp() });
+    else await runTransaction(db(), async (transaction) => {
+      const snapshot = await transaction.get(ref);
+      const current = snapshot.exists() ? ((snapshot.data().envelope as EncryptedEnvelope | undefined)?.iv ?? null) : null;
+      if (current !== expectedIv) throw new RealtimeSyncError("conflict", "Familia a trimis între timp o schimbare; o unim și reîncercăm.");
+      transaction.set(ref, { envelope, updatedAt: serverTimestamp() });
+    });
+    void measureClockSkew(ref);
   } catch (error) {
     if (error instanceof RealtimeSyncError) throw error;
     throw new RealtimeSyncError("unavailable", "Actualizarea nu a putut fi trimisă către serviciul de sincronizare.");
   }
+}
+
+export const CLOCK_SKEW_KEY = "buget-familie:clock-skew-ms";
+let skewMeasured = false;
+/**
+ * O dată pe sesiune: ora serverului din ultima noastră scriere față de ceasul telefonului.
+ * Unirea compară marcaje scrise cu ceasul telefonului, deci un ceas dat înainte sau înapoi
+ * câștigă sau pierde mereu; aplicația spune asta în Sync, ca omul să pună ora automată.
+ */
+async function measureClockSkew(ref: ReturnType<typeof roomRef>) {
+  if (skewMeasured) return;
+  skewMeasured = true;
+  try {
+    const localNow = Date.now();
+    const snapshot = await getDoc(ref);
+    const server = (snapshot.data()?.updatedAt as { toMillis?: () => number } | undefined)?.toMillis?.();
+    if (typeof server === "number") window.localStorage.setItem(CLOCK_SKEW_KEY, String(Math.round(localNow - server)));
+  } catch { /* măsurarea e doar un semnal */ }
 }
 
 export async function fetchRecoveryWrap(recoveryId: string): Promise<EncryptedEnvelope | null> {

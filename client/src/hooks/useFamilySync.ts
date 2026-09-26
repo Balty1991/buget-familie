@@ -451,28 +451,40 @@ export function useFamilySync(
           const crypto = await loadFamilyCrypto();
           const syncApi = await loadFamilySync();
           const roomId = syncRoomIdRef.current!;
-          // Fetch+merge înainte de push — evită race „push fără pull recent”.
-          const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
+          // Fetch+merge înainte de push; scrierea cere ca documentul să fie tot cel citit.
+          // Dacă partenerul a scris între timp, citim din nou și unim (de cel mult 3 ori).
           let toPush = syncDataRef.current;
-          if (remoteEnvelope) {
-            const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncSecretRef.current));
-            if (remoteData.settings.syncRoomMovedAt) {
-              syncStopMovedRoom();
-              return;
+          for (let attempt = 1; ; attempt += 1) {
+            const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
+            toPush = syncDataRef.current;
+            if (remoteEnvelope) {
+              const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncSecretRef.current));
+              if (remoteData.settings.syncRoomMovedAt) {
+                syncStopMovedRoom();
+                return;
+              }
+              toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData, readSyncBase(roomId)));
+              const mergedPortable = syncPortable(toPush);
+              if (mergedPortable !== syncPortable(syncDataRef.current)) {
+                syncLastPortableRef.current = mergedPortable;
+                setData(toPush);
+              }
             }
-            toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData, readSyncBase(roomId)));
-            const mergedPortable = syncPortable(toPush);
-            if (mergedPortable !== syncPortable(syncDataRef.current)) {
-              syncLastPortableRef.current = mergedPortable;
-              setData(toPush);
+            const envelope = await crypto.encryptFamilyData(toPush, syncSecretRef.current);
+            try {
+              await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null);
+              break;
+            } catch (error) {
+              if (attempt >= 3 || !(error instanceof syncApi.RealtimeSyncError) || error.kind !== "conflict") throw error;
             }
           }
-          const envelope = await crypto.encryptFamilyData(toPush, syncSecretRef.current);
-          await syncApi.pushFamilyEnvelope(roomId, envelope);
           writeSyncBase(roomId, crypto.syncBaseOf(toPush));
           syncLastPortableRef.current = syncPortable(toPush);
           setSyncLastSync(new Date().toISOString());
-          setSyncNotice(t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
+          const skew = Number(window.localStorage.getItem(syncApi.CLOCK_SKEW_KEY) || 0);
+          setSyncNotice(Math.abs(skew) > 120_000
+            ? t("Ceasul telefonului e cu aproximativ {minutes} minute {direction}. Pune ora automată din setările telefonului; altfel, la unire, schimbările de aici pot câștiga sau pierde pe nedrept.", { minutes: Math.round(Math.abs(skew) / 60_000), direction: skew > 0 ? t("înainte") : t("în urmă") })
+            : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
         } catch (error) {
           setSyncNotice(error instanceof Error ? error.message : t("Actualizarea nu a putut fi trimisă."));
         }
