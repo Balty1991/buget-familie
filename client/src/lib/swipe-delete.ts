@@ -8,6 +8,7 @@ export function swipeToDelete(onDelete: () => void) {
   let startX = 0;
   let startY = 0;
   let active = false;
+  let armed = false;
   const reset = (element: HTMLElement) => {
     element.style.transition = "transform 160ms ease";
     element.style.transform = "";
@@ -16,7 +17,7 @@ export function swipeToDelete(onDelete: () => void) {
   return {
     onPointerDown: (event: ReactPointerEvent<HTMLElement>) => {
       if (event.pointerType !== "touch") return;
-      startX = event.clientX; startY = event.clientY; active = true;
+      startX = event.clientX; startY = event.clientY; active = true; armed = false;
       event.currentTarget.style.transition = "none";
     },
     onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
@@ -26,7 +27,11 @@ export function swipeToDelete(onDelete: () => void) {
       if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) { active = false; reset(event.currentTarget); return; }
       if (dx >= 0) return;
       event.currentTarget.classList.add("is-swiping");
-      event.currentTarget.classList.toggle("is-swipe-armed", dx < -96);
+      const nowArmed = dx < -96;
+      // Un tic scurt când glisarea trece pragul: de aici, ridicarea degetului șterge.
+      if (nowArmed && !armed) { try { navigator.vibrate?.(8); } catch { /* fără vibrație */ } }
+      armed = nowArmed;
+      event.currentTarget.classList.toggle("is-swipe-armed", nowArmed);
       event.currentTarget.style.transform = `translateX(${Math.max(dx, -160)}px)`;
     },
     onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {

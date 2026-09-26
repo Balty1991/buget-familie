@@ -20,12 +20,15 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
    */
   const autoNow = automaticTheme(currentLocalMinutes(), scheduleTimes);
   const autoNowName = themeOptions.find((item) => item.id === autoNow)?.name || t("tema automată");
+  let systemNow: ThemeId = "white";
+  try { systemNow = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "white"; } catch { /* fără media query */ }
+  const keepsSystem = schedule === "system" && preview === systemNow;
   const keepsAuto = schedule === "auto" && preview === autoNow;
   const stopsAuto = schedule === "auto" && preview !== autoNow;
   const applyPreview = () => {
     onChange(preview);
     onBackgroundChange(previewBackground);
-    onScheduleChange(keepsAuto ? "auto" : "manual");
+    onScheduleChange(keepsAuto ? "auto" : keepsSystem ? "system" : "manual");
     onClose();
   };
   const toggleSchedule = () => {
@@ -107,6 +110,13 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
           </div>
         </section>
         <section className="bf-theme-preferences" aria-label={t("Preferințe temă")}>
+          <button type="button" className={schedule === "system" ? "active" : ""} role="switch" aria-checked={schedule === "system"} onClick={() => onScheduleChange(schedule === "system" ? "manual" : "system")}>
+            <span>
+              <b>{t("Urmează telefonul")}</b>
+              <small>{t("Alb când telefonul e pe luminos, Întunecat când e pe întunecat.")}</small>
+            </span>
+            <i aria-hidden="true" />
+          </button>
           <button type="button" className={schedule === "auto" ? "active" : ""} role="switch" aria-checked={schedule === "auto"} onClick={toggleSchedule}>
             <span>
               <b>{t("Comută automat zi/noapte")}</b>

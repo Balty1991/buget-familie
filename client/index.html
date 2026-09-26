@@ -250,7 +250,9 @@
           var theme = localStorage.getItem("buget-familie:theme") || "white";
           if (legacy[theme]) theme = legacy[theme];
           var schedule = localStorage.getItem("buget-familie:theme-schedule");
-          if (schedule === "auto") {
+          if (schedule === "system" || (!schedule && !localStorage.getItem("buget-familie:setup-complete"))) {
+            theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "white";
+          } else if (schedule === "auto") {
             var now = new Date();
             var minutes = now.getHours() * 60 + now.getMinutes();
             var times = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };

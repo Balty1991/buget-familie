@@ -12,7 +12,8 @@ import { lei } from "@/lib/money-format";
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
 export type MoreView = "overview" | "review" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
 export type ThemeId = "white" | "dark" | "aurora" | "navy" | "cyber";
-export type ThemeSchedule = "manual" | "auto";
+/** „system”: Alb sau Întunecat, după setarea telefonului (implicit pentru cei noi). */
+export type ThemeSchedule = "manual" | "auto" | "system";
 export type ThemeScheduleTimes = { dayStart: string; eveningStart: string; nightStart: string };
 export type BackgroundId = "plain" | "paper" | "grid" | "aurora" | "dots";
 export const LIGHT_THEMES: ThemeId[] = ["white"];
