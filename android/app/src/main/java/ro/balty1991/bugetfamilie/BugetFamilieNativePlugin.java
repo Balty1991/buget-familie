@@ -15,6 +15,9 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -52,6 +55,27 @@ public class BugetFamilieNativePlugin extends Plugin {
       if (enabled) getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
       else getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
       call.resolve();
+    });
+  }
+
+  /**
+   * Fereastra de recenzie a Magazinului Play, în aplicație. Play hotărăște dacă o arată
+   * (are cotele lui); rezultatul nu spune dacă omul a scris ceva, deci doar rezolvăm.
+   */
+  @PluginMethod
+  public void requestReview(PluginCall call) {
+    if (getActivity() == null) {
+      call.reject("fără activitate");
+      return;
+    }
+    final ReviewManager manager = ReviewManagerFactory.create(getContext());
+    manager.requestReviewFlow().addOnCompleteListener(request -> {
+      if (!request.isSuccessful()) {
+        call.reject("recenzie indisponibilă");
+        return;
+      }
+      final ReviewInfo info = request.getResult();
+      manager.launchReviewFlow(getActivity(), info).addOnCompleteListener(flow -> call.resolve());
     });
   }
 

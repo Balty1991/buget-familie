@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
-import { answerReviewPrompt, PLAY_STORE_URL, reviewPromptDue } from "@/lib/review-prompt";
+import { answerReviewPrompt, requestInAppReview, reviewPromptDue } from "@/lib/review-prompt";
 import { applySalaryAllocationRules, activeSalaryApplications, revertSalaryAllocationApplication, autoPostDueRecurring, confirmRecurringPayment, eligibleSalaryAllocationRules, isoToday, parseRomanianAmount, unappliedSalaryIncomes, type AppData } from "@/lib/finance-data";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck, retireIgnoredBalanceCheck, type BalanceCheckRow } from "@/lib/balance-check";
 import { cycleClose } from "@/lib/cycle-close";
@@ -125,9 +125,18 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
   const transfers = data.settings.members.length > 1 ? pendingTransfers(data, isoToday()) : [];
   const backupPrefs = useAutoBackupPrefs();
   const showBackup = !simpleMode && autoBackupCardVisible(backupPrefs, data);
-  const [reviewOpen, setReviewOpen] = useState(() => { try { return reviewPromptDue(window.localStorage, data.transactions.length, Capacitor.isNativePlatform()); } catch { return false; } });
-  const answerReview = (answer: "done" | "never" | "later") => { answerReviewPrompt(window.localStorage, answer); setReviewOpen(false); if (answer === "done") window.open(PLAY_STORE_URL, "_blank", "noopener"); };
-  if (!reviewOpen && !showBackup && !transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
+  // Produs #5: fereastra de recenzie a Play, chiar după a doua repartizare reușită; fără cartonaș care întreabă.
+  const successes = (data.settings.salaryPlan.salaryAllocationApplications || []).filter((item) => !item.revertedAt).length;
+  const appliedNow = justApplied?.id || "";
+  useEffect(() => {
+    if (!appliedNow) return;
+    try {
+      if (!reviewPromptDue(window.localStorage, successes, Capacitor.isNativePlatform())) return;
+      answerReviewPrompt(window.localStorage, "done");
+    } catch { return; }
+    void requestInAppReview();
+  }, [appliedNow, successes]);
+  if (!showBackup && !transfers.length && !showStamp && !showIncome && !(splitIncome && !splitDismissed) && !showCycleEnd && !cycleEndDone && !justApplied && !showRitual && !showCheck && !showCheckOk && !showDues && !showHunts && !showWeek && !showClose) return null;
 
   return (
     <section className="bf-today-brief" aria-labelledby="bf-today-brief-title">
@@ -256,14 +265,6 @@ export function TodayBrief({ data, onGo, onChange, onOpenWeek, onOpenRecurring, 
         <button type="button" className="bf-brief-close" onClick={() => onGo("plan")}>
           {t("Ciclul se închide. Uită-te ce a rămas.")}
         </button>
-      )}
-      {reviewOpen && (
-        <aside className="bf-income-split-done bf-review-ask" role="status">
-          <span>{t("Îți e de folos Buget Familie? O recenzie în Magazin Play ajută alte familii să o găsească.")}</span>
-          <button type="button" className="bf-secondary" onClick={() => answerReview("done")}>{t("Lasă o recenzie")}</button>
-          <button type="button" className="bf-brief-check-later" onClick={() => answerReview("later")}>{t("Nu acum")}</button>
-          <button type="button" className="bf-brief-check-later" onClick={() => answerReview("never")}>{t("Nu mai întreba")}</button>
-        </aside>
       )}
     </section>
   );
