@@ -442,7 +442,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             return <div className="bf-week-started">
               <p>{t("Săptămâna e începută: pentru {days} rămase revin {fair} (≈{perDay}/zi).", { days: daysLabel(shift.share.daysLeft), fair: money(shift.share.fair), perDay: money(shift.share.perDay) })}</p>
               {shift.movable >= 1
-                ? <button type="button" onClick={() => rebalanceStartedWeek(item.id, shift.weekIndex, shift.movable)}>{t("Mută {amount} în săptămânile următoare", { amount: money(shift.movable) })}</button>
+                ? <button type="button" onClick={() => rebalanceStartedWeek(item.id, shift.weekIndex, shift.movable)}>{t("Mută {amount} mai departe", { amount: money(shift.movable) })}</button>
                 : <small>{t("Nu prisosește nimic de mutat în săptămânile următoare.")}</small>}
             </div>;
           })()}

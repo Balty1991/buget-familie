@@ -227,3 +227,9 @@ html body .os-shell .bf-burndown figcaption, html body .os-shell .bf-burndown fi
 .bf-mva-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--cf-primary-strong, #1f5c52); }
 .bf-mva-bar i.up { background: var(--cf-warning, #c4a15a); }
 .bf-mva-bar em { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--cf-ink, #143c36); }
+
+/* „Bilanțul săptămânii”: titlul și textul pe rânduri separate, aliniate la stânga (nu „săptămâniiMută…”). */
+html body .os-shell .bf-brief-week b,
+html body .os-shell .bf-brief-week small { display: block; text-align: left; }
+/* „Mută … mai departe”: pe toată lățimea, nu strivit într-o cutie de 60 px pe 4 rânduri. */
+html body .os-shell .bf-week-started > button { justify-self: stretch; width: 100%; min-height: 44px; white-space: normal; line-height: 1.25; }

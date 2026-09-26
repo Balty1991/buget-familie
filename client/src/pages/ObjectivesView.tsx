@@ -170,7 +170,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
           <div className="bf-section-heading">
             <div>
               <p className="bf-kicker">{t("ABONAMENTE")}</p>
-              <h2>{t("În fiecare lună")}</h2>
+              <h2>{t("Plăți care se repetă")}</h2>
             </div>
             <button type="button" onClick={onOpenRecurring}>{data.recurring.some((item) => item.active) ? t("Gestionează") : t("Adaugă")}</button>
           </div>
@@ -179,7 +179,8 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
               {data.recurring.filter((item) => item.active).map((item) => (
                 <li key={item.id}>
                   <b>{item.name}</b>
-                  <small>{t("în fiecare lună")} · {t("Ziua {day}", { day: item.dueDay })}</small>
+                  {/* RCA-ul anual nu e „în fiecare lună”: frecvența și luna se spun cum sunt. */}
+                  <small>{item.frequency === "yearly" ? t("anual · {date}", { date: item.month ? new Date(2026, item.month - 1, Math.min(item.dueDay, 28)).toLocaleDateString(getLocale(), { day: "numeric", month: "long" }) : t("Ziua {day}", { day: item.dueDay }) }) : item.frequency === "quarterly" ? t("la 3 luni · Ziua {day}", { day: item.dueDay }) : `${t("în fiecare lună")} · ${t("Ziua {day}", { day: item.dueDay })}`}</small>
                   <strong>{money(item.amount)}</strong>
                 </li>
               ))}
