@@ -5,18 +5,9 @@
  */
 
 .bf-app {
-  --neo-ink: var(--cf-ink, #10231f);
-  --neo-ink-soft: var(--cf-muted, #27413a);
-  --neo-forest: var(--cf-primary-strong, #0f3d35);
-  --neo-forest-2: var(--cf-primary, #185849);
   --neo-mint: color-mix(in srgb, var(--cf-primary, #7cffc4) 18%, var(--cf-surface, #10151a));
   --neo-lime: var(--cf-primary, #d8f06e);
   --neo-honey: var(--cf-warning, #f1c85b);
-  --neo-coral: var(--cf-danger, #ff7a63);
-  --neo-paper: var(--cf-surface, #fffdf8);
-  --neo-paper-2: var(--cf-bg, #f4f7f1);
-  --neo-line: var(--cf-line, rgba(16, 35, 31, .12));
-  --neo-muted: var(--cf-muted, #6c7f77);
   --neo-ease: cubic-bezier(.23, 1, .32, 1);
   min-height: 100dvh;
   color: var(--cf-ink, var(--neo-ink));

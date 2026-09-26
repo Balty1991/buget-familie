@@ -203,12 +203,8 @@
 .bf-payday-strip li.payday span { color: var(--cf-ink); }
 
 .bf-envelope-fan {
-  display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(132px, 1fr);
-  gap: 10px;
-  margin: 0;
-  padding: 4px 2px 8px;
   list-style: none;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -216,23 +212,10 @@
 }
 .bf-envelope-fan li { scroll-snap-align: start; }
 .bf-envelope-fan button {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  width: 100%;
-  min-height: 168px;
-  padding: 12px 10px 14px;
-  border: 1px solid var(--cf-line);
-  border-radius:12px 12px 20px 20px;
-  color: var(--cf-ink);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px);
-  text-align: center;
   box-shadow: 0 10px 22px color-mix(in srgb, var(--cf-ink) 8%, transparent);
 }
-.bf-envelope-fan b { font-size:14px; line-height: 1.25; }
-.bf-envelope-fan strong { font-variant-numeric: tabular-nums; font-size: 14px; }
-.bf-envelope-fan small { color: var(--cf-muted); font-size:12px; line-height: 1.35; }
 .bf-envelope-fan li.watch button { background: linear-gradient(180deg, color-mix(in srgb, var(--cf-warning) 22%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px); }
 .bf-envelope-fan li.over button { background: linear-gradient(180deg, color-mix(in srgb, var(--cf-danger) 22%, var(--cf-surface)) 0 22px, var(--cf-surface) 22px); }
 
@@ -348,15 +331,7 @@
 .bf-statement.risk .bf-statement-stamp { border-color: var(--cf-danger); color: var(--cf-danger); }
 
 @media (max-width: 760px) {
-  .bf-desk-top { grid-template-columns: 1fr; }
-  .bf-today-pulse { grid-template-columns: 1fr; }
   .bf-allocation-list.bf-envelope-desk { grid-template-columns: 1fr; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bf-health-gauge-arc,
-  .bf-envelope-fill,
-  .bf-today-pulse-chart i { transition: none !important; }
 }
 
 

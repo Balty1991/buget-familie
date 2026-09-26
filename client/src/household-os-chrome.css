@@ -445,7 +445,6 @@ html.capacitor-android {
   right: 12px;
   bottom: calc(78px + env(safe-area-inset-bottom, 0px));
   z-index: 45 !important;
-  display: flex;
   align-items: center;
   gap: 8px;
   width: auto;

@@ -192,7 +192,6 @@ html body .bf-app .os-dock {
 
 html body .os-shell .os-dock button.is-on,
 html body .os-shell .os-dock button.active {
-  box-shadow: 0 3px 10px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 20%, transparent) !important;
   filter: none !important;
   outline: none !important;
 }
