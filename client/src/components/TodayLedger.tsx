@@ -101,7 +101,7 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
                     </span>
                     <small>
                       <span>{Math.round(entry.usage * 100)}%</span>
-                      <span>{t("din {amount}", { amount: money(entry.budget) })}{entry.scope === "week" && entry.weekIndex ? ` · ${t("tranșa S{index}", { index: entry.weekIndex })}` : ""}</span>
+                      <span>{t("din {amount}", { amount: money(entry.budget) })}{entry.scope === "week" && entry.weekIndex ? ` · ${t("săptămâna {index}", { index: entry.weekIndex })}` : ""}</span>
                     </small>
                     {entry.fixed && entry.state !== "over" ? (
                       <span className={`bf-plic-pace ${entry.paid ? "pace-paid" : "pace-due"}`}>{entry.paid ? t("✓ Plătit") : t("de plătit")}</span>

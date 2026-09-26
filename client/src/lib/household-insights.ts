@@ -849,11 +849,11 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
         ? { daily: stripLei(rhythm.futureShare, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(Math.max(1, rhythm.remainingDays - 1)) }
         : { daily: stripLei(safe.available / (remainingDays - 1), getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays - 1) })
       : spendable <= 0
-      ? t("Ritmul sigur e 0 — verifică plicurile sau scadențele rezervate.")
+      ? t("Azi nu mai sunt bani liberi: verifică plicurile sau plățile rezervate.")
       : fromWeek != null
-        ? t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: stripLei(fromWeek, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(rhythm.remainingDays) })
+        ? t("Azi poți {pace} lei. În plicul săptămânii mai sunt {available} pentru {days}.", { pace: stripLei(fromWeek, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(rhythm.remainingDays) })
           + (rhythm.days[0] && rhythm.days[0].day < asOf && rhythm.days[0].day === plan.periodStart && weekdayIndex(rhythm.days[0].day) !== 0 ? ` ${t("Săptămâna plicului a început {day}, în ziua salariului.", { day: new Date(`${rhythm.days[0].day}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" }) })}` : "")
-        : t("Ritm {pace} lei/zi, din {available} disponibili pe {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) });
+        : t("Azi poți {pace} lei. Mai sunt {available} bani liberi pentru {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) });
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);
@@ -945,10 +945,10 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
       { label: t("Lichid ÷ zile rămase"), amount: fromLiquidDaily, note: t("{days} până la venit", { days: daysLabel(remainingDays) }) },
     ];
   const summary = !brief.hasPayday
-    ? t("Fără dată de venit nu putem calcula un reper zilnic. Setează salariul în Plan.")
+    ? t("Fără data salariului nu putem calcula cifra zilei. Setează salariul în Plicuri.")
     : rhythm.hasWeekly
-      ? t("Reperul zilei ({amount}) e limita de azi din plicurile săptămânii. Banii fără plic nu măresc cifra.", { amount: lei(brief.spendable) })
-      : t("Reperul zilei ({amount}): banii de la începutul zilei, după scadențe și rate, împărțiți pe zilele până la venit. Ce cheltui azi scade din el; mâine restul se reîmparte. Nu e un sold bancar.", { amount: lei(brief.spendable) });
+      ? t("Cifra zilei ({amount}) e cât poți cheltui azi din plicurile săptămânii. Banii fără plic nu o măresc.", { amount: lei(brief.spendable) })
+      : t("Cifra zilei ({amount}): banii de la începutul zilei, după scadențe și rate, împărțiți pe zilele până la venit. Ce cheltui azi scade din ea; mâine restul se reîmparte. Nu e un sold bancar.", { amount: lei(brief.spendable) });
   return {
     spendable: brief.spendable,
     hasPayday: brief.hasPayday,
@@ -1227,8 +1227,8 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
       : summary.cashflow < 0 && summary.income > 0
         ? t("Cheltuielile au trecut peste veniturile săptămânii. Amână o plată neesențială.")
         : watch[0]
-          ? t("Urmărește {label} — s-a consumat {percent}% din tranșa săptămânii.", { label: watch[0].label, percent: Math.round(watch[0].usage * 100) })
-          : t("Săptămâna e în ritm. Poți trimite bilanțul familiei.");
+          ? t("Urmărește {label}: s-a dus {percent}% din banii săptămânii.", { label: watch[0].label, percent: Math.round(watch[0].usage * 100) })
+          : t("Săptămâna merge bine. Poți trimite bilanțul familiei.");
 
   return {
     start: summary.start,
@@ -1362,7 +1362,7 @@ export const weeklyDigestHeadline = (data: AppData, asOf = isoToday()) => {
   const top = check.categories[0];
   return {
     tone: "good" as const,
-    title: top ? t("Cel mai mult: {category} ({amount})", { category: top[0], amount: lei(Number(top[1])) }) : t("Săptămâna e în ritm"),
+    title: top ? t("Cel mai mult: {category} ({amount})", { category: top[0], amount: lei(Number(top[1])) }) : t("Săptămâna merge bine"),
     detail: check.nextStep,
   };
 };

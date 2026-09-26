@@ -420,7 +420,7 @@ describe("fereastra de comparație Analiză", () => {
     expect(sheet.hasPayday).toBe(true);
     expect(sheet.steps.length).toBeGreaterThanOrEqual(4);
     expect(sheet.spendable).toBeGreaterThanOrEqual(0);
-    expect(sheet.summary).toMatch(/Reperul|minim/i);
+    expect(sheet.summary).toMatch(/Cifra zilei|minim/i);
   });
 
   it("compune un headline pentru digestul săptămânii", () => {

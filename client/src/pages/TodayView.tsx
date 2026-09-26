@@ -254,12 +254,12 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
           <CalendarClock size={19} />
           <div>
-            <p>{t("TRANȘA S{index} A ÎNCEPUT", { index: activeTranche.index })}</p>
+            <p>{t("A ÎNCEPUT SĂPTĂMÂNA {index}", { index: activeTranche.index })}</p>
             <strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong>
-            <span>{t("Ritmul acestei tranșe este {amount} pentru {days} {dayLabel}.", { amount: money(activeTranche.amount), days: activeTranche.days, dayLabel: activeTranche.days === 1 ? t("zi") : t("zile") })}</span>
+            <span>{t("Săptămâna aceasta are {amount} pentru {days} {dayLabel}.", { amount: money(activeTranche.amount), days: activeTranche.days, dayLabel: activeTranche.days === 1 ? t("zi") : t("zile") })}</span>
           </div>
           <button onClick={() => onGo("plan")}>{t("Plan")}</button>
-          <button className="dismiss" aria-label={t("Ascunde alerta tranșei săptămânale")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
+          <button className="dismiss" aria-label={t("Ascunde anunțul săptămânii")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
         </aside>
       )}
       {fastWeek && topNotice === "fast" && (
@@ -325,7 +325,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
 
       <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
         <div className="os-hero-top">
-          <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Ritm urmărit")}</span>
+          <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Cifra zilei")}</span>
           <div className="os-date">
             <b>{String(new Date(`${todayIso}T12:00:00`).getDate()).padStart(2, "0")}</b>
             <span>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { month: "long" }).toLocaleUpperCase(getLocale())}</span>
@@ -400,7 +400,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
             </div>
             {!rhythm.hasWeekly || brief.expired ? null : (
-              <div className="bf-hero-week" aria-label={t("Ritm zilnic")}>
+              <div className="bf-hero-week" aria-label={t("Pe zi")}>
                 <div className="bf-os-rhythm-grid" style={{ ["--bf-rhythm-days" as string]: String(Math.max(1, rhythm.days.length)) }}>
                   {rhythm.days.map((row) => {
                     const figure = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);

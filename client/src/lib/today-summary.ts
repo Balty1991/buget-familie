@@ -76,15 +76,15 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
     : weekEmpty
       ? planHelp
         ? t("Plicul săptămânii s-a terminat până {until}. În Plan mai ai {free} nerepartizați: poți pune o parte în plic.", { until: untilName, free: exact(freeInPlan) })
-        : t("Plicul săptămânii s-a terminat până {until}. Tranșa următoare pornește atunci.", { until: untilName })
+        : t("Plicul săptămânii s-a terminat până {until}. Banii săptămânii următoare vin atunci.", { until: untilName })
     : heroTracksWeek
       ? todayUsedUp
         ? t("Azi ai folosit partea zilei. De mâine: {daily} lei/zi ({available} pe {days}).", { daily: exact(rhythm.futureShare), available: exact(rhythm.remaining), days: daysLabel(rhythm.remainingDays - 1) })
-        : t("Ritm {pace} lei/zi, din {available} rămași în plicul săptămânii, pe {days}.", { pace: exact(brief.spendable), available: exact(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
+        : t("Azi poți {pace} lei. În plicul săptămânii mai sunt {available} pentru {days}.", { pace: exact(brief.spendable), available: exact(rhythm.remaining), days: daysLabel(rhythm.remainingDays) })
       : brief.hasPayday
         ? brief.reason
         : data.settings.salaryPlan.allocations.length
-          ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: exact(Math.max(0, weeklyEnvelopesRemaining)), monthly: exact(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · reper {daily}/zi", { daily: exact(daily) }) : "" })
+          ? t("{weekly} săptămânale · {monthly} lunare/fixe{benchmark}", { weekly: exact(Math.max(0, weeklyEnvelopesRemaining)), monthly: exact(Math.max(0, monthlyEnvelopesRemaining)), benchmark: math.plan.nextPayday ? t(" · cam {daily}/zi", { daily: exact(daily) }) : "" })
           : trackHero.kind === "income"
             ? t("Suma e în Mișcări. Pune plicuri în Plan ca să vezi cât mai rămâne pe categorii.")
             : trackHero.kind === "liquid"
