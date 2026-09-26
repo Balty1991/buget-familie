@@ -370,6 +370,13 @@ export function learnedMerchantCategories(data: AppData): Map<string, Learned> {
  * în registru sau în coada de revizuire sunt numărate, nu propuse: un extras descărcat
  * de două ori pentru perioade suprapuse nu trebuie să dubleze nimic.
  */
+/**
+ * Mișcări între conturile familiei: retragere de numerar, transfer între conturi proprii,
+ * alimentare (top-up), plata cardului de credit. Nu sunt cheltuieli (produs #2): marcate cu
+ * transferId, mută soldul fără să umfle analiza, iar cash-ul cheltuit apoi nu se numără de două ori.
+ */
+export const INTERNAL_MOVEMENT = /retragere\s+numerar|\batm\b|cash\s+withdrawal|transfer\s+(intre|între)\s+conturi|conturi(le)?\s+proprii|transfer\s+propriu|own\s+account|\btop[\s-]?up\b|alimentare\s+(cont|card|revolut)|plata\s+card(ului)?\s+de\s+credit|rambursare\s+card\s+de\s+credit/i;
+
 export function statementDrafts(
   data: AppData,
   rows: StatementRow[],
@@ -434,6 +441,12 @@ export function statementDrafts(
       allocationId,
       createdAt: now,
     };
+    const internal = INTERNAL_MOVEMENT.test(row.description) && !matchExpectedIncome(data, { amount: base, date: row.date });
+    if (internal) {
+      transaction.transferId = newId("transfer");
+      transaction.category = "Transfer";
+      if (row.kind === "expense") { transaction.allocationId = "outside"; transaction.outsideChosen = true; }
+    }
     // Un venit care seamănă cu salariul declarat primește numele lui: după confirmare vine propunerea de repartizare.
     const salary = row.kind === "income" ? matchExpectedIncome(data, { amount: base, date: row.date }) : undefined;
     if (salary) {
@@ -444,7 +457,9 @@ export function statementDrafts(
     drafts.push({
       id: newId("review"),
       origin: "import",
-      reason: salary
+      reason: internal
+        ? t("Rândul {line} din extras · pare o mutare între conturile voastre, nu o cheltuială", { line: row.line })
+        : salary
         ? t("Rândul {line} din extras · pare {label}; după confirmare îți propun repartizarea", { line: row.line, label: salary.label })
         : habitCategory
         ? t("Rândul {line} din extras · {category}, ca data trecută la {merchant}", { line: row.line, category: t(finalCategory), merchant })

@@ -28,6 +28,8 @@ export type Transaction = {
   memberId?: string;
   /** Corecție de sold („Sold real = X”): mută soldul sursei, dar nu e venit sau cheltuială în rapoarte. */
   adjustment?: boolean;
+  /** Mutare între sursele familiei (card → cash, alimentare Revolut): cele două jumătăți au același id de pereche. */
+  transferId?: string;
   /** Plicul ales expres pentru această cheltuială; valoarea „outside” înseamnă că nu consumă niciun plic. */
   allocationId?: string;
   /** Omul a ales el „În afara plicurilor”; „outside” fără bifa asta e doar valoarea implicită și poate fi pus în plic. */
@@ -1271,7 +1273,28 @@ export const transferBetweenEnvelopes = (data: AppData, input: { fromAllocationI
 };
 
 /** Corecția de sold („Bani disponibili” / „Corecție de sold”): contează la soldul sursei, nu la venituri și cheltuieli. */
-export const isBalanceAdjustment = (item: Pick<Transaction, "id" | "adjustment">) => item.adjustment === true || item.id.startsWith("balance-check");
+export const isBalanceAdjustment = (item: Pick<Transaction, "id" | "adjustment" | "transferId">) => item.adjustment === true || Boolean(item.transferId) || item.id.startsWith("balance-check");
+
+/**
+ * Bani mutați între două surse ale familiei (retragere de la ATM, alimentare Revolut, plata
+ * cardului de credit): o ieșire din prima și o intrare în a doua, legate prin transferId.
+ * Soldurile se mută; veniturile, cheltuielile și plicurile nu se schimbă.
+ */
+export const sourceTransferPair = (data: AppData, input: { fromId: string; toId: string; amount: number; date: string; memberId?: string; note?: string }): Transaction[] => {
+  const from = data.settings.paymentSources.find((item) => item.id === input.fromId);
+  const to = data.settings.paymentSources.find((item) => item.id === input.toId);
+  if (!from || !to || from.id === to.id) throw new Error(t("Alege două surse diferite."));
+  const amount = money2(input.amount);
+  if (!(amount > 0)) throw new Error(t("Introdu o sumă mai mare decât zero."));
+  const member = data.settings.members.find((item) => item.id === input.memberId) || data.settings.members.find((item) => item.id === from.memberId) || data.settings.members[0];
+  const pair = newId("transfer");
+  const createdAt = new Date().toISOString();
+  const common = { amount, date: input.date, memberId: member?.id, person: member?.name || "", transferId: pair, createdAt, ...(input.note ? { note: input.note } : {}) };
+  return [
+    { ...common, id: `${pair}-out`, title: t("Mutat în {name}", { name: to.name }), kind: "expense", category: "Transfer", sourceId: from.id, source: from.name, allocationId: "outside", outsideChosen: true },
+    { ...common, id: `${pair}-in`, title: t("Mutat din {name}", { name: from.name }), kind: "income", category: "Transfer", sourceId: to.id, source: to.name },
+  ];
+};
 
 /** Venituri încă nerepartizate prin ritualul de salariu. */
 export const unappliedSalaryIncomes = (data: AppData) => {

@@ -387,4 +387,16 @@ describe("diacriticele din extras", () => {
     const parsed = parseStatementCsv("Data;Descriere;Suma\n21.09.2026;Plată Ştefan Ţurcanu;-10,00");
     expect(parsed.rows[0].description).toBe("Plată Ștefan Țurcanu");
   });
+
+  it("retragerea de la ATM și alimentarea Revolut sunt mutări, nu cheltuieli (produs #2)", () => {
+    const data = createEmptyAppData();
+    const rows = [
+      { line: 2, date: "2026-09-07", description: "Retragere numerar ATM BT Unirii", amount: 300, kind: "expense" as const },
+      { line: 3, date: "2026-09-08", description: "Top-up Revolut", amount: 150, kind: "expense" as const },
+      { line: 4, date: "2026-09-09", description: "LIDL DISCOUNT SRL", amount: 80, kind: "expense" as const },
+    ];
+    const { drafts } = statementDrafts(data, rows, { sourceId: "source-debit", memberId: "member-me" });
+    expect(drafts.map((item) => Boolean(item.transaction.transferId))).toEqual([true, true, false]);
+    expect(drafts[0].transaction.allocationId).toBe("outside");
+  });
 });

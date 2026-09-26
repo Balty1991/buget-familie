@@ -2,6 +2,7 @@
  * Atelier Financiar — captură rapidă locală care respectă plicul compatibil și tranșa activă.
  * Filosofie: sursa plății poate aparține unui alt membru; plicul se alege după categoria și sursa reală.
  */
+import { SourceTransferForm } from "@/components/SourceTransferForm";
 import "../currency.css";
 import "../transaction-envelope-picker.css";
 import "../mobile-capture-pass.css";
@@ -39,7 +40,7 @@ const CAPTURE_CATEGORIES: Array<[string, typeof ShoppingCart]> = [
   ["Altele", Ellipsis],
 ];
 
-type Props = { data: AppData; onSave: (item: Transaction, meta?: { fromWeekIndex?: number }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; };
+type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; };
 
 export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind }: Props) {
   const [kind, setKind] = useState<TransactionKind>(initialKind || "expense");
@@ -67,6 +68,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const [templateLabel, setTemplateLabel] = useState("");
   const [showArchive, setShowArchive] = useState(false);
   const [error, setError] = useState("");
+  const [moving, setMoving] = useState(false);
   const captureIdRef = useRef(newId("tx"));
   const activeTemplate = data.settings.quickTemplates.find((item) => item.id === templateId);
   const matched = kind === "expense" ? matchingAllocationsForExpense(data, { category, memberId, sourceId }) : [];
@@ -192,6 +194,15 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const projectedSourceBalance = ledgerAmount == null ? undefined : selectedSourceBalance + (kind === "income" ? ledgerAmount : -ledgerAmount);
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
 
+  if (moving) {
+    return <div className="bf-modal-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section ref={dialogRef} tabIndex={-1} className="bf-modal bf-quick-entry-panel" role="dialog" aria-modal="true" aria-label={t("Mută bani între surse")} onPointerDown={(event) => event.stopPropagation()}>
+        <header><div><p className="bf-kicker">{t("NOTEAZĂ")}</p><h2>{t("Mută bani între surse")}</h2></div><button className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button></header>
+        <div className="bf-quick-entry-scroll"><SourceTransferForm data={data} onBack={() => setMoving(false)} onSave={(pair) => { onSave(pair); onClose(); }} /></div>
+      </section>
+    </div>;
+  }
+
   const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget | null }) => {
     if (event.target === event.currentTarget) onClose();
   };
@@ -204,7 +215,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
       {(data.settings.quickTemplates.length > 0 || data.settings.archivedQuickTemplates.length > 0) && <div className="bf-template-header-actions"><span>{t("{count} șabloane active", { count: data.settings.quickTemplates.length })}</span><button type="button" onClick={() => setShowArchive((value) => !value)}><Archive size={15} /> {t("Arhivă")}{data.settings.archivedQuickTemplates.length ? ` (${data.settings.archivedQuickTemplates.length})` : ""}</button></div>}
       {showArchive && <section className="bf-template-archive" aria-label={t("Arhiva lunară a șabloanelor")}><p className="bf-kicker">{t("ARHIVĂ LOCALĂ")}</p>{archiveGroups.map(([month, items]) => <div key={month}><h3>{formatDate(`${month}-01`, { month: "long", year: "numeric" })}</h3>{items.map((item) => <article key={item.id}><div><b>{item.label}</b><small>{item.amount ? money.format(item.amount) : t("sumă liberă")} · arhivat {formatDate(item.archivedAt)}</small></div><div className="bf-template-archive-actions"><button type="button" onClick={() => onRestoreTemplate(item.id)}><ArchiveRestore size={15} /> {t("Restaurează")}</button><button type="button" className="danger" aria-label={`Șterge definitiv ${item.label}`} onClick={() => removeArchived(item.id, item.label)}><Trash2 size={15} /></button></div></article>)}</div>)}{!archiveGroups.length && <p className="bf-empty-inline">{t("Nu ai șabloane arhivate. Arhivează un șablon activ pentru a-l păstra în istoricul local.")}</p>}</section>}
       {data.settings.quickTemplates.length > 0 && <div className="bf-quick-template-rail" role="list" aria-label={t("Șabloane locale")}><button role="listitem" className={!templateId ? "active" : ""} onClick={chooseManual}>{t("Manual")}</button>{data.settings.quickTemplates.map((item) => <button role="listitem" key={item.id} className={templateId === item.id ? "active" : ""} onClick={() => selectTemplate(item)}><b>{item.label}</b><small>{item.amount ? money.format(item.amount) : t("sumă liberă")}</small></button>)}</div>}
-      <div className="bf-segment"><button className={kind === "expense" ? "active expense" : ""} onClick={() => setKind("expense")}>{t("Cheltuială")}</button><button className={kind === "income" ? "active income" : ""} onClick={() => setKind("income")}>{t("Venit")}</button></div>
+      <div className="bf-segment"><button className={kind === "expense" ? "active expense" : ""} onClick={() => setKind("expense")}>{t("Cheltuială")}</button><button className={kind === "income" ? "active income" : ""} onClick={() => setKind("income")}>{t("Venit")}</button></div><button type="button" className="bf-link-button bf-quick-move" onClick={() => setMoving(true)}>{t("Am scos cash sau am mutat bani între carduri")}</button>
       {kind === "income" && declaredIncomes.length > 0 && <div className="bf-quick-category-picks bf-declared-incomes" aria-label={t("Veniturile declarate")}>{declaredIncomes.map((item) => <button type="button" key={item.id} className={incomeLabel === item.label ? "active" : ""} onClick={() => pickDeclaredIncome(item)}>{item.label} · {money.format(item.amount)}</button>)}</div>}
       {kind === "expense" && <div className="bf-cat-grid" role="listbox" aria-label={t("Categorii rapide")}>{CAPTURE_CATEGORIES.map(([name, Icon]) => <button type="button" key={name} role="option" aria-selected={category === name} className={category === name ? "is-on" : ""} onClick={() => { setCategory(name); setCategoryTouched(true); setAllocationChoiceTouched(false); }}><Icon size={18} aria-hidden="true" /><span>{t(name)}</span></button>)}</div>}
       {kind === "expense" && recentCategories.length > 0 && <div className="bf-quick-category-picks" aria-label={t("Categorii folosite recent")}><span>{t("Folosite recent")}</span>{recentCategories.map((item) => <button type="button" key={item} className={category === item ? "active" : ""} onClick={() => { setCategory(item); setCategoryTouched(true); setAllocationChoiceTouched(false); }}>{item}</button>)}</div>}
