@@ -58,6 +58,7 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
   const [incomes, setIncomes] = useState<IncomeDraft[]>([{ id: newId("income"), who: "me", label: t("Salariul meu"), amount: "", day: "" }]);
   const [needs, setNeeds] = useState<NeedDraft[]>(START_NEEDS.map((item) => ({ ...item, label: t(item.label) })));
   const [flex, setFlex] = useState(3);
+  const [onHand, setOnHand] = useState("");
   const [error, setError] = useState("");
   const today = isoToday();
   const hasPartner = incomes.some((item) => item.who === "partner");
@@ -97,6 +98,12 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
     let paymentSources = data.settings.paymentSources;
     if (partnerId && incomes.some((item) => item.who === "partner" && item.meal) && !paymentSources.some((source) => source.kind === "meal" && source.memberId === partnerId)) {
       paymentSources = [...paymentSources, { id: newId("source"), name: t("Bonuri de masă · {name}", { name: partnerName.trim() || t("partener") }), kind: "meal", memberId: partnerId, openingBalance: 0 }];
+    }
+    // Produs #1: banii de acum dau cifra zilei din prima zi, nu abia la salariu.
+    const cash = Math.max(0, parseRomanianAmount(onHand) || 0);
+    const main = paymentSources.find((source) => source.kind !== "meal");
+    if (cash > 0 && main && !data.transactions.length && !(main.openingBalance > 0)) {
+      paymentSources = paymentSources.map((source) => source.id === main.id ? { ...source, openingBalance: Math.round(cash * 100) / 100 } : source);
     }
     const plan = data.settings.salaryPlan;
     const earliest = firstDay && flex > 0 ? (() => { const date = new Date(`${firstDay}T12:00:00`); date.setDate(date.getDate() - flex); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; })() : undefined;
@@ -193,6 +200,8 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
               {[1, 2, 3, 4, 5].map((days) => <option key={days} value={days}>{days === 1 ? t("± 1 zi") : t("± {days} zile", { days })}</option>)}
             </select>
           </label>
+          <label className="bf-field"><span>{t("Cât aveți acum, pe card și cash? (opțional)")}</span><input inputMode="decimal" value={onHand} onChange={(event) => setOnHand(event.target.value)} placeholder={t("ex. 1.250")} /></label>
+          <p className="bf-helper">{parseRomanianAmount(onHand) > 0 && firstDay ? t("Din banii de acum, pe Astăzi vezi din prima zi cât poți cheltui pe zi până pe {date}.", { date: formatDate(firstDay, { day: "numeric", month: "long" }) }) : ""}</p>
           <p className="bf-helper">{t("Gata. Când notezi salariul, pe Astăzi apare propunerea: cât merge în fiecare plic. Nimic nu se mută fără să apeși „Aplică”.")}</p>
         </>
       )}

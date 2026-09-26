@@ -3417,4 +3417,7 @@ export const en: Record<string, string> = {
   "Venituri {income} · cheltuieli ~{spend}": "Income {income} · spending ~{spend}",
   "lipsesc ~{amount}": "~{amount} short",
   "rămân ~{amount}": "~{amount} left",
+  "Cât aveți acum, pe card și cash? (opțional)": "How much do you have now, on card and in cash? (optional)",
+  "Din banii de acum, pe Astăzi vezi din prima zi cât poți cheltui pe zi până pe {date}.": "From the money you have now, Today shows from day one how much you can spend per day until {date}.",
+  "ex. 1.250": "e.g. 1,250",
 };
