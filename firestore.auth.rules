@@ -4,7 +4,8 @@ rules_version = '2';
 // anonimă a telefonului (Firebase Auth) pe camerele familiei și pe codurile de recuperare.
 // O cerere trimisă direct la Firestore, fără aplicație și fără identitate, e refuzată.
 //
-// PUBLICATE în producție pe 25.09.2026 (Firebase Console → Firestore → Rules).
+// Publicate pe 25.09.2026; înlocuite de etapa 3 (firestore.chain.rules). Rămân ca revenire
+// de urgență și ca verificare de compatibilitate (pnpm test:sync:current).
 // Revenire de urgență: lipește firestore.rules (aceleași reguli, fără identitate).
 // Cerințe (vezi docs/ANONYMOUS_AUTH.md): furnizorul „Anonymous” pornit și aplicația
 // 1.1.95 sau mai nouă — versiunile vechi nu au identitate și nu mai sincronizează.

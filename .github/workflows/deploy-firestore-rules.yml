@@ -1,0 +1,82 @@
+name: Publică regulile Firestore
+
+# Publică firestore.chain.rules (etapa 3: lanțul de scriere) în producție, dar numai după ce
+# testul cap-coadă a trecut pe emulator cu exact aceste reguli. Nu scrie nimic în baza reală.
+# La final citește înapoi regula publicată, ca verificare.
+# Revenire de urgență: firebase.json → "rules": "firestore.auth.rules" (etapa 2) și push.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "firestore.chain.rules"
+      - "firestore.auth.rules"
+      - "firebase.json"
+      - ".github/workflows/deploy-firestore-rules.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firestore-rules-production
+  cancel-in-progress: false
+
+env:
+  FIREBASE_PROJECT_ID: buget-familie-a6a0d
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Setup Java (emulatorul Firestore)
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright-core install --with-deps chromium
+
+      - name: Regulile din firebase.json sunt cele testate
+        run: |
+          set -euo pipefail
+          published=$(node -e 'console.log(require("./firebase.json").firestore.rules)')
+          tested=$(node -e 'console.log(require("./firebase.e2e.json").firestore.rules)')
+          echo "Se publică: $published · testate: $tested"
+          [ "$published" = "$tested" ]
+
+      - name: Test sync cap-coadă pe regulile care se publică
+        timeout-minutes: 12
+        run: pnpm test:sync
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Publică regulile
+        run: npx --yes firebase-tools@latest deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive --force
+
+      - name: Verifică regula publicată
+        run: |
+          set -euo pipefail
+          token=$(gcloud auth print-access-token)
+          api="https://firebaserules.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}"
+          ruleset=$(curl -sS -H "Authorization: Bearer ${token}" "${api}/releases/cloud.firestore" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).rulesetName))')
+          curl -sS -H "Authorization: Bearer ${token}" "https://firebaserules.googleapis.com/v1/${ruleset}" > /tmp/ruleset.json
+          if grep -q "chainContinues" /tmp/ruleset.json; then echo "Etapa 3 (lanțul de scriere) e publicată: ${ruleset}"; else echo "::error::Regula publicată nu conține lanțul de scriere"; exit 1; fi

@@ -1,9 +1,10 @@
 rules_version = '2';
 
 // Etapa 3 a regulilor Firestore: etapa 2 (firestore.auth.rules) plus lanțul de scriere al camerei.
-// NEPUBLICATĂ. Se publică (Firebase Console → Firestore → Rules) după ce aplicația care scrie
-// lanțul (commit-ul „Sync: lanț de scriere…”) a ajuns la toată lumea: versiunile mai vechi nu
-// mai pot scrie în camerele care au deja lanț. Revenire de urgență: lipește firestore.auth.rules.
+// PUBLICATĂ automat de .github/workflows/deploy-firestore-rules.yml (firebase.json o indică),
+// după ce testul cap-coadă trece pe emulator cu aceste reguli. Versiunile aplicației dinainte de
+// lanț nu mai pot scrie în camerele care au deja lanț. Revenire de urgență: în firebase.json pune
+// "rules": "firestore.auth.rules" (etapa 2) și fă push.
 //
 // Lanțul: fiecare scriere în familySync dezvăluie tokenul t_i = HMAC(cheia familiei, cameră:i)
 // („reveal”), al cărui SHA-256 a fost lăsat de scrierea precedentă („commit”), și lasă commit-ul

@@ -9,7 +9,7 @@
     ]
   },
   "firestore": {
-    "rules": "firestore.auth.rules"
+    "rules": "firestore.chain.rules"
   },
   "emulators": {
     "firestore": {
