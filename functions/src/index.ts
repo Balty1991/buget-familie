@@ -6,6 +6,7 @@ import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getAppCheck } from "firebase-admin/app-check";
 import { getAuth } from "firebase-admin/auth";
 import cors from "cors";
+import { OAuth2Client } from "google-auth-library";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const groqApiKey = defineSecret("GROQ_API_KEY");
@@ -808,9 +809,42 @@ export const verifyPlayPurchase = onRequest(
  * Se leagă ca abonament „push” Pub/Sub către acest URL. Nu are încredere în conținut:
  * reverifică tokenul direct la Google, deci un apel fals nu poate da sau lua Familia.
  */
+/**
+ * Notificările Play (RTDN) vin prin Pub/Sub push, care trimite un token OIDC semnat de Google
+ * pentru contul de serviciu ales pe abonament. Fără token valid cererea e ignorată: altfel oricine
+ * cunoaște adresa funcției o putea apela (R9 din raport).
+ * Audiența: adresa funcției (implicit la Pub/Sub) sau PLAY_RTDN_AUDIENCE; contul: orice cont de
+ * serviciu Google, sau exact PLAY_RTDN_SERVICE_ACCOUNT dacă e setat. Vezi docs/BILLING_PLAY_PREP.md.
+ */
+const rtdnVerifier = new OAuth2Client();
+const RTDN_AUDIENCES = [
+  process.env.PLAY_RTDN_AUDIENCE,
+  "https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/playRtdn",
+  "https://playrtdn-lqfczp6iea-lm.a.run.app",
+].filter((value): value is string => Boolean(value));
+
+async function fromPubSub(header: string | undefined): Promise<boolean> {
+  const match = /^Bearer\s+(\S+)$/i.exec(String(header || "").trim());
+  if (!match) return false;
+  try {
+    const ticket = await rtdnVerifier.verifyIdToken({ idToken: match[1], audience: RTDN_AUDIENCES });
+    const claims = ticket.getPayload();
+    const email = String(claims?.email || "");
+    const expected = process.env.PLAY_RTDN_SERVICE_ACCOUNT;
+    return claims?.email_verified === true && (expected ? email === expected : email.endsWith(".gserviceaccount.com"));
+  } catch {
+    return false;
+  }
+}
+
 export const playRtdn = onRequest(
   { region: "europe-central2", invoker: "public", timeoutSeconds: 30, memory: "256MiB", maxInstances: 4 },
   async (request, response) => {
+    if (!(await fromPubSub(request.get("authorization")))) {
+      console.warn("playRtdn: cerere fără token Pub/Sub valid, ignorată");
+      response.status(204).send("");
+      return;
+    }
     try {
       const data = (request.body as { message?: { data?: string } } | undefined)?.message?.data;
       const decoded = data ? JSON.parse(Buffer.from(data, "base64").toString("utf8")) as { packageName?: string; subscriptionNotification?: { purchaseToken?: string } } : undefined;
