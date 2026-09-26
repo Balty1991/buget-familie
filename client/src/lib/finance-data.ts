@@ -687,6 +687,7 @@ export const isKnownTransaction = (data: AppData, candidate: Pick<Transaction, "
   return data.transactions.some(same) || data.pendingReview.some((draft) => same(draft.transaction));
 };
 
+/** Textele de sistem din istoric („Plic eliminat”, „Plăți rare”) se salvează netraduse; se traduc la afișare, în limba fiecărui telefon. */
 export const appendAllocationHistory = (data: AppData, entry: Omit<AllocationHistoryEntry, "id" | "createdAt">): AppData => {
   const plan = data.settings.salaryPlan;
   const history: AllocationHistoryEntry = { ...entry, id: newId("allocation-history"), createdAt: new Date().toISOString() };
@@ -723,7 +724,7 @@ export const applySalaryAllocationRules = (data: AppData, incomeId: string) => {
   const application: SalaryAllocationApplication = { id: newId("salary-application"), incomeId: income.id, incomeTitle: income.title, incomeAmount: income.amount, sourceId: income.sourceId, memberId: income.memberId, appliedAt, allocations: applied };
   const amounts = applied.reduce((all, item) => all.set(item.allocationId, roundedMoney((all.get(item.allocationId) || 0) + item.amount)), new Map<string, number>());
   const nextData = { ...data, settings: { ...data.settings, salaryPlan: { ...plan, allocations: plan.allocations.map((item) => amounts.has(item.id) ? { ...item, amount: roundedMoney(item.amount + (amounts.get(item.id) || 0)) } : item), salaryAllocationApplications: [application, ...(plan.salaryAllocationApplications || [])].slice(0, 80), updatedAt: appliedAt } } };
-  return { data: appendAllocationHistory(nextData, { kind: "income-applied", referenceId: application.id, allocationLabel: applied.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || t("Plic eliminat")).join(", "), amount: total, incomeId: income.id, incomeTitle: income.title, note: `Venit de ${income.amount.toLocaleString("ro-RO")} RON` }), applied, total, remaining: roundedMoney(income.amount - total) };
+  return { data: appendAllocationHistory(nextData, { kind: "income-applied", referenceId: application.id, allocationLabel: applied.map((item) => plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat").join(", "), amount: total, incomeId: income.id, incomeTitle: income.title }), applied, total, remaining: roundedMoney(income.amount - total) };
 };
 
 /**
@@ -769,7 +770,7 @@ export const revertSalaryAllocationApplication = (data: AppData, applicationId: 
   const back = application.previousCycle && plan.periodStart === application.previousCycle.openedPeriodStart ? application.previousCycle : undefined;
   const cycle = back ? { periodStart: back.periodStart, nextPayday: back.nextPayday, earliestPayday: back.earliestPayday, paydayFlexDays: back.paydayFlexDays, transfers: back.transfers, weekTransfers: back.weekTransfers } : {};
   const nextData = { ...data, settings: { ...data.settings, plannedEvents, salaryPlan: { ...plan, ...cycle, allocations, salaryAllocationApplications: applications, updatedAt: now } } };
-  return appendAllocationHistory(nextData, { kind: "income-reverted", referenceId: application.id, allocationLabel: Array.from(new Set(application.allocations.map((item) => item.ruleId.startsWith("event:") ? t("Plăți rare") : plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || t("Plic eliminat")))).join(", "), amount: application.allocations.reduce((sum, item) => sum + item.amount, 0), incomeId: application.incomeId, incomeTitle: application.incomeTitle, note: t("Repartizarea a fost anulată.") });
+  return appendAllocationHistory(nextData, { kind: "income-reverted", referenceId: application.id, allocationLabel: Array.from(new Set(application.allocations.map((item) => item.ruleId.startsWith("event:") ? "Plăți rare" : plan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "Plic eliminat"))).join(", "), amount: application.allocations.reduce((sum, item) => sum + item.amount, 0), incomeId: application.incomeId, incomeTitle: application.incomeTitle, note: "Repartizarea a fost anulată." });
 };
 
 /** Valuta unei surse; absența ei înseamnă lei. */
