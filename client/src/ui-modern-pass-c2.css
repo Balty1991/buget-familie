@@ -231,13 +231,7 @@ html body .bf-app .bf-analysis-balance{
 }
 
 /* ---- Dark themes: elevation, not violet bloom; coral only for alerts ---- */
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movements-header,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-insights-header,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligation-lane,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-control,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-month,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero{
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-movements-header, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-insights-header, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-obligation-lane, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-control, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-snapshot, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-month, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .os-hero{
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-line, #22302a) 80%, transparent);
   border-color: color-mix(in srgb, var(--os-mint, #7cffc4) 12%, #1a2420) !important;
   outline: none;
@@ -246,37 +240,17 @@ html body .bf-app .bf-analysis-balance{
   text-shadow: none;
 }
 
-html.theme-aurora body .bf-app .bf-movements-header,
-html.theme-aurora body .bf-app .bf-insights-header,
-html.theme-aurora body .bf-app .bf-analysis-snapshot,
-html.theme-aurora body .bf-app .os-hero {
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), 0 0 0 1px color-mix(in srgb, var(--cf-line, #49416c) 70%, transparent);
-  border-color: color-mix(in srgb, var(--cf-primary, #65d3a6) 14%, #252044) !important;
-  background: var(--cf-surface, #18142f) !important;
-  background-image: none !important;
-  filter: none;
-}
-
 /* Kill violet bloom / neon halos on shell surfaces */
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movements-ledger *:not(svg):not(path),
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligations-workspace *:not(svg):not(path),
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-insights-workspace *:not(svg):not(path),
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis *:not(svg):not(path),
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-today-workspace *:not(svg):not(path) {
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-movements-ledger *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-obligations-workspace *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-insights-workspace *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis *:not(svg):not(path), :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-today-workspace *:not(svg):not(path) {
   text-shadow: none;
 }
 
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-movements-ledger,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-obligations-workspace,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-insights-workspace,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-today-workspace {
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-movements-ledger, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-obligations-workspace, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-insights-workspace, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-today-workspace {
   --cf-glow: transparent;
 }
 
 /* Coral / danger only for alert / risk / overdue — not ambient glow */
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .os-hero.is-risk,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot.risk {
+:is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .os-hero.is-risk, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-snapshot.risk {
   border-color: color-mix(in srgb, var(--os-out, var(--cf-danger, #ff8a7a)) 42%, transparent) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38), 0 0 0 1px color-mix(in srgb, var(--os-out, var(--cf-danger, #ff8a7a)) 22%, transparent) !important;
 }

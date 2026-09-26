@@ -68,35 +68,15 @@ html.theme-white .os-shell.bf-app::after {
   opacity: .028;
   mix-blend-mode: multiply;
 }
-
-html.theme-aurora .os-shell.bf-app {
-  --bf-mesh-a: rgba(124, 91, 255, .32);
-  --bf-mesh-b: rgba(101, 211, 166, .18);
-  --bf-mesh-c: rgba(116, 208, 255, .14);
-}
 html.theme-navy .os-shell.bf-app {
   --bf-mesh-a: rgba(212, 176, 106, .24);
   --bf-mesh-b: rgba(139, 180, 232, .16);
   --bf-mesh-c: rgba(90, 130, 200, .1);
 }
-html.theme-cyber .os-shell.bf-app {
-  --bf-mesh-a: rgba(124, 255, 196, .22);
-  --bf-mesh-b: rgba(80, 220, 200, .12);
-  --bf-mesh-c: rgba(124, 255, 196, .08);
-}
 html.theme-dark .os-shell.bf-app {
   --bf-mesh-a: rgba(197, 203, 212, .14);
   --bf-mesh-b: rgba(120, 140, 170, .1);
   --bf-mesh-c: rgba(160, 170, 190, .06);
-}
-
-html.background-aurora .os-shell.bf-app::before,
-html.theme-aurora .os-shell.bf-app::before {
-  background:
-    radial-gradient(48% 62% at 88% 6%, var(--bf-mesh-a), transparent 66%),
-    radial-gradient(38% 50% at 6% 12%, var(--bf-mesh-b), transparent 60%),
-    radial-gradient(32% 40% at 55% 55%, var(--bf-mesh-c), transparent 68%),
-    linear-gradient(125deg, transparent 40%, color-mix(in srgb, var(--cf-info) 8%, transparent) 70%, transparent) !important;
 }
 
 @media (max-width: 640px) {
@@ -359,27 +339,11 @@ html.theme-white .os-shell .bf-utilities-workspace > .bf-topline {
     inset 0 1px 0 rgba(255, 255, 255, .92);
 }
 
-html.theme-aurora .os-shell .bf-more-grid,
-html.theme-aurora .os-shell .bf-settings-group {
-  box-shadow:
-    0 16px 40px rgba(8, 4, 24, .35),
-    0 0 28px rgba(124, 91, 255, .1),
-    inset 0 1px 0 rgba(255, 255, 255, .08);
-}
-
 html.theme-navy .os-shell .bf-more-grid,
 html.theme-navy .os-shell .bf-settings-group {
   box-shadow:
     0 16px 40px rgba(4, 10, 24, .4),
     0 0 24px rgba(212, 176, 106, .08),
-    inset 0 1px 0 rgba(255, 255, 255, .06);
-}
-
-html.theme-cyber .os-shell .bf-more-grid,
-html.theme-cyber .os-shell .bf-settings-group {
-  box-shadow:
-    0 16px 40px rgba(2, 12, 10, .42),
-    0 0 26px rgba(124, 255, 196, .1),
     inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 

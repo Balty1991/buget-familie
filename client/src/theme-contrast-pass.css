@@ -4,7 +4,7 @@
  * Problema: --card / --muted-foreground / --bf-major-* rămâneau pe paleta ivory
  * (crem + gri) și pe temele închise produceau text deschis pe card deschis
  * sau text gri pe verde închis. Aici toate token-urile urmează --cf-*.
- */html.theme-white, html.theme-dark, html.theme-aurora, html.theme-cyber, html.theme-navy, html.dark{
+ */html.theme-white, html.theme-dark, html.theme-navy, html.dark{
   --background: var(--cf-bg);
   --foreground: var(--cf-ink);
   --card: var(--cf-surface);
@@ -19,7 +19,7 @@
   --bf-green: var(--cf-primary);
   --bf-honey: var(--cf-warning);
   --bf-coral: var(--cf-danger);
-}.bf-app, .theme-white .bf-app, .theme-dark .bf-app, .theme-aurora .bf-app, .theme-cyber .bf-app, .theme-navy .bf-app, .dark .bf-app{
+}.bf-app, .theme-white .bf-app, .theme-dark .bf-app, .theme-navy .bf-app, .dark .bf-app{
   --bf-major-bg: var(--cf-bg);
   --bf-major-sheet: var(--cf-surface);
   --bf-major-ink: var(--cf-ink);
@@ -44,7 +44,7 @@ html.bf-high-contrast {
   position: fixed !important;
   inset: 0;
   z-index: 120;
-}.bf-modal, .dark .bf-modal, .theme-white .bf-modal, .theme-dark .bf-modal, .theme-aurora .bf-modal, .theme-cyber .bf-modal, .theme-navy .bf-modal{
+}.bf-modal, .dark .bf-modal, .theme-white .bf-modal, .theme-dark .bf-modal, .theme-navy .bf-modal{
   color: var(--cf-ink);
   background: var(--cf-surface);
   border-color: var(--cf-line) !important;
@@ -194,10 +194,7 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 }
 
 /* Fundaluri: textura stă ÎN SPATELE cardurilor, nu prin ele. */
-.background-paper .bf-app,
-.background-grid .bf-app,
-.background-aurora .bf-app,
-.background-dots .bf-app {
+.background-paper .bf-app {
   background-color: var(--cf-bg) !important;
 }
 .bf-page,

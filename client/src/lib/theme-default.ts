@@ -37,7 +37,7 @@ export const STALE_SKIN_KEYS = [
 export const DEFAULT_THEME: ThemeId = "white";
 
 /** ID-uri din catalogul curent. */
-export const KNOWN_THEMES: ThemeId[] = ["white", "dark", "aurora", "navy", "cyber"];
+export const KNOWN_THEMES: ThemeId[] = ["white", "dark", "navy"];
 
 /**
  * ID-uri vechi + curente — folosite la strip pe <html> ca să nu rămână
@@ -124,7 +124,7 @@ export function resolveInitialTheme(storage: StorageLike): ThemeId {
   // Aurora / Navy / Cyber rămân; dark rămâne dark; ink/ivory/snow → white.
   if (!storage.getItem(THEME_MIGRATED_ATELIER_KEY)) {
     write(storage, THEME_MIGRATED_ATELIER_KEY, "1");
-    if (next === "aurora" || next === "navy" || next === "cyber" || next === "dark") {
+    if (next === "navy" || next === "dark") {
       // păstrează alegerea explicită / nocturnă
     } else {
       next = "white";
@@ -138,7 +138,7 @@ export function resolveInitialTheme(storage: StorageLike): ThemeId {
     for (const key of STALE_SKIN_KEYS) {
       clear(storage, key);
     }
-    if (next === "aurora" || next === "navy" || next === "cyber" || next === "dark") {
+    if (next === "navy" || next === "dark") {
       // păstrează temele premium nocturne
     } else {
       next = "white";

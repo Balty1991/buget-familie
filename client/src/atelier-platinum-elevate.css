@@ -147,14 +147,10 @@
 
 /* Dark + extras same quality bar */
 html.theme-dark .bf-modal,
-html.theme-aurora .bf-modal,
-html.theme-navy .bf-modal,
-html.theme-cyber .bf-modal {
+html.theme-navy .bf-modal {
   box-shadow:var(--bf-shadow-raise);
 }
-html.theme-aurora .os-dock button.is-on,
-html.theme-navy .os-dock button.is-on,
-html.theme-cyber .os-dock button.is-on {
+html.theme-navy .os-dock button.is-on {
   box-shadow: 0 8px 20px color-mix(in srgb, var(--cf-primary, #7cffc4) 28%, transparent);
 }
 

@@ -343,53 +343,31 @@
 
 .bf-theme-preview.white { --preview-on: #ffffff; }
 .bf-theme-preview.dark { --preview-on: #111214; --preview-primary: #c5cad3; }
-.bf-theme-preview.aurora { --preview-on: #0d0b1c; --preview-primary: #65d3a6; }
 .bf-theme-preview.navy { --preview-on: #14100a; --preview-primary: #d4b06a; }
-.bf-theme-preview.cyber { --preview-on: #04140e; --preview-primary: #7cffc4; }
 
 html.theme-dark .os-shell,
-html.theme-aurora .os-shell,
-html.theme-navy .os-shell,
-html.theme-cyber .os-shell {
+html.theme-navy .os-shell {
   --os-mint-fg: var(--cf-on-primary, #111214);
 }
 
 html.theme-dark .os-shell .bf-primary,
-html.theme-aurora .os-shell .bf-primary,
 html.theme-navy .os-shell .bf-primary,
-html.theme-cyber .os-shell .bf-primary,
 html.theme-dark .os-shell .bf-theme-apply,
-html.theme-aurora .os-shell .bf-theme-apply,
 html.theme-navy .os-shell .bf-theme-apply,
-html.theme-cyber .os-shell .bf-theme-apply,
 html.theme-dark .os-shell .bf-os-decide,
-html.theme-aurora .os-shell .bf-os-decide,
 html.theme-navy .os-shell .bf-os-decide,
-html.theme-cyber .os-shell .bf-os-decide,
 html.theme-dark .os-shell .bf-analysis-balance > button,
-html.theme-aurora .os-shell .bf-analysis-balance > button,
 html.theme-navy .os-shell .bf-analysis-balance > button,
-html.theme-cyber .os-shell .bf-analysis-balance > button,
 html.theme-dark .os-shell .bf-segment button.active,
-html.theme-aurora .os-shell .bf-segment button.active,
 html.theme-navy .os-shell .bf-segment button.active,
-html.theme-cyber .os-shell .bf-segment button.active,
 html.theme-dark .os-shell .bf-insights-switch button.active,
-html.theme-aurora .os-shell .bf-insights-switch button.active,
 html.theme-navy .os-shell .bf-insights-switch button.active,
-html.theme-cyber .os-shell .bf-insights-switch button.active,
 html.theme-dark .os-shell .bf-analysis-scope button.active,
-html.theme-aurora .os-shell .bf-analysis-scope button.active,
 html.theme-navy .os-shell .bf-analysis-scope button.active,
-html.theme-cyber .os-shell .bf-analysis-scope button.active,
 html.theme-dark .os-shell .os-dock button.active,
-html.theme-aurora .os-shell .os-dock button.active,
 html.theme-navy .os-shell .os-dock button.active,
-html.theme-cyber .os-shell .os-dock button.active,
 html.theme-dark .os-shell .os-dock button.is-on,
-html.theme-aurora .os-shell .os-dock button.is-on,
-html.theme-navy .os-shell .os-dock button.is-on,
-html.theme-cyber .os-shell .os-dock button.is-on {
+html.theme-navy .os-shell .os-dock button.is-on {
   color: var(--cf-on-primary, #111214) !important;
   background: var(--cf-primary) !important;
   background-image: none !important;
@@ -414,12 +392,12 @@ html,
 body {
   background: var(--cf-bg, #07090c);
   color: var(--cf-ink, inherit);
-}html.theme-white, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber{
+}html.theme-white, html.theme-dark, html.theme-navy{
   background: var(--cf-bg) !important;
-}html.theme-white body, html.theme-dark body, html.theme-aurora body, html.theme-navy body, html.theme-cyber body{
+}html.theme-white body, html.theme-dark body, html.theme-navy body{
   background: var(--cf-bg);
   color: var(--cf-ink);
-}.bf-app, .os-shell.bf-app, html.theme-white .bf-app, html.theme-dark .bf-app, html.theme-aurora .bf-app, html.theme-navy .bf-app, html.theme-cyber .bf-app, html.dark .bf-app{
+}.bf-app, .os-shell.bf-app, html.theme-white .bf-app, html.theme-dark .bf-app, html.theme-navy .bf-app, html.dark .bf-app{
   color: var(--cf-ink);
   background-color: var(--cf-bg);
 }
@@ -664,25 +642,11 @@ body {
   order: -1;
 }
 
-html.theme-aurora .bf-plan-workspace > .bf-plan-studio-header {
-  background:
-    radial-gradient(120% 90% at 100% -10%, rgba(124, 91, 255, .34), transparent 55%),
-    radial-gradient(80% 70% at -10% 110%, rgba(101, 211, 166, .18), transparent 50%),
-    linear-gradient(155deg, rgba(37, 32, 68, .94), rgba(24, 20, 47, .82));
-}
-
 html.theme-navy .bf-plan-workspace > .bf-plan-studio-header {
   background:
     radial-gradient(120% 90% at 100% -10%, rgba(212, 176, 106, .26), transparent 55%),
     radial-gradient(80% 70% at -10% 110%, rgba(139, 180, 232, .14), transparent 50%),
     linear-gradient(155deg, rgba(28, 39, 64, .95), rgba(20, 28, 46, .84));
-}
-
-html.theme-cyber .bf-plan-workspace > .bf-plan-studio-header {
-  background:
-    radial-gradient(120% 90% at 100% -10%, rgba(124, 255, 196, .22), transparent 55%),
-    radial-gradient(80% 70% at -10% 110%, rgba(124, 255, 196, .1), transparent 50%),
-    linear-gradient(155deg, rgba(22, 29, 35, .95), rgba(16, 21, 26, .86));
 }
 
 html.theme-dark .bf-plan-workspace > .bf-plan-studio-header {
@@ -746,22 +710,10 @@ html.theme-white .os-shell.bf-app::before {
   opacity: .7;
 }
 
-html.theme-aurora .os-shell.bf-app::before {
-  background:
-    radial-gradient(55% 70% at 80% 10%, rgba(124, 91, 255, .28), transparent 70%),
-    radial-gradient(40% 55% at 10% 5%, rgba(101, 211, 166, .16), transparent 65%);
-}
-
 html.theme-navy .os-shell.bf-app::before {
   background:
     radial-gradient(55% 70% at 80% 10%, rgba(212, 176, 106, .2), transparent 70%),
     radial-gradient(40% 55% at 10% 5%, rgba(139, 180, 232, .14), transparent 65%);
-}
-
-html.theme-cyber .os-shell.bf-app::before {
-  background:
-    radial-gradient(55% 70% at 80% 10%, rgba(124, 255, 196, .18), transparent 70%),
-    radial-gradient(40% 55% at 10% 5%, rgba(80, 220, 200, .1), transparent 65%);
 }
 
 html.theme-dark .os-shell.bf-app::before {
@@ -1123,16 +1075,8 @@ html.theme-white .os-shell .os-dock {
   box-shadow: 0 -8px 22px rgba(18, 32, 28, .12);
 }
 
-html.theme-aurora .os-shell .os-dock {
-  box-shadow: 0 -8px 22px rgba(10, 6, 24, .45);
-}
-
 html.theme-navy .os-shell .os-dock {
   box-shadow: 0 -8px 22px rgba(6, 12, 28, .5);
-}
-
-html.theme-cyber .os-shell .os-dock {
-  box-shadow: 0 -8px 22px rgba(4, 12, 10, .5);
 }
 
 html.theme-dark .os-shell .os-dock {

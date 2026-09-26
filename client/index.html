@@ -246,7 +246,7 @@
       (function () {
         try {
           var root = document.documentElement;
-          var legacy = { snow: "white", ivory: "white", ink: "white", sand: "white", sage: "white", slate: "white", lagoon: "cyber", forest: "cyber", midnight: "aurora", plum: "aurora", graphite: "dark", copper: "dark", rosewood: "dark" };
+          var legacy = { snow: "white", ivory: "white", ink: "white", sand: "white", sage: "white", slate: "white", lagoon: "dark", forest: "dark", midnight: "navy", plum: "navy", graphite: "dark", copper: "dark", rosewood: "dark", aurora: "navy", cyber: "dark" };
           var theme = localStorage.getItem("buget-familie:theme") || "white";
           if (legacy[theme]) theme = legacy[theme];
           var schedule = localStorage.getItem("buget-familie:theme-schedule");
@@ -269,12 +269,12 @@
             var day = toMin(times.dayStart, 360);
             var evening = toMin(times.eveningStart, 1020);
             var night = toMin(times.nightStart, 1260);
-            theme = minutes >= day && minutes < evening ? "white" : minutes >= evening && minutes < night ? "cyber" : "dark";
+            theme = minutes >= day && minutes < evening ? "white" : minutes >= evening && minutes < night ? "navy" : "dark";
           }
-          var known = { white: 1, dark: 1, aurora: 1, navy: 1, cyber: 1 };
+          var known = { white: 1, dark: 1, navy: 1 };
           if (!known[theme]) theme = "white";
           var background = localStorage.getItem("buget-familie:background") || "plain";
-          if (!{ plain: 1, paper: 1, grid: 1, aurora: 1, dots: 1 }[background]) background = "plain";
+          if (!{ plain: 1, paper: 1 }[background]) background = "plain";
           root.classList.add("theme-" + theme, "background-" + background);
           var dark = theme !== "white";
           if (dark) root.classList.add("dark");

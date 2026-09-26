@@ -25,8 +25,7 @@
 }
 
 /* Pe teme de noapte, „coral pe negru” pentru delete outline devine --cf-ink + tint, nu ink închis. */
-:is(html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber, .dark) .bf-allocation-actions button:last-child,
-:is(html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber, .dark) .bf-obligation-entry-actions > button.delete {
+:is(html.theme-dark, html.theme-navy, .dark) .bf-allocation-actions button:last-child, :is(html.theme-dark, html.theme-navy, .dark) .bf-obligation-entry-actions > button.delete {
   color: var(--cf-ink) !important;
   border-color: color-mix(in srgb, var(--cf-danger) 50%, var(--cf-line)) !important;
 }

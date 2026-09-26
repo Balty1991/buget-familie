@@ -167,8 +167,8 @@
 /* Plata fixă: „✓ Plătit” e un semn bun, nu un avertisment; „de plătit” e neutru. */
 .bf-plic-pace.pace-paid { color: #1b6a51; background: #ddf0e5; }
 .bf-plic-pace.pace-due { color: #3d5a4e; background: #e8eee9; }
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-paid { color: #8fe3bd; background: color-mix(in srgb, #8fe3bd 16%, transparent); }
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) .bf-plic-pace.pace-due { color: #c3d3ca; background: color-mix(in srgb, #c3d3ca 14%, transparent); }
+:is(html.dark, html.theme-dark, html.theme-navy) .bf-plic-pace.pace-paid { color: #8fe3bd; background: color-mix(in srgb, #8fe3bd 16%, transparent); }
+:is(html.dark, html.theme-dark, html.theme-navy) .bf-plic-pace.pace-due { color: #c3d3ca; background: color-mix(in srgb, #c3d3ca 14%, transparent); }
 
 /* După pornirea în 3 pași: „Gata”, cu salariul ca pas următor. */
 .os-start-ready .os-start-note { margin: 0; color: var(--cf-muted, #4d645d); font-size: 15px; line-height: 1.45; }

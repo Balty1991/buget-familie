@@ -27,17 +27,6 @@ html.theme-dark {
   --lu-honey: #e8c38a;
   --lu-coral: #ff8a7a;
 }
-html.theme-aurora {
-  --lu-paper: #0c0a18;
-  --lu-card: #17132c;
-  --lu-ink: #f6f3ff;
-  --lu-muted: #b9b1d0;
-  --lu-line: #3f3862;
-  --lu-accent: #65d3a6;
-  --lu-accent-fg: #0c0a18;
-  --lu-honey: #f4c665;
-  --lu-coral: #ff939e;
-}
 html.theme-navy {
   --lu-paper: #071428;
   --lu-card: #102646;
@@ -48,17 +37,6 @@ html.theme-navy {
   --lu-accent-fg: #14100a;
   --lu-honey: #e0c07a;
   --lu-coral: #ff8b7a;
-}
-html.theme-cyber {
-  --lu-paper: #050708;
-  --lu-card: #0e1418;
-  --lu-ink: #e8eeea;
-  --lu-muted: #8a968f;
-  --lu-line: #1c2a24;
-  --lu-accent: #7cffc4;
-  --lu-accent-fg: #04140e;
-  --lu-honey: #e8c38a;
-  --lu-coral: #ff8a7a;
 }
 
 /* —— Fișa de decizie (Astăzi) —— */
@@ -179,9 +157,7 @@ html.theme-cyber {
   background: var(--lu-accent, #143c36);
 }
 html.theme-dark .os-shell .os-dock button.is-on,
-html.theme-aurora .os-shell .os-dock button.is-on,
-html.theme-navy .os-shell .os-dock button.is-on,
-html.theme-cyber .os-shell .os-dock button.is-on {
+html.theme-navy .os-shell .os-dock button.is-on {
   color: var(--lu-accent-fg);
   background: var(--lu-accent);
 }

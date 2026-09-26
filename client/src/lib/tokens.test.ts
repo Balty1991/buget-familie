@@ -8,21 +8,22 @@ const read = (name: string) => readFileSync(fileURLToPath(new URL(`../${name}`, 
 describe("tokenii de temă", () => {
   const css = read("tokens.css");
 
-  it("ține cele cinci teme și scara de text", () => {
-    for (const theme of ["theme-white", "theme-dark", "theme-aurora", "theme-navy", "theme-cyber"]) {
+  it("ține cele trei teme și scara de text", () => {
+    for (const theme of ["theme-white", "theme-dark", "theme-navy"]) {
       expect(css).toContain(theme);
     }
+    // Aurora și Cyber au fost scoase (se convertesc la Navy și Întunecat la pornire).
+    expect(css).not.toContain("theme-aurora");
+    expect(css).not.toContain("theme-cyber");
     expect(css).toContain("--bf-text-min: 12px");
     expect(css).toContain("--bf-hit: 44px");
     expect(css).toContain("--cf-primary: #176b54");
-    expect(css).toContain("--cf-primary: #7cffc4");
   });
 
   it("nu mai definește paletele și în foaia veche de teme", () => {
     const legacy = read("ui-themes-modern-2026.css");
     expect(legacy).not.toContain("--os-mint:#7cffc4!important");
     expect(legacy).not.toContain("--os-mint:#176b54!important");
-    expect(css).toContain("--os-mint: #7cffc4");
     expect(legacy).toContain("tokens.css");
   });
 
@@ -53,9 +54,9 @@ describe("plafonul de !important", () => {
     const count = walk(root)
       .filter((file) => file.endsWith(".css"))
       .reduce((sum, file) => sum + (readFileSync(file, "utf8").split("!important").length - 1), 0);
-    // 8.344 la re-audit → 5.410 (curățenie verificată) → 3.819 (reguli moarte) → 3.426 (a doua rundă) → 3442 (ținte de atingere în @layer ds) → 3446 (eticheta de pe bannerul scadențelor, opacitatea etichetelor și a „RON”, descrierea temelor) → 3448 (codul de recuperare) → 3369 (reguli cu clase inexistente în cod) → 3364 (declarații umbrite în același fișier); vezi docs/CSS_IMPORTANT_CLEANUP.md.
+    // 8.344 la re-audit → 5.410 (curățenie verificată) → 3.819 (reguli moarte) → 3.426 (a doua rundă) → 3442 (ținte de atingere în @layer ds) → 3446 (eticheta de pe bannerul scadențelor, opacitatea etichetelor și a „RON”, descrierea temelor) → 3448 (codul de recuperare) → 3369 (reguli cu clase inexistente în cod) → 3364 (declarații umbrite în același fișier) → 3320 (temele Aurora și Cyber, trei texturi); vezi docs/CSS_IMPORTANT_CLEANUP.md.
     // Curățenia poate scădea numărul; o foaie nouă nu are voie să-l urce.
-    expect(count).toBeLessThanOrEqual(3364);
+    expect(count).toBeLessThanOrEqual(3320);
   });
 });
 

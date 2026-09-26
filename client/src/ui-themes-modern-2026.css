@@ -1,64 +1,34 @@
-/* ui-themes-modern-2026 — LAST deferred. white/dark/aurora/navy/cyber */html.theme-white, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber{
+/* ui-themes-modern-2026 — LAST deferred. white/dark/aurora/navy/cyber */html.theme-white, html.theme-dark, html.theme-navy{
 --cf-glow:transparent;--os-glow:transparent;
 --ui-theme-card-pad:22px;--ui-theme-stack-gap:14px;--ui-theme-lh:1.5;
 --ui-theme-elev:0 10px 24px rgba(0,0,0,.08)}
-html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber{
+html.theme-dark,html.theme-navy{
 --ui-theme-elev:0 10px 28px rgba(0,0,0,.38)}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app{
 --cf-glow:transparent;--os-glow:transparent}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-dock,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-dock::before{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .os-dock,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .os-dock::before{
 filter:none;background-image:none;outline:none;
 box-shadow:0 -6px 20px rgba(0,0,0,.1)}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .os-hero,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-simulator,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-simulation,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-allocation-period,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-analysis-snapshot,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-household-card,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-settings>section,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-sync{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .os-hero,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulation,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-allocation-period,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-analysis-snapshot,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-household-card,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-settings>section,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-sync{
 padding:var(--ui-theme-card-pad) 20px!important;gap:var(--ui-theme-stack-gap)!important;
 line-height:var(--ui-theme-lh)!important;border-radius:1.15rem!important;
 box-shadow:var(--ui-theme-elev)!important;filter:none!important;--cf-glow:transparent!important}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-primary,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .os-shell .bf-primary,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-simulator-action,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-movement-add,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-empty-state .bf-primary,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-onboarding-actions .bf-primary{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-primary,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .bf-primary,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator-action,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-movement-add,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-empty-state .bf-primary,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-onboarding-actions .bf-primary{
 min-height:48px!important;padding:0 18px!important;border:0!important;border-radius:999px!important;
 font-weight:600!important;color:var(--os-mint-fg,var(--cf-on-forest,#04140e))!important;
 background:var(--os-mint,var(--cf-primary))!important;
 box-shadow:0 6px 16px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 22%,transparent)!important}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-allocation-period-tabs,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-pace-switch,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-insights-switch,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-analysis-scope,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-movement-kind{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-pace-switch,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-insights-switch,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-analysis-scope,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-movement-kind{
 border:0;box-shadow:none!important;gap:6px;padding:4px!important;border-radius:12px !important;
 background:color-mix(in srgb,var(--os-surface-2,var(--cf-surface-alt)) 94%,transparent)!important}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-allocation-period-tabs button.active,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-allocation-period-tabs button[aria-selected="true"],
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-pace-switch button.active,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-movement-kind button.active{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button.active,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button[aria-selected="true"],:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-pace-switch button.active,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-movement-kind button.active{
 border:1px solid transparent;color:var(--os-mint-fg,var(--cf-on-forest,#04140e));
 background:var(--os-mint,var(--cf-primary))!important;font-weight:600}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-page,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-today-workspace,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-movements-ledger,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-workspace,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-obligations-workspace,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-analysis,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-utilities-workspace{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-page,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-today-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-movements-ledger,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-obligations-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-analysis,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-utilities-workspace{
 padding-bottom:calc(88px + env(safe-area-inset-bottom,0px) + 24px)!important;
 scroll-padding-bottom:calc(88px + env(safe-area-inset-bottom,0px) + 24px)}
 @media (max-width:640px){
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-workspace h1,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-plan-workspace h2,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-movements-header h1,
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-aurora,html.theme-navy,html.theme-cyber) body .bf-app .bf-today-workspace>header h1{
+:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace h1,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace h2,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-movements-header h1,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-today-workspace>header h1{
 font-family:"IBM Plex Sans", system-ui,sans-serif!important;font-weight:600!important;
 font-size:clamp(1.12rem,4.6vw,1.38rem)!important;letter-spacing:-.02em!important}
 }
@@ -84,13 +54,6 @@ html.theme-dark body .bf-app .bf-analysis-snapshot{background:#16181c!important;
 html.theme-dark body .os-shell .os-dock{background:#121418!important;box-shadow:0 -6px 20px rgba(0,0,0,.45)!important;filter:none;border-top:1px solid #2a2e35!important}
 html.theme-dark body .os-shell .os-dock button.is-on,html.theme-dark body .os-shell .os-dock button.active{color:#062018!important;background:#7dcfab!important}
 /* tokens.css */
-html.theme-aurora body,html.theme-aurora body .os-shell.bf-app{
-background:radial-gradient(520px 300px at 92% -4%,rgba(101,211,166,.08),transparent 50%),radial-gradient(400px 280px at -8% 40%,rgba(116,208,255,.05),transparent 48%),#0c0b16;color:#f4f1ff}
-html.theme-aurora body .bf-app .bf-plan-simulator,
-html.theme-aurora body .bf-app .bf-allocation-period,
-html.theme-aurora body .bf-app .bf-analysis-snapshot{background:#15132a!important;border:1px solid color-mix(in srgb,#65d3a6 16%,#35305a)!important;box-shadow:var(--bf-shadow-raise) !important;filter:none}
-html.theme-aurora body .os-shell .os-dock{background:#12101f!important;box-shadow:0 -6px 20px rgba(0,0,0,.4)!important;filter:none}
-html.theme-aurora body .os-shell .os-dock button.is-on,html.theme-aurora body .os-shell .os-dock button.active{color:#0c0b16!important;background:#65d3a6!important}
 /* tokens.css */
 html.theme-navy body,html.theme-navy body .os-shell.bf-app{
 background:radial-gradient(560px 320px at 100% -8%,rgba(212,176,106,.22),transparent 52%),#071428;color:#eef2f8}
@@ -103,24 +66,13 @@ html.theme-navy body .bf-app .bf-analysis-snapshot{background:#102646!important;
 html.theme-navy body .os-shell .os-dock{background:#0a1a36!important;box-shadow:0 -6px 20px rgba(0,0,0,.42)!important;filter:none}
 html.theme-navy body .os-shell .os-dock button.is-on,html.theme-navy body .os-shell .os-dock button.active{color:#12100a!important;background:#d4b06a!important}
 /* tokens.css */
-html.theme-cyber body,html.theme-cyber body .os-shell.bf-app{
-background:radial-gradient(420px 260px at 96% -2%,rgba(124,255,196,.07),transparent 48%),#050708;color:#e8eeea}
-html.theme-cyber body .bf-app .bf-plan-simulator,
-html.theme-cyber body .bf-app .bf-allocation-period,
-html.theme-cyber body .bf-app .bf-analysis-snapshot{background:#0e1318!important;border:1px solid color-mix(in srgb,#7cffc4 14%,#1e2c26)!important;box-shadow:var(--bf-shadow-raise) !important}
-html.theme-cyber body .os-shell .os-dock{background:#080c0f!important;box-shadow:0 -6px 20px rgba(0,0,0,.45)!important;filter:none}
-html.theme-cyber body .os-shell .os-dock button.is-on,html.theme-cyber body .os-shell .os-dock button.active{color:#04140e!important;background:#7cffc4!important}
 .bf-theme-option.white .bf-theme-swatch,.bf-theme-option.ink .bf-theme-swatch{background:linear-gradient(135deg,#e8ece9 0 48%,#176b54 49% 72%,#0c1612 73%)!important}
 .bf-theme-option.dark .bf-theme-swatch{background:linear-gradient(135deg,#0c0d0f 0 48%,#7dcfab 49% 72%,#16181c 73%)}
-.bf-theme-option.aurora .bf-theme-swatch{background:radial-gradient(circle at 78% 22%,rgba(101,211,166,.55) 0 8%,transparent 26%),linear-gradient(145deg,#0c0b16 0 56%,#1e1b38 57% 74%,#65d3a6 75%)}
 .bf-theme-option.navy .bf-theme-swatch{background:linear-gradient(135deg,#071428 0 48%,#d4b06a 49% 72%,#102646 73%)}
-.bf-theme-option.cyber .bf-theme-swatch{background:linear-gradient(135deg,#050708 0 48%,#7cffc4 49% 72%,#0e1318 73%)}
 .bf-theme-preview.white{--preview-bg:#e8ece9;--preview-surface:#fafbfa;--preview-ink:#0c1612;--preview-muted:#4a5852;--preview-line:#c5cec8;--preview-primary:#176b54;--preview-info:#2a6a8a;--preview-glow:transparent}
 .bf-theme-preview.dark{--preview-bg:#0c0d0f;--preview-surface:#16181c;--preview-ink:#eceff3;--preview-muted:#9aa3ad;--preview-line:#2a2e35;--preview-primary:#7dcfab;--preview-info:#aeb6c2;--preview-glow:transparent}
-.bf-theme-preview.aurora{--preview-bg:#0c0b16;--preview-surface:#15132a;--preview-ink:#f4f1ff;--preview-muted:#b8b0cc;--preview-line:#35305a;--preview-primary:#65d3a6;--preview-info:#74d0ff;--preview-glow:transparent}
 .bf-theme-preview.navy{--preview-bg:#071428;--preview-surface:#102646;--preview-ink:#eef2f8;--preview-muted:#9aa8be;--preview-line:#2c4d7a;--preview-primary:#d4b06a;--preview-info:#8bb4e8;--preview-glow:transparent}
-.bf-theme-preview.cyber{--preview-bg:#050708;--preview-surface:#0e1318;--preview-ink:#e8eeea;--preview-muted:#8a968f;--preview-line:#1e2c26;--preview-primary:#7cffc4;--preview-info:#7cffc4;--preview-glow:transparent}
 .bf-theme-option{border-radius:12px;gap:10px;padding:10px}
 .bf-theme-option.selected{box-shadow:0 0 0 2px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 35%,transparent)!important}
-@media (prefers-reduced-motion:reduce){html.theme-white body *, html.theme-dark body *, html.theme-aurora body *, html.theme-navy body *, html.theme-cyber body *{transition:none!important;animation:none!important}
+@media (prefers-reduced-motion:reduce){html.theme-white body *, html.theme-dark body *, html.theme-navy body *{transition:none!important;animation:none!important}
 }

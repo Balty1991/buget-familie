@@ -181,39 +181,8 @@ html[class*="theme-"].background-paper .bf-app {
   background-size: auto, 100% 5px, 16px 16px !important;
   background-blend-mode: normal !important;
 }
-html.background-grid .bf-app,
-html[class*="theme-"].background-grid .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(860px 480px at 100% -8%, color-mix(in srgb, var(--cf-primary) 22%, transparent), transparent 56%),
-    linear-gradient(color-mix(in srgb, var(--cf-ink) 10%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 10%, transparent) 1px, transparent 1px) !important;
-  background-size: auto, 44px 44px, 44px 44px !important;
-  background-blend-mode: normal !important;
-}
-html.background-aurora .bf-app,
-html[class*="theme-"].background-aurora .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(640px 420px at 88% 6%, color-mix(in srgb, var(--cf-primary) 38%, transparent), transparent 62%),
-    radial-gradient(520px 360px at 8% 92%, color-mix(in srgb, var(--cf-info) 30%, transparent), transparent 58%),
-    radial-gradient(380px 260px at 72% 72%, color-mix(in srgb, var(--cf-warning) 16%, transparent), transparent 55%) !important;
-  background-size: auto !important;
-  background-blend-mode: normal !important;
-}
-html.background-dots .bf-app,
-html[class*="theme-"].background-dots .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(720px 420px at 12% 0, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 50%),
-    radial-gradient(color-mix(in srgb, var(--cf-primary) 28%, transparent) 1.15px, transparent 1.7px) !important;
-  background-size: auto, 18px 18px !important;
-  background-blend-mode: normal !important;
-}
 
-html.background-paper .bf-app::before,
-html.background-grid .bf-app::before,
-html.background-dots .bf-app::before {
+html.background-paper .bf-app::before {
   opacity: .1 !important;
 }
 

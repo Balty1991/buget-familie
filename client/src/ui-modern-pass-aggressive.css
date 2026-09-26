@@ -196,11 +196,7 @@ html body .os-shell .os-dock button.active {
   outline: none !important;
 }
 
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .os-shell .os-hero,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-plan-simulator,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-plan-simulation,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-allocation-period,
-:is(html.dark, html.theme-dark, html.theme-aurora, html.theme-navy, html.theme-cyber) body .bf-app .bf-analysis-snapshot{
+:is(html.dark, html.theme-dark, html.theme-navy) body .os-shell .os-hero, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-plan-simulator, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-plan-simulation, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-allocation-period, :is(html.dark, html.theme-dark, html.theme-navy) body .bf-app .bf-analysis-snapshot{
   box-shadow:var(--bf-shadow-raise) !important;
   filter: none !important;
   outline: none !important;
@@ -209,8 +205,6 @@ html body .os-shell .os-dock button.active {
   border-color: color-mix(in srgb, var(--os-mint, #7cffc4) 14%, #1a2420) !important;
 }
 
-html.theme-aurora body .os-shell .os-dock,
-html.theme-cyber body .os-shell .os-dock,
 html.theme-navy body .os-shell .os-dock {
   box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.35);
   filter: none;

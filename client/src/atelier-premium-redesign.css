@@ -449,30 +449,6 @@ html.theme-dark .os-shell .bf-os-decide {
   box-shadow:var(--bf-shadow-raise);
 }
 
-html.theme-aurora .os-shell.bf-app {
-  background:
-    radial-gradient(720px 420px at 100% -8%, rgba(124, 91, 255, .22), transparent 55%),
-    radial-gradient(480px 320px at 0% 30%, rgba(101, 211, 166, .12), transparent 50%),
-    linear-gradient(180deg, #14102a 0, #0d0b1c 160px),
-    #0d0b1c;
-}
-html.theme-aurora .os-shell .os-dock {
-  background: rgba(24, 20, 47, .82);
-  box-shadow: 0 0 0 1px #49416c, 0 18px 40px rgba(0, 0, 0, .45);
-}
-html.theme-aurora .os-shell .os-dock button.is-on,
-html.theme-aurora .os-shell .os-dock button.active {
-  color: #0d0b1c !important;
-  background: linear-gradient(180deg, #7ae0b4, #319e7b) !important;
-  box-shadow:var(--bf-shadow-raise) !important;
-}
-html.theme-aurora .os-shell .bf-today-add,
-html.theme-aurora .os-shell .bf-os-decide {
-  color: #0d0b1c;
-  background: linear-gradient(180deg, #7ae0b4, #319e7b);
-  box-shadow:var(--bf-shadow-raise);
-}
-
 html.theme-navy .os-shell.bf-app {
   background:
     radial-gradient(720px 420px at 100% -8%, rgba(212, 176, 106, .16), transparent 55%),
@@ -497,38 +473,10 @@ html.theme-navy .os-shell .bf-os-decide {
   box-shadow:var(--bf-shadow-raise);
 }
 
-html.theme-cyber .os-shell.bf-app {
-  background:
-    radial-gradient(720px 420px at 100% -8%, rgba(124, 255, 196, .14), transparent 55%),
-    radial-gradient(480px 320px at 0% 40%, rgba(124, 255, 196, .06), transparent 50%),
-    linear-gradient(180deg, #0c1216 0, #07090c 160px),
-    #07090c;
-}
-html.theme-cyber .os-shell .os-dock {
-  background: rgba(16, 21, 26, .84);
-  box-shadow: 0 0 0 1px #22302a, 0 18px 40px rgba(0, 0, 0, .5);
-}
-html.theme-cyber .os-shell .os-dock button.is-on,
-html.theme-cyber .os-shell .os-dock button.active {
-  color: #04140e !important;
-  background: linear-gradient(180deg, #9dffd4, #5ee0aa) !important;
-  box-shadow:var(--bf-shadow-raise) !important;
-}
-html.theme-cyber .os-shell .bf-today-add,
-html.theme-cyber .os-shell .bf-os-decide {
-  color: #04140e;
-  background: linear-gradient(180deg, #9dffd4, #5ee0aa);
-  box-shadow:var(--bf-shadow-raise);
-}
-
 html.theme-dark .bf-modal,
-html.theme-aurora .bf-modal,
 html.theme-navy .bf-modal,
-html.theme-cyber .bf-modal,
 html.theme-dark .bf-whats-new,
-html.theme-aurora .bf-whats-new,
-html.theme-navy .bf-whats-new,
-html.theme-cyber .bf-whats-new {
+html.theme-navy .bf-whats-new {
   box-shadow:var(--bf-shadow-raise) !important;
 }
 

@@ -715,18 +715,14 @@
 
 /* Dark / aurora / navy / cyber keep legibility */
 html.theme-dark .os-shell .bf-obligation-ai,
-html.theme-aurora .os-shell .bf-obligation-ai,
-html.theme-navy .os-shell .bf-obligation-ai,
-html.theme-cyber .os-shell .bf-obligation-ai {
+html.theme-navy .os-shell .bf-obligation-ai {
   background: color-mix(in srgb, var(--os-surface, #16191e) 92%, transparent);
   border-color: var(--os-line, #2c323a);
   color: var(--os-ink, #f1f4f8) !important;
 }
 
 html.theme-dark .os-shell .bf-obligation-ai h2,
-html.theme-aurora .os-shell .bf-obligation-ai h2,
-html.theme-navy .os-shell .bf-obligation-ai h2,
-html.theme-cyber .os-shell .bf-obligation-ai h2 {
+html.theme-navy .os-shell .bf-obligation-ai h2 {
   color: var(--os-ink, #f1f4f8) !important;
 }
 
@@ -970,29 +966,19 @@ html.theme-cyber .os-shell .bf-obligation-ai h2 {
 
 /* Dark / aurora / navy / cyber: keep glass, force readable ink */
 html.theme-dark .os-shell .bf-advisor-hero,
-html.theme-aurora .os-shell .bf-advisor-hero,
 html.theme-navy .os-shell .bf-advisor-hero,
-html.theme-cyber .os-shell .bf-advisor-hero,
 html.theme-dark .os-shell .bf-sync-hero,
-html.theme-aurora .os-shell .bf-sync-hero,
 html.theme-navy .os-shell .bf-sync-hero,
-html.theme-cyber .os-shell .bf-sync-hero,
 html.theme-dark .os-shell .bf-plan-resource-band,
-html.theme-aurora .os-shell .bf-plan-resource-band,
-html.theme-navy .os-shell .bf-plan-resource-band,
-html.theme-cyber .os-shell .bf-plan-resource-band {
+html.theme-navy .os-shell .bf-plan-resource-band {
   background: color-mix(in srgb, var(--os-surface, #16191e) 92%, transparent) !important;
   border-color: var(--os-line, #2c323a) !important;
   color: var(--os-ink, #f1f4f8) !important;
 }
 html.theme-dark .os-shell .bf-advisor-hero h2,
-html.theme-aurora .os-shell .bf-advisor-hero h2,
 html.theme-navy .os-shell .bf-advisor-hero h2,
-html.theme-cyber .os-shell .bf-advisor-hero h2,
 html.theme-dark .os-shell .bf-advisor-metrics b,
-html.theme-aurora .os-shell .bf-advisor-metrics b,
-html.theme-navy .os-shell .bf-advisor-metrics b,
-html.theme-cyber .os-shell .bf-advisor-metrics b {
+html.theme-navy .os-shell .bf-advisor-metrics b {
   color: var(--os-ink, #f1f4f8) !important;
 }
 

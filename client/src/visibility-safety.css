@@ -252,9 +252,7 @@
  * CTA-urile Obligații rămân outline cu --cf-ink — #2b0a06 pe navy era invizibil. */
 .dark .bf-obligation-entry-actions button.pay,
 html.theme-dark .bf-obligation-entry-actions button.pay,
-html.theme-aurora .bf-obligation-entry-actions button.pay,
-html.theme-navy .bf-obligation-entry-actions button.pay,
-html.theme-cyber .bf-obligation-entry-actions button.pay {
+html.theme-navy .bf-obligation-entry-actions button.pay {
   color: var(--cf-on-danger, #111214);
   background: var(--cf-danger);
   border-color: var(--cf-danger);
@@ -262,9 +260,7 @@ html.theme-cyber .bf-obligation-entry-actions button.pay {
 
 .dark .bf-obligation-actions button,
 html.theme-dark .bf-obligation-actions button,
-html.theme-aurora .bf-obligation-actions button,
-html.theme-navy .bf-obligation-actions button,
-html.theme-cyber .bf-obligation-actions button {
+html.theme-navy .bf-obligation-actions button {
   color: var(--cf-ink);
   background: color-mix(in srgb, var(--cf-surface) 88%, transparent);
 }

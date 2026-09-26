@@ -11,26 +11,23 @@ import { lei } from "@/lib/money-format";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
 export type MoreView = "overview" | "review" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
-export type ThemeId = "white" | "dark" | "aurora" | "navy" | "cyber";
+/** Aurora și Cyber au fost scoase; cine le avea trece pe Navy, respectiv Întunecat (theme-default). */
+export type ThemeId = "white" | "dark" | "navy";
 /** „system”: Alb sau Întunecat, după setarea telefonului (implicit pentru cei noi). */
 export type ThemeSchedule = "manual" | "auto" | "system";
 export type ThemeScheduleTimes = { dayStart: string; eveningStart: string; nightStart: string };
-export type BackgroundId = "plain" | "paper" | "grid" | "aurora" | "dots";
+/** Două texturi rămase din cinci; o alegere veche (grilă, auroră, puncte) revine la „Lumină curată”. */
+export type BackgroundId = "plain" | "paper";
 export const LIGHT_THEMES: ThemeId[] = ["white"];
 
 export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: string }> = [
   { id: "plain", name: t("Lumină curată"), detail: t("Halo-uri moi, fără grilă") },
   { id: "paper", name: "In de registru", detail: t("Fibre calde, ca o coală") },
-  { id: "grid", name: t("Hartă discretă"), detail: t("Grilă largă, aproape invizibilă") },
-  { id: "aurora", name: t("Auroră profundă"), detail: t("Trei pete de lumină") },
-  { id: "dots", name: t("Ceață fină"), detail: t("Puncte moi, adâncime") },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
   { id: "white", name: t("Alb"), detail: t("Atelier Platinum — hârtie caldă, pin, citire de zi. Implicit."), mood: "ZI · PLATINUM" },
   { id: "dark", name: t("Întunecat"), detail: t("Noapte cu accent verde de pădure."), mood: "NOAPTE · VERDE" },
-  { id: "aurora", name: t("Aurora"), detail: t("Sticlă ultravioletă, cyan controlat — clar nocturn."), mood: "NOAPTE · STICLĂ" },
   { id: "navy", name: t("Navy"), detail: t("Bleumarin profund, auriu discret. Cabinet modern."), mood: "NOAPTE · OLED" },
-  { id: "cyber", name: t("Cyber"), detail: t("Mint neon pe negru — cifre clare, distinct."), mood: "NOAPTE · CYBER" },
 ];
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };

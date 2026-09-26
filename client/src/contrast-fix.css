@@ -47,30 +47,8 @@ html.theme-dark {
 }
 
 /* Aurora Glass — mapat din midnight */
-html.theme-aurora {
-  --cf-muted: #c1b9d5;
-  --cf-primary: #65d3a6;
-  --cf-primary-strong: #319e7b;
-  --cf-danger: #ff939e;
-  --cf-info: #74d0ff;
-  --cf-warning: #f4c665;
-  --cf-on-primary: #0d0b1c;
-  --cf-on-danger: #0d0b1c;
-  --cf-on-forest: #0d0b1c;
-}
 
-/* Cyber Teal — mapat din forest / Mint OLED */
-html.theme-cyber {
-  --cf-muted: #8a968f;
-  --cf-primary: #7cffc4;
-  --cf-primary-strong: #5ee0aa;
-  --cf-danger: #ff8a7a;
-  --cf-info: #7cffc4;
-  --cf-warning: #e8c38a;
-  --cf-on-primary: #07090c;
-  --cf-on-danger: #07090c;
-  --cf-on-forest: #07090c;
-}/* Studio Alb *//* Porcelain Studio *//* Hârtie Caldă *//* Salvie *//* Nordic Slate *//* Lagoon Glass *//* Mint OLED *//* Ultraviolet Grid */
+/* Cyber Teal — mapat din forest / Mint OLED *//* Studio Alb *//* Porcelain Studio *//* Hârtie Caldă *//* Salvie *//* Nordic Slate *//* Lagoon Glass *//* Mint OLED *//* Ultraviolet Grid */
 /* Navy Cabinet */
 html.theme-navy {
   --cf-muted: #9aa8be;          /* 6.17 */
@@ -381,31 +359,25 @@ html .bf-quick-entry-grid > * { grid-column: auto !important; }
  * Mobile display repair (360–430px) + contrast pe butoane filled.
  * Rulează ultimul: etichete vizibile, overflow wrap, spațiu dock/header.
  * ============================================================ */
-html.theme-white .bf-os-decide, html.theme-aurora .bf-os-decide, html.theme-navy .bf-os-decide, html.theme-cyber .bf-os-decide, html.theme-white .bf-movement-add, html.theme-aurora .bf-movement-add, html.theme-navy .bf-movement-add, html.theme-cyber .bf-movement-add, html.theme-white .bf-primary, html.theme-aurora .bf-primary, html.theme-navy .bf-primary, html.theme-cyber .bf-primary, html.theme-white .bf-movement-kind button.active, html.theme-aurora .bf-movement-kind button.active, html.theme-navy .bf-movement-kind button.active, html.theme-cyber .bf-movement-kind button.active, html.theme-white .bf-segment button.active, html.theme-aurora .bf-segment button.active, html.theme-navy .bf-segment button.active, html.theme-cyber .bf-segment button.active, html.theme-white .bf-journal-quickbar .active, html.theme-aurora .bf-journal-quickbar .active, html.theme-navy .bf-journal-quickbar .active, html.theme-cyber .bf-journal-quickbar .active, html.theme-white .bf-movement-scope button.active, html.theme-aurora .bf-movement-scope button.active, html.theme-navy .bf-movement-scope button.active, html.theme-cyber .bf-movement-scope button.active{
+html.theme-white .bf-os-decide, html.theme-navy .bf-os-decide, html.theme-white .bf-movement-add, html.theme-navy .bf-movement-add, html.theme-white .bf-primary, html.theme-navy .bf-primary, html.theme-white .bf-movement-kind button.active, html.theme-navy .bf-movement-kind button.active, html.theme-white .bf-segment button.active, html.theme-navy .bf-segment button.active, html.theme-white .bf-journal-quickbar .active, html.theme-navy .bf-journal-quickbar .active, html.theme-white .bf-movement-scope button.active, html.theme-navy .bf-movement-scope button.active{
   background-color: var(--cf-primary-strong, #1f5240) !important;
   background-image: none;
   color: var(--cf-on-primary, #ffffff);
-}html.theme-white .bf-os-decide svg, html.theme-aurora .bf-os-decide svg, html.theme-navy .bf-os-decide svg, html.theme-cyber .bf-os-decide svg, html.theme-white .bf-movement-add svg, html.theme-aurora .bf-movement-add svg, html.theme-navy .bf-movement-add svg, html.theme-cyber .bf-movement-add svg, html.theme-white .bf-primary svg, html.theme-aurora .bf-primary svg, html.theme-navy .bf-primary svg, html.theme-cyber .bf-primary svg{
+}html.theme-white .bf-os-decide svg, html.theme-navy .bf-os-decide svg, html.theme-white .bf-movement-add svg, html.theme-navy .bf-movement-add svg, html.theme-white .bf-primary svg, html.theme-navy .bf-primary svg{
   color: var(--cf-on-primary, #ffffff);
   stroke: currentColor;
-}html.theme-white .bf-secondary, html.theme-aurora .bf-secondary, html.theme-navy .bf-secondary, html.theme-cyber .bf-secondary{
+}html.theme-white .bf-secondary, html.theme-navy .bf-secondary{
   color: var(--cf-ink, #1a2420);
   background-color: var(--cf-surface, #fbfaf7);
   border: 1px solid var(--cf-line, #d5d2c8);
 }
 
 /* Dock is-on pe temele de noapte: etichetă pe umplutură via --cf-on-primary */
-html.theme-aurora .os-dock button.is-on,
 html.theme-navy .os-dock button.is-on,
-html.theme-cyber .os-dock button.is-on,
-html.theme-aurora .os-desktop-nav button.is-on,
-html.theme-navy .os-desktop-nav button.is-on,
-html.theme-cyber .os-desktop-nav button.is-on {
+html.theme-navy .os-desktop-nav button.is-on {
   color: var(--cf-on-primary, #0d0b1c) !important;
 }
-html.theme-aurora .os-dock button.is-on svg,
-html.theme-navy .os-dock button.is-on svg,
-html.theme-cyber .os-dock button.is-on svg {
+html.theme-navy .os-dock button.is-on svg {
   color: var(--cf-on-primary, #0d0b1c);
   stroke: currentColor;
 }
@@ -751,34 +723,22 @@ html .bf-advisor-metrics b {
 }
 
 html.theme-dark .bf-advisor-hero,
-html.theme-aurora .bf-advisor-hero,
 html.theme-navy .bf-advisor-hero,
-html.theme-cyber .bf-advisor-hero,
 html.theme-dark .bf-sync-hero,
-html.theme-aurora .bf-sync-hero,
-html.theme-navy .bf-sync-hero,
-html.theme-cyber .bf-sync-hero {
+html.theme-navy .bf-sync-hero {
   background: color-mix(in srgb, var(--cf-surface, #16191e) 94%, transparent) !important;
   color: var(--cf-ink, #f1f4f8) !important;
 }
 html.theme-dark .bf-advisor-hero h2,
-html.theme-aurora .bf-advisor-hero h2,
 html.theme-navy .bf-advisor-hero h2,
-html.theme-cyber .bf-advisor-hero h2,
 html.theme-dark .bf-advisor-metrics b,
-html.theme-aurora .bf-advisor-metrics b,
-html.theme-navy .bf-advisor-metrics b,
-html.theme-cyber .bf-advisor-metrics b {
+html.theme-navy .bf-advisor-metrics b {
   color: var(--cf-ink, #f1f4f8) !important;
 }
 html.theme-dark .bf-advisor-hero > p:not(.bf-kicker),
-html.theme-aurora .bf-advisor-hero > p:not(.bf-kicker),
 html.theme-navy .bf-advisor-hero > p:not(.bf-kicker),
-html.theme-cyber .bf-advisor-hero > p:not(.bf-kicker),
 html.theme-dark .bf-advisor-metrics small,
-html.theme-aurora .bf-advisor-metrics small,
-html.theme-navy .bf-advisor-metrics small,
-html.theme-cyber .bf-advisor-metrics small {
+html.theme-navy .bf-advisor-metrics small {
   color: var(--cf-muted, #c5d0c8) !important;
 }
 
@@ -798,114 +758,54 @@ html.theme-cyber .bf-advisor-metrics small {
  * uses --cf-ink (light), never the light-theme #0c1612 fallback.
  * ============================================================ */
 
-html.theme-aurora .bf-plan-resource-band,
 html.theme-navy .bf-plan-resource-band,
-html.theme-cyber .bf-plan-resource-band,
-html.theme-aurora .bf-coach-card,
 html.theme-navy .bf-coach-card,
-html.theme-cyber .bf-coach-card,
-html.theme-aurora .bf-week-digest,
 html.theme-navy .bf-week-digest,
-html.theme-cyber .bf-week-digest,
-html.theme-aurora .bf-obligation-ai,
 html.theme-navy .bf-obligation-ai,
-html.theme-cyber .bf-obligation-ai,
-html.theme-aurora .bf-goal-card,
 html.theme-navy .bf-goal-card,
-html.theme-cyber .bf-goal-card,
-html.theme-aurora .bf-scenario-card,
 html.theme-navy .bf-scenario-card,
-html.theme-cyber .bf-scenario-card,
-html.theme-aurora .bf-household article,
 html.theme-navy .bf-household article,
-html.theme-cyber .bf-household article,
-html.theme-aurora .bf-weekly-summary,
-html.theme-navy .bf-weekly-summary,
-html.theme-cyber .bf-weekly-summary {
+html.theme-navy .bf-weekly-summary {
   color: var(--cf-ink, #f1f4f8) !important;
 }
 
-html.theme-aurora .bf-plan-resource-band h2,
 html.theme-navy .bf-plan-resource-band h2,
-html.theme-cyber .bf-plan-resource-band h2,
-html.theme-aurora .bf-coach-card h2,
 html.theme-navy .bf-coach-card h2,
-html.theme-cyber .bf-coach-card h2,
-html.theme-aurora .bf-obligation-ai h2,
 html.theme-navy .bf-obligation-ai h2,
-html.theme-cyber .bf-obligation-ai h2,
-html.theme-aurora .bf-week-digest b,
 html.theme-navy .bf-week-digest b,
-html.theme-cyber .bf-week-digest b,
-html.theme-aurora .bf-goal-card b,
 html.theme-navy .bf-goal-card b,
-html.theme-cyber .bf-goal-card b,
-html.theme-aurora .bf-household article b,
-html.theme-navy .bf-household article b,
-html.theme-cyber .bf-household article b {
+html.theme-navy .bf-household article b {
   color: var(--cf-ink, #f1f4f8) !important;
 }
 
-html.theme-aurora .bf-plan-resource-band p:not(.bf-kicker),
 html.theme-navy .bf-plan-resource-band p:not(.bf-kicker),
-html.theme-cyber .bf-plan-resource-band p:not(.bf-kicker),
-html.theme-aurora .bf-coach-card p:not(.bf-kicker),
 html.theme-navy .bf-coach-card p:not(.bf-kicker),
-html.theme-cyber .bf-coach-card p:not(.bf-kicker),
-html.theme-aurora .bf-week-digest small,
 html.theme-navy .bf-week-digest small,
-html.theme-cyber .bf-week-digest small,
-html.theme-aurora .bf-household article em,
 html.theme-navy .bf-household article em,
-html.theme-cyber .bf-household article em,
-html.theme-aurora .bf-household article small,
-html.theme-navy .bf-household article small,
-html.theme-cyber .bf-household article small {
+html.theme-navy .bf-household article small {
   color: var(--cf-muted, #c5d0c8) !important;
 }
 
 /* Filled controls: force on-primary (dark ink on light mint/gold/teal fills) */
-html.theme-aurora .bf-os-decide,
 html.theme-navy .bf-os-decide,
-html.theme-cyber .bf-os-decide,
-html.theme-aurora .bf-today-add,
 html.theme-navy .bf-today-add,
-html.theme-cyber .bf-today-add,
-html.theme-aurora .bf-primary,
 html.theme-navy .bf-primary,
-html.theme-cyber .bf-primary,
-html.theme-aurora .bf-movement-add,
 html.theme-navy .bf-movement-add,
-html.theme-cyber .bf-movement-add,
-html.theme-aurora .bf-week-checkin-actions .bf-week-share,
 html.theme-navy .bf-week-checkin-actions .bf-week-share,
-html.theme-cyber .bf-week-checkin-actions .bf-week-share,
-html.theme-aurora .bf-analysis-balance button,
-html.theme-navy .bf-analysis-balance button,
-html.theme-cyber .bf-analysis-balance button {
+html.theme-navy .bf-analysis-balance button {
   color: var(--cf-on-primary, #0d0b1c) !important;
 }
 
-html.theme-aurora .bf-os-decide svg,
 html.theme-navy .bf-os-decide svg,
-html.theme-cyber .bf-os-decide svg,
-html.theme-aurora .bf-today-add svg,
 html.theme-navy .bf-today-add svg,
-html.theme-cyber .bf-today-add svg,
-html.theme-aurora .bf-primary svg,
 html.theme-navy .bf-primary svg,
-html.theme-cyber .bf-primary svg,
-html.theme-aurora .bf-movement-add svg,
-html.theme-navy .bf-movement-add svg,
-html.theme-cyber .bf-movement-add svg {
+html.theme-navy .bf-movement-add svg {
   color: var(--cf-on-primary, #0d0b1c);
   stroke: currentColor;
 }
 
 /* Secondary / outline controls on night themes: light ink on dark surface */
-html.theme-aurora .bf-secondary,
-html.theme-navy .bf-secondary,
-html.theme-cyber .bf-secondary {
+html.theme-navy .bf-secondary {
   color: var(--cf-ink, #f1f4f8);
   background-color: var(--cf-surface, #18142f);
   border-color: var(--cf-line, #49416c);
@@ -983,9 +883,7 @@ html.theme-dark .bf-secondary {
 }
 
 /* Chip / tab filled pe aurora/navy/cyber — ținte ≥48dp pe dock active */
-html.theme-aurora .bf-allocation-period-tabs button.active,
 html.theme-navy .bf-allocation-period-tabs button.active,
-html.theme-cyber .bf-allocation-period-tabs button.active,
 html.theme-dark .bf-allocation-period-tabs button.active {
   color: var(--cf-on-primary, #0d0b1c);
   background-color: var(--cf-primary-strong, #7dcea0);
@@ -994,21 +892,13 @@ html.theme-dark .bf-allocation-period-tabs button.active {
 
 /* P0 2026-09-12 Obligații outline CTAs — ink pe orice temă */
 html.theme-dark .bf-obligation-actions button,
-html.theme-aurora .bf-obligation-actions button,
 html.theme-navy .bf-obligation-actions button,
-html.theme-cyber .bf-obligation-actions button,
 html.theme-dark .bf-obligation-empty > button,
-html.theme-aurora .bf-obligation-empty > button,
 html.theme-navy .bf-obligation-empty > button,
-html.theme-cyber .bf-obligation-empty > button,
 html.theme-dark .bf-goals-link,
-html.theme-aurora .bf-goals-link,
 html.theme-navy .bf-goals-link,
-html.theme-cyber .bf-goals-link,
 html.theme-dark .bf-secondary,
-html.theme-aurora .bf-secondary,
 html.theme-navy .bf-secondary,
-html.theme-cyber .bf-secondary,
 .dark .bf-obligation-actions button,
 .dark .bf-obligation-empty > button,
 .dark .bf-secondary,
@@ -1020,13 +910,9 @@ html.theme-cyber .bf-secondary,
 
 /* Coral/danger outline (delete, danger section) — ink pe noapte, nu coral închis pe navy. */
 html.theme-dark .bf-danger > button,
-html.theme-aurora .bf-danger > button,
 html.theme-navy .bf-danger > button,
-html.theme-cyber .bf-danger > button,
 html.theme-dark .bf-obligation-entry-actions > button.delete,
-html.theme-aurora .bf-obligation-entry-actions > button.delete,
 html.theme-navy .bf-obligation-entry-actions > button.delete,
-html.theme-cyber .bf-obligation-entry-actions > button.delete,
 .dark .bf-danger > button,
 .dark .bf-obligation-entry-actions > button.delete {
   color: var(--cf-ink) !important;

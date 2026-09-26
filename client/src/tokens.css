@@ -57,27 +57,6 @@ html.theme-dark {
   --os-line: var(--cf-line);
 }
 
-html.theme-aurora {
-  --cf-bg: #0c0b16;
-  --cf-surface: #15132a;
-  --cf-surface-alt: #1e1b38;
-  --cf-ink: #f4f1ff;
-  --cf-muted: #b8b0cc;
-  --cf-line: #35305a;
-  --cf-primary: #65d3a6;
-  --cf-primary-strong: #3fb88a;
-  --cf-on-forest: #0c0b16;
-  --cf-glow: transparent;
-  --os-bg: var(--cf-bg);
-  --os-surface: var(--cf-surface);
-  --os-surface-2: var(--cf-surface-alt);
-  --os-fg: var(--cf-ink);
-  --os-muted: var(--cf-muted);
-  --os-mint: var(--cf-primary);
-  --os-mint-fg: var(--cf-on-forest);
-  --os-line: var(--cf-line);
-}
-
 html.theme-navy {
   --cf-bg: #071428;
   --cf-surface: #102646;
@@ -95,27 +74,6 @@ html.theme-navy {
   --os-fg: var(--cf-ink);
   --os-muted: var(--cf-muted);
   --os-mint: var(--cf-primary);
-  --os-mint-fg: var(--cf-on-forest);
-  --os-line: var(--cf-line);
-}
-
-html.theme-cyber {
-  --cf-bg: #050708;
-  --cf-surface: #0e1318;
-  --cf-surface-alt: #141c22;
-  --cf-ink: #e8eeea;
-  --cf-muted: #8a968f;
-  --cf-line: #1e2c26;
-  --cf-primary: #7cffc4;
-  --cf-primary-strong: #5ee0aa;
-  --cf-on-forest: #04140e;
-  --cf-glow: transparent;
-  --os-bg: var(--cf-bg);
-  --os-surface: var(--cf-surface);
-  --os-surface-2: var(--cf-surface-alt);
-  --os-fg: var(--cf-ink);
-  --os-muted: var(--cf-muted);
-  --os-mint: #7cffc4;
   --os-mint-fg: var(--cf-on-forest);
   --os-line: var(--cf-line);
 }

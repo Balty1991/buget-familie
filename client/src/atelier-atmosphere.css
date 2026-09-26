@@ -349,34 +349,6 @@ html.background-paper .bf-app,
   background-size: auto, 100% 5px, 16px 16px !important;
 }
 
-html.background-grid .bf-app,
-.background-grid .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(860px 480px at 100% -8%, color-mix(in srgb, var(--cf-primary) 22%, transparent), transparent 56%),
-    linear-gradient(color-mix(in srgb, var(--cf-ink) 6%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 6%, transparent) 1px, transparent 1px) !important;
-  background-size: auto, 52px 52px, 52px 52px !important;
-}
-
-html.background-aurora .bf-app,
-.background-aurora .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(640px 420px at 88% 6%, color-mix(in srgb, var(--cf-primary) 38%, transparent), transparent 62%),
-    radial-gradient(520px 360px at 8% 92%, color-mix(in srgb, var(--cf-info) 30%, transparent), transparent 58%),
-    radial-gradient(380px 260px at 72% 72%, color-mix(in srgb, var(--cf-warning) 16%, transparent), transparent 55%) !important;
-}
-
-html.background-dots .bf-app,
-.background-dots .bf-app {
-  background-color: var(--cf-bg) !important;
-  background-image:
-    radial-gradient(720px 420px at 12% 0, color-mix(in srgb, var(--cf-primary) 18%, transparent), transparent 50%),
-    radial-gradient(color-mix(in srgb, var(--cf-primary) 20%, transparent) 1.15px, transparent 1.7px) !important;
-  background-size: auto, 22px 22px !important;
-}
-
 .bf-background-swatch.plain {
   background:
     radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--cf-primary) 45%, transparent), var(--cf-bg) 62%);
@@ -387,25 +359,6 @@ html.background-dots .bf-app,
     repeating-linear-gradient(0deg, transparent, transparent 2px, color-mix(in srgb, var(--cf-ink) 14%, transparent) 3px),
     radial-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) .6px, transparent .8px);
   background-size: 100% 4px, 7px 7px;
-}
-.bf-background-swatch.grid {
-  background-color: var(--cf-bg);
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--cf-ink) 22%, transparent) 1px, transparent 1px);
-  background-size: 10px 10px;
-}
-.bf-background-swatch.aurora {
-  background:
-    radial-gradient(circle at 80% 18%, var(--cf-primary), transparent 46%),
-    radial-gradient(circle at 18% 84%, var(--cf-info), var(--cf-bg) 62%);
-}
-.bf-background-swatch.dots {
-  background-color: var(--cf-bg);
-  background-image:
-    radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--cf-primary) 40%, transparent), transparent 50%),
-    radial-gradient(var(--cf-primary) 1px, transparent 1.5px);
-  background-size: auto, 8px 8px;
 }
 
 html.dark .bf-today-pulse,

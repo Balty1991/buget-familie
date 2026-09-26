@@ -15,16 +15,14 @@ html {
 
 html.dark,
 html.theme-dark,
-html.theme-aurora,
-html.theme-navy,
-html.theme-cyber {
+html.theme-navy {
   --os-dock-bg: #12161c;
 }
 
 html.capacitor-android,
 html.is-android-standalone {
   --os-nav-overlay: 0px;
-}.os-dock, .os-shell .os-dock, .os-shell.bf-app > .os-dock, html.capacitor-android .os-shell .os-dock, html.theme-white .os-shell .os-dock, html.theme-dark .os-shell .os-dock, html.theme-aurora .os-shell .os-dock, html.theme-navy .os-shell .os-dock, html.theme-cyber .os-shell .os-dock, :is(html.theme-ink, html.theme-white) .os-shell .os-dock{
+}.os-dock, .os-shell .os-dock, .os-shell.bf-app > .os-dock, html.capacitor-android .os-shell .os-dock, html.theme-white .os-shell .os-dock, html.theme-dark .os-shell .os-dock, html.theme-navy .os-shell .os-dock, :is(html.theme-ink, html.theme-white) .os-shell .os-dock{
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
@@ -53,9 +51,7 @@ html.is-android-standalone {
 
 html.dark .os-dock,
 html.theme-dark .os-dock,
-html.theme-aurora .os-dock,
 html.theme-navy .os-dock,
-html.theme-cyber .os-dock,
 html.dark .os-shell .os-dock,
 html.theme-dark .os-shell .os-dock {
   border-top-color: rgba(255, 255, 255, 0.08) !important;
