@@ -218,6 +218,16 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <button type="button" className="bf-link-button" aria-expanded={qrOpen} onClick={() => setQrOpen((value) => !value)}>{qrOpen ? t("Ascunde codul QR") : t("Arată codul QR")}</button>
             {qrOpen && <InviteQr link={inviteLink(parseInvite(invite)!)} />}
             <p className="bf-helper">{t("Cine are invitația intră în familie. Trimite-o doar oamenilor din casă.")}</p>
+            {/* Invitația nu expiră singură; dacă a ajuns unde nu trebuia, o schimbi aici. */}
+            {moveConfirm ? (
+              <div className="bf-sync-invite-actions" role="note">
+                <p className="bf-helper">{t("Se face o cameră nouă, cu invitație nouă, iar cea veche se golește. Celelalte telefoane se opresc până primesc invitația nouă; datele lor nu se pierd.")}</p>
+                <button type="button" className="bf-primary" disabled={busy || !online} onClick={() => { setMoveConfirm(false); onMoveToInvite(); }}>{t("Da, schimbă invitația")}</button>
+                <button type="button" className="bf-secondary" onClick={() => setMoveConfirm(false)}>{t("Anulează")}</button>
+              </div>
+            ) : (
+              <button type="button" className="bf-link-button" disabled={busy || !online} onClick={() => setMoveConfirm(true)}>{t("Invitația a ajuns unde nu trebuia? Schimb-o")}</button>
+            )}
           </div>
         ) : (
           <div className="bf-sync-move" role="note">

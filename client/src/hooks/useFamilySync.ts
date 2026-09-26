@@ -391,7 +391,8 @@ export function useFamilySync(
   const syncMoveToInvite = () => syncGuarded(async () => {
     const oldRoomId = syncRoomIdRef.current;
     const oldSecret = syncSecretRef.current;
-    if (!syncConnected || !oldRoomId || !oldSecret || syncInvite) return;
+    // Merge și de pe o cameră cu invitație: așa se schimbă o invitație ajunsă unde nu trebuia.
+    if (!syncConnected || !oldRoomId || !oldSecret) return;
     if (!(await syncEnterInvite(createFamilyInvite(), "create"))) return;
     const crypto = await loadFamilyCrypto();
     const syncApi = await loadFamilySync();
