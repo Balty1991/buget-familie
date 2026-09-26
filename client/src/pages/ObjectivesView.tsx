@@ -5,12 +5,13 @@ import "../objective-edit.css";
 import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
-import { debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationStatus, debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { BudgetBar, dateText, money } from "@/pages/home-kit";
 import { amortize, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type PayoffStrategy } from "@/lib/debt-plan";
 import { getLocale, monthsLabel, t } from "@/lib/i18n";
 import { monthTitle, savingsSuggestion } from "@/lib/household-insights";
 import { upcomingPlannedEvents } from "@/lib/planned-events";
+import { activeNeeds, reserveOf } from "@/lib/monthly-needs";
 
 export function DebtPaymentHistory({ data, debt }: { data: AppData; debt: Debt }) { const history = debtPaymentHistory(data, debt.id); if (!history.length) return <p className="bf-debt-history empty">{t("Nu există încă plăți confirmate pentru această datorie.")}</p>; return <div className="bf-debt-history"><p>{t("PLĂȚI ÎNREGISTRATE")}</p>{history.slice(0, 4).map((payment) => <div key={payment.id}><span><b>{payment.title.includes("achitată integral") ? t("Achitată integral") : t("Plată parțială")}</b><small>{dateText(payment.date, true)} · {payment.source}</small></span><span><strong>{money(payment.amount)}</strong><small>{t("rămân {amount}", { amount: money(payment.debtRemainingAfter ?? debt.remaining) })}</small></span></div>)}</div>; }
 
@@ -145,6 +146,13 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
     if (date === today) return t("Azi");
     return dateText(date, true);
   };
+  /** „Ce plătim lunar” și Obligații erau două lumi: rata declarată nu apărea aici („Nu ai datorii”). */
+  const fixedNeeds = activeNeeds(data)
+    .filter((need) => need.priority === "fixed" || (!need.priority && ["Casă & facturi", "Rate produse", "Abonamente"].includes(need.category)))
+    .map((need) => {
+      const envelope = data.settings.salaryPlan.allocations.find((item) => item.id === need.allocationId);
+      return { need, status: envelope ? allocationStatus(data, envelope) : undefined };
+    });
   return (
     <div className="bf-page bf-obligations-workspace">
       <section className="bf-upcoming-hero" aria-labelledby="bf-upcoming-title">
@@ -208,6 +216,22 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
         <summary>{t("Simulează o plată în plus")}</summary>
         <DebtPayoffSimulator data={data} />
       </details>
+      {fixedNeeds.length > 0 && (
+        <section className="bf-obligation-ledger bf-declared-bills" aria-labelledby="bf-declared-bills-title">
+          <p className="bf-kicker" id="bf-declared-bills-title">{t("PLĂȚI LUNARE DECLARATE")}</p>
+          <p className="bf-declared-bills-note">{t("Din „Ce plătim lunar”: ratele și facturile de care ține planul, cu starea lor în ciclul acesta.")}</p>
+          <ul>
+            {fixedNeeds.map(({ need, status }) => (
+              <li key={need.id}>
+                <span><b>{need.label}</b><small>{money(reserveOf(need))} {t("pe lună")}</small></span>
+                <strong className={status?.paid ? "paid" : status && status.remaining < 0 ? "over" : ""}>
+                  {!status ? t("fără plic încă") : status.paid ? t("✓ Plătit") : status.remaining < 0 ? t("depășit") : status.spent > 0 ? t("mai sunt {amount}", { amount: money(status.remaining) }) : t("de plătit")}
+                </strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section className="bf-obligation-ai">
         <div className="bf-obligation-ai-icon"><Bot size={22} /></div>
         <div>
