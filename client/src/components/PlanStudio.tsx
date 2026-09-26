@@ -74,6 +74,12 @@ function sourceName(data: AppData, sourceId?: string) {
   return data.settings.paymentSources.find((source) => source.id === sourceId)?.name || t("Orice sursă");
 }
 
+/**
+ * Sumele plicurilor văzute ultima dată în această sesiune. Când salariul e repartizat (de pe
+ * Astăzi sau din Plan), plicurile care au primit bani arată suma „coborând” în ele o dată.
+ */
+const seenEnvelopeAmounts = new Map<string, number>();
+
 export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppData; onChange: (data: AppData) => void; simpleMode?: boolean }) {
   const plan = data.settings.salaryPlan;
   const planEnd = planEndDate(plan);
@@ -140,6 +146,19 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const runOutById = new Map(envelopeRunOut(data).map((entry) => [entry.allocationId, entry]));
   const burnById = new Map(envelopeBurnPace(data).map((entry) => [entry.allocationId, entry]));
   const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: isWeeklyPaced(item, plan) ? allocationWeekStatus(data, item) : undefined, weeks: isWeeklyPaced(item, plan) ? allocationWeeksStatus(data, item) : [] }));
+  const [funded, setFunded] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const gains: Record<string, number> = {};
+    for (const item of plan.allocations) {
+      const before = seenEnvelopeAmounts.get(item.id);
+      if (before !== undefined && item.amount - before > 0.5) gains[item.id] = Math.round((item.amount - before) * 100) / 100;
+      seenEnvelopeAmounts.set(item.id, item.amount);
+    }
+    if (!Object.keys(gains).length) return;
+    setFunded(gains);
+    const timer = window.setTimeout(() => setFunded({}), 1400);
+    return () => window.clearTimeout(timer);
+  }, [plan.allocations]);
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const weekSpentByIndex = envelopes.reduce((all, envelope) => { envelope.weeks.forEach((week) => all.set(week.index, (all.get(week.index) || 0) + week.spent)); return all; }, new Map<number, number>());
   const { availableSources, scheduled, scheduledInEnvelopes, reservedInEnvelopes, unrepartized } = planAllocationMath(data);
@@ -420,7 +439,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           const sorted = envelopes.map((entry, order) => ({ entry, order })).sort((a, b) => groupOf(a.entry) - groupOf(b.entry) || a.order - b.order).map(({ entry }) => entry);
           const several = new Set(sorted.map(groupOf)).size > 1;
           return sorted.map((entry, index) => ({ ...entry, groupStart: several && (index === 0 || groupOf(sorted[index - 1]) !== groupOf(entry)) ? names[groupOf(entry)] : "" }));
-        })().map(({ item, budget, remaining, spent, usage, state, week, weeks, fixed, paid, groupStart }, index) => <Fragment key={item.id}>{groupStart && <h3 className="bf-envelope-group">{groupStart}</h3>}<article className={state} style={{ "--bf-i": Math.min(index, 8) } as React.CSSProperties}>
+        })().map(({ item, budget, remaining, spent, usage, state, week, weeks, fixed, paid, groupStart }, index) => <Fragment key={item.id}>{groupStart && <h3 className="bf-envelope-group">{groupStart}</h3>}<article className={`${state}${funded[item.id] ? " is-funded" : ""}`} style={{ "--bf-i": Math.min(index, 8) } as React.CSSProperties}>{funded[item.id] ? <span className="bf-envelope-fly" aria-hidden="true">+{money(funded[item.id])}</span> : null}
           <div className="bf-envelope-portrait" aria-hidden="true"><EnvelopeMark remaining={Math.max(0, 1 - usage)} state={state} size={58} /></div>
           <div className="bf-allocation-list-heading"><div className="bf-allocation-flags">{(() => {
             // O singură etichetă, nu două care se contrazic: fixele au „de plătit / ✓ Plătit”, restul „în ritm / în urmă / atenție / depășit”.

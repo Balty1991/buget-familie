@@ -19,3 +19,18 @@
 /* Marcajul „aici ar trebui să fii azi” pe bara plicului: o liniuță verticală. */
 .bf-envelope-meter i { position: relative; overflow: visible; }
 .bf-envelope-meter i u { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--cf-ink); opacity: .55; text-decoration: none; }
+
+/* Salariul repartizat: suma „coboară” în plic și bara se umple din nou (600 ms). */
+.bf-envelope-list-first article.is-funded { position: relative; }
+.bf-envelope-fly { position: absolute; top: 8px; right: 14px; z-index: 2; padding: 4px 10px; border-radius: 999px; color: var(--cf-on-forest, #fff); background: var(--cf-primary-strong); font-size: 13px; font-weight: 800; pointer-events: none; animation: bf-envelope-fly 1300ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes bf-envelope-fly {
+  0% { transform: translateY(-36px) scale(.9); opacity: 0; }
+  25% { opacity: 1; }
+  55% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(10px) scale(.96); opacity: 0; }
+}
+.bf-envelope-list-first article.is-funded .bf-envelope-meter em { animation: bf-envelope-fill 600ms cubic-bezier(.2, .7, .2, 1) 300ms both; }
+@media (prefers-reduced-motion: reduce) {
+  .bf-envelope-fly { animation: none; opacity: 0; }
+  .bf-envelope-list-first article.is-funded .bf-envelope-meter em { animation: none; }
+}
