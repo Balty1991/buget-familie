@@ -1168,7 +1168,7 @@ const allocationWeeksStatusUncached = (data: AppData, allocation: BudgetAllocati
     const remaining = roundSigned(weekBudget - spent);
     const days = weekEnd === week.end ? week.days : periodDays(week.start, weekEnd);
     carryNext = weekEnd < today ? remaining : 0;
-    return { ...week, end: weekEnd, days, budget: weekBudget, carry: roundSigned(carry), spent: roundedMoney(spent), remaining, usage: weekBudget > 0 ? spent / weekBudget : 0, state: remaining < 0 ? "over" as const : "healthy" as const };
+    return { ...week, end: weekEnd, days, plannedEnd: week.end, plannedDays: week.days, budget: weekBudget, carry: roundSigned(carry), spent: roundedMoney(spent), remaining, usage: weekBudget > 0 ? spent / weekBudget : 0, state: remaining < 0 ? "over" as const : "healthy" as const };
   });
 };
 
@@ -1185,14 +1185,18 @@ const planWeeklyCycleUncached = (data: AppData): CalendarBudget | undefined => {
   for (const item of paced) {
     for (const week of allocationWeeksStatus(data, item)) {
       const prev = byIndex.get(week.index);
+      // Tranșa se afișează până la data obișnuită a salariului; zilele de toleranță sunt separat
+      // („+3 zile dacă salariul întârzie”), nu o „săptămână de 9 zile”.
+      const graceDays = periodDays(week.plannedEnd, week.end) - 1;
       if (!prev) {
-        byIndex.set(week.index, { index: week.index, start: week.start, end: week.end, days: week.days, amount: week.budget });
+        byIndex.set(week.index, { index: week.index, start: week.start, end: week.plannedEnd, days: week.plannedDays, amount: week.budget, ...(graceDays > 0 ? { graceDays } : {}) });
       } else {
         prev.amount = money2(prev.amount + week.budget);
-        if (week.end > prev.end) {
-          prev.end = week.end;
-          prev.days = week.days;
+        if (week.plannedEnd > prev.end) {
+          prev.end = week.plannedEnd;
+          prev.days = week.plannedDays;
         }
+        if (graceDays > (prev.graceDays || 0)) prev.graceDays = graceDays;
       }
     }
   }

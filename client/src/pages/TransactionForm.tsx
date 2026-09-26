@@ -53,7 +53,8 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
   const envelopeRemaining = matchedEnvelope ? allocationBudget(data, matchedEnvelope) - envelopeSpent : 0;
   const pacedEnvelope = Boolean(matchedEnvelope && isWeeklyPaced(matchedEnvelope, data.settings.salaryPlan));
   const matchedWeek = pacedEnvelope ? allocationWeekStatus(data, matchedEnvelope!, date) : undefined;
-  const envelopeWeeks = pacedEnvelope ? allocationWeeksStatus(data, matchedEnvelope!) : [];
+  // O mișcare din ciclul trecut nu are săptămâni în ciclul de acum: fără alegerea „Din ce săptămână”.
+  const envelopeWeeks = pacedEnvelope && (!date || !data.settings.salaryPlan.periodStart || date >= data.settings.salaryPlan.periodStart) ? allocationWeeksStatus(data, matchedEnvelope!) : [];
   const initialInsideMatchedWeek = Boolean(initial && initial.date && matchedWeek && initial.date >= matchedWeek.start && initial.date <= matchedWeek.end);
   const adjustedWeekSpent = matchedWeek ? Math.max(0, matchedWeek.spent - (editedAlreadyInEnvelope && initialInsideMatchedWeek ? initial?.amount || 0 : 0)) : 0;
   const weekRemaining = matchedWeek ? matchedWeek.budget - adjustedWeekSpent : 0;

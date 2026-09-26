@@ -9,7 +9,7 @@ import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBala
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BookOpen, BellRing, CalendarClock, CreditCard, Inbox, Info, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { calculateHealthScore, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
+import { addIsoDays, calculateHealthScore, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey } from "@/lib/calendar-budget";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { ChartTip } from "@/components/ChartFrame";
@@ -223,7 +223,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const periodIncome = data.transactions.filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const periodExpense = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   // Tranșa din plicuri (600 la mâncare), nu o împărțire pe zile a totalului (599,97).
-  const activeTranche = math.planEnd ? planWeeklyCycle(data)?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end) : undefined;
+  const activeTranche = math.planEnd ? planWeeklyCycle(data)?.weeks.find((week) => isoToday() >= week.start && isoToday() <= (week.graceDays ? addIsoDays(week.end, week.graceDays) : week.end)) : undefined;
   const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : "";
   const showTrancheNotice = Boolean(activeTranche && shownTrancheKey === activeTrancheKey);
   useEffect(() => {
@@ -267,7 +267,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <div>
             <p>{t("A ÎNCEPUT SĂPTĂMÂNA {index}", { index: activeTranche.index })}</p>
             <strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong>
-            <span>{t("Săptămâna aceasta are {amount} pentru {days} {dayLabel}.", { amount: money(activeTranche.amount), days: activeTranche.days, dayLabel: activeTranche.days === 1 ? t("zi") : t("zile") })}</span>
+            <span>{t("Săptămâna aceasta are {amount} pentru {days} {dayLabel}.", { amount: money(activeTranche.amount), days: activeTranche.days, dayLabel: activeTranche.days === 1 ? t("zi") : t("zile") })}{activeTranche.graceDays ? " " + t("Dacă salariul întârzie, mai acoperă {count} zile.", { count: activeTranche.graceDays }) : ""}</span>
           </div>
           <button onClick={() => onGo("plan")}>{t("Plicuri")}</button>
           <button className="dismiss" aria-label={t("Ascunde anunțul săptămânii")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>

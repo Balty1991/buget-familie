@@ -3400,4 +3400,5 @@ export const en: Record<string, string> = {
   "totul e deblocat gratuit, fără limită de plicuri sau membri. Limitele de mai jos pornesc abia când abonamentul apare în Google Play.": "everything is unlocked for free, with no limit on envelopes or members. The limits below only start once the subscription is live in Google Play.",
   "Caută și online (Open Food Facts)": "Also search online (Open Food Facts)",
   "Familia e încă într-o cameră cu parolă, mai ușor de ghicit. Apasă „Mută familia” ca să treceți pe invitație; datele rămân.": "Your family is still in a password room, which is easier to guess. Tap “Move the family” to switch to an invitation; your data stays.",
+  "Dacă salariul întârzie, mai acoperă {count} zile.": "If the salary is late, it covers {count} more days.",
 };

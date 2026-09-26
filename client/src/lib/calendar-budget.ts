@@ -4,7 +4,7 @@
  */
 import { perDay } from "@/lib/money-format";
 
-export type CalendarBudgetWeek = { index: number; start: string; end: string; days: number; amount: number };
+export type CalendarBudgetWeek = { index: number; start: string; end: string; days: number; amount: number; /** Zile de după data obișnuită a salariului, acoperite dacă venitul întârzie. */ graceDays?: number };
 export type CalendarBudget = { total: number; start: string; end: string; days: number; exactWeeks: number; weeklyAmount: number; weeks: CalendarBudgetWeek[] };
 
 const dayMs = 86_400_000;
