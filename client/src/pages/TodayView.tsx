@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { useCountUp } from "@/hooks/useCountUp";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -163,6 +164,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const math = usePlanCycle(data);
   const summary = useTodaySummary(data);
   const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
+  const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0);
   const signals = useMemo(() => advisorSignals(data), [data]);
   // „Poți folosi azi” e deja cifra mare de sus; dacă un plic se golește înainte de salariu, aceea e recomandarea.
   const nextStep = signals[0] && signals[0].id !== "daily-pace" ? signals[0] : signals.find((item) => item.id.startsWith("runout-"));
@@ -385,7 +387,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <>
             <p className="os-kicker-lg">{heroLabel}</p>
             <h1 className="os-amount">
-              <span>{(Number.isFinite(heroValue) ? heroValue : 0).toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
