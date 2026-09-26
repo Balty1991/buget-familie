@@ -233,3 +233,7 @@ html body .os-shell .bf-brief-week b,
 html body .os-shell .bf-brief-week small { display: block; text-align: left; }
 /* „Mută … mai departe”: pe toată lățimea, nu strivit într-o cutie de 60 px pe 4 rânduri. */
 html body .os-shell .bf-week-started > button { justify-self: stretch; width: 100%; min-height: 44px; white-space: normal; line-height: 1.25; }
+
+/* Titlurile grupelor din lista de plicuri: Fixe, Variabile, Economii. */
+.bf-envelope-list-first .bf-envelope-group { grid-column: 1 / -1; margin: 10px 2px 0; color: var(--cf-muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.bf-envelope-list-first .bf-envelope-group:first-child { margin-top: 0; }

@@ -10,7 +10,7 @@ import "../plan-studio.css";
 import "../envelope-source.css";
 import "../envelope-transfer.css";
 import "../envelope-insights.css";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
@@ -413,7 +413,14 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     <section className="bf-envelope-list-first" aria-labelledby="bf-envelope-list-title">
       <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">{t("PLICURILE TALE")}</p><h2 id="bf-envelope-list-title">{envelopesLabel(envelopes.length)} · {money(allocated)}</h2></div><button type="button" className="bf-primary bf-add-envelope" onClick={() => { resetAllocationBuilder(); openBuilder(); }}><Plus size={17} /> {t("Plic")}</button></div>
       <div className="bf-allocation-list bf-envelope-desk" aria-live="polite">
-        {envelopes.map(({ item, budget, remaining, spent, usage, state, week, weeks, fixed, paid }, index) => <article key={item.id} className={state} style={{ "--bf-i": Math.min(index, 8) } as React.CSSProperties}>
+        {(() => {
+          // Grupate ca în raportul de design: Fixe (facturi, rate), Variabile (zi cu zi), Economii.
+          const groupOf = (entry: (typeof envelopes)[number]) => entry.fixed ? 0 : entry.item.category === "Economii" ? 2 : 1;
+          const names = [t("Fixe"), t("Variabile"), t("Economii")];
+          const sorted = envelopes.map((entry, order) => ({ entry, order })).sort((a, b) => groupOf(a.entry) - groupOf(b.entry) || a.order - b.order).map(({ entry }) => entry);
+          const several = new Set(sorted.map(groupOf)).size > 1;
+          return sorted.map((entry, index) => ({ ...entry, groupStart: several && (index === 0 || groupOf(sorted[index - 1]) !== groupOf(entry)) ? names[groupOf(entry)] : "" }));
+        })().map(({ item, budget, remaining, spent, usage, state, week, weeks, fixed, paid, groupStart }, index) => <Fragment key={item.id}>{groupStart && <h3 className="bf-envelope-group">{groupStart}</h3>}<article className={state} style={{ "--bf-i": Math.min(index, 8) } as React.CSSProperties}>
           <div className="bf-envelope-portrait" aria-hidden="true"><EnvelopeMark remaining={Math.max(0, 1 - usage)} state={state} size={58} /></div>
           <div className="bf-allocation-list-heading"><div className="bf-allocation-flags">{(() => {
             // O singură etichetă, nu două care se contrazic: fixele au „de plătit / ✓ Plătit”, restul „în ritm / în urmă / atenție / depășit”.
@@ -489,7 +496,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           })()}
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> {t("Editează")}</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> {t("Șterge")}</button></div>
           </details>
-        </article>)}
+        </article></Fragment>)}
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.")}</span></div>}
             </div>
     </section>

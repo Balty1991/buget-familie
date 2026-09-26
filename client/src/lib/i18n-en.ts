@@ -2337,6 +2337,8 @@ export const en: Record<string, string> = {
   "Codul adultului": "Adult's code",
   "Cod greșit.": "Wrong code.",
   "Prea multe încercări. Mai așteaptă {seconds} secunde.": "Too many attempts. Wait {seconds} more seconds.",
+  "Fixe": "Fixed",
+  "Variabile": "Variable",
   "Cheltuit azi": "Spent today",
   "Cum se calculează cifra zilei": "How today’s figure is worked out",
   "În plicurile săptămânii, la începutul zilei": "In this week’s envelopes, at the start of the day",
