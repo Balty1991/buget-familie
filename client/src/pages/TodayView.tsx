@@ -424,7 +424,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                       type="button"
                       className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
                       aria-pressed={rhythmTip === row.day}
-                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: figureLabel })}
+                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: row.isToday || row.isFuture ? t("{amount} de cheltuit", { amount: figureLabel }) : t("{amount} cheltuiți", { amount: figureLabel }) })}
                       onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
                     >
                       <span>{weekdayShort()[row.weekday]}</span>
@@ -434,6 +434,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                     );
                   })}
                 </div>
+                {/* Zilele trecute arată ce s-a cheltuit, azi și viitorul ce se poate cheltui: se spune, nu se ghicește. */}
+                {rhythm.days.some((row) => !row.isToday && !row.isFuture) && rhythm.days.some((row) => row.isToday || row.isFuture) && <p className="bf-os-legend">{t("Zilele trecute: cheltuit · de azi: cât poți cheltui")}</p>}
                 {(() => {
                   const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
                   if (!row) return null;

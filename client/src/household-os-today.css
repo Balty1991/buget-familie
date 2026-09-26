@@ -743,3 +743,11 @@ html.theme-dark .bf-cycle-flow span:first-child b,
 html.theme-navy .bf-cycle-flow span:first-child b { color: #86dcae; }
 html.theme-dark .bf-cycle-flow span:last-child b,
 html.theme-navy .bf-cycle-flow span:last-child b { color: #ffa493; }
+
+/* Utilizator #16: ce înseamnă cifrele din banda zilelor. */
+.os-hero .bf-hero-week .bf-os-legend {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--os-muted);
+}

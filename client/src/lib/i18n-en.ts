@@ -3405,4 +3405,8 @@ export const en: Record<string, string> = {
   "ziua plății: oricând în lună": "payment day: any time in the month",
   "se plătește pe {day}": "paid on the {day}",
   "Ce plătim lunar": "What we pay monthly",
+  "cheltuit": "spent",
+  "{amount} de cheltuit": "{amount} to spend",
+  "{amount} cheltuiți": "{amount} spent",
+  "Zilele trecute: cheltuit · de azi: cât poți cheltui": "Past days: spent · from today: what you can spend",
 };
