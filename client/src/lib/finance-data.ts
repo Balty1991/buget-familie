@@ -1612,10 +1612,28 @@ export const recurringNextDue = (item: Pick<RecurringPayment, "dueDay" | "freque
 
 export const recurringDueInPlan = (item: RecurringPayment, plan: SalaryPlan) => item.active ? monthDayDueInPlan(item.dueDay, plan, (month) => recurringOccursInMonth(item, month)) : undefined;
 
+/**
+ * Scadența e plătită în perioadă: confirmată din Obligații (`recurringId`) sau notată de mână
+ * („Chirie 1.800” în Notează), cu numele scadenței în titlu și suma la ±10%. Altfel aceeași
+ * chirie era „Plătit” în Plicuri și „Întârziată” pe Astăzi și în Obligații.
+ */
+export const recurringPaidInPlan = (data: AppData, item: RecurringPayment) => {
+  const plan = data.settings.salaryPlan;
+  const name = foldRomanian(item.name.trim());
+  return data.transactions.some((transaction) => {
+    if (!inPlanPeriod(transaction.date, plan)) return false;
+    if (transaction.recurringId) return transaction.recurringId === item.id;
+    if (transaction.kind !== "expense" || transaction.debtId || name.length < 3) return false;
+    const title = foldRomanian(transaction.title || "");
+    const close = item.variable || item.amount <= 0 || Math.abs(transaction.amount - item.amount) <= item.amount * 0.1;
+    return close && (title.includes(name) || (title.length >= 3 && name.includes(title)));
+  });
+};
+
 /** Plățile programate care trebuie încă rezervate, fără a număra de două ori mișcările deja înregistrate. */
 export const pendingRecurringInPlan = (data: AppData) => data.recurring.flatMap((item) => {
   const dueDate = recurringDueInPlan(item, data.settings.salaryPlan);
-  const paid = data.transactions.some((transaction) => transaction.recurringId === item.id && inPlanPeriod(transaction.date, data.settings.salaryPlan));
+  const paid = recurringPaidInPlan(data, item);
   return dueDate && !paid ? [{ ...item, dueDate }] : [];
 });
 
@@ -1678,7 +1696,7 @@ export const autoPostDueRecurring = (data: AppData, asOf = isoToday()): AppData 
     if (!item.active || !item.autoPost || item.variable || item.amount <= 0) return;
     const dueDate = recurringDueInPlan(item, data.settings.salaryPlan) || (!planEnd ? recurringDueForMonth(item, asOf) : undefined);
     if (!dueDate || dueDate > asOf) return;
-    if (data.transactions.some((transaction) => transaction.recurringId === item.id && inPlanPeriod(transaction.date, data.settings.salaryPlan))) return;
+    if (recurringPaidInPlan(data, item)) return;
     const source = data.settings.paymentSources.find((entry) => entry.id === item.sourceId);
     const member = data.settings.members.find((entry) => entry.id === item.memberId);
     if (!source || !member) return;
@@ -1773,9 +1791,11 @@ const ENVELOPE_HINTS: Array<[RegExp, RegExp]> = [
   [/\bapa\b|apa rece|canal/, /\b(apa|apa nova|apavital|aquatim|compania de apa|raja|canal)\b/],
   [/\bgaz/, /\b(gaz|engie|distrigaz|e\.?on gaz)\b/],
   [/gradinit|cresa|scoal|after/, /\b(gradinit\w*|cresa|after ?school|scoal\w*|bona)\b/],
-  [/taxi|transport/, /\b(taxi|uber|bolt(?! food)|clever|star taxi|speed taxi)\b/],
+  [/benzin|carburant|motorin|masin|auto\b/, /\b(benzin\w*|motorin\w*|carburant\w*|omv|petrom|rompetrol|mol|lukoil|socar|gazprom|full tank)\b/],
+  [/taxi|transport/, /\b(taxi|uber|bolt(?! food)|clever|star taxi|speed taxi|benzin\w*|motorin\w*|carburant\w*|omv|petrom|rompetrol|mol|lukoil|socar|gazprom)\b/],
   [/abonament|streaming/, /\b(abonament\w*|netflix|spotify|hbo|disney|youtube|icloud|google one|apple\.com)\b/],
   [/telefon|internet|mobil/, /\b(digi|rcs|orange|vodafone|telekom|internet|telefon)\b/],
+  [/abonament/, /\b(digi|rcs|orange|vodafone|telekom)\b/],
   [/fara dobanda|rate magazin|rate produse/, /\b(fara dobanda|tbi|mokka|paypo|rate emag|emag rate)\b/],
   [/rate banc|credit|imprumut|\brata\b/, /\b(rata|rate banca|credit\w*|imprumut|bcr|brd|ing bank|raiffeisen|cec|garanti|unicredit)\b/],
   [/chirie/, /\bchirie\b/],

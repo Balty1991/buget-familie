@@ -465,7 +465,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
               ? t("Plicul e gol.")
               : cap
                 ? cap.week.remaining > 0
-                  ? t("Săptămâna asta mai ai {left}: cel mult {perDay} pe zi, {days} cu tot cu azi.", { left: money(cap.week.remaining), perDay: money(cap.perDay), days: daysLabel(cap.daysLeft) })
+                  ? cap.daysLeft > 1
+                    ? t("Săptămâna asta mai ai {left}: {today} azi, apoi cam {future} pe zi.", { left: money(cap.week.remaining), today: money(cap.todayLeft), future: money(cap.futureShare) })
+                    : t("Săptămâna asta mai ai {left}, toți pentru azi.", { left: money(cap.week.remaining) })
                   : t("Tranșa săptămânii s-a terminat; în tot plicul mai sunt {amount}.", { amount: money(until.remaining) })
                 : t("Rămân {amount} pentru perioada asta.", { amount: money(until.remaining) });
             return <p className="bf-envelope-until">{head} {tail}</p>;

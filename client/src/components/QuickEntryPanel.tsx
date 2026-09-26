@@ -104,6 +104,17 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
       if (fallback) setAllocationId(fallback.id);
     }
   }, [allocationChoiceTouched, allocationId, candidateIds, hideUnallocated, kind]);
+  /**
+   * Categoria s-a schimbat (din text: „Benzină OMV” → Transport) și omul n-a ales plicul:
+   * plicul o urmează. Altfel rămânea Mâncare și benzina golea săptămâna de mâncare.
+   */
+  const previousCategory = useRef(category);
+  useEffect(() => {
+    if (previousCategory.current === category) return;
+    previousCategory.current = category;
+    if (kind !== "expense" || allocationChoiceTouched) return;
+    setAllocationId(matched[0]?.id || (candidates.length === 1 ? candidates[0].id : "outside"));
+  }, [category]);
   useEffect(() => {
     setFromWeekIndex(week?.index);
   }, [allocationId, week?.index]);

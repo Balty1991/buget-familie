@@ -6,6 +6,7 @@ import {
   addIsoDays,
   allocationBudget,
   allocationStatus,
+  planAllocationMath,
   exchangeRateFor,
   toBaseAmount,
   allocationWeekStatus,
@@ -529,7 +530,21 @@ export const weekDayCap = (data: AppData, allocation: BudgetAllocation, asOf = i
   if (!week) return undefined;
   const daysLeft = Math.max(1, daysBetween(asOf, week.end) + 1);
   // La bani, ca cifra de pe Astăzi (37,50), rotunjit în jos ca să nu promită mai mult.
-  return { week, daysLeft, perDay: Math.floor(Math.max(0, week.remaining) * 100 / daysLeft) / 100 };
+  const floorCents = (value: number) => Math.floor(Math.max(0, value) * 100) / 100;
+  // Aceeași socoteală ca ritmul de pe Astăzi: partea zilei din banii de la începutul zilei,
+  // minus ce s-a dus azi; zilele următoare împart restul.
+  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && expenseBelongsTo(data.settings.salaryPlan, item, allocation)).reduce((sum, item) => sum + item.amount, 0);
+  const remaining = Math.max(0, week.remaining);
+  const todayLeft = Math.max(0, (remaining + spentToday) / daysLeft - spentToday);
+  const futureDays = daysLeft - 1;
+  return {
+    week,
+    daysLeft,
+    perDay: floorCents(remaining / daysLeft),
+    spentToday,
+    todayLeft: floorCents(todayLeft),
+    futureShare: futureDays > 0 ? floorCents((remaining - todayLeft) / futureDays) : 0,
+  };
 };
 
 export type WeekTooFast = { allocationId: string; label: string; weekIndex: number; spent: number; budget: number; remaining: number; daysLeft: number; perDay: number; over: boolean };
@@ -837,7 +852,16 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
   const fromLiquid = dayShareLeft(Math.max(0, safe.available));
   const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
   const fromWeek = rhythm.hasWeekly ? Math.max(0, rhythm.todayLeft) : undefined;
-  const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromPace, fromLiquid, safe.available)) : 0;
+  /**
+   * Cu plicuri, dar fără plic săptămânal plin: banii zilei sunt cei din plicurile de cheltuieli
+   * curente (nu facturi sau rate) plus ce n-a fost repartizat. Altfel, după ce tot salariul
+   * mergea în facturi, cifra zilei cădea pe soldul cardului („358 lei/zi” cu Mâncare 0).
+   */
+  const flexibleLeft = plan.allocations.length && fromWeek == null
+    ? plan.allocations.filter((item) => !isFixedEnvelope(plan, item)).reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0) + Math.max(0, planAllocationMath(data).unrepartized)
+    : undefined;
+  const fromEnvelopes = flexibleLeft == null ? undefined : dayShareLeft(flexibleLeft);
+  const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromEnvelopes ?? fromPace, fromLiquid, safe.available)) : 0;
   const reason = nextCycleIncome > 0 && !expired && hasPayday
     ? t("Venitul de azi e pentru ciclul următor: repartizează-l în plicuri. Cifra zilei vine din banii ciclului care se încheie.")
     : !hasPayday
@@ -853,7 +877,9 @@ export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => {
       : fromWeek != null
         ? t("Azi poți {pace} lei. În plicul săptămânii mai sunt {available} pentru {days}.", { pace: stripLei(fromWeek, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(rhythm.remainingDays) })
           + (rhythm.days[0] && rhythm.days[0].day < asOf && rhythm.days[0].day === plan.periodStart && weekdayIndex(rhythm.days[0].day) !== 0 ? ` ${t("Săptămâna plicului a început {day}, în ziua salariului.", { day: new Date(`${rhythm.days[0].day}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" }) })}` : "")
-        : t("Azi poți {pace} lei. Mai sunt {available} bani liberi pentru {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) });
+        : flexibleLeft != null
+          ? t("Azi poți {pace} lei. În plicurile de cheltuieli curente mai sunt {available} lei pentru {days}.", { pace: stripLei(spendable, getLocale()), available: stripLei(flexibleLeft, getLocale()), days: daysLabel(remainingDays) })
+          : t("Azi poți {pace} lei. Mai sunt {available} lei liberi pentru {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) });
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);

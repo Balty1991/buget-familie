@@ -634,7 +634,7 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
   if (dues.length) {
     const first = dues[0];
     const days = Math.round((Date.parse(`${first.dueDate}T12:00:00`) - Date.parse(`${asOf}T12:00:00`)) / 86400000);
-    const when = days <= 0 ? "azi" : days === 1 ? "mâine" : `în ${plural(days, "zi", "zile")}`;
+    const when = days < 0 ? `întârziată de ${plural(-days, "zi", "zile")}` : days === 0 ? "azi" : days === 1 ? "mâine" : `în ${plural(days, "zi", "zile")}`;
     actions.push(`scadența «${first.name}» ${when}, ${money(first.amount)}`);
     rows.push({ label: first.name, value: money(first.amount), hint: formatDate(first.dueDate) });
   }

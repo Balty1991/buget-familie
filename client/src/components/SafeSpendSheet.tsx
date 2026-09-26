@@ -70,7 +70,10 @@ export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onC
                 return (
                   <li key={step.label} className={`is-${step.kind}`}>
                     <span>{step.label}</span>
-                    <strong>{money(step.total)}</strong>
+                    {/* La un pas „minus” arătăm cât se scade, apoi ce rămâne: eticheta descrie operația, nu rezultatul. */}
+                    {step.kind === "minus" && previous > step.total
+                      ? <strong>−{money(previous - step.total)} <small>→ {money(step.total)}</small></strong>
+                      : <strong>{money(step.total)}</strong>}
                     <i aria-hidden="true">
                       {step.kind !== "start" && step.kind !== "result" && previous > step.total && <em className="drop" style={{ left: width(step.total), width: width(previous - step.total) }} />}
                       <em className="bar" style={{ width: width(step.total) }} />

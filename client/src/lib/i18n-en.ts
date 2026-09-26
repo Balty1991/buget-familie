@@ -3371,4 +3371,10 @@ export const en: Record<string, string> = {
   "Unești backup-ul cu familia?": "Merge the backup with the family?",
   "Da, unește": "Yes, merge",
   "Data nu există în calendar. Scrie-o ca zz.ll.aaaa, de exemplu 05.10.2026.": "That date does not exist. Write it as dd.mm.yyyy, for example 05.10.2026.",
+  "Mai rămân {remaining} în plicul săptămânii: {today} azi, apoi cam {daily} pe zi până {until}.": "{remaining} left in this week's envelope: {today} today, then about {daily} a day until {until}.",
+  "Mai rămân {remaining} în plicul săptămânii, toți pentru azi.": "{remaining} left in this week's envelope, all for today.",
+  "Săptămâna asta mai ai {left}: {today} azi, apoi cam {future} pe zi.": "This week you have {left} left: {today} today, then about {future} a day.",
+  "Săptămâna asta mai ai {left}, toți pentru azi.": "This week you have {left} left, all for today.",
+  "Azi poți {pace} lei. În plicurile de cheltuieli curente mai sunt {available} lei pentru {days}.": "Today you can spend {pace} lei. Your everyday envelopes still hold {available} lei for {days}.",
+  "Azi poți {pace} lei. Mai sunt {available} lei liberi pentru {days}.": "Today you can spend {pace} lei. There are {available} lei free for {days}.",
 };

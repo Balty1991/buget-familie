@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adjustDebtsForLedgerEdits, amountInput, autoPostDueRecurring, commitLedgerEntry, createEmptyAppData, parseRomanianAmount, recordDebtPayment, type AppData } from "./finance-data";
+import { recurringPaidInPlan, adjustDebtsForLedgerEdits, amountInput, autoPostDueRecurring, commitLedgerEntry, createEmptyAppData, parseRomanianAmount, recordDebtPayment, type AppData } from "./finance-data";
 
 const withDebt = (): AppData => {
   const data = createEmptyAppData();
@@ -43,5 +43,17 @@ describe("plată recurentă adăugată automat", () => {
     expect(auto).toBeDefined();
     const deleted: AppData = { ...posted, transactions: [], deleted: [{ entity: "transactions", id: auto!.id, deletedAt: "2026-09-26T10:00:00.000Z" }] };
     expect(autoPostDueRecurring(deleted, "2026-09-26").transactions).toHaveLength(0);
+  });
+});
+
+describe("scadența plătită de mână", () => {
+  it("chiria notată în Notează închide scadența, iar o sumă mult diferită nu", () => {
+    const data = withDebt();
+    const member = data.settings.members[0];
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-10", nextPayday: "2026-10-10" };
+    data.recurring = [{ id: "rent", name: "Chirie", amount: 1800, dueDay: 16, category: "Casă & facturi", sourceId: "card", memberId: member.id, active: true, frequency: "monthly" } as AppData["recurring"][number]];
+    const tx = (amount: number) => ({ id: `t${amount}`, title: "Chirie septembrie", amount, kind: "expense" as const, category: "Casă & facturi", source: "Card", sourceId: "card", person: member.name, memberId: member.id, date: "2026-09-16" });
+    expect(recurringPaidInPlan({ ...data, transactions: [tx(1800)] }, data.recurring[0])).toBe(true);
+    expect(recurringPaidInPlan({ ...data, transactions: [tx(300)] }, data.recurring[0])).toBe(false);
   });
 });

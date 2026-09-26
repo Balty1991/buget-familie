@@ -116,7 +116,10 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
         ? t("Azi a trecut peste partea de {share}. Mai rămân {remaining}, cam {daily} pe zi până {until}.", { share: exact(rhythm.todayShare), remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName })
         : todayUsedUp
           ? t("Azi ai folosit partea zilei. Mai rămân {remaining}, cam {daily} pe zi de mâine până {until}.", { remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName })
-          : t("Mai rămân {remaining} în plicul săptămânii, cam {daily} pe zi până {until}.", { remaining: exact(rhythm.remaining), daily: exact(noteDaily), until: untilName });
+          // Aceeași cifră ca eroul pentru azi; zilele următoare au partea lor, nu media.
+          : rhythm.days.some((row) => row.isFuture)
+            ? t("Mai rămân {remaining} în plicul săptămânii: {today} azi, apoi cam {daily} pe zi până {until}.", { remaining: exact(rhythm.remaining), today: exact(noteDaily), daily: exact(rhythm.futureShare), until: untilName })
+            : t("Mai rămân {remaining} în plicul săptămânii, toți pentru azi.", { remaining: exact(rhythm.remaining) });
 
   const todayRow = rhythm.days.find((row) => row.isToday);
   const todayStrip = todayRow ? dayStripFigure(todayRow, heroTracksWeek ? brief.spendable : todayRow.left, heroTracksWeek) : 0;
