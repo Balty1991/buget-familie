@@ -182,7 +182,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
 
   return <div className="bf-sync">
     {!canUseFamilySync() ? <FamilieUpgrade reason="sync" /> : null}
-    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{t("FAMILIE CONECTATĂ")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Datele se criptează pe telefon; serverul vede doar un pachet pe care nu-l poate citi. Pozele bonurilor rămân pe telefon.")}</p></div>
+    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{connected ? t("FAMILIE CONECTATĂ") : t("SINCRONIZARE")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Datele se criptează pe telefon; serverul vede doar un pachet pe care nu-l poate citi. Pozele bonurilor rămân pe telefon.")}</p></div>
     <aside className="bf-sync-local-only" role="note">
       <p className="bf-kicker">{t("CE SE SINCRONIZEAZĂ")}</p>
       <ul>

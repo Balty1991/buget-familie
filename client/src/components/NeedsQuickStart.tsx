@@ -133,7 +133,7 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
       {step === 2 && (
         <>
           <h2 id="bf-setup-title">{t("Ce plătiți")} <em>{t("de obicei?")}</em></h2>
-          <p>{t("Bifează ce aveți și scrie cam cât. Mâncarea e pe săptămână. Intervalele (300–400) le poți pune după, în Plan.")}</p>
+          <p>{t("Bifează ce aveți și scrie cam cât. Mâncarea e pe săptămână. Intervalele (300–400) le poți pune după, în Plicuri.")}</p>
           <div className="bf-quick-category-picks bf-household-templates" role="group" aria-label={t("Pornește de la un șablon")}>
             <span>{t("Pornește de la")}</span>
             {HOUSEHOLD_TEMPLATES.map((template) => (

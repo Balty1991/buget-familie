@@ -123,7 +123,7 @@ export function TodayLedger({ data, onGo, compact = false }: { data: AppData; on
             <span>
               <EnvelopeStack fill={0.35} size={72} />
               <b>{t("Masa e pregătită, plicurile încă nu.")}</b>
-              <small>{t("Așază prima categorie în Plan — alimente, transport, facturi. Totalul e suma lor.")}</small>
+              <small>{t("Așază prima categorie în Plicuri — alimente, transport, facturi. Totalul e suma lor.")}</small>
             </span>
           </button>
         )}

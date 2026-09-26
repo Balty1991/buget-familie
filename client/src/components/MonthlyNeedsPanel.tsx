@@ -140,7 +140,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
     const message = !envelope
       ? t("Ștergi „{name}” din cheltuielile lunare?", { name: need.label })
       : used
-        ? t("Ștergi „{name}” din cheltuielile lunare? Plicul „{envelope}” rămâne în Plan, fiindcă are cheltuieli; îl poți șterge de acolo.", { name: need.label, envelope: envelope.label })
+        ? t("Ștergi „{name}” din cheltuielile lunare? Plicul „{envelope}” rămâne în Plicuri, fiindcă are cheltuieli; îl poți șterge de acolo.", { name: need.label, envelope: envelope.label })
         : t("Ștergi „{name}” din cheltuielile lunare? Plicul lui, încă fără cheltuieli, se șterge și el.", { name: need.label });
     if (!await askConfirm(message, { danger: true, confirmLabel: t("Șterge") })) return;
     const stamp = now();

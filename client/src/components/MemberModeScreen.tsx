@@ -68,7 +68,7 @@ export function MemberModeScreen({ data, memberId, onChange }: { data: AppData; 
       ) : (
         <>
           <h1 id="bf-member-mode-title"><span>{t("Bun venit, {name}!", { name })}</span></h1>
-          <p className="bf-member-mode-note">{t("Încă nu ai un plic al tău. Roagă un adult să-ți facă unul în Plan (de exemplu „Bani de buzunar”). Până atunci poți nota ce cheltui.")}</p>
+          <p className="bf-member-mode-note">{t("Încă nu ai un plic al tău. Roagă un adult să-ți facă unul în Plicuri (de exemplu „Bani de buzunar”). Până atunci poți nota ce cheltui.")}</p>
         </>
       )}
 

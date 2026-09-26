@@ -260,7 +260,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
 
         {!intent && (
           <div className="bf-setup-copy">
-            <p className="bf-kicker">{t("PRIMUL REZULTAT")}</p>
+            <p className="bf-kicker">{t("PRIMUL PAS")}</p>
             <h2 id="bf-setup-title">{t("Ce vrei să faci")} <em>{t("acum?")}</em></h2>
             <p>{t("Plicuri pe ciclul de salariu, fără bancă. Alege o intenție — poți schimba totul mai târziu, sau Mai târziu fără nicio pierdere.")}</p>
             <p className="bf-helper bf-first-run-legal">{t("Datele stau pe telefon. Sync-ul e opțional și criptat — fără login bancar.")}</p>
@@ -278,7 +278,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
               <button type="button" onClick={() => setIntent("track")}>
                 <ReceiptText size={20} />
                 <b>{t("Vreau doar să văd pe ce se duc banii.")}</b>
-                <small>{t("Deschide direct înregistrarea unei cheltuieli.")}</small>
+                <small>{t("Notezi cheltuielile, iar Analiza îți arată unde se duc.")}</small>
               </button>
               <button type="button" onClick={() => setIntent("money")}>
                 <Wallet size={20} />
@@ -346,7 +346,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
           <div className="bf-setup-copy">
             <p className="bf-kicker">{t("BANII DE AZI")}</p>
             <h2 id="bf-setup-title">{t("Câți bani")} <em>{t("ai acum?")}</em></h2>
-            <p>{t("Card, cash, bonuri — ale tale și ale partenerului, dacă e cazul. Plicurile le pui mai târziu, în Plan, doar dacă ai nevoie.")}</p>
+            <p>{t("Card, cash, bonuri — ale tale și ale partenerului, dacă e cazul. Plicurile le pui mai târziu, în Plicuri, doar dacă ai nevoie.")}</p>
             <label className="bf-field"><span>{t("Numele tău")}</span><input value={memberName} onChange={(event) => setMemberName(event.target.value)} placeholder="ex. Andrei" /></label>
             <label className="bf-field"><span>{t("Partener (opțional)")}</span><input value={partnerName} onChange={(event) => setPartnerName(event.target.value)} placeholder="ex. Maria" /></label>
             <label className="bf-field"><span>{t("Următorul venit (opțional)")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
@@ -387,7 +387,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <h2 id="bf-setup-title">{t("Până când vrei să ajungă")} <em>{t("banii?")}</em></h2>
             <label className="bf-field"><span>{t("Următorul venit")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
             <label className="bf-field"><span>{t("Cât intră pe lună (salariu, pensie)")}</span><input inputMode="decimal" value={monthlyIncome} onChange={(event) => setMonthlyIncome(event.target.value)} placeholder={t("ex. 4.500")} /></label>
-            <p className="bf-helper">{t("Plicurile propuse sunt o parte din venit: 25% mâncare, 8% transport, 20% casă și facturi. Le schimbi oricând în Plan.")}</p>
+            <p className="bf-helper">{t("Plicurile propuse sunt o parte din venit: 25% mâncare, 8% transport, 20% casă și facturi. Le schimbi oricând în Plicuri.")}</p>
             <div className="bf-setup-presets" role="group" aria-label={t("Plicuri de start")}>
               {PRESETS.map((preset) => {
                 const active = selected.includes(preset.category);

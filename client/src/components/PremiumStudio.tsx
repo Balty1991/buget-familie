@@ -10,6 +10,8 @@ export function PremiumStudio() {
       <p className="bf-kicker">{t("UN SINGUR PLAN PENTRU CASĂ")}</p>
       <h2>{t("Casa e gratuită. Familia se cere când intră al doilea om sau al doilea telefon.")}</h2>
       <p>{t("Nu blocăm registrul. Notezi cheltuieli oricum. Plătești când gospodăria are nevoie de două telefoane, de mai mulți oameni sau de ghidul încăpător.")}</p>
+      {/* Limitele Casei nu se aplică încă: fără fraza asta, „Până la 10 plicuri” părea o regulă încălcată. */}
+      {!BILLING_LIVE && <p className="bf-premium-now" role="note"><b>{t("Acum:")}</b> {t("totul e deblocat gratuit, fără limită de plicuri sau membri. Limitele de mai jos pornesc abia când abonamentul apare în Google Play.")}</p>}
       <div className="bf-premium-plans">
         <article>
           <p className="bf-kicker">{t("CASA")}</p>
@@ -18,7 +20,7 @@ export function PremiumStudio() {
           <ul>
             <li><Check size={14} /> {t("Până la {n} plicuri", { n: String(PLANS.casa.envelopes) })}</li>
             <li><Check size={14} /> {t("Un membru, un telefon")}</li>
-            <li><Check size={14} /> {t("Astăzi, Mișcări, Plan, scadențe")}</li>
+            <li><Check size={14} /> {t("Astăzi, Mișcări, Plicuri, scadențe")}</li>
             <li><Check size={14} /> {t("Ghid local + {n} mesaje online pe zi", { n: String(PLANS.casa.aiOnlinePerDay) })}</li>
             <li><Check size={14} /> {t("Export CSV și backup pe telefon")}</li>
           </ul>

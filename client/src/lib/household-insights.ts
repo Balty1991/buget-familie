@@ -548,7 +548,7 @@ export const weekDayCap = (data: AppData, allocation: BudgetAllocation, asOf = i
   };
 };
 
-export type WeekTooFast = { allocationId: string; label: string; weekIndex: number; spent: number; budget: number; remaining: number; daysLeft: number; perDay: number; over: boolean };
+export type WeekTooFast = { allocationId: string; label: string; weekIndex: number; spent: number; budget: number; remaining: number; daysLeft: number; perDay: number; /** Aceeași cifră ca „Poți folosi azi” și zilele de după. */ todayLeft: number; futureShare: number; over: boolean };
 
 /**
  * Plicurile pe săptămâni în care tranșa curentă se duce mai repede decât zilele: „450 din 600,
@@ -568,7 +568,7 @@ export const weekTooFast = (data: AppData, asOf = isoToday()): WeekTooFast[] => 
     const usage = week.spent / week.budget;
     const over = week.remaining < 0;
     if (!over && (daysLeft < 2 || usage < 0.6 || usage < elapsed / week.days + 0.15)) continue;
-    out.push({ allocationId: item.id, label: item.label, weekIndex: week.index, spent: week.spent, budget: week.budget, remaining: week.remaining, daysLeft, perDay: cap.perDay, over });
+    out.push({ allocationId: item.id, label: item.label, weekIndex: week.index, spent: week.spent, budget: week.budget, remaining: week.remaining, daysLeft, perDay: cap.perDay, todayLeft: cap.todayLeft, futureShare: cap.futureShare, over });
   }
   return out.sort((a, b) => Number(b.over) - Number(a.over) || b.spent / b.budget - a.spent / a.budget);
 };
@@ -1441,7 +1441,9 @@ export const familyWeekExtras = (data: AppData, asOf = isoToday()): string[] => 
   for (const item of weekTooFast(data, asOf).slice(0, 3)) {
     lines.push(item.over
       ? t("{label}: săptămâna e depășită cu {amount}.", { label: item.label, amount: lei(-item.remaining) })
-      : t("{label}: {spent} din {budget}, cel mult {perDay} pe zi până la capătul săptămânii.", { label: item.label, spent: lei(item.spent), budget: lei(item.budget), perDay: leiCents(item.perDay) }));
+      : item.daysLeft > 1
+        ? t("{label}: {spent} din {budget}. Azi cel mult {today}, apoi cam {future} pe zi până la capătul săptămânii.", { label: item.label, spent: lei(item.spent), budget: lei(item.budget), today: leiCents(item.todayLeft), future: leiCents(item.futureShare) })
+        : t("{label}: {spent} din {budget}; azi mai sunt {today}.", { label: item.label, spent: lei(item.spent), budget: lei(item.budget), today: leiCents(item.todayLeft) }));
   }
   const members = data.settings.members;
   for (const entry of members.length > 1 ? pendingTransfers(data, asOf) : []) {

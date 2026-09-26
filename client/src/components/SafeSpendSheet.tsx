@@ -52,7 +52,7 @@ export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onC
               <small>
                 {sheet.paydayDate
                   ? t("Țintă: {date}", { date: formatDate(sheet.paydayDate, { day: "2-digit", month: "long" }) })
-                  : t("Setează data în Plan")}
+                  : t("Setează data în Plicuri")}
               </small>
             </div>
             <PaydayStrip elapsed={track.elapsed} total={track.total} remaining={track.remaining} />

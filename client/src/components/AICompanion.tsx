@@ -181,7 +181,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
       return;
     }
     if (stamped.kind === "transfer") {
-      addMessage({ role: "assistant", text: `Am mutat ${money(stamped.amount)} din **${stamped.fromLabel}** în **${stamped.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plan") } });
+      addMessage({ role: "assistant", text: `Am mutat ${money(stamped.amount)} din **${stamped.fromLabel}** în **${stamped.toLabel}**.`, action: { type: "plan", label: t("Vezi în Plicuri") } });
       setHistoryOpen(false);
       return;
     }
@@ -292,9 +292,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         : {
             role: "assistant",
             text: plicuri >= 2
-              ? t("Gata, am făcut cele {count} plicuri. Le vezi în Plan, cu tranșele pe săptămâni.", { count: String(plicuri) })
+              ? t("Gata, am făcut cele {count} plicuri. Le vezi în Plicuri, cu tranșele pe săptămâni.", { count: String(plicuri) })
               : `Gata. ${item.updates.length === 1 ? "Am trecut-o" : "Le-am trecut"} în registru${day ? ` pe ${dateCopy(day)}` : ""}; poți corecta orice din ecranul respectiv.`,
-            action: plicuri >= 2 ? { type: "plan", label: t("Vezi în Plan") } : { type: "journal", label: t("Vezi în Mișcări") },
+            action: plicuri >= 2 ? { type: "plan", label: t("Vezi în Plicuri") } : { type: "journal", label: t("Vezi în Mișcări") },
           });
       setHistoryOpen(false);
       resetSpendDraft();
@@ -709,7 +709,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
           action: saveNow && updates.some((update) => update.kind === "income")
             ? { type: "journal", label: t("Vezi în Mișcări") }
             : saveNow && updates.some((update) => update.kind === "allocation")
-              ? { type: "plan", label: t("Vezi tranșele în Plan") }
+              ? { type: "plan", label: t("Vezi tranșele în Plicuri") }
               : !saveNow && updates.length
               ? { type: "apply", label: `Adaugă ${updates.filter((update) => "amount" in update).map((update) => money((update as { amount: number }).amount)).join(" + ")} în registru` }
               : undefined,

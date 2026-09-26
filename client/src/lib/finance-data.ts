@@ -2014,7 +2014,7 @@ export const calculateHealthScore = (data: AppData, asOf = isoToday()): HealthSc
 
   const missing = [
     marginKnown ? "" : t("Adaugă o mișcare sau soldul unei surse"),
-    envelopes.length ? "" : t("Creează primul plic în Plan"),
+    envelopes.length ? "" : t("Creează primul plic"),
     duesKnown ? "" : t("Treci scadențele lunare sau o datorie"),
     paceKnown ? "" : t("Stabilește data următorului venit"),
   ].filter(Boolean);

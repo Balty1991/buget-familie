@@ -602,7 +602,7 @@ export default function Home() {
     const brief = todayBrief(data);
     publishSpendToday({
       amount: fmtExact.format(brief.spendable),
-      caption: brief.hasPayday && !brief.expired ? t("până la salariu: {days}", { days: daysLabel(brief.remainingDays) }) : t("Setează data salariului în Plan."),
+      caption: brief.hasPayday && !brief.expired ? t("până la salariu: {days}", { days: daysLabel(brief.remainingDays) }) : t("Setează data salariului în Plicuri."),
       date: today,
       zone: getFamilyTimeZone(),
       stale: t("Cifra e de pe {date} — deschide aplicația pentru azi", { date: formatDate(today, { day: "numeric", month: "long" }) }),

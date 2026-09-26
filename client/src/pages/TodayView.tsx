@@ -269,7 +269,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             <strong>{formatDate(activeTranche.start, { day: "2-digit", month: "short" })} – {formatDate(activeTranche.end, { day: "2-digit", month: "short" })}</strong>
             <span>{t("Săptămâna aceasta are {amount} pentru {days} {dayLabel}.", { amount: money(activeTranche.amount), days: activeTranche.days, dayLabel: activeTranche.days === 1 ? t("zi") : t("zile") })}</span>
           </div>
-          <button onClick={() => onGo("plan")}>{t("Plan")}</button>
+          <button onClick={() => onGo("plan")}>{t("Plicuri")}</button>
           <button className="dismiss" aria-label={t("Ascunde anunțul săptămânii")} onClick={() => setShownTrancheKey("")}><X size={16} /></button>
         </aside>
       )}
@@ -281,7 +281,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             <strong>{t("{label} · S{index}", { label: fastWeek.label, index: fastWeek.weekIndex })}</strong>
             <span>{fastWeek.over
               ? t("{spent} din {budget}, peste cu {amount}. Se scade din ce rămâne în plic.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), amount: money(-fastWeek.remaining) })
-              : t("{spent} din {budget}, mai sunt {days}. Ca să ajungă: cel mult {perDay} pe zi.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), days: daysLabel(fastWeek.daysLeft), perDay: money(fastWeek.perDay) })}</span>
+              : fastWeek.daysLeft > 1
+                ? t("{spent} din {budget}, mai sunt {days}. Azi cel mult {today}, apoi cam {future} pe zi.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), days: daysLabel(fastWeek.daysLeft), today: money(fastWeek.todayLeft), future: money(fastWeek.futureShare) })
+                : t("{spent} din {budget}; azi mai sunt {today}.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), today: money(fastWeek.todayLeft) })}</span>
           </div>
           <button onClick={() => onGo("plan")}>{t("Vezi")}</button>
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: fastWeek.label })} onClick={() => setDismissedAlerts((current) => [...current, `week-${fastWeek.allocationId}-${fastWeek.weekIndex}`])}><X size={16} /></button>
@@ -312,7 +314,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         </aside>
       )}
       {topNotice && moreNotices > 0 && (
-        <button type="button" className="bf-notice-more" onClick={() => onGo("plan")}>{moreNotices === 1 ? t("Încă o alertă la plicuri — vezi în Plan") : t("Încă {count} alerte la plicuri — vezi în Plan", { count: moreNotices })}</button>
+        <button type="button" className="bf-notice-more" onClick={() => onGo("plan")}>{moreNotices === 1 ? t("Încă o alertă la plicuri — vezi în Plicuri") : t("Încă {count} alerte la plicuri — vezi în Plicuri", { count: moreNotices })}</button>
       )}
       {data.pendingReview.length > 0 && (
         <aside className="bf-review-today-banner" role="status" aria-live="polite">

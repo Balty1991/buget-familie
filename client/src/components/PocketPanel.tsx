@@ -22,7 +22,7 @@ export function PocketPanel({ data }: { data: AppData }) {
       <div className="bf-empty-state slim">
         <PiggyBank size={23} />
         <h2>Niciun copil marcat</h2>
-        <p>{t("În Setări → Membri poți marca un membru drept copil. Dă-i apoi un plic pe numele lui, în Plan, iar aici va vedea cât mai are din banii de buzunar.")}</p>
+        <p>{t("În Setări → Membri poți marca un membru drept copil. Dă-i apoi un plic pe numele lui, în Plicuri, iar aici va vedea cât mai are din banii de buzunar.")}</p>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export function PocketPanel({ data }: { data: AppData }) {
       <div className="bf-empty-state slim">
         <Wallet size={23} />
         <h2>{t("Încă nu are un plic")}</h2>
-        <p>{t("Creează în Plan un plic pe numele lui {name} și pune-i suma de buzunar. Cheltuielile lui vor scădea din acel plic.", { name: children.find((item) => item.id === memberId)?.name || children[0].name })}</p>
+        <p>{t("Creează în Plicuri un plic pe numele lui {name} și pune-i suma de buzunar. Cheltuielile lui vor scădea din acel plic.", { name: children.find((item) => item.id === memberId)?.name || children[0].name })}</p>
       </div>
     );
   }

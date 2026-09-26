@@ -413,7 +413,7 @@ function buildAlerts(data: AppData): PlannedAlert[] {
       title: fast.over ? t("Săptămâna e depășită") : t("Săptămâna merge repede"),
       body: fast.over
         ? t("{label}: {spent} din {budget} în S{index}, peste cu {amount}.", { label: fast.label, spent: money(fast.spent), budget: money(fast.budget), index: fast.weekIndex, amount: money(-fast.remaining) })
-        : t("{label}: {spent} din {budget}, mai sunt {days}. Ca să ajungă: cel mult {perDay} pe zi.", { label: fast.label, spent: money(fast.spent), budget: money(fast.budget), days: daysLabel(fast.daysLeft), perDay: money(fast.perDay) }),
+        : t("{label}: {spent} din {budget}, mai sunt {days}. Azi cel mult {today}, apoi cam {future} pe zi.", { label: fast.label, spent: money(fast.spent), budget: money(fast.budget), days: daysLabel(fast.daysLeft), today: money(fast.todayLeft), future: money(fast.futureShare) }),
       at: evening,
       tag: `week-fast-${fast.allocationId}-${fast.weekIndex}`,
     });
@@ -480,7 +480,7 @@ function buildAlerts(data: AppData): PlannedAlert[] {
         alerts.push({
           id: id++,
           title: t("Venit mâine"),
-          body: t("Următorul venit este planificat pe {date}. Pregătește repartizarea în Plan.", { date: formatDate(payday) }),
+          body: t("Următorul venit este planificat pe {date}. Pregătește repartizarea în Plicuri.", { date: formatDate(payday) }),
           at: when,
           tag: `payday-eve-${payday}`,
         });

@@ -39,7 +39,7 @@ describe("scorul de sănătate nu inventează o notă", () => {
     const health = calculateHealthScore(base(), ASOF);
     expect(health.missing).toEqual([
       "Adaugă o mișcare sau soldul unei surse",
-      "Creează primul plic în Plan",
+      "Creează primul plic",
       "Treci scadențele lunare sau o datorie",
       "Stabilește data următorului venit",
     ]);
@@ -66,7 +66,7 @@ describe("scorul de sănătate nu inventează o notă", () => {
     const health = calculateHealthScore(data, ASOF);
     expect(health.score).not.toBeNull();
     // Plicurile și scadențele lipsesc încă; scorul o spune, nu o ascunde.
-    expect(health.missing).toContain("Creează primul plic în Plan");
+    expect(health.missing).toContain("Creează primul plic");
   });
 
   it("bani plus plicuri dau un scor real", () => {
