@@ -24,10 +24,16 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 ## Descriere scurtă (≤80 caractere)
 
 ```
-Plicuri pe ciclu de salariu, sync familie criptat — fără login bancar.
+Buget pe salariu, pe plicuri. Cheltuieli, facturi, rate. Fără parola băncii.
 ```
 
-(72 caractere cu spații)
+(76 de caractere cu spații). Varianta B, pentru test A/B în Console:
+
+```
+Salariul vine, aplicația îl împarte pe plicuri. Fără legătură cu banca.
+```
+
+(71 de caractere)
 
 ## Descriere completă
 
