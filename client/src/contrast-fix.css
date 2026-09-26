@@ -524,9 +524,6 @@ html.theme-cyber .os-dock button.is-on svg {
     grid-row: auto;
   }
 
-  .bf-movements-ledger .bf-journal-quickbar {
-    grid-template-columns: 1fr !important;
-  }
   .bf-movements-ledger .bf-movement-kind {
     width: 100%;
   }

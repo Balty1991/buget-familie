@@ -115,3 +115,21 @@ html body .os-shell .bf-movements-ledger .bf-movement-day > div > article.is-swi
 @media (prefers-reduced-motion: reduce) {
   html body .os-shell .bf-movements-ledger .bf-movement-day > div > article { transition: none; }
 }
+
+/* Bara compactă: tipul pe un rând, apoi căutarea și butonul de filtre alături. */
+html body .os-shell .bf-movements-ledger .bf-journal-quickbar > .bf-journal-filter-toggle { width: auto; min-width: 48px; min-height: 48px; padding: 0 12px; white-space: nowrap; }
+
+/* Filtrele: pe desktop rămân în pagină; pe telefon devin o foaie de jos, peste listă. */
+.bf-journal-filter-backdrop, .bf-journal-filter-head { display: none; }
+@media (max-width: 760px) {
+  html body .os-shell .bf-movements-ledger .bf-journal-filter-backdrop { display: block; position: fixed; inset: 0; z-index: 90; width: auto; height: auto; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: rgb(10 20 16 / 45%); box-shadow: none; }
+  html body .os-shell .bf-movements-ledger .bf-journal-filter-sheet { position: fixed; right: 0; bottom: 0; left: 0; z-index: 91; max-height: 82dvh; margin: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 20px 20px 0 0; animation: bf-journal-sheet-up 260ms cubic-bezier(.2, .8, .2, 1) both; }
+  html body .os-shell .bf-movements-ledger .bf-journal-filter-head { display: flex; position: sticky; top: -12px; z-index: 1; align-items: center; justify-content: space-between; gap: 12px; margin: -12px -16px 8px; padding: 12px 16px 8px; background: inherit; }
+  html body .os-shell .bf-movements-ledger .bf-journal-filter-head b { font-size: 17px; }
+  html body .os-shell .bf-movements-ledger .bf-journal-filter-head button { width: auto; min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px; color: var(--cf-on-forest, #fff); background: var(--cf-primary-strong, #1f5a4c); font-weight: 700; }
+}
+@keyframes bf-journal-sheet-up { from { transform: translateY(40px); opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { html body .os-shell .bf-movements-ledger .bf-journal-filter-sheet { animation: none; } }
+html body .os-shell .bf-movements-ledger .bf-journal-quickbar > .bf-journal-search { grid-column: auto; }
+/* Meniul de jos stă peste pagină; cât e deschisă foaia de filtre, se ascunde ca să nu o acopere. */
+@media (max-width: 760px) { html.bf-journal-sheet-open body .os-shell .os-dock { visibility: hidden; } }
