@@ -4,7 +4,8 @@ import { categoryColors } from "./finance-data";
  * Aceeași culoare pentru o categorie peste tot. Categoriile proprii („Grădiniță Maria”) primesc
  * o culoare stabilă din numele lor, nu gri, și nu își schimbă culoarea de la o lună la alta.
  */
-const EXTRA = ["#5B7FA6", "#9A6FB0", "#C0784A", "#4F8F9A", "#8C6A3D", "#6E8B3D", "#B05A6E", "#3D7A8C"];
+/** Culori pentru categoriile proprii, altele decât cele de bază (înainte „Copii” primea culoarea Transportului). */
+const EXTRA = ["#9C4F9E", "#2F7F9E", "#B8653A", "#4F9A6E", "#7E6BC4", "#B3486A", "#8A7A2E", "#3F6E8C"];
 
 export function categoryColor(name: string): string {
   if (categoryColors[name]) return categoryColors[name];

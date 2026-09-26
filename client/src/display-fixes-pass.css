@@ -214,14 +214,14 @@
   color: #f4f7f4 !important;
 }
 .os-shell .bf-debt-schedule-head p {
-  color: #7fe7c1 !important;
+  color: var(--cf-primary) !important;
 }
 .os-shell .bf-debt-schedule-head b,
 .os-shell .bf-debt-schedule-row b {
-  color: #edf9f2;
+  color: var(--cf-ink);
 }
 .os-shell .bf-debt-schedule-row small {
-  color: #b9cfc6;
+  color: var(--cf-muted);
 }
 
 /* Butonul „Plan” din anunțul de tranșă are fundal `--cf-info`, care pe temele de noapte

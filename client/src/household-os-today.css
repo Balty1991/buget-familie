@@ -97,7 +97,7 @@ html:not(.dark) .bf-os-decide {
 
 .bf-os-day b {
   margin-top: 6px;
-  font-family: Fraunces, Georgia, serif;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
   font-size: 14px;
   font-weight: 560;
   font-variant-numeric: tabular-nums;
@@ -216,9 +216,10 @@ html:not(.dark) .bf-os-decide {
   letter-spacing: -.04em !important;
 }
 
+/* Accentul titlului e al temei: mint pe Întunecat, auriu pe Navy (nu mint-ul neon al vechii Cyber). */
 .dark .bf-app h1 em,
 .dark .bf-app h2 em {
-  color: #7cffc4 !important;
+  color: var(--cf-primary, #7dcfab) !important;
   font-style: italic !important;
   font-weight: inherit;
 }

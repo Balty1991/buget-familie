@@ -212,7 +212,12 @@ export type SyncDevice = {
 export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
 export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Educație", "Timp liber", "Credite", "Rate produse", "Altele"];
-export const categoryColors: Record<string, string> = { Alimente: "#176B54", "Consumabile copil": "#3E8F74", Abonamente: "#C4A15A", "Casă & facturi": "#2F6F5E", Transport: "#8C6A3D", "Timp liber": "#4F8F9A", Sănătate: "#1F6B62", "Rate produse": "#A68445", Credite: "#8A5A3C", Educație: "#5B7FA6", Altele: "#6E7C76" };
+/**
+ * Culorile categoriilor: nuanțe separate (înainte Alimente, Casă și Sănătate erau trei verzi
+ * aproape identici). Verificate pe fundal deschis și închis, inclusiv pentru daltonism; „Altele”
+ * rămâne gri, ca rest.
+ */
+export const categoryColors: Record<string, string> = { Alimente: "#2E8B57", "Casă & facturi": "#3B6FB6", Transport: "#D0782F", "Timp liber": "#8A5CC2", Sănătate: "#C8506E", Abonamente: "#A8862A", "Consumabile copil": "#1E9AA8", Educație: "#5561C9", "Rate produse": "#A0522D", Credite: "#6B8E23", Altele: "#7A8580" };
 
 /**
  * Data calendaristică a telefonului, nu cea UTC. `toISOString()` ar întoarce ziua
