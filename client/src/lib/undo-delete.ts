@@ -13,7 +13,7 @@
  * scoată înregistrarea. La anulare acesta trebuie ridicat, altfel sincronizarea
  * ar șterge la loc ce tocmai am readus.
  */
-import type { AppData, Debt, Receipt, RecurringPayment, SavingsGoal, Transaction } from "./finance-data";
+import { TOMBSTONE_MAX, type AppData, type Debt, type Receipt, type RecurringPayment, type SavingsGoal, type Transaction } from "./finance-data";
 
 export type UndoAction = {
   /** Ce i se spune omului: „Mișcarea a fost ștearsă.” */
@@ -83,7 +83,7 @@ export function buildUndoSave(label: string, ids: string[]): UndoAction | undefi
         ...current,
         transactions: current.transactions.filter((item) => !wanted.has(item.id)),
         receipts: current.receipts.filter((receipt) => !receipt.linkedTransactionId || !wanted.has(receipt.linkedTransactionId)),
-        deleted: [...current.deleted, ...present.map((id) => ({ entity: "transactions" as const, id, deletedAt: now }))].slice(-500),
+        deleted: [...current.deleted, ...present.map((id) => ({ entity: "transactions" as const, id, deletedAt: now }))].slice(-TOMBSTONE_MAX),
       };
     },
   };

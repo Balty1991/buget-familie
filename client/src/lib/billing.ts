@@ -18,6 +18,8 @@ export type BillingResult = { ok: boolean; message: string };
 /** Camera în care e conectat telefonul; o achiziție de aici dă Familia tuturor telefoanelor din ea. */
 let activeRoomId: string | undefined;
 export const setActiveFamilyRoom = (roomId: string | undefined) => { activeRoomId = roomId; };
+/** Camera familiei în care e conectat acum telefonul (undefined fără sync). */
+export const getActiveFamilyRoom = () => activeRoomId;
 
 type VerifyResponse = { active: boolean; productId?: string; expiresAt?: string; error?: string };
 

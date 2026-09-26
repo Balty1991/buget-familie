@@ -2,7 +2,7 @@
 import "../recurring.css";
 import { useMemo, useState } from "react";
 import { CalendarClock, Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { recurringNextDue, isoToday, autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringFrequency, type RecurringPayment } from "@/lib/finance-data";
+import { recurringNextDue, isoToday, TOMBSTONE_MAX, autoPostDueRecurring, confirmRecurringPayment, expenseCategories, inPlanPeriod, newId, parseRomanianAmount, pendingRecurringInPlan, sourceBalance, type AppData, type RecurringFrequency, type RecurringPayment } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 import { dateText } from "@/pages/home-kit";
 import { selfMemberIdOf } from "@/lib/member-identity";
@@ -223,7 +223,7 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
             const toggleAuto = () => onChange(autoPostDueRecurring({ ...data, recurring: data.recurring.map((entry) => entry.id === item.id ? { ...entry, autoPost: !entry.autoPost, updatedAt: new Date().toISOString() } : entry) }));
             const remove = () => {
               const now = new Date().toISOString();
-              onChange({ ...data, recurring: data.recurring.filter((entry) => entry.id !== item.id), deleted: [...data.deleted, { entity: "recurring" as const, id: item.id, deletedAt: now }].slice(-500) });
+              onChange({ ...data, recurring: data.recurring.filter((entry) => entry.id !== item.id), deleted: [...data.deleted, { entity: "recurring" as const, id: item.id, deletedAt: now }].slice(-TOMBSTONE_MAX) });
               if (editingId === item.id) resetForm();
             };
             return (

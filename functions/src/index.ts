@@ -560,8 +560,19 @@ async function takeQuota(collection: string, key: string, limit: number, extra: 
  */
 function clientIp(request: { ip?: string; get(name: string): string | undefined }) {
   const forwarded = String(request.get("x-forwarded-for") || "").split(",").map((part) => part.trim()).filter(Boolean);
-  return String(forwarded[forwarded.length - 1] || request.ip || "unknown").slice(0, 64);
+  const ip = String(forwarded[forwarded.length - 1] || request.ip || "unknown").slice(0, 64);
+  // Un abonament IPv6 primește un /64 întreg: numărăm pe prefix, altfel limita se ocolește schimbând adresa.
+  if (ip.includes(":") && !ip.startsWith("::ffff:")) return `${ip.split(":").slice(0, 4).join(":")}::/64`;
+  return ip;
 }
+
+/**
+ * Plafonul zilnic comun e împărțit pe 10 documente: unul singur, scris în tranzacție la fiecare
+ * cerere, nu ține mai mult de ~1 scriere pe secundă și la vârf ar refuza pe toată lumea.
+ */
+const GLOBAL_SHARDS = 10;
+const takeGlobalDaily = (collection: string, cap: number) =>
+  takeQuota(collection, `global-day|${Math.floor(Math.random() * GLOBAL_SHARDS)}`, Math.ceil(cap / GLOBAL_SHARDS), {}, { failOpen: false, perDay: true });
 
 /** Plafon zilnic pentru tot ghidul online: un cost maxim cunoscut, orice s-ar întâmpla. */
 const AI_GUIDE_DAILY_CAP = Number(process.env.AI_GUIDE_DAILY_CAP || 3000);
@@ -573,7 +584,8 @@ const AI_GUIDE_DAILY_CAP = Number(process.env.AI_GUIDE_DAILY_CAP || 3000);
  */
 async function allowPerCaller(collection: string, ip: string, uid: string | null, limit: number, extra: Record<string, unknown> = {}, failOpen = true): Promise<boolean> {
   if (!uid) return takeQuota(collection, ip, limit, extra, { failOpen });
-  return (await takeQuota(collection, `uid|${uid}`, limit, extra, { failOpen })) && (await takeQuota(collection, `ip|${ip}`, limit * 5, extra, { failOpen }));
+  // IP-ul întâi: un refuz pe rețea nu mai consumă și cota telefonului.
+  return (await takeQuota(collection, `ip|${ip}`, limit * 5, extra, { failOpen })) && (await takeQuota(collection, `uid|${uid}`, limit, extra, { failOpen }));
 }
 
 /**
@@ -635,7 +647,7 @@ export const aiGuide = onRequest(
       const perCaller = anonymous
         ? await takeQuota("aiGuideQuota", "anonymous-pool", 30, { trusted: false }, { failOpen: false })
         : await allowPerCaller("aiGuideQuota", ip, uid, trust === "ok" ? 60 : 12, { trusted: trust === "ok" }, false);
-      if (!perCaller || !(await takeQuota("aiGuideQuota", "global-day", AI_GUIDE_DAILY_CAP, {}, { failOpen: false, perDay: true }))) {
+      if (!perCaller || !(await takeGlobalDaily("aiGuideQuota", AI_GUIDE_DAILY_CAP))) {
         response.status(429).json({ error: "Too many requests", code: "quota" });
         return;
       }
@@ -851,7 +863,7 @@ export const playRtdn = onRequest(
       const purchaseToken = decoded?.subscriptionNotification?.purchaseToken;
       // Plafon zilnic: un apel fals nu poate da Familia (tokenul se reverifică la Google), dar fără
       // plafon ar putea face mii de apeluri spre API-ul Play pe costul proiectului.
-      if (decoded?.packageName === PLAY_PACKAGE && purchaseToken && await takeQuota("playRtdnQuota", "global-day", 5000, {}, { failOpen: false, perDay: true })) await syncPlayPurchase(purchaseToken);
+      if (decoded?.packageName === PLAY_PACKAGE && purchaseToken && await takeGlobalDaily("playRtdnQuota", 5000)) await syncPlayPurchase(purchaseToken);
     } catch (error) {
       console.error("playRtdn", error instanceof Error ? error.message : error);
     }

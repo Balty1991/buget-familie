@@ -606,7 +606,10 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
     settings: {
       ...remote.settings,
       ...local.settings,
-      familyName: local.settings.familyName || remote.settings.familyName,
+      // Redenumirea familiei ajunge la toți: câștigă numele ales mai recent.
+      ...((Date.parse(remote.settings.familyNameSetAt || "") || 0) > (Date.parse(local.settings.familyNameSetAt || "") || 0) && remote.settings.familyName
+        ? { familyName: remote.settings.familyName, familyNameSetAt: remote.settings.familyNameSetAt }
+        : { familyName: local.settings.familyName || remote.settings.familyName, familyNameSetAt: local.settings.familyNameSetAt || remote.settings.familyNameSetAt }),
       memberName: local.settings.memberName,
       familyCode: local.settings.familyCode || remote.settings.familyCode,
       members,
