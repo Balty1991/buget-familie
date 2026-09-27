@@ -32,7 +32,6 @@ import { activeIncomes } from "@/lib/monthly-needs";
 import "../monthly-needs.css";
 import { daysLabel, envelopesLabel, getLocale, t } from "@/lib/i18n";
 import { PaidCheck } from "@/components/PaidCheck";
-import { leiLabel } from "@/lib/chart-ui";
 import { hasSeenEnvelopeGlossary, markEnvelopeGlossarySeen } from "@/lib/ui-prefs";
 import { EnvelopeConflictBadge, EnvelopeConflictBanner } from "@/components/EnvelopeConflictBanner";
 import { canAddEnvelope, PLANS } from "@/lib/entitlements";
@@ -428,7 +427,13 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     <EnvelopeConflictBanner data={data} onChange={onChange} />
     <header className="bf-plan-studio-header bf-plan-hero-glass">
       <div className="bf-plan-hero-copy"><p className="bf-kicker">{t("PLANUL FAMILIEI, PE CATEGORII")}</p><h1>{t("Fiecare leu")} <em>{t("are un loc.")}</em></h1><p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p></div>
-      <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{t("NEREPARTIZAȚI")}</small><b>{money(unrepartized)}</b></div>
+      <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{t("NEREPARTIZAȚI")}</small><b>{money(unrepartized)}</b>
+        {/* D12: cele trei cifre se leagă: disponibili = în plicuri (și scadențe) + liberi. */}
+        {availableSources > 0 && <>
+          <i className="bf-plan-header-bar" role="progressbar" aria-label={t("Procentul banilor repartizați în plicuri")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(allocatedRatio * 100)}><em style={{ width: `${Math.round(allocatedRatio * 100)}%` }} /></i>
+          <small className="bf-plan-header-eq">{t("{available} disponibili = {placed} în plicuri + {free} liberi · {percent}% așezat", { available: money(availableSources), placed: money(Math.max(0, availableSources - Math.max(0, unrepartized))), free: money(Math.max(0, unrepartized)), percent: Math.round(allocatedRatio * 100) })}</small>
+        </>}
+      </div>
     </header>
 
     {/* Lista plicurilor e primul lucru de pe ecran; înainte începea abia după ~3.400 px de setări. */}
@@ -646,37 +651,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         {!simpleMode && <button type="button" className="bf-link-button" onClick={() => { markEnvelopeGlossarySeen(); setShowGlossary(false); }}>{t("Am înțeles")}</button>}
       </aside>
     )}
-    <section className="bf-allocation-progress-card" aria-label="Progres repartizare">
-      <div className="bf-allocation-progress-top">
-        <div>
-          <p className="bf-kicker">{t("PROGRES REPARTIZARE")}</p>
-          <h2>{allocationHealth === "balanced" ? "Totul are un loc." : allocationHealth === "ready" ? t("Mai ai de așezat.") : t("Ajustează limitele.")}</h2>
-        </div>
-        <strong>{Math.round(allocatedRatio * 100)}%</strong>
-      </div>
-      <div
-        className="bf-allocation-progress-track"
-        role="progressbar"
-        aria-label={t("Procentul banilor repartizați în plicuri")}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(allocatedRatio * 100)}
-      >
-        <i aria-hidden="true" style={{ width: `${Math.round(allocatedRatio * 100)}%` }} className={allocationHealth} />
-      </div>
-      {/* Bara merge de la 0 la banii disponibili, deci partea „repartizați” trebuie să fie
-          exact complementul celor rămași: rezerva din plicuri plus scadențele. Cu totalul
-          planificat (care include și ce s-a cheltuit deja) cele două cifre nu se adunau la
-          capătul axei, iar procentul părea greșit. */}
-      <div className="bf-allocation-progress-meta">
-        <span><b>{money(Math.max(0, availableSources - Math.max(0, unrepartized)))}</b> {t("repartizați")}</span>
-        <span><b>{money(Math.max(0, unrepartized))}</b> {t("rămași")}</span>
-      </div>
-      <div className="bf-plan-allocation-axis" aria-hidden="true">
-        <span>0 lei</span>
-        <span>{leiLabel(Math.max(0, availableSources))}</span>
-      </div>
-      {missingCategories.length > 0 && (
+    {/* D12: un singur total, în antet; aici rămâne doar pornirea rapidă. */}
+    {missingCategories.length > 0 && <section className="bf-allocation-progress-card" aria-label={t("Pornire rapidă plicuri")}>
+      {(
         <div className="bf-quick-envelope-chips" aria-label={t("Pornire rapidă plicuri")}>
           <p><Sparkles size={14} /> {t("Pornește rapid")}</p>
           <div>
@@ -688,7 +665,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           </div>
         </div>
       )}
-    </section>
+    </section>}
 
     {activeWeek && <section className="bf-active-week" aria-labelledby="active-week-title"><div><p className="bf-kicker">{t("ACUM · TRANȘA S{index}", { index: activeWeek.index })}</p><h2 id="active-week-title">{formatDate(activeWeek.start)} – {formatDate(activeWeek.end)}</h2><span>{t("Aceasta este săptămâna din care se vor scădea cheltuielile repartizate.")}</span></div><strong>{money(activeWeek.amount)}<small>{t("ritm total")}</small></strong></section>}
 

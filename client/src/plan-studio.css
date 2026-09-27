@@ -349,3 +349,34 @@
 .bf-week-band li.is-over small { color: var(--cf-coral); }
 .bf-week-band em { color: var(--cf-primary-strong); font-size: 12px; font-style: normal; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .bf-week-band-bar i { transition: none; } }
+
+/* D12: bara și ecuația din antetul Plicuri, pe toată lățimea cartonașului. */
+.bf-plan-studio-header .bf-plan-header-stat .bf-plan-header-bar {
+  display: block;
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  width: 100%;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cf-muted) 22%, transparent);
+  overflow: hidden;
+}
+.bf-plan-studio-header .bf-plan-header-stat .bf-plan-header-bar em {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cf-primary);
+}
+.bf-plan-studio-header .bf-plan-header-stat .bf-plan-header-eq {
+  display: block;
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  margin-top: 2px;
+  font: 500 12px/1.4 "IBM Plex Sans", system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  color: var(--cf-muted);
+}
