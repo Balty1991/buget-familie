@@ -71,6 +71,12 @@ function nodePainted(node: Element): boolean {
 
 function firstScreenReady(): boolean {
   if (typeof document === "undefined") return true;
+  // P3-14: Astăzi își pune singur semnul după ce e pictat; fără el ar trebui să măsurăm (layout sincron).
+  try {
+    if (typeof performance !== "undefined" && typeof performance.getEntriesByName === "function" && performance.getEntriesByName("bf-today-painted").length) return true;
+  } catch {
+    /* fără Performance API: măsurăm ca înainte */
+  }
   const list = typeof document.querySelectorAll === "function"
     ? document.querySelectorAll(READY_SELECTOR)
     : typeof document.querySelector === "function"
