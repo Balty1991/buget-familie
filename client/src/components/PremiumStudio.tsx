@@ -18,8 +18,8 @@ export function PremiumStudio() {
           <h3>{t("Gratuit")}</h3>
           <p>{t("Pentru un om, pe un telefon.")}</p>
           <ul>
-            <li><Check size={14} /> {t("Până la {n} plicuri", { n: String(PLANS.casa.envelopes) })}</li>
-            <li><Check size={14} /> {t("Un membru, un telefon")}</li>
+            <li><Check size={14} /> {t("Plicuri fără limită")}</li>
+            <li><Check size={14} /> {t("Doi oameni, un telefon")}</li>
             <li><Check size={14} /> {t("Astăzi, Mișcări, Plicuri, scadențe")}</li>
             <li><Check size={14} /> {t("Ghid local + {n} mesaje online pe zi", { n: String(PLANS.casa.aiOnlinePerDay) })}</li>
             <li><Check size={14} /> {t("Export CSV și backup pe telefon")}</li>

@@ -2773,7 +2773,7 @@ export const en: Record<string, string> = {
   "Sincronizare criptată între telefoane": "Encrypted sync between phones",
   "Ghid online încăpător, OCR bonuri, PDF": "Roomier online guide, receipt OCR, PDF",
   "Feed familie: cine a scos, din ce plic": "Family feed: who spent, from which envelope",
-  "14 zile de probă, anulare din Google Play": "14-day trial, cancel in Google Play",
+  "30 de zile de probă, anulare din Google Play": "30-day trial, cancel in Google Play",
   "Dacă anulezi, registrul rămâne pe telefon. Nu luăm ostatic datele.": "If you cancel, the ledger stays on the phone. We do not hold data hostage.",
   "Plata trece prin Google Play. Poți anula oricând din abonamentele contului Google.": "Payment goes through Google Play. You can cancel anytime from your Google account subscriptions.",
   "Buget Familie nu e sfat financiar, credit sau investiție. Este un registru de familie.": "Buget Familie is not financial advice, credit or an investment. It is a household ledger.",
@@ -3479,4 +3479,6 @@ export const en: Record<string, string> = {
   "Semnalat. Mulțumim!": "Reported. Thank you!",
   "Semnalezi acest răspuns al ghidului ca greșit sau nepotrivit? Trimitem doar textul răspunsului, fără datele familiei.": "Report this guide answer as wrong or inappropriate? We send only the answer text, without your family's data.",
   "Răspuns al ghidului AI semnalat": "Reported AI guide answer",
+  "Plicuri fără limită": "Unlimited envelopes",
+  "Doi oameni, un telefon": "Two people, one phone",
 };

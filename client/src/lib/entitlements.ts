@@ -23,7 +23,9 @@ export const PLANS: Record<PlanId, {
   priceMonth: number;
   priceYear: number;
 }> = {
-  casa: { id: "casa", envelopes: 10, members: 1, devices: 1, aiOnlinePerDay: 20, priceMonth: 0, priceYear: 0 },
+  // Casa: bugetul complet al unui cuplu pe un telefon (plicuri fără limită, două nume).
+  // Familia se cere doar pentru al doilea telefon (sync), mai multe persoane și mai mult ghid.
+  casa: { id: "casa", envelopes: Number.POSITIVE_INFINITY, members: 2, devices: 1, aiOnlinePerDay: 20, priceMonth: 0, priceYear: 0 },
   familie: { id: "familie", envelopes: Number.POSITIVE_INFINITY, members: 6, devices: 6, aiOnlinePerDay: 100, priceMonth: 19.99, priceYear: 149 },
 };
 
@@ -34,7 +36,7 @@ export const PLAY_PRODUCT_IDS = {
 
 export type BillingSku = typeof PLAY_PRODUCT_IDS[keyof typeof PLAY_PRODUCT_IDS];
 
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 30;
 export const FAMILIE_OPEN_EVENT = "buget-familie:open-familie";
 
 export const planLimits = (id: PlanId) => PLANS[id];
@@ -77,7 +79,8 @@ export const isFamilie = () => currentPlan() === "familie";
 export const canAddEnvelope = (count: number) => isFamilie() || count < PLANS.casa.envelopes;
 export const canAddMember = (count: number) => isFamilie() || count < PLANS.casa.members;
 export const canUseFamilySync = () => isFamilie();
-export const canUseSettleUp = () => isFamilie();
+/** „Cine cui dă” are sens pentru orice cuplu, și pe un singur telefon. */
+export const canUseSettleUp = () => true;
 export const canUseCycleClose = () => isFamilie();
 export const aiDailyLimit = () => planLimits(currentPlan()).aiOnlinePerDay;
 

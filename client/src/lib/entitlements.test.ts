@@ -30,13 +30,13 @@ describe("planuri Casa / Familia", () => {
 
   it("Casa e gratuită și mărginită; Familia e un abonament de familie, nu per persoană", () => {
     expect(PLANS.casa.priceMonth).toBe(0);
-    expect(PLANS.casa.envelopes).toBe(10);
-    expect(PLANS.casa.members).toBe(1);
+    expect(PLANS.casa.envelopes).toBe(Number.POSITIVE_INFINITY);
+    expect(PLANS.casa.members).toBe(2);
     expect(PLANS.casa.aiOnlinePerDay).toBe(20);
     expect(PLANS.familie.priceYear).toBe(149);
     expect(PLANS.familie.priceMonth).toBe(19.99);
     expect(PLANS.familie.members).toBe(6);
-    expect(planLimits("casa").envelopes).toBe(10);
+    expect(planLimits("casa").envelopes).toBe(Number.POSITIVE_INFINITY);
     expect(planLimits("familie").members).toBe(6);
   });
 
@@ -47,7 +47,7 @@ describe("planuri Casa / Familia", () => {
   it("SKU Play stub + trial + prețuri RO pentru catalog (fără plăți reale)", () => {
     expect(PLAY_PRODUCT_IDS.familieMonth).toBe("familie_lunar");
     expect(PLAY_PRODUCT_IDS.familieYear).toBe("familie_anual");
-    expect(TRIAL_DAYS).toBe(14);
+    expect(TRIAL_DAYS).toBe(30);
     expect(formatPlanPriceRon("casa", "month")).toBe("Gratuit");
     expect(formatPlanPriceRon("familie", "month")).toBe("19,99 lei/lună");
     expect(formatPlanPriceRon("familie", "year")).toBe("149 lei/an");
