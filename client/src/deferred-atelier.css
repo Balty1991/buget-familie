@@ -6172,6 +6172,13 @@ body .bf-command-palette,
   .os-shell .bf-more-list article:nth-child(2) { animation-delay: 40ms; }
   .os-shell .bf-more-list article:nth-child(3) { animation-delay: 80ms; }
   .os-shell .bf-more-list article:nth-child(4) { animation-delay: 120ms; }
+  /* P3-15: doar primele 6 rânduri intră animat; restul apar direct (60–80 de recalculări de stil pe navigare). */
+  .os-shell .bf-more-grid > button:nth-child(n+7),
+  .os-shell .bf-settings-row:nth-child(n+7),
+  .os-shell .bf-movement-day:nth-child(n+7),
+  .os-shell .bf-obligation-ledger article:nth-child(n+7),
+  .os-shell .bf-goal-card:nth-child(n+7),
+  .os-shell .bf-more-list article:nth-child(n+7) { animation: none; }
 
   /* Sheet spring — nu pe first-run: foaia amânată repornea animația la opacity 0. */
   .bf-modal:not(.bf-first-run),

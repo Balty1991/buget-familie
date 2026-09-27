@@ -34,13 +34,21 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const iterations = 250_000;
 
+/** Pe bucăți de 32 KB: caracter cu caracter, un pachet de 119 KB costa zeci de ms pe fir (P2-9). */
 const toBase64 = (bytes: Uint8Array) => {
-  let output = "";
-  bytes.forEach((byte) => { output += String.fromCharCode(byte); });
-  return btoa(output);
+  const parts: string[] = [];
+  for (let start = 0; start < bytes.length; start += 0x8000) {
+    parts.push(String.fromCharCode.apply(null, Array.from(bytes.subarray(start, start + 0x8000))));
+  }
+  return btoa(parts.join(""));
 };
 
-const fromBase64 = (value: string) => Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+const fromBase64 = (value: string) => {
+  const text = atob(value);
+  const bytes = new Uint8Array(text.length);
+  for (let index = 0; index < text.length; index += 1) bytes[index] = text.charCodeAt(index);
+  return bytes;
+};
 
 /**
  * Parola familiei sau cheia PBKDF2 făcută din ea. Cheia e neexportabilă: poate sta pe
