@@ -988,6 +988,8 @@ const legacyFits = (item: Pick<Transaction, "memberId" | "category" | "sourceId"
  */
 export const expenseBelongsTo = (plan: Pick<SalaryPlan, "allocations">, item: Transaction, allocation: BudgetAllocation) => {
   if (item.kind !== "expense") return false;
+  // Corecția de sold și transferurile potrivesc cardul, nu consumă din plic.
+  if (isBalanceAdjustment(item)) return false;
   if (item.allocationId) return item.allocationId === allocation.id;
   if (!legacyFits(item, allocation)) return false;
   return !plan.allocations.some((other) => other.id !== allocation.id && legacyFits(item, other));
@@ -1477,6 +1479,7 @@ export const adoptOutsideExpenses = (data: AppData): AppData => {
   const transactions = data.transactions.map((item) => {
     if (item.kind !== "expense") return item;
     if (item.note === "decontare-intre-membri") return item;
+    if (isBalanceAdjustment(item)) return item;
     if (item.allocationId && item.allocationId !== "outside") return item;
     if (item.outsideChosen) return item;
     if (!inPlanPeriod(item.date, data.settings.salaryPlan)) return item;
@@ -1890,6 +1893,21 @@ export const allocationFromText = (data: AppData, raw: string, input: { memberId
     if (found) return found;
   }
   return scored[0]?.allocation;
+};
+
+/**
+ * Omul a mutat plicul de mână la notare („Engie” → Gaz, nu Chirie): data viitoare aplicația
+ * propune singură același plic. O regulă mai nouă pentru același text o înlocuiește pe cea veche.
+ */
+export const learnMerchantRule = (data: AppData, input: { match: string; category: string; allocationId?: string }): AppData => {
+  const match = input.match.trim().slice(0, 80);
+  if (match.length < 3) return data;
+  const key = foldRomanian(match);
+  const rules = data.settings.merchantRules || [];
+  const same = rules.find((item) => foldRomanian(item.match) === key);
+  if (same && same.allocationId === input.allocationId && same.category === input.category) return data;
+  const rule: MerchantRule = { id: same?.id || newId("merchant-rule"), match, category: input.category, allocationId: input.allocationId, updatedAt: new Date().toISOString() };
+  return { ...data, settings: { ...data.settings, merchantRules: [rule, ...rules.filter((item) => foldRomanian(item.match) !== key)].slice(0, 80) } };
 };
 
 /** Propune plic din reguli locale, dacă există și e încă în plan; altfel din textul plății. */

@@ -10,7 +10,7 @@ import "../receipt-form-fix.css";
 import "../capture-amount-first.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, Ellipsis, HeartPulse, House, Plus, ShoppingCart, Ticket, Trash2, X } from "lucide-react";
-import { allocationFromText, amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { allocationFromText, guessAllocationFromText, matchMerchantRule, amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
@@ -40,7 +40,7 @@ const CAPTURE_CATEGORIES: Array<[string, typeof ShoppingCart]> = [
   ["Altele", Ellipsis],
 ];
 
-type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; };
+type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; };
 
 export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind }: Props) {
   const [kind, setKind] = useState<TransactionKind>(initialKind || "expense");
@@ -171,7 +171,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     if (foreign && !stored) return setError(t("Adaugă în Setări cursul pentru {currency} înainte de a folosi această sursă.", { currency: foreign }));
     if (kind === "expense" && allocationId !== "outside" && !matchedAllocation) return setError(t("Plicul nu mai corespunde categoriei sau sursei. Alege din nou."));
     try {
-      onSave({ id: captureIdRef.current, title: activeTemplate?.label || (kind === "expense" ? (merchant.trim() || t("Cheltuială rapidă · {category}", { category: t(category) })) : incomeLabel.trim() || t("Venit rapid")), amount: stored || numeric, originalAmount: foreign ? numeric : undefined, originalCurrency: foreign, exchangeRate: foreign ? rate : undefined, kind, category: kind === "expense" ? category : "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: isoToday(), allocationId: kind === "expense" ? allocationId : undefined, outsideChosen: kind === "expense" && allocationId === "outside" && allocationChoiceTouched ? true : undefined, createdAt: new Date().toISOString() }, { fromWeekIndex: kind === "expense" && paced ? fromWeekIndex : undefined });
+      onSave({ id: captureIdRef.current, title: activeTemplate?.label || (kind === "expense" ? (merchant.trim() || t("Cheltuială rapidă · {category}", { category: t(category) })) : incomeLabel.trim() || t("Venit rapid")), amount: stored || numeric, originalAmount: foreign ? numeric : undefined, originalCurrency: foreign, exchangeRate: foreign ? rate : undefined, kind, category: kind === "expense" ? category : "Venit", sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date: isoToday(), allocationId: kind === "expense" ? allocationId : undefined, outsideChosen: kind === "expense" && allocationId === "outside" && allocationChoiceTouched ? true : undefined, createdAt: new Date().toISOString() }, { fromWeekIndex: kind === "expense" && paced ? fromWeekIndex : undefined, learnRule: kind === "expense" && allocationChoiceTouched && allocationId !== "outside" && merchant.trim().length >= 3 && !activeTemplate ? { match: merchant.trim(), category, allocationId } : undefined });
       onClose();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("Nu am putut salva mișcarea."));
@@ -224,9 +224,14 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
         setMerchant(next);
         if (categoryTouched) return;
         // Plicul spus de text („taxi”, „Enel”) bate categoria: Lumină și Apă au aceeași categorie.
-        const envelope = allocationFromText(data, next, { memberId, sourceId });
+        // O regulă învățată („Engie → Gaz”) bate ghicitul din text.
+        const ruleId = guessAllocationFromText(data, next);
+        const ruled = ruleId && matchMerchantRule(next, data.settings.merchantRules || [])?.allocationId === ruleId ? data.settings.salaryPlan.allocations.find((item) => item.id === ruleId) : undefined;
+        const envelope = ruled || allocationFromText(data, next, { memberId, sourceId });
         if (envelope) {
-          if (envelope.category && envelope.category !== category) setCategory(envelope.category);
+          // Categoria vine odată cu plicul: efectul „plicul urmează categoria” nu trebuie să-l
+          // mute pe primul plic al categoriei (Engie ajungea în Chirie, nu în Gaz).
+          if (envelope.category && envelope.category !== category) { previousCategory.current = envelope.category; setCategory(envelope.category); }
           setAllocationId(envelope.id);
           return;
         }

@@ -4,7 +4,7 @@
  */
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, Users, RotateCcw, Inbox, LayoutGrid, MessagesSquare, MoreHorizontal, Plus, ReceiptText, Search, ShieldCheck, Wallet, X } from "lucide-react";
-import { TOMBSTONE_MAX, rollIncomeHorizon, deviceTimeZone, setFamilyTimeZone, getFamilyTimeZone, adoptOutsideExpenses, commitLedgerEntry, confirmRecurringPayment, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { TOMBSTONE_MAX, rollIncomeHorizon, deviceTimeZone, setFamilyTimeZone, getFamilyTimeZone, adoptOutsideExpenses, commitLedgerEntry, learnMerchantRule, confirmRecurringPayment, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
 import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
@@ -332,7 +332,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; applyData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
-  const saveTx = (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => {
+  const saveTx = (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => {
     let failed: Error | undefined;
     const saved = Array.isArray(item) ? item : [item];
     /** Doar mișcările noi primesc „Anulează”; o corectură se refac din formular. */
@@ -340,7 +340,8 @@ export default function Home() {
     update((current) => {
       try {
         const list = Array.isArray(item) ? item : [item];
-        return list.reduce((ledger, entry) => commitLedgerEntry(ledger, entry, meta?.fromWeekIndex), current);
+        const next = list.reduce((ledger, entry) => commitLedgerEntry(ledger, entry, meta?.fromWeekIndex), current);
+        return meta?.learnRule ? learnMerchantRule(next, meta.learnRule) : next;
       } catch (reason) {
         failed = reason instanceof Error ? reason : new Error(t("Nu am putut salva mișcarea."));
         return current;

@@ -221,7 +221,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     return recentActivityMoves(data.transactions, cycleIds, today, data.settings.members.length);
   }, [data]);
   const periodIncome = data.transactions.filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
-  const periodExpense = data.transactions.filter((item) => item.kind === "expense" && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
+  const periodExpense = data.transactions.filter((item) => item.kind === "expense" && !isBalanceAdjustment(item) && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   // Tranșa din plicuri (600 la mâncare), nu o împărțire pe zile a totalului (599,97).
   const activeTranche = math.planEnd ? planWeeklyCycle(data)?.weeks.find((week) => isoToday() >= week.start && isoToday() <= (week.graceDays ? addIsoDays(week.end, week.graceDays) : week.end)) : undefined;
   const activeTrancheKey = activeTranche ? calendarBudgetWeekKey(activeTranche) : "";

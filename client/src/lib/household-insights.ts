@@ -856,11 +856,22 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
   const liquid = liquidSafeToSpend(data, asOf);
   const safe = { ...liquid, available: Math.max(0, liquid.available - nextCycleIncome) };
   const remainingDays = Math.max(1, forecast.remainingDays);
-  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && inPlanPeriod(item.date, plan)).reduce((sum, item) => sum + item.amount, 0);
+  /**
+   * Doar cheltuiala care vine din banii zilei: o factură plătită din plicul ei (Enel din Lumină,
+   * grădinița din Grădiniță) era deja pusă deoparte, deci nu micșorează partea de azi. Altfel
+   * „Poți folosi azi” cădea 365 → 0 după două facturi, cu 1.831 lei în plicul săptămânii.
+   */
+  const fixedIds = new Set(plan.allocations.filter((item) => isFixedEnvelope(plan, item)).map((item) => item.id));
+  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && inPlanPeriod(item.date, plan) && !isBalanceAdjustment(item) && !(item.allocationId && fixedIds.has(item.allocationId))).reduce((sum, item) => sum + item.amount, 0);
   /** Partea de azi, socotită din banii de la începutul zilei; cheltuiala de azi o micșorează leu cu leu. */
   const dayShareLeft = (moneyNowAfterToday: number) => Math.max(0, (moneyNowAfterToday + spentToday) / remainingDays - spentToday);
   const fromPace = dayShareLeft(Math.max(0, forecast.safeDaily) * remainingDays);
-  const fromLiquid = dayShareLeft(Math.max(0, safe.available));
+  /**
+   * Plafonul din cont nu socotește ca liberi banii puși deja deoparte pentru facturi și rate
+   * (plicurile fixe): altfel plata Enel din plicul ei scădea plafonul, și cifra zilei cu el.
+   */
+  const fixedLeft = plan.allocations.filter((item) => fixedIds.has(item.id)).reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
+  const fromLiquid = dayShareLeft(Math.max(0, safe.available - fixedLeft));
   const rhythm = weeklyEnvelopeDailyRhythm(data, asOf);
   const fromWeek = rhythm.hasWeekly ? Math.max(0, rhythm.todayLeft) : undefined;
   /**
