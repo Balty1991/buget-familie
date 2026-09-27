@@ -1,0 +1,3 @@
+
+# Construit din src la deploy (predeploy: npm run build); copia veche încurca la review.
+lib/

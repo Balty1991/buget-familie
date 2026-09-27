@@ -26,7 +26,7 @@ env:
   FIREBASE_PROJECT_ID: buget-familie-a6a0d
 
 jobs:
-  test-and-deploy:
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -61,6 +61,26 @@ jobs:
         timeout-minutes: 12
         run: pnpm test:sync
 
+  # Publicarea e alt job: codul din dependențe și testele de mai sus nu rulează niciodată
+  # lângă credențialul de producție (S3).
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+          cache: pnpm
+      # Firebase CLI din lockfile (cu toate dependențele fixate), fără scripturi de instalare.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
@@ -74,7 +94,7 @@ jobs:
         run: |
           set -uo pipefail
           for try in 1 2 3; do
-            if npx --yes firebase-tools@15.31.0 deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive --force; then exit 0; fi
+            if pnpm exec firebase deploy --only firestore:rules --project "$FIREBASE_PROJECT_ID" --non-interactive --force; then exit 0; fi
             echo "Încercarea $try nu a reușit; aștept 60 s."
             sleep 60
           done

@@ -39,6 +39,10 @@ jobs:
         with:
           node-version: 22
 
+      # Firebase CLI din lockfile-ul proiectului (dependențe fixate), fără scripturi de instalare (S3).
+      - name: Install Firebase CLI from lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
       - name: Install function dependencies
         working-directory: functions
         run: npm ci --ignore-scripts --legacy-peer-deps
@@ -127,7 +131,7 @@ jobs:
           gcloud firestore fields ttls list --project "$FIREBASE_PROJECT_ID" --quiet || true
 
       - name: Deploy Firebase Functions
-        run: npx --yes firebase-tools@15.31.0 deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
+        run: pnpm exec firebase deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
 
       - name: Check aiGuide endpoint
         run: |
