@@ -769,3 +769,43 @@ html body .bf-today-workspace > .bf-today-side { display: grid; gap: inherit; al
   html body .os-shell .bf-today-workspace:not(.is-simple) > .bf-today-side { grid-column: 2; }
   html body .os-shell .bf-today-workspace:not(.is-simple) > .bf-today-side > .bf-today-brief { padding: 16px 18px; }
 }
+
+/* D10: pe ecrane late, navigația devine bară laterală: marcă, „+ Notează”, ecranele, iar jos căutare și instrumente.
+   Shell-ul devine grilă cu două coloane; antetul rămâne „sticky”, pe toată înălțimea ecranului. */
+.os-desktop-add { display: none; }
+@media (min-width: 1200px) {
+  html body .bf-app.os-shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); align-items: start; }
+  html body .bf-app.os-shell > * { grid-column: 2; }
+  html body .bf-app.os-shell > header.os-appbar {
+    grid-column: 1;
+    grid-row: 1 / span 30;
+    align-self: start;
+    top: 0;
+    height: 100vh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 18px;
+    padding: 18px 14px;
+    border-right: 1px solid var(--cf-line);
+  }
+  html body .bf-app.os-shell > header.os-appbar .os-desktop-nav { display: flex; flex-direction: column; align-items: stretch; align-self: stretch; width: auto; gap: 4px; }
+  html body .bf-app.os-shell > header.os-appbar nav.os-desktop-nav > button { justify-content: flex-start; align-self: stretch; width: auto; max-width: none; min-height: 44px; padding: 0 14px; }
+  html body .bf-app.os-shell > header.os-appbar > button.os-desktop-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--cf-primary);
+    color: var(--cf-on-primary, #fff);
+    font-weight: 700;
+  }
+  html body .bf-app.os-shell > header.os-appbar > button.os-desktop-add { align-self: stretch; width: auto; max-width: none; }
+  html body .bf-app.os-shell > header.os-appbar > .os-brand { align-self: flex-start; }
+  html body .bf-app.os-shell > header.os-appbar .os-tools { margin-top: auto; justify-content: flex-start; }
+}

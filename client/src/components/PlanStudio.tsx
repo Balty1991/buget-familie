@@ -10,7 +10,7 @@ import "../plan-studio.css";
 import "../envelope-source.css";
 import "../envelope-transfer.css";
 import "../envelope-insights.css";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
@@ -133,9 +133,26 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const [showGlossary, setShowGlossary] = useState(() => !hasSeenEnvelopeGlossary());
   /** Formularul de plic stă închis sub listă; „+ Plic”, „Modifică” și pornirea rapidă îl deschid. */
   const [builderOpen, setBuilderOpen] = useState(false);
+  const closeBuilder = () => { setBuilderOpen(false); setEditingAllocationId(""); };
+  // D16: pe telefon, formularul deschis se randează la nivelul aplicației (peste barele de sus și de jos).
+  const [phone, setPhone] = useState(() => typeof window !== "undefined" && window.matchMedia?.("(max-width: 760px)").matches);
+  useEffect(() => {
+    const query = window.matchMedia?.("(max-width: 760px)");
+    if (!query) return;
+    const update = () => setPhone(query.matches);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  const sheetOrInline = (node: ReactNode) => {
+    const open = builderOpen || Boolean(editingAllocationId);
+    // În <body>, ca dialogul de previzualizare: `.bf-app` are `overflow: clip` și ar tăia foaia.
+    const host = typeof document !== "undefined" ? document.body : null;
+    return open && phone && host ? createPortal(<div className="bf-plan-workspace bf-plan-sheet-host">{node}</div>, host) : node;
+  };
   const openBuilder = () => {
     setBuilderOpen(true);
-    window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    // Pe telefon e foaie (se deschide de sus); pe ecran mare formularul e sub listă și ducem pagina la el.
+    if (!window.matchMedia?.("(max-width: 760px)").matches) window.setTimeout(() => document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   };
 
   const periodValid = Boolean(cycleStart && cycleEnd && cycleEnd >= cycleStart);
@@ -342,6 +359,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     const saved = appendAllocationHistory(nextData, { kind: editingAllocationId ? "updated" : "created", allocationId: next.id, allocationLabel: label, amount, previousAmount: previous?.amount, newAmount: amount });
     onChange(levelStarted ? levelStartedWeek(saved, next.id) : saved);
     resetAllocationBuilder();
+    setBuilderOpen(false);
   };
   const editAllocation = (item: BudgetAllocation) => { setAllocationFunding((item.funding || []).map((entry) => ({ sourceId: entry.sourceId, amount: amountInput(entry.amount) }))); setEditingAllocationId(item.id); setAllocationLabel(item.label); setAllocationCategory(item.category || categories[0] || "Alimente"); setAllocationAmount(amountInput(item.amount)); setAllocationMemberId(item.memberId || ""); setAllocationSourceId(item.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(item.note || ""); setAllocationThreshold(item.alertThreshold || 80); setAllocationWeeklyPace(item.weeklyPace !== false); setAllocationError(""); openBuilder(); };
   const applyRecommendation = (allocation: BudgetAllocation, amount: number) => { setEditingAllocationId(allocation.id); setAllocationLabel(allocation.label); setAllocationCategory(allocation.category || categories[0] || "Alimente"); setAllocationAmount(amountInput(amount)); setAllocationMemberId(allocation.memberId || ""); setAllocationSourceId(allocation.sourceId || data.settings.paymentSources[0]?.id || ""); setAllocationNote(allocation.note || ""); setAllocationThreshold(allocation.alertThreshold || 80); setAllocationWeeklyPace(allocation.weeklyPace !== false); setAllocationError(""); openBuilder(); };
@@ -531,8 +549,11 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.")}</span></div>}
             </div>
     </section>
-    <details className="bf-plan-tools bf-plan-builder" open={builderOpen || Boolean(editingAllocationId)} onToggle={(event) => setBuilderOpen((event.currentTarget as HTMLDetailsElement).open)}>
-      <summary>{editingAllocationId ? t("Modifică plicul") : t("Plic nou")}</summary>
+    {/* D16: pe telefon formularul e o foaie peste pagină; fundalul și Escape o închid. */}
+    {sheetOrInline(<>
+    {(builderOpen || Boolean(editingAllocationId)) && <div className="bf-plan-builder-backdrop" aria-hidden="true" onClick={closeBuilder} />}
+    <details className="bf-plan-tools bf-plan-builder" open={builderOpen || Boolean(editingAllocationId)} onToggle={(event) => { const open = (event.currentTarget as HTMLDetailsElement).open; setBuilderOpen(open); if (!open && editingAllocationId) setEditingAllocationId(""); }} onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); closeBuilder(); } }}>
+      <summary>{editingAllocationId ? t("Modifică plicul") : t("Plic nou")}<span className="bf-plan-builder-close" aria-hidden="true">×</span></summary>
       <section className={`bf-allocation-guidance ${allocationHealth}`} aria-labelledby="bf-allocation-guidance-title"><div className="bf-allocation-guidance-heading"><div><p className="bf-kicker">{t("REPARTIZARE GHIDATĂ")}</p><h2 id="bf-allocation-guidance-title">{unrepartized > 0 ? <>{t("Înainte să adaugi un plic, vezi")} <em>{t("ce mai trebuie acoperit.")}</em></> : unrepartized < 0 ? t("Plicurile depășesc disponibilul") : t("Banii disponibili sunt repartizați")}</h2><p>{allocationHealthLabel}. {t("Plicurile sunt limite de planificare; nu mută bani din card sau cash.")}</p></div><WalletCards size={23} aria-hidden="true" /></div><div className="bf-allocation-guidance-stats"><span><small>{t("Disponibil în surse")}</small><b>{money(Math.max(0, availableSources))}</b></span><span><small>{t("În plicuri")}</small><b>{money(Math.max(0, reservedInEnvelopes))}</b></span><span><small>{t("Scadențe")}</small><b>{money(Math.max(0, scheduled))}</b>{scheduledInEnvelopes > 0 && <small>{t("+{amount} plătite din plicuri", { amount: money(scheduledInEnvelopes) })}</small>}</span><span><small>{t("De repartizat")}</small><b>{money(Math.max(0, unrepartized))}</b></span></div>{unrepartized > 0 && <button type="button" className="bf-allocation-guidance-action" onClick={() => { setAllocationAmount(String(Math.round(unrepartized))); setAllocationError(""); document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>{t("Folosește suma nealocată pentru următorul plic")} <ChevronDown size={15} /></button>}{unrepartized < 0 && <p className="bf-form-error" role="alert">{t("Limitele plicurilor și scadențele depășesc soldul disponibil. Redu un plic sau verifică sursele înainte de a continua.")}</p>}</section><p className="bf-allocation-intro">{t("Adaugă o categorie pentru fiecare parte a banilor: alimente, taxi, abonamente, consumabile copil. La o cheltuială reală, alegi categoria și aplicația scade automat din plicul potrivit.")}</p>
       <div id="bf-allocation-builder" className="bf-allocation-builder">
         <PlanField label={t("Ce plătește plicul")}><select value={allocationCategory} onChange={(event) => setAllocationCategory(event.target.value)}>{categories.map((category) => <option key={category} value={category}>{category}</option>)}</select></PlanField>
@@ -645,6 +666,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       {allocationPreviewOpen && createPortal(<div className="bf-allocation-preview" role="dialog" aria-modal="true" aria-labelledby="allocation-preview-title"><div><p className="bf-kicker">{t("PREVIZUALIZARE")}</p><h3 id="allocation-preview-title">{t("Verifică înainte de aplicare")}</h3><p>Vei {editingAllocationId ? "actualiza" : t("adăuga")} plicul <b>{allocationLabel.trim() || allocationCategory}</b> cu <strong>{money(allocationTotal)}</strong> {t("pentru perioada aleasă.")}</p><div><span>{t("Rămas acum")}<strong>{money(unrepartized)}</strong></span><span>{t("Rămas după")}<strong>{money(previewAfter)}</strong></span></div><small>{t("Previzualizarea nu schimbă nimic până când nu confirmi.")}</small><footer><button onClick={() => setAllocationPreviewOpen(false)}>{t("Înapoi la editare")}</button><button className="bf-primary" onClick={() => { setAllocationPreviewOpen(false); saveAllocation(); }}><Check size={16} /> {t("Confirmă repartizarea")}</button></footer></div></div>, document.body)}
       {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}
     </details>
+    </>)}
     {(simpleMode || showGlossary) && (
       <aside className={simpleMode ? "bf-plan-simple-tip" : "bf-envelope-glossary-tip"} role="note">
         <p className="bf-kicker">{t("PE SCURT")}</p>

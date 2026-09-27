@@ -394,3 +394,62 @@ html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto > span { displ
 html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto b { font-size: 14px; line-height: 1.35; }
 html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto small { font-size: 13px; line-height: 1.45; color: var(--cf-muted); }
 html body .bf-cycle-setup .bf-irregular-income { margin-top: 12px; }
+
+/* D16: pe telefon, „Plic nou” / „Modifică plicul” e o foaie de jos, peste pagină și peste bara de jos. */
+.bf-plan-builder-backdrop { display: none; }
+.bf-plan-builder-close { display: none; }
+@media (max-width: 760px) {
+  .bf-plan-builder-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1190;
+    background: color-mix(in srgb, #0b1a16 48%, transparent);
+  }
+  html body .bf-plan-builder[open] {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    max-height: 92vh;
+    margin: 0;
+    padding: 0 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 22px 22px 0 0;
+    background: var(--cf-surface);
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, .24);
+  }
+  html body .bf-plan-builder[open] > summary {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    margin: 0 -16px 8px;
+    padding: 0 16px;
+    background: var(--cf-surface);
+    border-bottom: 1px solid var(--cf-line);
+    font-size: 17px;
+  }
+  html body .bf-plan-builder[open] .bf-plan-builder-close {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--cf-muted);
+    background: color-mix(in srgb, var(--cf-muted) 12%, transparent);
+  }
+}
+.bf-plan-sheet-host { display: contents; }
+/* În foaie, direct câmpurile; ghidajul rămâne în vederea de pe ecran mare. */
+.bf-plan-sheet-host .bf-plan-builder > .bf-allocation-guidance { display: none; }
+.bf-plan-sheet-host .bf-plan-builder > p { display: none; }
+/* Confirmarea plicului se deschide deasupra foii „Plic nou” (D16). */
+html body .bf-allocation-preview { z-index: 1300; }
