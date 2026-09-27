@@ -251,7 +251,8 @@ async function main() {
       }, password);
       if (!oldRoom.movedAt || oldRoom.transactions || oldRoom.hasInvite) fail(`Camera veche nu a fost golită corect: ${JSON.stringify(oldRoom)}`);
       // B3: camera veche e sigilată. Cine are încă parola veche (un telefon scos din familie) nu o mai poate rescrie.
-      const rewrite = await ana.page.evaluate(async (password) => {
+      // Regulile de rezervă (E2E_RULES=auth, fără lanț) nu au sigiliu: acolo încercarea ar reuși și ar goli camera.
+      const rewrite = process.env.E2E_RULES === "auth" ? "sărit" : await ana.page.evaluate(async (password) => {
         const crypto = await import("/src/lib/family-crypto.ts");
         const sync = await import("/src/lib/realtime-sync.ts");
         const finance = await import("/src/lib/finance-data.ts");

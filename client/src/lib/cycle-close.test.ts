@@ -3,7 +3,7 @@
  * Regula care contează: nu se învață din întâmplări, ci din obiceiuri.
  */
 import { describe, expect, it } from "vitest";
-import { createEmptyAppData, type AppData, type Transaction } from "./finance-data";
+import { addIsoDays, createEmptyAppData, type AppData, type Transaction } from "./finance-data";
 import { cycleClose, nextMonthSameDay, startNextCycle } from "./cycle-close";
 
 const cheltuiala = (id: string, amount: number, date: string, category: string, allocationId: string): Transaction => ({
@@ -155,8 +155,4 @@ describe("ziua salariului după februarie", () => {
   });
 });
 
-function nextDay(iso: string) {
-  const date = new Date(`${iso}T12:00:00`);
-  date.setDate(date.getDate() + 1);
-  return date.toISOString().slice(0, 10);
-}
+const nextDay = (iso: string) => addIsoDays(iso, 1);
