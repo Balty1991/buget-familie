@@ -20,7 +20,7 @@
 | D13 | Cifra „pe zi” cu 5 reguli de rotunjire | ✅ `c29cfac` |
 | D14 | Contor zilnic AI într-un singur document | ✅ `33f7b6e` |
 | D15 | Teste fără verificare de tipuri, CI incomplet, firebase-tools nefixat | ✅ `2bab932`, `3e874ab` |
-| D16 | Fișiere mari, teste lipsă pentru sync | ✅ test cap-coadă pentru D1; ⏳ extragerea `sync-engine.ts` |
+| D16 | Fișiere mari, teste lipsă pentru sync | ✅ test cap-coadă pentru D1; `sync-engine.ts` cu teste `3fa0b07` |
 
 ## Securitate (security-report.md)
 | # | Constatare | Stare |
@@ -71,8 +71,8 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | P1-1…P1-4 | Gata, revenire pe Astăzi, pornire, jurnal | ✅ `444d385` |
 | P2-5, P2-6, P2-7 | Căutarea din jurnal, paleta, Plicuri (formatDate) | ✅ `d691122`, `3df805e` |
 | P2-8 | Randări la orice schimbare din Home | ✅ `53206ff` |
-| P2-9 | Sync pe firul principal | ✅ cheie pe sare, iv sărit `b634970`, base64 `9e816d6`; ⏳ Web Worker |
-| P2-10 | CSS 635 KB | ⏳ continuu (D24) |
+| P2-9 | Sync pe firul principal | ✅ cheie pe sare, iv sărit `b634970`, base64 `9e816d6`, Web Worker `d634c13` |
+| P2-10 | CSS 635 KB | ✅ reguli moarte scoase, plafoane de mărime și `!important` în teste `500b904`; restul continuu |
 | P2-11 | Service worker offline | ✅ `53206ff` |
 | P3-12, P3-14, P3-15 | Pachet de pornire, layout la pornire, animații | ✅ `d691122`, `1d894c0`, `9e816d6` |
 | P3-13 | Fonturi (subset Fraunces) | ✅ 58 KB → 7 KB pe greutate |
@@ -84,17 +84,17 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | D4, D5, D7, D8 | Bloc închis pe Alb, roșu, fonturi, paletă | ✅ `bbab747` |
 | D6 | Accent Navy, „OLED” | ✅ `bbab747`, `aec8069` |
 | D9 | Fâșia de pe desktop | ✅ `a58e0f2` |
-| D10 | Layout de desktop | ✅ Astăzi pe două coloane, taburi în ordinea din dock `0aec841`; ⏳ sidebar, Plicuri master-detail, Mișcări ca tabel |
+| D10 | Layout de desktop | ✅ Astăzi pe două coloane `0aec841`, bară laterală cu „+ Notează” `f994406`, Mișcări la 960 px, plicurile pe două coloane |
 | D11 | Cardul plicului compact | ✅ 259 → 184 px |
 | D12 | Trei totaluri pe Plicuri | ✅ `7fd69b4` |
 | D13 | Obligații | ✅ `0a76d3f` (plata era deja verde) |
 | D14 | Analiză | ✅ `f88b581` |
 | D15 | Setări grupate | ✅ secțiuni pliabile; textele `4a90313` |
-| D16 | „+ Plic” | ✅ grila aliniată la 48 px, suma pe tot rândul; ⏳ foaie separată |
+| D16 | „+ Plic” | ✅ grila aliniată, foaie de jos pe telefon `f994406` |
 | D17 | „Cum se citește?” | ✅ `bc64dbf` |
 | D18 | Mișcări | ✅ `51dae9f` |
 | D19–D23 | Text mic, gri, ghid, first-run, sync | ✅ D19, D20 `09fe9b5`; D21 `81bbc18`, `529763b`; D22 `4403de5`; D23 era deja făcut |
-| D24 | Straturi CSS | ⏳ continuu |
+| D24 | Straturi CSS | ✅ plafoane în teste `500b904`; curățenia continuă la fiecare schimbare |
 
 ## Produs (product-report.md)
 | # | Constatare | Stare |
@@ -106,5 +106,5 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | 5 | Cererea de recenzie | ✅ `21b3d5c` (👤 un build APK/AAB ca să intre pluginul Play Review) |
 | 6 | 6 intenții, lipsește „Mă alătur familiei” | ✅ `4403de5` |
 | 7 | Materiale de lansare vechi | ✅ `7e6b1ab` (👤 capturile noi) |
-| 8 | „Închide anul” | ⏳ |
+| 8 | „Închide anul” | ✅ `313f92e` |
 | — | Preț, probă, ASO | 👤 decizie |
