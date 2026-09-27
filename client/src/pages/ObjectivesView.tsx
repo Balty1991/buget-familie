@@ -156,14 +156,14 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
       kind: "recurring" as const,
       date: item.dueDate,
       label: item.name,
-      detail: item.category,
+      detail: t(item.category),
       amount: item.amount,
       onConfirm: () => onPayRecurring(item.id),
     })),
     // Chiria sau rata din „Ce plătim lunar”, cu ziua plății aleasă, fără plată recurentă separată.
     ...(data.settings.salaryPlan.needs || []).filter((need) => !data.recurring.some((item) => item.active && item.name.trim().toLowerCase() === need.label.trim().toLowerCase())).flatMap((need) => {
       const due = nextNeedDue(data, need, today);
-      return due ? [{ id: `need-${need.id}`, kind: "need" as const, date: due.date, label: need.label, detail: need.category, amount: due.amount, onConfirm: onOpenCalendar }] : [];
+      return due ? [{ id: `need-${need.id}`, kind: "need" as const, date: due.date, label: need.label, detail: t(need.category), amount: due.amount, onConfirm: onOpenCalendar }] : [];
     }),
   ].filter((entry) => !laterIds.includes(entry.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
   const kindLabel = (kind: "debt" | "saving" | "recurring" | "event" | "need") => kind === "debt" ? t("Rată") : kind === "saving" ? t("Obiectiv") : kind === "event" ? t("Eveniment") : kind === "need" ? t("Ce plătim lunar") : t("Factură / abonament");

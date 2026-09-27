@@ -1,5 +1,31 @@
 # Capturi Play Store — note de producție
 
+## Gata de încărcat
+
+8 cadre cu titlu, 1080×1920, câte un set pe limbă:
+
+- `screenshots/ro/` — pentru fișa în română
+- `screenshots/en/` — pentru fișa în engleză (en-US / en-GB)
+
+| # | Fișier | RO | EN |
+|---|---|---|---|
+| 1 | `01-today` | Cât poți cheltui azi | What you can spend today |
+| 2 | `02-split` | A intrat salariul? Se împarte singur. | Payday? It splits itself. |
+| 3 | `03-plan` | Fiecare leu are un loc. | Every leu has a place. |
+| 4 | `04-needs` | Două salarii, zile diferite. | Two salaries, different days. |
+| 5 | `05-add` | Notezi în 3 secunde. | Log it in 3 seconds. |
+| 6 | `06-journal` | Toate mișcările familiei. | Every family transaction. |
+| 7 | `07-obligations` | Rate și facturi la timp. | Bills and loans on time. |
+| 8 | `08-insights` | Vezi unde se duc banii. | See where the money goes. |
+
+Date inventate (familia Andrei și Maria), scrise doar în localStorage-ul browserului de test, nu în Firebase.
+Refacere: pornește `vite --port 5174`, apoi din `scripts/store-screenshots/`:
+`CHROMIUM_PATH=/opt/pw-browsers/chromium node capture.mjs && node compose.mjs`.
+
+---
+
+## Planul inițial
+
 Temă: **Alb**. Telefon 1080×2340. Date inventate, nu ale tale. Fără notificări pe bară.
 
 Versiune de listat: **1.1.96** / `versionCode` **98**. Navigația de jos: **Astăzi · Plicuri · Notează · Mișcări · Mai mult**.
