@@ -66,6 +66,10 @@ dependencies {
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
     implementation 'androidx.work:work-runtime:2.9.1'
+    // @capgo/native-purchases aduce Guava doar la rulare; Gradle aliniază atunci și compilarea pe
+    // „listenablefuture:9999.0-empty”, iar ReminderWorker nu mai găsește ListenableFuture.
+    // Aceeași versiune ca pluginul: e deja în APK, deci nu crește dimensiunea.
+    implementation 'com.google.guava:guava:33.7.1-android'
     implementation 'androidx.core:core:1.17.0'
     implementation 'com.google.android.play:review:2.0.2'
     testImplementation "junit:junit:$junitVersion"
