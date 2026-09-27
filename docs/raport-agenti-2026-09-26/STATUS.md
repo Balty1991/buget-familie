@@ -85,8 +85,15 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | D6 | Accent Navy, „OLED” | ✅ `bbab747`, `aec8069` |
 | D9 | Fâșia de pe desktop | ✅ `a58e0f2` |
 | D10 | Layout de desktop | ⏳ |
-| D11–D18 | Plicuri, Obligații, Analiză, Setări, + Plic, „Cum se citește”, Mișcări | ⏳ |
-| D19–D23 | Text mic, gri, ghid, first-run, sync | ✅ D19, D20 `09fe9b5`; ⏳ D21–D23 |
+| D11 | Cardul plicului compact | ⏳ |
+| D12 | Trei totaluri pe Plicuri | ✅ `7fd69b4` |
+| D13 | Obligații | ✅ `0a76d3f` (plata era deja verde) |
+| D14 | Analiză | ✅ `f88b581` |
+| D15 | Setări grupate | ⏳ (textele ✅ `4a90313`) |
+| D16 | „+ Plic” în foaie | ⏳ |
+| D17 | „Cum se citește?” | ✅ `bc64dbf` |
+| D18 | Mișcări | ✅ `51dae9f` |
+| D19–D23 | Text mic, gri, ghid, first-run, sync | ✅ D19, D20 `09fe9b5`; D21 `81bbc18`, `529763b`; D22 `4403de5`; D23 era deja făcut |
 | D24 | Straturi CSS | ⏳ continuu |
 
 ## Produs (product-report.md)
