@@ -21,7 +21,7 @@ export function MonthVsAverage({ data }: { data: AppData }) {
           return (
           <li key={row.category}>
             <span className="bf-mva-label"><b>{t(row.category)}</b><small className={tone}>{row.delta > 0 ? "+" : row.delta < 0 ? "−" : ""}{lei(Math.abs(row.delta))}</small></span>
-            <span className="bf-mva-bar" aria-label={t("{now} acum, media {avg}", { now: lei(row.thisMonth), avg: lei(row.average) })}>
+            <span className="bf-mva-bar" role="img" aria-label={t("{now} acum, media {avg}", { now: lei(row.thisMonth), avg: lei(row.average) })}>
               <i style={{ width: `${Math.round(row.thisMonth / top * 100)}%` }} className={tone === "up" ? "up" : ""} />
               <em style={{ left: `${Math.round(row.average / top * 100)}%` }} aria-hidden="true" />
             </span>

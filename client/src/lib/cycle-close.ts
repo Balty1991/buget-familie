@@ -22,6 +22,7 @@ import {
   type BudgetAllocation,
   isBalanceAdjustment,
 } from "./finance-data";
+import { nextPaydayAfter } from "./monthly-needs";
 
 export type EnvelopeOutcome = {
   id: string;
@@ -65,6 +66,15 @@ export function nextMonthSameDay(iso: string): string {
   const nextYear = month === 12 ? year + 1 : year;
   const zileInLuna = new Date(nextYear, nextMonth, 0).getDate();
   return `${nextYear}-${String(nextMonth).padStart(2, "0")}-${String(Math.min(day, zileInLuna)).padStart(2, "0")}`;
+}
+
+/** Ziua din lună a salariului care încheie ciclul: venitul declarat care cade chiar la sfârșitul lui. */
+export function salaryDayOf(plan: AppData["settings"]["salaryPlan"], periodEnd: string): number {
+  const [year, month, day] = periodEnd.split("-").map(Number);
+  const last = new Date(year, month, 0).getDate();
+  const incomes = (plan.incomes || []).filter((item) => !item.archived);
+  const match = incomes.find((item) => Math.min(item.day, last) === day);
+  return match?.day ?? day;
 }
 
 /**
@@ -113,7 +123,9 @@ export function cycleClose(data: AppData, today = isoToday()): CycleClose | unde
   });
 
   const nextStart = periodEnd >= addIsoDays(today, -15) ? periodEnd : today;
-  const nextPayday = nextMonthSameDay(nextStart);
+  // Ziua salariului vine din venitul declarat, nu din data de start: după februarie, 31 nu
+  // rămâne 28 pentru totdeauna, iar o închidere întârziată (30.10) nu mută salariul de pe 10 pe 30.
+  const nextPayday = nextPaydayAfter(nextStart, salaryDayOf(plan, periodEnd));
   // Propunerea e pentru ciclul care începe, deci pe lungimea lui, nu a celui încheiat (poate fi de 15 zile).
   const nextDays = Math.max(1, Math.round((new Date(`${nextPayday}T12:00:00`).getTime() - new Date(`${nextStart}T12:00:00`).getTime()) / 86400000));
   const lessons: CycleLesson[] = [];

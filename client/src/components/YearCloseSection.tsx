@@ -2,13 +2,49 @@
  * „Închide anul” în Setări (produs #8): în loc de „șterge mișcările din anii încheiați”,
  * anul trece într-o arhivă descărcată, iar în aplicație rămân rezumatul și soldurile.
  */
-import { Archive } from "lucide-react";
+import { useState } from "react";
+import { Archive, FolderOpen } from "lucide-react";
 import { closableYears, closeYear, yearArchiveBlob, yearBlockedByCycle } from "@/lib/year-close";
-import type { AppData } from "@/lib/finance-data";
+import { foldRomanian, formatDate, type AppData, type Transaction } from "@/lib/finance-data";
 import { askConfirm, showNotice } from "@/lib/confirm-dialog";
 import { saveExport } from "@/lib/save-export";
 import { t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
+
+/** Arhiva unui an închis, citită din fișier: doar pentru citit și căutat, nu intră în registru. */
+function ArchiveViewer() {
+  const [archive, setArchive] = useState<{ year: string; transactions: Transaction[] } | null>(null);
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState("");
+  const open = async (file?: File) => {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text()) as { kind?: string; year?: string; transactions?: Transaction[] };
+      if (parsed.kind !== "buget-familie-arhiva-an" || !Array.isArray(parsed.transactions)) throw new Error("kind");
+      setArchive({ year: String(parsed.year || ""), transactions: parsed.transactions.filter((item) => item && typeof item.amount === "number") });
+      setError("");
+    } catch {
+      setError(t("Fișierul nu e o arhivă de an Buget Familie."));
+    }
+  };
+  const needle = foldRomanian(query.trim());
+  const rows = archive ? archive.transactions.filter((item) => !needle || foldRomanian(`${item.title} ${item.category} ${t(item.category)} ${item.amount.toFixed(2).replace(".", ",")}`).includes(needle)).sort((a, b) => b.date.localeCompare(a.date)) : [];
+  const out = rows.filter((item) => item.kind === "expense").reduce((sum, item) => sum + item.amount, 0);
+  return (
+    <div className="bf-year-archive-viewer">
+      <label className="bf-secondary bf-file-button"><FolderOpen size={16} aria-hidden="true" /> {t("Vezi o arhivă")}<input type="file" accept="application/json,.json" hidden onChange={(event) => void open(event.target.files?.[0])} /></label>
+      {error && <p className="bf-form-error" role="alert">{error}</p>}
+      {archive && <>
+        <p className="bf-helper">{t("Arhiva {year}: {count} mișcări, doar pentru citit.", { year: archive.year, count: archive.transactions.length })}</p>
+        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("Caută în arhivă")} aria-label={t("Caută în arhivă")} />
+        <p className="bf-helper">{t("{count} rezultate · ieșit {amount}", { count: rows.length, amount: lei(out) })}</p>
+        <ul className="bf-year-close-list">
+          {rows.slice(0, 200).map((item) => <li key={item.id}><b>{item.title}</b><span>{formatDate(item.date)} · {t(item.category)} · {item.kind === "income" ? "+" : "−"}{lei(item.amount)}</span></li>)}
+        </ul>
+      </>}
+    </div>
+  );
+}
 
 export function YearCloseSection({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const years = closableYears(data);
@@ -38,6 +74,7 @@ export function YearCloseSection({ data, onChange }: { data: AppData; onChange: 
       {years.map((year) => (
         <button key={year} type="button" className="bf-secondary" onClick={() => void close(year)}><Archive size={16} aria-hidden="true" /> {t("Închide anul {year}", { year })}</button>
       ))}
+      {summaries.length > 0 && <ArchiveViewer />}
       {summaries.length > 0 && (
         <ul className="bf-year-close-list">
           {summaries.map((item) => (

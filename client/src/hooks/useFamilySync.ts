@@ -100,6 +100,9 @@ export function useFamilySync(
   /** Cu ce se criptează: cheia PBKDF2 neexportabilă (sau parola, dacă stocarea cheii lipsește). */
   const syncSecretRef = useRef<FamilySecret>("");
   const syncResumeTriedRef = useRef(false);
+  /** Reluarea eșuată din lipsă de rețea se reîncearcă singură, nu rămâne oprită până la repornire. */
+  const syncResumeFailuresRef = useRef(0);
+  const [syncResumeTick, setSyncResumeTick] = useState(0);
   const syncRoomIdRef = useRef<string | undefined>(undefined);
   const syncUnsubscribeRef = useRef<(() => void) | undefined>(undefined);
   /** Ultima stare trimisă în cameră (sau identică cu ea): până la ea nu e nimic de trimis. */
@@ -496,15 +499,25 @@ export function useFamilySync(
         if (session.invite && !keepInviteOnDevice()) await saveFamilySession(session.roomId, session.material, session.invite, { keepInvite: false });
         await syncOpenRoom(session.roomId, session.material, { invite: keepInviteOnDevice() ? session.invite : undefined, inviteRoom: Boolean(session.invite || session.inviteRoom), mode: "resume" });
       } catch (error) {
-        setSyncNotice(error instanceof Error ? error.message : t("Sincronizarea nu a putut fi reluată."));
+        const transient = (typeof navigator !== "undefined" && navigator.onLine === false)
+          || (error instanceof Error && ((error as { kind?: string }).kind === "unavailable" || /network|fetch|timeout|unavailable|failed-precondition|deadline/i.test(error.message)));
+        if (transient && syncResumeFailuresRef.current < 6) {
+          syncResumeFailuresRef.current += 1;
+          syncResumeTriedRef.current = false;
+          setSyncNotice(t("Nu am putut ajunge la camera familiei. Încerc din nou singur."));
+          window.setTimeout(() => setSyncResumeTick((value) => value + 1), retryDelay(syncResumeFailuresRef.current));
+        } else {
+          setSyncNotice(error instanceof Error ? error.message : t("Sincronizarea nu a putut fi reluată."));
+        }
       } finally {
         setSyncBusy(false);
         setSyncResumeSettled(true);
       }
     })();
-    // syncOpenRoom citește starea curentă prin ref-uri; reluarea rulează o singură dată.
+    // syncOpenRoom citește starea curentă prin ref-uri; reluarea rulează o dată, iar după o
+    // cădere de rețea încă o dată, la revenirea rețelei sau după pauza de reîncercare.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [online, storageReady]);
+  }, [online, storageReady, syncResumeTick]);
 
   useEffect(() => {
     if (!syncConnected || !syncRoomIdRef.current) return;

@@ -7,7 +7,7 @@ import "../movements-flat.css";
 import { swipeToDelete } from "@/lib/swipe-delete";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDownRight, Download, FileUp, Pencil, Plus, ReceiptText, Search, SlidersHorizontal, Trash2, X } from "lucide-react";
-import { formatDate, isBalanceAdjustment, isoDate, isoToday, newId, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { foldRomanian, formatDate, isBalanceAdjustment, isoDate, isoToday, newId, transactionShareScope, type AppData, type ShareScope, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { downloadJournalCsv } from "@/lib/journal-csv";
 import { countLabel, getLocale, t } from "@/lib/i18n";
 import { MovementConflictBanner } from "@/components/EnvelopeConflictBanner";
@@ -58,7 +58,9 @@ const haystacks = new WeakMap<Transaction, string>();
 const haystackOf = (item: Transaction) => {
   let text = haystacks.get(item);
   if (text === undefined) {
-    text = [item.title, item.category, item.source, item.person, String(item.amount), item.note || ""].join(" ").toLocaleLowerCase("ro-RO");
+    // Fără diacritice („mancare” găsește Mâncare) și cu suma scrisă ca în aplicație („86,40”).
+    const fixed = item.amount.toFixed(2);
+    text = foldRomanian([item.title, item.category, t(item.category), item.source, item.person, String(item.amount), fixed, fixed.replace(".", ","), String(item.amount).replace(".", ","), item.note || ""].join(" "));
     haystacks.set(item, text);
   }
   return text;
@@ -68,7 +70,7 @@ export function MovementsJournal({ data, onEdit, onDelete, onAdd, onOpenReview, 
   const [kind, setKind] = useState<"all" | TransactionKind>("all"); const [member, setMember] = useState("all"); const [source, setSource] = useState("all"); const [shareScope, setShareScope] = useState<"all" | ShareScope>("all"); const [query, setQuery] = useState(() => (typeof window === "undefined" ? "" : takeJournalQuery(window.sessionStorage))); const [fromDate, setFromDate] = useState(""); const [toDate, setToDate] = useState(""); const [focusDay, setFocusDay] = useState(""); const [filtersOpen, setFiltersOpen] = useState(false); const [showSaved, setShowSaved] = useState(false); const [saveName, setSaveName] = useState(""); const [renamingId, setRenamingId] = useState<string | null>(null); const [renameValue, setRenameValue] = useState("");
   // P2-5: lista se refiltrează după tastare, nu la fiecare tastă; textul căutat al fiecărei mișcări se face o dată.
   const deferredQuery = useDeferredValue(query);
-  const normalizedQuery = deferredQuery.trim().toLocaleLowerCase("ro-RO"); const invalidRange = Boolean(fromDate && toDate && fromDate > toDate);
+  const normalizedQuery = foldRomanian(deferredQuery.trim()); const invalidRange = Boolean(fromDate && toDate && fromDate > toDate);
   const matchesQuery = (item: Transaction) => !normalizedQuery || haystackOf(item).includes(normalizedQuery);
   const clearFilters = () => { setKind("all"); setMember("all"); setSource("all"); setShareScope("all"); setQuery(""); setFromDate(""); setToDate(""); setFocusDay(""); };
   // Pe telefon filtrele sunt o foaie peste listă; Escape o închide ca pe orice foaie.

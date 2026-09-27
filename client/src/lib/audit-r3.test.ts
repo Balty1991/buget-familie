@@ -125,3 +125,19 @@ describe("sync: ce notezi cât se decriptează pachetul partenerului nu se pierd
     expect(keepConcurrentEdits(snapshot, snapshot, merged, () => { throw new Error("nu trebuie unit"); })).toBe(merged);
   });
 });
+
+describe("ziua salariului nu alunecă la închiderea ciclului", () => {
+  it("31 rămâne 31 după februarie, iar o închidere întârziată nu mută salariul de pe 10", async () => {
+    const { cycleClose } = await import("./cycle-close");
+    const feb = house();
+    feb.settings.salaryPlan.periodStart = "2027-01-31";
+    feb.settings.salaryPlan.nextPayday = "2027-02-28";
+    feb.settings.salaryPlan.incomes = [{ id: "i", memberId: me, label: "Salariu", amount: 5000, day: 31 }];
+    expect(cycleClose(feb, "2027-03-01")?.nextPayday).toBe("2027-03-31");
+    const late = house();
+    late.settings.salaryPlan.periodStart = "2026-09-10";
+    late.settings.salaryPlan.nextPayday = "2026-10-10";
+    late.settings.salaryPlan.incomes = [{ id: "i", memberId: me, label: "Salariu", amount: 5000, day: 10 }];
+    expect(cycleClose(late, "2026-10-30")?.nextPayday).toBe("2026-11-10");
+  });
+});

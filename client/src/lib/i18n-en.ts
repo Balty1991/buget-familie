@@ -3462,4 +3462,11 @@ export const en: Record<string, string> = {
   "Închide anul {year}": "Close {year}",
   "{count} mișcări · intrat {income} · ieșit {expense}": "{count} movements · in {income} · out {expense}",
   "Anul {year} se poate închide după ce începe primul ciclu de salariu din {next}: ciclul curent are încă mișcări din decembrie.": "{year} can be closed once the first pay cycle of {next} starts: the current cycle still has December transactions.",
+  "Fișierul e arhiva unui an închis, nu un backup. Îl deschizi din Setări → Copii de siguranță → Închide anul → „Vezi o arhivă”.": "This file is the archive of a closed year, not a backup. Open it from Settings → Backups → Close the year → “View an archive”.",
+  "Fișierul nu e o arhivă de an Buget Familie.": "This file is not a Buget Familie year archive.",
+  "Vezi o arhivă": "View an archive",
+  "Arhiva {year}: {count} mișcări, doar pentru citit.": "Archive {year}: {count} transactions, read-only.",
+  "Caută în arhivă": "Search the archive",
+  "{count} rezultate · ieșit {amount}": "{count} results · out {amount}",
+  "Nu am putut ajunge la camera familiei. Încerc din nou singur.": "Couldn't reach the family room. Retrying on my own.",
 };

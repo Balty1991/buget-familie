@@ -1,5 +1,6 @@
 import type { AppData } from "./finance-data";
 import { freeHeavyLocalCache, isQuotaExceededError, safeSetItem } from "./safe-storage";
+import { t } from "./i18n";
 
 const DB_NAME = "buget-familie";
 const DB_VERSION = 1;
@@ -279,6 +280,9 @@ export function makeBackup(data: AppData): AppBackup {
 
 export function parseBackup(raw: string): AppBackup {
   const parsed = JSON.parse(raw) as Partial<AppBackup>;
+  if ((parsed as { kind?: string }).kind === "buget-familie-arhiva-an") {
+    throw new Error(t("Fișierul e arhiva unui an închis, nu un backup. Îl deschizi din Setări → Copii de siguranță → Închide anul → „Vezi o arhivă”."));
+  }
   if (parsed.kind !== "buget-familie-backup" || parsed.version !== BACKUP_VERSION || !parsed.data) {
     throw new Error("Fișierul nu este un backup Buget Familie valid.");
   }

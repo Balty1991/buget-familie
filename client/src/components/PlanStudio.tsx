@@ -192,7 +192,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   /** Ritmul scris se traduce în total pe zilele care chiar mai pot primi bani. */
   const paceToday = levelStarted ? isoToday() : undefined;
   const allocationTotalFromInput = () => {
-    const typed = parseRomanianAmount(allocationAmount);
+    const typed = Math.round(parseRomanianAmount(allocationAmount) * 100) / 100;
     if (!paceByWeek || allocationPaceMode !== "weekly") return typed;
     return Math.round(totalFromWeeklyPace(typed, plan.periodStart, planEnd, paceToday));
   };
