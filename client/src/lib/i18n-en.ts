@@ -3474,4 +3474,5 @@ export const en: Record<string, string> = {
   "Cheltuit înainte de aplicație": "Spent before the app",
   "Plicurile mai așteaptă {amount}: se acoperă când vine {label} pe {date}.": "Envelopes are still waiting for {amount}: covered when {label} arrives on {date}.",
   "Ai notat deja „{title}” · {amount} acum câteva secunde. Îl mai pun o dată?": "You already logged “{title}” · {amount} a few seconds ago. Log it again?",
+  "Telefonul nu are internet acum. Încearcă din nou când are semnal; ce notezi rămâne pe telefon.": "The phone has no internet right now. Try again when it has signal; what you log stays on the phone.",
 };

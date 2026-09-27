@@ -414,6 +414,11 @@ export function useFamilySync(
       setSyncNotice(t("Modul „doar offline” este activ. Dezactivează-l din Setări ca să folosești Sync."));
       return;
     }
+    // Fără rețea spunem pe loc, nu după 40 de secunde de „Se conectează…”.
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setSyncNotice(t("Telefonul nu are internet acum. Încearcă din nou când are semnal; ce notezi rămâne pe telefon."));
+      return;
+    }
     setSyncBusy(true);
     try {
       await work();

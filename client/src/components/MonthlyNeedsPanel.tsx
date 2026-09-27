@@ -125,7 +125,7 @@ function NeedRow({ need, members, categories, startOpen, onSave, onDelete }: { n
   );
 }
 
-export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
+export function MonthlyNeedsPanel({ data, onChange, hidePayday }: { data: AppData; onChange: (next: AppData) => void; /** În Plicuri, data salariului stă deja în secțiunea „Salariul”. */ hidePayday?: boolean }) {
   const plan = data.settings.salaryPlan;
   const needs = activeNeeds(data);
   const incomes = activeIncomes(data);
@@ -197,7 +197,7 @@ export function MonthlyNeedsPanel({ data, onChange }: { data: AppData; onChange:
         </div>
       ))}
       <button type="button" className="bf-secondary bf-needs-add" onClick={addIncome}><Plus size={15} /> {t("Adaugă un venit")}</button>
-      {incomes.length > 0 && !plan.horizonDays && <NextPayday plan={plan} incomes={incomes} onSave={save} />}
+      {incomes.length > 0 && !plan.horizonDays && !hidePayday && <NextPayday plan={plan} incomes={incomes} onSave={save} />}
 
       <h3>{t("Cheltuielile")}</h3>
       {needs.map((need) => (
@@ -272,7 +272,7 @@ export function MonthlyNeedsSection({ data, onChange }: { data: AppData; onChang
   return (
     <details className="bf-plan-tools bf-needs-details" open={open} onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}>
       <summary>{count ? t("Ce plătim lunar · {count} cheltuieli · {incomes} venituri", { count, incomes: activeIncomes(data).length }) : t("Ce plătim lunar — repartizare automată la salariu")}</summary>
-      {open && <MonthlyNeedsPanel data={data} onChange={onChange} />}
+      {open && <MonthlyNeedsPanel data={data} onChange={onChange} hidePayday />}
     </details>
   );
 }
