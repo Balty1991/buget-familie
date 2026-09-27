@@ -16,7 +16,6 @@
 .os-shell .bf-plan-workspace .bf-allocation-period-tabs button,
 .os-shell .bf-plan-workspace .bf-allocation-period-summary small,
 .os-shell .bf-plan-workspace .bf-allocation-period-heading p,
-.os-shell .bf-plan-workspace .bf-allocation-progress-meta,
 .os-shell .bf-plan-workspace .bf-quick-envelope-chips > p,
 .os-shell .bf-plan-workspace .bf-pace-switch > button,
 .os-shell .bf-plan-workspace .bf-pace-advice span,
@@ -28,7 +27,6 @@
 .os-shell .bf-plan-workspace .bf-envelope-meter span,
 .os-shell .bf-plan-workspace .bf-active-week > strong small,
 .os-shell .bf-plan-workspace .bf-active-week span,
-.os-shell .bf-plan-workspace .bf-plan-resource-band > div:last-child > span,
 .os-shell .bf-plan-workspace .bf-cycle-tranches small,
 .os-shell .bf-plan-workspace .bf-plan-simulation p,
 .os-shell .bf-plan-workspace .bf-plan-simulation-list small,
@@ -49,7 +47,6 @@
 }
 
 .os-shell .bf-plan-workspace .bf-allocation-period-summary b,
-.os-shell .bf-plan-workspace .bf-plan-resource-band > div:last-child > span > b,
 .os-shell .bf-plan-workspace .bf-plan-field input,
 .os-shell .bf-plan-workspace .bf-plan-field select,
 .os-shell .bf-plan-workspace .bf-funding-row select,

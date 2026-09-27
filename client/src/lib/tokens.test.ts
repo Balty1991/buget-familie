@@ -56,7 +56,23 @@ describe("plafonul de !important", () => {
       .reduce((sum, file) => sum + (readFileSync(file, "utf8").split("!important").length - 1), 0);
     // 8.344 la re-audit → 5.410 (curățenie verificată) → 3.819 (reguli moarte) → 3.426 (a doua rundă) → 3442 (ținte de atingere în @layer ds) → 3446 (eticheta de pe bannerul scadențelor, opacitatea etichetelor și a „RON”, descrierea temelor) → 3448 (codul de recuperare) → 3369 (reguli cu clase inexistente în cod) → 3364 (declarații umbrite în același fișier) → 3320 (temele Aurora și Cyber, trei texturi); vezi docs/CSS_IMPORTANT_CLEANUP.md.
     // Curățenia poate scădea numărul; o foaie nouă nu are voie să-l urce.
-    expect(count).toBeLessThanOrEqual(3320);
+    // 27.09: 3263 după scoaterea regulilor moarte (clase care nu mai apar în cod).
+    expect(count).toBeLessThanOrEqual(3263);
+  });
+
+  it("CSS-ul sursă nu crește: bugetul de mărime (P2-10 / D24)", () => {
+    const root = fileURLToPath(new URL("..", import.meta.url));
+    const walk = (dir: string, out: string[] = []): string[] => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name);
+        if (statSync(full).isDirectory()) walk(full, out);
+        else out.push(full);
+      }
+      return out;
+    };
+    const kb = walk(root).filter((file) => file.endsWith(".css")).reduce((sum, file) => sum + statSync(file).size, 0) / 1024;
+    // 922 KB la 27.09. O funcție nouă își aduce stilul, dar pe mai departe se scoate cel vechi: plafonul nu urcă.
+    expect(kb).toBeLessThanOrEqual(935);
   });
 });
 

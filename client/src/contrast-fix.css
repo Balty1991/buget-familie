@@ -688,7 +688,6 @@ html.theme-dark .os-dock button.is-on svg {
 /* Analiză / Plan / Sync: last-word contrast — light glass, never muted-on-emerald */
 html .bf-advisor-hero,
 html .bf-sync-hero,
-html .bf-plan-resource-band,
 html .bf-coach-card {
   color: var(--cf-ink, #0c1612) !important;
 }
@@ -714,9 +713,7 @@ html .bf-advisor-metrics b {
   color: var(--cf-ink, #0c1612) !important;
 }
 
-:is(html.theme-ink, html.theme-white) .bf-advisor-hero,
-:is(html.theme-ink, html.theme-white) .bf-sync-hero,
-:is(html.theme-ink, html.theme-white) .bf-plan-resource-band {
+:is(html.theme-ink, html.theme-white) .bf-advisor-hero, :is(html.theme-ink, html.theme-white) .bf-sync-hero {
   background: linear-gradient(160deg, #ffffff, #eef2f0) !important;
   border-color: #c5cec8 !important;
   color: #0c1612 !important;
@@ -758,7 +755,6 @@ html.theme-navy .bf-advisor-metrics small {
  * uses --cf-ink (light), never the light-theme #0c1612 fallback.
  * ============================================================ */
 
-html.theme-navy .bf-plan-resource-band,
 html.theme-navy .bf-coach-card,
 html.theme-navy .bf-week-digest,
 html.theme-navy .bf-obligation-ai,
@@ -769,7 +765,6 @@ html.theme-navy .bf-weekly-summary {
   color: var(--cf-ink, #f1f4f8) !important;
 }
 
-html.theme-navy .bf-plan-resource-band h2,
 html.theme-navy .bf-coach-card h2,
 html.theme-navy .bf-obligation-ai h2,
 html.theme-navy .bf-week-digest b,
@@ -778,7 +773,6 @@ html.theme-navy .bf-household article b {
   color: var(--cf-ink, #f1f4f8) !important;
 }
 
-html.theme-navy .bf-plan-resource-band p:not(.bf-kicker),
 html.theme-navy .bf-coach-card p:not(.bf-kicker),
 html.theme-navy .bf-week-digest small,
 html.theme-navy .bf-household article em,

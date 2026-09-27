@@ -175,15 +175,6 @@
   padding: 0;
 }
 
-.bf-plan-allocation-axis {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  color: var(--os-muted, var(--cf-muted));
-  font-size:12px;
-  font-variant-numeric: tabular-nums;
-}
-
 /* ---------- Butoane secundare: același limbaj chrome ---------- */
 .os-shell .bf-plan-simulation footer > button,
 .os-shell .bf-plan-cashflow-panel footer > button,
@@ -460,43 +451,6 @@ body {
 }
 
 /* Glass Plan surfaces — never cream paper */
-.bf-plan-workspace :is(
-  .bf-cycle-setup,
-  .bf-cycle-tools,
-  .bf-plan-simulator,
-  .bf-plan-simulation,
-  .bf-plan-cashflow-suggest,
-  .bf-plan-cashflow-panel,
-  .bf-allocation-period,
-  .bf-allocation-progress-card,
-  .bf-allocation-guidance,
-  .bf-allocation-builder,
-  .bf-allocation-list > article,
-  .bf-plan-flow,
-  .bf-monthly-wizard,
-  .bf-allocation-recommendations,
-  .bf-allocation-history,
-  .bf-allocation-chart,
-  .bf-plan-sheet,
-  .bf-plan-sources,
-  .bf-plan-envelope-workbench,
-  .bf-envelope-glossary-tip,
-  .bf-plan-simple-tip,
-  .bf-active-week
-) {
-  color: var(--cf-ink) !important;
-  background:
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--cf-surface) 88%, transparent),
-      color-mix(in srgb, var(--cf-surface-alt) 55%, transparent)
-    ) !important;
-  border-color: color-mix(in srgb, var(--cf-line) 92%, transparent) !important;
-  box-shadow:
-    0 14px 34px color-mix(in srgb, var(--cf-ink) 10%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 8%, transparent);
-  backdrop-filter: blur(14px) saturate(1.08);
-}
 
 .bf-plan-workspace .bf-cycle-setup,
 .bf-plan-workspace .bf-cycle-tools {
@@ -844,41 +798,6 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
 }
 
 /* ---- Stronger glass depth + refined card motion ---- */
-.bf-plan-workspace :is(
-  .bf-cycle-setup,
-  .bf-cycle-tools,
-  .bf-plan-simulator,
-  .bf-plan-simulation,
-  .bf-plan-cashflow-suggest,
-  .bf-plan-cashflow-panel,
-  .bf-allocation-period,
-  .bf-allocation-progress-card,
-  .bf-allocation-guidance,
-  .bf-allocation-builder,
-  .bf-allocation-list > article,
-  .bf-plan-flow,
-  .bf-monthly-wizard,
-  .bf-allocation-recommendations,
-  .bf-allocation-history,
-  .bf-allocation-chart,
-  .bf-plan-sheet,
-  .bf-plan-sources,
-  .bf-plan-envelope-workbench,
-  .bf-envelope-glossary-tip,
-  .bf-plan-simple-tip,
-  .bf-active-week
-) {
-  border-radius: 20px !important;
-  box-shadow:
-    0 18px 40px color-mix(in srgb, var(--cf-ink) 12%, transparent),
-    0 4px 12px color-mix(in srgb, var(--cf-ink) 6%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--cf-line) 55%, transparent) !important;
-  backdrop-filter: blur(16px) saturate(1.12);
-  transition:
-    transform 220ms cubic-bezier(.22, 1.1, .36, 1),
-    box-shadow 220ms cubic-bezier(.22, 1.1, .36, 1);
-}
 
 @media (hover: hover) and (pointer: fine) {
   .bf-plan-workspace :is(
@@ -918,19 +837,6 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
   font-size:12px;
   letter-spacing: .14em;
   font-weight:600;
-}
-
-.bf-plan-workspace .bf-allocation-progress-top strong {
-  font-size: clamp(1.5rem, 5vw, 1.85rem);
-  letter-spacing: -.05em;
-  background: linear-gradient(
-    135deg,
-    var(--cf-ink),
-    color-mix(in srgb, var(--cf-primary) 70%, var(--cf-ink))
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* Glossary tip polish */
@@ -1152,25 +1058,6 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
 /* ============================================================
  * WOW+ 2026-09-12 — Obligații glass + CTA contrast (match Plan).
  * ============================================================ */
-
-.bf-obligations-workspace :is(
-  .bf-obligation-ledger,
-  .bf-obligation-lane,
-  .bf-obligation-timeline,
-  .bf-obligation-ai,
-  .bf-debt-plan,
-  .bf-debt-simulator,
-  .bf-snowball,
-  .bf-obligation-empty
-) {
-  border-radius: 20px;
-  box-shadow:
-    0 18px 40px color-mix(in srgb, var(--cf-ink) 11%, transparent),
-    0 4px 12px color-mix(in srgb, var(--cf-ink) 5%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 11%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, var(--cf-line) 55%, transparent);
-  backdrop-filter: blur(16px) saturate(1.1);
-}
 
 .bf-obligations-workspace .bf-obligation-ledger {
   overflow: hidden;
