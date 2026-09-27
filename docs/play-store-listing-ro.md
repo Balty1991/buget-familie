@@ -10,12 +10,12 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 
 | Câmp | Valoare |
 |---|---|
-| Nume (max 30) | Buget Familie |
+| Nume (max 30) | Buget Familie – cheltuieli (26 caractere; „buget” și „cheltuieli” sunt cele mai căutate cuvinte din categorie) |
 | Pachet | `ro.balty1991.bugetfamilie` |
 | versionName | `1.1.96` |
 | versionCode | `98` |
 | Categorie | Finance |
-| Etichete | Buget, Familie, Cheltuieli, Plicuri, România, Ciclu salariu |
+| Etichete | Buget, Familie, Cheltuieli, Economii, Plicuri, Cuplu, Salariu |
 | Contact | contact.vanzo@gmail.com |
 | Politică | https://balty1991.github.io/buget-familie/privacy.html |
 | Termeni | https://balty1991.github.io/buget-familie/terms.html |
@@ -24,21 +24,26 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 ## Descriere scurtă (≤80 caractere)
 
 ```
-Buget pe salariu, pe plicuri. Cheltuieli, facturi, rate. Fără parola băncii.
+Buget de familie pe plicuri: cheltuieli, economii, facturi. Fără parola băncii.
 ```
 
-(76 de caractere cu spații). Varianta B, pentru test A/B în Console:
+(79 de caractere). Varianta B, pentru test A/B în Console:
 
 ```
-Salariul vine, aplicația îl împarte pe plicuri. Fără legătură cu banca.
+Salariul vine, aplicația îl împarte pe plicuri. Buget pentru cuplu și familie.
 ```
 
-(71 de caractere)
+(78 de caractere)
 
 ## Descriere completă
 
 ```
-Buget Familie îți spune câți lei poți folosi azi, din plic, până la salariu. Nu e un jurnal de magazin și nu se leagă de bancă.
+Buget Familie e aplicația de buget pentru familie și cuplu, gratuită, în limba română: îți spune câți bani poți cheltui azi, din plic, până la salariu. Ții evidența cheltuielilor, a facturilor, a ratelor și a economiilor, împreună cu partenerul, fără parola băncii și fără reclame.
+
+De ce e diferită
+• Bugetul merge pe ciclul salariului vostru, nu pe luna calendaristică. Două salarii în zile diferite? Merge.
+• Metoda plicurilor: fiecare leu are un loc — chirie, mâncare, transport, economii.
+• Doi oameni, două telefoane, un singur buget: sincronizare criptată, serverul nu vede sumele.
 
 Scrii o dată ce plătiți
 • „Ce plătim lunar”: veniturile (cu ziua lor) și cheltuielile știute — rate, facturi, grădiniță, mâncare pe săptămână — cu intervale (lumina 300–400).
@@ -68,7 +73,7 @@ Din afara aplicației
 • Widget opțional „Poți cheltui azi”, pentru cine vrea cifra zilei pe ecranul principal.
 • Dală în Setări rapide: o cheltuială din trasarea de sus.
 
-Datele stau pe telefon. Fără reclame. Fără plată în magazin în versiunea asta.
+Datele stau pe telefon. Fără reclame. Gratuită: fără plată în magazin în versiunea asta.
 
 Nu plătește facturi, nu dă credite și nu ține loc de consultant.
 ```
@@ -124,9 +129,9 @@ App de finanțe personale, fără user-generated public, fără violență, făr
 
 ## Grafică de magazin
 
-- Grafic caracteristică: [play-feature.svg](https://balty1991.github.io/buget-familie/play-feature.svg) — exportă PNG 1024×500 (Play nu acceptă SVG).
-- Capturi: Astăzi (cifra, intrat/ieșit, săptămâna, trei mișcări, +), Notează (iconițe), Plan (bară cheltuit/limită), Mișcări (săptămâna), Obligații, Analiză (unde au mers banii). Widgetul nu e captură din app: pe telefon, fără sume.
-- Shot list detaliat: [`PLAY_LISTING.md`](./PLAY_LISTING.md).
+- Grafic de prezentare: `play-store-assets/feature-graphic-ro.png` (1024×500).
+- Pictogramă: `play-store-assets/icon-512.png`.
+- Capturi: `play-store-assets/screenshots/ro/` (telefon, 8) și `screenshots/tableta-ro/` (tabletă, 8), refăcute cu `scripts/store-screenshots` (vezi `SCREENSHOTS.md`).
 
 ## Ce NU s-a atins
 
