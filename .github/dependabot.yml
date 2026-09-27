@@ -1,0 +1,10 @@
+# Acțiunile din CI sunt fixate pe commit (SHA). Dependabot propune lunar versiunile noi.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

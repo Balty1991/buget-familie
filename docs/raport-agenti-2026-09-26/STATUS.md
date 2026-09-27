@@ -30,7 +30,7 @@
 | S3 | Plafonul AI se golește ușor | ✅ IPv6 /64, shard-uri `33f7b6e`; cererile fără App Check au 1/5 din plafon `3fa74bc`; 👤 Play Integrity |
 | S4 | Telefonul revocat are încă cheia | ✅ `368d921` |
 | S5 | Invitația în clar pe web | ✅ `f13b9b8`; 👤 domeniu propriu |
-| S6 | Lanțul de aprovizionare în CI | ✅ firebase-tools fixat, pnpm 10.34.5 `3fa74bc`; 👤 Workload Identity, acțiuni fixate pe SHA |
+| S6 | Lanțul de aprovizionare în CI | ✅ firebase-tools fixat, pnpm 10.34.5 `3fa74bc`; acțiuni fixate pe SHA + Dependabot lunar; 👤 Workload Identity |
 | S7 | Ghidul AI scrie fără confirmare pe calea veche | ✅ `3fa74bc` |
 | S8 | Codul de recuperare se poate suprascrie | ✅ `2bab932` |
 | S9 | Reguli: 2 MB, câmpuri fără tip | ✅ 950 KB `2bab932`, tipuri `3fa74bc`; 👤 App Check Enforce |
@@ -105,6 +105,6 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | 4 | Pornirea nu compară cu venitul | ✅ `677b675` |
 | 5 | Cererea de recenzie | ✅ `21b3d5c` (👤 un build APK/AAB ca să intre pluginul Play Review) |
 | 6 | 6 intenții, lipsește „Mă alătur familiei” | ✅ `4403de5` |
-| 7 | Materiale de lansare vechi | ✅ `7e6b1ab` (👤 capturile noi) |
+| 7 | Materiale de lansare vechi | ✅ `7e6b1ab`; capturi telefon + tabletă, feature graphic nou `12ed36f` |
 | 8 | „Închide anul” | ✅ `313f92e` |
 | — | Preț, probă, ASO | 👤 decizie |
