@@ -99,7 +99,7 @@ describe("ghidul și Astăzi spun aceeași cifră", () => {
     data.settings.salaryPlan = { ...data.settings.salaryPlan, allocations: [{ id: "casa", label: "Casă & facturi", amount: 100, category: "Casă & facturi" }] };
     data.transactions = [{ id: "t1", title: "Enel", amount: 150, kind: "expense", category: "Casă & facturi", source: "Card", person: "Eu", date: ASOF, sourceId: "source-debit", memberId: "member-me" }];
     const answer = analyze("Ce fac azi?", data, ASOF)!;
-    expect(answer.headline).toMatch(/^Azi: oprește «Casă & facturi»/);
+    expect(answer.headline).toMatch(/^Azi: oprește „Casă & facturi”/);
     expect(answer.detail).not.toMatch(/ritm sigur/);
     expect(answer.detail).toMatch(/Poți folosi azi .* la fel ca pe Astăzi/);
   });

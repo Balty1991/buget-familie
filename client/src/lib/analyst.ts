@@ -606,7 +606,7 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
     return {
       kind: "next",
       headline: "Hai să punem prima cifră în registru: un venit sau o cheltuială.",
-      detail: "Fără mișcări nu am din ce să-ți spun ce merită azi. Scrie, de exemplu, «salariul meu e 5000» sau «am dat 50 pe benzină».",
+      detail: "Fără mișcări nu am din ce să-ți spun ce merită azi. Scrie, de exemplu, „salariul meu e 5000” sau „am dat 50 pe benzină”.",
       followUps: ["Cât mai am?", "Cât pot cheltui pe zi?"],
     };
   }
@@ -629,14 +629,14 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
 
   if (over.length) {
     const first = over[0];
-    actions.push(`oprește «${first.item.label}»: e depășit cu ${money(Math.abs(first.remaining))}`);
+    actions.push(`oprește „${first.item.label}”: e depășit cu ${money(Math.abs(first.remaining))}`);
     rows.push({ label: first.item.label, value: money(first.remaining), hint: first.scope === "week" && first.weekIndex ? `S${first.weekIndex} · depășit` : "depășit" });
   }
   if (dues.length) {
     const first = dues[0];
     const days = Math.round((Date.parse(`${first.dueDate}T12:00:00`) - Date.parse(`${asOf}T12:00:00`)) / 86400000);
     const when = days < 0 ? `întârziată de ${plural(-days, "zi", "zile")}` : days === 0 ? "azi" : days === 1 ? "mâine" : `în ${plural(days, "zi", "zile")}`;
-    actions.push(`scadența «${first.name}» ${when}, ${money(first.amount)}`);
+    actions.push(`scadența „${first.name}” ${when}, ${money(first.amount)}`);
     rows.push({ label: first.name, value: money(first.amount), hint: formatDate(first.dueDate) });
   }
   if (payday && pace > safe * 1.05 && safe >= 0 && pace > 0) {
@@ -645,7 +645,7 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
   }
   if (watch.length && !over.length) {
     const first = watch[0];
-    actions.push(`atenție la «${first.item.label}»: ${money(Math.max(0, first.remaining))} rămași`);
+    actions.push(`atenție la „${first.item.label}”: ${money(Math.max(0, first.remaining))} rămași`);
     rows.push({
       label: first.item.label,
       value: money(Math.max(0, first.remaining)),
@@ -682,7 +682,7 @@ function answerNext(data: AppData, asOf: string): AnalystAnswer {
   };
 }
 
-/** «Am cheltuit prea mult?» — compară perioada cerută cu intervalul de aceeași lungime dinainte. */
+/** „Am cheltuit prea mult?” — compară perioada cerută cu intervalul de aceeași lungime dinainte. */
 function answerUnusual(data: AppData, folded: string, asOf: string): AnalystAnswer {
   const period = readPeriod(folded, asOf);
   const prior = previousPeriod(period);
@@ -750,7 +750,7 @@ function answerUnusual(data: AppData, folded: string, asOf: string): AnalystAnsw
   };
 }
 
-/** «Cine a cheltuit mai mult?» — compară membrii familiei pe perioada cerută. */
+/** „Cine a cheltuit mai mult?” — compară membrii familiei pe perioada cerută. */
 function answerWho(data: AppData, folded: string, asOf: string): AnalystAnswer {
   const period = readPeriod(folded, asOf);
   const members = data.settings.members;
@@ -796,7 +796,7 @@ type Matcher = { kind: string; test: RegExp; run: (data: AppData, folded: string
  * Ordinea contează: tiparele mai precise trebuie încercate înaintea celor largi.
  * „cât pot cheltui pe zi” nu trebuie să cadă pe „cât am cheltuit”.
  * Briefingul, „e normal?” și „cine a cheltuit” stau înaintea restului, ca să nu
- * fie înghițite de «cât mai am» sau «cel mai mult».
+ * fie înghițite de „cât mai am” sau „cel mai mult”.
  */
 /**
  * „De ce mi-a scăzut plicul de alimente?”

@@ -38,7 +38,7 @@ export function LearnedRulesPanel({ data, onChange }: { data: AppData; onChange:
         <div className="bf-empty-state slim">
           <BrainCircuit size={23} />
           <h2>{t("Încă nu am învățat nimic")}</h2>
-          <p>{t("După câteva cheltuieli trecute la fel, o să-ți propun singur plicul și sursa. Poți scrie și o regulă din ghid: «de fiecare dată când scriu Lidl, pune-l pe Alimente».")}</p>
+          <p>{t("După câteva cheltuieli trecute la fel, o să-ți propun singur plicul și sursa. Poți scrie și o regulă din ghid: „de fiecare dată când scriu Lidl, pune-l pe Alimente”.")}</p>
         </div>
       ) : (
         <ul className="bf-learned-list">

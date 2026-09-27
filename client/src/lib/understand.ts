@@ -714,7 +714,7 @@ export function paidRecurringProposal(raw: string, data: AppData): Proposal | un
   }
   const source = data.settings.paymentSources.find((item) => item.id === due.sourceId) || data.settings.paymentSources[0];
   const matched = matchingAllocationsForExpense(data, { category: due.category, memberId: due.memberId, sourceId: due.sourceId })[0];
-  const from = matched ? `din plicul «${matched.label}»` : source ? `din ${source.name}` : "";
+  const from = matched ? `din plicul „${matched.label}”` : source ? `din ${source.name}` : "";
   return {
     text: `Am înțeles: **${due.name}**, ${money(due.amount)}${from ? `, ${from}` : ""}. O trec în registru?`,
     choices: [{
@@ -1064,7 +1064,7 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
   if (due) readings.push({ kind: "due", score: BASE.due, why: "spune că a plătit o scadență cunoscută", proposal: due });
 
   const moved = transferProposal(raw, data);
-  if (moved) readings.push({ kind: "transfer", score: BASE.transfer, why: "«mută … din … în …»", proposal: moved });
+  if (moved) readings.push({ kind: "transfer", score: BASE.transfer, why: "„mută … din … în …”", proposal: moved });
 
   const income = incomeProposal(raw, data);
   if (income) readings.push({ kind: "income", score: BASE.income, why: "sumă plus un cuvânt de venit", proposal: income });

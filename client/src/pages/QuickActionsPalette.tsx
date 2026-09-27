@@ -1,4 +1,5 @@
 /** Acțiuni rapide și primul tur. Scos din home-secondary. */
+import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BellRing, BookOpen, CalendarClock, CalendarDays, ChevronRight, Goal, LayoutDashboard, Search, PiggyBank, Plus, ReceiptText, WalletCards, X } from "lucide-react";
@@ -72,7 +73,7 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
           {ledgerHits.length > 0 && <p className="bf-command-section">{query.trim() ? t("Mișcări din registru") : t("Mișcări recente")}</p>}
           {ledgerHits.map((item) => (
             <button key={item.id} type="button" role="option" onClick={() => openLedger(item.title)}>
-              <span className="bf-command-icon"><ReceiptText size={17} /></span>
+              <span className="bf-command-icon"><CategoryGlyph category={item.category} size={17} /></span>
               <span><b>{item.title} · {item.kind === "income" ? "+" : "−"}{lei(item.amount)}</b><small>{formatDate(item.date, { day: "numeric", month: "short" })} · {t(item.category)}{item.person ? ` · ${item.person}` : ""}</small></span>
               <ChevronRight size={16} />
             </button>
