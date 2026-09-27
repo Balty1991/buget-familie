@@ -67,6 +67,10 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # id-token: GitHub poate cere la Google o permisiune de câteva minute (Workload Identity Federation).
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -81,7 +85,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Authenticate to Google Cloud
+      # Fără cheie salvată: cu variabilele GCP_WIF_PROVIDER și GCP_SERVICE_ACCOUNT puse în repo,
+      # Google are încredere direct în acest workflow (docs/GHID-APPCHECK-WIF.md).
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        if: ${{ vars.GCP_WIF_PROVIDER != '' }}
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+      # Rezerva, până e pusă federarea: cheia JSON a contului de serviciu.
+      - name: Authenticate to Google Cloud (cheie JSON)
+        if: ${{ vars.GCP_WIF_PROVIDER == '' }}
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           project_id: ${{ env.FIREBASE_PROJECT_ID }}
