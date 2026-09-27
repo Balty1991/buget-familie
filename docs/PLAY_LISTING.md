@@ -29,7 +29,7 @@ Plicuri pe ciclu de salariu, sync familie criptat — fără login bancar.
 ## Descriere completă
 
 ```
-Buget Familie este registrul unei gospodării românești: fiecare leu are un loc până la următorul venit.
+Buget Familie este registrul unei gospodării românești: fiecare ban are un loc până la următorul venit.
 
 De ce e altfel
 • Plicuri pe categorie, membru și sursă — card, cash, bonuri de masă, transfer comun.

@@ -11,7 +11,7 @@
 |---|---|---|---|
 | 1 | `01-today` | Cât poți cheltui azi | What you can spend today |
 | 2 | `02-split` | A intrat salariul? Se împarte singur. | Payday? It splits itself. |
-| 3 | `03-plan` | Fiecare leu are un loc. | Every leu has a place. |
+| 3 | `03-plan` | Fiecare ban are un loc. | Every penny has a place. |
 | 4 | `04-needs` | Două salarii, zile diferite. | Two salaries, different days. |
 | 5 | `05-add` | Notezi în 3 secunde. | Log it in 3 seconds. |
 | 6 | `06-journal` | Toate mișcările familiei. | Every family transaction. |
