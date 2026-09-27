@@ -472,7 +472,7 @@ export function useFamilySync(
     const syncApi = await loadFamilySync();
     const movedAt = new Date().toISOString();
     const stub = { ...createEmptyAppData(), settings: { ...createEmptyAppData().settings, members: [], paymentSources: [], syncRoomMovedAt: movedAt } };
-    await syncApi.pushFamilyEnvelope(oldRoomId, await crypto.encryptFamilyData(stub, oldSecret), undefined, (seq) => crypto.writeChainToken(oldSecret, oldRoomId, seq));
+    await syncApi.pushFamilyEnvelope(oldRoomId, await crypto.encryptFamilyData(stub, oldSecret), undefined, (seq) => crypto.writeChainToken(oldSecret, oldRoomId, seq), { seal: true });
     setSyncNotice(t("Familia s-a mutat în camera nouă, iar camera veche a fost golită. Trimite invitația celorlalte telefoane: ele se opresc până o primesc."));
   }, t("Mutarea nu a reușit. Camera veche a rămas neatinsă."));
 

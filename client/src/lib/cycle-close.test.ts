@@ -125,3 +125,38 @@ describe("închiderea ciclului", () => {
     expect(close.lessons.find((item) => item.allocationId === "env-rent")).toBeUndefined();
   });
 });
+
+describe("ziua salariului după februarie", () => {
+  it("fără venituri declarate, 31 ianuarie → 28 februarie → 31 martie → 30 aprilie → 31 mai", () => {
+    let data = casa();
+    data.settings.salaryPlan.incomes = [];
+    data.settings.salaryPlan.periodStart = "2027-01-31";
+    data.settings.salaryPlan.nextPayday = "2027-02-28";
+    const seen: string[] = [];
+    let today = "2027-03-01";
+    for (let i = 0; i < 3; i += 1) {
+      const close = cycleClose(data, today)!;
+      seen.push(close.nextPayday);
+      data = { ...data, settings: { ...data.settings, salaryPlan: { ...data.settings.salaryPlan, periodStart: close.nextStart, nextPayday: close.nextPayday } } };
+      today = nextDay(close.nextPayday);
+    }
+    expect(seen).toEqual(["2027-03-31", "2027-04-30", "2027-05-31"]);
+  });
+
+  it("două venituri pe 28 și 31: pe 28 februarie contează cel de pe 31", () => {
+    const data = casa();
+    data.settings.salaryPlan.periodStart = "2027-01-31";
+    data.settings.salaryPlan.nextPayday = "2027-02-28";
+    data.settings.salaryPlan.incomes = [
+      { id: "a", memberId: "member-me", label: "Salariu A", amount: 3000, day: 28 },
+      { id: "b", memberId: "member-me", label: "Salariu B", amount: 5000, day: 31 },
+    ];
+    expect(cycleClose(data, "2027-03-01")?.nextPayday).toBe("2027-03-31");
+  });
+});
+
+function nextDay(iso: string) {
+  const date = new Date(`${iso}T12:00:00`);
+  date.setDate(date.getDate() + 1);
+  return date.toISOString().slice(0, 10);
+}

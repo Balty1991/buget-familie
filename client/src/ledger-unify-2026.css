@@ -603,3 +603,19 @@ html.theme-navy .os-shell .os-dock button.is-on {
 /* Politica Play pentru AI: „Semnalează răspunsul” discret, sub fiecare răspuns al ghidului. */
 .ai-chat-report { align-self: flex-start; min-height: 32px; margin: 2px 0 0 6px; padding: 0 6px; border: 0; background: transparent; color: var(--cf-muted); font: 600 12px/1 "IBM Plex Sans", system-ui, sans-serif; text-decoration: underline; cursor: pointer; }
 .ai-chat-report:disabled { text-decoration: none; cursor: default; }
+
+/* Plicuri gol: butonul „Fă primul plic”, nu doar text (testul cu 30 de persoane). */
+.bf-allocation-empty > .bf-primary {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--cf-primary-strong);
+  border-radius: 12px;
+  background: var(--cf-primary-strong);
+  color: var(--cf-on-forest);
+  font: 750 14px/1 "IBM Plex Sans", sans-serif;
+}

@@ -38,6 +38,18 @@ function getWorker(): Worker | null {
 
 class WorkerUnavailable extends Error {}
 
+/**
+ * Secretul ajunge în worker ca o copie nouă la fiecare mesaj, iar cache-ul de chei PBKDF2 e pe
+ * obiect: fără un număr stabil, worker-ul deriva cheia din nou (~1 s) la fiecare sincronizare.
+ */
+const secretIds = new WeakMap<object, number>();
+let nextSecretId = 1;
+const secretIdOf = (secret: FamilySecret) => {
+  if (typeof secret === "string") return 0;
+  if (!secretIds.has(secret)) secretIds.set(secret, nextSecretId++);
+  return secretIds.get(secret)!;
+};
+
 function call<T>(message: Record<string, unknown>): Promise<T> {
   const target = getWorker();
   if (!target) return Promise.reject(new WorkerUnavailable());
@@ -55,7 +67,7 @@ function call<T>(message: Record<string, unknown>): Promise<T> {
 
 export async function encryptInWorker(data: AppData, secret: FamilySecret): Promise<EncryptedEnvelope> {
   try {
-    return await call<EncryptedEnvelope>({ op: "encrypt", data, secret });
+    return await call<EncryptedEnvelope>({ op: "encrypt", data, secret, secretId: secretIdOf(secret) });
   } catch (error) {
     if (!(error instanceof WorkerUnavailable)) throw error;
     const crypto = await import("@/lib/family-crypto");
@@ -66,7 +78,7 @@ export async function encryptInWorker(data: AppData, secret: FamilySecret): Prom
 /** Decriptează și normalizează pachetul camerei. */
 export async function decryptInWorker(envelope: EncryptedEnvelope, secret: FamilySecret): Promise<AppData> {
   try {
-    return await call<AppData>({ op: "decrypt", envelope, secret });
+    return await call<AppData>({ op: "decrypt", envelope, secret, secretId: secretIdOf(secret) });
   } catch (error) {
     if (!(error instanceof WorkerUnavailable)) throw error;
     const crypto = await import("@/lib/family-crypto");

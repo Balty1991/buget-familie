@@ -73,8 +73,12 @@ export function salaryDayOf(plan: AppData["settings"]["salaryPlan"], periodEnd: 
   const [year, month, day] = periodEnd.split("-").map(Number);
   const last = new Date(year, month, 0).getDate();
   const incomes = (plan.incomes || []).filter((item) => !item.archived);
-  const match = incomes.find((item) => Math.min(item.day, last) === day);
-  return match?.day ?? day;
+  // Două venituri pe 28 și 31 cad amândouă pe 28 februarie: contează cel mai târziu, altfel ciclul rămâne pe 28.
+  const matches = incomes.filter((item) => Math.min(item.day, last) === day).map((item) => item.day);
+  if (matches.length) return Math.max(...matches);
+  // Fără venituri declarate, 28 februarie poate fi un 30 sau 31 tăiat de lună: ziua de start o spune.
+  const startDay = Number(plan.periodStart?.slice(8, 10)) || 0;
+  return day === last && startDay > day ? startDay : day;
 }
 
 /**

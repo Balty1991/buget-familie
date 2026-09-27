@@ -20,6 +20,16 @@ export function closeTopDialog(): boolean {
 
 export function useFocusTrap<T extends HTMLElement>(onClose: () => void): RefObject<T | null> {
   const containerRef = useRef<T>(null);
+  useFocusTrapOn(containerRef, onClose);
+  return containerRef;
+}
+
+/**
+ * Același lucru pe un element care există deja (de exemplu foaia „+ Plic”, un <details>):
+ * se montează doar cât foaia e deschisă. Doar dialogul de deasupra ascultă tastele, ca
+ * Escape din previzualizare să nu închidă și foaia de sub ea.
+ */
+export function useFocusTrapOn<T extends HTMLElement>(containerRef: RefObject<T | null>, onClose: () => void) {
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
   useEffect(() => {
@@ -38,6 +48,7 @@ export function useFocusTrap<T extends HTMLElement>(onClose: () => void): RefObj
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (openDialogs[openDialogs.length - 1] !== onCloseRef) return;
       if (event.key === "Escape") { event.preventDefault(); onCloseRef.current(); return; }
       if (event.key !== "Tab") return;
       const items = focusableElements();
@@ -52,7 +63,5 @@ export function useFocusTrap<T extends HTMLElement>(onClose: () => void): RefObj
       document.removeEventListener("keydown", handleKeyDown);
       if (previouslyFocused && previouslyFocused !== document.body && document.contains(previouslyFocused)) previouslyFocused.focus();
     };
-  }, [previouslyFocused]);
-
-  return containerRef;
+  }, [previouslyFocused, containerRef]);
 }

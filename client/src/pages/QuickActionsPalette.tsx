@@ -80,6 +80,8 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
           ))}
           {query.trim() && !visible.length && !ledgerHits.length && <p className="bf-command-empty">{t("Nu am găsit o mișcare sau o acțiune pentru „{query}”.", { query })}</p>}
         </div>
+        {/* Cititorul de ecran află câte rezultate sunt, fără să plece din câmpul de căutare. */}
+        <p className="bf-visually-hidden" role="status" aria-live="polite">{query.trim() ? t("{count} rezultate", { count: String(visible.length + ledgerHits.length) }) : ""}</p>
         <p className="bf-command-hint">{t("Scurtătură:")} <kbd>Ctrl</kbd><span>+</span><kbd>K</kbd> {t("sau")} <kbd>⌘</kbd><span>+</span><kbd>K</kbd></p>
       </section>
     </div>,

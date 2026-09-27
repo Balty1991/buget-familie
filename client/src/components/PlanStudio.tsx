@@ -10,8 +10,9 @@ import "../plan-studio.css";
 import "../envelope-source.css";
 import "../envelope-transfer.css";
 import "../envelope-insights.css";
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { useFocusTrap, useFocusTrapOn } from "@/hooks/use-focus-trap";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
 import { EnvelopeEmptyArt, EnvelopeMark } from "@/components/EnvelopeMark";
 import { calendarBudget, periodDays as daysBetween, remainingPace, startedWeekShare, totalFromWeeklyPace, weeklyPaceFromTotal } from "@/lib/calendar-budget";
@@ -134,6 +135,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   /** Formularul de plic stă închis sub listă; „+ Plic”, „Modifică” și pornirea rapidă îl deschid. */
   const [builderOpen, setBuilderOpen] = useState(false);
   const closeBuilder = () => { setBuilderOpen(false); setEditingAllocationId(""); };
+  const builderRef = useRef<HTMLDetailsElement>(null);
   // D16: pe telefon, formularul deschis se randează la nivelul aplicației (peste barele de sus și de jos).
   const [phone, setPhone] = useState(() => typeof window !== "undefined" && window.matchMedia?.("(max-width: 760px)").matches);
   useEffect(() => {
@@ -546,13 +548,14 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           <div className="bf-allocation-actions"><button aria-label={`Editează ${item.label}`} onClick={() => editAllocation(item)}><Pencil size={15} /> {t("Editează")}</button><button aria-label={`Șterge ${item.label}`} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> {t("Șterge")}</button></div>
           </details>
         </article></Fragment>)}
-        {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Alege o categorie de mai sus sau completează formularul. Totalul planului este suma plicurilor — fără o limită generală separată.")}</span></div>}
+        {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Un plic e o limită pe o categorie: Mâncare, Transport, Chirie. Începe cu unul, restul le adaugi când ai nevoie.")}</span><button type="button" className="bf-primary" onClick={() => setBuilderOpen(true)}><Plus size={16} /> {t("Fă primul plic")}</button></div>}
             </div>
     </section>
     {/* D16: pe telefon formularul e o foaie peste pagină; fundalul și Escape o închid. */}
     {sheetOrInline(<>
     {(builderOpen || Boolean(editingAllocationId)) && <div className="bf-plan-builder-backdrop" aria-hidden="true" onClick={closeBuilder} />}
-    <details className="bf-plan-tools bf-plan-builder" open={builderOpen || Boolean(editingAllocationId)} onToggle={(event) => { const open = (event.currentTarget as HTMLDetailsElement).open; setBuilderOpen(open); if (!open && editingAllocationId) setEditingAllocationId(""); }} onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); closeBuilder(); } }}>
+    {(builderOpen || Boolean(editingAllocationId)) && <FocusTrapScope target={builderRef} onClose={closeBuilder} />}
+    <details ref={builderRef} tabIndex={-1} className="bf-plan-tools bf-plan-builder" open={builderOpen || Boolean(editingAllocationId)} onToggle={(event) => { const open = (event.currentTarget as HTMLDetailsElement).open; setBuilderOpen(open); if (!open && editingAllocationId) setEditingAllocationId(""); }} onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); closeBuilder(); } }}>
       <summary>{editingAllocationId ? t("Modifică plicul") : t("Plic nou")}<span className="bf-plan-builder-close" aria-hidden="true">×</span></summary>
       <section className={`bf-allocation-guidance ${allocationHealth}`} aria-labelledby="bf-allocation-guidance-title"><div className="bf-allocation-guidance-heading"><div><p className="bf-kicker">{t("REPARTIZARE GHIDATĂ")}</p><h2 id="bf-allocation-guidance-title">{unrepartized > 0 ? <>{t("Înainte să adaugi un plic, vezi")} <em>{t("ce mai trebuie acoperit.")}</em></> : unrepartized < 0 ? t("Plicurile depășesc disponibilul") : t("Banii disponibili sunt repartizați")}</h2><p>{allocationHealthLabel}. {t("Plicurile sunt limite de planificare; nu mută bani din card sau cash.")}</p></div><WalletCards size={23} aria-hidden="true" /></div><div className="bf-allocation-guidance-stats"><span><small>{t("Disponibil în surse")}</small><b>{money(Math.max(0, availableSources))}</b></span><span><small>{t("În plicuri")}</small><b>{money(Math.max(0, reservedInEnvelopes))}</b></span><span><small>{t("Scadențe")}</small><b>{money(Math.max(0, scheduled))}</b>{scheduledInEnvelopes > 0 && <small>{t("+{amount} plătite din plicuri", { amount: money(scheduledInEnvelopes) })}</small>}</span><span><small>{t("De repartizat")}</small><b>{money(Math.max(0, unrepartized))}</b></span></div>{unrepartized > 0 && <button type="button" className="bf-allocation-guidance-action" onClick={() => { setAllocationAmount(String(Math.round(unrepartized))); setAllocationError(""); document.getElementById("bf-allocation-builder")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>{t("Folosește suma nealocată pentru următorul plic")} <ChevronDown size={15} /></button>}{unrepartized < 0 && <p className="bf-form-error" role="alert">{t("Limitele plicurilor și scadențele depășesc soldul disponibil. Redu un plic sau verifică sursele înainte de a continua.")}</p>}</section><p className="bf-allocation-intro">{t("Adaugă o categorie pentru fiecare parte a banilor: alimente, taxi, abonamente, consumabile copil. La o cheltuială reală, alegi categoria și aplicația scade automat din plicul potrivit.")}</p>
       <div id="bf-allocation-builder" className="bf-allocation-builder">
@@ -663,7 +666,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
       </div>
       {/* Randat prin portal în <body>: `.bf-app` are `overflow: clip`, care limitează un element
           `position: fixed` la pagină, așa că dialogul apărea sus, nu peste ecran. */}
-      {allocationPreviewOpen && createPortal(<div className="bf-allocation-preview" role="dialog" aria-modal="true" aria-labelledby="allocation-preview-title"><div><p className="bf-kicker">{t("PREVIZUALIZARE")}</p><h3 id="allocation-preview-title">{t("Verifică înainte de aplicare")}</h3><p>Vei {editingAllocationId ? "actualiza" : t("adăuga")} plicul <b>{allocationLabel.trim() || allocationCategory}</b> cu <strong>{money(allocationTotal)}</strong> {t("pentru perioada aleasă.")}</p><div><span>{t("Rămas acum")}<strong>{money(unrepartized)}</strong></span><span>{t("Rămas după")}<strong>{money(previewAfter)}</strong></span></div><small>{t("Previzualizarea nu schimbă nimic până când nu confirmi.")}</small><footer><button onClick={() => setAllocationPreviewOpen(false)}>{t("Înapoi la editare")}</button><button className="bf-primary" onClick={() => { setAllocationPreviewOpen(false); saveAllocation(); }}><Check size={16} /> {t("Confirmă repartizarea")}</button></footer></div></div>, document.body)}
+      {allocationPreviewOpen && createPortal(<TrappedDialog className="bf-allocation-preview" labelledBy="allocation-preview-title" onClose={() => setAllocationPreviewOpen(false)}><div><p className="bf-kicker">{t("PREVIZUALIZARE")}</p><h3 id="allocation-preview-title">{t("Verifică înainte de aplicare")}</h3><p>Vei {editingAllocationId ? "actualiza" : t("adăuga")} plicul <b>{allocationLabel.trim() || allocationCategory}</b> cu <strong>{money(allocationTotal)}</strong> {t("pentru perioada aleasă.")}</p><div><span>{t("Rămas acum")}<strong>{money(unrepartized)}</strong></span><span>{t("Rămas după")}<strong>{money(previewAfter)}</strong></span></div><small>{t("Previzualizarea nu schimbă nimic până când nu confirmi.")}</small><footer><button onClick={() => setAllocationPreviewOpen(false)}>{t("Înapoi la editare")}</button><button className="bf-primary" onClick={() => { setAllocationPreviewOpen(false); saveAllocation(); }}><Check size={16} /> {t("Confirmă repartizarea")}</button></footer></div></TrappedDialog>, document.body)}
       {allocationError && <p className="bf-form-error" role="alert">{allocationError}</p>}
     </details>
     </>)}
@@ -751,4 +754,15 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     {!simpleMode && <MonthlyAllocationWizard allocations={plan.allocations} available={availableSources} scheduled={scheduled} remainingById={Object.fromEntries(envelopes.map((envelope) => [envelope.item.id, Math.max(0, envelope.remaining)]))} periodLabel={allocationPeriodOptions.find((option) => option.id === allocationPeriod)?.label || t("Luna aceasta")} onApply={applyMonthlyAllocation} />}
     <details className="bf-cycle-tools"><summary><span><BookmarkPlus size={17} /> {t("Instrumente pentru perioade repetate")}</span><ChevronDown size={17} /></summary><div className="bf-cycle-tools-body"><p>{t("Un șablon reține doar durata perioadei; începi mereu următorul ciclu cu data aleasă de tine.")}</p><div className="bf-cycle-template-save"><input value={cycleTemplateLabel} onChange={(event) => setCycleTemplateLabel(event.target.value)} maxLength={42} placeholder={periodValid ? `ex. Salariu ${daysBetween(cycleStart, cycleEnd)} zile` : t("Completează mai întâi perioada")} disabled={!periodValid} /><button disabled={!periodValid} onClick={saveCycleTemplate}>{t("Salvează șablonul")}</button></div><div className="bf-cycle-template-list">{data.settings.salaryCycleTemplates.map((template) => <article key={template.id}>{templateRenameId === template.id ? <div className="bf-cycle-template-rename"><input autoFocus value={templateRename} maxLength={42} onChange={(event) => setTemplateRename(event.target.value)} /><button onClick={() => renameCycleTemplate(template.id)}>{t("Salvează")}</button><button onClick={() => { setTemplateRenameId(""); setTemplateRename(""); }}>{t("Anulează")}</button></div> : <><button type="button" onClick={() => applyCycleTemplate(template)}><b>{template.label}</b><small>{template.durationDays} zile</small></button><div><button type="button" aria-label={`Redenumește șablonul ${template.label}`} onClick={() => { setTemplateRenameId(template.id); setTemplateRename(template.label); }}><Pencil size={15} /></button><button type="button" aria-label={`Șterge șablonul ${template.label}`} onClick={() => deleteCycleTemplate(template.id, template.label)}><Trash2 size={15} /></button></div></>}</article>)}{!data.settings.salaryCycleTemplates.length && <span>{t("Nu ai șabloane salvate încă.")}</span>}</div></div></details>
   </div>;
+}
+
+/** Foaia „+ Plic” deschisă ține focusul în ea; Escape și Înapoi pe Android o închid. */
+function FocusTrapScope({ target, onClose }: { target: RefObject<HTMLElement | null>; onClose: () => void }) {
+  useFocusTrapOn(target, onClose);
+  return null;
+}
+
+function TrappedDialog({ className, labelledBy, onClose, children }: { className: string; labelledBy: string; onClose: () => void; children: ReactNode }) {
+  const ref = useFocusTrap<HTMLDivElement>(onClose);
+  return <div ref={ref} tabIndex={-1} className={className} role="dialog" aria-modal="true" aria-labelledby={labelledBy}>{children}</div>;
 }

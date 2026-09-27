@@ -178,7 +178,7 @@ export function RecurringPanel({ data, onChange }: { data: AppData; onChange: (n
           <input type="checkbox" checked={autoPost} disabled={variable} onChange={(event) => setAutoPost(event.target.checked)} />
           <span>
             <b>{t("Adaugă automat în registru")}</b>
-            <small>{t("La prima deschidere din ziua scadenței sau după; nu poate dubla plata.")}</small>
+            <small>{variable ? t("Nu merge cu sumă variabilă: suma exactă e cea de pe factură, așa că plata o confirmi tu, cu un singur buton.") : t("La prima deschidere din ziua scadenței sau după; nu poate dubla plata.")}</small>
           </span>
         </label>
         {error && <p className="bf-form-error" role="alert">{error}</p>}

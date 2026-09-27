@@ -315,6 +315,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
           {parseInvite(inviteDraft) && !isNativeApp() && typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent) && (
             <a className="bf-secondary full bf-open-in-app" href={androidInviteIntent(inviteDraft)}>{t("Deschide în aplicație")}</a>
           )}
+          {!online && <p className="bf-helper" role="note">{t("Fără internet nu se poate intra în familie. Butonul pornește singur când revine conexiunea.")}</p>}
           {inviteDraft.trim() && !parseInvite(inviteDraft) && <p className="bf-form-error">{t("Codul nu arată ca o invitație. Lipește tot mesajul primit sau tot linkul.")}</p>}
         </div>
         <button type="button" className="bf-link-button" aria-expanded={legacyOpen} onClick={() => setLegacyOpen((value) => !value)}>{t("Am o parolă de familie")}</button>

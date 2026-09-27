@@ -250,6 +250,20 @@ async function main() {
         return { movedAt: data.settings.syncRoomMovedAt, transactions: data.transactions.length, hasInvite: JSON.stringify(data).includes("bf1.") };
       }, password);
       if (!oldRoom.movedAt || oldRoom.transactions || oldRoom.hasInvite) fail(`Camera veche nu a fost golită corect: ${JSON.stringify(oldRoom)}`);
+      // B3: camera veche e sigilată. Cine are încă parola veche (un telefon scos din familie) nu o mai poate rescrie.
+      const rewrite = await ana.page.evaluate(async (password) => {
+        const crypto = await import("/src/lib/family-crypto.ts");
+        const sync = await import("/src/lib/realtime-sync.ts");
+        const finance = await import("/src/lib/finance-data.ts");
+        const roomId = await crypto.deriveFamilyRoomId(password);
+        try {
+          await sync.pushFamilyEnvelope(roomId, await crypto.encryptFamilyData(finance.createEmptyAppData(), password), undefined, (seq) => crypto.writeChainToken(password, roomId, seq));
+          return "scris";
+        } catch (error) {
+          return error instanceof Error ? error.message : String(error);
+        }
+      }, password);
+      if (rewrite === "scris") fail("Camera veche s-a putut rescrie după „Mută familia” (sigiliul nu ține)");
       await mihai.page.goto("about:blank");
       await mihai.page.goto(`${BASE}#alatura=${moved}`);
       await joinWithInvite(mihai.page);

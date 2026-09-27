@@ -35,18 +35,24 @@ jobs:
           java-version: "21"
       - name: Scrie keystore-ul de release din secrete
         working-directory: android/app
+        # Secretele intră prin env, nu lipite în script: nu apar în textul comenzii și un „$” din parolă nu se mai expandează.
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
         run: |
-          if [ -z "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" ]; then
+          if [ -z "$KEYSTORE_B64" ]; then
             echo "::error::Lipsesc secretele ANDROID_RELEASE_*. Vezi README → Release Play Store."
             exit 1
           fi
-          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
-          cat > release-keystore.properties <<EOF
-          storeFile=release.keystore
-          storePassword=${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
-          keyPassword=${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
-          EOF
+          printf '%s' "$KEYSTORE_B64" | base64 -d > release.keystore
+          {
+            printf 'storeFile=release.keystore\n'
+            printf 'storePassword=%s\n' "$STORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+          } > release-keystore.properties
       # Aceeași pază ca la APK: o descărcare de Gradle picată nu e o problemă a aplicației.
       - name: Pregătește Gradle cu reîncercări
         run: |

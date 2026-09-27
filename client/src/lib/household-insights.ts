@@ -904,7 +904,7 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
     : expired
       ? t("Ciclul s-a încheiat pe {date} — pornește ciclul nou ca să-ți spun din nou ritmul zilei.", { date: formatDate(planEndDate(data.settings.salaryPlan)) })
       : spendable <= 0 && remainingDays > 1 && (fromWeek != null ? rhythm.remaining : safe.available) > 0
-      ? t("Azi ai folosit partea zilei. De mâine: {daily} lei/zi ({available} pe {days}).", fromWeek != null
+      ? t("Azi ai folosit partea zilei; banii nu s-au terminat, doar partea de azi. De mâine: {daily} lei/zi ({available} pe {days}).", fromWeek != null
         ? { daily: stripLei(rhythm.futureShare, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(Math.max(1, rhythm.remainingDays - 1)) }
         : { daily: stripLei(safe.available / (remainingDays - 1), getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays - 1) })
       : spendable <= 0

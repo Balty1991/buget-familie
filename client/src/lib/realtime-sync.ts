@@ -157,8 +157,10 @@ export async function fetchFamilyEnvelope(roomId: string): Promise<EncryptedEnve
  * Cu `token`, scrierea poartă și lanțul camerei (vezi `writeChainToken`): dezvăluie tokenul
  * angajat de scrierea precedentă și angajează următorul. Cât timp regulile publicate sunt cele
  * vechi (care refuză câmpuri noi), un document fără lanț se scrie ca înainte.
+ *
+ * Cu `seal`, camera se sigilează (pachetul „s-a mutat”): regulile nu mai primesc nicio scriere în ea.
  */
-export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnvelope, expectedIv?: string | null, token?: (seq: number) => Promise<string>): Promise<void> {
+export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnvelope, expectedIv?: string | null, token?: (seq: number) => Promise<string>, options: { seal?: boolean } = {}): Promise<void> {
   try {
     await signedInOrTimeout();
     const ref = roomRef(roomId);
@@ -174,7 +176,8 @@ export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnve
         const seq = hadChain ? Number(current!.seq) + 1 : 1;
         const reveal = hadChain ? await token(Number(current!.seq)) : undefined;
         if (reveal && (await sha256Hex(reveal)) !== current!.commit) throw new RealtimeSyncError("unavailable", "Camera familiei a fost scrisă de un telefon fără cheia familiei. Mută familia pe o invitație nouă din Sync.");
-        chain = { seq, commit: await sha256Hex(await token(seq)), ...(reveal ? { reveal } : {}) };
+        // Sigiliul merge doar cu lanțul: regulile vechi, fără lanț, nu-l cunosc.
+        chain = { seq, commit: await sha256Hex(await token(seq)), ...(reveal ? { reveal } : {}), ...(options.seal ? { sealedAt: serverTimestamp() } : {}) };
       }
       transaction.set(ref, { envelope, updatedAt: serverTimestamp(), ...chain });
     });

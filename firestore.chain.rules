@@ -36,7 +36,8 @@ service cloud.firestore {
 
     // Camera familiei: același pachet, plus câmpurile lanțului.
     function roomWriteOk() {
-      return request.resource.data.keys().hasOnly(['envelope', 'updatedAt', 'seq', 'commit', 'reveal'])
+      return request.resource.data.keys().hasOnly(['envelope', 'updatedAt', 'seq', 'commit', 'reveal', 'sealedAt'])
+        && (!('sealedAt' in request.resource.data) || request.resource.data.sealedAt == request.time)
         && request.resource.data.envelope.keys().hasOnly(['version', 'createdAt', 'salt', 'iv', 'ciphertext'])
         && request.resource.data.envelope.version == 1
         && request.resource.data.envelope.ciphertext is string
@@ -72,6 +73,12 @@ service cloud.firestore {
         && hashing.sha256(request.resource.data.reveal).toHexString().lower() == resource.data.commit;
     }
 
+    // „Mută familia” sigilează camera veche: după pachetul „s-a mutat”, nimeni nu mai scrie în ea,
+    // nici un telefon scos din familie care are încă cheia veche și ar putea continua lanțul.
+    function notSealed() {
+      return resource == null || !('sealedAt' in resource.data);
+    }
+
     match /familySync/{roomId} {
       // `get`, nu `read`: `read` acoperă și interogarea colecției, așa că oricine
       // putea descărca pachetele criptate ale tuturor familiilor și le putea ataca
@@ -82,7 +89,7 @@ service cloud.firestore {
       // cerere. Nu există niciun motiv legitim ca aplicația să șteargă documentul —
       // o familie care vrea să se retragă schimbă parola, iar camera veche rămâne
       // orfană. Ce poate face cineva rămâne astfel „strică”, nu „distruge”.
-      allow create, update: if signedIn() && roomId.size() == 64 && roomWriteOk() && commitOk() && (chainStarts() || chainContinues());
+      allow create, update: if signedIn() && roomId.size() == 64 && notSealed() && roomWriteOk() && commitOk() && (chainStarts() || chainContinues());
     }
 
     // Cod de recuperare: același format de pachet, ID derivat din cod (nu din parolă).

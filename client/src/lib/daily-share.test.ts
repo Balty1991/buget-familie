@@ -61,7 +61,7 @@ describe("după cumpărăturile săptămânii (M2)", () => {
     const summary = buildTodaySummary(data, ASOF);
     expect(summary.heroTracksWeek).toBe(true);
     expect(summary.brief.spendable).toBe(0);
-    expect(summary.heroHint).toMatch(/^Azi ai folosit partea zilei\. De mâine: /);
+    expect(summary.heroHint).toMatch(/^Azi ai folosit partea zilei; banii nu s-au terminat, doar partea de azi\. De mâine: /);
     expect(summary.heroHint).not.toMatch(/\b0 lei\/zi/);
     expect(summary.rhythmNote).not.toMatch(/cam 0 pe zi/);
     const future = summary.rhythm.days.find((row) => row.isFuture);

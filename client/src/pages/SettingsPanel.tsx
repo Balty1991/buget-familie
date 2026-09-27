@@ -136,7 +136,7 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
       setEnabled(isNotificationsEnabled() && status !== "denied");
       setArmed(isNotificationsArmed());
       if (status === "granted") setNotice(t("Alertele sunt active pe acest dispozitiv. Urmează și o notificare de confirmare."));
-      else if (status === "denied") setNotice(t("Permisiunea a fost refuzată. O poți reactiva din setările telefonului."));
+      else if (status === "denied") setNotice(isNativeApp() ? t("Permisiunea a fost refuzată. O poți reactiva din setările telefonului.") : t("Browserul a refuzat notificările. Le pornești din lacătul de lângă adresă → Notificări → Permite, apoi apeși din nou aici."));
       else if (status === "unsupported") setNotice(t("Notificările nu sunt disponibile în acest browser."));
       else setNotice(t("Am înregistrat Permite pe acest telefon. Dacă nu vezi o notificare, apasă „Trimite o notificare de test”."));
       setBusy(false);
@@ -348,7 +348,8 @@ export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onCh
     if (!backupPreview) return;
     const backup = backupPreview.data;
     setBackupPreview(null);
-    if (!getActiveFamilyRoom()) { onChange(backup); return; }
+    const restored = t("Backup restaurat: {moves} mișcări, {envelopes} plicuri, {members} membri.", { moves: String(backup.transactions.length), envelopes: String(backup.settings.salaryPlan.allocations.length), members: String(backup.settings.members.length) });
+    if (!getActiveFamilyRoom()) { onChange(backup); void showNotice(restored); return; }
     /**
      * Conectat la familie: un backup vechi ar întoarce sumele și ar șterge pe toate telefoanele
      * plicurile făcute de atunci. Îl unim doar: aduce înapoi ce lipsește, nu schimbă nimic din ce există.
@@ -356,6 +357,7 @@ export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onCh
     if (!(await askConfirm(t("Telefonul e conectat la familie, deci backup-ul nu înlocuiește datele: adaugă doar ce nu există acum (mișcări, plicuri, datorii). Ce există rămâne cum e, pe toate telefoanele. Ca să înlocuiești tot, închide întâi sesiunea din Sync."), { title: t("Unești backup-ul cu familia?"), confirmLabel: t("Da, unește") }))) return;
     const { mergeFamilyData, syncBaseOf } = await import("@/lib/family-crypto");
     onChange(mergeFamilyData(data, backup, syncBaseOf(backup)));
+    void showNotice(t("Backup unit cu familia. Ce lipsea a fost adăugat."));
   };
   const [member, setMember] = useState(""); const [source, setSource] = useState(""); const [kind, setKind] = useState<PaymentKind>("card"); const [owner, setOwner] = useState(data.settings.members[0]?.id || ""); const [category, setCategory] = useState("");
   const settings = data.settings; const change = (patch: Partial<typeof settings>) => onChange({ ...data, settings: { ...settings, ...patch } });
