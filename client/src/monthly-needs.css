@@ -223,6 +223,7 @@ html body .os-shell .bf-burndown figcaption, html body .os-shell .bf-burndown fi
 .bf-mva-label small { font-size: 12px; font-variant-numeric: tabular-nums; }
 .bf-mva-label small.up { color: var(--cf-danger, #a44e3e); }
 .bf-mva-label small.down { color: var(--cf-primary-strong, #1f5c52); }
+.bf-mva-label small.flat { color: var(--cf-muted, #6d7c74); }
 .bf-mva-bar { position: relative; display: block; height: 10px; margin-top: 4px; border-radius: 999px; background: color-mix(in srgb, var(--cf-ink, #143c36) 8%, transparent); }
 .bf-mva-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--cf-primary-strong, #1f5c52); }
 .bf-mva-bar i.up { background: var(--cf-warning, #c4a15a); }

@@ -3440,4 +3440,7 @@ export const en: Record<string, string> = {
   "Telefonul revocat are încă cheia familiei. Mut familia acum pe o invitație nouă? Celelalte telefoane intră din nou cu ea; datele nu se pierd.": "The revoked phone still has the family key. Move the family to a new invite now? The other phones join again with it; no data is lost.",
   "{available} disponibili = {placed} în plicuri + {free} liberi · {percent}% așezat": "{available} available = {placed} in envelopes + {free} free · {percent}% placed",
   "{count} zile până la venit": "{count} days until income",
+  "Venituri minus cheltuieli": "Income minus spending",
+  "Bani în surse minus datorii": "Money in sources minus debts",
+  "Banii din card, cash și celelalte surse, minus tot ce mai aveți de dat la datorii.": "The money on card, in cash and in other sources, minus everything still owed on debts.",
 };
