@@ -3,6 +3,7 @@
  * Pozele bonurilor rămân pe telefon; pachetul trimis e fără imageData.
  * Sesiunea se reia singură la pornire din cheia păstrată în family-session (nu din parolă).
  */
+import { pushWithRetry, retryDelay } from "@/lib/sync-engine";
 import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createEmptyAppData, isoToday, newId, normalizeAppData, type AppData } from "@/lib/finance-data";
@@ -518,37 +519,32 @@ export function useFamilySync(
           const roomId = syncRoomIdRef.current!;
           // Fetch+merge înainte de push; scrierea cere ca documentul să fie tot cel citit.
           // Dacă partenerul a scris între timp, citim din nou și unim (de cel mult 3 ori).
-          let toPush = syncDataRef.current;
-          let lastEnvelopeSize = 0;
-          for (let attempt = 1; ; attempt += 1) {
-            const remoteEnvelope = await syncApi.fetchFamilyEnvelope(roomId);
-            toPush = syncDataRef.current;
-            if (remoteEnvelope) {
-              const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, syncSecretRef.current));
-              if (remoteData.settings.syncRoomMovedAt) {
-                syncStopMovedRoom();
-                return;
-              }
-              toPush = syncRetainLocalReceiptImages(crypto.mergeFamilyData(syncDataRef.current, remoteData, readSyncBase(roomId)));
-              // Camera e acum în `toPush`: la o nouă încercare, strămoșul comun e pachetul acesta.
-              writeSyncBase(roomId, crypto.syncBaseOf(remoteData));
-              syncLastIvRef.current = remoteEnvelope.iv;
-              const mergedPortable = syncPortable(toPush);
+          const result = await pushWithRetry({
+            current: () => syncDataRef.current,
+            fetch: () => syncApi.fetchFamilyEnvelope(roomId),
+            decrypt: async (envelope) => normalizeAppData(await crypto.decryptFamilyData(envelope, syncSecretRef.current)),
+            merge: (local, remote) => syncRetainLocalReceiptImages(crypto.mergeFamilyData(local, remote, readSyncBase(roomId))),
+            onRemoteMerged: (remote, merged, remoteIv) => {
+              // Camera e acum în pachetul unit: la o nouă încercare, strămoșul comun e acesta.
+              writeSyncBase(roomId, crypto.syncBaseOf(remote));
+              syncLastIvRef.current = remoteIv;
+              const mergedPortable = syncPortable(merged);
               if (mergedPortable !== syncPortable(syncDataRef.current)) {
                 syncLastPortableRef.current = mergedPortable;
-                setData(toPush);
+                setData(merged);
               }
-            }
-            const envelope = await crypto.encryptFamilyData(toPush, syncSecretRef.current);
-            lastEnvelopeSize = envelope.ciphertext.length;
-            try {
-              await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null, (seq) => crypto.writeChainToken(syncSecretRef.current!, roomId, seq));
-              syncLastIvRef.current = envelope.iv;
-              break;
-            } catch (error) {
-              if (attempt >= 3 || !(error instanceof syncApi.RealtimeSyncError) || error.kind !== "conflict") throw error;
-            }
+            },
+            encrypt: (value) => crypto.encryptFamilyData(value, syncSecretRef.current),
+            write: (envelope, expectedIv) => syncApi.pushFamilyEnvelope(roomId, envelope, expectedIv, (seq) => crypto.writeChainToken(syncSecretRef.current!, roomId, seq)),
+            isConflict: (error) => error instanceof syncApi.RealtimeSyncError && error.kind === "conflict",
+          });
+          if (result.status === "moved") {
+            syncStopMovedRoom();
+            return;
           }
+          const toPush = result.data;
+          const lastEnvelopeSize = result.size;
+          syncLastIvRef.current = result.iv;
           writeSyncBase(roomId, crypto.syncBaseOf(toPush));
           syncLastPortableRef.current = syncPortable(toPush);
           syncFailuresRef.current = 0;
@@ -564,7 +560,7 @@ export function useFamilySync(
         } catch (error) {
           // Nimic nu a plecat: starea rămâne „de trimis” și reîncercăm singuri, fără să aștepte o nouă editare.
           syncLastPortableRef.current = pushedBefore;
-          const delay = [5_000, 30_000, 120_000][Math.min(syncFailuresRef.current, 2)];
+          const delay = retryDelay(syncFailuresRef.current);
           syncFailuresRef.current += 1;
           window.clearTimeout(syncRetryTimerRef.current);
           syncRetryTimerRef.current = window.setTimeout(() => setSyncRetryTick((tick) => tick + 1), delay);
