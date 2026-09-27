@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createEmptyAppData, addIsoDays, isoToday, planAllocationMath, type AppData } from "./finance-data";
 import { decide, understand, compactGuideContext, householdIsSetUp, shouldAskWhichReading, readingLabel, expenseProposal, emptyGuideMemory, canCommitGuideSpend, isDatedSpendChoice, type Reading } from "./understand";
 import { buildTodaySummary } from "./today-summary";
@@ -263,6 +263,10 @@ describe("ce pleacă către model", () => {
      * cu 2026-09-11 scris de mână, tranșa curentă începea chiar azi în unele zile
      * ale anului, iar „săptămâna e începută” devenea fals fără ca ceva să fie stricat.
      */
+    // O miercuri fixă: lunea, tranșa calendaristică începe chiar azi și „săptămâna e începută”
+    // ar fi fals fără ca ceva să fie stricat (testul pica lunea, pe fusul Auckland mai întâi).
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-30T12:00:00"));
     const spare = house();
     spare.settings.paymentSources[0].openingBalance = 9000;
     const shift = (days: number) => addIsoDays(isoToday(), days);
@@ -273,6 +277,7 @@ describe("ce pleacă către model", () => {
     expect(rich.period!.pacePerDay).toBeGreaterThan(0);
     // Săptămâna e începută de trei zile, deci tranșa curentă primește doar partea celor rămase.
     expect(rich.period!.startedWeek!.daysLeft).toBeLessThan(7);
+    vi.useRealTimers();
   });
 
   /**
