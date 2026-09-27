@@ -47,8 +47,21 @@ function vitePluginBuildId(): Plugin {
   return {
     name: "build-id",
     apply: "build",
-    generateBundle() {
+    // După pluginul CSS al lui Vite, care scoate bucățile JS goale (doar CSS): lista trebuie să le vadă scoase.
+    enforce: "post",
+    generateBundle(_options, bundle) {
       this.emitFile({ type: "asset", fileName: "build.json", source: JSON.stringify({ id: BUILD_ID }) });
+      /*
+       * P2-11: lista pe care service worker-ul o pune în cache la instalare, ca ecranele leneșe
+       * (Plicuri, Mișcări, Notează) să meargă offline și fără să fi fost deschise. Fără bucățile
+       * mari care cer oricum rețea sau sunt rare: Firebase, OCR, PDF.
+       */
+      const heavy = /(family-sync|receipt-ocr|tesseract|jspdf|html2canvas|pdf)/i;
+      const files = Object.values(bundle)
+        .filter((item) => /^assets\/.+\.(js|css)$/.test(item.fileName) && !heavy.test(item.fileName))
+        .filter((item) => (item.type === "chunk" ? item.code.length : String(item.source).length) < 400_000)
+        .map((item) => `./${item.fileName}`);
+      this.emitFile({ type: "asset", fileName: "precache.json", source: JSON.stringify({ id: BUILD_ID, files }) });
     },
   };
 }

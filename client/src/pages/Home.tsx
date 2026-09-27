@@ -47,13 +47,15 @@ import { selfMemberOf } from "@/lib/member-identity";
 import { isNativeApp } from "@/lib/app-storage";
 import { buildUndoSave } from "@/lib/undo-delete";
 import { formatInvite, parseInvite, takeInviteFromLocation } from "@/lib/family-invite";
-import { openHouseholdGuide, TodayView } from "@/pages/TodayView";
+import { openHouseholdGuide, TodayView as TodayViewRaw } from "@/pages/TodayView";
+import { stableView } from "@/lib/stable-view";
+const TodayView = stableView(TodayViewRaw);
 import { reloadToNewVersion, useUpdateAvailable } from "@/lib/update-check";
 
 export { recentActivityMoves } from "@/pages/TodayView";
 
-const PlanStudio = lazy(safeImport(() => import("@/components/PlanStudio").then((module) => ({ default: module.PlanStudio }))));
-const MovementsJournal = lazy(safeImport(() => import("@/components/MovementsJournal").then((module) => ({ default: module.MovementsJournal }))));
+const PlanStudio = lazy(safeImport(() => import("@/components/PlanStudio").then((module) => ({ default: stableView(module.PlanStudio) }))));
+const MovementsJournal = lazy(safeImport(() => import("@/components/MovementsJournal").then((module) => ({ default: stableView(module.MovementsJournal) }))));
 const QuickEntryPanel = lazy(safeImport(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel }))));
 const FirstWeekTour = lazy(safeImport(() => import("@/components/FirstWeekTour").then((module) => ({ default: module.FirstWeekTour }))));
 const FinancialCalendarView = lazy(safeImport(() => import("@/components/FinancialCalendarView").then((module) => ({ default: module.FinancialCalendarView }))));
