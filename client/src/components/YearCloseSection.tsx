@@ -3,7 +3,7 @@
  * anul trece într-o arhivă descărcată, iar în aplicație rămân rezumatul și soldurile.
  */
 import { Archive } from "lucide-react";
-import { closableYears, closeYear, yearArchiveBlob } from "@/lib/year-close";
+import { closableYears, closeYear, yearArchiveBlob, yearBlockedByCycle } from "@/lib/year-close";
 import type { AppData } from "@/lib/finance-data";
 import { askConfirm, showNotice } from "@/lib/confirm-dialog";
 import { saveExport } from "@/lib/save-export";
@@ -13,7 +13,8 @@ import { lei } from "@/lib/money-format";
 export function YearCloseSection({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
   const years = closableYears(data);
   const summaries = data.settings.yearSummaries || [];
-  if (!years.length && !summaries.length) return null;
+  const blocked = yearBlockedByCycle(data);
+  if (!years.length && !summaries.length && !blocked) return null;
   const close = async (year: string) => {
     const count = data.transactions.filter((item) => item.date <= `${year}-12-31`).length;
     if (!await askConfirm(t("Închizi anul {year}? Cele {count} mișcări se descarcă într-un fișier și ies din aplicație și din sincronizare, pe toate telefoanele. Soldurile rămân aceleași, iar în Setări rămâne rezumatul pe luni.", { year, count }))) return;
@@ -33,6 +34,7 @@ export function YearCloseSection({ data, onChange }: { data: AppData; onChange: 
       <p className="bf-kicker">{t("ANII ÎNCHEIAȚI")}</p>
       <h2 id="bf-year-close-title">{t("Închide anul")}</h2>
       <p className="bf-helper">{t("Mișcările unui an încheiat trec într-un fișier de arhivă. Aplicația rămâne rapidă, iar sincronizarea nu se umple.")}</p>
+      {blocked && !years.includes(blocked) && <p className="bf-helper">{t("Anul {year} se poate închide după ce începe primul ciclu de salariu din {next}: ciclul curent are încă mișcări din decembrie.", { year: blocked, next: String(Number(blocked) + 1) })}</p>}
       {years.map((year) => (
         <button key={year} type="button" className="bf-secondary" onClick={() => void close(year)}><Archive size={16} aria-hidden="true" /> {t("Închide anul {year}", { year })}</button>
       ))}

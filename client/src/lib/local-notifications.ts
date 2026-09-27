@@ -556,13 +556,16 @@ export function buildLocalAlerts(data: AppData) {
 const NOTIFY_ICON_COLOR = "#1B4F42";
 
 async function tryCapacitorSchedule(alerts: PlannedAlert[]): Promise<boolean> {
-  if (!alerts.length) return false;
   try {
     if (!isNative()) return false;
     const LocalNotifications = await loadNativeNotifications();
     const perm = await LocalNotifications.checkPermissions();
     if (perm.display !== "granted") return false;
-    await LocalNotifications.cancel({ notifications: alerts.map((a) => ({ id: a.id })) }).catch(() => undefined);
+    // Tot ce era programat înainte pleacă: o alertă care nu mai e în listă nu mai e adevărată.
+    const pending = await LocalNotifications.getPending().catch(() => ({ notifications: [] as Array<{ id: number }> }));
+    const stale = [...pending.notifications.map((item) => ({ id: item.id })), ...alerts.map((a) => ({ id: a.id }))];
+    if (stale.length) await LocalNotifications.cancel({ notifications: stale }).catch(() => undefined);
+    if (!alerts.length) return true;
     await LocalNotifications.schedule({
       notifications: alerts.map((alert) => ({
         id: alert.id,
@@ -792,6 +795,8 @@ function scheduleWorkManager(alerts: PlannedAlert[]): boolean {
   try {
     const bridge = nativeReminders();
     if (!bridge?.schedule) return false;
+    // Și din JS, pentru versiunile native mai vechi: întâi pleacă tot, apoi lista de acum.
+    bridge.cancelAll?.();
     const payload = JSON.stringify(
       alerts.slice(0, 6).map((alert) => ({
         id: alert.id,
@@ -816,8 +821,9 @@ export async function scheduleFinancialReminders(data: AppData): Promise<void> {
   const alerts = buildAlerts(data).map((alert) => ({ ...alert, body: lockSafeBody(alert.body) }));
 
   if (isNative()) {
-    if (alerts.length) scheduleWorkManager(alerts);
-    if (permission === "granted") await tryCapacitorSchedule(alerts);
+    // Un singur canal: cu puntea nativă (WorkManager) nu mai programăm și prin Capacitor,
+    // altfel fiecare reamintire apărea de două ori. Lista se trimite și goală, ca să anuleze.
+    if (!scheduleWorkManager(alerts) && permission === "granted") await tryCapacitorSchedule(alerts);
   } else if (alerts.length) {
     await scheduleWeb(alerts);
   }

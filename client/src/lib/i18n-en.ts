@@ -3461,4 +3461,5 @@ export const en: Record<string, string> = {
   "Mișcările unui an încheiat trec într-un fișier de arhivă. Aplicația rămâne rapidă, iar sincronizarea nu se umple.": "A finished year's movements move into an archive file. The app stays fast and sync does not fill up.",
   "Închide anul {year}": "Close {year}",
   "{count} mișcări · intrat {income} · ieșit {expense}": "{count} movements · in {income} · out {expense}",
+  "Anul {year} se poate închide după ce începe primul ciclu de salariu din {next}: ciclul curent are încă mișcări din decembrie.": "{year} can be closed once the first pay cycle of {next} starts: the current cycle still has December transactions.",
 };

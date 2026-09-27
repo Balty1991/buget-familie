@@ -36,6 +36,8 @@ export function usePersistAppData(
   const storageHydrated = useRef(false);
   const editedBeforeHydrate = useRef(false);
   const channelRef = useRef<BroadcastChannel | null>(null);
+  /** Ultima copie comună cu celelalte file: baza unirii, ca o sumă schimbată într-o filă să nu devină conflict. */
+  const sharedRef = useRef<AppData | null>(null);
   const lastSavedHash = useRef("");
 
   const applyData: typeof setData = (value) => {
@@ -105,7 +107,7 @@ export function usePersistAppData(
           t("Spațiul local este aproape plin. Fotografiile bonurilor rămân în stocarea dedicată; exportă un backup dacă problema continuă."),
         );
       }
-      void writeAppData(data, savedAt, hash).then(() => channelRef.current?.postMessage(savedAt)).catch(() =>
+      void writeAppData(data, savedAt, hash).then(() => { sharedRef.current = data; channelRef.current?.postMessage(savedAt); }).catch(() =>
         setStorageNotice(t("Datele sunt păstrate în fallback-ul browserului; stocarea modernă nu a confirmat salvarea.")),
       );
     };
@@ -140,10 +142,11 @@ export function usePersistAppData(
       void (async () => {
         const record = await readAppDataRecord().catch(() => null);
         if (!record?.data) return;
-        const { mergeFamilyData } = await import("@/lib/family-crypto");
+        const { mergeFamilyData, syncBaseOf } = await import("@/lib/family-crypto");
         const other = normalizeAppData(record.data);
         setData((current) => {
-          const merged = mergeFamilyData(current, other);
+          const merged = mergeFamilyData(current, other, sharedRef.current ? syncBaseOf(sharedRef.current) : undefined);
+          sharedRef.current = merged;
           const images = new Map([...other.receipts, ...current.receipts].map((item) => [item.id, item]));
           const withImages = { ...merged, receipts: merged.receipts.map((item) => { const source = images.get(item.id); return source ? { ...item, imageData: source.imageData, imageData2: source.imageData2, imageKeys: source.imageKeys } : item; }) };
           return localSnapshotText(withImages) === localSnapshotText(current) ? current : withImages;

@@ -8,6 +8,7 @@ import {
   buildPendingReviewMeta,
   normalizeAppData,
   pruneTombstones,
+  isArchivedTransaction,
   type AllocationAmountConflict,
   type AllocationHistoryEntry,
   type AppData,
@@ -15,6 +16,7 @@ import {
   type DeletedRecord,
   type PendingReviewMeta,
   type PaymentSource,
+  type SalaryAllocationApplication,
   type SyncDevice,
   type Transaction,
   type TransactionConflict,
@@ -321,13 +323,36 @@ function conflictOutcome<T extends AnyConflict>(localConflict?: T, remoteConflic
  * — niciodată LWW tăcut pe bani. Conflictul are sumele văzute de telefonul curent
  * („la mine”/„la partener”), iar cât e deschis blochează unirea automată a plicului.
  */
+/**
+ * Același salariu repartizat pe ambele telefoane înainte de sync: suma plicului iese la fel
+ * (e aceeași schimbare), dar rămâneau două aplicări active și două anulări scădeau plicul la 0.
+ * Păstrăm activă doar cea mai veche; cealaltă e marcată anulată, fără efect pe sume.
+ */
+const singleActivePerIncome = (list: SalaryAllocationApplication[]) => {
+  const first = new Map<string, SalaryAllocationApplication>();
+  [...list].filter((item) => !item.revertedAt).sort((left, right) => left.appliedAt.localeCompare(right.appliedAt) || left.id.localeCompare(right.id)).forEach((item) => { if (!first.has(item.incomeId)) first.set(item.incomeId, item); });
+  return list.map((item) => !item.revertedAt && first.get(item.incomeId) !== item ? { ...item, revertedAt: item.appliedAt } : item);
+};
+
 function mergeAllocationsWithConflicts(
   localAllocations: BudgetAllocation[],
   remoteAllocations: BudgetAllocation[],
   localConflicts: AllocationAmountConflict[],
   remoteConflicts: AllocationAmountConflict[],
   base?: SyncBase,
+  applied?: { local: SalaryAllocationApplication[]; remote: SalaryAllocationApplication[] },
 ): { allocations: BudgetAllocation[]; conflicts: AllocationAmountConflict[] } {
+  /**
+   * Cât a pus în plic fiecare telefon prin repartizări pe care celălalt nu le are încă.
+   * Două salarii repartizate în același plic, pe telefoane diferite, se adună (600 + 2.000
+   * + 1.500 = 4.100), nu ajung un conflict {2.600, 2.100} fără nicio variantă corectă.
+   */
+  const onlyHere = (mine: SalaryAllocationApplication[] = [], theirs: SalaryAllocationApplication[] = [], allocationId: string) => {
+    const known = new Set(theirs.map((item) => item.id));
+    const incomes = new Set(theirs.filter((item) => !item.revertedAt).map((item) => item.incomeId));
+    return mine.filter((item) => !known.has(item.id) && !item.revertedAt && !incomes.has(item.incomeId))
+      .reduce((sum, item) => sum + item.allocations.filter((line) => line.allocationId === allocationId).reduce((total, line) => total + line.amount, 0), 0);
+  };
   const remoteById = new Map(remoteAllocations.map((item) => [item.id, item]));
   const localById = new Map(localAllocations.map((item) => [item.id, item]));
   const localConflictById = conflictsBy(localConflicts, (item) => item.allocationId);
@@ -363,6 +388,15 @@ function mergeAllocationsWithConflicts(
       // Doar un telefon a schimbat suma de la ultima sincronizare: schimbarea lui câștigă.
       if (localItem.amount !== remoteItem.amount && before !== undefined && before === localItem.amount) { allocations.push(remoteItem); return; }
       if (localItem.amount !== remoteItem.amount && before !== undefined && before === remoteItem.amount) { allocations.push(localItem); return; }
+      if (localItem.amount !== remoteItem.amount && before !== undefined && applied) {
+        const localAdded = onlyHere(applied.local, applied.remote, id);
+        const remoteAdded = onlyHere(applied.remote, applied.local, id);
+        const near = (left: number, right: number) => Math.abs(left - right) < 0.005;
+        if (localAdded > 0 && remoteAdded > 0 && near(localItem.amount - before, localAdded) && near(remoteItem.amount - before, remoteAdded)) {
+          allocations.push({ ...localItem, amount: Math.round((localItem.amount + remoteItem.amount - before) * 100) / 100, updatedAt: now });
+          return;
+        }
+      }
       if (localItem.amount !== remoteItem.amount) {
         allocations.push(localItem);
         conflicts.push({
@@ -499,6 +533,25 @@ function mergePendingReviewMeta(localMeta: PendingReviewMeta[], remoteMeta: Pend
 }
 
 /** Unește două copii de familie fără a expedia imagini de bon și fără a reintroduce elemente șterse. */
+/**
+ * Soldul datoriei e o valoare stocată, iar unirea alege un telefon. Plățile făcute pe celălalt
+ * telefon, pe care telefonul câștigător nu le avea, se scad și ele: 10.000 − 500 − 300 = 9.200,
+ * nu 9.700 (ultima scriere).
+ */
+function withConcurrentDebtPayments(debts: AppData["debts"], local: AppData, remote: AppData, gone: Set<string>): AppData["debts"] {
+  const paymentsOf = (data: AppData) => new Map(data.transactions.filter((item) => item.debtId && item.kind === "expense" && !gone.has(item.id)).map((item) => [item.id, item]));
+  const localPaid = paymentsOf(local);
+  const remotePaid = paymentsOf(remote);
+  if (!localPaid.size && !remotePaid.size) return debts;
+  const localDebts = new Map(local.debts.map((item) => [item.id, item]));
+  return debts.map((debt) => {
+    const winnerIsLocal = localDebts.get(debt.id) === debt;
+    const [winner, other] = winnerIsLocal ? [localPaid, remotePaid] : [remotePaid, localPaid];
+    const missed = Array.from(other.values()).filter((item) => item.debtId === debt.id && !winner.has(item.id)).reduce((sum, item) => sum + item.amount, 0);
+    return missed >= 0.005 ? { ...debt, remaining: Math.max(0, Math.round((debt.remaining - missed) * 100) / 100) } : debt;
+  });
+}
+
 export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: SyncBase): AppData {
   const local = normalizeAppData(localRaw); const remote = normalizeAppData(remoteRaw);
   // O singură trecere (înainte era O(n²): 350 ms la 1.500 de ștergeri).
@@ -551,6 +604,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
     local.allocationConflicts || [],
     remote.allocationConflicts || [],
     base,
+    { local: localPlan.salaryAllocationApplications || [], remote: remotePlan.salaryAllocationApplications || [] },
   );
   const allocations = merged.allocations.filter((item) => alive("allocations", item.id, item.updatedAt));
   const conflicts = merged.conflicts.filter((item) => allocations.some((allocation) => allocation.id === item.allocationId));
@@ -561,7 +615,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
     transfers: mergeById(localPlan.transfers || [], remotePlan.transfers || []).filter((item) => alive("transfers", item.id, item.createdAt)),
     weekTransfers: mergeById(localPlan.weekTransfers || [], remotePlan.weekTransfers || []).filter((item) => alive("weekTransfers", item.id, item.createdAt)),
     salaryAllocationRules: mergeById(localPlan.salaryAllocationRules || [], remotePlan.salaryAllocationRules || []).filter((item) => alive("salaryRules", item.id, item.updatedAt)),
-    salaryAllocationApplications: mergeById(localPlan.salaryAllocationApplications || [], remotePlan.salaryAllocationApplications || []),
+    salaryAllocationApplications: singleActivePerIncome(mergeById(localPlan.salaryAllocationApplications || [], remotePlan.salaryAllocationApplications || [])),
     needs: mergeById(localPlan.needs || [], remotePlan.needs || []),
     incomes: mergeById(localPlan.incomes || [], remotePlan.incomes || []),
     allocationHistory,
@@ -606,8 +660,13 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
     allocationConflicts: conflicts,
     transactionConflicts: txConflicts,
     // „Închide anul”: mișcările de dinainte de data arhivată nu revin din copia celuilalt telefon.
-    transactions: (() => { const cut = [local.settings.archivedThrough || "", remote.settings.archivedThrough || ""].sort().pop(); return cut ? transactions.filter((item) => item.date > cut) : transactions; })(),
-    debts: mergeCollection("debts", local.debts, remote.debts, deleted),
+    transactions: (() => {
+      const localCut = local.settings.archivedThrough || "";
+      const remoteCut = remote.settings.archivedThrough || "";
+      const winner = remoteCut > localCut ? remote.settings : localCut ? local.settings : undefined;
+      return winner ? transactions.filter((item) => !isArchivedTransaction(winner, item)) : transactions;
+    })(),
+    debts: withConcurrentDebtPayments(mergeCollection("debts", local.debts, remote.debts, deleted), local, remote, new Set(deleted.filter((item) => item.entity === "transactions").map((item) => item.id))),
     savings: mergeCollection("savings", local.savings, remote.savings, deleted),
     receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted),
     recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted),
@@ -624,7 +683,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
         const localCut = local.settings.archivedThrough || "";
         const remoteCut = remote.settings.archivedThrough || "";
         const winner = remoteCut > localCut ? remote.settings : localCut ? local.settings : undefined;
-        return winner?.archivedThrough ? { archivedThrough: winner.archivedThrough, archivedNet: winner.archivedNet || {}, yearSummaries: winner.yearSummaries || [] } : {};
+        return winner?.archivedThrough ? { archivedThrough: winner.archivedThrough, archivedNet: winner.archivedNet || {}, yearSummaries: winner.yearSummaries || [], archivedIds: winner.archivedIds, archivedNetCurrency: winner.archivedNetCurrency } : {};
       })(),
       memberName: local.settings.memberName,
       familyCode: local.settings.familyCode || remote.settings.familyCode,

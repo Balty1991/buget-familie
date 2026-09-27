@@ -4,7 +4,7 @@
  * Sesiunea se reia singură la pornire din cheia păstrată în family-session (nu din parolă).
  */
 import { decryptInWorker, encryptInWorker } from "@/lib/sync-worker-client";
-import { pushWithRetry, retryDelay } from "@/lib/sync-engine";
+import { keepConcurrentEdits, pushWithRetry, retryDelay } from "@/lib/sync-engine";
 import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createEmptyAppData, isoToday, newId, type AppData } from "@/lib/finance-data";
@@ -295,14 +295,17 @@ export function useFamilySync(
           : t("Nu există nicio cameră cu această parolă. Camerele noi se fac cu „Creează camera”, iar partenerul intră cu invitația."));
         return false;
       }
+      const mergedFrom = merged;
+      let openBase: ReturnType<typeof readSyncBase> = undefined;
       if (remoteEnvelope) {
         const remoteData = await decryptInWorker(remoteEnvelope, secret);
+        openBase = readSyncBase(roomId);
         if (remoteData.settings.syncRoomMovedAt) {
           syncStopMovedRoom();
           return false;
         }
         const own = claimOwnMember(merged, remoteData, getOrCreateDeviceId());
-        merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData, readSyncBase(roomId)));
+        merged = syncRetainLocalReceiptImages(crypto.mergeFamilyData(own, remoteData, openBase));
         // Ce am unit conține deja camera: la o nouă încercare, strămoșul comun e pachetul acesta.
         writeSyncBase(roomId, crypto.syncBaseOf(remoteData));
       }
@@ -322,7 +325,9 @@ export function useFamilySync(
       }
       prepared = merged;
       syncLastPortableRef.current = syncPortable(merged);
-      setData(merged);
+      // Ce s-a notat cât am decriptat nu se pierde: se unește peste rezultat.
+      { const result = merged;
+        setData((current) => keepConcurrentEdits(current, mergedFrom, result, (now, unit, snapshot) => syncRetainLocalReceiptImages(crypto.mergeFamilyData(now, unit, crypto.syncBaseOf(snapshot))))); }
       const envelope = await encryptInWorker(merged, secret);
       try {
         await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null, (seq) => crypto.writeChainToken(secret, roomId, seq));
@@ -514,6 +519,7 @@ export function useFamilySync(
       void syncEnqueue(async () => {
         if (!syncRoomIdRef.current || syncPortable(syncDataRef.current) === syncLastPortableRef.current) return;
         const pushedBefore = syncLastPortableRef.current;
+        let mergedFrom: AppData | undefined;
         try {
           const crypto = await loadFamilyCrypto();
           const syncApi = await loadFamilySync();
@@ -524,7 +530,7 @@ export function useFamilySync(
             current: () => syncDataRef.current,
             fetch: () => syncApi.fetchFamilyEnvelope(roomId),
             decrypt: (envelope) => decryptInWorker(envelope, syncSecretRef.current),
-            merge: (local, remote) => syncRetainLocalReceiptImages(crypto.mergeFamilyData(local, remote, readSyncBase(roomId))),
+            merge: (local, remote) => { mergedFrom = local; return syncRetainLocalReceiptImages(crypto.mergeFamilyData(local, remote, readSyncBase(roomId))); },
             onRemoteMerged: (remote, merged, remoteIv) => {
               // Camera e acum în pachetul unit: la o nouă încercare, strămoșul comun e acesta.
               writeSyncBase(roomId, crypto.syncBaseOf(remote));
@@ -532,7 +538,10 @@ export function useFamilySync(
               const mergedPortable = syncPortable(merged);
               if (mergedPortable !== syncPortable(syncDataRef.current)) {
                 syncLastPortableRef.current = mergedPortable;
-                setData(merged);
+                // O cheltuială notată cât se decripta pachetul partenerului se unește și ea, nu se pierde.
+                const from = mergedFrom;
+                // Unire în 3 căi: ce s-a schimbat de la instantaneul unit (aici) + ce aduce pachetul unit.
+                setData((current) => keepConcurrentEdits(current, from, merged, (now, unit, snapshot) => syncRetainLocalReceiptImages(crypto.mergeFamilyData(now, unit, crypto.syncBaseOf(snapshot)))));
               }
             },
             encrypt: (value) => encryptInWorker(value, syncSecretRef.current),

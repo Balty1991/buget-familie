@@ -203,6 +203,22 @@ export function resolveHydrateMerge(options: {
   editedBeforeHydrate: boolean;
 }): AppData | null {
   const memoryHash = hashAppPayload(localSnapshotText(options.memory));
+  if (options.editedBeforeHydrate && !options.local.data && options.indexed.data) {
+    /*
+     * Copia din localStorage lipsea (golită de plafon), deci memoria pornise goală: ce s-a notat
+     * până a răspuns IndexedDB se adaugă peste registrul întreg, nu îl înlocuiește.
+     */
+    const indexed = options.indexed.data;
+    const fresh = options.memory.transactions.filter((item) => !indexed.transactions.some((known) => known.id === item.id));
+    const updated = new Map(options.memory.transactions.map((item) => [item.id, item]));
+    return {
+      ...indexed,
+      transactions: [...fresh, ...indexed.transactions.map((item) => {
+        const mine = updated.get(item.id);
+        return mine && (mine.updatedAt || mine.createdAt || "") > (item.updatedAt || item.createdAt || "") ? mine : item;
+      })],
+    };
+  }
   if (options.editedBeforeHydrate) {
     const stamped = {
       data: options.memory,

@@ -20,4 +20,6 @@ export function planCycle(data: AppData) {
  * „peste limită” față de zero lei pe care omul nici n-a apucat să-i scrie (testare, M1).
  */
 export const hasNoMoneyYet = (data: AppData) =>
-  data.transactions.length === 0 && data.settings.paymentSources.every((source) => source.openingBalance <= 0);
+  data.transactions.length === 0 && data.settings.paymentSources.every((source) => source.openingBalance <= 0)
+  // După „Închide anul” banii sunt în arhivă, nu în mișcări: nu mai spunem „pune banii de azi”.
+  && !Object.values(data.settings.archivedNet || {}).some((value) => Math.abs(value) >= 0.005);

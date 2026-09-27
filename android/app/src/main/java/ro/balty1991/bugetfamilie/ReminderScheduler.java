@@ -20,6 +20,9 @@ public final class ReminderScheduler {
   public static void scheduleJson(Context context, String payload) {
     if (payload == null || payload.trim().isEmpty()) return;
     ReminderWorker.ensureChannel(context);
+    // Lista primită e toată lista: alertele care nu mai sunt adevărate (plic reîncărcat,
+    // factură plătită) se anulează, altfel sunau oricum, cu sume vechi.
+    WorkManager.getInstance(context).cancelAllWorkByTag("bf-reminder");
     try {
       final JSONArray items = new JSONArray(payload);
       final int limit = Math.min(items.length(), 6);

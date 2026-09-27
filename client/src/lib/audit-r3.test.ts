@@ -110,3 +110,18 @@ describe("o factură plătită din plicul ei nu mănâncă cifra zilei", () => {
     expect(todayBrief(paid, "2026-10-11").spendable).toBeCloseTo(before, 2);
   });
 });
+
+describe("sync: ce notezi cât se decriptează pachetul partenerului nu se pierde", () => {
+  it("farmacia notată în timpul decriptării rămâne lângă kaufland și lidl", async () => {
+    const { mergeFamilyData, syncBaseOf } = await import("./family-crypto");
+    const { keepConcurrentEdits } = await import("./sync-engine");
+    const shared = createEmptyAppData();
+    const snapshot: AppData = { ...shared, transactions: [tx({ id: "lidl", amount: 40 })] };
+    const partner: AppData = { ...shared, transactions: [tx({ id: "kaufland", amount: 111 })] };
+    const merged = mergeFamilyData(snapshot, partner, syncBaseOf(shared));
+    const current: AppData = { ...snapshot, transactions: [...snapshot.transactions, tx({ id: "farmacie", amount: 25 })] };
+    const shown = keepConcurrentEdits(current, snapshot, merged, (now, unit, snap) => mergeFamilyData(now, unit, syncBaseOf(snap)));
+    expect(shown.transactions.map((item) => item.id).sort()).toEqual(["farmacie", "kaufland", "lidl"]);
+    expect(keepConcurrentEdits(snapshot, snapshot, merged, () => { throw new Error("nu trebuie unit"); })).toBe(merged);
+  });
+});

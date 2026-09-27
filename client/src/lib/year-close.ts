@@ -9,17 +9,30 @@
  *   aceleași mișcări, fără mii de „pietre de mormânt”.
  * Corecțiile de sold și mutările între surse intră la sold, nu la venituri/cheltuieli.
  */
-import { isBalanceAdjustment, isoToday, type AppData, type Transaction, type YearSummary } from "@/lib/finance-data";
+import { archivedIdHash, exchangeRateFor, isBalanceAdjustment, isoToday, type AppData, type Transaction, type YearSummary } from "@/lib/finance-data";
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
-/** Anii care se pot închide: încheiați, cu mișcări, după ultima arhivă. */
+/**
+ * Anii care se pot închide: încheiați, cu mișcări, după ultima arhivă, și nu în mijlocul
+ * ciclului de salariu curent. Ciclul 25.12–25.01 are cheltuieli în decembrie: arhivate,
+ * plicul ar fi arătat 1.900 rămași în loc de 1.000.
+ */
 export function closableYears(data: AppData, today = isoToday()): string[] {
   const current = today.slice(0, 4);
   const cut = data.settings.archivedThrough || "";
+  const cycleStart = data.settings.salaryPlan.periodStart || "";
   return Array.from(new Set(data.transactions.map((item) => item.date.slice(0, 4))))
-    .filter((year) => /^\d{4}$/.test(year) && year < current && `${year}-12-31` > cut)
+    .filter((year) => /^\d{4}$/.test(year) && year < current && `${year}-12-31` > cut && !(cycleStart && cycleStart <= `${year}-12-31`))
     .sort();
+}
+
+/** Anul trecut nu se poate închide încă pentru că ciclul curent a început în el. */
+export function yearBlockedByCycle(data: AppData, today = isoToday()): string | undefined {
+  const last = String(Number(today.slice(0, 4)) - 1);
+  const cycleStart = data.settings.salaryPlan.periodStart || "";
+  const hasMoves = data.transactions.some((item) => item.date.startsWith(last));
+  return hasMoves && cycleStart && cycleStart <= `${last}-12-31` && `${last}-12-31` > (data.settings.archivedThrough || "") ? last : undefined;
 }
 
 function summarize(year: string, items: Transaction[], closedAt: string): YearSummary {
@@ -54,6 +67,17 @@ export function closeYear(data: AppData, year: string, today = isoToday()): { da
     if (!item.sourceId) continue;
     archivedNet[item.sourceId] = round((archivedNet[item.sourceId] || 0) + (item.kind === "income" ? item.amount : -item.amount));
   }
+  const archivedNetCurrency = { ...(data.settings.archivedNetCurrency || {}) };
+  for (const source of data.settings.paymentSources) {
+    if (!source.currency) continue;
+    const rate = exchangeRateFor(data, source.currency);
+    const own = archive.filter((item) => item.sourceId === source.id).reduce((sum, item) => {
+      const value = item.originalCurrency === source.currency && item.originalAmount ? item.originalAmount : rate && rate > 0 ? item.amount / rate : 0;
+      return sum + (item.kind === "income" ? value : -value);
+    }, 0);
+    if (own) archivedNetCurrency[source.id] = round((archivedNetCurrency[source.id] || 0) + own);
+  }
+  const archivedIds = (data.settings.archivedIds || "") + archive.map((item) => archivedIdHash(item.id)).join("");
   const closedAt = new Date().toISOString();
   const years = Array.from(new Set(archive.map((item) => item.date.slice(0, 4)))).sort();
   const summaries = years.map((each) => summarize(each, archive.filter((item) => item.date.startsWith(each)), closedAt));
@@ -63,7 +87,7 @@ export function closeYear(data: AppData, year: string, today = isoToday()): { da
     data: {
       ...data,
       transactions: data.transactions.filter((item) => item.date > cut),
-      settings: { ...data.settings, archivedThrough: cut, archivedNet, yearSummaries: [...kept, ...summaries].sort((a, b) => a.year.localeCompare(b.year)) },
+      settings: { ...data.settings, archivedThrough: cut, archivedNet, archivedIds, ...(Object.keys(archivedNetCurrency).length ? { archivedNetCurrency } : {}), yearSummaries: [...kept, ...summaries].sort((a, b) => a.year.localeCompare(b.year)) },
     },
   };
 }

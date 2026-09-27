@@ -48,3 +48,12 @@ export async function pushWithRetry<E extends SyncEnvelopeLike>(deps: PushDeps<E
 
 /** Reîncercarea după un eșec: 5 s, 30 s, apoi la 2 minute. */
 export const retryDelay = (failures: number) => [5_000, 30_000, 120_000][Math.min(Math.max(0, failures), 2)];
+
+/**
+ * Starea de pus pe ecran după ce a sosit pachetul unit. Dacă omul a notat ceva cât se
+ * decripta pachetul (starea curentă nu mai e instantaneul unit), unim în 3 căi: ce s-a
+ * schimbat de la instantaneu rămâne, ce aduce pachetul unit se adaugă. Altfel cheltuiala
+ * dispărea tăcut.
+ */
+export const keepConcurrentEdits = <T>(current: T, snapshot: T | undefined, merged: T, merge3: (current: T, merged: T, snapshot: T) => T): T =>
+  !snapshot || current === snapshot || current === merged ? merged : merge3(current, merged, snapshot);
