@@ -150,6 +150,8 @@ export function GuideQuotaBar({ quota, habits }: { quota: QuotaInfo; habits: num
   const shortLabel = local
     ? `Local · se reia ${formatReset(quota.resetAt)}${learned}`
     : `${quota.remaining}/${quota.limit} azi${learned}`;
+  // D21: cu mulți mesaje rămase, bara „100/100 azi” arăta ca un scor; apare doar când contează.
+  if (!local && quota.remaining >= 20) return null;
   return (
     <div className={`ai-quota ${local ? "is-local" : low ? "is-low" : "is-ok"}`} aria-live="polite">
       <div className="ai-quota-track" aria-hidden="true"><i style={{ width: `${quotaPercent(quota)}%` }} /></div>
