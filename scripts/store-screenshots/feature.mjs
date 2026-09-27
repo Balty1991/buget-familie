@@ -5,8 +5,8 @@ const F = "/home/user/buget-familie/client/src/assets/fonts/";
 const D = "/home/user/buget-familie/docs/play-store-assets/";
 const b64 = (p) => fs.readFileSync(p).toString("base64");
 const T = {
-  ro: ["Fiecare ban", "are un loc.", "Plicuri · cât poți cheltui azi · toată familia"],
-  en: ["Every penny", "has a place.", "Envelopes · daily budget · the whole family"],
+  ro: ["Fiecare leu", "are un loc.", "Plicuri · cât poți cheltui azi · toată familia"],
+  en: ["Every leu", "has a place.", "Envelopes · daily budget · the whole family"],
 };
 const html = ([a, b, sub]) => `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face{font-family:Fr;src:url(data:font/woff2;base64,${b64(F + "fraunces-640-latin.woff2")});unicode-range:U+0000-00FF}

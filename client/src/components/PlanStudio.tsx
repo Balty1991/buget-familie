@@ -444,7 +444,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     <CycleClosePanel data={data} onChange={onChange} />
     <EnvelopeConflictBanner data={data} onChange={onChange} />
     <header className="bf-plan-studio-header bf-plan-hero-glass">
-      <div className="bf-plan-hero-copy"><p className="bf-kicker">{t("PLANUL FAMILIEI, PE CATEGORII")}</p><h1>{t("Fiecare ban")} <em>{t("are un loc.")}</em></h1><p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p></div>
+      <div className="bf-plan-hero-copy"><p className="bf-kicker">{t("PLANUL FAMILIEI, PE CATEGORII")}</p><h1>{t("Fiecare leu")} <em>{t("are un loc.")}</em></h1><p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p></div>
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{t("NEREPARTIZAȚI")}</small><b>{money(unrepartized)}</b>
         {/* D12: cele trei cifre se leagă: disponibili = în plicuri (și scadențe) + liberi. */}
         {availableSources > 0 && <>

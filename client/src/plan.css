@@ -106,3 +106,6 @@
     margin: 0;
   }
 }
+
+/* Inelul decorativ al antetului rămâne în chenar (pe tabletă ieșea peste „Plicurile tale”). */
+.os-shell .bf-plan-workspace > .bf-plan-studio-header.bf-plan-hero-glass { overflow: clip; }

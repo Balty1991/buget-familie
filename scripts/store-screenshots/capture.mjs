@@ -4,10 +4,16 @@ import { makeSeed } from "./seed.mjs";
 const OUT = new URL("./raw/", import.meta.url).pathname;
 import fs from "node:fs"; fs.mkdirSync(OUT, { recursive: true });
 const only = process.argv[2];
+// DEVICE=tablet → tabletă 10" în picioare; LANGS=ro → doar română.
+const tablet = process.env.DEVICE === "tablet";
+const VIEW = tablet ? { width: 800, height: 1280 } : { width: 390, height: 844 };
+const DPR = tablet ? 2 : 3;
+const PREFIX = tablet ? "tab-" : "";
+const LANGS = (process.env.LANGS || "ro,en").split(",");
 
 async function open(lang, opts = {}) {
   const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, locale: lang === "ro" ? "ro-RO" : "en-GB" });
+  const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: DPR, locale: lang === "ro" ? "ro-RO" : "en-GB" });
   await ctx.addInitScript(([lang]) => {
     if (sessionStorage.getItem("store-init")) return; sessionStorage.setItem("store-init", "1");
     const set = { "buget-familie:setup-complete": "true", "buget-familie:onboarding-complete": "true", "buget-familie:first-week-tour-dismissed": "1", "buget-familie:theme": "white", "buget-familie:whats-new-ledger-unify-2026-09": "1", "buget-familie:language": lang, "buget-familie:envelope-glossary-seen": "1", "buget-familie:last-balance-check": new Date().toISOString().slice(0, 10) };
@@ -27,8 +33,10 @@ async function open(lang, opts = {}) {
   await page.addStyleTag({ content: "* { caret-color: transparent !important; } .bf-undo-bar, .bf-offline-banner, .bf-update-banner { display: none !important; }" });
   return { browser, page };
 }
-const dock = (page, i) => page.locator(".os-dock button").nth(i);
-const more = async (page, re) => { await dock(page, 4).click(); await page.waitForTimeout(800); await page.locator("button:visible", { hasText: re }).first().click(); await page.waitForTimeout(1500); };
+const TOP = [/^(Astăzi|Today)$/, /^(Plicuri|Envelopes)$/, /(Notează|Log it)/, /^(Mișcări|Movements)$/];
+// Pe tabletă meniul stă sus, în antet; pe telefon e bara de jos.
+const dock = (page, i) => tablet ? page.locator("button:visible", { hasText: TOP[i] }).first() : page.locator(".os-dock button").nth(i);
+const more = async (page, re) => { if (tablet) { await page.locator("header button:visible", { hasText: re }).first().click(); await page.waitForTimeout(1500); return; } await dock(page, 4).click(); await page.waitForTimeout(800); await page.locator("button:visible", { hasText: re }).first().click(); await page.waitForTimeout(1500); };
 const shot = async (page, name) => { await page.waitForTimeout(500); await page.screenshot({ path: `${OUT}${name}.png` }); console.log("✓", name); };
 
 const frames = {
@@ -42,11 +50,11 @@ const frames = {
   async insights(page) { await more(page, /Analiză|Analysis|Insights/); await page.evaluate(() => { document.querySelector(".bf-spend-compass")?.scrollIntoView({ block: "start" }); window.scrollBy(0, -80); }); },
 };
 
-for (const lang of ["ro", "en"]) {
+for (const lang of LANGS) {
   for (const [name, go] of Object.entries(frames)) {
     if (only && only !== name) continue;
     const { browser, page } = await open(lang, { pendingIncome: name === "split" });
-    try { await go(page); await shot(page, `${lang}-${name}`); } catch (e) { console.log("✗", lang, name, e.message.split("\n")[0]); }
+    try { await go(page); await shot(page, `${PREFIX}${lang}-${name}`); } catch (e) { console.log("✗", lang, name, e.message.split("\n")[0]); }
     await browser.close();
   }
 }
