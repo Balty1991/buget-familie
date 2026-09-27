@@ -80,7 +80,7 @@ De acum nu mai există nicio cheie care să poată scăpa.
 ## Partea 2 · App Check
 
 **Unde suntem:**
-- Aplicația cere deja jetoane App Check prin **reCAPTCHA Enterprise** (cheia `6Lc9zrctAAAAAAz27Nr8XWx9D3cRnBnHkChyyeCq`).
+- Aplicația cere deja jetoane App Check prin **reCAPTCHA Enterprise** (cheia `6Lc9zrctAAAAAAz27Nr8XWx9D3cRnBnHKChyyeCq`).
 - Ghidul AI verifică jetonul pe server. Fără jeton, primește un plafon mai mic.
 - Pe Firestore, App Check **nu e impus** încă. Asta e corect până vedem cifrele.
 

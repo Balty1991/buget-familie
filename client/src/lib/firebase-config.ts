@@ -27,7 +27,7 @@ export const firebaseConfig = {
 };
 
 /** Site key public reCAPTCHA Enterprise. VITE_RECAPTCHA_SITE_KEY la build overridează. */
-const RECAPTCHA_SITE_KEY_PLACEHOLDER = "6Lc9zrctAAAAAAz27Nr8XWx9D3cRnBnHkChyyeCq";
+const RECAPTCHA_SITE_KEY_PLACEHOLDER = "6Lc9zrctAAAAAAz27Nr8XWx9D3cRnBnHKChyyeCq";
 
 const envSiteKey =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_RECAPTCHA_SITE_KEY
