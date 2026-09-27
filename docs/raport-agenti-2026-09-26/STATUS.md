@@ -75,7 +75,7 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | P2-10 | CSS 635 KB | ⏳ continuu (D24) |
 | P2-11 | Service worker offline | ✅ `53206ff` |
 | P3-12, P3-14, P3-15 | Pachet de pornire, layout la pornire, animații | ✅ `d691122`, `1d894c0`, `9e816d6` |
-| P3-13 | Fonturi (subset Fraunces) | ⏳ |
+| P3-13 | Fonturi (subset Fraunces) | ✅ 58 KB → 7 KB pe greutate |
 
 ## Design (design-report.md)
 | # | Constatare | Stare |
@@ -85,12 +85,12 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | D6 | Accent Navy, „OLED” | ✅ `bbab747`, `aec8069` |
 | D9 | Fâșia de pe desktop | ✅ `a58e0f2` |
 | D10 | Layout de desktop | ⏳ |
-| D11 | Cardul plicului compact | ⏳ |
+| D11 | Cardul plicului compact | ✅ 259 → 184 px |
 | D12 | Trei totaluri pe Plicuri | ✅ `7fd69b4` |
 | D13 | Obligații | ✅ `0a76d3f` (plata era deja verde) |
 | D14 | Analiză | ✅ `f88b581` |
-| D15 | Setări grupate | ⏳ (textele ✅ `4a90313`) |
-| D16 | „+ Plic” în foaie | ⏳ |
+| D15 | Setări grupate | ✅ secțiuni pliabile; textele `4a90313` |
+| D16 | „+ Plic” | ✅ grila aliniată la 48 px, suma pe tot rândul; ⏳ foaie separată |
 | D17 | „Cum se citește?” | ✅ `bc64dbf` |
 | D18 | Mișcări | ✅ `51dae9f` |
 | D19–D23 | Text mic, gri, ghid, first-run, sync | ✅ D19, D20 `09fe9b5`; D21 `81bbc18`, `529763b`; D22 `4403de5`; D23 era deja făcut |

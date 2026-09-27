@@ -491,3 +491,60 @@ html.theme-navy .os-shell .os-dock button.is-on {
   background: color-mix(in srgb, var(--cf-primary) 14%, transparent);
   color: var(--cf-primary);
 }
+
+
+/* Reguli globale mutate din mobile-capture-pass.css (acela se încarcă doar cu Notează). */
+.bf-needs-templates-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cf-muted);
+}
+
+.bf-needs-meal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+  font-size: 13px;
+}
+
+.bf-allocation-list-total .bf-allocation-meal {
+  display: block;
+  margin-top: 2px;
+  color: var(--cf-muted);
+}
+
+.bf-needs-balance {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cf-muted) 10%, transparent);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.bf-needs-balance.is-short b { color: var(--bf-alert, #b3261e); }
+
+/* D15: Setările, grupate în secțiuni pliabile (rânduri de 56 px), nu un formular de 5.700 px. */
+.bf-settings > .bf-settings-group {
+  border: 1px solid var(--cf-line);
+  border-radius: 16px;
+  background: var(--cf-surface);
+  overflow: hidden;
+}
+.bf-settings > .bf-settings-group > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cf-ink);
+  cursor: pointer;
+  list-style: none;
+}
+.bf-settings > .bf-settings-group > summary::-webkit-details-marker { display: none; }
+.bf-settings > .bf-settings-group > summary::after { content: "›"; font-size: 22px; color: var(--cf-muted); transition: transform .15s ease; }
+.bf-settings > .bf-settings-group[open] > summary::after { transform: rotate(90deg); }
+.bf-settings > .bf-settings-group > :not(summary) { margin: 0 12px 12px; }

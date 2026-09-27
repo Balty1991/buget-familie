@@ -192,39 +192,9 @@
   color: var(--cf-on-primary, #fff);
 }
 
-.bf-needs-templates-label {
-  margin: 0 0 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--cf-muted);
-}
-
-.bf-needs-meal {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  grid-column: 1 / -1;
-  font-size: 13px;
-}
-
-.bf-allocation-list-total .bf-allocation-meal {
-  display: block;
-  margin-top: 2px;
-  color: var(--cf-muted);
-}
-
-.bf-needs-balance {
-  margin: 12px 0 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--cf-surface-2, rgba(0, 0, 0, .04));
-  font-size: 13px;
-  line-height: 1.4;
-}
-.bf-needs-balance.is-short b { color: var(--bf-alert, #b3261e); }
-
 /* Produs #2: mutarea între surse. */
 .bf-quick-entry-panel .bf-quick-move { display: block; margin: 8px 0 4px; font-size: 13px; }
 .bf-source-transfer-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 8px; }
 .bf-source-transfer-row > svg { margin-bottom: 14px; color: var(--cf-muted); }
 .bf-source-transfer-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+

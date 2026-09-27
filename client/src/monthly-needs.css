@@ -238,3 +238,9 @@ html body .os-shell .bf-week-started > button { justify-self: stretch; width: 10
 /* Titlurile grupelor din lista de plicuri: Fixe, Variabile, Economii. */
 .bf-envelope-list-first .bf-envelope-group { grid-column: 1 / -1; margin: 10px 2px 0; color: var(--cf-muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .bf-envelope-list-first .bf-envelope-group:first-child { margin-top: 0; }
+
+/* D11: pe cardul plicului, numele și suma pe același rând; restul pe toată lățimea. */
+html body .bf-envelope-list-first .bf-allocation-list.bf-envelope-desk > article { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+html body .bf-envelope-list-first .bf-allocation-list.bf-envelope-desk > article > .bf-allocation-list-heading { grid-column: 1; }
+html body .bf-envelope-list-first .bf-allocation-list.bf-envelope-desk > article > .bf-allocation-list-total { grid-column: 2; align-self: end; text-align: right; }
+html body .bf-envelope-list-first .bf-envelope-meter b { white-space: nowrap; }

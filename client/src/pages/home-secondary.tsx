@@ -59,6 +59,8 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
     const tick = () => {
       const node = document.getElementById(anchor);
       if (node) {
+        // Setările sunt grupate în secțiuni pliabile: întâi deschidem grupul.
+        node.closest("details")?.setAttribute("open", "");
         node.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }

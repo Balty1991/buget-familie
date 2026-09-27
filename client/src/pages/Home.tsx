@@ -238,6 +238,8 @@ export default function Home() {
       const tick = () => {
         const node = document.getElementById("bf-familie-plan");
         if (node) {
+          // Setările sunt grupate în secțiuni pliabile: întâi deschidem grupul.
+          node.closest("details")?.setAttribute("open", "");
           node.scrollIntoView({ behavior: "smooth", block: "start" });
           return;
         }
@@ -616,7 +618,8 @@ export default function Home() {
     const expense = data.settings.quickTemplates.filter((item) => item.kind !== "income").slice(0, 3);
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));
   }, [data.settings.quickTemplates]);
-  const allNav = [{ id: "today" as MainView, label: t("Astăzi"), icon: LayoutGrid }, { id: "journal" as MainView, label: t("Mișcări"), icon: ReceiptText }, { id: "plan" as MainView, label: t("Plicuri"), icon: Wallet }, { id: "obligations" as MainView, label: t("Obligații"), icon: Bell }, { id: "insights" as MainView, label: t("Analiză"), icon: BarChart3 }];
+  // D10: aceeași ordine ca bara de jos de pe telefon (Astăzi · Plicuri · Mișcări).
+  const allNav = [{ id: "today" as MainView, label: t("Astăzi"), icon: LayoutGrid }, { id: "plan" as MainView, label: t("Plicuri"), icon: Wallet }, { id: "journal" as MainView, label: t("Mișcări"), icon: ReceiptText }, { id: "obligations" as MainView, label: t("Obligații"), icon: Bell }, { id: "insights" as MainView, label: t("Analiză"), icon: BarChart3 }];
   const dockNav: Array<{ id: MainView | "add"; label: string; icon: typeof LayoutGrid }> = [
     { id: "today", label: t("Astăzi"), icon: LayoutGrid },
     { id: "plan", label: t("Plicuri"), icon: Wallet },

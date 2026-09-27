@@ -751,3 +751,21 @@ html.theme-navy .bf-cycle-flow span:last-child b { color: #ffa493; }
   line-height: 1.35;
   color: var(--os-muted);
 }
+
+/* D10: grupul „De rezolvat” + mișcări + „Mai mult” păstrează pe telefon distanțele de până acum. */
+html body .bf-today-workspace > .bf-today-side { display: grid; gap: inherit; align-content: start; min-width: 0; }
+
+/* D10: pe desktop, Astăzi pe două coloane — eroul (cifra zilei, banda) în stânga,
+   „De rezolvat” și ultimele mișcări în dreapta; anunțurile rămân pe toată lățimea. */
+@media (min-width: 1100px) {
+  html body .os-shell .bf-today-workspace:not(.is-simple) {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: 24px;
+    align-items: start;
+  }
+  html body .os-shell .bf-today-workspace:not(.is-simple) > * { grid-column: 1 / -1; }
+  html body .os-shell .bf-today-workspace:not(.is-simple) > .os-hero { grid-column: 1; margin-bottom: 0; }
+  html body .os-shell .bf-today-workspace:not(.is-simple) > .bf-today-side { grid-column: 2; }
+  html body .os-shell .bf-today-workspace:not(.is-simple) > .bf-today-side > .bf-today-brief { padding: 16px 18px; }
+}

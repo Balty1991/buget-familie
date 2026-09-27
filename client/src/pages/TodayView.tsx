@@ -462,6 +462,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       </section>
       {coach}
 
+      {/* D10: pe desktop coloana din dreapta; pe telefon, doar un grup în flux. */}
+      <div className="bf-today-side">
       {!simpleMode && <OpeningBalanceCard data={data} onChange={onChange} />}
 
       <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenRecurring={onOpenRecurring} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => { setDayMore(true); window.setTimeout(() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }} />
@@ -599,6 +601,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           )}
         </section>
       )}
+      </div>
 
       {safeSheetOpen && (
         <Suspense fallback={null}>

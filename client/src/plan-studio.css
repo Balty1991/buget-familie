@@ -380,3 +380,8 @@
   white-space: normal;
   color: var(--cf-muted);
 }
+
+/* D16: formularul „Plic nou” — suma cu comutatorul ei pe tot rândul, câmpurile aliniate jos, la 48 px. */
+html body .bf-plan-builder .bf-allocation-builder { align-items: end; }
+html body .bf-plan-builder .bf-allocation-builder > .bf-pace-field { grid-column: 1 / -1; }
+html body .bf-plan-builder .bf-allocation-builder .bf-plan-field :is(select, input:not([type="checkbox"])) { min-height: 48px; height: auto; }

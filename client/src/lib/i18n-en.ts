@@ -3443,4 +3443,11 @@ export const en: Record<string, string> = {
   "Venituri minus cheltuieli": "Income minus spending",
   "Bani în surse minus datorii": "Money in sources minus debts",
   "Banii din card, cash și celelalte surse, minus tot ce mai aveți de dat la datorii.": "The money on card, in cash and in other sources, minus everything still owed on debts.",
+  "Săptămâna S{index}": "Week S{index}",
+  "Familie și membri": "Family and members",
+  "Surse, solduri și valută": "Sources, balances and currency",
+  "Categorii și reguli": "Categories and rules",
+  "Mementouri și siguranță": "Reminders and security",
+  "Copii de siguranță": "Backups",
+  "Confidențialitate și planuri": "Privacy and plans",
 };
