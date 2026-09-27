@@ -8,7 +8,7 @@ const C = {
   today: { ro: ["Cât poți cheltui", "azi", "O singură cifră pe zi, până la salariu."], en: ["What you can spend", "today", "One number a day, until payday."] },
   split: { ro: ["A intrat salariul?", "Se împarte singur.", "Întâi obligațiile, apoi restul, pe plicuri."], en: ["Payday?", "It splits itself.", "Bills first, then the rest, into envelopes."] },
   plan: { ro: ["Fiecare leu", "are un loc.", "Plicuri pentru chirie, mâncare, economii."], en: ["Every leu", "has a place.", "Envelopes for rent, groceries, savings."] },
-  needs: { ro: ["Două salarii,", "zile diferite.", "Ciclul se potrivește familiei, nu invers."], en: ["Two salaries,", "different days.", "The cycle fits your family, not the other way round."] },
+  needs: { ro: ["Două salarii,", "zile diferite.", "Fiecare salariu umple plicurile în ziua în care intră."], en: ["Two salaries,", "different days.", "Each salary fills the envelopes on the day it arrives."] },
   add: { ro: ["Notezi în", "3 secunde.", "Suma, magazinul, gata. Categoria se alege singură."], en: ["Log it in", "3 seconds.", "Amount, shop, done. The category picks itself."] },
   journal: { ro: ["Toate mișcările", "familiei.", "Comune sau personale, pe zile, cu căutare."], en: ["Every family", "transaction.", "Shared or personal, by day, searchable."] },
   obligations: { ro: ["Rate și facturi", "la timp.", "Vezi ce urmează și confirmi cu o atingere."], en: ["Bills and loans", "on time.", "See what's next and confirm with one tap."] },
