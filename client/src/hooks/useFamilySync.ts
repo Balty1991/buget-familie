@@ -3,10 +3,11 @@
  * Pozele bonurilor rămân pe telefon; pachetul trimis e fără imageData.
  * Sesiunea se reia singură la pornire din cheia păstrată în family-session (nu din parolă).
  */
+import { decryptInWorker, encryptInWorker } from "@/lib/sync-worker-client";
 import { pushWithRetry, retryDelay } from "@/lib/sync-engine";
 import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { createEmptyAppData, isoToday, newId, normalizeAppData, type AppData } from "@/lib/finance-data";
+import { createEmptyAppData, isoToday, newId, type AppData } from "@/lib/finance-data";
 import { checkFamilyPassword, legacyPasswordClosed } from "@/lib/family-password";
 import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
@@ -227,7 +228,7 @@ export function useFamilySync(
     if (!syncSecretRef.current || envelope.iv === syncLastIvRef.current) return;
     try {
       const crypto = await loadFamilyCrypto();
-      const remoteData = normalizeAppData(await crypto.decryptFamilyData(envelope, syncSecretRef.current));
+      const remoteData = await decryptInWorker(envelope, syncSecretRef.current);
       if (remoteData.settings.syncRoomMovedAt) {
         syncStopMovedRoom();
         return;
@@ -295,7 +296,7 @@ export function useFamilySync(
         return false;
       }
       if (remoteEnvelope) {
-        const remoteData = normalizeAppData(await crypto.decryptFamilyData(remoteEnvelope, secret));
+        const remoteData = await decryptInWorker(remoteEnvelope, secret);
         if (remoteData.settings.syncRoomMovedAt) {
           syncStopMovedRoom();
           return false;
@@ -322,7 +323,7 @@ export function useFamilySync(
       prepared = merged;
       syncLastPortableRef.current = syncPortable(merged);
       setData(merged);
-      const envelope = await crypto.encryptFamilyData(merged, secret);
+      const envelope = await encryptInWorker(merged, secret);
       try {
         await syncApi.pushFamilyEnvelope(roomId, envelope, remoteEnvelope?.iv ?? null, (seq) => crypto.writeChainToken(secret, roomId, seq));
         syncLastIvRef.current = envelope.iv;
@@ -522,7 +523,7 @@ export function useFamilySync(
           const result = await pushWithRetry({
             current: () => syncDataRef.current,
             fetch: () => syncApi.fetchFamilyEnvelope(roomId),
-            decrypt: async (envelope) => normalizeAppData(await crypto.decryptFamilyData(envelope, syncSecretRef.current)),
+            decrypt: (envelope) => decryptInWorker(envelope, syncSecretRef.current),
             merge: (local, remote) => syncRetainLocalReceiptImages(crypto.mergeFamilyData(local, remote, readSyncBase(roomId))),
             onRemoteMerged: (remote, merged, remoteIv) => {
               // Camera e acum în pachetul unit: la o nouă încercare, strămoșul comun e acesta.
@@ -534,7 +535,7 @@ export function useFamilySync(
                 setData(merged);
               }
             },
-            encrypt: (value) => crypto.encryptFamilyData(value, syncSecretRef.current),
+            encrypt: (value) => encryptInWorker(value, syncSecretRef.current),
             write: (envelope, expectedIv) => syncApi.pushFamilyEnvelope(roomId, envelope, expectedIv, (seq) => crypto.writeChainToken(syncSecretRef.current!, roomId, seq)),
             isConflict: (error) => error instanceof syncApi.RealtimeSyncError && error.kind === "conflict",
           });

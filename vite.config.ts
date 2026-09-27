@@ -121,6 +121,8 @@ export default defineConfig(({ command }) => {
     // GitHub Pages servește acest proiect sub /buget-familie/; buildurile locale și Android rămân la rădăcină.
     base: process.env.GITHUB_PAGES === "true" ? "/buget-familie/" : "/",
     plugins,
+    // Worker-ul de sync (P2-9) împarte module cu aplicația: format ES, cu bucăți comune.
+    worker: { format: "es" },
     define: { "import.meta.env.VITE_BUILD_ID": JSON.stringify(command === "build" ? BUILD_ID : "dev") },
     resolve: {
       alias: {
