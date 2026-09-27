@@ -2,7 +2,8 @@
   "name": "buget-familie",
   "version": "1.1.96",
   "type": "module",
-  "license": "MIT",
+  "license": "UNLICENSED",
+  "private": true,
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
