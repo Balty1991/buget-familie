@@ -84,7 +84,7 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | D4, D5, D7, D8 | Bloc închis pe Alb, roșu, fonturi, paletă | ✅ `bbab747` |
 | D6 | Accent Navy, „OLED” | ✅ `bbab747`, `aec8069` |
 | D9 | Fâșia de pe desktop | ✅ `a58e0f2` |
-| D10 | Layout de desktop | ⏳ |
+| D10 | Layout de desktop | ✅ Astăzi pe două coloane, taburi în ordinea din dock `0aec841`; ⏳ sidebar, Plicuri master-detail, Mișcări ca tabel |
 | D11 | Cardul plicului compact | ✅ 259 → 184 px |
 | D12 | Trei totaluri pe Plicuri | ✅ `7fd69b4` |
 | D13 | Obligații | ✅ `0a76d3f` (plata era deja verde) |
