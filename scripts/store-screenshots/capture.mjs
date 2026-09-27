@@ -21,6 +21,8 @@ async function open(lang, opts = {}) {
     for (const k of ["catalog", "ink", "atelier", "premium", "ui-chrome"]) localStorage.setItem(`buget-familie:theme-migrated-${k}-2026-09`, "1");
   }, [lang]);
   const page = await ctx.newPage();
+  // O zi obișnuită din săptămână (joi), nu ultima zi a săptămânii plicului: cifra zilei e cea tipică.
+  if (process.env.STORE_DAY !== "real") await page.clock.setFixedTime(new Date(process.env.STORE_DAY || "2026-09-24T10:00:00"));
   await page.goto("http://127.0.0.1:5174/"); await page.waitForTimeout(1500);
   await page.evaluate(async (src) => {
     const storage = await import("/src/lib/app-storage.ts"); const fd = await import("/src/lib/finance-data.ts");

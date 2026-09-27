@@ -340,7 +340,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         <div className="os-hero-top">
           <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Cifra zilei")}</span>
           {/* D13: data pe un singur rând („dum., 27 sept.”), nu pe trei. */}
-          <time className="os-date is-inline" dateTime={todayIso}>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}</time>
+          <time className="os-date-line" dateTime={todayIso}>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}</time>
         </div>
         {fresh && planDeclared ? (
           <div className="os-start os-start-ready">

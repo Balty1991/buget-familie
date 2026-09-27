@@ -2,6 +2,7 @@
  * Propunerea de repartizare pentru un salariu intrat: ce acoperă acum, ce rămâne pentru
  * salariul următor, cât e liber. Nimic nu se schimbă până la „Aplică repartizarea”.
  */
+import { foldRomanian } from "@/lib/finance-data";
 import "../monthly-needs.css";
 import { useMemo, useState } from "react";
 import { Check, WalletCards } from "lucide-react";
@@ -29,7 +30,7 @@ export function IncomeSplitCard({ data, incomeId, onChange, onDismiss }: { data:
         <WalletCards size={19} aria-hidden="true" />
         <div>
           <p className="bf-kicker">{t("A INTRAT UN VENIT")}</p>
-          <h3 id={`split-${incomeId}`}>{t("{title}{who} · {amount}", { title: split.income.title, who: member ? ` (${member})` : "", amount: money(split.income.amount) })}</h3>
+          <h3 id={`split-${incomeId}`}>{t("{title}{who} · {amount}", { title: split.income.title, who: member && !foldRomanian(split.income.title).includes(foldRomanian(member).slice(0, 4)) ? ` (${member})` : "", amount: money(split.income.amount) })}</h3>
           <p>{t("Propunere după cheltuielile lunare: obligațiile întâi, apoi restul, cât ajung banii.")}</p>
         </div>
       </header>
