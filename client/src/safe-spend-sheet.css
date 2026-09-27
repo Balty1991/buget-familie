@@ -80,3 +80,7 @@
 .bf-waterfall li em.drop { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--cf-coral, #c2473c) 45%, transparent) 0 4px, transparent 4px 7px); }
 .bf-waterfall li.is-result span, .bf-waterfall li.is-result strong { font-weight: 800; }
 .bf-waterfall li.is-result em.bar { background: var(--cf-primary-strong); }
+
+/* D17: cronologia nu mai e tăiată la capăt. */
+.bf-safe-spend-payday .bf-payday-strip { overflow: visible; padding-inline: 12px; }
+.bf-payday-strip li.today span { font-weight: 700; }

@@ -79,25 +79,30 @@ export function CashNote({ amount, caption }: { amount: string; caption: string 
   );
 }
 
-export function PaydayStrip({ elapsed, total, remaining }: { elapsed: number; total: number; remaining: number }) {
+export function PaydayStrip({ elapsed, total, remaining, showCopy = true }: { elapsed: number; total: number; remaining: number; showCopy?: boolean }) {
   const shown = Math.min(total, 12);
   const stride = total > shown ? total / shown : 1;
+  // D17: etichete doar pe „azi” și pe ziua venitului; restul punctelor fără numere fără lună.
+  const todayIndex = Math.min(shown - 1, Math.max(0, Math.round((Math.max(1, elapsed) - 1) / stride)));
 
   return (
-    <div className="bf-payday-strip" aria-label={`${remaining} zile până la venit`}>
-      <div className="bf-payday-copy">
-        <small>{t("Până la venit")}</small>
-        <b>{remaining === 0 ? "Astăzi" : `${remaining} ${remaining === 1 ? "zi" : "zile"}`}</b>
-      </div>
+    <div className="bf-payday-strip" aria-label={t("{count} zile până la venit", { count: remaining })}>
+      {showCopy && (
+        <div className="bf-payday-copy">
+          <small>{t("Până la venit")}</small>
+          <b>{remaining === 0 ? t("Astăzi") : `${remaining} ${remaining === 1 ? t("zi") : t("zile")}`}</b>
+        </div>
+      )}
       <ol>
         {Array.from({ length: shown }, (_, index) => {
           const day = Math.round(index * stride) + 1;
           const past = day <= elapsed;
           const payday = index === shown - 1;
+          const today = index === todayIndex && !payday;
           return (
-            <li key={index} className={`${past ? "past" : ""} ${payday ? "payday" : ""}`.trim()}>
+            <li key={index} className={`${past ? "past" : ""} ${payday ? "payday" : ""} ${today ? "today" : ""}`.trim()}>
               <i />
-              <span>{payday ? "Venit" : day}</span>
+              <span>{payday ? "▸" : today ? t("azi") : ""}</span>
             </li>
           );
         })}

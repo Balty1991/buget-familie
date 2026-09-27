@@ -55,7 +55,7 @@ export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onC
                   : t("Setează data în Plicuri")}
               </small>
             </div>
-            <PaydayStrip elapsed={track.elapsed} total={track.total} remaining={track.remaining} />
+            <PaydayStrip elapsed={track.elapsed} total={track.total} remaining={track.remaining} showCopy={false} />
           </div>
         )}
 
