@@ -773,6 +773,28 @@ html body .bf-today-workspace > .bf-today-side { display: grid; gap: inherit; al
 /* D10: pe ecrane late, navigația devine bară laterală: marcă, „+ Notează”, ecranele, iar jos căutare și instrumente.
    Shell-ul devine grilă cu două coloane; antetul rămâne „sticky”, pe toată înălțimea ecranului. */
 .os-desktop-add { display: none; }
+/* D4: între dock (≤760 px) și bara laterală (≥1200 px), „Notează” e un buton plutitor jos-dreapta,
+   pe toate ecranele. Stă în afara antetului: antetul are filtru, deci „fixed” s-ar fi legat de el. */
+.os-tablet-add { display: none; }
+@media (min-width: 761px) and (max-width: 1199px) {
+  html body .bf-app.os-shell > button.os-tablet-add:not(.os-dock):not(.os-nav-fill) {
+    display: inline-flex;
+    position: fixed;
+    right: max(24px, env(safe-area-inset-right));
+    bottom: max(24px, env(safe-area-inset-bottom));
+    z-index: 900;
+    align-items: center;
+    gap: 8px;
+    min-height: 56px;
+    padding: 0 22px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--cf-primary);
+    color: var(--cf-on-primary, #fff);
+    font: 700 16px/1 "IBM Plex Sans", system-ui, sans-serif;
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--cf-ink) 28%, transparent);
+  }
+}
 @media (min-width: 1200px) {
   html body .bf-app.os-shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); align-items: start; }
   html body .bf-app.os-shell > * { grid-column: 2; }

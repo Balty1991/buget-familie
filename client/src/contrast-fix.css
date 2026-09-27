@@ -373,8 +373,8 @@ html.theme-white .bf-os-decide, html.theme-navy .bf-os-decide, html.theme-white 
 }
 
 /* Dock is-on pe temele de noapte: etichetă pe umplutură via --cf-on-primary */
-html.theme-navy .os-dock button.is-on,
-html.theme-navy .os-desktop-nav button.is-on {
+/* D1: doar dock-ul are umplutură aurie; în bara laterală fundalul e ardezie, iar textul rămâne auriu (--os-mint). */
+html.theme-navy .os-dock button.is-on {
   color: var(--cf-on-primary, #0d0b1c) !important;
 }
 html.theme-navy .os-dock button.is-on svg {

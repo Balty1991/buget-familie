@@ -339,11 +339,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
         <div className="os-hero-top">
           <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Cifra zilei")}</span>
-          <div className="os-date">
-            <b>{String(new Date(`${todayIso}T12:00:00`).getDate()).padStart(2, "0")}</b>
-            <span>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { month: "long" }).toLocaleUpperCase(getLocale())}</span>
-            <span>{new Date(`${todayIso}T12:00:00`).getFullYear()}</span>
-          </div>
+          {/* D13: data pe un singur rând („dum., 27 sept.”), nu pe trei. */}
+          <time className="os-date is-inline" dateTime={todayIso}>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}</time>
         </div>
         {fresh && planDeclared ? (
           <div className="os-start os-start-ready">
@@ -437,14 +434,15 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 {/* Zilele trecute arată ce s-a cheltuit, azi și viitorul ce se poate cheltui: se spune, nu se ghicește. */}
                 {rhythm.days.some((row) => !row.isToday && !row.isFuture) && rhythm.days.some((row) => row.isToday || row.isFuture) && <p className="bf-os-legend">{t("Zilele trecute: cheltuit · de azi: cât poți cheltui")}</p>}
                 {(() => {
-                  const row = rhythm.days.find((item) => item.day === rhythmTip) || rhythm.days.find((item) => item.isToday);
+                  // D13: detaliul zilei apare doar la atingerea unei zile; pentru azi, cifra e deja în erou.
+                  const row = rhythm.days.find((item) => item.day === rhythmTip);
                   if (!row) return null;
                   const shown = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
                   const leiExact = (value: number) => `${stripLei(value, getLocale())} lei`;
                   const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiExact(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiExact(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiExact(row.out) });
                   return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiExact(row.out) })}</span></ChartTip>;
                 })()}
-                <p className="bf-os-note">{rhythmNote}</p>
+                {(!heroTracksWeek || rhythm.days.some((row) => row.isFuture)) && <p className="bf-os-note">{rhythmNote}</p>}
               </div>
             )}
             {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}

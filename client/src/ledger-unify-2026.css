@@ -556,3 +556,46 @@ html.theme-navy .os-shell .os-dock button.is-on {
 .bf-year-close-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .bf-year-close-list li { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 13px; color: var(--cf-muted); }
 .bf-year-close-list b { color: var(--cf-ink); }
+
+/* D3: eticheta de pe blocul plin al proiecției ia culoarea textului „pe verde”, nu a blocului. */
+.bf-scenario-result .bf-kicker { color: var(--cf-on-forest, #fffdf7); opacity: .82; }
+
+/* D8: bara plicului trece pe auriu de la pragul de avertizare (80 %), nu rămâne verde la 90 %. */
+.bf-envelope-meter.is-watch i em { background: var(--cf-warning); }
+/* D5: „De rezolvat” pe tabletă are aer ca pe desktop. */
+@media (min-width: 761px) and (max-width: 1099px) {
+  .os-shell .bf-today-workspace .bf-today-brief { padding: 16px; }
+}
+/* D6: starea sync-ului nu se mai întinde pe toată înălțimea rândului. */
+.bf-sync-state { align-self: start; }
+/* D9: toate acordeoanele din Plicuri și Obligații arată că se deschid (chevron), la fel ca „Detalii”. */
+.bf-plan-workspace details > summary:not(:has(svg)),
+.bf-obligations-workspace details > summary:not(:has(svg)) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  cursor: pointer;
+  list-style: none;
+}
+.bf-plan-workspace details > summary:not(:has(svg))::-webkit-details-marker,
+.bf-obligations-workspace details > summary:not(:has(svg))::-webkit-details-marker { display: none; }
+.bf-plan-workspace details > summary:not(:has(svg))::after,
+.bf-obligations-workspace details > summary:not(:has(svg))::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin: 0 4px 4px 0;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: .65;
+  transform: rotate(45deg);
+  transition: transform .15s ease;
+}
+.bf-plan-workspace details[open] > summary:not(:has(svg))::after,
+.bf-obligations-workspace details[open] > summary:not(:has(svg))::after { margin-bottom: -4px; transform: rotate(-135deg); }
+
+/* D13: data zilei pe un rând, cu litere normale. */
+html body .os-shell .os-hero-top .os-date.is-inline { display: inline-block; white-space: nowrap; color: var(--cf-muted); font: 600 13px/1.2 "IBM Plex Sans", system-ui, sans-serif; font-variant: normal; letter-spacing: 0; text-transform: none; }

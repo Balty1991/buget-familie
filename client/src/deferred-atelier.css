@@ -2270,11 +2270,14 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
   color: var(--cf-ink);
   box-shadow: 0 14px 28px color-mix(in srgb, var(--cf-ink) 8%, transparent);
 }
+/* D8: fără bandă de 28 px care tăia suma în două; starea stă în bordura laterală și în bară. */
 .bf-allocation-list.bf-envelope-desk > article.watch {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--cf-warning) 22%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
+  background: var(--cf-surface) !important;
+  box-shadow: inset 4px 0 0 var(--cf-warning), 0 14px 28px color-mix(in srgb, var(--cf-ink) 8%, transparent);
 }
 .bf-allocation-list.bf-envelope-desk > article.over {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--cf-danger) 20%, var(--cf-surface)) 0 28px, var(--cf-surface) 28px) !important;
+  background: var(--cf-surface) !important;
+  box-shadow: inset 4px 0 0 var(--cf-danger), 0 14px 28px color-mix(in srgb, var(--cf-ink) 8%, transparent);
 }
 .bf-allocation-list.bf-envelope-desk > article::after { display: none; }
 .bf-envelope-desk .bf-envelope-portrait {
