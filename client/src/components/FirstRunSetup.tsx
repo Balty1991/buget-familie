@@ -8,7 +8,8 @@ import { BrandMark } from "@/components/BrandMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { isoDate, isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type PaymentKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
-import { t } from "@/lib/i18n";
+import { languages, t } from "@/lib/i18n";
+import { useLanguage } from "@/hooks/use-language";
 import { markSetupCompletedAt } from "@/lib/first-week-tour";
 import { markWhatsNewSeen } from "@/lib/theme-default";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -72,6 +73,7 @@ function midHorizon(paydayISO: string) {
 }
 
 export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpenSync }: { data: AppData; onChange: (next: AppData) => void; onClose: () => void; onGoPlan: () => void; onAdd: () => void; onOpenSync?: () => void }) {
+  const [lang, setLang] = useLanguage();
   const [intent, setIntent] = useState<Intent | null>(null);
   useLayoutEffect(() => { hideNativeSplash(); }, []);
   useLayoutEffect(() => {
@@ -242,7 +244,10 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
               {t("Înapoi")}
             </button>
           ) : (
-            <span className="bf-first-run-chrome-spacer" aria-hidden="true" />
+            // Prima întrebare, înaintea oricărui text: în ce limbă citești. Testerii din afară nu știu româna.
+            <div className="bf-first-run-language" role="group" aria-label={t("Limba aplicației")}>
+              {languages.map((item) => <button key={item.id} type="button" lang={item.id} aria-pressed={lang === item.id} className={lang === item.id ? "active" : ""} onClick={() => setLang(item.id)}>{item.label}</button>)}
+            </div>
           )}
           <button type="button" className="bf-onboarding-skip" onClick={complete}>{t("Mai târziu")}</button>
         </div>

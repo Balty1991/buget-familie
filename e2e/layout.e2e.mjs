@@ -153,7 +153,7 @@ async function main() {
   try {
     for (const theme of THEMES) for (const width of WIDTHS) for (const [name, open] of Object.entries(SCREENS)) {
       if (ONLY && !ONLY.test(name)) continue;
-      const context = await browser.newContext({ viewport: { width, height: 800 } });
+      const context = await browser.newContext({ viewport: { width, height: 800 }, locale: "ro-RO" });
       await context.addInitScript((theme) => {
         try {
           const keys = { "buget-familie:setup-complete": "true", "buget-familie:onboarding-complete": "true", "buget-familie:first-week-tour-dismissed": "1", "buget-familie:theme": theme, "buget-familie:whats-new-ledger-unify-2026-09": "1" };

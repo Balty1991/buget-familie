@@ -56,9 +56,9 @@ export function PocketPanel({ data }: { data: AppData }) {
         <h2 id="pocket-title">{fmtExact.format(Math.max(0, pocket.remaining))}</h2>
         <p className="bf-pocket-line">
           {pocket.remaining < 0
-            ? `Ai cheltuit cu ${fmtExact.format(Math.abs(pocket.remaining))} mai mult decât aveai.`
+            ? t("Ai cheltuit cu {amount} mai mult decât aveai.", { amount: fmtExact.format(Math.abs(pocket.remaining)) })
             : pocket.daysLeft > 0
-              ? `Poți cheltui ${fmtExact.format(pocket.perDay)} pe zi până se reumple.`
+              ? t("Poți cheltui {amount} pe zi până se reumple.", { amount: fmtExact.format(pocket.perDay) })
               : "Se reumple azi."}
         </p>
         <div className="bf-pocket-bar" aria-hidden="true">

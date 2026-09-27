@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Sesiunea familiei păstrată pe acest telefon, ca sincronizarea să se reia după ce
  * Android închide aplicația. Parola nu se salvează: rămâne doar cheia PBKDF2 făcută din
@@ -25,7 +26,7 @@ function openDatabase(): Promise<IDBDatabase> {
       if (!database.objectStoreNames.contains(STORE_NAME)) database.createObjectStore(STORE_NAME);
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error("Sesiunea familiei nu a putut fi deschisă."));
+    request.onerror = () => reject(request.error || new Error(t("Sesiunea familiei nu a putut fi deschisă.")));
   });
 }
 

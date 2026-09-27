@@ -208,20 +208,20 @@ export const SCREEN_NAMES: Record<AppScreen, string> = {
 function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideMemory): string {
   switch (intent.kind) {
     case "expense": {
-      const head = `cheltuială ${money(intent.amount)} · ${intent.category} · ${formatDate(intent.date)}`;
+      const head = t("cheltuială {amount} · {category} · {date}", { amount: money(intent.amount), category: t(intent.category), date: formatDate(intent.date) });
       if (!data) return head;
       const offer = buildExpenseOffer(data, intent, memory);
       const first = offer.choices[0];
       return first ? `${head}\n  ↳ ${first.label}` : `${head}\n  ↳ ${offer.text}`;
     }
     case "income": {
-      const head = `venit ${money(intent.amount)} · ${intent.title} · ${formatDate(intent.date)}`;
+      const head = t("venit {amount} · {title} · {date}", { amount: money(intent.amount), title: intent.title, date: formatDate(intent.date) });
       if (!data) return head;
       const target = planIncome(data)[0];
-      const line = target ? `${head}\n  ↳ intră în ${target.source.name} (${money(target.balance)} acum)` : head;
+      const line = target ? `${head}\n  ↳ ${t("intră în {source} ({balance} acum)", { source: target.source.name, balance: money(target.balance) })}` : head;
       // „am primit salariul 4700” a doua oară: întreabă, nu dubla venitul.
       const twin = data.transactions.find((item) => item.kind === "income" && Math.abs(item.amount - intent.amount) < 0.005 && Math.abs(Date.parse(`${item.date}T12:00:00`) - Date.parse(`${intent.date}T12:00:00`)) <= 25 * 86_400_000);
-      return twin ? `${line}\n  ⚠ Ai deja ${twin.title} ${money(twin.amount)} pe ${formatDate(twin.date)}. E altul? Dacă nu, nu confirma.` : line;
+      return twin ? `${line}\n  ⚠ ${t("Ai deja {title} {amount} pe {date}. E altul? Dacă nu, nu confirma.", { title: twin.title, amount: money(twin.amount), date: formatDate(twin.date) })}` : line;
     }
     case "envelope": {
       /**
@@ -234,53 +234,53 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
         const before = current?.amount ?? 0;
         const after = intent.delta === "increase" ? before + intent.amount : Math.max(0, before - intent.amount);
         return current
-          ? `plicul „${intent.label}”: ${intent.delta === "increase" ? "+" : "−"}${money(intent.amount)} (${money(before)} → ${money(after)})`
-          : `plicul „${intent.label}” cu ${money(intent.amount)} — nu există încă, îl creez`;
+          ? t("plicul „{label}”: {sign}{amount} ({before} → {after})", { label: intent.label, sign: intent.delta === "increase" ? "+" : "−", amount: money(intent.amount), before: money(before), after: money(after) })
+          : t("plicul „{label}” cu {amount} — nu există încă, îl creez", { label: intent.label, amount: money(intent.amount) });
       }
-      if (intent.delta) return `plicul „${intent.label}”: ${intent.delta === "increase" ? "+" : "−"}${money(intent.amount)}`;
-      if (intent.amountIsWeekly) return `plicul „${intent.label}” cu ${money(intent.amount)} pe săptămână întreagă, până la venit`;
+      if (intent.delta) return t("plicul „{label}”: {sign}{amount}", { label: intent.label, sign: intent.delta === "increase" ? "+" : "−", amount: money(intent.amount) });
+      if (intent.amountIsWeekly) return t("plicul „{label}” cu {amount} pe săptămână întreagă, până la venit", { label: intent.label, amount: money(intent.amount) });
       /**
        * Ritmul se scrie în propunere, nu se lasă pe ghicite: omul cere „împarte-mi banii pe
        * săptămâni”, vede o listă de plicuri cu totaluri și crede că n-am împărțit nimic.
        */
       const saptamani = intent.weeklyPace && !intent.weeklyLimit && data ? planWeeks(data) : 0;
-      const ritm = saptamani > 1 ? `, pe săptămâni (~${money(Math.round(intent.amount / saptamani))} pe săptămână)` : "";
-      return `plicul „${intent.label}” cu ${money(intent.amount)}${intent.weeklyLimit ? `, limită săptămânală ${money(intent.weeklyLimit)}` : ritm}`;
+      const ritm = saptamani > 1 ? t(", pe săptămâni (~{amount} pe săptămână)", { amount: money(Math.round(intent.amount / saptamani)) }) : "";
+      return `${t("plicul „{label}” cu {amount}", { label: intent.label, amount: money(intent.amount) })}${intent.weeklyLimit ? t(", limită săptămânală {amount}", { amount: money(intent.weeklyLimit) }) : ritm}`;
     }
-    case "debt": return `datoria „${intent.name}”, sold ${money(intent.remaining)}${intent.monthly ? `, rată ${money(intent.monthly)}` : ""}`;
-    case "recurring": return `scadența „${intent.name}”, ${money(intent.amount)} pe data de ${intent.dueDay}`;
-    case "goal": return `obiectivul „${intent.name}”, țintă ${money(intent.target)}${intent.current ? `, strâns ${money(intent.current)}` : ""}`;
+    case "debt": return `${t("datoria „{name}”, sold {amount}", { name: intent.name, amount: money(intent.remaining) })}${intent.monthly ? t(", rată {amount}", { amount: money(intent.monthly) }) : ""}`;
+    case "recurring": return t("scadența „{name}”, {amount} pe data de {day}", { name: intent.name, amount: money(intent.amount), day: intent.dueDay });
+    case "goal": return `${t("obiectivul „{name}”, țintă {amount}", { name: intent.name, amount: money(intent.target) })}${intent.current ? t(", strâns {amount}", { amount: money(intent.current) }) : ""}`;
     case "funds": {
       const source = data ? pickFundsSource(data, intent.sourceHint, intent.sourceId) : undefined;
-      if (!source || !data) return `banii pe care îi ai acum: ${money(intent.amount)}`;
+      if (!source || !data) return t("banii pe care îi ai acum: {amount}", { amount: money(intent.amount) });
       /**
        * Se scrie cât intră, nu doar cât ai. Când sursa are deja bani, în Mișcări intră
        * doar diferența — altfel omul ar vedea o intrare mai mare decât ce s-a schimbat.
        */
       const diferenta = Math.round((intent.amount - sourceBalance(data, source.id)) * 100) / 100;
-      if (Math.abs(diferenta) < 0.005) return `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — atât arată și acum, nu am ce schimba`;
-      const cand = intent.date && intent.date !== isoToday() ? `, pe ${formatDate(intent.date)}` : "";
+      if (Math.abs(diferenta) < 0.005) return t("banii pe care îi ai acum: {amount} pe „{source}” — atât arată și acum, nu am ce schimba", { amount: money(intent.amount), source: source.name });
+      const cand = intent.date && intent.date !== isoToday() ? t(", pe {date}", { date: formatDate(intent.date) }) : "";
       return diferenta > 0
-        ? `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — trec ${money(diferenta)} ca intrare în Mișcări${cand}`
-        : `banii pe care îi ai acum: ${money(intent.amount)} pe „${source.name}” — scad ${money(Math.abs(diferenta))} din registru${cand}, ca să iasă soldul`;
+        ? t("banii pe care îi ai acum: {amount} pe „{source}” — trec {diff} ca intrare în Mișcări{when}", { amount: money(intent.amount), source: source.name, diff: money(diferenta), when: cand })
+        : t("banii pe care îi ai acum: {amount} pe „{source}” — scad {diff} din registru{when}, ca să iasă soldul", { amount: money(intent.amount), source: source.name, diff: money(Math.abs(diferenta)), when: cand });
     }
     case "envelope-delete": {
       const current = data?.settings.salaryPlan.allocations.find((item) => item.label === intent.label || item.category === intent.label);
       return current
-        ? `șterge plicul „${current.label}” — cei ${money(current.amount)} din el se întorc în nerepartizat`
-        : `șterge plicul „${intent.label}” — nu găsesc niciun plic cu numele ăsta`;
+        ? t("șterge plicul „{label}” — cei {amount} din el se întorc în nerepartizat", { label: current.label, amount: money(current.amount) })
+        : t("șterge plicul „{label}” — nu găsesc niciun plic cu numele ăsta", { label: intent.label });
     }
-    case "planned-event": return `evenimentul „${intent.name}” pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.estimate ? `, cost estimat ${money(intent.estimate)}` : ", fără cost estimat încă"}${intent.repeat === "yearly" ? ", în fiecare an" : ""}`;
-    case "payday": return `următorul venit pe ${formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" })}${intent.flexDays ? `, cu ${intent.flexDays} zile de flexibilitate` : ""}`;
-    case "transfer": return `mută ${money(intent.amount)} din plicul „${intent.from}” în „${intent.to}” — banii rămân pe același card`;
-    case "event-contribution": return `pune ${money(intent.amount)} deoparte pentru „${intent.name}” — socoteală de planificare, nu iese din surse`;
+    case "planned-event": return `${t("evenimentul „{name}” pe {date}", { name: intent.name, date: formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" }) })}${intent.estimate ? t(", cost estimat {amount}", { amount: money(intent.estimate) }) : t(", fără cost estimat încă")}${intent.repeat === "yearly" ? t(", în fiecare an") : ""}`;
+    case "payday": return `${t("următorul venit pe {date}", { date: formatDate(intent.date, { day: "2-digit", month: "long", year: "numeric" }) })}${intent.flexDays ? t(", cu {days} zile de flexibilitate", { days: intent.flexDays }) : ""}`;
+    case "transfer": return t("mută {amount} din plicul „{from}” în „{to}” — banii rămân pe același card", { amount: money(intent.amount), from: intent.from, to: intent.to });
+    case "event-contribution": return t("pune {amount} deoparte pentru „{name}” — socoteală de planificare, nu iese din surse", { amount: money(intent.amount), name: intent.name });
     case "due-paid": {
       const due = data ? matchRecurring(data, intent.name) : undefined;
       return due
-        ? `scadența „${due.name}”, ${money(due.amount)} — o trec ca plătită`
-        : `scadența „${intent.name}” — nu o găsesc printre plățile tale recurente`;
+        ? t("scadența „{name}”, {amount} — o trec ca plătită", { name: due.name, amount: money(due.amount) })
+        : t("scadența „{name}” — nu o găsesc printre plățile tale recurente", { name: intent.name });
     }
-    case "open": return `deschid ecranul ${SCREEN_NAMES[intent.screen]}`;
+    case "open": return t("deschid ecranul {screen}", { screen: t(SCREEN_NAMES[intent.screen]) });
     /**
      * La o corectare se scrie rândul găsit, nu ce a spus omul: „50 lei” poate fi oricare
      * dintre trei cafele. Dacă pe ecran scrie ziua și titlul exact, confirmarea e informată.
@@ -288,23 +288,23 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
     case "transaction-delete": {
       const found = data ? matchTransaction(data, { title: intent.title, amount: intent.amount, date: intent.date }) : undefined;
       return found
-        ? `șterge mișcarea „${found.title}” · ${money(found.amount)} · ${formatDate(found.date)}`
-        : `șterge mișcarea „${intent.title || ""}” — nu o găsesc în registru`;
+        ? t("șterge mișcarea „{title}” · {amount} · {date}", { title: found.title, amount: money(found.amount), date: formatDate(found.date) })
+        : t("șterge mișcarea „{title}” — nu o găsesc în registru", { title: intent.title || "" });
     }
     case "transaction-amend": {
       const found = data ? matchTransaction(data, { title: intent.title, amount: intent.was, date: intent.date }) : undefined;
       return found
-        ? `corectează „${found.title}” · ${formatDate(found.date)}: ${money(found.amount)} → ${money(intent.amount)}`
-        : `corectează „${intent.title || ""}” — nu găsesc mișcarea`;
+        ? t("corectează „{title}” · {date}: {was} → {amount}", { title: found.title, date: formatDate(found.date), was: money(found.amount), amount: money(intent.amount) })
+        : t("corectează „{title}” — nu găsesc mișcarea", { title: intent.title || "" });
     }
     case "merchant-rule": {
-      const unde = intent.envelope ? `plicul „${intent.envelope}”` : `categoria ${intent.category}`;
-      return `regulă: de fiecare dată când scrie „${intent.match}”, propun ${unde}`;
+      const unde = intent.envelope ? t("plicul „{label}”", { label: intent.envelope }) : t("categoria {category}", { category: t(intent.category || "") });
+      return t("regulă: de fiecare dată când scrie „{match}”, propun {target}", { match: intent.match, target: unde });
     }
     case "income-split": return intent.preview;
     case "salary-rule": {
       const cat = intent.mode === "percent" ? `${intent.value}%` : money(intent.value);
-      return `din fiecare venit, ${cat} merg în plicul „${intent.envelope}” — se aplică la venitul următor`;
+      return t("din fiecare venit, {share} merg în plicul „{label}” — se aplică la venitul următor", { share: cat, label: intent.envelope });
     }
   }
 }
@@ -313,9 +313,9 @@ function describeIntent(intent: AssistantIntent, data?: AppData, memory?: GuideM
 export function proposalText(intents: AssistantIntent[], data?: AppData, memory?: GuideMemory, headline?: string, warning?: string): string {
   // O propunere de împărțire nu e o înțelegere a mesajului, deci nu se anunță „am înțeles”.
   // Titlul propriu își aduce punctul lui; lista de dedesubt adaugă „:”, deci ar ieși „.:”.
-  const head = (headline ? headline.replace(/\.$/, "") : undefined) || (intents.length === 1 ? "Am înțeles" : `Am înțeles ${intents.length} lucruri`);
+  const head = (headline ? headline.replace(/\.$/, "") : undefined) || (intents.length === 1 ? t("Am înțeles") : t("Am înțeles {count} lucruri", { count: intents.length }));
   const avertisment = warning ? `\n\n${warning}` : "";
-  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}${avertisment}\n\nConfirmi să le trec în registru?`;
+  return `${head}:\n${intents.map((item) => `• ${describeIntent(item, data, memory)}`).join("\n")}${avertisment}\n\n${t("Confirmi să le trec în registru?")}`;
 }
 
 /** Alternativele se arată doar când mesajul conține exact o cheltuială; altfel ar fi ambiguu ce schimbă atingerea. */

@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Cât de solidă este parola de familie.
  *
@@ -49,8 +50,8 @@ export function checkFamilyPassword(raw: string): PasswordVerdict {
     return {
       ok: false,
       score: 0,
-      label: "Prea scurtă",
-      advice: [`Mai adaugă ${MIN_LENGTH - value.length} caractere: minimul este ${MIN_LENGTH}.`],
+      label: t("Prea scurtă"),
+      advice: [t("Mai adaugă {count} caractere: minimul este {min}.", { count: MIN_LENGTH - value.length, min: MIN_LENGTH })],
     };
   }
 
@@ -60,10 +61,10 @@ export function checkFamilyPassword(raw: string): PasswordVerdict {
     .filter(Boolean).length;
 
   for (const [pattern, message] of WEAK_PATTERNS) {
-    if (pattern.test(value)) advice.push(message);
+    if (pattern.test(value)) advice.push(t(message));
   }
   const common = COMMON.find((word) => folded.includes(word));
-  if (common) advice.push(`Conține „${common}”, un cuvânt pe care oricine îl încearcă printre primele.`);
+  if (common) advice.push(t("Conține „{word}”, un cuvânt pe care oricine îl încearcă printre primele.", { word: common }));
   /**
    * „Cuvânt evident + câteva cifre” este chiar prima formă pe care o încearcă un
    * atacator. „bugetfamilie2024” are 16 caractere și patru feluri de semne, deci
@@ -71,9 +72,9 @@ export function checkFamilyPassword(raw: string): PasswordVerdict {
    */
   const rest = common ? folded.replace(common, "") : "";
   const commonDominates = Boolean(common) && (rest.length < 8 || /^\d*$/.test(rest));
-  if (looksLikeDate(value)) advice.push("Pare să conțină o dată; datele familiei se ghicesc ușor.");
-  if (distinct < 6) advice.push("Folosește mai multe caractere diferite.");
-  if (families < 2) advice.push("Amestecă litere cu cifre sau cu un semn.");
+  if (looksLikeDate(value)) advice.push(t("Pare să conțină o dată; datele familiei se ghicesc ușor."));
+  if (distinct < 6) advice.push(t("Folosește mai multe caractere diferite."));
+  if (families < 2) advice.push(t("Amestecă litere cu cifre sau cu un semn."));
 
   /**
    * Punctajul pleacă de la lungime și de la varietate, iar fiecare slăbiciune
@@ -87,12 +88,12 @@ export function checkFamilyPassword(raw: string): PasswordVerdict {
   if (distinct >= 10) score += 1;
   score = Math.max(0, Math.min(commonDominates ? 1 : 4, score - advice.length)) as 0 | 1 | 2 | 3 | 4;
 
-  const labels = ["Prea slabă", "Slabă", "Acceptabilă", "Bună", "Foarte bună"];
+  const labels = [t("Prea slabă"), t("Slabă"), t("Acceptabilă"), t("Bună"), t("Foarte bună")];
   return {
     ok: score >= 2,
     score: score as PasswordVerdict["score"],
     label: labels[score],
-    advice: score >= 3 ? [] : advice.length ? advice : ["Fă-o mai lungă sau amestecă mai multe feluri de caractere."],
+    advice: score >= 3 ? [] : advice.length ? advice : [t("Fă-o mai lungă sau amestecă mai multe feluri de caractere.")],
   };
 }
 

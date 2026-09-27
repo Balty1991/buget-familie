@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Sincronizare în timp real a familiei, fără token generat de fiecare utilizator.
  * Toate telefoanele care instalează aplicația împart același proiect Firebase
@@ -107,7 +108,7 @@ function db(): Firestore {
   if (isOfflineOnly()) {
     throw new RealtimeSyncError("offline-only", "Modul „doar offline” este activ — sincronizarea cloud este oprită pe acest telefon.");
   }
-  if (!isFirebaseConfigured) throw new RealtimeSyncError("not-configured", "Sincronizarea nu a fost încă configurată de administratorul aplicației.");
+  if (!isFirebaseConfigured) throw new RealtimeSyncError("not-configured", t("Sincronizarea nu a fost încă configurată de administratorul aplicației."));
   if (!firestore) {
     const firebase = firebaseApp();
     void ensureSignedIn();
@@ -169,13 +170,13 @@ export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnve
       const snapshot = await transaction.get(ref);
       const current = snapshot.exists() ? snapshot.data() : undefined;
       const currentIv = (current?.envelope as EncryptedEnvelope | undefined)?.iv ?? null;
-      if (expectedIv !== undefined && currentIv !== expectedIv) throw new RealtimeSyncError("conflict", "Familia a trimis între timp o schimbare; o unim și reîncercăm.");
+      if (expectedIv !== undefined && currentIv !== expectedIv) throw new RealtimeSyncError("conflict", t("Familia a trimis între timp o schimbare; o unim și reîncercăm."));
       hadChain = typeof current?.commit === "string";
       let chain: Record<string, unknown> = {};
       if (withChain && token) {
         const seq = hadChain ? Number(current!.seq) + 1 : 1;
         const reveal = hadChain ? await token(Number(current!.seq)) : undefined;
-        if (reveal && (await sha256Hex(reveal)) !== current!.commit) throw new RealtimeSyncError("unavailable", "Camera familiei a fost scrisă de un telefon fără cheia familiei. Mută familia pe o invitație nouă din Sync.");
+        if (reveal && (await sha256Hex(reveal)) !== current!.commit) throw new RealtimeSyncError("unavailable", t("Camera familiei a fost scrisă de un telefon fără cheia familiei. Mută familia pe o invitație nouă din Sync."));
         // Sigiliul merge doar cu lanțul: regulile vechi, fără lanț, nu-l cunosc.
         chain = { seq, commit: await sha256Hex(await token(seq)), ...(reveal ? { reveal } : {}), ...(options.seal ? { sealedAt: serverTimestamp() } : {}) };
       }
@@ -188,13 +189,13 @@ export async function pushFamilyEnvelope(roomId: string, envelope: EncryptedEnve
       // Reguli vechi: câmpurile lanțului nu sunt încă permise; scriem ca înainte.
       if (token && denied && !hadChain) await write(false);
       // Reguli noi, lanț existent: alt telefon a scris între timp; se citește din nou.
-      else if (token && denied && hadChain) throw new RealtimeSyncError("conflict", "Familia a trimis între timp o schimbare; o unim și reîncercăm.");
+      else if (token && denied && hadChain) throw new RealtimeSyncError("conflict", t("Familia a trimis între timp o schimbare; o unim și reîncercăm."));
       else throw error;
     }
     void measureClockSkew(ref);
   } catch (error) {
     if (error instanceof RealtimeSyncError) throw error;
-    throw new RealtimeSyncError("unavailable", "Actualizarea nu a putut fi trimisă către serviciul de sincronizare.");
+    throw new RealtimeSyncError("unavailable", t("Actualizarea nu a putut fi trimisă către serviciul de sincronizare."));
   }
 }
 
@@ -248,7 +249,7 @@ export function subscribeFamilyRoom(roomId: string, onEnvelope: (envelope: Encry
       if (snapshot.metadata.hasPendingWrites || !snapshot.exists()) return;
       const envelope = snapshot.data().envelope as EncryptedEnvelope | undefined;
       if (envelope) onEnvelope(envelope);
-    }, (error) => onError(error instanceof RealtimeSyncError ? error : new RealtimeSyncError("unavailable", "Conexiunea live cu serviciul de sincronizare a fost întreruptă.")));
+    }, (error) => onError(error instanceof RealtimeSyncError ? error : new RealtimeSyncError("unavailable", t("Conexiunea live cu serviciul de sincronizare a fost întreruptă."))));
   });
   return () => {
     cancelled = true;

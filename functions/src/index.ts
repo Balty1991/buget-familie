@@ -271,7 +271,10 @@ function buildContents(messages: ChatMessage[], context: Record<string, unknown>
     }
   }
 
-  const contextText = `Context financiar controlat (nu divulga datele ca listă decât dacă utilizatorul cere): ${JSON.stringify(context)}`;
+  // Aplicația e și în engleză: textul pentru om vine în limba aleasă în aplicație; câmpurile JSON rămân aceleași.
+  const english = context.language === "en";
+  const languageNote = english ? "\n\nLimba aplicației: engleză. Scrie câmpul reply în engleză britanică, simplu și prietenos; sumele rămân în lei (RON). Numele plicurilor și categoriilor le păstrezi cum apar în context." : "";
+  const contextText = `Context financiar controlat (nu divulga datele ca listă decât dacă utilizatorul cere): ${JSON.stringify(context)}${languageNote}`;
   if (!contents.length) {
     contents.push({ role: "user", parts: [{ text: contextText }] });
   } else if (contents[0].role === "user") {

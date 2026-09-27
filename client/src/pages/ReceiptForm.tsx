@@ -243,7 +243,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
             </label>
           </div>
           {images.length > 0 && <button type="button" className="bf-ocr-button" disabled={busy} onClick={() => void scan()}><Bot size={17} /> {busy && progress ? `Citim ${progress}%` : t("Citește produsele și prețurile local")}</button>}
-          <div className="bf-receipt-preview-grid">{images.map((image, index) => <figure key={`${index}-${image.slice(-24)}`}><img src={image} alt={`Previzualizare bon partea ${index + 1}`} width={280} height={140} loading="lazy" decoding="async" /><button type="button" aria-label={`Elimină fotografia ${index + 1}`} onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={15} /></button></figure>)}</div>
+          <div className="bf-receipt-preview-grid">{images.map((image, index) => <figure key={`${index}-${image.slice(-24)}`}><img src={image} alt={`Previzualizare bon partea ${index + 1}`} width={280} height={140} loading="lazy" decoding="async" /><button type="button" aria-label={t("Elimină fotografia {index}", { index: index + 1 })} onClick={() => setImages((current) => current.filter((_, imageIndex) => imageIndex !== index))}><X size={15} /></button></figure>)}</div>
           {ocrSummary && <p className="bf-ocr-info" role="status"><Bot size={16} /> {ocrSummary}</p>}
         </section>
         {ocrText ? <Field label={t("Text citit local (verifică înainte de salvare)")}><textarea value={note} onChange={(event) => setNote(event.target.value)} /></Field> : <Field label={t("Produse / notiță")}><textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder={t("ex. apă, fructe, detergent")} /></Field>}

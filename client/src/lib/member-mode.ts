@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * „Telefonul lui X”: pe telefonul unui copil sau al unui bunic, aplicația arată un singur
  * ecran — cât are azi persoana aceea și „Notează”. E o alegere a telefonului, nu a familiei:
@@ -33,7 +34,7 @@ async function derive(pin: string, salt: Uint8Array) {
 
 /** Codul de ieșire, ales de adult la pornire: fără el, copilul nu ajunge la bugetul familiei. */
 export async function setMemberModePin(pin: string) {
-  if (!/^\d{4}$/.test(pin)) throw new Error("Codul trebuie să aibă 4 cifre.");
+  if (!/^\d{4}$/.test(pin)) throw new Error(t("Codul trebuie să aibă 4 cifre."));
   const salt = crypto.getRandomValues(new Uint8Array(16));
   safeSetItem(window.localStorage, PIN_KEY, JSON.stringify({ salt: toBase64(salt), hash: await derive(pin, salt) }));
 }

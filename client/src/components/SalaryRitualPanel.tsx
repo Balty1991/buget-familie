@@ -39,7 +39,7 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
     onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, salaryAllocationRules: rules.map((item) => item.id === id ? { ...item, active: !item.active, updatedAt: new Date().toISOString() } : item), updatedAt: new Date().toISOString() } } });
   };
   const deleteRule = async (id: string, name: string) => {
-    if (!await askConfirm(`Ștergi regula „${name}”? Veniturile deja repartizate rămân neschimbate.`)) return;
+    if (!await askConfirm(t("Ștergi regula „{name}”? Veniturile deja repartizate rămân neschimbate.", { name }))) return;
     onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, salaryAllocationRules: rules.filter((item) => item.id !== id), updatedAt: new Date().toISOString() } } });
   };
   const applyIncome = (incomeId: string) => {
@@ -103,7 +103,7 @@ export function SalaryRitualPanel({ data, onChange }: { data: AppData; onChange:
               </div>
               <div>
                 <button type="button" onClick={() => toggleRule(rule.id)}>{rule.active ? t("Pauză") : t("Activează")}</button>
-                <button type="button" className="delete" aria-label={`Șterge regula ${rule.label}`} onClick={() => deleteRule(rule.id, rule.label)}><Trash2 size={15} /></button>
+                <button type="button" className="delete" aria-label={t("Șterge regula {label}", { label: rule.label })} onClick={() => deleteRule(rule.id, rule.label)}><Trash2 size={15} /></button>
               </div>
             </article>
           );

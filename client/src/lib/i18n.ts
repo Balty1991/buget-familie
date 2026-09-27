@@ -21,9 +21,27 @@ export const languages: Array<{ id: Lang; label: string; locale: string }> = [
 
 const STORAGE_KEY = "buget-familie:language";
 
+/**
+ * Limba aleasă câștigă. Fără alegere, urmăm telefonul: cine nu îl are în română
+ * (testerii din afară, familiile din diaspora) pornește în engleză, nu într-o limbă
+ * pe care n-o citește. Testele rămân pe română, limba implicită a aplicației.
+ */
+const deviceLanguage = (): Lang => {
+  try {
+    if (import.meta.env?.MODE === "test") return "ro";
+    const preferred = (navigator.languages?.length ? navigator.languages : [navigator.language]).filter(Boolean);
+    if (!preferred.length) return "ro";
+    return preferred.some((item) => /^ro\b/i.test(item)) ? "ro" : "en";
+  } catch {
+    return "ro";
+  }
+};
+
 const readStored = (): Lang => {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === "en" ? "en" : "ro";
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "en" || stored === "ro") return stored;
+    return deviceLanguage();
   } catch {
     return "ro";
   }

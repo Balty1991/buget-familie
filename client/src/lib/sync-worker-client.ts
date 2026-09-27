@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Clientul worker-ului de sync (P2-9). Dacă worker-ul nu pornește (browser vechi, teste,
  * CSP), aceleași funcții rulează pe firul principal: rezultatul e identic, doar mai lent.
@@ -21,7 +22,7 @@ function getWorker(): Worker | null {
       if (!entry) return;
       pending.delete(event.data.id);
       if (event.data.ok) entry.resolve(event.data.result);
-      else entry.reject(new Error(event.data.error || "Sincronizarea a eșuat."));
+      else entry.reject(new Error(event.data.error || t("Sincronizarea a eșuat.")));
     };
     worker.onerror = () => {
       // Worker-ul a căzut: cererile în curs trec pe firul principal, iar cele noi la fel.

@@ -120,7 +120,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
           <button type="button" className={schedule === "auto" ? "active" : ""} role="switch" aria-checked={schedule === "auto"} onClick={toggleSchedule}>
             <span>
               <b>{t("Comută automat zi/noapte")}</b>
-              <small>{schedule === "auto" ? `Activ acum: ${themeOptions.find((item) => item.id === automaticTheme(currentLocalMinutes(), scheduleTimes))?.name || "tema automată"}. Zi ${scheduleTimes.dayStart}–${scheduleTimes.eveningStart} · seară ${scheduleTimes.eveningStart}–${scheduleTimes.nightStart} · noapte ${scheduleTimes.nightStart}–${scheduleTimes.dayStart}.` : t("Folosește Alb ziua, Navy seara și Întunecat cu verde noaptea.")}</small>
+              <small>{schedule === "auto" ? t("Activ acum: {theme}. Zi {day}–{evening} · seară {evening}–{night} · noapte {night}–{day}.", { theme: t(themeOptions.find((item) => item.id === automaticTheme(currentLocalMinutes(), scheduleTimes))?.name || "tema automată"), day: scheduleTimes.dayStart, evening: scheduleTimes.eveningStart, night: scheduleTimes.nightStart }) : t("Folosește Alb ziua, Navy seara și Întunecat cu verde noaptea.")}</small>
             </span>
             <i aria-hidden="true" />
           </button>

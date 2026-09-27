@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
 /**
  * Blocare locală opțională a aplicației cu un PIN de 4 cifre, doar pe acest telefon.
@@ -53,7 +54,7 @@ export async function setAppLockPin(pin: string): Promise<void> {
   if (!safeSetItem(window.localStorage, SALT_KEY, toBase64(salt))
     || !safeSetItem(window.localStorage, HASH_KEY, hash)
     || !safeSetItem(window.localStorage, ENABLED_KEY, "true")) {
-    throw new Error("Nu am putut salva PIN-ul: spațiul local este plin.");
+    throw new Error(t("Nu am putut salva PIN-ul: spațiul local este plin."));
   }
 }
 

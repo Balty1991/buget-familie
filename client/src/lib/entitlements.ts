@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Planuri Casa / Familia. Play Billing se lipește aici după listare.
  *
@@ -49,7 +50,7 @@ export const formatPlanPriceRon = (plan: PlanId, period: "month" | "year"): stri
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   });
-  return period === "month" ? `${amount} lei/lună` : `${amount} lei/an`;
+  return period === "month" ? t("{amount} lei/lună", { amount }) : t("{amount} lei/an", { amount });
 };
 
 /** Câte luni cadou are anualul față de 12 × luna. 149 vs 19,99 × 12 → 4 luni. */

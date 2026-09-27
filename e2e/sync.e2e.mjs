@@ -50,7 +50,7 @@ async function startVite() {
 
 /** Un telefon nou: onboarding închis, un nume și 2.500 lei pe card, scrise prin stocarea aplicației. */
 async function phone(browser, { name, partner }) {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, permissions: ["clipboard-read", "clipboard-write"] });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "ro-RO", permissions: ["clipboard-read", "clipboard-write"] });
   await context.addInitScript(() => {
     try {
       localStorage.setItem("buget-familie:setup-complete", "true");

@@ -72,7 +72,7 @@ function openDatabase(): Promise<IDBDatabase> {
     };
     request.onerror = () => {
       dbPromise = null;
-      reject(request.error || new Error("Nu am putut deschide stocarea locală."));
+      reject(request.error || new Error(t("Nu am putut deschide stocarea locală.")));
     };
   });
   return dbPromise;
@@ -284,7 +284,7 @@ export function parseBackup(raw: string): AppBackup {
     throw new Error(t("Fișierul e arhiva unui an închis, nu un backup. Îl deschizi din Setări → Copii de siguranță → Închide anul → „Vezi o arhivă”."));
   }
   if (parsed.kind !== "buget-familie-backup" || parsed.version !== BACKUP_VERSION || !parsed.data) {
-    throw new Error("Fișierul nu este un backup Buget Familie valid.");
+    throw new Error(t("Fișierul nu este un backup Buget Familie valid."));
   }
   return parsed as AppBackup;
 }
@@ -348,7 +348,7 @@ async function saveToPublicDownloads(text: string, name: string): Promise<string
   }
   const result = await plugin.saveBackupToDownloads({ name, data: text });
   if (!result?.path || !result.path.includes(name)) {
-    throw new Error("Scrierea în Descărcări a eșuat.");
+    throw new Error(t("Scrierea în Descărcări a eșuat."));
   }
   return result.path;
 }
@@ -386,7 +386,7 @@ async function saveNatively(text: string, name: string, intent: BackupIntent): P
   });
   const info = await Filesystem.stat({ path: name, directory: Directory.Cache });
   if (!info.size) {
-    return { how: "failed", reason: "Fișierul a rămas gol." };
+    return { how: "failed", reason: t("Fișierul a rămas gol.") };
   }
   const uri = written.uri || info.uri;
 
@@ -395,7 +395,7 @@ async function saveNatively(text: string, name: string, intent: BackupIntent): P
       title: name,
       text: name,
       url: uri,
-      dialogTitle: intent === "save" ? "Salvează backupul pe telefon" : "Trimite backupul",
+      dialogTitle: intent === "save" ? t("Salvează backupul pe telefon") : "Trimite backupul",
     });
     return intent === "save" ? { how: "shared", fallback: true } : { how: "shared" };
   } catch (error) {
@@ -410,7 +410,7 @@ async function saveNatively(text: string, name: string, intent: BackupIntent): P
  * poate, aruncă — nu deschide foaia de partajare peste ce face omul în aplicație.
  */
 export async function saveBackupSilently(data: AppData, name = backupFileName()): Promise<string> {
-  if (!isNativeApp()) throw new Error("Doar pe telefon, în aplicație.");
+  if (!isNativeApp()) throw new Error(t("Doar pe telefon, în aplicație."));
   return saveToPublicDownloads(JSON.stringify(makeBackup(data), null, 2), name);
 }
 
@@ -464,6 +464,6 @@ export async function clearAppStorage(): Promise<void> {
   await new Promise<void>((resolve, reject) => {
     const request = db.transaction(STORE_NAME, "readwrite").objectStore(STORE_NAME).clear();
     request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error || new Error("Nu am putut goli stocarea locală."));
+    request.onerror = () => reject(request.error || new Error(t("Nu am putut goli stocarea locală.")));
   });
 }

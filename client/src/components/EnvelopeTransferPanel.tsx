@@ -30,7 +30,7 @@ export function EnvelopeTransferPanel({ data, onChange }: { data: AppData; onCha
     if (fromId === toId) return setError(t("Alege două plicuri diferite."));
     if (value <= 0) return setError(t("Introdu o sumă mai mare decât zero."));
     const next = transferBetweenEnvelopes(data, { fromAllocationId: fromId, toAllocationId: toId, amount: value, note });
-    if (!next) return setError(from ? `Poți muta cel mult ${money(Math.max(0, from.remaining))} din „${from.item.label}”.` : t("Suma depășește ce a rămas în plicul sursă."));
+    if (!next) return setError(from ? t("Poți muta cel mult {amount} din „{label}”.", { amount: money(Math.max(0, from.remaining)), label: from.item.label }) : t("Suma depășește ce a rămas în plicul sursă."));
     const transfer = next.settings.salaryPlan.transfers[0];
     const fromLabel = plan.allocations.find((item) => item.id === fromId)?.label || t("Plic sursă");
     const toLabel = plan.allocations.find((item) => item.id === toId)?.label || t("Plic destinație");

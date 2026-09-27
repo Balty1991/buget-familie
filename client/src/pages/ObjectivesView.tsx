@@ -296,7 +296,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
               <div className="bf-obligation-entry-actions">
                 <button className="pay" onClick={() => onPayDebt(debt)}><Check size={16} /> {t("Confirmă plata")}</button>
                 <button onClick={() => onEditDebt(debt)}><Pencil size={15} /> {t("Editează")}</button>
-                <button className="delete" aria-label={`Șterge ${debt.name}`} onClick={() => onDeleteDebt(debt.id)}><Trash2 size={16} /></button>
+                <button className="delete" aria-label={t("Șterge {name}", { name: debt.name })} onClick={() => onDeleteDebt(debt.id)}><Trash2 size={16} /></button>
               </div>
             </article>
           ))}
@@ -341,7 +341,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
               })()}
               <div className="bf-obligation-entry-actions">
                 <button onClick={() => onEditSaving(saving)}><Pencil size={15} /> {t("Editează")}</button>
-                <button className="delete" aria-label={`Șterge ${saving.name}`} onClick={() => onDeleteSaving(saving.id)}><Trash2 size={16} /></button>
+                <button className="delete" aria-label={t("Șterge {name}", { name: saving.name })} onClick={() => onDeleteSaving(saving.id)}><Trash2 size={16} /></button>
               </div>
             </article>
           ))}

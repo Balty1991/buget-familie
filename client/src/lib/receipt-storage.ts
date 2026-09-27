@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 /**
  * Atelierul Financiar — fotografii de bon păstrate doar pe dispozitiv.
  * Registrul păstrează referințe ușoare; bloburile nu intră în localStorage sau în sincronizarea GitHub.
@@ -24,7 +25,7 @@ export function receiptThumbKey(imageKeyValue: string): string | undefined {
 }
 
 function openDatabase(): Promise<IDBDatabase> {
-  if (typeof indexedDB === "undefined") throw new Error("Acest browser nu oferă stocare locală pentru fotografii.");
+  if (typeof indexedDB === "undefined") throw new Error(t("Acest browser nu oferă stocare locală pentru fotografii."));
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
     request.onupgradeneeded = () => {
@@ -32,7 +33,7 @@ function openDatabase(): Promise<IDBDatabase> {
       if (!database.objectStoreNames.contains(STORE_NAME)) database.createObjectStore(STORE_NAME, { keyPath: "key" });
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error("Stocarea locală a bonului nu a putut fi deschisă."));
+    request.onerror = () => reject(request.error || new Error(t("Stocarea locală a bonului nu a putut fi deschisă.")));
   });
 }
 
@@ -49,8 +50,8 @@ function runTransaction<T>(mode: IDBTransactionMode, operation: (store: IDBObjec
     const transaction = database.transaction(STORE_NAME, mode);
     const request = operation(transaction.objectStore(STORE_NAME));
     transaction.oncomplete = () => { database.close(); resolve(request?.result); };
-    transaction.onabort = () => { database.close(); reject(transaction.error || new Error("Fotografia bonului nu a putut fi salvată local.")); };
-    transaction.onerror = () => { database.close(); reject(transaction.error || new Error("Fotografia bonului nu a putut fi salvată local.")); };
+    transaction.onabort = () => { database.close(); reject(transaction.error || new Error(t("Fotografia bonului nu a putut fi salvată local."))); };
+    transaction.onerror = () => { database.close(); reject(transaction.error || new Error(t("Fotografia bonului nu a putut fi salvată local."))); };
   }));
 }
 
@@ -110,8 +111,8 @@ export async function storeReceiptImages(receiptId: string, images: string[]): P
     });
     return full.map((entry) => entry.key);
   } catch (reason) {
-    const message = reason instanceof Error ? reason.message : "Fotografiile bonului nu au putut fi păstrate pe telefon.";
-    if (/quota|space|storage/i.test(message)) throw new Error("Telefonul nu mai are spațiu local pentru fotografii. Eliberează spațiu sau salvează bonul fără poze.", { cause: reason });
+    const message = reason instanceof Error ? reason.message : t("Fotografiile bonului nu au putut fi păstrate pe telefon.");
+    if (/quota|space|storage/i.test(message)) throw new Error(t("Telefonul nu mai are spațiu local pentru fotografii. Eliberează spațiu sau salvează bonul fără poze."), { cause: reason });
     throw new Error(message, { cause: reason });
   }
 }

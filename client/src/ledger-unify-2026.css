@@ -619,3 +619,23 @@ html.theme-navy .os-shell .os-dock button.is-on {
   color: var(--cf-on-forest);
   font: 750 14px/1 "IBM Plex Sans", sans-serif;
 }
+
+/* Prima pornire: alegerea limbii stă sus, în locul butonului „Înapoi”, compactă. */
+.bf-first-run-chrome .bf-first-run-language {
+  display: flex;
+  gap: 6px;
+}
+.bf-first-run-chrome .bf-first-run-language button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--cf-line);
+  border-radius: 12px;
+  color: var(--cf-muted);
+  background: var(--cf-surface-alt);
+  font: 750 12px/1 "IBM Plex Sans", sans-serif;
+}
+.bf-first-run-chrome .bf-first-run-language button.active {
+  border-color: var(--cf-primary-strong);
+  color: var(--cf-on-forest);
+  background: var(--cf-primary-strong);
+}

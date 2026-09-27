@@ -47,7 +47,7 @@ const KEYS = {
 
 /** Un telefon nou. `seed` completează registrul (salariu, plicuri, o datorie) prin stocarea aplicației. */
 async function phone(browser, { seed = true, theme = "white", extra = {}, time } = {}) {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "ro-RO" });
   await context.addInitScript((keys) => {
     try {
       for (const [key, value] of Object.entries(keys)) localStorage.setItem(key, value);
