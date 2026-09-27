@@ -176,3 +176,25 @@
 .bf-payoff-chart figcaption { display: flex; gap: 12px; margin-top: 4px; font-size: 12px; color: var(--cf-muted); }
 .bf-payoff-chart figcaption i { display: inline-block; width: 14px; margin-right: 4px; vertical-align: middle; border-top: 2px solid var(--cf-primary-strong, #1f5c52); }
 .bf-payoff-chart figcaption i.base { border-top: 2px dashed var(--cf-muted, #6e7c76); }
+
+/* D13: cele trei legături sunt chip-uri pe un rând, nu trei pastile pe toată lățimea. */
+.os-shell .bf-obligations-workspace .bf-upcoming-hero .bf-obligations-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 8px;
+}
+.os-shell .bf-obligations-workspace .bf-upcoming-hero .bf-obligations-links .bf-goals-link {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* D13: la abonamente, numele în stânga și suma în dreapta (suma avea rând fix și lua prima coloană). */
+.bf-obligations-workspace .bf-sub-board li b { grid-column: 1; grid-row: 1; }
+.bf-obligations-workspace .bf-sub-board li small { grid-column: 1; grid-row: 2; }
+.bf-obligations-workspace .bf-sub-board li strong { grid-column: 2; grid-row: 1 / span 2; }

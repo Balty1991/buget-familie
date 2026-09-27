@@ -188,9 +188,9 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
           <p>{t("Rate, facturi și obiective pe o singură listă. Confirmarea creează mișcarea — nu trimite bani din bancă.")}</p>
         </div>
         <div className="bf-obligations-links">
-          <button className="bf-goals-link" onClick={onOpenGoals}><PiggyBank size={16} /> {t("Obiective pe termen lung")}</button>
-          <button className="bf-goals-link" onClick={onOpenCalendar}><CalendarDays size={16} /> {t("Calendar de scadențe")}</button>
-          <button className="bf-goals-link" onClick={onOpenEvents}><Gift size={16} /> {t("Evenimente viitoare")}</button>
+          <button className="bf-goals-link" aria-label={t("Obiective pe termen lung")} onClick={onOpenGoals}><PiggyBank size={16} /> {t("Obiective")}</button>
+          <button className="bf-goals-link" aria-label={t("Calendar de scadențe")} onClick={onOpenCalendar}><CalendarDays size={16} /> {t("Calendar")}</button>
+          <button className="bf-goals-link" aria-label={t("Evenimente viitoare")} onClick={onOpenEvents}><Gift size={16} /> {t("Evenimente")}</button>
         </div>
         <section className="bf-sub-board" aria-label={t("Abonamente")}>
           <div className="bf-section-heading">
