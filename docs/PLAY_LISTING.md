@@ -88,9 +88,10 @@ Director: [`docs/play-store-assets/`](./play-store-assets/)
 
 | Fișier | Spec | Rol |
 |---|---|---|
-| `feature-graphic.png` (+ `.svg`) | 1024×500 | Feature graphic Play |
-| `icon-512.png` (+ `.svg`) | 512×512 | Icon high-res Play |
-| `SCREENSHOTS.md` | — | Ordine capturi + note brand |
+| `icon-512.png` | 512×512 | Icon Play (același plic ca iconul aplicației; `.svg` e o schiță veche, nu se încarcă) |
+| `feature-graphic-ro.png` / `feature-graphic-en.png` | 1024×500 | Feature graphic Play, pe limbă |
+| `screenshots/ro/`, `screenshots/en/` | 1080×1920 | 8 capturi cu text, pe limbă |
+| `SCREENSHOTS.md` | — | Ordine capturi + cum se refac |
 
 Brand: emerald/sage Premium (`#0F3D34` / `#143c36`, plic `#3AA87C`). Iconița și splash-ul Android din `android/app/src/main/res/` folosesc același limbaj vizual (adaptive + monochrome).
 

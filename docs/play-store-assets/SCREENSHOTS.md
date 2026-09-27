@@ -19,6 +19,8 @@
 | 8 | `08-insights` | Vezi unde se duc banii. | See where the money goes. |
 
 Date inventate (familia Andrei și Maria), scrise doar în localStorage-ul browserului de test, nu în Firebase.
+Tot aici: `icon-512.png` (iconul Play) și `feature-graphic-ro.png` / `feature-graphic-en.png` (1024×500, `node feature.mjs`).
+
 Refacere: pornește `vite --port 5174`, apoi din `scripts/store-screenshots/`:
 `CHROMIUM_PATH=/opt/pw-browsers/chromium node capture.mjs && node compose.mjs`.
 
