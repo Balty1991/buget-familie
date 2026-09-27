@@ -11,6 +11,14 @@ const exact = (value: number) => stripLei(value, getLocale());
  * Cifra mare, textul de sub ea și banda de zile. Aceeași sursă pentru toate trei.
  * Banii rămân cu cenți: 65,22 nu devine 65, iar 2.049,50 nu devine 2.050.
  */
+/** Un singur formatter pe limbă: `toLocaleDateString` făcea unul nou la fiecare randare (61 ms la pornire). */
+const weekdayFormatters = new Map<string, Intl.DateTimeFormat>();
+const weekdayLong = (locale: string) => {
+  let format = weekdayFormatters.get(locale);
+  if (!format) { format = new Intl.DateTimeFormat(locale, { weekday: "long" }); weekdayFormatters.set(locale, format); }
+  return format;
+};
+
 export function buildTodaySummary(data: AppData, asOf?: string) {
   const math = planCycle(data);
   const forecast = planForecast(data, asOf);
@@ -84,7 +92,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const untilName = (() => {
     const end = rhythm.days[rhythm.days.length - 1]?.day;
     if (!end) return t("duminică");
-    return new Date(`${end}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" });
+    return weekdayLong(getLocale()).format(new Date(`${end}T12:00:00`));
   })();
   /**
    * Plicul săptămânii e gol, dar în Plan sunt bani nerepartizați: fără o frază, „0,00” lângă

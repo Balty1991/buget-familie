@@ -1742,11 +1742,24 @@ export const recurringDueInPlan = (item: RecurringPayment, plan: SalaryPlan) => 
  * („Chirie 1.800” în Notează), cu numele scadenței în titlu și suma la ±10%. Altfel aceeași
  * chirie era „Plătit” în Plicuri și „Întârziată” pe Astăzi și în Obligații.
  */
-export const recurringPaidInPlan = (data: AppData, item: RecurringPayment) => {
+/**
+ * Mișcările din perioada planului, filtrate o singură dată pe registru și perioadă. Scadențele
+ * și ratele chemau `inPlanPeriod` (cu data de sfârșit refăcută) pentru fiecare mișcare, la
+ * fiecare scadență: cu 5.000 de mișcări, sute de milisecunde la pornire și la „Gata”.
+ */
+const planWindowKey = (plan: SalaryPlan) => `${plan.periodStart}|${plan.nextPayday}|${plan.earliestPayday || ""}|${plan.paydayFlexDays ?? ""}`;
+export const planPeriodTransactions = (data: AppData): Transaction[] => {
   const plan = data.settings.salaryPlan;
+  return tickMemo([data.transactions], `period:${planWindowKey(plan)}`, () => {
+    const start = plan.periodStart;
+    const end = planCoverEndDate(plan);
+    return data.transactions.filter((item) => item.date >= start && item.date <= end);
+  });
+};
+
+export const recurringPaidInPlan = (data: AppData, item: RecurringPayment) => {
   const name = foldRomanian(item.name.trim());
-  return data.transactions.some((transaction) => {
-    if (!inPlanPeriod(transaction.date, plan)) return false;
+  return planPeriodTransactions(data).some((transaction) => {
     if (transaction.recurringId) return transaction.recurringId === item.id;
     if (transaction.kind !== "expense" || transaction.debtId || name.length < 3) return false;
     const title = foldRomanian(transaction.title || "");
@@ -1776,7 +1789,7 @@ export const pendingDebtsInPlan = (data: AppData) => {
     const amount = roundedMoney(Math.min(debt.monthly, debt.remaining));
     if (amount <= 0 || !debt.dueDate || !/^\d{4}-\d{2}-\d{2}$/.test(debt.dueDate) || debt.dueDate > planEnd) return [];
     const dueDate = debt.dueDate >= plan.periodStart ? debt.dueDate : monthDayDueInPlan(Number(debt.dueDate.slice(8)), plan);
-    const paid = data.transactions.some((transaction) => transaction.debtId === debt.id && inPlanPeriod(transaction.date, plan));
+    const paid = planPeriodTransactions(data).some((transaction) => transaction.debtId === debt.id);
     return dueDate && !paid ? [{ ...debt, amount, dueDate }] : [];
   });
 };

@@ -32,7 +32,7 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
   const envelopeLabel = (item: { allocationId?: string }) => data?.settings.salaryPlan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "";
   const ledgerHits = query.trim()
     ? searchLedgerHits(data?.transactions || [], query, 6, envelopeLabel)
-    : (data?.transactions || []).slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+    : (data?.transactions || []).slice().sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0)).slice(0, 5);
   const openLedger = (term: string) => {
     writeJournalQuery(window.sessionStorage, term);
     onGo("journal");

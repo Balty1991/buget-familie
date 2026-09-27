@@ -34,13 +34,24 @@ export type LedgerSearchItem = {
  * primele rezultate, cele mai noi întâi: normalizarea întregului registru la fiecare tastă costa
  * ~0,6 s pe un telefon slab.
  */
+/** Registrul sortat o dată pe listă (nu la fiecare tastă), cu comparație simplă de șiruri ISO. */
+const sortedCache = new WeakMap<object, unknown[]>();
+const byDateDesc = <T extends LedgerSearchItem>(items: T[]): T[] => {
+  let sorted = sortedCache.get(items) as T[] | undefined;
+  if (!sorted) { sorted = items.slice().sort((a, b) => ((b.date || "") > (a.date || "") ? 1 : (b.date || "") < (a.date || "") ? -1 : 0)); sortedCache.set(items, sorted); }
+  return sorted;
+};
+const foldedCache = new WeakMap<object, string>();
+
 export function searchLedgerHits<T extends LedgerSearchItem>(items: T[], query: string, limit = 6, extra?: (item: T) => string): T[] {
   const needle = foldRo(query.trim());
   if (!needle) return [];
-  const sorted = items.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const hits: T[] = [];
-  for (const item of sorted) {
-    if (foldRo([item.title, item.category, item.person || "", String(item.amount), item.note || "", extra?.(item) || ""].join(" ")).includes(needle)) hits.push(item);
+  for (const item of byDateDesc(items)) {
+    // Textul fiecărei mișcări se face o dată (mișcările nu se modifică pe loc; o corectură e alt obiect).
+    let text = foldedCache.get(item);
+    if (text === undefined) { text = foldRo([item.title, item.category, item.person || "", String(item.amount), item.note || "", extra?.(item) || ""].join(" ")); foldedCache.set(item, text); }
+    if (text.includes(needle)) hits.push(item);
     if (hits.length >= limit) break;
   }
   return hits;

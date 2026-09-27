@@ -1064,15 +1064,39 @@ export type EnvelopeMonth = { month: string; amount: number };
  * inclusă, ultima în listă). Media se face doar pe lunile întregi cu cheltuieli, ca o lună
  * abia începută sau una fără date să n-o strice.
  */
-export const envelopeMonthlyHistory = (data: AppData, allocation: BudgetAllocation, asOf = isoToday(), count = 6) => {
+/**
+ * Sumele pe lună ale tuturor plicurilor, într-o singură trecere prin registru (cu cache pe
+ * registru): înainte, fiecare plic trecea de 6 ori prin tot registrul la fiecare randare a
+ * Plicurilor, inclusiv la deschiderea foii „+ Plic”.
+ */
+const envelopeMonthTotals = (data: AppData, asOf: string, count: number) => tickMemo([data.transactions, data.settings.salaryPlan], `envMonths:${asOf}:${count}`, () => {
   const base = new Date(`${asOf}T12:00:00`);
-  const months: EnvelopeMonth[] = [];
+  const keys: string[] = [];
   for (let back = count - 1; back >= 0; back -= 1) {
     const date = new Date(base.getFullYear(), base.getMonth() - back, 1, 12);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const amount = data.transactions.filter((item) => item.date.startsWith(key) && expenseBelongsTo(data.settings.salaryPlan, item, allocation)).reduce((sum, item) => sum + item.amount, 0);
-    months.push({ month: key, amount: roundMoney(amount) });
+    keys.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`);
   }
+  const index = new Map(keys.map((key, position) => [key, position]));
+  const plan = data.settings.salaryPlan;
+  const totals = new Map<string, number[]>();
+  for (const item of data.transactions) {
+    if (item.kind !== "expense") continue;
+    const position = index.get(item.date.slice(0, 7));
+    if (position === undefined) continue;
+    for (const allocation of plan.allocations) {
+      if (!expenseBelongsTo(plan, item, allocation)) continue;
+      const row = totals.get(allocation.id) || new Array(count).fill(0);
+      row[position] += item.amount;
+      totals.set(allocation.id, row);
+    }
+  }
+  return { keys, totals };
+});
+
+export const envelopeMonthlyHistory = (data: AppData, allocation: BudgetAllocation, asOf = isoToday(), count = 6) => {
+  const { keys, totals } = envelopeMonthTotals(data, asOf, count);
+  const row = totals.get(allocation.id);
+  const months: EnvelopeMonth[] = keys.map((key, position) => ({ month: key, amount: roundMoney(row ? row[position] : 0) }));
   const full = months.slice(0, -1).filter((item) => item.amount > 0);
   const average = full.length ? roundMoney(full.reduce((sum, item) => sum + item.amount, 0) / full.length) : undefined;
   // Fără nicio cheltuială în afară de luna în curs, istoricul n-are ce arăta.
