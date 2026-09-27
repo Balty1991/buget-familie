@@ -113,7 +113,7 @@ export async function encryptFamilyData(data: AppData, secret: FamilySecret): Pr
   // Comprimat înainte de criptare (registrul scade de 5–8 ori): un document Firestore are cel mult 1 MiB.
   const plain = await gzip(encoder.encode(JSON.stringify(shareable)));
   const ciphertext = toBase64(new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plain)));
-  if (ciphertext.length > SYNC_ENVELOPE_LIMIT) throw new Error(t("Registrul familiei a devenit prea mare pentru sincronizare ({size} KB). Șterge bonurile vechi sau fă o copie de siguranță și arhivează anii trecuți.", { size: Math.round(ciphertext.length / 1024) }));
+  if (ciphertext.length > SYNC_ENVELOPE_LIMIT) throw new Error(t("Registrul familiei a devenit prea mare pentru sincronizare ({size} KB). Șterge bonurile vechi sau folosește „Închide anul” din Setări.", { size: Math.round(ciphertext.length / 1024) }));
   return { version: 1, createdAt: new Date().toISOString(), salt: toBase64(salt), iv: toBase64(iv), ciphertext };
 }
 
@@ -605,7 +605,8 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
     pendingReviewMeta,
     allocationConflicts: conflicts,
     transactionConflicts: txConflicts,
-    transactions,
+    // „Închide anul”: mișcările de dinainte de data arhivată nu revin din copia celuilalt telefon.
+    transactions: (() => { const cut = [local.settings.archivedThrough || "", remote.settings.archivedThrough || ""].sort().pop(); return cut ? transactions.filter((item) => item.date > cut) : transactions; })(),
     debts: mergeCollection("debts", local.debts, remote.debts, deleted),
     savings: mergeCollection("savings", local.savings, remote.savings, deleted),
     receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted),
@@ -618,6 +619,13 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       ...((Date.parse(remote.settings.familyNameSetAt || "") || 0) > (Date.parse(local.settings.familyNameSetAt || "") || 0) && remote.settings.familyName
         ? { familyName: remote.settings.familyName, familyNameSetAt: remote.settings.familyNameSetAt }
         : { familyName: local.settings.familyName || remote.settings.familyName, familyNameSetAt: local.settings.familyNameSetAt || remote.settings.familyNameSetAt }),
+      // „Închide anul”: câștigă arhiva mai nouă (dată-limită mai mare), cu soldurile și rezumatele ei.
+      ...(() => {
+        const localCut = local.settings.archivedThrough || "";
+        const remoteCut = remote.settings.archivedThrough || "";
+        const winner = remoteCut > localCut ? remote.settings : localCut ? local.settings : undefined;
+        return winner?.archivedThrough ? { archivedThrough: winner.archivedThrough, archivedNet: winner.archivedNet || {}, yearSummaries: winner.yearSummaries || [] } : {};
+      })(),
       memberName: local.settings.memberName,
       familyCode: local.settings.familyCode || remote.settings.familyCode,
       members,

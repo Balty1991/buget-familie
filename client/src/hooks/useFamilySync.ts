@@ -557,7 +557,7 @@ export function useFamilySync(
           // Un pachet ține cam 27.000 de mișcări (măsurat); avertizăm cu mult înainte de limită.
           const usage = lastEnvelopeSize / crypto.SYNC_ENVELOPE_LIMIT;
           setSyncNotice(usage > 0.7
-            ? t("Registrul familiei ocupă {percent}% din spațiul de sincronizare. Fă o copie de siguranță, apoi șterge mișcările din anii încheiați, ca sincronizarea să nu se oprească.", { percent: Math.round(usage * 100) })
+            ? t("Registrul familiei ocupă {percent}% din spațiul de sincronizare. În Setări → Copii de siguranță, „Închide anul” mută anii încheiați într-o arhivă, fără să pierzi istoricul.", { percent: Math.round(usage * 100) })
             : Math.abs(skew) > 120_000
             ? t("Ceasul telefonului e cu aproximativ {minutes} minute {direction}. Pune ora automată din setările telefonului; altfel, la unire, schimbările de aici pot câștiga sau pierde pe nedrept.", { minutes: Math.round(Math.abs(skew) / 60_000), direction: skew > 0 ? t("înainte") : t("în urmă") })
             : t("Sesiunea familiei este activă. Actualizările apar automat pe toate telefoanele conectate, fără reîmprospătare manuală."));
