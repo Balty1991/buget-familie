@@ -136,3 +136,8 @@ html body .os-shell .bf-movements-ledger .bf-journal-quickbar > .bf-journal-sear
 
 /* Punctul cu culoarea membrului, înaintea numelui. */
 .bf-member-dot { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; vertical-align: 1px; }
+
+/* D10: pe desktop, Mișcări nu se întinde pe 1.040 px (suma ajungea departe de nume). */
+@media (min-width: 1100px) {
+  html body .os-shell .bf-page.bf-movements-ledger { max-width: 960px; margin-inline: auto; }
+}
