@@ -3450,4 +3450,7 @@ export const en: Record<string, string> = {
   "Mementouri și siguranță": "Reminders and security",
   "Copii de siguranță": "Backups",
   "Confidențialitate și planuri": "Privacy and plans",
+  "SALARIUL": "SALARY",
+  "Când vine salariul": "When the salary comes",
+  "Data dă ritmul săptămânal al plicurilor. Poate varia cu câteva zile.": "The date sets the weekly pace of the envelopes. It can vary by a few days.",
 };

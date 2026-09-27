@@ -693,8 +693,10 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
 
 
     <section className="bf-cycle-setup" aria-labelledby="cycle-setup-title">
-      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">{t("CATEGORII")}</p><h2 id="cycle-setup-title">{t("Unde merge fiecare leu")}</h2></div><span>{envelopesLabel(envelopes.length)} · {money(allocated)}</span></div>
-      <p>{t("Perioada e opțională — o folosesc doar categoriile cu ritm săptămânal. Data salariului poate varia; alege o fereastră, nu o zi exactă.")}</p>
+      {/* Secțiunea e despre salariu: fără pastila care repeta totalul plicurilor și fără paragraful lung. */}
+      <div className="bf-plan-sheet-heading"><div><p className="bf-kicker">{t("SALARIUL")}</p><h2 id="cycle-setup-title">{t("Când vine salariul")}</h2></div></div>
+      <p className="bf-cycle-setup-lead">{t("Data dă ritmul săptămânal al plicurilor. Poate varia cu câteva zile.")}</p>
+      {!plan.horizonDays && <NextPayday plan={plan} incomes={activeIncomes(data)} onSave={updatePlan} />}
       <div className={`bf-irregular-income${plan.horizonDays ? " is-on" : ""}`}>
         <label className="bf-recurring-auto">
           <input type="checkbox" checked={Boolean(plan.horizonDays)} onChange={(event) => { const today = isoToday(); updatePlan(event.target.checked ? { horizonDays: 30, periodStart: today, nextPayday: addIsoDays(today, 29), paydayFlexDays: 0, earliestPayday: undefined } : { horizonDays: undefined }); }} />
@@ -702,7 +704,6 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         </label>
         {plan.horizonDays ? <PlanField label={t("Vreau ca banii să-mi ajungă")}><select value={plan.horizonDays} onChange={(event) => { const days = Number(event.target.value); const today = isoToday(); updatePlan({ horizonDays: days, periodStart: today, nextPayday: addIsoDays(today, days - 1) }); }}>{[7, 14, 21, 30, 45, 60, 90].map((days) => <option key={days} value={days}>{t("{days} zile", { days })}</option>)}</select></PlanField> : null}
       </div>
-      {!plan.horizonDays && <NextPayday plan={plan} incomes={activeIncomes(data)} onSave={updatePlan} />}
       {!plan.horizonDays && <details className="bf-plan-period">
         <summary>{t("Perioada salariului, dacă vrei ritm săptămânal")}</summary>
       <div className="bf-cycle-setup-fields">

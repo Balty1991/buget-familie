@@ -385,3 +385,12 @@
 html body .bf-plan-builder .bf-allocation-builder { align-items: end; }
 html body .bf-plan-builder .bf-allocation-builder > .bf-pace-field { grid-column: 1 / -1; }
 html body .bf-plan-builder .bf-allocation-builder .bf-plan-field :is(select, input:not([type="checkbox"])) { min-height: 48px; height: auto; }
+
+/* Secțiunea „Când vine salariul”: text de citit, nu un bloc îngroșat; opțiunea PFA aerisită. */
+html body .bf-cycle-setup > p.bf-cycle-setup-lead { margin: 4px 0 12px; font-size: 14px; font-weight: 400; line-height: 1.45; color: var(--cf-muted); }
+html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; margin: 0 0 12px; }
+html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto input { width: 22px; height: 22px; margin: 2px 0 0; }
+html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto > span { display: grid; gap: 3px; }
+html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto b { font-size: 14px; line-height: 1.35; }
+html body .bf-cycle-setup .bf-irregular-income .bf-recurring-auto small { font-size: 13px; line-height: 1.45; color: var(--cf-muted); }
+html body .bf-cycle-setup .bf-irregular-income { margin-top: 12px; }
