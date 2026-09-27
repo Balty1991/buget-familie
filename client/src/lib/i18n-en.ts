@@ -3469,4 +3469,9 @@ export const en: Record<string, string> = {
   "Caută în arhivă": "Search the archive",
   "{count} rezultate · ieșit {amount}": "{count} results · out {amount}",
   "Nu am putut ajunge la camera familiei. Încerc din nou singur.": "Couldn't reach the family room. Retrying on my own.",
+  "Am scăzut deja {amount} lei pentru {labels}, până la salariu.": "{amount} lei are already set aside for {labels} until payday.",
+  "{label} din {date} a intrat deja și e în suma de mai sus": "{label} from {date} already came in and is in the amount above",
+  "Cheltuit înainte de aplicație": "Spent before the app",
+  "Plicurile mai așteaptă {amount}: se acoperă când vine {label} pe {date}.": "Envelopes are still waiting for {amount}: covered when {label} arrives on {date}.",
+  "Ai notat deja „{title}” · {amount} acum câteva secunde. Îl mai pun o dată?": "You already logged “{title}” · {amount} a few seconds ago. Log it again?",
 };

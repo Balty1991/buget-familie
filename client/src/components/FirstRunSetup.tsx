@@ -311,7 +311,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
         )}
 
         {intent === "salary" && (
-          <NeedsQuickStart data={data} yourName={memberName} partnerName={partnerName} onPartnerName={setPartnerName} onFinish={(next) => { onChange(next); complete(); }} />
+          <NeedsQuickStart data={data} yourName={memberName} onYourName={setMemberName} partnerName={partnerName} onPartnerName={setPartnerName} onFinish={(next) => { onChange(next); complete(); }} />
         )}
 
         {intent === "track" && (

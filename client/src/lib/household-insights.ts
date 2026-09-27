@@ -2,6 +2,7 @@
  * Analize de gospodărie calculate numai din registrul local.
  * Nu persistă nimic în AppData și nu ating pachetul Firebase.
  */
+import { nextNeedDue } from "@/lib/cashflow-projection";
 import { tickMemo } from "@/lib/tick-cache";
 import {
   addIsoDays,
@@ -854,7 +855,19 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
    */
   const nextCycleIncome = hasPayday ? nextCycleIncomeArrived(data, asOf) : 0;
   const liquid = liquidSafeToSpend(data, asOf);
-  const safe = { ...liquid, available: Math.max(0, liquid.available - nextCycleIncome) };
+  /**
+   * Fără plicuri încă (prima zi, soldul de pornire), cifra zilei scade întâi obligațiile
+   * declarate care cad până la salariu: chiria de pe 1 și rata de pe 5 nu sunt bani de cheltuit.
+   * Cu plicuri, banii lor sunt deja în plicurile fixe.
+   */
+  const paydayEnd = plan.nextPayday || plan.earliestPayday || "";
+  const obligations = !plan.allocations.length && paydayEnd
+    ? (plan.needs || []).filter((need) => !need.archived && need.priority === "fixed")
+      .map((need) => ({ need, due: nextNeedDue(data, need, asOf) }))
+      .filter((item): item is { need: typeof item.need; due: { date: string; amount: number } } => Boolean(item.due && item.due.date < paydayEnd))
+    : [];
+  const obligationsDue = obligations.reduce((sum, item) => sum + item.due.amount, 0);
+  const safe = { ...liquid, available: Math.max(0, liquid.available - nextCycleIncome - obligationsDue) };
   const remainingDays = Math.max(1, forecast.remainingDays);
   /**
    * Doar cheltuiala care vine din banii zilei: o factură plătită din plicul ei (Enel din Lumină,
@@ -901,7 +914,8 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
           + (rhythm.days[0] && rhythm.days[0].day < asOf && rhythm.days[0].day === plan.periodStart && weekdayIndex(rhythm.days[0].day) !== 0 ? ` ${t("Săptămâna plicului a început {day}, în ziua salariului.", { day: new Date(`${rhythm.days[0].day}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" }) })}` : "")
         : flexibleLeft != null
           ? t("Azi poți {pace} lei. În plicurile de cheltuieli curente mai sunt {available} lei pentru {days}.", { pace: stripLei(spendable, getLocale()), available: stripLei(flexibleLeft, getLocale()), days: daysLabel(remainingDays) })
-          : t("Azi poți {pace} lei. Mai sunt {available} lei liberi pentru {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) });
+          : t("Azi poți {pace} lei. Mai sunt {available} lei liberi pentru {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) })
+            + (obligationsDue > 0 ? ` ${t("Am scăzut deja {amount} lei pentru {labels}, până la salariu.", { amount: stripLei(obligationsDue, getLocale()), labels: obligations.slice(0, 3).map((item) => item.need.label).join(", ") })}` : "");
 
   const horizonDate = new Date(`${asOf}T12:00:00`);
   horizonDate.setDate(horizonDate.getDate() + 7);
@@ -1292,12 +1306,18 @@ export const weeklyCheckIn = (data: AppData, asOf = isoToday(), memberId?: strin
   const weekday = new Date(`${asOf}T12:00:00`).getDay();
   const weekend = weekday === 0 || weekday >= 5;
   const empty = summary.transactionCount === 0;
-  const tone = empty ? "empty" as const : over.length || summary.cashflow < 0 ? "risk" as const : watch.length ? "watch" as const : "good" as const;
+  /**
+   * Cu plicuri, săptămâna se judecă după plicuri: salariul vine o dată pe lună, deci în trei
+   * săptămâni din patru „cheltuieli peste venituri” e normal și nu spune nimic.
+   */
+  const byEnvelopes = data.settings.salaryPlan.allocations.length > 0;
+  const cashflowRisk = !byEnvelopes && summary.cashflow < 0;
+  const tone = empty ? "empty" as const : over.length || cashflowRisk ? "risk" as const : watch.length ? "watch" as const : "good" as const;
   const nextStep = empty
     ? t("Înregistrează mișcări ca să ai un bilanț de trimis familiei.")
     : over[0]
       ? t("Mută lei în {label} sau încetinește cheltuielile din acest plic ({amount} peste plan).", { label: over[0].label, amount: lei(Math.abs(over[0].remaining)) })
-      : summary.cashflow < 0 && summary.income > 0
+      : cashflowRisk && summary.income > 0
         ? t("Cheltuielile au trecut peste veniturile săptămânii. Amână o plată neesențială.")
         : watch[0]
           ? t("Urmărește {label}: s-a dus {percent}% din banii săptămânii.", { label: watch[0].label, percent: Math.round(watch[0].usage * 100) })

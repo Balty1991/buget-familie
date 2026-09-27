@@ -1882,11 +1882,16 @@ const categoryAliases: Array<[RegExp, string]> = [
   [/\b(medic|farmacie|doctor|sanatate|catena|help ?net|dona|regina maria|medlife|sanador)\b/, "Sănătate"],
   [/\b(film|joc|iesire|concert|timp liber|cinema|netflix|spotify|steam|hbo|disney)\b/, "Timp liber"],
   [/\b(abonament|subscription)\b/, "Abonamente"],
+  // Magazinele mari care nu sunt de mâncare: „Decathlon 150” și un cadou mâncau săptămâna de mâncare.
+  [/\b(pepco|smyk|noriel|jumbo|scutece|pampers|huggies)\b/, "Consumabile copil"],
+  [/\b(dedeman|jysk|ikea|leroy|brico\w*|hornbach|mobexpert|praktiker)\b/, "Casă & facturi"],
+  [/\b(decathlon|intersport|sportisimo|piscina|sala|fitness|carti|carturesti|elefant)\b/, "Timp liber"],
   [/\b(tigar|tutun|vape)\b/, "Altele"],
   // Grădinița și școala nu sunt „consumabile copil”, iar rata la bancă nu e o „rată de produs”.
   [/\b(gradinit\w*|scoal\w*|creșa|cresa|after ?school|meditati\w*|rechizit\w*|universitat\w*|taxa scolara)\b/, "Educație"],
   [/\b(rata (la )?banca|credit|imprumut|ipotecar|bcr|brd|bt|ing|raiffeisen|cec|unicredit|garanti|leasing)\b/, "Credite"],
   [/\b(rata|rate)\b/, "Rate produse"],
+  [/\b(cadou\w*|aniversar\w*|emag|altex|flanco|haine|imbracaminte|pantofi|h&m|zara|reserved|deichmann)\b/, "Altele"],
 ];
 
 /** Prima regulă locală al cărei text apare în titlu/descriere (fără autosave). */

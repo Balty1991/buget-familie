@@ -203,6 +203,9 @@ export default function Home() {
   }, [storageReady, onboardingOpen, setupOpen, modal, more, view, data.transactions.length, data.settings.salaryPlan.allocations.length]);
   const dismissWhatsNew = () => { markWhatsNewSeen(window.localStorage); setWhatsNewOpen(false); };
   const dismissFirstWeekTour = () => { markFirstWeekTourSeen(window.localStorage); setFirstWeekTourOpen(false); };
+  // Cine a notat deja trei cheltuieli a învățat gestul: indiciul „1 · CAPTURĂ” nu mai stă pe Astăzi.
+  const capturedEnough = data.transactions.filter((item) => item.kind === "expense").length >= 3;
+  useEffect(() => { if (firstWeekTourOpen && capturedEnough) dismissFirstWeekTour(); }, [firstWeekTourOpen, capturedEnough]);
 
   const update = (fn: (current: AppData) => AppData) => applyData((current) => fn(current));
   useEffect(() => {

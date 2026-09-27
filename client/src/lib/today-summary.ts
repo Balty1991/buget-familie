@@ -43,10 +43,19 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
     return incomes.length ? { first: incomes[0], total: incomes.reduce((sum, item) => sum + item.amount, 0) } : undefined;
   })();
   const waitingForIncome = Boolean(upcomingIncome && upcomingIncome.total >= Math.abs(math.remaining) - 0.009);
+  /**
+   * Plicurile așteaptă un venit declarat, dar azi tot sunt bani de cheltuit: cifra mare rămâne
+   * „Poți folosi azi”, iar suma de acoperit trece în rândul de sub ea. Un părinte citea
+   * „2.672 RON” ca bani disponibili.
+   */
+  const heroOver = overPlan && !(waitingForIncome && brief.hasPayday && !brief.expired);
+  const waitingNote = overPlan && !heroOver && upcomingIncome
+    ? t("Plicurile mai așteaptă {amount}: se acoperă când vine {label} pe {date}.", { amount: exact(Math.abs(math.remaining)), label: upcomingIncome.first.title, date: formatDate(upcomingIncome.first.date, { day: "numeric", month: "long" }) })
+    : "";
   const heroLabel = noMoneyYet
     ? t("Pune banii de azi")
-    : overPlan
-    ? waitingForIncome ? t("Așteaptă venitul următor") : t("Peste limita planului")
+    : heroOver
+    ? t("Peste limita planului")
     : brief.hasPayday
       ? t("Poți folosi azi")
       : data.settings.salaryPlan.allocations.length
@@ -58,12 +67,12 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
             : trackHero.kind === "spent"
               ? t("Cheltuit astăzi")
               : t("Plicuri neconfigurate");
-  const heroTracksWeek = !overPlan && brief.hasPayday && !brief.expired && rhythm.hasWeekly;
+  const heroTracksWeek = !heroOver && brief.hasPayday && !brief.expired && rhythm.hasWeekly;
   /** Azi s-a consumat partea zilei, dar plicul mai are bani pentru zilele care urmează. */
   const todayUsedUp = rhythm.hasWeekly && rhythm.todayLeft <= 0.009 && rhythm.remaining > 0.009 && rhythm.remainingDays > 1 && rhythm.futureShare > 0;
   const heroValue = noMoneyYet
     ? 0
-    : overPlan
+    : heroOver
     ? Math.abs(math.remaining)
     : heroTracksWeek
       ? brief.spendable
@@ -86,10 +95,8 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const planHelp = weekEmpty && freeInPlan > 0.009;
   const heroHint = noMoneyYet
     ? t("Scrie cât ai acum pe card și în numerar (Setări → Surse și sold inițial). Apoi îți spunem cât poți folosi pe zi.")
-    : overPlan
-    ? waitingForIncome && upcomingIncome
-      ? t("se acoperă când vine {label} pe {date} ({amount})", { label: upcomingIncome.first.title, date: formatDate(upcomingIncome.first.date, { day: "numeric", month: "long" }), amount: exact(upcomingIncome.first.amount) })
-      : t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
+    : heroOver
+    ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : weekEmpty
       ? planHelp
         ? t("Plicul săptămânii s-a terminat până {until}. În Plan mai ai {free} nerepartizați: poți pune o parte în plic.", { until: untilName, free: exact(freeInPlan) })
@@ -109,7 +116,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
               : trackHero.kind === "spent"
                 ? t("Nu e un sold. E suma ieșită azi, până pui un venit sau un plic.")
                 : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
-  const explainer = overPlan
+  const explainer = heroOver
     ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
     : brief.hasPayday
       ? rhythm.hasWeekly
@@ -146,6 +153,6 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
    * Astăzi e deficitul („Peste limita planului”), nu bani de cheltuit — ghidul spunea
    * „Poți folosi azi 4.457” exact când lipseau 4.457.
    */
-  const canSpendToday = noMoneyYet || overPlan || !brief.hasPayday || brief.expired ? 0 : Math.max(0, brief.spendable);
-  return { overPlan, canSpendToday, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
+  const canSpendToday = noMoneyYet || heroOver || !brief.hasPayday || brief.expired ? 0 : Math.max(0, brief.spendable);
+  return { overPlan: heroOver, canSpendToday, heroLabel, heroValue, heroHint: waitingNote ? `${heroHint} ${waitingNote}` : heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
 }

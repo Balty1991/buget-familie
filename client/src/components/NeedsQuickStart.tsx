@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { Check, ChevronRight, Plus, Trash2 } from "lucide-react";
-import { formatDate, isoToday, newId, parseRomanianAmount, type AppData, type ExpectedIncome, type MonthlyNeed } from "@/lib/finance-data";
+import { formatDate, isoToday, newId, parseRomanianAmount, type AppData, type ExpectedIncome, type MonthlyNeed, type Transaction } from "@/lib/finance-data";
 import { t } from "@/lib/i18n";
 import { lei as money } from "@/lib/money-format";
 import { genitiveName } from "@/lib/member-mode";
@@ -49,22 +49,39 @@ export const nextDateForDay = (today: string, day: number) => {
   return here > today ? here : make(1);
 };
 
+/** Ultima zi (azi sau în urmă) în care a venit un salariu cu ziua dată. */
+export const lastDateForDay = (today: string, day: number) => {
+  const base = new Date(`${today}T12:00:00`);
+  const make = (offset: number) => {
+    const date = new Date(base.getFullYear(), base.getMonth() + offset, 1, 12);
+    const last = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    date.setDate(Math.min(day, last));
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  };
+  const here = make(0);
+  return here <= today ? here : make(-1);
+};
+
 /** Totalul pe lună al cheltuielilor bifate: cele pe săptămână × 52/12. */
 export const monthlyNeedsTotal = (needs: Array<{ on: boolean; amount: string; cadence: "weekly" | "monthly" }>) =>
   Math.round(needs.filter((item) => item.on).reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(item.amount) || 0) * (item.cadence === "weekly" ? 52 / 12 : 1), 0));
 
-export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, onFinish }: { data: AppData; yourName: string; partnerName: string; onPartnerName: (name: string) => void; onFinish: (next: AppData) => void }) {
+export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPartnerName, onFinish }: { data: AppData; yourName: string; onYourName?: (name: string) => void; partnerName: string; onPartnerName: (name: string) => void; onFinish: (next: AppData) => void }) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [incomes, setIncomes] = useState<IncomeDraft[]>([{ id: newId("income"), who: "me", label: t("Salariul meu"), amount: "", day: "" }]);
   const [needs, setNeeds] = useState<NeedDraft[]>(START_NEEDS.map((item) => ({ ...item, label: t(item.label) })));
   const [flex, setFlex] = useState(3);
   const [onHand, setOnHand] = useState("");
+  /** Salariile venite de curând: sunt deja în suma de acum? Altfel se adunau de două ori (8.400 în loc de 4.100). */
+  const [alreadyIn, setAlreadyIn] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const today = isoToday();
   const hasPartner = incomes.some((item) => item.who === "partner");
 
   const validIncomes = incomes.filter((item) => parseRomanianAmount(item.amount) > 0 && Number(item.day) >= 1 && Number(item.day) <= 31);
   const firstDay = validIncomes.map((item) => nextDateForDay(today, Math.round(Number(item.day)))).sort()[0] || "";
+  const recentIncomes = validIncomes.map((item) => ({ item, date: lastDateForDay(today, Math.round(Number(item.day))) }))
+    .filter(({ date }) => (Date.parse(`${today}T12:00:00`) - Date.parse(`${date}T12:00:00`)) / 86_400_000 <= 20);
 
   const next = () => {
     setError("");
@@ -102,13 +119,31 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
     // Produs #1: banii de acum dau cifra zilei din prima zi, nu abia la salariu.
     const cash = Math.max(0, parseRomanianAmount(onHand) || 0);
     const main = paymentSources.find((source) => source.kind !== "meal");
+    let transactions = data.transactions;
+    let cycleStart = today;
     if (cash > 0 && main && !data.transactions.length && !(main.openingBalance > 0)) {
-      paymentSources = paymentSources.map((source) => source.id === main.id ? { ...source, openingBalance: Math.round(cash * 100) / 100 } : source);
+      // Salariul deja intrat și cuprins în suma de acum devine venitul lui, cu data lui: are
+      // propunerea de plicuri pe Astăzi, iar soldul rămâne exact suma scrisă.
+      const arrived = recentIncomes.filter(({ item }) => alreadyIn[item.id] !== false);
+      const rows: Transaction[] = arrived.map(({ item, date }) => {
+        const memberId = item.who === "partner" && partnerId ? partnerId : me.id;
+        const label = expected.find((entry) => entry.id === item.id)?.label || item.label;
+        return { id: newId("tx"), title: label, amount: parseRomanianAmount(item.amount), kind: "income", category: "Venit", sourceId: main.id, source: main.name, memberId, person: members.find((member) => member.id === memberId)?.name || "", date, createdAt: now };
+      });
+      const arrivedTotal = rows.reduce((sum, row) => sum + row.amount, 0);
+      const opening = Math.round(Math.max(0, cash - arrivedTotal) * 100) / 100;
+      paymentSources = paymentSources.map((source) => source.id === main.id ? { ...source, openingBalance: opening } : source);
+      // Au cheltuit deja din salariu: diferența e o corecție de sold, nu o cheltuială din plicuri.
+      if (arrivedTotal > cash + 0.005) rows.push({ id: `balance-check-start-${now}`, title: t("Cheltuit înainte de aplicație"), amount: Math.round((arrivedTotal - cash) * 100) / 100, kind: "expense", category: "Altele", sourceId: main.id, source: main.name, memberId: me.id, person: members.find((member) => member.id === me.id)?.name || "", date: today, allocationId: "outside", adjustment: true, createdAt: now });
+      transactions = [...rows, ...transactions];
+      // Ciclul pornește din ziua salariului deja intrat, ca venitul să fie al ciclului de acum.
+      cycleStart = rows.filter((row) => row.kind === "income").map((row) => row.date).sort()[0] || today;
     }
     const plan = data.settings.salaryPlan;
     const earliest = firstDay && flex > 0 ? (() => { const date = new Date(`${firstDay}T12:00:00`); date.setDate(date.getDate() - flex); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; })() : undefined;
     onFinish({
       ...data,
+      transactions,
       settings: {
         ...data.settings,
         memberName: yourName.trim() || data.settings.memberName,
@@ -119,7 +154,7 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
           incomes: [...(plan.incomes || []), ...expected],
           needs: [...(plan.needs || []), ...declared],
           paydayFlexDays: flex,
-          ...(firstDay && !plan.nextPayday ? { periodStart: today, nextPayday: firstDay, earliestPayday: earliest && earliest > today ? earliest : today } : {}),
+          ...(firstDay && !plan.nextPayday ? { periodStart: cycleStart, nextPayday: firstDay, earliestPayday: earliest && earliest > today ? earliest : today } : {}),
           updatedAt: now,
         },
       },
@@ -136,6 +171,7 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
         <>
           <h2 id="bf-setup-title">{t("Ce venituri")} <em>{t("intră?")}</em></h2>
           <p>{t("Salariile și ziua în care vin de obicei. Tichetele de masă nu le trece aici: ele rămân pentru cheltuieli de moment.")}</p>
+          {onYourName && <label className="bf-field"><span>{t("Numele tău")}</span><input value={yourName} onChange={(event) => onYourName(event.target.value)} placeholder="ex. Andrei" autoComplete="given-name" /></label>}
           {incomes.map((item) => (
             <div className="bf-needs-start-row" key={item.id}>
               <label className="bf-field"><span>{item.who === "partner" ? t("Al partenerului") : t("Al tău")}</span><input value={item.label} onChange={(event) => setIncome(item.id, { label: event.target.value })} /></label>
@@ -201,6 +237,9 @@ export function NeedsQuickStart({ data, yourName, partnerName, onPartnerName, on
             </select>
           </label>
           <label className="bf-field"><span>{t("Cât aveți acum, pe card și cash? (opțional)")}</span><input inputMode="decimal" value={onHand} onChange={(event) => setOnHand(event.target.value)} placeholder={t("ex. 1.250")} /></label>
+          {parseRomanianAmount(onHand) > 0 && recentIncomes.map(({ item, date }) => (
+            <label className="bf-needs-meal" key={item.id}><input type="checkbox" checked={alreadyIn[item.id] !== false} onChange={(event) => setAlreadyIn((current) => ({ ...current, [item.id]: event.target.checked }))} /> {t("{label} din {date} a intrat deja și e în suma de mai sus", { label: item.who === "partner" && partnerName.trim() && item.label.trim() === t("Salariul partenerului") ? t("Salariul {name}", { name: genitiveName(partnerName.trim()) }) : item.label, date: formatDate(date, { day: "numeric", month: "long" }) })}</label>
+          ))}
           <p className="bf-helper">{parseRomanianAmount(onHand) > 0 && firstDay ? t("Din banii de acum, pe Astăzi vezi din prima zi cât poți cheltui pe zi până pe {date}.", { date: formatDate(firstDay, { day: "numeric", month: "long" }) }) : ""}</p>
           <p className="bf-helper">{t("Gata. Când notezi salariul, pe Astăzi apare propunerea: cât merge în fiecare plic. Nimic nu se mută fără să apeși „Aplică”.")}</p>
         </>

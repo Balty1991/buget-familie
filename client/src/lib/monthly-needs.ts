@@ -95,6 +95,14 @@ const fundedInCycle = (data: AppData, income: Transaction) => {
    * ciclu. Fereastra de 20 de zile rămâne doar când planul nu spune nimic.
    */
   const plan = data.settings.salaryPlan;
+  /**
+   * Salariul care vine la sfârșitul ciclului (în fereastra zilei de salariu) deschide ciclul
+   * următor: banii repartizați din salariul partenerului pe 25 erau ai ciclului care se
+   * încheie și sunt deja cheltuiți. Socotiți „deja acoperiți”, propunerea arăta „Liberi 1.733”,
+   * iar a doua zi ciclul nou ieșea cu −2.672 nerepartizați.
+   */
+  const opensNext = Boolean(plan.periodStart && plan.nextPayday && !plan.horizonDays && income.date >= addIsoDays(plan.nextPayday, -(plan.paydayFlexDays ?? 3)) && income.date > plan.periodStart);
+  if (opensNext) return { funded: new Map<string, number>(), cycleStart: income.date };
   const inCurrent = Boolean(plan.periodStart && plan.nextPayday && !plan.horizonDays && income.date >= plan.periodStart && income.date < addIsoDays(plan.nextPayday, -(plan.paydayFlexDays ?? 3)));
   const windowStart = addIsoDays(income.date, -CYCLE_WINDOW_DAYS);
   const since = inCurrent && plan.periodStart < windowStart ? plan.periodStart : windowStart;
