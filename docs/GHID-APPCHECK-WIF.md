@@ -8,7 +8,7 @@ Proiect Firebase: `buget-familie-a6a0d` · Repo: `Balty1991/buget-familie`
 
 **Ce se schimbă:** GitHub nu mai folosește cheia JSON salvată în secrete. La fiecare publicare cere de la Google o permisiune valabilă câteva minute, doar pentru acest repo și doar de pe `main`.
 
-**Pregătit deja în cod:** workflow-urile `deploy-firestore-rules.yml` și `deploy-firebase-functions.yml` folosesc federarea când găsesc variabila `GCP_WIF_PROVIDER`. Până atunci merg cu cheia de acum, deci nimic nu se strică între timp.
+**Stare (27.09.2026): făcut.** Federarea e configurată, ambele publicări au trecut fără cheie, iar cheia JSON și secretul `FIREBASE_SERVICE_ACCOUNT` au fost șterse. Workflow-urile folosesc doar federarea. Pașii de mai jos rămân pentru refacere (proiect nou, repo redenumit).
 
 ### Pasul 1 · Deschide Cloud Shell
 

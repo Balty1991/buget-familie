@@ -2,23 +2,33 @@
 
 Workflow-ul `.github/workflows/deploy-firebase-functions.yml` rulează la fiecare push pe `main` care modifică `functions/`, configurația Firebase sau workflow-ul însuși. Poate fi pornit și manual din GitHub Actions.
 
-## Secrete necesare în GitHub
+## Autentificare: fără cheie (Workload Identity Federation)
 
-În repository-ul GitHub, la **Settings → Secrets and variables → Actions**, adaugă următoarele secrete:
+Din 27.09.2026 workflow-urile de publicare nu mai folosesc nicio cheie JSON. Google are încredere direct în GitHub Actions, doar pentru repo-ul `Balty1991/buget-familie` și doar de pe `main` (lista de încredere `github`, legătura `buget-familie`). Contul folosit: `firebase-adminsdk-fbsvc@buget-familie-a6a0d.iam.gserviceaccount.com`. Pașii de configurare sunt în `docs/GHID-APPCHECK-WIF.md`.
+
+La **Settings → Secrets and variables → Actions**, tabul **Variables**:
+
+| Variabilă | Valoare |
+|---|---|
+| `GCP_WIF_PROVIDER` | `projects/119097201129/locations/global/workloadIdentityPools/github/providers/buget-familie` |
+| `GCP_SERVICE_ACCOUNT` | `firebase-adminsdk-fbsvc@buget-familie-a6a0d.iam.gserviceaccount.com` |
+
+Dacă repo-ul se redenumește sau se mută la alt proprietar, condiția din legătura `buget-familie` trebuie actualizată, altfel publicarea e refuzată.
+
+## Secrete în GitHub
+
+Tabul **Secrets**:
 
 | Secret | Conținut | Obligatoriu |
 |---|---|---|
-| `FIREBASE_SERVICE_ACCOUNT` | JSON-ul unei chei de service account Google Cloud pentru proiectul `buget-familie-a6a0d` | Da |
 | `GEMINI_API_KEY` | Cheia Gemini care va fi sincronizată în Secret Manager | Recomandat pentru activarea Gemini |
 | `GROQ_API_KEY` | Cheia Groq (gratuită) folosită ca rezervă când Gemini e ocupat | Opțional, dar recomandat |
-
-Valoarea `FIREBASE_SERVICE_ACCOUNT` trebuie păstrată ca secret GitHub și nu trebuie introdusă în repository. Workflow-ul folosește autentificarea Google doar în timpul jobului, iar valoarea cheii nu este afișată în loguri.
 
 ## Permisiuni Google Cloud
 
 Service account-ul folosit de workflow trebuie să poată publica Firebase Functions și să gestioneze secretul `GEMINI_API_KEY`. În funcție de politica proiectului, acordă-i permisiuni echivalente cu administrarea Cloud Functions, utilizarea service account-ului de runtime și administrarea versiunilor de secrete în Secret Manager.
 
-Dacă organizația permite, este preferabilă autentificarea fără cheie persistentă prin Workload Identity Federation. Workflow-ul actual folosește `FIREBASE_SERVICE_ACCOUNT` pentru a fi ușor de configurat și pentru compatibilitate directă cu Firebase CLI; cheia trebuie rotită periodic.
+Nu crea chei JSON pentru acest cont: publicarea merge fără ele.
 
 ## Ce face workflow-ul
 

@@ -59,22 +59,14 @@ jobs:
         working-directory: functions
         run: npm run build
 
-      # Fără cheie salvată: cu variabilele GCP_WIF_PROVIDER și GCP_SERVICE_ACCOUNT puse în repo,
-      # Google are încredere direct în acest workflow (docs/GHID-APPCHECK-WIF.md).
+      # Fără cheie salvată: Google are încredere direct în acest workflow, doar din acest repo și de pe main
+      # (Workload Identity Federation, variabilele GCP_WIF_PROVIDER și GCP_SERVICE_ACCOUNT; docs/GHID-APPCHECK-WIF.md).
       - name: Authenticate to Google Cloud (Workload Identity Federation)
-        if: ${{ vars.GCP_WIF_PROVIDER != '' }}
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           project_id: ${{ env.FIREBASE_PROJECT_ID }}
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
           service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-      # Rezerva, până e pusă federarea: cheia JSON a contului de serviciu.
-      - name: Authenticate to Google Cloud (cheie JSON)
-        if: ${{ vars.GCP_WIF_PROVIDER == '' }}
-        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
-        with:
-          project_id: ${{ env.FIREBASE_PROJECT_ID }}
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Setup Google Cloud CLI
         uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
