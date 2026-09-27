@@ -69,7 +69,13 @@ Toate cele 12 (QA-01 … QA-12): ✅ `b2ef974`, `3b6c1e5`, `b0e96cf`, `a323cff`.
 | # | Constatare | Stare |
 |---|---|---|
 | P1-1…P1-4 | Gata, revenire pe Astăzi, pornire, jurnal | ✅ `444d385` |
-| P2-5…P2-11, P3 | Căutarea din jurnal, Plicuri, randări, sync, CSS, service worker, fonturi | ⏳ (paleta de căutare ✅ `3df805e`) |
+| P2-5, P2-6, P2-7 | Căutarea din jurnal, paleta, Plicuri (formatDate) | ✅ `d691122`, `3df805e` |
+| P2-8 | Randări la orice schimbare din Home | ✅ `53206ff` |
+| P2-9 | Sync pe firul principal | ✅ cheie pe sare, iv sărit `b634970`, base64 `9e816d6`; ⏳ Web Worker |
+| P2-10 | CSS 635 KB | ⏳ continuu (D24) |
+| P2-11 | Service worker offline | ✅ `53206ff` |
+| P3-12, P3-14, P3-15 | Pachet de pornire, layout la pornire, animații | ✅ `d691122`, `1d894c0`, `9e816d6` |
+| P3-13 | Fonturi (subset Fraunces) | ⏳ |
 
 ## Design (design-report.md)
 | # | Constatare | Stare |
