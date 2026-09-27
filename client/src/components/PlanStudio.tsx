@@ -294,7 +294,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     : Math.round(selectedSourceAvailable.reserved) <= 0
       ? undefined
       : selectedSourceAvailable.free > 0
-        ? t("Din {balance} ai deja {reserved} în plicuri sau scadențe; liberi rămân {free}.", { balance: money(selectedSourceAvailable.balance), reserved: money(selectedSourceAvailable.reserved), free: money(selectedSourceAvailable.free) })
+        ? t("Pe {source} mai sunt liberi {free} (din {balance}, {reserved} sunt deja în plicuri sau scadențe).", { source: data.settings.paymentSources.find((item) => item.id === allocationSourceId)?.name || t("sursa aleasă"), balance: money(selectedSourceAvailable.balance), reserved: money(selectedSourceAvailable.reserved), free: money(selectedSourceAvailable.free) })
         : t("Toți banii din această sursă sunt deja repartizați.");
 
   const updatePlan = (patch: Partial<typeof plan>) => onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, ...patch, updatedAt: new Date().toISOString() } } });
@@ -604,7 +604,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             hint={!allocationWeeklyPace
               ? t("Fără ritm săptămânal — contează doar totalul.")
               : !paceByWeek
-                ? t("Alege perioada mai sus ca să vezi ritmul săptămânal.")
+                ? t("Pune data salariului (Plicuri → Salariul) ca să vezi ritmul săptămânal.")
                 : allocationPaceMode === "weekly"
                   ? (allocationTotal <= 0
                       ? t("Scrie cât vrei să ai la dispoziție într-o săptămână întreagă.")
@@ -613,7 +613,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
                         : t("Total pe perioadă: {amount}.", { amount: money(allocationTotal) }))
                   : (allocationStartedShare
                       ? t("≈{weekly} pe săptămână întreagă, {fair} pentru zilele rămase din săptămâna începută.", { weekly: money(Math.round(weeklyPaceFromTotal(allocationTotal, plan.periodStart, planEnd, paceToday))), fair: money(allocationStartedShare.fair) })
-                      : allocationPreview ? t("În fiecare săptămână: aproximativ {amount} din acest plic.", { amount: money(allocationPreview.weeklyAmount) }) : t("Alege perioada mai sus ca să vezi ritmul săptămânal."))}
+                      : allocationPreview ? t("În fiecare săptămână: aproximativ {amount} din acest plic.", { amount: money(allocationPreview.weeklyAmount) }) : t("Pune data salariului (Plicuri → Salariul) ca să vezi ritmul săptămânal."))}
           >
             <input value={allocationAmount} onChange={(event) => { setAllocationAmount(event.target.value); setAllocationError(""); }} inputMode="decimal" placeholder={allocationPaceMode === "weekly" ? "ex. 500" : "ex. 1200"} />
           </PlanField>

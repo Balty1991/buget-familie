@@ -3481,4 +3481,6 @@ export const en: Record<string, string> = {
   "Răspuns al ghidului AI semnalat": "Reported AI guide answer",
   "Plicuri fără limită": "Unlimited envelopes",
   "Doi oameni, un telefon": "Two people, one phone",
+  "Pe {source} mai sunt liberi {free} (din {balance}, {reserved} sunt deja în plicuri sau scadențe).": "{free} is still free on {source} (of {balance}, {reserved} is already in envelopes or bills).",
+  "Pune data salariului (Plicuri → Salariul) ca să vezi ritmul săptămânal.": "Set your payday (Envelopes → Salary) to see the weekly pace.",
 };
