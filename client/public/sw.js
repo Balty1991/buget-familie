@@ -1,19 +1,45 @@
-const CACHE = "buget-familie-shell-v91";
+const CACHE = "buget-familie-shell-v92";
 
 const SHELL = ["./manifest.webmanifest", "./bf-favicon.svg", "./icons/favicon-32.png", "./icons/icon-192.png", "./icons/mark-240.webp", "./icons/notify-badge.png"];
 
 const HASHED = /\/assets\/.+-[A-Za-z0-9_-]{8,}\.(js|css)$/;
 
 /** Lista build-ului (precache.json, scrisă de Vite). Fără ea (server de dezvoltare), doar shell-ul. */
-async function buildFiles() {
+let manifest;
+async function buildManifest() {
+  if (manifest) return manifest;
   try {
     const response = await fetch("./precache.json", { cache: "no-store" });
-    if (!response.ok) return [];
+    if (!response.ok) return { files: [], hashes: {} };
     const body = await response.json();
-    return Array.isArray(body.files) ? body.files : [];
+    manifest = { files: Array.isArray(body.files) ? body.files : [], hashes: body.hashes && typeof body.hashes === "object" ? body.hashes : {} };
+    return manifest;
   } catch {
-    return [];
+    return { files: [], hashes: {} };
   }
+}
+async function buildFiles() {
+  return (await buildManifest()).files;
+}
+
+/**
+ * S1: pe o origine comună (github.io) altă pagină poate scrie în Cache Storage. Un fișier
+ * JS/CSS din cache se folosește doar dacă are exact amprenta din build; altfel se aruncă
+ * și se ia din rețea. Fără listă de amprente (offline la prima pornire) rămâne regula veche.
+ */
+async function trustedCached(request) {
+  const cached = await caches.match(request);
+  if (!cached) return undefined;
+  const { hashes } = await buildManifest();
+  const path = new URL(request.url).pathname;
+  const key = Object.keys(hashes).find((entry) => path.endsWith(entry));
+  if (!key) return cached;
+  const digest = await crypto.subtle.digest("SHA-256", await cached.clone().arrayBuffer());
+  const actual = btoa(String.fromCharCode(...new Uint8Array(digest)));
+  if (actual === hashes[key]) return cached;
+  const cache = await caches.open(CACHE);
+  await cache.delete(request);
+  return undefined;
 }
 
 self.addEventListener("install", (event) => {
@@ -67,7 +93,7 @@ self.addEventListener("fetch", (event) => {
 
   const hashed = HASHED.test(url.pathname) || /\.woff2?$/.test(url.pathname);
   if (hashed) {
-    event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
+    event.respondWith(trustedCached(request).then((cached) => cached || fetch(request).then((response) => {
       if (response.ok) {
         const copy = response.clone();
         void caches.open(CACHE).then((cache) => cache.put(request, copy));

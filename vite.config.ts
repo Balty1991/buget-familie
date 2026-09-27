@@ -1,7 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { defineConfig, type Plugin } from "vite";
 
@@ -62,6 +62,22 @@ function vitePluginBuildId(): Plugin {
         .filter((item) => (item.type === "chunk" ? item.code.length : String(item.source).length) < 400_000)
         .map((item) => `./${item.fileName}`);
       this.emitFile({ type: "asset", fileName: "precache.json", source: JSON.stringify({ id: BUILD_ID, files }) });
+    },
+    /*
+     * S1: amprenta SHA-256 a fiecărui fișier JS/CSS, luată din fișierele scrise pe disc (după
+     * toate transformările). Pe originea comună (balty1991.github.io) altă pagină poate scrie în
+     * Cache Storage; service worker-ul servește din cache doar ce are exact amprenta de aici.
+     */
+    writeBundle(options, bundle) {
+      const dir = options.dir || "dist";
+      const target = path.join(dir, "precache.json");
+      const manifest = JSON.parse(readFileSync(target, "utf8")) as { id: string; files: string[]; hashes?: Record<string, string> };
+      const hashes: Record<string, string> = {};
+      for (const name of Object.keys(bundle)) {
+        if (!/^assets\/.+\.(js|css)$/.test(name)) continue;
+        hashes[`/${name}`] = createHash("sha256").update(readFileSync(path.join(dir, name))).digest("base64");
+      }
+      writeFileSync(target, JSON.stringify({ ...manifest, hashes }));
     },
   };
 }
