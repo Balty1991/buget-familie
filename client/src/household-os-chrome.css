@@ -64,8 +64,10 @@ html.is-android-standalone {
   --os-nav-overlay: 0px;
 }
 
+/* WebView-urile mai vechi de Chromium 140 dau 0 la env(); valoarea reală vine atunci de la
+   SystemBars, în --safe-area-inset-top. */
 html.capacitor-android {
-  --os-inset-top: max(24px, env(safe-area-inset-top, 0px));
+  --os-inset-top: max(24px, var(--safe-area-inset-top, env(safe-area-inset-top, 0px)));
 }
 
 /* ---- App bar: cub + Buget / Familie + 3 butoane rotunde ---- */
@@ -1271,7 +1273,7 @@ body .bf-command-palette .bf-icon-button,
 .bf-app > .bf-skip-link:focus-visible {
   position: fixed !important;
   z-index: 400 !important;
-  top: max(10px, env(safe-area-inset-top, 0px)) !important;
+  top: max(10px, var(--os-inset-top, env(safe-area-inset-top, 0px))) !important;
   left: 10px !important;
   width: auto !important;
   height: auto !important;

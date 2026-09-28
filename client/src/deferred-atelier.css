@@ -3797,7 +3797,7 @@ html.background-dots .bf-app::before {
 .bf-app > .bf-skip-link {
   position: fixed !important;
   z-index: 200 !important;
-  top: max(8px, env(safe-area-inset-top));
+  top: max(8px, var(--os-inset-top, env(safe-area-inset-top, 0px)));
   left: 8px;
   width: auto;
   height: auto;

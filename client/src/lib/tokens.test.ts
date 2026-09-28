@@ -74,6 +74,26 @@ describe("plafonul de !important", () => {
     // 922 KB la 27.09. O funcție nouă își aduce stilul, dar pe mai departe se scoate cel vechi: plafonul nu urcă.
     expect(kb).toBeLessThanOrEqual(935);
   });
+
+  it("calc() are spații în jurul lui + și -", () => {
+    // „calc(8px+var(...))” nu e respins la citire (are var()), dar devine invalid la calcul și
+    // proprietatea cade la 0: bara de sus ajungea sub bara de stare pe Android.
+    const root = fileURLToPath(new URL("..", import.meta.url));
+    const walk = (dir: string, out: string[] = []): string[] => {
+      for (const name of readdirSync(dir)) {
+        const full = join(dir, name);
+        if (statSync(full).isDirectory()) walk(full, out);
+        else out.push(full);
+      }
+      return out;
+    };
+    const bad = walk(root)
+      .filter((file) => file.endsWith(".css"))
+      .flatMap((file) =>
+        [...readFileSync(file, "utf8").matchAll(/calc\([^;{}]*?[\w%)](?:\+|-(?=var\(|env\(|\d))[\w(]/g)].map((m) => `${file}: ${m[0]}`),
+      );
+    expect(bad).toEqual([]);
+  });
 });
 
 describe("ecranul Astăzi", () => {
