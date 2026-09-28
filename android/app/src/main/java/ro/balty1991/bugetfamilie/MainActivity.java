@@ -32,6 +32,8 @@ import java.io.File;
 
 public class MainActivity extends BridgeActivity {
   private static final int REQ_POST_NOTIFICATIONS = 4101;
+  /** Un singur fir, în ordine: ultima cifră publicată rămâne pe widget. */
+  private static final java.util.concurrent.ExecutorService WIDGET_WORK = java.util.concurrent.Executors.newSingleThreadExecutor();
   private static final String PREFS_CHROME = "bf_chrome";
   private static final String PREF_DARK = "dark";
   private volatile boolean keepSplash = true;
@@ -325,16 +327,23 @@ public class MainActivity extends BridgeActivity {
       return action == null ? "" : action;
     }
 
+    /* JS așteaptă întoarcerea din metodă; scrierea și redesenarea widgetului se fac în fundal. */
     @JavascriptInterface
     public void publishTemplates(String json) {
-      WidgetTemplates.saveJson(MainActivity.this.getApplicationContext(), json);
-      QuickAddWidgetProvider.updateAll(MainActivity.this.getApplicationContext());
+      final android.content.Context app = MainActivity.this.getApplicationContext();
+      WIDGET_WORK.execute(() -> {
+        WidgetTemplates.saveJson(app, json);
+        QuickAddWidgetProvider.updateAll(app);
+      });
     }
 
     @JavascriptInterface
     public void publishSpendToday(String json) {
-      SpendTodayWidgetProvider.save(MainActivity.this.getApplicationContext(), json);
-      SpendTodayWidgetProvider.updateAll(MainActivity.this.getApplicationContext());
+      final android.content.Context app = MainActivity.this.getApplicationContext();
+      WIDGET_WORK.execute(() -> {
+        SpendTodayWidgetProvider.save(app, json);
+        SpendTodayWidgetProvider.updateAll(app);
+      });
     }
   }
 

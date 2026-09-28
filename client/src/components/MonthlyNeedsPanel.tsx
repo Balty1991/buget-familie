@@ -191,9 +191,10 @@ export function MonthlyNeedsPanel({ data, onChange, hidePayday }: { data: AppDat
             {members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}
           </select>
           <input aria-label={t("Numele venitului")} defaultValue={income.label} onBlur={(event) => event.target.value.trim() !== income.label && updateIncome(income.id, { label: event.target.value.trim() || t("Salariu") })} />
-          <AmountField label={t("Sumă")} value={income.amount} onCommit={(value) => updateIncome(income.id, { amount: value })} />
+          <AmountField label={income.variable ? t("Sumă medie") : t("Sumă")} value={income.amount} onCommit={(value) => updateIncome(income.id, { amount: value })} />
           <label><span>{t("Ziua")}</span><input inputMode="numeric" defaultValue={income.day} onBlur={(event) => { const day = Math.min(31, Math.max(1, Math.round(Number(event.target.value)) || income.day)); if (day !== income.day) updateIncome(income.id, { day }); }} /></label>
           <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: income.label })} onClick={() => void deleteIncome(income)}><Trash2 size={15} /></button>
+          <label className="bf-needs-variable"><input type="checkbox" checked={Boolean(income.variable)} onChange={(event) => updateIncome(income.id, { variable: event.target.checked || undefined })} /> {t("Suma diferă de la lună la lună")}</label>
         </div>
       ))}
       <button type="button" className="bf-secondary bf-needs-add" onClick={addIncome}><Plus size={15} /> {t("Adaugă un venit")}</button>

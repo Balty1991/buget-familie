@@ -639,3 +639,17 @@ html.theme-navy .os-shell .os-dock button.is-on {
   color: var(--cf-on-forest);
   background: var(--cf-primary-strong);
 }
+
+/* Salariu variabil: bifa stă pe tot rândul, sub sumă și zi. */
+.bf-needs-row.bf-needs-income .bf-needs-variable {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cf-muted);
+  font: 600 12px/1.3 "IBM Plex Sans", sans-serif;
+}
+.bf-needs-variable-hint {
+  display: block;
+  margin: 4px 0 0;
+}

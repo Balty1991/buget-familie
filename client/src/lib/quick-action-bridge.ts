@@ -58,10 +58,29 @@ export function publishWidgetTemplates(templates: Array<{ id: string; label: str
         .slice(0, 3)
         .map((item) => ({ id: item.id, label: item.label.trim().slice(0, 28) })),
     );
-    bridge()?.publishTemplates?.(payload);
+    publishLater("templates", payload, (value) => bridge()?.publishTemplates?.(value));
   } catch {
     /* widgetul e opțional */
   }
+}
+
+/**
+ * Puntea către widget e sincronă: JS stă până Android scrie și redesenează widgetul. Se chema
+ * la fiecare schimbare din registru, deci fiecare notare aștepta după ecranul principal al
+ * telefonului. Trimitem doar ce s-a schimbat, după ce ecranul s-a liniștit.
+ */
+const lastSent = new Map<string, string>();
+const pendingSend = new Map<string, ReturnType<typeof setTimeout>>();
+function publishLater(key: string, payload: string, send: (payload: string) => void) {
+  if (lastSent.get(key) === payload) return;
+  const waiting = pendingSend.get(key);
+  if (waiting) clearTimeout(waiting);
+  pendingSend.set(key, setTimeout(() => {
+    pendingSend.delete(key);
+    if (lastSent.get(key) === payload) return;
+    lastSent.set(key, payload);
+    try { send(payload); } catch { /* widgetul e opțional */ }
+  }, 700));
 }
 
 /**
@@ -115,7 +134,8 @@ export type SpendTodayWidget = { amount: string; caption: string; date: string; 
  */
 export function publishSpendToday(payload: SpendTodayWidget): void {
   try {
-    bridge()?.publishSpendToday?.(JSON.stringify(payload));
+    if (!bridge()?.publishSpendToday) return;
+    publishLater("spend-today", JSON.stringify(payload), (value) => bridge()?.publishSpendToday?.(value));
   } catch {
     /* widgetul e opțional */
   }

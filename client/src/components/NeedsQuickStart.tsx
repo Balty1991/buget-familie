@@ -10,7 +10,7 @@ import { t } from "@/lib/i18n";
 import { lei as money } from "@/lib/money-format";
 import { genitiveName } from "@/lib/member-mode";
 
-type IncomeDraft = { id: string; who: "me" | "partner"; label: string; amount: string; day: string; /** Primește și tichete de masă: partenerul își are sursa lui, nu le pune pe ale mele. */ meal?: boolean };
+type IncomeDraft = { id: string; who: "me" | "partner"; label: string; amount: string; day: string; /** Salariu care nu e la fel în fiecare lună: suma e o medie. */ variable?: boolean; /** Primește și tichete de masă: partenerul își are sursa lui, nu le pune pe ale mele. */ meal?: boolean };
 type NeedDraft = { label: string; category: string; cadence: "monthly" | "weekly"; priority: "fixed" | "flex" | "buffer"; amount: string; on: boolean };
 
 const START_NEEDS: NeedDraft[] = [
@@ -106,7 +106,7 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
       partnerId = newId("member");
       members = [...members, { id: partnerId, name: partnerName.trim(), color: "#966E4A" }];
     }
-    const expected: ExpectedIncome[] = validIncomes.map((item) => ({ id: item.id, memberId: item.who === "partner" && partnerId ? partnerId : me.id, label: item.who === "partner" && item.label.trim() === t("Salariul partenerului") && partnerName.trim() ? t("Salariul {name}", { name: genitiveName(partnerName.trim()) }) : item.label.trim() || t("Salariu"), amount: parseRomanianAmount(item.amount), day: Math.round(Number(item.day)), updatedAt: now }));
+    const expected: ExpectedIncome[] = validIncomes.map((item) => ({ id: item.id, memberId: item.who === "partner" && partnerId ? partnerId : me.id, label: item.who === "partner" && item.label.trim() === t("Salariul partenerului") && partnerName.trim() ? t("Salariul {name}", { name: genitiveName(partnerName.trim()) }) : item.label.trim() || t("Salariu"), amount: parseRomanianAmount(item.amount), day: Math.round(Number(item.day)), ...(item.variable ? { variable: true } : {}), updatedAt: now }));
     const declared: MonthlyNeed[] = needs.filter((item) => item.on && parseRomanianAmount(item.amount) > 0).map((item) => {
       const amount = parseRomanianAmount(item.amount);
       return { id: newId("need"), label: item.label, category: item.category, cadence: item.cadence, min: amount, max: amount, reserve: "max", priority: item.priority, updatedAt: now };
@@ -175,8 +175,10 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
           {incomes.map((item) => (
             <div className="bf-needs-start-row" key={item.id}>
               <label className="bf-field"><span>{item.who === "partner" ? t("Al partenerului") : t("Al tău")}</span><input value={item.label} onChange={(event) => setIncome(item.id, { label: event.target.value })} /></label>
-              <label className="bf-field"><span>{t("Suma")}</span><input inputMode="decimal" value={item.amount} onChange={(event) => setIncome(item.id, { amount: event.target.value })} placeholder={t("ex. 4.700")} /></label>
+              <label className="bf-field"><span>{item.variable ? t("Suma medie") : t("Suma")}</span><input inputMode="decimal" value={item.amount} onChange={(event) => setIncome(item.id, { amount: event.target.value })} placeholder={t("ex. 4.700")} /></label>
               <label className="bf-field"><span>{t("Ziua din lună")}</span><input inputMode="numeric" value={item.day} onChange={(event) => setIncome(item.id, { day: event.target.value.replace(/\D/g, "").slice(0, 2) })} placeholder={t("ex. 10")} /></label>
+              <label className="bf-needs-meal"><input type="checkbox" checked={Boolean(item.variable)} onChange={(event) => setIncome(item.id, { variable: event.target.checked })} /> {t("Suma diferă de la lună la lună")}</label>
+              {item.variable && <small className="bf-helper bf-needs-variable-hint">{t("Pune o medie. Când intră salariul, scrii suma exactă, iar împărțirea pe plicuri se face pe ea. Media o schimbi oricând din Plicuri → Ce plătim lunar.")}</small>}
               {item.who === "partner" && <label className="bf-needs-meal"><input type="checkbox" checked={Boolean(item.meal)} onChange={(event) => setIncome(item.id, { meal: event.target.checked })} /> {t("Primește și tichete de masă")}</label>}
               {incomes.length > 1 && <button type="button" className="bf-needs-remove" aria-label={t("Șterge {name}", { name: item.label })} onClick={() => setIncomes((current) => current.filter((entry) => entry.id !== item.id))}><Trash2 size={15} /></button>}
             </div>

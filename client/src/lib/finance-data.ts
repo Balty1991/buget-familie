@@ -128,7 +128,7 @@ export type SplitTransfer = { toMemberId: string; amount: number; labels: string
  */
 export type MonthlyNeed = { id: string; label: string; category: string; cadence: "monthly" | "weekly"; min: number; max: number; /** Cât se rezervă din interval. Implicit maximul (prudent). */ reserve?: "max" | "avg" | "min"; /** Doar din venitul acestui membru; lipsă = din oricare. */ payerId?: string; /** Cine o plătește efectiv, de pe cardul lui; dacă banii vin din alt salariu, se propune un transfer. */ paidById?: string; /** „fixed” (rate, facturi) se acoperă înaintea celor „flex” (mâncare, taxi); „buffer” (neprevăzute) doar din ce rămâne liber. */ priority?: "fixed" | "flex" | "buffer"; allocationId?: string; /** Ziua din lună în care se plătește (1–31), ca Calendarul și Obligațiile s-o scadă la data ei. */ dueDay?: number; /** Luna („2026-10”) în care propunerea de ajustare a fost pusă sau lăsată; nu se mai cere până luna viitoare. */ reviewedMonth?: string; archived?: boolean; updatedAt?: string };
 /** Un venit care vine lunar, într-o zi știută: „salariul meu, 4.700, pe 10”. */
-export type ExpectedIncome = { id: string; memberId: string; label: string; amount: number; day: number; archived?: boolean; updatedAt?: string };
+export type ExpectedIncome = { id: string; memberId: string; label: string; amount: number; day: number; /** Suma se schimbă de la lună la lună (comisioane, ore, PFA): `amount` e o medie, iar repartizarea se face pe suma care intră. */ variable?: boolean; archived?: boolean; updatedAt?: string };
 export type AllocationHistoryKind = "created" | "updated" | "deleted" | "income-applied" | "income-reverted" | "envelope-transfer" | "week-transfer";
 export type AllocationHistoryEntry = { id: string; referenceId?: string; kind: AllocationHistoryKind; allocationId?: string; allocationLabel?: string; fromAllocationId?: string; fromAllocationLabel?: string; toAllocationId?: string; toAllocationLabel?: string; amount?: number; previousAmount?: number; newAmount?: number; incomeId?: string; incomeTitle?: string; fromWeekIndex?: number; toWeekIndex?: number; note?: string; createdAt: string };
 /** Preferință de viteză locală: păstrează suma și durata, nu fixează datele calendaristice ale următorului ciclu. */
@@ -478,6 +478,7 @@ const normalizeIncomes = (value: unknown): ExpectedIncome[] | undefined => {
     label: String(item.label || "Salariu").trim().slice(0, 40),
     amount: Math.max(0, parseRomanianAmount(item.amount)),
     day: Math.min(31, Math.max(1, Math.round(Number(item.day)) || 1)),
+    variable: item.variable === true ? true : undefined,
     archived: item.archived === true ? true : undefined,
     updatedAt: typeof item.updatedAt === "string" ? item.updatedAt : undefined,
   })).filter((item) => item.memberId), 12);

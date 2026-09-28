@@ -48,7 +48,8 @@ describe("puntea către widget", () => {
     expect(consumeQuickAction()).toEqual({ kind: "template", templateId: "taxi-serviciu" });
   });
 
-  it("publică pe widget doar id și etichetă, max 3", () => {
+  it("publică pe widget doar id și etichetă, max 3 — o singură dată, după ce ecranul se liniștește", () => {
+    vi.useFakeTimers();
     const publish = vi.fn();
     stubNative([], publish);
     publishWidgetTemplates([
@@ -57,11 +58,19 @@ describe("puntea către widget", () => {
       { id: "c", label: "Benzină" },
       { id: "d", label: "Extra" },
     ]);
+    // Puntea e sincronă: nu o chemăm în timpul randării.
+    expect(publish).not.toHaveBeenCalled();
+    vi.runAllTimers();
     expect(publish).toHaveBeenCalledWith(JSON.stringify([
       { id: "a", label: "Taxi" },
       { id: "b", label: "Lidl" },
       { id: "c", label: "Benzină" },
     ]));
+    // Aceleași șabloane din nou: nimic nou de scris pe widget.
+    publishWidgetTemplates([{ id: "a", label: "Taxi" }, { id: "b", label: "Lidl" }, { id: "c", label: "Benzină" }]);
+    vi.runAllTimers();
+    expect(publish).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it("nu face nimic fără puntea nativă", () => {

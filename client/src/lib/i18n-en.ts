@@ -3664,4 +3664,8 @@ export const en: Record<string, string> = {
   "Șterge bonul {vendor}": "Delete receipt {vendor}",
   "Vei actualiza plicul „{label}” la {amount} pentru perioada aleasă.": "You will update the “{label}” envelope to {amount} for the chosen period.",
   "Vei adăuga plicul „{label}” cu {amount} pentru perioada aleasă.": "You will add the “{label}” envelope with {amount} for the chosen period.",
+  "Suma medie": "Average amount",
+  "Sumă medie": "Average amount",
+  "Suma diferă de la lună la lună": "The amount changes from month to month",
+  "Pune o medie. Când intră salariul, scrii suma exactă, iar împărțirea pe plicuri se face pe ea. Media o schimbi oricând din Plicuri → Ce plătim lunar.": "Enter an average. When the salary arrives, you type the exact amount and the envelope split uses it. You can change the average any time in Envelopes → What we pay monthly.",
 };
