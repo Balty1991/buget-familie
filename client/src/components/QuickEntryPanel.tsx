@@ -45,23 +45,13 @@ type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?:
 export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind }: Props) {
   const amountRef = useRef<HTMLInputElement>(null);
   /**
-   * Pe telefon, focusul pe sumă deschide tastatura, iar tastatura micșorează ecranul și reașază
-   * toată aplicația. Dacă se întâmplă în timp ce foaia urcă, animația sacadează (pe web nu există
-   * tastatură pe ecran, deci nu se vedea). Tastatura vine imediat după ce foaia a urcat.
+   * Pe telefon foaia se deschide întreagă, fără tastatură: omul vede tot formularul, iar
+   * tastatura apare când atinge „Sumă”. Deschisă automat, ea acoperea jumătate de foaie și
+   * reașeza ecranul chiar în timpul animației. Pe calculator cursorul stă direct pe sumă.
    */
   useEffect(() => {
-    const input = amountRef.current;
-    if (!input) return;
-    const focus = () => input.focus({ preventScroll: true });
-    const panel = input.closest<HTMLElement>(".bf-quick-entry-panel");
     const touch = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
-    const animated = panel && getComputedStyle(panel).animationName !== "none";
-    if (!touch || !panel || !animated) { focus(); return; }
-    let done = false;
-    const once = () => { if (done) return; done = true; focus(); };
-    panel.addEventListener("animationend", once, { once: true });
-    const timer = window.setTimeout(once, 520);
-    return () => { done = true; window.clearTimeout(timer); panel.removeEventListener("animationend", once); };
+    if (!touch) amountRef.current?.focus({ preventScroll: true });
   }, []);
   const [kind, setKind] = useState<TransactionKind>(initialKind || "expense");
   const [amount, setAmount] = useState("");
