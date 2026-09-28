@@ -43,6 +43,26 @@ const CAPTURE_CATEGORIES: Array<[string, typeof ShoppingCart]> = [
 type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; };
 
 export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind }: Props) {
+  const amountRef = useRef<HTMLInputElement>(null);
+  /**
+   * Pe telefon, focusul pe sumă deschide tastatura, iar tastatura micșorează ecranul și reașază
+   * toată aplicația. Dacă se întâmplă în timp ce foaia urcă, animația sacadează (pe web nu există
+   * tastatură pe ecran, deci nu se vedea). Tastatura vine imediat după ce foaia a urcat.
+   */
+  useEffect(() => {
+    const input = amountRef.current;
+    if (!input) return;
+    const focus = () => input.focus({ preventScroll: true });
+    const panel = input.closest<HTMLElement>(".bf-quick-entry-panel");
+    const touch = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
+    const animated = panel && getComputedStyle(panel).animationName !== "none";
+    if (!touch || !panel || !animated) { focus(); return; }
+    let done = false;
+    const once = () => { if (done) return; done = true; focus(); };
+    panel.addEventListener("animationend", once, { once: true });
+    const timer = window.setTimeout(once, 520);
+    return () => { done = true; window.clearTimeout(timer); panel.removeEventListener("animationend", once); };
+  }, []);
   const [kind, setKind] = useState<TransactionKind>(initialKind || "expense");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Alimente");
@@ -223,7 +243,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
       {kind === "income" && declaredIncomes.length > 0 && <div className="bf-quick-category-picks bf-declared-incomes" aria-label={t("Veniturile declarate")}>{declaredIncomes.map((item) => <button type="button" key={item.id} className={incomeLabel === item.label ? "active" : ""} onClick={() => pickDeclaredIncome(item)}>{item.label} · {money.format(item.amount)}</button>)}</div>}
       {kind === "expense" && <div className="bf-cat-grid" role="listbox" aria-label={t("Categorii rapide")}>{CAPTURE_CATEGORIES.map(([name, Icon]) => <button type="button" key={name} role="option" aria-selected={category === name} className={category === name ? "is-on" : ""} onClick={() => { setCategory(name); setCategoryTouched(true); setAllocationChoiceTouched(false); }}><Icon size={18} aria-hidden="true" /><span>{t(name)}</span></button>)}</div>}
       {kind === "expense" && recentCategories.length > 0 && <div className="bf-quick-category-picks" aria-label={t("Categorii folosite recent")}><span>{t("Folosite recent")}</span>{recentCategories.map((item) => <button type="button" key={item} className={category === item ? "active" : ""} onClick={() => { setCategory(item); setCategoryTouched(true); setAllocationChoiceTouched(false); }}>{item}</button>)}</div>}
-      <div className="bf-quick-entry-grid"><label className="bf-field bf-amount-field"><span>{t("Sumă ({currency})", { currency: isForeign ? entryCurrency : t("lei") })}</span><input autoFocus value={amount} onChange={(event) => setAmount(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); save(); } }} inputMode="decimal" placeholder="0,00" aria-describedby="bf-quick-amount-hint" />{recentAmounts.length > 0 && <span className="bf-amount-suggestions" id="bf-quick-amount-hint"><span>{t("Folosit recent")}</span>{recentAmounts.map((value) => { const filled = !isForeign ? value : entryRate ? Math.round((value / entryRate) * 100) / 100 : undefined; if (filled == null) return null; return <button type="button" key={value} onClick={() => { setAmount(String(filled)); setError(""); }}>{isForeign ? `${filled.toLocaleString(getLocale(), { maximumFractionDigits: 2 })} ${entryCurrency}` : money.format(value)}</button>; })}</span>}</label>{kind === "expense" ? <label className="bf-field"><span>{t("Magazin sau denumire")}</span><input value={merchant} onChange={(event) => {
+      <div className="bf-quick-entry-grid"><label className="bf-field bf-amount-field"><span>{t("Sumă ({currency})", { currency: isForeign ? entryCurrency : t("lei") })}</span><input ref={amountRef} value={amount} onChange={(event) => setAmount(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); save(); } }} inputMode="decimal" placeholder="0,00" aria-describedby="bf-quick-amount-hint" />{recentAmounts.length > 0 && <span className="bf-amount-suggestions" id="bf-quick-amount-hint"><span>{t("Folosit recent")}</span>{recentAmounts.map((value) => { const filled = !isForeign ? value : entryRate ? Math.round((value / entryRate) * 100) / 100 : undefined; if (filled == null) return null; return <button type="button" key={value} onClick={() => { setAmount(String(filled)); setError(""); }}>{isForeign ? `${filled.toLocaleString(getLocale(), { maximumFractionDigits: 2 })} ${entryCurrency}` : money.format(value)}</button>; })}</span>}</label>{kind === "expense" ? <label className="bf-field"><span>{t("Magazin sau denumire")}</span><input value={merchant} onChange={(event) => {
         const next = event.target.value;
         setMerchant(next);
         if (categoryTouched) return;
