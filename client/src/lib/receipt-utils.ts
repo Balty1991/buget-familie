@@ -8,7 +8,7 @@ const TARGET_COMPRESSED_BYTES = 600_000;
 const MAX_EDGE = 1600;
 const moneyPattern = /-?\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{2})|-?\d+[,.]\d{2}/g;
 const receiptTotalPattern = /-?(?:\d{1,3}(?:[.\s]\d{3})+|\d+)(?:[,.]\d{1,2})?/g;
-const footerLinePattern = /\b(subtotal|numerar|rest(?:\s*lei)?|tva|cash|card|visa|mastercard|bon\s*fiscal|operator|casa|aprob|cif|cui|nr\.?\s*tranzact|puncte|economisit|id\s*unic|extra\s*plu|^plu:|cod\s*identificare|total\s*tva|totaltva)\b/i;
+const footerLinePattern = /\b(sub\s*total|numerar|rest(?:\s*lei)?|tva|cash|card|visa|mastercard|bon\s*fiscal|operator|casa|aprob|cif|cui|nr\.?\s*tranzact|puncte|economisit|id\s*unic|extra\s*plu|^plu:|cod\s*identificare|total\s*tva|totaltva)\b/i;
 const totalLinePattern = /\b(total\s*lei|suma(?:\s*de)?\s*plata|de\s*plata|amount\s*paid|total)\b/i;
 const discountLinePattern = /\b(reducere|rabat|discount|promo)\b/i;
 const legalVendorPattern = /\b(s\.?\s*r\.?\s*l\.?|s\.?\s*a\.?|pfa|cif|cui|romania|com\.|centru|parter|str\.|nr\.|tel|jud\.|operator|fashion|consulting|retail)\b/i;
@@ -231,6 +231,29 @@ function fuzzyKnownVendor(blob: string) {
   return undefined;
 }
 
+/** Logo-ul Mega Image pică des la OCR (1 în loc de I). Lanțul se caută și pe forma compactă. */
+function knownChain(blob: string) {
+  for (const [pattern, name] of knownVendors) {
+    if (pattern.test(blob)) return name;
+  }
+  const squashed = compactVendor(blob).replace(/3/g, "e");
+  if (squashed.includes("megaimage") || squashed.includes("megaimag")) return "Mega Image";
+  if (/\bmega\b/i.test(blob) && /\b(?:i|1|l)m(?:a|4)(?:g|9|q|c)e\b/i.test(blob)) return "Mega Image";
+  return fuzzyKnownVendor(blob);
+}
+
+const foldReceiptLine = (line: string) => line.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+const placeLinePattern = /\b(judetul|judet|jud|aleea|alee|strada|bulevardul|bulevard|calea|soseaua|bloc|scara|etaj|apartament|municipiul|municipiu|orasul|comuna|cod\s+identificare|identificare\s+fiscala)\b/i;
+const countyOnlyPattern = /^(?:jud(?:etul)?\.?\s+)?(?:alba|arad|arges|bacau|bihor|bistrita(?:\s*nasaud)?|botosani|braila|brasov|bucuresti|buzau|calarasi|caras(?:\s*severin)?|cluj|constanta|covasna|dambovita|dolj|galati|giurgiu|gorj|harghita|hunedoara|ialomita|iasi|ilfov|maramures|mehedinti|mures|neamt|olt|prahova|salaj|satu\s*mare|sibiu|suceava|teleorman|timis|tulcea|valcea|vaslui|vrancea)\.?$/i;
+
+/** Județul, strada și blocul nu sunt magazinul — chiar dacă punctul din „Jud.” lipsește. */
+function isPlaceLine(line: string) {
+  const folded = foldReceiptLine(line);
+  if (placeLinePattern.test(folded) || countyOnlyPattern.test(folded)) return true;
+  return /\b(?:str|nr|bl)\b/.test(folded);
+}
+
 /** Tesseract pe hârtie mototolită rupe TOTAL, LEI, sumele și lipește cuvintele. Reparația e idempotentă pe text curat. */
 export function repairOcrLines(input: string[]): string[] {
   const cleaned = input.map((line) => repairOcrLine(line)).filter(Boolean);
@@ -322,25 +345,27 @@ export function clusterOcrWordsToLines(words: OcrWord[]): string[] {
 }
 
 function inferVendor(lines: string[]) {
-  const blob = lines.join(" ");
-  for (const [pattern, name] of knownVendors) {
-    if (pattern.test(blob)) return name;
+  const chain = knownChain(lines.join(" "));
+  if (chain) return chain;
+  const head: string[] = [];
+  for (const raw of lines) {
+    const line = raw.replace(/\s+/g, " ").trim();
+    if (!line) continue;
+    if (head.length >= 12) break;
+    if (parseQtyUnit(line) || totalLinePattern.test(line) || /\bsub\s*total\b/i.test(line) || lastMoney(line)) break;
+    head.push(line);
   }
-  const fuzzy = fuzzyKnownVendor(blob);
-  if (fuzzy) return fuzzy;
-  const head = lines.slice(0, 12).map((line) => line.replace(/\s+/g, " ").trim()).filter((line) => line.length >= 3);
   for (const line of head) {
     const magazin = line.match(/\bmagazin\s+([A-ZĂÂÎȘȚa-zăâîșț]{3,})\b/i);
-    if (magazin?.[1] && !legalVendorPattern.test(magazin[1])) return titleVendor(magazin[1]);
+    if (magazin?.[1] && !legalVendorPattern.test(magazin[1]) && !isPlaceLine(magazin[1])) return titleVendor(magazin[1]);
   }
   for (const line of head) {
-    if (legalVendorPattern.test(line)) continue;
-    if (lastMoney(line)) continue;
-    if (/\d{3,}/.test(line)) continue;
+    if (legalVendorPattern.test(line) || isPlaceLine(line)) continue;
+    if (lastMoney(line) || /\d{3,}/.test(line)) continue;
     if (!/[a-zA-ZăâîșțĂÂÎȘȚ]{3,}/.test(line)) continue;
+    if (/^(?:lei|ron|bon|fiscal|casa|operator)$/i.test(line)) continue;
     const words = line.split(" ").filter(Boolean);
-    if (words.length > 4) continue;
-    if (line.length > 28) continue;
+    if (words.length > 4 || line.length > 28) continue;
     return titleVendor(line);
   }
   return undefined;
@@ -577,10 +602,15 @@ function parseProductLines(lines: string[]): ReceiptDetectedItem[] {
     if (footerLinePattern.test(line) || totalLinePattern.test(line)) continue;
     const money = lastMoney(line);
     if (!money?.amount || money.index === undefined) continue;
-    if (money.amount > 20000) continue;
+    const qty = parseQtyUnit(line);
+    // „0,506 Kg x 7,99” : 7,99 e prețul pe kilogram, nu linia. Linia e cantitatea × prețul.
+    const amount = qty && Math.abs(money.amount - qty.unit) <= 0.001 && Math.abs(qty.lineTotal - qty.unit) > 0.05
+      ? qty.lineTotal
+      : money.amount;
+    if (amount > 20000 || amount <= 0) continue;
     const label = cleanProductLabel(line, money.index);
     if (label.length < 2 || !/[a-zA-ZăâîșțĂÂÎȘȚ]/.test(label)) continue;
-    items.push({ label, amount: money.amount, category: suggestedCategory(label), raw: line });
+    items.push({ label, amount, category: suggestedCategory(label), raw: line });
   }
   return items;
 }
@@ -617,6 +647,62 @@ function reconcileItems(items: ReceiptDetectedItem[], total?: number) {
   return { items: unique.length <= 12 ? unique : [], amount: unique.length === 1 ? unique[0].amount : undefined };
 }
 
+/** Prețul de după „x” nu e totalul bonului când cantitatea nu e 1 (kilograme, 2 bucăți). */
+function isPerUnitPrice(lines: string[], amount: number) {
+  return lines.some((line) => {
+    const qty = parseQtyUnit(line);
+    if (!qty || Math.abs(qty.unit - amount) > 0.001) return false;
+    return Math.abs(qty.lineTotal - qty.unit) > 0.05;
+  });
+}
+
+function readSubtotal(lines: string[]) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index].replace(/\s+/g, " ").trim();
+    if (!/\bsub\s*total\b/i.test(line)) continue;
+    const inline = lastMoney(line)?.amount;
+    if (inline && inline < 20000) return inline;
+    const next = (lines[index + 1] || "").replace(/\s+/g, " ").trim();
+    if (!next || totalLinePattern.test(next) || /\bsub\s*total\b/i.test(next)) continue;
+    if (/[a-zA-ZăâîșțĂÂÎȘȚ]{4,}/.test(next.replace(taxLetter, ""))) continue;
+    const amount = lastMoney(next)?.amount;
+    if (amount && amount < 20000) return amount;
+  }
+  return undefined;
+}
+
+/** Sumele cu literă de TVA (5,45 B) sunt totalurile de linie, nu prețul pe kilogram și nu restul. */
+function sumTaxLetterAmounts(lines: string[]) {
+  const amounts: number[] = [];
+  for (const raw of lines) {
+    const line = raw.replace(/\s+/g, " ").trim();
+    if (/\b(total\s*tva|tva\s*[abe]|sub\s*total|^total\b)\b/i.test(line)) continue;
+    const tax = line.match(/(-?\d+[.,]\d{2})\s*[abe]\s*$/i);
+    if (!tax) continue;
+    const signed = parseSignedAmount(tax[1]);
+    if (signed === undefined || Math.abs(signed) >= 20000 || signed === 0) continue;
+    amounts.push(signed);
+  }
+  if (amounts.length < 2) return undefined;
+  return round2(amounts.reduce((sum, value) => sum + value, 0));
+}
+
+/**
+ * TOTAL lipit de un preț unitar (7,99 lei/kg) pierde în fața SUBTOTAL-ului
+ * sau a sumei liniilor cu literă de TVA, când acelea se pupă.
+ */
+function chooseReceiptTotal(lines: string[], merged: string[], printed?: number) {
+  const sub = readSubtotal(lines) ?? readSubtotal(merged);
+  const taxSum = sumTaxLetterAmounts(merged) ?? sumTaxLetterAmounts(lines);
+  const printedIsUnit = printed !== undefined && (isPerUnitPrice(lines, printed) || isPerUnitPrice(merged, printed));
+  // TOTAL-ul tipărit rămâne, dacă nu e de fapt prețul de pe „x 7,99”.
+  if (printed !== undefined && !printedIsUnit) return printed;
+  if (taxSum !== undefined && sub !== undefined && Math.abs(taxSum - sub) <= 0.08) return taxSum;
+  if (sub !== undefined && (printed === undefined || printedIsUnit)) return sub;
+  if (taxSum !== undefined && printedIsUnit) return taxSum;
+  return printed;
+}
+
 export function interpretReceiptText(input: string | string[]): LocalReceiptOcr {
   const rawLines = (Array.isArray(input) ? input : input.split(/\r?\n/)).map((line) => line.replace(/\s+/g, " ").trim()).filter(Boolean);
   const repaired = repairOcrLines(rawLines);
@@ -627,7 +713,8 @@ export function interpretReceiptText(input: string | string[]): LocalReceiptOcr 
   const printedTotal = inferTotal(repaired) ?? inferTotal(lines);
   const parsed = parseProductLines(lines);
   const paid = inferPaidTender(repaired);
-  const total = printedTotal ?? (paid && parsed.length && Math.abs(round2(parsed.reduce((sum, item) => sum + item.amount, 0)) - paid) <= 0.08 ? paid : undefined);
+  const chosen = chooseReceiptTotal(repaired, lines, printedTotal);
+  const total = chosen ?? (paid && parsed.length && Math.abs(round2(parsed.reduce((sum, item) => sum + item.amount, 0)) - paid) <= 0.08 ? paid : undefined);
   const reconciled = reconcileItems(parsed, total);
   if (!reconciled.amount && paid && (!reconciled.items.length || Math.abs(round2(reconciled.items.reduce((sum, item) => sum + item.amount, 0)) - paid) <= 0.08)) {
     return { text: rawLines.join("\n"), vendor, date, amount: paid, items: reconciled.items };

@@ -596,7 +596,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
                 vendor: local.vendor,
                 date: local.date,
                 category: dominantReceiptCategory(local.items),
-                confidence: receiptReadIsReconciled(local) ? "high" : "medium",
+                confidence: receiptReadIsReconciled(local) ? "high" : "low",
               };
               const localProposal = expenseProposal(requestText, extracted, data, guideMemory.current, true);
               if (localProposal) {

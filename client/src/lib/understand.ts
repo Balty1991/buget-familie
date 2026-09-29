@@ -205,6 +205,7 @@ function spendTitle(folded: string, extracted: ExtractedGuide | undefined, categ
   if (/dulce|prajitur|ciocolat/.test(folded)) return "Dulciuri";
   if (/tigar|tutun/.test(folded)) return t("Țigări");
   if (/cafea/.test(folded)) return "Cafea";
+  if (extracted?.vendor && /\b(bon|bonul|bonului|analizeaz)\b/.test(folded)) return extracted.vendor;
   const cleaned = folded
     .replace(/\b(adaug[ae]?|adauga|cheltuiel[aei]*|lei|ron|pe data de|data de|alaltaieri|ieri|azi|astazi|maine|am uitat|sa trec|sa o trec|te rog|pentru|pe)\b/g, " ")
     .replace(/\d[\d.,]*/g, " ")
@@ -260,9 +261,10 @@ export function findHabit(memory: GuideMemory, raw: string, title: string) {
     .sort((left, right) => right.count - left.count || right.key.length - left.key.length)[0];
 }
 
-export function receiptDetails(extracted?: ExtractedGuide) {
+export function receiptDetails(extracted?: ExtractedGuide, title?: string) {
   if (!extracted?.amount && !extracted?.vendor && !extracted?.category) return "";
-  const vendor = extracted.vendor ? ` **${extracted.vendor}**.` : "";
+  const sameStore = title && extracted.vendor && title.trim().toLocaleLowerCase("ro-RO") === extracted.vendor.trim().toLocaleLowerCase("ro-RO");
+  const vendor = extracted.vendor && !sameStore ? ` **${extracted.vendor}**.` : "";
   const total = extracted.amount ? ` Total bon: **${money(extracted.amount)}**.` : "";
   const group = extracted.category ? spendGroupOf(extracted.category) : "";
   const category = extracted.category
@@ -422,6 +424,21 @@ export function buildExpenseOffer(
   return { text: noDoubleStop(text), choices };
 }
 
+/** „Jud.” nu e sfârșit de propoziție. Detaliile bonului intră după prima frază adevărată. */
+const abbrevBeforeDot = /^(?:jud|jdt|str|nr|bl|sc|et|ap|bd|sos|dr|dl|dna|etc|cf|vol|pag|tel|fax|ian|feb|mar|apr|iun|iul|aug|sept|sep|oct|noi|nov|dec|srl|sa)$/i;
+
+function withReceiptDetails(text: string, extra: string) {
+  let from = 0;
+  while (from < text.length) {
+    const dot = text.indexOf(". ", from);
+    if (dot < 0) break;
+    const word = text.slice(0, dot).match(/[A-Za-zĂÂÎȘȚăâîșț]{1,6}$/)?.[0] || "";
+    if (!abbrevBeforeDot.test(word)) return noDoubleStop(`${text.slice(0, dot)}.${extra} ${text.slice(dot + 2)}`);
+    from = dot + 2;
+  }
+  return noDoubleStop(`${text} ${extra.trim()}`);
+}
+
 export function expenseProposal(raw: string, extracted: ExtractedGuide | undefined, data: AppData, memory: GuideMemory, forced = false): { text: string; choices: ChatChoice[] } | undefined {
   if (isDebtOrInstallmentMessage(raw)) return undefined;
   if (!forced && isQuestion(raw)) return undefined;
@@ -454,9 +471,9 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   const title = draftTitle === "Altele" && habit ? habit.title : draftTitle;
   const date = extracted?.date && /^20\d{2}-\d{2}-\d{2}$/.test(extracted.date) ? extracted.date : spendDate(raw);
   const offer = buildExpenseOffer(data, { amount, title, category, date, sourceHint: payment.sourceHint, ownerHint: payment.ownerHint }, memory);
-  const extra = receiptDetails(extracted);
+  const extra = receiptDetails(extracted, title);
   if (!extra) return offer;
-  return { ...offer, text: noDoubleStop(offer.text.replace(/\.\s/, `.${extra} `)) };
+  return { ...offer, text: withReceiptDetails(offer.text, extra) };
 }
 
 export function incomeProposal(raw: string, data: AppData): { text: string; choices: ChatChoice[] } | undefined {

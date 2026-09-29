@@ -373,6 +373,28 @@ describe("ghidul pe bon spune doar totalul", () => {
     expect(out?.text).not.toMatch(/CIORAPI/);
     expect(out?.text).not.toMatch(/HANORAC/);
   });
+
+  it("nu taie fraza la punctul din Jud. și titlul bonului e magazinul", () => {
+    const broken = expenseProposal("Analizează bonul atașat și propune cheltuiala.", {
+      amount: 7.99,
+      vendor: "Jud. teleorman",
+      title: "Jud. teleorman",
+      category: "Alimente",
+    }, createEmptyAppData(), emptyGuideMemory(), true);
+    expect(broken?.text).toMatch(/Jud\. teleorman/);
+    expect(broken?.text).not.toMatch(/Jud\.\s+Jud/);
+    expect(broken?.text).toMatch(/Total bon/);
+    const named = expenseProposal("Analizează bonul atașat și propune cheltuiala.", {
+      amount: 66,
+      vendor: "Mega Image",
+      title: "Mega Image",
+      category: "Alimente",
+    }, createEmptyAppData(), emptyGuideMemory(), true);
+    expect(named?.text).toMatch(/\*\*Mega Image\*\*/);
+    expect(named?.text).toMatch(/66 RON/);
+    expect(named?.text).not.toMatch(/Analizeaza bonul/i);
+    expect(named?.text).not.toMatch(/Mega Image\*\*\. Total/);
+  });
 });
 
 describe("ghidul salvează cheltuiala după alegerea plicului", () => {

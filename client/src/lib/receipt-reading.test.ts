@@ -378,3 +378,112 @@ describe("citire inteligentă — OCR mototolit și două coloane", () => {
     expect(receiptReadIsReconciled(result)).toBe(true);
   });
 });
+
+describe("bon Mega Image — două coloane, preț pe kilogram", () => {
+  const lines = [
+    "MEGA IMAGE SRL",
+    "ROSIORI DE VEDE, ALEEA CFR,",
+    "BL. L7-L8, JUD. TELEORMAN.",
+    "Cod Identificare Fiscala: R06719278",
+    "Lei",
+    "1,000 Buc x 5,45",
+    "MENTOS PEPPERMINT",
+    "5,45 B",
+    "0,506 Kg x 7,99",
+    "PORTOCALE",
+    "4,04 B",
+    "2,000 Buc x 3,49",
+    "DELACO LAPTE CAFEA",
+    "6,98 B",
+    "1,000 Buc x 2,89",
+    "KINDER DELICE COCOS",
+    "2,89 A",
+    "1,000 Buc x 9,49",
+    "UNIVER KETCHUP DULCE",
+    "9,49 A",
+    "1,030 Kg x 6,99",
+    "BANANE",
+    "7,20 B",
+    "1,000 Buc x 6,99",
+    "CRENVURSTI PUI 100G",
+    "6,99 B",
+    "1,000 Buc x 12,69",
+    "ACTIMEL ACTIKIDS CAP",
+    "12,69 B",
+    "2,000 Buc x 3,85",
+    "OLY IAURT GRECESC10%",
+    "7,70 B",
+    "1,000 Buc x 2,19",
+    "AKADIKA 50 ACADELE",
+    "2,19 A",
+    "2,000 Buc x 0,19",
+    "PUNGA BIODEGRADABILA",
+    "0,38 A",
+    "SUBTOTAL",
+    "66,00",
+    "TOTAL",
+    "66,00",
+    "TOTAL TVA",
+    "7,65",
+    "TVA A 21,00%",
+    "2,59",
+    "TVA B 11,00%",
+    "5,06",
+    "CASH",
+    "200,00",
+  ];
+
+  it("ia Mega Image și TOTAL 66, nu județul, TVA sau banii dați", () => {
+    const result = interpretReceiptText(lines);
+    expect(result.vendor).toBe("Mega Image");
+    expect(result.amount).toBe(66);
+    expect(result.items.find((item) => /portocale/i.test(item.label))?.amount).toBe(4.04);
+    expect(result.items.some((item) => item.amount === 7.99 || item.amount === 200 || item.amount === 7.65)).toBe(false);
+    expect(result.items.reduce((sum, item) => sum + item.amount, 0)).toBeCloseTo(66, 2);
+    expect(receiptReadIsReconciled(result)).toBe(true);
+  });
+
+  it("când OCR lipește TOTAL de 7,99 lei/kg, rămâne 66 și nu Teleorman", () => {
+    const result = interpretReceiptText([
+      "ROSIORI DE VEDE, ALEEA CFR,",
+      "JUD. TELEORMAN",
+      "MENTOS PEPPERMINT 1,000 Buc x 5,45 5,45 B",
+      "PORTOCALE 0,506 Kg x 7,99 4,04 B",
+      "DELACO LAPTE CAFEA 2,000 Buc x 3,49 6,98 B",
+      "KINDER DELICE COCOS 1,000 Buc x 2,89 2,89 A",
+      "UNIVER KETCHUP DULCE 1,000 Buc x 9,49 9,49 A",
+      "BANANE 1,030 Kg x 6,99 7,20 B",
+      "CRENVURSTI PUI 100G 1,000 Buc x 6,99 6,99 B",
+      "ACTIMEL ACTIKIDS CAP 1,000 Buc x 12,69 12,69 B",
+      "OLY IAURT GRECESC10% 2,000 Buc x 3,85 7,70 B",
+      "AKADIKA 50 ACADELE 1,000 Buc x 2,19 2,19 A",
+      "PUNGA BIODEGRADABILA 2,000 Buc x 0,19 0,38 A",
+      "SUBTOTAL 66,00",
+      "TOTAL",
+      "7,99",
+      "TOTAL TVA 7,65",
+      "CASH 200,00",
+    ]);
+    expect(result.vendor || "").not.toMatch(/teleorman|jud/i);
+    expect(result.amount).toBe(66);
+    expect(result.items.find((item) => /portocale/i.test(item.label))?.amount).toBe(4.04);
+    expect(receiptReadIsReconciled(result)).toBe(true);
+  });
+
+  it("recunoaște MEGA 1MAGE și totalul din literele de TVA, fără cuvântul SUBTOTAL", () => {
+    const result = interpretReceiptText([
+      "MEGA 1MAGE SRL",
+      "JUD TELEORMAN",
+      "PORTOCALE 0,506 Kg x 7,99 4,04 B",
+      "BANANE 1,030 Kg x 6,99 7,20 B",
+      "MENTOS PEPPERMINT 1,000 Buc x 5,45 5,45 B",
+      "TOTAL 7,99",
+      "66,00",
+      "CASH 200,00",
+    ]);
+    expect(result.vendor).toBe("Mega Image");
+    expect(result.amount).toBeCloseTo(16.69, 2);
+    expect(result.amount).not.toBe(7.99);
+    expect(result.amount).not.toBe(200);
+  });
+});
