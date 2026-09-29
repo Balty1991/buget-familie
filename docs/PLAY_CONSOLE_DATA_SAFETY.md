@@ -1,7 +1,7 @@
 # Răspunsuri Data safety — Google Play Console
 
 Text gata de lipit / bifat în **Play Console → Politica aplicației → Siguranța datelor**.  
-Aliniat la aplicația reală (versiunea **1.1.111** / `versionCode` **112**).  
+Aliniat la aplicația reală (versiunea **1.1.113** / `versionCode` **114**).  
 Surse: `client/public/privacy.html`, `AndroidManifest.xml` (`allowBackup=false` + `dataExtractionRules`), sync AES-GCM, IndexedDB bonuri, `functions/src/index.ts` (ghid AI, feedback), `understand.ts` (`compactGuideContext`).
 
 > Nu este sfat juridic. Reverifică formularele Play dacă Google schimbă etichetele.
@@ -42,25 +42,15 @@ Date financiare (sume, categorii, plicuri, datorii, scadențe) sunt introduse de
 Fără vânzare de date. Backup-ul sistem Android este dezactivat (allowBackup=false).
 ```
 
-### 2. Fotografii și videoclipuri (bonuri): colectate, prelucrate temporar, opțional
+### 2. Fotografii și videoclipuri (bonuri): NU se colectează
 
-De la 1.1.111, poza unui bon încărcat **în ghid** pleacă la Google Gemini, care citește totalul
-(când e internet; fără internet se citește pe telefon). Cel mult două poze, doar imagini (nu PDF),
-doar la Gemini (nu la Groq), nepăstrate pe server. Bonurile din Mișcări / De verificat rămân pe
-telefon, iar pozele nu intră în sync.
-
-| Câmp Play | Alegere |
-|---|---|
-| Categorie | **Fotografii și videoclipuri → Fotografii** |
-| Colectat? | **Da** |
-| Partajat? | **Nu** (Gemini e furnizor de servicii) |
-| Prelucrat temporar? | **Da** |
-| Obligatoriu / opțional | **Utilizatorii pot alege** |
-| Scop | **Funcționalitatea aplicației** |
+În Play, „colectat” înseamnă că datele pleacă de pe dispozitiv. Pozele bonurilor nu pleacă:
+stau în IndexedDB, OCR-ul rulează local, nu intră în sync și nu merg la ghidul AI.
+Bifează **Nu** la Fotografii și videoclipuri.
 
 ```
-Poza bonului pleacă la Google Gemini doar când omul încarcă bonul în ghid. Nu se păstrează pe
-server și nu intră în sincronizare.
+Fotografiile bonurilor rămân pe telefon (IndexedDB). Nu se sincronizează și nu se trimit la ghid.
+OCR-ul rulează local. Ghidul nu primește bonuri (din 1.1.113 nu mai are atașare de fișiere).
 ```
 
 ### 3. Identificatori de dispozitiv / aplicație (identitate anonimă)
@@ -101,7 +91,7 @@ AES-GCM, iar dezvoltatorul nu poate citi sumele în clar.
 
 Ce pleacă, exact: întrebarea, ultimele 8 mesaje, `compactGuideContext` (plicuri cu sumă și rest,
 surse cu sold, categorii, scadențe, recurente, datorii, obiective, evenimente, venituri așteptate
-cu ziua lor, numele membrilor, totalurile lunii, data salariului) și, la bon, magazin/dată/total/produse.
+cu ziua lor, numele membrilor, totalurile lunii, data salariului).
 Nu pleacă jurnalul de mișcări, pozele, cheia sau parola camerei.
 
 Alți destinatari, fără date personale: jsDelivr (CDN) servește programul OCR și datele de limbă la prima citire a unui bon (vede doar IP-ul); Open Food Facts / Open Products Facts primesc doar cuvântul căutat în catalogul de produse.
@@ -122,6 +112,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 
 - Locație precisă / aproximativă  
 - Contacte  
+- Fotografii și videoclipuri (rămân pe telefon)  
 - Microfon / înregistrări audio  
 - Conturi de autentificare (Google/Facebook etc.) pentru core use  
 - Date de sănătate  
@@ -179,7 +170,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 ## G. Checklist rapid înainte de Submit
 
 - [ ] Informații financiare = Da, pe dispozitiv, scop Funcționalitate  
-- [ ] Fotografii = **Da**, prelucrate temporar, opțional (poza bonului încărcat în ghid, la Gemini)  
+- [ ] Fotografii = **Nu** (rămân pe telefon)  
 - [ ] Sync = opțional, criptat, dezvoltator fără plaintext  
 - [ ] AI online = opțional: conținut utilizator + informații financiare + nume; efemer; Gemini + Groq furnizori  
 - [ ] Identificatori = Da (ID anonim Firebase), funcționalitate + securitate, nu partajare  
