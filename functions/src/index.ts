@@ -631,7 +631,8 @@ async function generateGuide(contents: GeminiContent[], geminiKey: string, groqK
       return await callGemini(geminiKey, contents, deadline);
     } catch (error) {
       const status = error instanceof GuideCallError ? error.status : 502;
-      const failure = new GuideCallError("RECEIPT_UNAVAILABLE", status === 429 ? 429 : 503);
+      // Nu 429: telefonul ar crede că s-a terminat tot ghidul și ar opri și mesajele scrise (care au Groq).
+      const failure = new GuideCallError("RECEIPT_UNAVAILABLE", 503);
       failure.detail = error instanceof Error ? error.message.replace(/key=[^&\s"]+/gi, "key=…").slice(0, 200) : "";
       throw failure;
     }
@@ -742,15 +743,15 @@ export const aiGuide = onRequest(
           });
           return;
         }
-        const exhausted = err.status === 429;
         const receipt = err.message === "RECEIPT_UNAVAILABLE";
+        const exhausted = err.status === 429 && !receipt;
         response.status(exhausted ? 429 : 502).json({
           error: exhausted ? "Limita ghidului online s-a epuizat temporar." : "Copilotul AI nu a putut răspunde acum.",
           code: exhausted ? "quota" : receipt ? "receipt_unavailable" : "guide_upstream",
           imagesSeen,
           ...(receipt ? { detail: err.detail } : {}),
           source: "none",
-          quota: err.quota?.remaining != null || err.quota?.resetAt ? err.quota : { remaining: exhausted ? 0 : null, limit: null, resetAt: exhausted ? nextPacificMidnight() : null },
+          quota: receipt ? undefined : err.quota?.remaining != null || err.quota?.resetAt ? err.quota : { remaining: exhausted ? 0 : null, limit: null, resetAt: exhausted ? nextPacificMidnight() : null },
           upstreamStatus: err.status,
         });
       }

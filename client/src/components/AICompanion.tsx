@@ -508,7 +508,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
           if (payload.code) diag.push(`cod ${payload.code}${payload.upstreamStatus ? ` (${payload.upstreamStatus})` : ""}`);
           if (payload.detail) diag.push(`detaliu: ${payload.detail.slice(0, 140)}`);
           if (response.ok) diag.push(`total ${read?.amount ?? "-"}`, `eticheta ${read?.totalLabel || "-"}`, `cash ${read?.cashGiven ?? "-"}`, `produse ${(read?.receiptLines || payload.receiptLines || []).length}`, `magazin ${read?.vendor || "-"}`, `răspuns: ${(payload.reply || "").slice(0, 140)}`);
-          setQuota(consumeQuota(quota, payload.quota, response.ok, response.status === 429 || payload.code === "quota"));
+          // Un bon necitit nu oprește ghidul: doar limita reală a ghidului („quota”) îl trece pe local.
+          if (payload.code !== "receipt_unavailable") setQuota(consumeQuota(quota, payload.quota, response.ok, payload.code === "quota"));
           if (response.ok) {
             const { checkModelReceipt } = await import("@/lib/receipt-trust");
             const checked = checkModelReceipt({ ...payload.extracted, receiptLines: payload.extracted?.receiptLines || payload.receiptLines });
