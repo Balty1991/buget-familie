@@ -3729,4 +3729,12 @@ export const en: Record<string, string> = {
   "S{index}: deja cu {over} peste{after}": "W{index}: already {over} over{after}",
   "Deja cu {over} peste{after}": "Already {over} over{after}",
   "SE VA LUA DIN S{index}": "TAKEN FROM W{index}",
+  "Cauți articolul, pui suma, salvezi bonul.": "Find the item, enter the amount, save the receipt.",
+  "ex. Napolact, lapte, Ariel": "e.g. Napolact, milk, Ariel",
+  "Caută și online": "Also search online",
+  "Online n-a răspuns. Rămân rezultatele de pe telefon.": "Online search didn't respond. Showing results from this phone.",
+  "Fără internet: căutăm doar pe telefon.": "No internet: searching on this phone only.",
+  "Alege o sugestie sau scrie cel puțin 2 litere.": "Pick a suggestion or type at least 2 letters.",
+  "Gol": "Empty",
+  "Niciun articol. Caută mai sus.": "No items yet. Search above.",
 };
