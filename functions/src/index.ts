@@ -236,6 +236,7 @@ const responseSchema = {
 
 class GuideCallError extends Error {
   status: number;
+  detail = "";
   quota: Quota;
   constructor(message: string, status: number, quota: Quota = { remaining: null, limit: null, resetAt: null }) {
     super(message);
@@ -626,7 +627,9 @@ async function generateGuide(contents: GeminiContent[], geminiKey: string, groqK
       return await callGemini(geminiKey, contents, deadline);
     } catch (error) {
       const status = error instanceof GuideCallError ? error.status : 502;
-      throw new GuideCallError("RECEIPT_UNAVAILABLE", status === 429 ? 429 : 503);
+      const failure = new GuideCallError("RECEIPT_UNAVAILABLE", status === 429 ? 429 : 503);
+      failure.detail = error instanceof Error ? error.message.replace(/key=[^&\s"]+/gi, "key=…").slice(0, 200) : "";
+      throw failure;
     }
   }
   if (geminiKey) {
@@ -719,9 +722,11 @@ export const aiGuide = onRequest(
         return;
       }
 
+      const contents = buildContents(messages, context);
+      const imagesSeen = contents.reduce((count, content) => count + content.parts.filter((part) => part.inline_data).length, 0);
       try {
-        const result = await generateGuide(buildContents(messages, context), geminiKey, groqKey);
-        response.json({ ...result.answer, source: result.source, quota: result.quota });
+        const result = await generateGuide(contents, geminiKey, groqKey);
+        response.json({ ...result.answer, source: result.source, quota: result.quota, imagesSeen });
       } catch (error) {
         const err = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
         console.error("AI guide failure", err.message.slice(0, 500));
@@ -738,6 +743,8 @@ export const aiGuide = onRequest(
         response.status(exhausted ? 429 : 502).json({
           error: exhausted ? "Limita ghidului online s-a epuizat temporar." : "Copilotul AI nu a putut răspunde acum.",
           code: exhausted ? "quota" : receipt ? "receipt_unavailable" : "guide_upstream",
+          imagesSeen,
+          ...(receipt ? { detail: err.detail } : {}),
           source: "none",
           quota: err.quota?.remaining != null || err.quota?.resetAt ? err.quota : { remaining: exhausted ? 0 : null, limit: null, resetAt: exhausted ? nextPacificMidnight() : null },
           upstreamStatus: err.status,

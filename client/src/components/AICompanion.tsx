@@ -477,7 +477,9 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
       addMessage({ role: "assistant", text: t("Pot citi doar poze de bon (JPG, PNG). Fă o poză bonului sau notează-l din + Notează.") });
       return;
     }
-    const cannotRead = () => addMessage({ role: "assistant", text: t("Nu am putut citi sigur totalul de pe poză. Fă o poză dreaptă, cu rândul TOTAL în cadru, sau notează bonul din + Notează.") });
+    // Diagnostic temporar: ce s-a întâmplat pe drum, ca să reparăm cauza reală, nu s-o ghicim.
+    const diag: string[] = [`poze ${images.length} (${images.map((item) => `${Math.round(item.data.length / 1024)} KB`).join(", ")})`];
+    const cannotRead = () => addMessage({ role: "assistant", text: `${t("Nu am putut citi sigur totalul de pe poză. Fă o poză dreaptă, cu rândul TOTAL în cadru, sau notează bonul din + Notează.")}\nDiagnostic: ${diag.join(" · ")}` });
     const propose = (read: { amount: number; vendor?: string; date?: string; category?: string; confidence: "high" | "low"; items: Array<{ label: string; amount: number; category: string }> }, by: string) => {
       const category = read.category || dominantReceiptCategory(read.items) || "Alimente";
       pendingReceiptRef.current = { vendor: read.vendor || t("Bon"), amount: read.amount, date: read.date, items: read.items.map((item) => ({ ...item, category: item.category || category })) };
@@ -500,7 +502,12 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
               context: { ...compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }), language: getLanguage() },
             }),
           });
-          const payload = await response.json() as { extracted?: ModelReceiptRead; receiptLines?: ModelReceiptRead["receiptLines"]; quota?: { remaining?: number | null; limit?: number | null; resetAt?: string | null }; code?: string };
+          const payload = await response.json().catch(() => ({})) as { reply?: string; source?: string; imagesSeen?: number; detail?: string; upstreamStatus?: number; extracted?: ModelReceiptRead; receiptLines?: ModelReceiptRead["receiptLines"]; quota?: { remaining?: number | null; limit?: number | null; resetAt?: string | null }; code?: string };
+          const read = payload.extracted;
+          diag.push(`HTTP ${response.status}`, `server a văzut ${payload.imagesSeen ?? "?"} poze`, `sursa ${payload.source || "-"}`);
+          if (payload.code) diag.push(`cod ${payload.code}${payload.upstreamStatus ? ` (${payload.upstreamStatus})` : ""}`);
+          if (payload.detail) diag.push(`detaliu: ${payload.detail.slice(0, 140)}`);
+          if (response.ok) diag.push(`total ${read?.amount ?? "-"}`, `eticheta ${read?.totalLabel || "-"}`, `cash ${read?.cashGiven ?? "-"}`, `produse ${(read?.receiptLines || payload.receiptLines || []).length}`, `magazin ${read?.vendor || "-"}`, `răspuns: ${(payload.reply || "").slice(0, 140)}`);
           setQuota(consumeQuota(quota, payload.quota, response.ok, response.status === 429 || payload.code === "quota"));
           if (response.ok) {
             const { checkModelReceipt } = await import("@/lib/receipt-trust");
@@ -509,18 +516,21 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
             propose({ ...checked, items: checked.lines.map((line) => ({ label: line.name || t("Produs"), amount: line.amount || 0, category: "" })) }, t("Citit de Gemini din poză."));
             return;
           }
-        } catch {
+        } catch (error) {
           // Fără rețea: încercăm pe telefon.
+          diag.push(`eroare rețea: ${error instanceof Error ? error.message.slice(0, 80) : "necunoscută"}`);
         }
       }
       const [{ readReceiptLocally }, { receiptReadIsTrustworthy }] = await Promise.all([import("@/lib/receipt-utils"), import("@/lib/receipt-trust")]);
       const local = await readReceiptLocally(images.map((item) => item.data));
+      diag.push(`telefon: total ${local.amount ?? "-"}, ${local.items.length} produse`);
       if (local.amount && receiptReadIsTrustworthy(local)) {
         propose({ amount: local.amount, vendor: local.vendor, date: local.date, category: dominantReceiptCategory(local.items), confidence: "high", items: local.items.map((item) => ({ label: item.label, amount: item.amount, category: item.category })) }, t("Citit pe telefon, fără internet."));
         return;
       }
       cannotRead();
-    } catch {
+    } catch (error) {
+      diag.push(`eroare: ${error instanceof Error ? error.message.slice(0, 80) : "necunoscută"}`);
       cannotRead();
     } finally {
       setTyping(false);
