@@ -918,7 +918,7 @@ function answerSaveBy(data: AppData, folded: string, asOf: string): AnalystAnswe
 }
 
 const MATCHERS: Matcher[] = [
-  { kind: "next", test: /\b(ce fac( azi| acum)?|ce sa fac|ce[- ]?mi recoman|ce imi recoman|recomand[- ]?mi|ce urmeaza\b|sfat(ul)?\b|briefing|cum stau azi|ce merita (azi|acum)|ce parere|parere ai)/, run: (d, _f, a) => answerNext(d, a) },
+  { kind: "next", test: /\b(merg bine|cum merg|merge bine|sunt pe drumul bun|ce fac( azi| acum)?|ce sa fac|ce[- ]?mi recoman|ce imi recoman|recomand[- ]?mi|ce urmeaza\b|sfat(ul)?\b|briefing|cum stau azi|ce merita (azi|acum)|ce parere|parere ai)/, run: (d, _f, a) => answerNext(d, a) },
   { kind: "unusual", test: /\b(prea mult|e normal|neobisnuit|iesit din ritm|am depasit|cheltuieli (mari|neobisnuite)|sunt peste buget)/, run: (d, f, a) => answerUnusual(d, f, a) },
   { kind: "who", test: /\b(cine (a )?(cheltuit|dat|platit)|cine cheltuie|care dintre (noi|voi)|intre noi)/, run: (d, f, a) => answerWho(d, f, a) },
   /**
@@ -927,21 +927,21 @@ const MATCHERS: Matcher[] = [
    * calcul — suma scăzută din ce e liber — dar doar prima era recunoscută.
    */
   { kind: "afford", test: /\b(imi permit|mi permit|pot sa (dau|cheltui)|as putea sa (dau|cheltui)|am bani de|ajung banii|mai am \d|cat ar ramane|ce mi ar ramane|cat (imi |mi )?(mai )?ramane|cat mai ramane|ce se intampla daca|daca (platesc|dau|cheltui|scot|cumpar))/, run: (d, f, a) => answerAfford(d, f, a) },
-  { kind: "pace", test: /\b(cat (mai )?pot (sa )?cheltui|cat am voie|ritm|pe zi|zilnic|cat pe zi)/, run: (d, _f, a) => answerPace(d, a) },
+  { kind: "pace", test: /\b(mai pot (sa )?(cheltui|da|dau)|cat (mai )?pot (sa )?(cheltui|da|dau)|cat am voie|ritm|pe zi|zilnic|cat pe zi)/, run: (d, _f, a) => answerPace(d, a) },
   { kind: "payday", test: /\b(cand (vine|intra) (salariul|venitul)|cate zile pana|pana la salariu)/, run: (d, _f, a) => answerPayday(d, a) },
-  { kind: "subscriptions", test: /\b(abonament|scadent|facturi lunare|recurent)/, run: (d) => answerSubscriptions(d) },
-  { kind: "debts", test: /\b(datorii|datorie|rate|de platit la|credit)/, run: (d) => answerDebts(d) },
+  { kind: "subscriptions", test: /\b(abonament|scadent|facturi lunare|cheltuieli(le)? fixe|plati(le)? fixe|recurent|cand (platesc|e|vine|trebuie sa platesc) (chiria|factura|rata|intretinerea|abonamentul))/, run: (d) => answerSubscriptions(d) },
+  { kind: "debts", test: /\b(datorii|datorie|datorez|rate|de platit la|credit)/, run: (d) => answerDebts(d) },
   /** Întrebarea de ritm („cât pe lună ca să am X până în Y”) trece înaintea celei de sold. */
   { kind: "save-by", test: /\b(ca sa (am|strang|adun|ajung la)|cat (ar trebui |trebuie )?(sa )?pun (deoparte|pe luna)|cat pe luna ca sa|cat pe saptamana ca sa|ca sa imi ajunga pentru)/, run: (d, f, a) => answerSaveBy(d, f, a) },
   { kind: "savings", test: /\b(economi|strans|obiectiv|pusi deoparte)/, run: (d) => answerSavings(d) },
   { kind: "biggest", test: /\b(cea mai mare|cel mai mare|top cheltui|cele mai mari)/, run: (d, f, a) => answerBiggest(d, f, a) },
-  { kind: "compare", test: /\b(compar|fata de luna|mai mult ca|mai putin ca|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
-  { kind: "where", test: /\b(unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui|a dat|am dat)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
-  { kind: "spend", test: /\b(cat am (cheltuit|dat|platit)|cat a (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos|ce am cumparat|de cate ori am dat|arata[- ]?mi cheltuielile|listeaza cheltuielile)/, run: (d, f, a) => answerSpend(d, f, a) },
+  { kind: "compare", test: /\b(compar|fata de luna|mai mult (ca|decat)|mai putin (ca|decat)|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
+  { kind: "where", test: /\b(unde (pot|as putea) (sa )?(tai|reduc|economisesc)|ce (pot|as putea) (sa )?(tai|reduc)|unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui|a dat|am dat)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
+  { kind: "spend", test: /\b(ce cheltuieli am (avut|facut)|ce am (cheltuit|platit|cumparat|dat)|cat m-?a costat|cat ne-?a costat|cat am (cheltuit|dat|platit)|cat a (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos|ce am cumparat|de cate ori am dat|arata[- ]?mi cheltuielile|listeaza cheltuielile)/, run: (d, f, a) => answerSpend(d, f, a) },
   // „mi-a scăzut”, „mi a scazut”, „s-a dus” — aceeași întrebare, scrisă în trei feluri.
   { kind: "envelope-why", test: /\bde ce .{0,14}(scazut|micsorat|mancat|dus|terminat|golit)|unde s-?au dus banii din plic|ce s-?a intamplat cu plicul/, run: (d, f, a) => answerEnvelopeWhy(d, f, a) },
   { kind: "late-entry", test: /\b(am uitat sa (trec|notez|adaug)|nu am trecut|nu am notat|cum (trec|adaug|notez) .{0,20}(trecut|alta zi|ieri|saptamana trecuta))/, run: () => answerLateEntry() },
-  { kind: "remaining", test: /\b(cat (mai )?am|ce mai am|cat mi a ramas|ramas|sold|situatia|bilant|disponibil|cum stau cu|cum sta)/, run: (d, _f, a) => answerRemaining(d, a) },
+  { kind: "remaining", test: /\b(sunt pe (plus|minus)|mai am bani|cati bani (mai )?(am|avem)|cat (mai )?am|ce mai am|cat mi a ramas|ramas|sold|situatia|bilant|disponibil|cum stau cu|cum sta)/, run: (d, _f, a) => answerRemaining(d, a) },
 ];
 
 /**
@@ -994,7 +994,7 @@ export function analyze(raw: string, data: AppData, asOf = isoToday()): AnalystA
    * „cât am dat la Lidl” conține și el „am dat”. Deosebirea o face începutul:
    * o întrebare se deschide cu un cuvânt de întrebare.
    */
-  const asksQuestion = /^(cat|cate|cati|unde|cand|care|cum|ce |ce-|cine |sfat|recomand|e normal|prea mult|imi permit|mi permit|pot sa|as putea|ajung |compar|arata|spune mi|listeaza|vreau sa vad)/.test(folded)
+  const asksQuestion = /^(cat|cate|cati|unde|cand|care|cum)\b|^(ce |ce-|cine |sfat|recomand|e normal|prea mult|imi permit|mi permit|pot sa|as putea|ajung |compar|arata|spune mi|listeaza|vreau sa vad|merg |sunt pe |mai am bani|am cheltuit mai|mai pot )/.test(folded)
     || /\?$/.test(raw.trim());
   const asksToRecord = /\b(adauga|adaug|treci|noteaza|trece|creeaza|fa mi|fa un|sterge)\b/.test(folded)
     || (!asksQuestion && /\b(am dat|am platit|am cumparat|am primit|am incasat)\b/.test(folded));

@@ -69,7 +69,8 @@ describe("extras cu o singură coloană de sumă", () => {
     const data = createEmptyAppData();
     const { drafts, duplicates } = statementDrafts(data, parseStatementCsv(csv).rows, { sourceId: "source-debit", memberId: "member-me", fileName: "extras.csv" });
     expect(duplicates).toBe(0);
-    expect(drafts.map((item) => item.transaction.category)).toEqual(["Alimente", "Venit", "Timp liber"]);
+    // Netflix se plătește lunar, ca o factură: e „Abonamente”, nu „Timp liber”.
+    expect(drafts.map((item) => item.transaction.category)).toEqual(["Alimente", "Venit", "Abonamente"]);
     expect(drafts.every((item) => item.origin === "import")).toBe(true);
     // Propunerile nu ating registrul până la confirmare.
     const withDrafts = addReviewDrafts(data, drafts);

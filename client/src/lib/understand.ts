@@ -16,6 +16,8 @@
  * Funcțiile de mai jos sunt mutate din componentă neschimbate; singura diferență
  * este că memoria obiceiurilor intră ca parametru, nu ca stare de modul.
  */
+import { spokenAmountsToDigits } from "./ro-numbers";
+import { recallPhrasing, type LearnedPhrase } from "./guide-learning";
 import { genitiveName } from "./member-mode";
 import {
   allocationStatus,
@@ -75,7 +77,7 @@ export type FinancialUpdate =
 
 export type ChatChoice = { label: string; update: FinancialUpdate };
 export type PhraseHabit = { key: string; title: string; category: string; allocationId?: string; sourceId?: string; count: number; lastAt: string };
-export type GuideMemory = { phrases: PhraseHabit[]; skippedOnline: number };
+export type GuideMemory = { phrases: PhraseHabit[]; skippedOnline: number; /** Fraze învățate de la model, după confirmarea ta. */ learned?: LearnedPhrase[] };
 export const emptyGuideMemory = (): GuideMemory => ({ phrases: [], skippedOnline: 0 });
 
 /**
@@ -148,12 +150,15 @@ export const householdIsSetUp = (data: AppData) =>
 export function isQuestion(raw: string) {
   const folded = foldRo(raw).replace(/\s+/g, " ").trim();
   return /\?\s*$/.test(raw.trim())
-    || /^(cat|cate|cati|unde|cand|care|cum|ce |ce-|cine |sfat|recomand|e normal|prea mult|imi permit|mi permit|pot sa|as putea|ajung |mai am |merita |arata|listeaza|vreau sa vad|spune mi)/.test(folded);
+    // Cuvânt întreg: „cumpărături 410” și „Catena 50” nu sunt întrebări.
+    || /^(cat|cate|cati|unde|cand|care|cum)\b|^(ce |ce-|cine |sfat|recomand|e normal|prea mult|imi permit|mi permit|pot sa|as putea|ajung |mai am |merita |arata|listeaza|vreau sa vad|spune mi)/.test(folded);
 }
 
 export function isConfirm(raw: string) {
   const folded = raw.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-  return /^(da+|ok|okay|confirm|confirma|confirmat|sigur|adauga|adaug[- ]o|inregistreaza|salveaza)([.! ]*)?$/.test(folded);
+  const yes = "(da+|ok|okay|okey|okei|oki|confirm|confirma|confirmat|sigur|adauga|adaug[- ]o|inregistreaza|salveaza|salveaz[aă]-?l|perfect|corect|e corect|exact|exact asa|super|bun|bine|e bine|e bine asa|e ok|asa|asa e|in regula|merge|de acord|te rog|da te rog)";
+  // „da, salvează”, „perfect”, „e bine așa”: tot confirmări, doar spuse mai lung.
+  return new RegExp(`^${yes}([ ,.!]+${yes})*[.! ]*$`).test(folded);
 }
 
 export function claimsSaved(raw: string) {
@@ -465,9 +470,9 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   if (!forced && plansMoney(raw) && !spendsMoney) return undefined;
   const looksSpend = forced
     || Boolean(habit)
-    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|uitat|\bpe |\bpentru /.test(folded)
+    || /cheltui|adaug|inregist|platit|cumpar|cumpăr|m-?a costat|a costat|au costat|s-?au dus|taxi|uber|bolt|apa\b|dulce|dulciuri|tigar|tutun|factura|benzina|combustibil|mancare|uitat|\bpe |\bpentru /.test(folded)
     || Boolean(parsed.category && !/venit|salariu|intrare/.test(folded));
-  if (!looksSpend || /venit|salariu|intrare/.test(folded)) return undefined;
+  if (!looksSpend || INCOME_WORDS.test(folded)) return undefined;
   const category = (parsed.category && parsed.category !== "Altele") ? parsed.category : (habit?.category || extracted?.category || "Altele");
   const title = draftTitle === "Altele" && habit ? habit.title : draftTitle;
   const date = extracted?.date && /^20\d{2}-\d{2}-\d{2}$/.test(extracted.date) ? extracted.date : spendDate(raw);
@@ -477,13 +482,24 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   return { ...offer, text: withReceiptDetails(offer.text, extra) };
 }
 
+/** Cuvintele după care un mesaj aduce bani, nu scoate: salariu, pensie, alocație, un câștig, o vânzare. */
+export const INCOME_WORDS = /venit|salariu|leaf[aă]|intrare|am primit|mi-?a venit|mi-?a intrat|mi-?au (dat|trimis|venit)|mi-?a (dat|trimis|platit)|mi-?au platit|mi s-?a (returnat|dat|platit|virat)|returnat|am incasat|incasat|am castigat|castig|pensi|alocati|freelanc|cashback|dividend|am vandut|\bolx\b|bonus|\bprima\b|\bbursa\b|rambursa|primit inapoi|mi-?a dat inapoi/;
+/** Titlul venitului după cuvântul lui, ca în registru să nu fie totul „Venit”. */
+const INCOME_TITLES: Array<[RegExp, string]> = [
+  [/pensi/, "Pensie"], [/alocati/, "Alocație"], [/freelanc|client/, "Freelance"], [/pariu|castig/, "Câștig"],
+  [/cashback/, "Cashback"], [/dividend/, "Dividende"], [/vandut|olx/, "Vânzare"], [/bonus/, "Bonus"], [/\bprima\b/, "Primă"],
+  [/\bbursa\b/, "Bursă"], [/rambursa|inapoi/, "Bani primiți înapoi"], [/chiri/, "Chirie încasată"], [/parinti|ai mei|mama|tata/, "Bani de la familie"],
+];
+
 export function incomeProposal(raw: string, data: AppData): { text: string; choices: ChatChoice[] } | undefined {
   const folded = foldRo(raw);
-  if (!/venit|salariu|intrare|am primit|mi-a venit/.test(folded)) return undefined;
+  if (!INCOME_WORDS.test(folded)) return undefined;
   if (/cheltui|tigar|tutun|taxi|suc|bere|paine|gume|factura/.test(folded) && !/salariu|venit/.test(folded)) return undefined;
   const amount = spendAmount(raw, undefined, 0);
-  if (!amount || amount < 50) return undefined;
-  const title = /sotie|sotiei|partener/.test(folded) ? t("Salariul soției") : /salariu/.test(folded) ? "Salariu" : "Venit";
+  // Un cashback de 25 de lei e un venit adevărat; pragul de 50 rămâne doar pentru „venit” vag.
+  const specific = INCOME_TITLES.some(([pattern]) => pattern.test(folded)) || /salariu|leaf/.test(folded);
+  if (!amount || amount < (specific ? 1 : 50)) return undefined;
+  const title = /sotie|sotiei|partener/.test(folded) ? t("Salariul soției") : /salariu|leaf/.test(folded) ? "Salariu" : (INCOME_TITLES.find(([pattern]) => pattern.test(folded))?.[1] || "Venit");
   const date = spendDate(raw);
   return {
     text: noDoubleStop(`Am înțeles **${title}**, ${money(amount)}, **${dateCopy(date)}**. Îl trec în registru pe ziua aleasă?`),
@@ -493,10 +509,11 @@ export function incomeProposal(raw: string, data: AppData): { text: string; choi
 
 export function transferProposal(raw: string, data: AppData): { text: string; choices: ChatChoice[] } | undefined {
   const folded = foldRo(raw);
-  if (!/\b(mut[ae]|transfer|treci|realoc)/.test(folded)) return undefined;
+  if (!/\b(mut[ae]|transfer|treci|trece|realoc)/.test(folded) && !/\bia\b.*\b(pune|baga|muta)\b/.test(folded)) return undefined;
   const amount = spendAmount(raw, undefined, 0);
   if (!amount) return undefined;
-  const pair = folded.match(/\b(?:din|de pe)\s+([a-z0-9 &ăâîșț]+?)\s+(?:in|în|spre|catre|către)\s+([a-z0-9 &ăâîșț]+)/);
+  // „din X în Y”, „de la X la Y”, „din X și pune la Y”.
+  const pair = folded.match(/\b(?:din|de pe|de la)\s+([a-z0-9 &]+?)\s+(?:si\s+(?:pune|baga|muta)-?(?:i|l)?\s+)?(?:in|spre|catre|la)\s+([a-z0-9 &]+)/);
   if (!pair) return undefined;
   const from = matchEnvelope(data, pair[1]);
   const to = matchEnvelope(data, pair[2]);
@@ -674,7 +691,9 @@ export function reviseProposal(raw: string, data: AppData): Proposal | undefined
   const folded = foldRo(raw);
 
   const amendment = folded.match(/\bera\s+(\d+(?:[.,]\d{1,2})?)\s*(?:lei|ron)?[,\s]+(?:nu|nu era)\s+(\d+(?:[.,]\d{1,2})?)/)
-    || folded.match(/\bschimba (?:suma|valoarea)\s+(?:in|la)\s+(\d+(?:[.,]\d{1,2})?)/);
+    || folded.match(/\b(?:schimba|modifica|corecteaza)\s+(?:suma|valoarea|ultima\s+(?:cheltuiala|miscare|suma)|ultimul\s+venit)\s+(?:in|la)\s+(\d+(?:[.,]\d{1,2})?)/)
+    // „am greșit suma, era 45”: suma corectă, pe ultima mișcare.
+    || folded.match(/\bam (?:gresit|scris gresit|pus gresit)(?:\s+suma)?[,\s]+(?:era|erau|e|sunt|trebuia(?:\s+sa\s+fie)?|corect e)\s+(\d+(?:[.,]\d{1,2})?)/);
   if (amendment) {
     const value = (token: string) => parseFloat(token.replace(",", "."));
     // „era 60, nu 50”: 60 e corect, 50 e ce s-a scris greșit.
@@ -824,7 +843,8 @@ export function correctPendingSpend(raw: string, pending: PendingSpend, data: Ap
  */
 export function paidRecurringProposal(raw: string, data: AppData): Proposal | undefined {
   const folded = foldRo(raw);
-  if (!/\b(am platit|am achitat|platit|achitat)\b/.test(folded)) return undefined;
+  // „Am plătit chiria”, dar și „chiria e plătită”.
+  if (!/\b(am platit|am achitat|platit[aă]?|achitat[aă]?|am dat-?o|am dat-?l|gata cu)\b/.test(folded)) return undefined;
   if (/\d/.test(folded)) return undefined; // cu sumă scrisă, o citește cheltuiala obișnuită
   /**
    * „Chiria” nu conține „chirie”: româna schimbă terminația, iar o potrivire
@@ -1122,7 +1142,8 @@ const soundsLikeCommand = (raw: string) =>
   !raw.includes("?") && /\b(imparte|imparti|impartiti|impartit|impartita|pune|pune-mi|fa|fa-mi|creeaza|creaza|repartizeaza|repartizeza|aloca|muta|seteaza|schimba)\b/.test(foldRo(raw));
 
 export function understand(text: string, data: AppData, ctx: UnderstandContext = {}): Reading[] {
-  const raw = text.trim();
+  // „o sută de lei”, „cincizeci”, „1,5k”, „2 mii” devin cifre înainte de orice altă citire.
+  const raw = spokenAmountsToDigits(text.trim());
   const memory = ctx.memory || emptyGuideMemory();
   const readings: Reading[] = [];
   if (!raw) return readings;
@@ -1137,6 +1158,9 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
     categories: ctx.categories || [...expenseCategories, ...data.settings.customCategories],
     merchantRules: data.settings.merchantRules || [],
   });
+  // O frază pe care n-o știam, dar pe care am învățat-o de la tine: aceeași intenție, cu suma nouă.
+  const recalled = intents.length ? undefined : recallPhrasing(memory.learned, raw, ctx.asOf || isoToday());
+  if (recalled) readings.push({ kind: "intents", score: BASE.intents, why: "am învățat fraza asta de la tine", intents: [{ intent: recalled, segment: raw }] });
   if (intents.length) {
     readings.push({
       kind: "intents",
@@ -1192,7 +1216,8 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
   if (due) readings.push({ kind: "due", score: BASE.due, why: "spune că a plătit o scadență cunoscută", proposal: due });
 
   const moved = transferProposal(raw, data);
-  if (moved) readings.push({ kind: "transfer", score: BASE.transfer, why: "„mută … din … în …”", proposal: moved });
+  // O mutare cu ambele plicuri găsite e mai precisă decât „pune 100 la X” citit ca plic nou.
+  if (moved) readings.push({ kind: "transfer", score: moved.choices.length ? BASE.intents + 3 : BASE.transfer, why: "„mută … din … în …”", proposal: moved });
 
   const income = incomeProposal(raw, data);
   if (income) readings.push({ kind: "income", score: BASE.income, why: "sumă plus un cuvânt de venit", proposal: income });
@@ -1379,7 +1404,7 @@ export function rememberExpense(
     count: (before?.count || 0) + weight,
     lastAt: new Date().toISOString(),
   });
-  return { phrases: phrases.slice(-80), skippedOnline: memory.skippedOnline };
+  return { ...memory, phrases: phrases.slice(-80) };
 }
 
 /**

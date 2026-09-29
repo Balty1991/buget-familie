@@ -3742,4 +3742,5 @@ export const en: Record<string, string> = {
   "Răspuns de pe telefon": "Answered on this phone",
   "Răspuns de la Gemini": "Answered by Gemini",
   "Răspuns de la Groq": "Answered by Groq",
+  "Am învățat fraza asta. Data viitoare o înțeleg direct pe telefon, și fără internet.": "I learned this phrase. Next time I'll understand it right on the phone, even offline.",
 };

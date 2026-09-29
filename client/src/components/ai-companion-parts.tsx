@@ -4,6 +4,8 @@ import { type AppData } from "@/lib/finance-data";
 import { getLocale, t } from "@/lib/i18n";
 import { aiDailyLimit } from "@/lib/entitlements";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
+import { rememberPhrasing } from "@/lib/guide-learning";
+import type { AssistantIntent } from "@/lib/assistant-intents";
 import {
   emptyGuideMemory,
   habitKey,
@@ -36,7 +38,7 @@ export function loadMemory(): GuideMemory {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(MEMORY_KEY) || "null") as Partial<GuideMemory> | null;
     if (!parsed || !Array.isArray(parsed.phrases)) return emptyMemory();
-    return { phrases: parsed.phrases.slice(-80), skippedOnline: Number(parsed.skippedOnline) || 0 };
+    return { phrases: parsed.phrases.slice(-80), skippedOnline: Number(parsed.skippedOnline) || 0, learned: Array.isArray(parsed.learned) ? parsed.learned.slice(-60) : [] };
   } catch {
     return emptyMemory();
   }
@@ -48,6 +50,12 @@ export const guideMemory: { current: GuideMemory } = { current: emptyMemory() };
 /** Reține alegerea și o salvează pe telefon. Corectura cântărește dublu. */
 export function learn(update: Extract<FinancialUpdate, { kind: "expense" }>, weight: 1 | 2 = 1): GuideMemory {
   guideMemory.current = rememberExpense(guideMemory.current, update, weight);
+  return guideMemory.current;
+}
+
+/** Reține forma unei fraze citite de model și confirmate de om (vezi guide-learning). */
+export function learnPhrasing(raw: string, intent: AssistantIntent): GuideMemory {
+  guideMemory.current = { ...guideMemory.current, learned: rememberPhrasing(guideMemory.current.learned, raw, intent) };
   return guideMemory.current;
 }
 
@@ -83,7 +91,7 @@ export function seedMemory(current: GuideMemory, data: AppData): GuideMemory {
       lastAt: item.date,
     });
   });
-  return { phrases: Array.from(map.values()).slice(-80), skippedOnline: current.skippedOnline };
+  return { ...current, phrases: Array.from(map.values()).slice(-80) };
 }
 
 export type QuotaInfo = { remaining: number; limit: number; resetAt: string; mode: "online" | "local" };

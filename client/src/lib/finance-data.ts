@@ -1897,16 +1897,21 @@ export const foldRomanian = memoString((value: string) => value.toLocaleLowerCas
 
 /** O singură listă de indicii, folosită și de simulatorul de scenarii, și de importul de extras. */
 const categoryAliases: Array<[RegExp, string]> = [
-  [/\b(taxi|uber|bolt|transport|metrou|stb|ratb|cfr|benzina|motorina|combustibil|omv|mol|petrom|rompetrol|parcare|bilet|blueair|wizz|tarom)\b/, "Transport"],
-  [/\b(mancare|restaurant|lunch|pranz|cina|aliment\w*|cumparaturi|supermarket|lidl|kaufland|carrefour|profi|auchan|penny|mega image|selgros|glovo|tazz|bolt food|patiserie|paine|covrig)\b/, "Alimente"],
-  [/\b(apa|suc|cafea|ceai|bere|starbucks|5 to go)\b/, "Băuturi"],
+  // Biletele de teatru, film sau concert sunt timp liber, nu transport.
+  [/\bbilet\w* (la|de|pentru) (teatru|cinema|film|concert|meci|spectacol|opera)\b/, "Timp liber"],
+  [/\b(taxi\w*|uber|bolt|transport|metrou|stb|ratb|cfr|benzin\w*|motorin\w*|combustibil|carburant\w*|alimentat|am alimentat|omv|mol|petrom|rompetrol|lukoil|socar|parcar\w*|bilet\w*|tren\w*|autobuz\w*|rovinet\w*|rovinie\w*|peaj\w*|autostrad\w*|itp|vulcaniz\w*|service auto|revizi\w*|spalatori\w* auto|benzinari\w*|blueair|wizz|tarom)\b/, "Transport"],
+  [/\b(mancare\w*|restaurant\w*|lunch|pranz|cina|aliment\w*|cumparaturi\w*|supermarket|lidl|kaufland|carrefour|profi|auchan|penny|mega image|selgros|glovo|tazz|bolt food|patiserie|paine\w*|covrig\w*|piat[ai]|la piata|legume|fructe|carne|macelari\w*|brutari\w*|oua|pizza|shaorma|burger\w*|mcdonald\w*|kfc|comanda\w*)\b/, "Alimente"],
+  // Apa de la robinet e o factură, nu o sticlă de apă: „apă canal 95” nu e Băuturi.
+  [/\b(apa canal|apa si canal|apa rece|apa calda|apa nova|apavital|aquatim|intretinere\w*|internet\w*|curent\w*|gaz\w*|factur\w*)\b/, "Casă & facturi"],
+  [/\b(apa|suc\w*|cafea|cafele|ceai|bere|starbucks|5 to go)\b/, "Băuturi"],
   [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
   [/\b(factura|internet|curent|gaz|chirie|detergent|casa|enel|electrica|engie|digi|rcs|orange|vodafone|telekom|apa nova|salubr)\b/, "Casă & facturi"],
-  [/\b(medic|farmacie|doctor|sanatate|catena|help ?net|dona|regina maria|medlife|sanador)\b/, "Sănătate"],
-  [/\b(film|joc|iesire|concert|timp liber|cinema|netflix|spotify|steam|hbo|disney)\b/, "Timp liber"],
-  [/\b(abonament|subscription)\b/, "Abonamente"],
+  [/\b(medic\w*|farmac\w*|doctor\w*|dentist\w*|stomatolog\w*|analize|laborator\w*|spital\w*|clinic\w*|ochelari|pastile|vitamine|sanatate|catena|help ?net|dona|sensiblu|regina maria|medlife|sanador|synevo|bioclinica)\b/, "Sănătate"],
+  // Streamingul e abonament, chiar dacă e și timp liber: se plătește lunar, ca o factură.
+  [/\b(abonament\w*|subscription|netflix|spotify|hbo|max|disney|youtube premium|icloud|google one|apple music)\b/, "Abonamente"],
+  [/\b(film\w*|joc\w*|iesire|am iesit|in oras|concert\w*|timp liber|cinema|teatru|steam|playstation|xbox)\b/, "Timp liber"],
   // Magazinele mari care nu sunt de mâncare: „Decathlon 150” și un cadou mâncau săptămâna de mâncare.
-  [/\b(pepco|smyk|noriel|jumbo|scutece|pampers|huggies)\b/, "Consumabile copil"],
+  [/\b(pepco|smyk|noriel|jumbo|scutec\w*|pampers|huggies|lapte praf|servetele umede|biberon\w*)\b/, "Consumabile copil"],
   [/\b(dedeman|jysk|ikea|leroy|brico\w*|hornbach|mobexpert|praktiker)\b/, "Casă & facturi"],
   [/\b(decathlon|intersport|sportisimo|piscina|sala|fitness|carti|carturesti|elefant)\b/, "Timp liber"],
   [/\b(tigar|tutun|vape)\b/, "Altele"],
@@ -1931,8 +1936,48 @@ export const guessCategoryFromText = (raw: string, categories: string[] = expens
   const fromRule = matchMerchantRule(raw, rules)?.category;
   if (fromRule && (categories.includes(fromRule) || expenseCategories.includes(fromRule))) return fromRule;
   const folded = foldRomanian(raw);
-  return categories.find((item) => folded.includes(foldRomanian(item))) || categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
+  // „Apă canal” conține numele categoriei „Apă”, dar e o factură: tiparele precise vin primele.
+  const precise = categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
+  if (precise && (categories.includes(precise) || expenseCategories.includes(precise)) && /\bapa\b/.test(folded)) return precise;
+  return categories.find((item) => folded.includes(foldRomanian(item))) || precise || fuzzyCategory(folded);
 };
+
+/**
+ * Cuvintele scrise cu o literă greșită sau cu două inversate („benzna”, „farmaice”):
+ * aceeași categorie ca scrise corect. Doar cuvinte de cel puțin 5 litere, ca „apa” să nu
+ * devină „ață” și invers.
+ */
+const FUZZY_WORDS: Array<[string, string]> = [
+  ["benzina", "Transport"], ["motorina", "Transport"], ["parcare", "Transport"], ["combustibil", "Transport"],
+  ["farmacie", "Sănătate"], ["farmacia", "Sănătate"], ["medicamente", "Sănătate"], ["dentist", "Sănătate"],
+  ["alimente", "Alimente"], ["mancare", "Alimente"], ["cumparaturi", "Alimente"], ["kaufland", "Alimente"], ["carrefour", "Alimente"],
+  ["factura", "Casă & facturi"], ["internet", "Casă & facturi"], ["intretinere", "Casă & facturi"],
+  ["abonament", "Abonamente"], ["netflix", "Abonamente"], ["spotify", "Abonamente"],
+  ["scutece", "Consumabile copil"], ["pampers", "Consumabile copil"], ["meditatii", "Educație"], ["rechizite", "Educație"],
+  ["restaurant", "Alimente"], ["cinema", "Timp liber"], ["ciocolata", "Dulciuri"],
+];
+
+/** Distanța de editare cu inversări (două litere schimbate între ele = o greșeală). */
+function typoDistance(a: string, b: string) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)));
+  for (let i = 1; i <= a.length; i += 1) {
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+  }
+  return d[a.length][b.length];
+}
+
+export function fuzzyCategory(folded: string) {
+  for (const word of folded.split(/[^a-z]+/)) {
+    if (word.length < 5) continue;
+    const hit = FUZZY_WORDS.find(([known]) => Math.abs(known.length - word.length) <= 1 && typoDistance(word, known) === 1);
+    if (hit) return hit[1];
+  }
+  return undefined;
+}
 
 /**
  * Cuvintele după care recunoaștem plicurile obișnuite, dincolo de numele lor. Categoria nu
@@ -2036,7 +2081,8 @@ export const parseNaturalSpendScenario = (raw: string, categories: string[] = ex
   const folded = foldRomanian(raw.trim());
   const amountMatch = raw.match(/(?:^|\s)(\d{1,3}(?:[.\s]\d{3})*(?:[,.]\d{1,2})?|\d+(?:[,.]\d{1,2})?)(?=\s*(?:de\s+)?(?:lei|ron|leu|pe|pentru|$))/i);
   const amount = amountMatch ? parseRomanianAmount(amountMatch[1]) : 0;
-  const category = categories.find((item) => folded.includes(foldRomanian(item))) || categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
+  // Aceeași alegere ca peste tot: tiparele precise, apoi numele categoriilor, apoi greșelile de tastare.
+  const category = guessCategoryFromText(raw, categories);
   const timing: NaturalSpendScenario["timing"] = /\bmaine\b/.test(folded) ? "mâine" : /\b(azi|astazi)\b/.test(folded) ? "azi" : /\b(saptamana viitoare|luna viitoare|vineri|sambata|duminica|luni|marti|miercuri|joi)\b/.test(folded) ? "viitor" : "nespecificat";
   const title = category ? `cheltuială pentru ${category.toLocaleLowerCase("ro-RO")}` : "cheltuială propusă";
   return { raw, amount, category, timing, title, understood: amount > 0 };

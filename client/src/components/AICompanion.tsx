@@ -8,6 +8,7 @@ import "../ai-companion.css";
 import { getLanguage, t } from "@/lib/i18n";
 import { appCheckHeader, authHeader } from "@/lib/realtime-sync";
 import { parseModelIntents, type AssistantIntent } from "@/lib/assistant-intents";
+import { messageShape } from "@/lib/guide-learning";
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText } from "@/lib/analyst";
 import { looksLikeProductSearch } from "@/lib/product-catalog";
@@ -40,7 +41,7 @@ import {
   type Reading,
 } from "@/lib/understand";
 import { shownChatMessages, hiddenChatCount } from "@/lib/shown-chat";
-import { consumeQuota, emptyQuota, formatReset, GuideQuotaBar, GuideText, guideMemory, learn, loadMemory, loadQuota, markLocalSave, MEMORY_KEY, money, naturalTitle, QUOTA_KEY, seedMemory, type QuotaInfo } from "@/components/ai-companion-parts";
+import { consumeQuota, emptyQuota, formatReset, GuideQuotaBar, GuideText, guideMemory, learn, learnPhrasing, loadMemory, loadQuota, markLocalSave, MEMORY_KEY, money, naturalTitle, QUOTA_KEY, seedMemory, type QuotaInfo } from "@/components/ai-companion-parts";
 import { intentToUpdate, pickFundsSource, proposalText, SCREEN_NAMES, spendAlternatives, updatesFromGuide } from "@/components/ai-companion-logic";
 
 export { pickFundsSource } from "@/components/ai-companion-logic";
@@ -140,6 +141,22 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
 
   /** Sursa răspunsurilor adăugate acum; rămâne „local” în afara răspunsului online. */
   const answerSource = useRef<AnswerSource>("local");
+  /** Ce a citit modelul din ultimul mesaj; se învață doar dacă omul confirmă exact asta. */
+  const pendingPhrasing = useRef<{ raw: string; intent: AssistantIntent } | null>(null);
+  const learnFromSave = (update: FinancialUpdate) => {
+    const pending = pendingPhrasing.current;
+    if (!pending || (update.kind !== "expense" && update.kind !== "income") || update.kind !== pending.intent.kind) return;
+    if (!("amount" in pending.intent) || Math.abs(update.amount - pending.intent.amount) > 0.01) return;
+    pendingPhrasing.current = null;
+    const shape = messageShape(pending.raw);
+    if (!shape) return;
+    const known = guideMemory.current.learned?.some((item) => item.shape === shape);
+    const intent: AssistantIntent = update.kind === "expense"
+      ? { kind: "expense", amount: update.amount, title: update.title, category: update.category, date: update.date || today() }
+      : { kind: "income", amount: update.amount, title: update.title, date: update.date || today() };
+    setMemory(learnPhrasing(pending.raw, intent));
+    if (!known) addMessage({ role: "assistant", text: t("Am învățat fraza asta. Data viitoare o înțeleg direct pe telefon, și fără internet."), by: "local" });
+  };
   const addMessage = (entry: Omit<ChatMessage, "id">) => {
     if (entry.role === "assistant" && !entry.by) entry = { ...entry, by: answerSource.current };
     const proposed = entry.updates?.find((item) => item.kind === "expense" || item.kind === "income");
@@ -169,6 +186,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
       : update;
     if (stamped.kind === "expense" && "receiptDraft" in stamped && stamped.receiptDraft) pendingReceiptRef.current = null;
     onFinancialUpdate(stamped);
+    learnFromSave(stamped);
     if (stamped.kind === "expense") {
       const proposed = [...messages].reverse().find((item) => item.role === "assistant" && item.updates?.length)?.updates?.[0];
       setMemory(learn(stamped, isCorrection(proposed, stamped) ? 2 : 1));
@@ -328,7 +346,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     });
   };
   const applyGuide = (updates: FinancialUpdate[]) => {
-    updates.forEach((update) => onFinancialUpdate(update));
+    updates.forEach((update) => { onFinancialUpdate(update); learnFromSave(update); });
     if (updates.some((update) => update.kind === "income")) setGuideStage("debts");
   };
   const firstAmount = (raw: string) => { const match = raw.match(/\d[\d\s.]*(?:,\d{1,2})?/); if (!match) return 0; const token = match[0].replace(/\s/g, ""); const normalized = token.includes(",") ? token.replace(/\./g, "").replace(",", ".") : /^\d{1,3}(?:\.\d{3})+$/.test(token) ? token.replace(/\./g, "") : token; return parseFloat(normalized) || 0; };
@@ -429,6 +447,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     const raw = (draft ?? message).trim();
     if (!raw) return;
     const requestText = raw;
+    pendingPhrasing.current = null;
     const receiptDraft = pendingReceiptRef.current;
     setMessage("");
     setHistoryOpen(false);
@@ -601,6 +620,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
          */
         const { kept, missing } = resolveIntents(modelIntents, data);
         if (kept.length) {
+          const single = kept.length === 1 ? kept[0].intent : undefined;
+          if (single && (single.kind === "expense" || single.kind === "income")) pendingPhrasing.current = { raw: requestText, intent: single };
           act({ kind: "intents", score: 100, why: "citit de model", intents: kept });
           if (missing.length) addMessage({ role: "assistant", text: t("Nu găsesc {what}. Restul e mai sus, gata de confirmat.", { what: missing.join(", ") }) });
           return;
@@ -639,6 +660,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
           ? undefined
           : expenseProposal(sourceText, payload.extracted, data, guideMemory.current, payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
         if (proposal) {
+          const firstSpend = proposal.choices.find((choice) => choice.update.kind === "expense")?.update || (proposal as { spend?: { amount: number; title: string; category: string; date: string } }).spend;
+          if (firstSpend && "title" in firstSpend && "category" in firstSpend) pendingPhrasing.current = { raw: requestText, intent: { kind: "expense", amount: firstSpend.amount, title: firstSpend.title, category: firstSpend.category, date: ("date" in firstSpend && firstSpend.date) || today() } };
           offerSpend(proposal);
           return;
         }

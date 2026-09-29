@@ -207,35 +207,39 @@ type Marker = { kind: AssistantIntent["kind"]; index: number; length: number };
 
 const MARKERS: Array<[AssistantIntent["kind"], RegExp]> = [
   // Ordinea contează: „următorul salariu” este o dată de plan, nu un venit încasat.
-  ["payday", /\b(urmatorul salariu|urmatorul venit|urmatoarea leafa|salariul urmator|data salariului|salariul (vine|intra)|urmatoarea plata a salariului)\b/g],
+  ["payday", /\b(urmatorul salariu|urmatorul venit|urmatoarea leafa|salariul urmator|data salariului|salariul (imi |ne )?(vine|intra)|leafa (imi |ne )?(vine|intra)|iau (leafa|salariul) pe|primesc (leafa|salariul) pe|urmatoarea plata a salariului)\b/g],
   /**
    * Sărbătorile stau înaintea plicului și a cheltuielii. „Pune-mi Crăciun 1200 pe 25
    * decembrie” era citit ca plată de 1.200 de lei făcută azi: o cheltuială inventată,
    * propusă cu toate cifrele la locul lor, deci ușor de confirmat din greșeală.
    */
-  ["planned-event", /\b(eveniment(ul|e|ele)?|sarbatoare|sarbatori|aniversare[ae]?|craciun(ul)?|revelion(ul)?|paste(le)?|pasti|8 martie|1 iunie|inceput(ul)? de scoala|vinerea neagra|black friday)\b/g],
+  // „Prima de Crăciun” e un venit, nu o sărbătoare de planificat.
+  ["planned-event", /(?<!(?:prima|bonus(?:ul)?|prime) de )\b(eveniment(ul|e|ele)?|sarbatoare|sarbatori|aniversare[ae]?|craciun(ul)?|revelion(ul)?|paste(le)?|pasti|8 martie|1 iunie|inceput(ul)? de scoala|vinerea neagra|black friday|ziua (lui|mamei|tatalui|bunicii|bunicului|sotiei|sotului|copilului|[a-z]+ei|[a-z]+ului)|zi de nastere|botez(ul)?|nunt[aă]|cumetri[ea]|majorat(ul)?)\b/g],
   ["envelope", /\b(fa-?mi|fa |creeaza|creaza|adauga|vreau|pune)?\s*(un |o )?plic(ul)?\b/g],
   ["envelope", /\b(repartizeaz[ăa]|repartizez|imparte|impart)\b/g],
+  // „Setează bugetul de alimente la 1800”, „alocă 500 pentru facturi”, „buget distracție 300 pe lună”.
+  ["envelope", /\b((seteaza|stabileste|fixeaza|pune) (bugetul|limita)|aloca\b|buget(ul)?(?= (de |pentru )?(?!de\b|pentru\b|lunar\b)[a-z]{3,} \d)|pune \d+ (lei |ron )?deoparte|vreau \d+ (lei |ron )?(pe luna |lunar |pe saptamana )?pentru|pune \d+ (lei |ron )?(pe luna |lunar )?(la|pentru) (?!card|cont|cash|tichete)[a-z]{3,})/g],
   /**
    * Verbele de ajustare deschid segmentul, ca suma spusă înaintea cuvântului „plic” să
    * rămână în el: „scade 100 din plicul de transport” începea la „plicul”, deci rămânea
    * fără sumă și nu era înțeles deloc.
    */
-  ["envelope", /\b(mareste|micsoreaza|scade|suplimenteaza|creste)\b/g],
+  ["envelope", /\b(mareste|micsoreaza|scade|suplimenteaza|creste|mai adauga|mai pune|mai baga)\b/g],
   // Ștergerea se citește separat: „șterge plicul X” nu e o modificare de sumă.
-  ["envelope-delete", /\b(sterge|sterg|elimina|renunt la|nu mai vreau|scapa de|desfiinteaza)\b/g],
-  ["recurring", /\b(abonament|chiri[ae]|factura|scadenta|rata lunara la)\b/g],
-  ["debt", /\b(datorie|datorii|credit|imprumut|mai am de (platit|achitat))\b/g],
-  ["goal", /\b(obiectiv|vreau sa strang|sa strang|economisesc pentru|fond de (siguranta|urgenta))\b/g],
+  ["envelope-delete", /\b(sterge|sterg|elimina|scoate|renunt la|nu mai vreau|nu mai am nevoie de|scapa de|desfiinteaza)\b/g],
+  ["recurring", /\b(abonament|chiri[ae]|factura|scadenta|rata lunara la|in fiecare luna|lunar pe|pe luna pe \d+|leasing(ul)?|rata (la|pentru) [a-z]+ \d+ pe \d+)\b/g],
+  ["debt", /\b(datorie|datorii|credit|imprumut|mai am de (platit|achitat)|(ii |le )?datorez|am de dat (inapoi|lui)|(ii |le )?dau inapoi)\b/g],
+  ["goal", /\b(obiectiv|vreau sa strang|vreau sa adun|sa strang|strang bani|adun bani|economisesc pentru|fond de (siguranta|urgenta))\b/g],
   /**
    * „Am un buget de 1800” nu e nici venit, nici cheltuială: sunt banii din care se face
    * planul. Fără el, fraza „am 1800, pune-i în plic alimente” crea plicul peste un sold
    * de zero, iar aplicația arăta „PESTE LIMITA PLANULUI” și „nerepartizați −1.800”.
    * Stă înaintea venitului, fiindcă „am un buget” conține și cuvinte de venit.
    */
-  ["funds", /\b(am un buget|avem un buget|bugetul (meu|nostru)|am disponibil|avem disponibil|dispun de|am in (card|cont|cash|banca)|am pe card|am cash|am in mana)\b|\bam\s+\d[\d.,\s]*(de\s+)?(lei|ron)\b|\bam\s+\d[\d.,\s]*(de\s+)?(lei|ron)?\s*(in|pe)\s+(card|cont|cash|banca)\b/g],
-  ["income", /\b(am primit|am incasat|mi-?a intrat|venit(uri)? (de|din)|salariu|leafa|bonus|prima de)\b/g],
-  ["expense", /\b(am cheltuit|am dat|am platit|am luat|cheltuiala|plata de)\b/g],
+  ["funds", /\b(am un buget|avem un buget|bugetul (meu|nostru)|am disponibil|avem disponibil|dispun de|am in (card|cont|cash|banca|portofel)|am pe card|am cash|am in mana)\b|\bam\s+\d[\d.,\s]*(de\s+)?(lei|ron)\b|\bam\s+\d[\d.,\s]*(de\s+)?(lei|ron)?\s*(cash\s+)?(in|pe)\s+(card|cont|cash|banca|portofel|mana)\b/g],
+  ["income", /\b(am primit|am incasat|mi-?a intrat|venit(uri)? (de|din)|salariu|leafa|bonus|prima de|pensia|alocatia|am castigat|cashback|dividende|am vandut|mi-?au dat|freelance|am luat (salariul|leafa|pensia|alocatia|bursa|prima|bonusul)|mi-?a platit|mi-?au platit|mi s-?a returnat)\b/g],
+  // „Am luat salariul” e un venit: „am luat” e cheltuială doar când nu urmează banii primiți.
+  ["expense", /\b(am cheltuit|am dat|am platit|am luat(?! (salariul|leafa|pensia|alocatia|banii|bursa|chiria|prima|bonusul))|cheltuiala|plata de)\b/g],
 ];
 
 /**
@@ -530,11 +534,16 @@ function parseFunds(segment: string, masked: string, amounts: AmountHit[]): Assi
   return { kind: "funds", amount: total.value, sourceHint };
 }
 
-function parsePayday(dates: DateHit[]): AssistantIntent | undefined {
+function parsePayday(dates: DateHit[], masked = "", asOf = ""): AssistantIntent | undefined {
   // „Următorul salariu luna viitoare între 07/10-10-2026” conține și o aproximare, și o
   // dată scrisă. Data scrisă este cea pe care a ales-o utilizatorul.
   const hit = dates.find((item) => item.explicit) || dates[0];
-  if (!hit) return undefined;
+  if (!hit) {
+    // „Salariul îmi intră pe 10 în fiecare lună”: doar ziua; data e următoarea zi 10.
+    const day = fold(masked).match(/\bpe (\d{1,2})\b/);
+    if (!day || !asOf) return undefined;
+    return { kind: "payday", date: nextDayOfMonth(Number(day[1]), asOf), flexDays: 0 };
+  }
   const flex = hit.end ? Math.max(0, Math.min(5, Math.round((new Date(`${hit.end}T12:00:00`).valueOf() - new Date(`${hit.start}T12:00:00`).valueOf()) / 86_400_000))) : 0;
   // Data prudentă este prima din interval; fereastra spune cât poate întârzia.
   return { kind: "payday", date: hit.start, flexDays: flex };
@@ -622,8 +631,6 @@ function parseDebt(segment: string, masked: string, amounts: AmountHit[]): Assis
 }
 
 function parseRecurring(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[], rules: MerchantRule[] = []): AssistantIntent | undefined {
-  const amount = amounts[0];
-  if (!amount) return undefined;
   /**
    * O plată recurentă are o zi în lună. Fără ea, „factura de curent 340 lei” este o
    * plată făcută acum, nu o scadență lunară — iar presupunând ziua 1 o transformam
@@ -633,7 +640,10 @@ function parseRecurring(segment: string, masked: string, amounts: AmountHit[], d
   const saysMonthly = /\b(rata lunara|pe luna|lunar[ăa]?)\b/.test(fold(segment));
   const dueDay = dates[0] ? Number(dates[0].start.slice(8, 10)) : dayMatch ? Math.min(31, Math.max(1, Number(dayMatch[1]))) : saysMonthly ? 1 : 0;
   if (!dueDay) return undefined;
-  const name = titleCase(cleanLabel(segment.replace(/\b(abonament(ul)?|scadenta|factura)\b/gi, ""))) || "Plată recurentă";
+  // „În fiecare lună pe 15 plătesc grădinița 800”: 15 e ziua, 800 e suma.
+  const amount = amounts.find((item) => !(dayMatch && item.value === Number(dayMatch[1]))) || amounts[0];
+  if (!amount) return undefined;
+  const name = titleCase(cleanLabel(segment.replace(/\b(abonament(ul)?|scadenta|factura|in fiecare luna|lunar|pe luna|platesc|plătesc|pe \d{1,2})\b/gi, ""))) || "Plată recurentă";
   return { kind: "recurring", name, amount: amount.value, dueDay, category: guessCategoryFromText(segment, expenseCategories, rules) || "Casă & facturi" };
 }
 
@@ -668,10 +678,32 @@ function parseEnvelopeDelete(_segment: string, _masked: string, fullText: string
   return label ? { kind: "envelope-delete", label } : undefined;
 }
 
+const MONTHS = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"];
+
+/** Următoarea zi `day` din lună, azi inclusiv, cu ziua tăiată la capătul lunii scurte. */
+function nextDayOfMonth(day: number, asOf: string) {
+  const [year, month, today] = asOf.split("-").map(Number);
+  const pick = (y: number, m: number) => {
+    const last = new Date(y, m, 0).getDate();
+    return `${y}-${String(m).padStart(2, "0")}-${String(Math.min(Math.max(1, day), last)).padStart(2, "0")}`;
+  };
+  return day >= today ? pick(year, month) : month === 12 ? pick(year + 1, 1) : pick(year, month + 1);
+}
+
+/** „Botez în decembrie”: fără zi, evenimentul stă pe 1 ale lunii, ca banii să fie gata la timp. */
+function monthOnlyDate(folded: string, asOf: string) {
+  const hit = folded.match(new RegExp(`\\b(?:in|pe|din|luna) (${MONTHS.join("|")})\\b`));
+  if (!hit || !asOf) return undefined;
+  const month = MONTHS.indexOf(hit[1]) + 1;
+  const [year, current] = asOf.split("-").map(Number);
+  const y = month >= current ? year : year + 1;
+  return `${y}-${String(month).padStart(2, "0")}-01`;
+}
+
 function parsePlannedEvent(segment: string, masked: string, amounts: AmountHit[], dates: DateHit[], asOf: string): AssistantIntent | undefined {
   const folded = fold(masked);
   const suggestion = matchKnownEvent(masked, asOf);
-  const date = dates[0]?.start || suggestion?.date;
+  const date = dates[0]?.start || suggestion?.date || monthOnlyDate(folded, asOf);
   if (!date) return undefined;
   const name = suggestion?.name
     || titleCase(cleanLabel(segment.replace(/\b(eveniment(ul|e|ele)?|sarbatoare|sarbatori|noteaza(-?mi)?|adauga|pune(-?mi)?|vreau|urmeaza)\b/gi, "")))
@@ -737,7 +769,7 @@ export function parseAssistantMessage(raw: string, options: { asOf?: string; cat
     const amounts = extractAmounts(masked);
     const found =
       marker.kind === "envelope" ? parseEnvelope(segment, masked, amounts, marker.length, rules, envelopeDelta(folded))
-      : marker.kind === "payday" ? parsePayday(dates)
+      : marker.kind === "payday" ? parsePayday(dates, masked, asOf)
       : marker.kind === "funds" ? parseFunds(segment, masked, amounts)
       : marker.kind === "expense" ? parseExpense(segment, amounts, dates, asOf, categories, rules)
       : marker.kind === "income" ? parseIncome(segment, amounts, dates, asOf)
