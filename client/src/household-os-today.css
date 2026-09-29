@@ -891,7 +891,7 @@ html:not(.dark) .bf-os-decide {
   color: inherit;
   font-weight: 750;
 }
-/* Pe temele închise, verdele și roșul de mai sus coborau sub 3,6:1 (Navy: 2,85:1). */
+/* Contrast sub 3,6:1 pe închis. */
 html.theme-dark .bf-cycle-flow span:first-child b,
 html.theme-navy .bf-cycle-flow span:first-child b { color: #86dcae; }
 html.theme-dark .bf-cycle-flow span:last-child b,
@@ -908,8 +908,7 @@ html.theme-navy .bf-cycle-flow span:last-child b { color: #ffa493; }
 /* D10: grupul „De rezolvat” + mișcări + „Mai mult” păstrează pe telefon distanțele de până acum. */
 html body .bf-today-workspace > .bf-today-side { display: grid; gap: inherit; align-content: start; min-width: 0; }
 
-/* D10: pe desktop, Astăzi pe două coloane — eroul (cifra zilei, banda) în stânga,
-   „De rezolvat” și ultimele mișcări în dreapta; anunțurile rămân pe toată lățimea. */
+/* D10: două coloane de la 1100px. */
 @media (min-width: 1100px) {
   html body .os-shell .bf-today-workspace:not(.is-simple) {
     display: grid;
@@ -984,3 +983,11 @@ html body .bf-today-workspace > .bf-today-side { display: grid; gap: inherit; al
   html body .bf-app.os-shell > header.os-appbar > .os-brand { align-self: flex-start; }
   html body .bf-app.os-shell > header.os-appbar .os-tools { margin-top: auto; justify-content: flex-start; }
 }
+.bf-week-vs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.bf-week-vs span{display:grid;gap:2px;min-width:0;padding:8px 10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--cf-line) 80%,transparent);background:color-mix(in srgb,var(--cf-surface) 86%,transparent);color:var(--cf-ink)}
+.bf-week-vs small{color:var(--cf-muted);font-size:11px;letter-spacing:.03em;text-transform:uppercase}
+.bf-week-vs b{color:var(--cf-ink);font-size:15px;font-variant-numeric:tabular-nums}
+.bf-week-vs i{display:block;height:8px;margin-top:6px;overflow:hidden;border-radius:999px;background:color-mix(in srgb,var(--cf-line) 70%,transparent)}
+.bf-week-vs em{display:block;height:100%;border-radius:inherit;background:var(--cf-primary)}
+.bf-week-vs span:last-child em{background:color-mix(in srgb,var(--cf-muted) 55%,var(--cf-line))}
+

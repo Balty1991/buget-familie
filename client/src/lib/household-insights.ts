@@ -1146,7 +1146,70 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
+export type WeekVersusLast = {
+  /** Zile scurse din săptămâna asta, inclusiv azi. Săptămâna trecută se taie la același număr. */
+  days: number;
+  thisSpent: number;
+  lastSpent: number;
+  /** Cheltuit acum minus aceleași zile din săptămâna trecută. Negativ = mai puțin. */
+  delta: number;
+};
 
+/**
+ * Săptămâna asta față de aceleași zile din săptămâna trecută.
+ * Miercuri nu se compară cu toată săptămâna de dinainte: ar părea că ați cheltuit „puțin”
+ * doar pentru că săptămâna nu s-a terminat. Fără cheltuieli în fereastra trecută, tace.
+ */
+export const weekVersusLast = (data: AppData, asOf = isoToday()): WeekVersusLast | undefined => {
+  const week = weeklySummary(data, asOf);
+  const days = daysBetween(week.start, asOf) + 1;
+  if (days < 1 || days > 7) return undefined;
+  const lastStart = addIsoDays(week.start, -7);
+  const lastEnd = addIsoDays(asOf, -7);
+  const spent = (from: string, to: string) => data.transactions
+    .filter((item) => item.kind === "expense" && !isBalanceAdjustment(item) && item.date >= from && item.date <= to)
+    .reduce((sum, item) => sum + item.amount, 0);
+  const thisSpent = roundMoney(spent(week.start, asOf));
+  const lastSpent = roundMoney(spent(lastStart, lastEnd));
+  if (lastSpent < 1) return undefined;
+  return { days, thisSpent, lastSpent, delta: roundMoney(thisSpent - lastSpent) };
+};
+
+export const weekVersusLastLine = (row: WeekVersusLast | undefined): string | undefined => {
+  if (!row) return undefined;
+  const amount = lei(Math.abs(row.delta));
+  if (row.days === 1) {
+    if (row.delta <= -20) return t("Cu {amount} mai puțin decât aceeași zi de săptămâna trecută.", { amount });
+    if (row.delta >= 20) return t("Cu {amount} mai mult decât aceeași zi de săptămâna trecută.", { amount });
+    return t("Cam la fel ca aceeași zi de săptămâna trecută.");
+  }
+  const days = String(row.days);
+  if (row.delta <= -20) return t("Cu {amount} mai puțin decât aceleași {days} zile de săptămâna trecută.", { amount, days });
+  if (row.delta >= 20) return t("Cu {amount} mai mult decât aceleași {days} zile de săptămâna trecută.", { amount, days });
+  return t("Cam la fel ca aceleași {days} zile de săptămâna trecută.", { days });
+};
+
+/** Plicul care a luat din bani mai repede decât au trecut zilele ciclului. Facturile fixe nu intră. */
+export const calendarPace = (data: AppData, asOf = isoToday()): EnvelopeBurnPace | undefined => {
+  const behind = envelopeBurnPace(data, asOf).find((item) => item.pace === "behind" && item.budget >= 20 && item.spent >= 10 && item.totalDays >= 7);
+  return behind;
+};
+
+export const calendarPaceLine = (pace: EnvelopeBurnPace | undefined): string | undefined =>
+  pace ? t("{label} a luat {usage}% din plic, iar ciclul e la {expected}%.", { label: pace.label, usage: Math.round(pace.usage * 100), expected: Math.round(pace.expectedUsage * 100) }) : undefined;
+
+/** Același plic s-a depășit și în ciclul închis înainte. Altfel nu e un obicei, e o întâmplare. */
+export const repeatedOverLine = (data: AppData): string | undefined => {
+  const names = data.settings.salaryPlan.cycleMemory?.[0]?.over || [];
+  if (!names.length) return undefined;
+  const again = data.settings.salaryPlan.allocations
+    .filter((item) => names.includes(item.label) && allocationStatus(data, item).remaining < -1)
+    .map((item) => item.label);
+  if (!again.length) return undefined;
+  return again.length === 1
+    ? t("Și ciclul trecut s-a depășit {name}.", { name: again[0] })
+    : t("Și ciclul trecut s-au depășit {names}.", { names: again.slice(0, 2).join(", ") });
+};
 
 export type EnvelopeMonth = { month: string; amount: number };
 

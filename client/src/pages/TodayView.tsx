@@ -17,7 +17,7 @@ import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, savingsSuggestion, weekTooFast, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
+import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, calendarPace, calendarPaceLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, repeatedOverLine, savingsSuggestion, weekTooFast, weekVersusLast, weekVersusLastLine, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   dateText,
@@ -207,6 +207,10 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     if (spent.length < 2) return "";
     return t("Săptămâna asta: {one} {oneAmount} · {two} {twoAmount}.", { one: spent[0].name, oneAmount: money(spent[0].expense), two: spent[1].name, twoAmount: money(spent[1].expense) });
   }), [data]);
+  const weekRow = useMemo(() => tickMemo([data], `week-vs:${isoToday()}`, () => weekVersusLast(data)), [data]);
+  const weekLine = weekVersusLastLine(weekRow);
+  const pace = useMemo(() => tickMemo([data], `pace-line:${isoToday()}`, () => calendarPace(data)), [data]);
+  const againLine = useMemo(() => tickMemo([data], `again:${isoToday()}`, () => repeatedOverLine(data) || ""), [data]);
   const topEnvelope = [...envelopes].sort((a, b) => b.usage - a.usage)[0];
   const runOuts = useMemo(() => envelopeRunOut(data), [data]);
   const activeEnvelopeAlert = envelopes.filter((item) => item.state !== "healthy" && !dismissedAlerts.includes(item.item.id)).sort((a, b) => (b.state === "over" ? 2 : 1) - (a.state === "over" ? 2 : 1))[0];
@@ -497,6 +501,23 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 ))}
               </ul>
             )}
+            {!simpleMode && weekRow && (
+              <div className="bf-week-vs" aria-label={t("Față de săptămâna trecută")}>
+                <span>
+                  <small>{t("Săptămâna asta")}</small>
+                  <b>{money(weekRow.thisSpent)}</b>
+                  <i aria-hidden="true"><em style={{ width: `${Math.round(weekRow.thisSpent / Math.max(weekRow.thisSpent, weekRow.lastSpent, 1) * 100)}%` }} /></i>
+                </span>
+                <span>
+                  <small>{t("Săptămâna trecută")}</small>
+                  <b>{money(weekRow.lastSpent)}</b>
+                  <i aria-hidden="true"><em style={{ width: `${Math.round(weekRow.lastSpent / Math.max(weekRow.thisSpent, weekRow.lastSpent, 1) * 100)}%` }} /></i>
+                </span>
+              </div>
+            )}
+            {!simpleMode && weekLine && <p className="os-hint">{weekLine}</p>}
+            {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
+            {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
             <div className="bf-os-actions">
               <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
             </div>

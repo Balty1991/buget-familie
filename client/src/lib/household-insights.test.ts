@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationStatus, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, extendRunOutMove, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, mealRunway, mealRunwayLine, monthlyRecap, nextTrueExpense, paydayTrack, pocketSlices, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, envelopeUntilPayday } from "./household-insights";
+import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, analysisCompareWindow, calendarPace, calendarPaceLine, detectSubscriptions, envelopeBurnPace, extendRunOutMove, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, mealRunway, mealRunwayLine, monthlyRecap, nextTrueExpense, paydayTrack, pocketSlices, recurringFromDetection, recurringPriceChanges, repeatedOverLine, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, envelopeUntilPayday, weekVersusLast, weekVersusLastLine } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
@@ -77,6 +77,57 @@ describe("analize de gospodărie", () => {
     expect(near!.monthly).toBeGreaterThan(50);
     data.settings.plannedEvents[0].date = "2027-08-01";
     expect(nextTrueExpense(data, "2026-11-10")).toBeUndefined();
+  });
+
+  it("compară aceleași zile cu săptămâna trecută, nu toată săptămâna", () => {
+    const { data, source } = base();
+    const expense = (id: string, date: string, amount: number) => ({ id, title: "Lidl", amount, kind: "expense" as const, category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date });
+    data.transactions = [
+      expense("a", "2026-09-07", 100),
+      expense("b", "2026-09-08", 50),
+      expense("c", "2026-09-01", 40),
+      expense("d", "2026-09-06", 500),
+    ];
+    const row = weekVersusLast(data, "2026-09-09");
+    expect(row).toMatchObject({ days: 3, thisSpent: 150, lastSpent: 40, delta: 110 });
+    expect(weekVersusLastLine(row)).toMatch(/mai mult/);
+    expect(weekVersusLastLine(row)).toMatch(/3 zile/);
+    data.transactions = [expense("only", "2026-09-08", 80)];
+    expect(weekVersusLast(data, "2026-09-09")).toBeUndefined();
+    data.transactions = [expense("now", "2026-09-07", 100), expense("then", "2026-08-31", 90)];
+    expect(weekVersusLastLine(weekVersusLast(data, "2026-09-07"))).toMatch(/Cam la fel/);
+  });
+
+  it("spune când un plic a luat-o înaintea zilelor ciclului", () => {
+    const { data, source } = base();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "2026-09-30";
+    data.settings.salaryPlan.allocations = [
+      { id: "alloc-food", label: "Alimente", amount: 1000, category: "Alimente", sourceId: source.id, memberId: "member-me" },
+    ];
+    data.transactions = [
+      { id: "e1", title: "Lidl", amount: 800, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-02", allocationId: "alloc-food" },
+    ];
+    const pace = calendarPace(data, "2026-09-05");
+    expect(pace?.pace).toBe("behind");
+    expect(calendarPaceLine(pace)).toMatch(/Alimente/);
+    expect(calendarPaceLine(pace)).toMatch(/80%/);
+  });
+
+  it("amintește plicul depășit și în ciclul trecut", () => {
+    const { data, source } = base();
+    data.settings.salaryPlan.periodStart = "2026-09-01";
+    data.settings.salaryPlan.nextPayday = "2026-09-30";
+    data.settings.salaryPlan.cycleMemory = [{ periodStart: "2026-08-01", periodEnd: "2026-08-31", spent: 900, leftInEnvelopes: 0, over: ["Alimente"] }];
+    data.settings.salaryPlan.allocations = [
+      { id: "alloc-food", label: "Alimente", amount: 100, category: "Alimente", sourceId: source.id, memberId: "member-me" },
+    ];
+    data.transactions = [
+      { id: "e1", title: "Lidl", amount: 180, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-04", allocationId: "alloc-food" },
+    ];
+    expect(repeatedOverLine(data)).toMatch(/Alimente/);
+    data.transactions = [];
+    expect(repeatedOverLine(data)).toBeUndefined();
   });
 
   it("construiește recapitularea lunii cu categoria dominantă și comparația anterioară", () => {
