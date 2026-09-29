@@ -84,7 +84,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
       document.documentElement.style.setProperty("--bf-keyboard", `${covered}px`);
     };
     viewport.addEventListener("resize", sync);
-    viewport.addEventListener("scroll", sync);
+    viewport.addEventListener("scroll", sync, { passive: true });
     sync();
     return () => {
       viewport.removeEventListener("resize", sync);

@@ -284,10 +284,30 @@ html.capacitor-android body *::after {
   transition-duration: 0.01ms !important;
 }
 
-/* Zilele din Mișcări care nu sunt pe ecran nu se pictează. Foaia Notează rămâne. */
-html.capacitor-android .bf-movement-day {
+/* Zilele din Mișcări sunt deja sărite în movements.css.
+   Plicurile și datoriile din afara ecranului nu se pictează.
+   Bara de jos stă pe stratul ei, ca umbra să nu se redeseneze la fiecare derulare.
+   Foaia Notează tot urcă, doar că mai scurt: jumătate de secundă ținea WebView-ul ocupat. */
+html.capacitor-android .bf-allocation-list > article,
+html.capacitor-android .bf-obligation-entry {
   content-visibility: auto;
-  contain-intrinsic-size: auto 148px;
+  contain-intrinsic-size: auto 96px;
+}
+
+html.capacitor-android .os-dock,
+html.capacitor-android .os-appbar,
+html.capacitor-android .bf-appbar {
+  transform: translateZ(0);
+}
+
+html.capacitor-android .bf-modal:not(.bf-first-run),
+html.capacitor-android .bf-health-sheet,
+html.capacitor-android .bf-theme-picker,
+html.capacitor-android .bf-whats-new,
+html.capacitor-android .bf-onboarding:not(.bf-first-run),
+html.capacitor-android .bf-command-palette,
+html.capacitor-android .bf-journal-filter-sheet {
+  animation-duration: 200ms !important;
 }
 
 html.capacitor-android .bf-today-activity-list article,

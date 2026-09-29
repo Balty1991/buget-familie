@@ -119,6 +119,11 @@ public class MainActivity extends BridgeActivity {
     if (Build.VERSION.SDK_INT >= 26) {
       webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true);
     }
+    settings.setSupportZoom(false);
+    settings.setBuiltInZoomControls(false);
+    settings.setDisplayZoomControls(false);
+    webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
+    disableForceDark(settings);
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");
@@ -133,6 +138,16 @@ public class MainActivity extends BridgeActivity {
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
     attachSplashOverlay(webView);
     webView.postDelayed(this::pruneStaleBackupCache, 2500);
+  }
+
+  /** Android nu recolorează pagina peste temele noastre și nu mai face o trecere în plus la desenare. */
+  @SuppressWarnings("deprecation")
+  private void disableForceDark(WebSettings settings) {
+    if (Build.VERSION.SDK_INT >= 33) {
+      settings.setAlgorithmicDarkeningAllowed(false);
+    } else if (Build.VERSION.SDK_INT >= 29) {
+      settings.setForceDark(WebSettings.FORCE_DARK_OFF);
+    }
   }
 
   /** versionCode din APK, ca să golim cache-ul o dată după update, nu la fiecare pornire. */

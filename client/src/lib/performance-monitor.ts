@@ -42,6 +42,8 @@ function report(metric: Metric) {
 
 export function startPerformanceMonitoring() {
   if (typeof window === "undefined") return;
+  /* Pe telefon măsurătorile citesc layout-ul în timp ce omul derulează. Nu aduc nimic vizibil. */
+  if (document.documentElement.classList.contains("capacitor-android")) return;
   onCLS(report);
   onFCP(report);
   onINP(report);
