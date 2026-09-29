@@ -91,10 +91,6 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
     return () => window.removeEventListener("buget-familie:open-catalog", onOpen);
   }, []);
 
-  /**
-   * Catalogul online se întreabă doar la cerere: înainte, fiecare tastă pleca la Open Food Facts.
-   * Acum pleacă doar denumirea pentru care omul apasă „Caută și online”.
-   */
   const [onlineQuery, setOnlineQuery] = useState("");
   useEffect(() => {
     const query = onlineQuery;
@@ -189,47 +185,15 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
         </div>
         <Search size={18} />
       </header>
-      <p className="bf-helper">{t("Aici adaugi articole din listele online. Cauți Napolact, Ariel, lapte — apeși, pui suma, salvezi bonul. Ghidul nu e pentru asta.")}</p>
+      <p className="bf-helper bf-catalog-lead">{t("Cauți articolul, pui suma, salvezi bonul.")}</p>
 
-      <section className="bf-catalog-basket" aria-label={t("Bonul în lucru")}>
-        <p className="bf-kicker">{t("BONUL ÎN LUCRU")}</p>
-        <div className="bf-form-grid">
-          <label>{t("Magazin")}<input value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder={t("ex. Lidl")} /></label>
-          <label>{t("Data")}<RoDateInput value={date} onChange={(event) => event.target.value && setDate(event.target.value)} /></label>
-          <label>{t("Membru")}<select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
-          <label>{t("Plătit din")}<select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></label>
-        </div>
-        {lines.length ? (
-          <ul className="bf-receipts-products">
-            {lines.map((line) => (
-              <li key={line.id}>
-                <div>
-                  <b>{line.name}</b>
-                  <small>{t(line.category)}</small>
-                </div>
-                <strong>{money(line.amount)}</strong>
-                <button type="button" aria-label={t("Elimină produsul")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))}><Trash2 size={15} /></button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="bf-helper">{t("Niciun articol încă. Caută mai jos sau scrie denumirea tu.")}</p>
-        )}
-        <div className="bf-receipts-actions">
-          <button type="button" className="bf-primary" disabled={!lines.length} onClick={saveBon}>{t("Salvează bonul")} · {fmtExact.format(basketTotal)}</button>
-          <button type="button" className="bf-ghost" onClick={onOpenReceiptForm}><ReceiptText size={16} /> {t("Bon cu fotografie")}</button>
-        </div>
-        {error ? <p className="bf-form-error" role="alert">{error}</p> : null}
-        {notice ? <p className="bf-helper" role="status">{notice}</p> : null}
-      </section>
-
-      <section className="bf-receipts-search" aria-label={t("Caută un produs")}>
+      <section className="bf-receipts-search bf-catalog-search" aria-label={t("Caută un produs")}>
         <p className="bf-kicker">{t("CAUTĂ ȘI ADAUGĂ")}</p>
         <input
           ref={inputRef}
           value={query}
           onChange={(event) => { setQuery(event.target.value); setPicked(null); }}
-          placeholder={t("ex. Napolact, lapte, Ariel, ciorapi")}
+          placeholder={t("ex. Napolact, lapte, Ariel")}
           autoComplete="off"
           aria-label={t("Caută un produs")}
         />
@@ -249,31 +213,83 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
                 <Plus size={14} />
               </button>
             ))}
-            {!offline && query.trim().length >= 3 && onlineQuery !== query && <button type="button" className="bf-link-button" onClick={() => setOnlineQuery(query)}>{t("Caută și online (Open Food Facts)")}</button>}
+            {!offline && query.trim().length >= 3 && onlineQuery !== query && <button type="button" className="bf-link-button" onClick={() => setOnlineQuery(query)}>{t("Caută și online")}</button>}
             {onlineBusy ? <p className="bf-helper">{t("Căutăm în catalogul online…")}</p> : null}
-            {onlineError ? <p className="bf-helper">{t("Catalogul online n-a răspuns. Rămân rezultatele de pe telefon — poți adăuga denumirea tu.")}</p> : null}
+            {onlineError ? <p className="bf-helper">{t("Online n-a răspuns. Rămân rezultatele de pe telefon.")}</p> : null}
             {!shownHits.some((hit) => foldRomanian(hit.name) === foldRomanian(query)) ? (
               <button type="button" onClick={() => { setPicked({ name: query.trim(), category: classifyProductLabel(query), source: "catalog" }); setAmount(""); }}>
-                <span>{t("Adaugă „{name}” pe bon", { name: query.trim() })}<small> · {t(classifyProductLabel(query))} · {t("categorie propusă")}</small></span>
+                <span>{t("Adaugă „{name}”", { name: query.trim() })}<small> · {t(classifyProductLabel(query))}</small></span>
                 <Plus size={14} />
               </button>
             ) : null}
           </div>
         ) : (
-          <p className="bf-helper">{offline ? t("Modul fără internet e pornit — căutăm doar pe telefon.") : t("Alege o sugestie sau scrie cel puțin 3 litere. Listele online apar imediat.")}</p>
+          <p className="bf-helper">{offline ? t("Fără internet: căutăm doar pe telefon.") : t("Alege o sugestie sau scrie cel puțin 2 litere.")}</p>
         )}
       </section>
 
       {picked ? (
-        <form className="bf-receipts-manual" onSubmit={(event) => { event.preventDefault(); addToBasket(picked, amount); }}>
-          <p><b>{picked.name}</b> · {t(picked.category)} · {sourceLabel(picked)}</p>
-          <label>{t("Sumă")}<input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" autoFocus /></label>
-          <div className="bf-receipts-actions">
+        <form className="bf-receipts-manual bf-catalog-amount" onSubmit={(event) => { event.preventDefault(); addToBasket(picked, amount); }}>
+          <p className="bf-catalog-picked"><b>{picked.name}</b><small>{t(picked.category)} · {sourceLabel(picked)}</small></p>
+          <label className="bf-field">
+            <span>{t("Sumă")}</span>
+            <input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0,00" autoFocus />
+          </label>
+          <div className="bf-receipts-actions bf-catalog-actions">
             <button type="submit" className="bf-primary" disabled={!(parseRomanianAmount(amount) > 0)}>{t("Pune pe bon")}</button>
             <button type="button" className="bf-ghost" onClick={() => setPicked(null)}>{t("Renunță")}</button>
           </div>
         </form>
       ) : null}
+
+      <section className="bf-catalog-basket" aria-label={t("Bonul în lucru")}>
+        <div className="bf-catalog-basket-head">
+          <p className="bf-kicker">{t("BONUL ÎN LUCRU")}</p>
+          {lines.length ? <strong>{fmtExact.format(basketTotal)} RON</strong> : <span>{t("Gol")}</span>}
+        </div>
+        <div className="bf-form-grid">
+          <label className="bf-field">
+            <span>{t("Magazin")}</span>
+            <input value={vendor} onChange={(event) => setVendor(event.target.value)} placeholder={t("ex. Lidl")} />
+          </label>
+          <label className="bf-field">
+            <span>{t("Data")}</span>
+            <RoDateInput value={date} onChange={(event) => event.target.value && setDate(event.target.value)} />
+          </label>
+          <label className="bf-field">
+            <span>{t("Membru")}</span>
+            <select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select>
+          </label>
+          <label className="bf-field">
+            <span>{t("Plătit din")}</span>
+            <select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select>
+          </label>
+        </div>
+        {lines.length ? (
+          <ul className="bf-catalog-lines">
+            {lines.map((line) => (
+              <li key={line.id}>
+                <div>
+                  <b>{line.name}</b>
+                  <small>{t(line.category)}</small>
+                </div>
+                <strong>{money(line.amount)}</strong>
+                <button type="button" aria-label={t("Elimină produsul")} onClick={() => setLines((current) => current.filter((item) => item.id !== line.id))}><Trash2 size={15} /></button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="bf-helper">{t("Niciun articol. Caută mai sus.")}</p>
+        )}
+        <div className="bf-receipts-actions bf-catalog-actions">
+          <button type="button" className="bf-primary" disabled={!lines.length} onClick={saveBon}>
+            {lines.length ? `${t("Salvează bonul")} · ${fmtExact.format(basketTotal)}` : t("Salvează bonul")}
+          </button>
+          <button type="button" className="bf-ghost" onClick={onOpenReceiptForm}><ReceiptText size={16} /> {t("Bon cu fotografie")}</button>
+        </div>
+        {error ? <p className="bf-form-error" role="alert">{error}</p> : null}
+        {notice ? <p className="bf-helper" role="status">{notice}</p> : null}
+      </section>
     </div>
   );
 }
