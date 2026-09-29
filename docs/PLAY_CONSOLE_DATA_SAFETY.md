@@ -1,7 +1,7 @@
 # Răspunsuri Data safety — Google Play Console
 
 Text gata de lipit / bifat în **Play Console → Politica aplicației → Siguranța datelor**.  
-Aliniat la aplicația reală (versiune listing **1.1.96** / `versionCode` **98**).  
+Aliniat la aplicația reală (versiunea **1.1.111** / `versionCode` **112**).  
 Surse: `client/public/privacy.html`, `AndroidManifest.xml` (`allowBackup=false` + `dataExtractionRules`), sync AES-GCM, IndexedDB bonuri, `functions/src/index.ts` (ghid AI, feedback), `understand.ts` (`compactGuideContext`).
 
 > Nu este sfat juridic. Reverifică formularele Play dacă Google schimbă etichetele.
@@ -42,15 +42,25 @@ Date financiare (sume, categorii, plicuri, datorii, scadențe) sunt introduse de
 Fără vânzare de date. Backup-ul sistem Android este dezactivat (allowBackup=false).
 ```
 
-### 2. Fotografii și videoclipuri (bonuri): NU se colectează
+### 2. Fotografii și videoclipuri (bonuri): colectate, prelucrate temporar, opțional
 
-În Play, „colectat” înseamnă că datele pleacă de pe dispozitiv. Pozele bonurilor nu pleacă:
-stau în IndexedDB, OCR-ul rulează local, nu intră în sync și nu merg la ghidul AI.
-Bifează **Nu** la Fotografii și videoclipuri.
+De la 1.1.111, poza unui bon încărcat în ghid pleacă la Google Gemini **doar** când citirea de pe
+telefon nu se leagă (totalul nu iese din produse sau magazinul arată a produs). Cel mult două poze,
+doar imagini (nu PDF), doar la Gemini (nu la Groq), nepăstrate pe server. Bonurile din Mișcări / De
+verificat rămân pe telefon, iar pozele nu intră în sync.
+
+| Câmp Play | Alegere |
+|---|---|
+| Categorie | **Fotografii și videoclipuri → Fotografii** |
+| Colectat? | **Da** |
+| Partajat? | **Nu** (Gemini e furnizor de servicii) |
+| Prelucrat temporar? | **Da** |
+| Obligatoriu / opțional | **Utilizatorii pot alege** |
+| Scop | **Funcționalitatea aplicației** |
 
 ```
-Fotografiile bonurilor rămân pe telefon (IndexedDB). Nu se sincronizează și nu se trimit la ghid.
-OCR-ul rulează local; la ghidul online pleacă doar magazinul, data, totalul și produsele citite.
+Poza bonului pleacă la Google Gemini doar când omul încarcă bonul în ghid și citirea de pe telefon
+nu e sigură. Nu se păstrează pe server și nu intră în sincronizare.
 ```
 
 ### 3. Identificatori de dispozitiv / aplicație (identitate anonimă)
@@ -112,7 +122,6 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 
 - Locație precisă / aproximativă  
 - Contacte  
-- Fotografii și videoclipuri (rămân pe telefon)  
 - Microfon / înregistrări audio  
 - Conturi de autentificare (Google/Facebook etc.) pentru core use  
 - Date de sănătate  
@@ -170,7 +179,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 ## G. Checklist rapid înainte de Submit
 
 - [ ] Informații financiare = Da, pe dispozitiv, scop Funcționalitate  
-- [ ] Fotografii = **Nu** (rămân pe telefon)  
+- [ ] Fotografii = **Da**, prelucrate temporar, opțional (poza bonului la Gemini doar când citirea de pe telefon nu e sigură)  
 - [ ] Sync = opțional, criptat, dezvoltator fără plaintext  
 - [ ] AI online = opțional: conținut utilizator + informații financiare + nume; efemer; Gemini + Groq furnizori  
 - [ ] Identificatori = Da (ID anonim Firebase), funcționalitate + securitate, nu partajare  
