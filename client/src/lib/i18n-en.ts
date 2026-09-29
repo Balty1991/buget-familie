@@ -3739,4 +3739,7 @@ export const en: Record<string, string> = {
   "Niciun articol. Caută mai sus.": "No items yet. Search above.",
   "Scrie-mi orice despre banii tăi": "Tell me anything about your money",
   "Exemple: „am dat 50 lei pe benzină”, „fă un plic de 600 pentru mâncare”. Salvez doar după confirmarea ta.": "Examples: “I spent 50 lei on fuel”, “make a 600 envelope for food”. I only save after you confirm.",
+  "Răspuns de pe telefon": "Answered on this phone",
+  "Răspuns de la Gemini": "Answered by Gemini",
+  "Răspuns de la Groq": "Answered by Groq",
 };

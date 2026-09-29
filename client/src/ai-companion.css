@@ -295,3 +295,9 @@ html body .os-shell.bf-app .ai-chat-panel:has(.ai-date-bar) .ai-chat-suggestions
   }
   html body .os-shell.bf-app .ai-chat-panel:has(.ai-date-bar) :is(.ai-quota,.ai-chat-input label){display:none}
 }
+/* Ledul de lângă robot: cine a răspuns (verde telefon, mov Gemini, negru Groq). */
+.ai-chat-row.assistant .ai-chat-bubble{position:relative}
+.ai-src-led{position:absolute;left:18px;top:19px;width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.92)}
+.ai-src-led.is-local{background:#1f9d55}
+.ai-src-led.is-gemini{background:#8b5cf6}
+.ai-src-led.is-groq{background:#0b0b0b}
