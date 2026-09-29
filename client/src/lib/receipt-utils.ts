@@ -361,11 +361,12 @@ function inferVendor(lines: string[]) {
   }
   for (const line of head) {
     if (legalVendorPattern.test(line) || isPlaceLine(line)) continue;
-    if (lastMoney(line) || /\d{3,}/.test(line)) continue;
+    if (lastMoney(line) || /\d/.test(line)) continue;
     if (!/[a-zA-ZăâîșțĂÂÎȘȚ]{3,}/.test(line)) continue;
     if (/^(?:lei|ron|bon|fiscal|casa|operator)$/i.test(line)) continue;
     const words = line.split(" ").filter(Boolean);
     if (words.length > 4 || line.length > 28) continue;
+    if (!words.some((word) => /[a-zăâîșțA-ZĂÂÎȘȚ]{4,}/.test(word))) continue;
     return titleVendor(line);
   }
   return undefined;

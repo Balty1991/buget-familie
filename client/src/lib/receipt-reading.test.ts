@@ -486,4 +486,19 @@ describe("bon Mega Image — două coloane, preț pe kilogram", () => {
     expect(result.amount).not.toBe(7.99);
     expect(result.amount).not.toBe(200);
   });
+
+  it("nu ia un rând stricat cu cifre drept magazin", () => {
+    const result = interpretReceiptText([
+      "B00 bue xg",
+      "PORTOCALE 0,506 Kg x 7,99 4,04 B",
+      "BANANE 1,030 Kg x 6,99 7,20 B",
+      "SUBTOTAL 66,00",
+      "TOTAL",
+      "7,99",
+      "CASH 200,00",
+    ]);
+    expect(result.vendor || "").not.toMatch(/b00|bue|xg/i);
+    expect(result.amount).toBe(66);
+    expect(result.amount).not.toBe(7.99);
+  });
 });
