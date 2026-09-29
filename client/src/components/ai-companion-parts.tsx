@@ -27,7 +27,7 @@ export function GuideText({ text }: { text: string }) {
   return <span className="ai-chat-text">{nodes}</span>;
 }
 
-export const QUOTA_KEY = "buget-familie:ai-quota-v2";
+export const QUOTA_KEY = "buget-familie:ai-quota-v3";
 export const MEMORY_KEY = "buget-familie:ai-memory-v1";
 
 const emptyMemory = emptyGuideMemory;

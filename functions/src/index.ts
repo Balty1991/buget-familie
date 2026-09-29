@@ -387,7 +387,7 @@ async function callGemini(apiKey: string, contents: GeminiContent[], deadline: n
   let lastDetail = "";
   let lastQuota: Quota = { remaining: null, limit: null, resetAt: null };
 
-  for (const model of GEMINI_MODELS) {
+  models: for (const model of GEMINI_MODELS) {
     for (const structured of [true, false]) {
       const payload = {
         system_instruction: { parts: [{ text: systemInstruction }] },
@@ -439,7 +439,11 @@ async function callGemini(apiKey: string, contents: GeminiContent[], deadline: n
             await sleep(500);
             continue;
           }
-          throw new GuideCallError(lastDetail.slice(0, 300) || "GEMINI_BUSY", apiResponse.status, quota);
+          // Fiecare model are cota lui: când 2.5 Flash e plin, încercăm Flash-Lite și celelalte,
+          // nu blocăm ghidul până mâine după prima limită atinsă.
+          lastQuota = quota;
+          console.warn("Gemini quota/busy, next model", model, apiResponse.status);
+          continue models;
         }
         break;
       }
