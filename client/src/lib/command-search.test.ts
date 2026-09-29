@@ -1,6 +1,6 @@
 
 import { describe, expect, it } from "vitest";
-import { matchCommandQuery, searchLedgerHits, takeJournalQuery, writeJournalQuery } from "./command-search";
+import { matchCommandQuery, recentLedger, searchLedgerHits, takeJournalQuery, writeJournalQuery } from "./command-search";
 
 describe("căutarea din bara de sus", () => {
   it("găsește mișcări fără diacritice", () => {
@@ -9,6 +9,16 @@ describe("căutarea din bara de sus", () => {
       { id: "2", title: "Netflix", category: "Abonamente", amount: 55 },
     ], "kaufland");
     expect(hits.map((item) => item.id)).toEqual(["1"]);
+  });
+
+  it("ia cele mai noi mișcări, fără să schimbe lista", () => {
+    const items = [
+      { id: "old", title: "Lidl", category: "Alimente", amount: 10, date: "2026-09-01" },
+      { id: "mid", title: "Mega", category: "Alimente", amount: 15, date: "2026-09-04" },
+      { id: "new", title: "Kaufland", category: "Alimente", amount: 20, date: "2026-09-08" },
+    ];
+    expect(recentLedger(items, 2).map((item) => item.id)).toEqual(["new", "mid"]);
+    expect(items.map((item) => item.id)).toEqual(["old", "mid", "new"]);
   });
 
   it("fără interogare nu pretinde rezultate din registru", () => {

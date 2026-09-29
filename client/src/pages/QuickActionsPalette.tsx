@@ -1,6 +1,6 @@
 /** Acțiuni rapide și primul tur. Scos din home-secondary. */
 import { CategoryGlyph } from "@/components/CategoryGlyph";
-import { useEffect, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BellRing, BookOpen, CalendarClock, CalendarDays, ChevronRight, Goal, LayoutDashboard, Search, PiggyBank, Plus, ReceiptText, WalletCards, X } from "lucide-react";
 import { formatDate, type AppData } from "@/lib/finance-data";
@@ -9,11 +9,12 @@ import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { EnvelopeStack } from "@/components/EnvelopeMark";
 import { type MainView } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
-import { matchCommandQuery, searchLedgerHits, writeJournalQuery } from "@/lib/command-search";
+import { matchCommandQuery, recentLedger, searchLedgerHits, writeJournalQuery } from "@/lib/command-search";
 import { completeOnboardingTourOnly } from "@/lib/first-week-tour";
 
 export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: AppData; onClose: () => void; onAdd: () => void; onGo: (view: MainView) => void }) {
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const actions = [
@@ -28,11 +29,11 @@ export function QuickActionsPalette({ data, onClose, onAdd, onGo }: { data?: App
     { id: "guide", label: t("Tutorial de folosire"), detail: t("Cum notezi, cum citești plicul și cifra de azi"), icon: BookOpen, run: () => { window.dispatchEvent(new Event("buget-familie:open-usage-tutorial")); } },
   ];
   const dockDuplicates = new Set(["plan", "goals", "journal", "obligations", "insights", "habits", "calendar"]);
-  const visible = actions.filter((action) => matchCommandQuery(`${action.label} ${action.detail}`, query) && (query.trim() || !dockDuplicates.has(action.id)));
+  const visible = actions.filter((action) => matchCommandQuery(`${action.label} ${action.detail}`, deferredQuery) && (deferredQuery.trim() || !dockDuplicates.has(action.id)));
   const envelopeLabel = (item: { allocationId?: string }) => data?.settings.salaryPlan.allocations.find((allocation) => allocation.id === item.allocationId)?.label || "";
-  const ledgerHits = query.trim()
-    ? searchLedgerHits(data?.transactions || [], query, 6, envelopeLabel)
-    : (data?.transactions || []).slice().sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0)).slice(0, 5);
+  const ledgerHits = deferredQuery.trim()
+    ? searchLedgerHits(data?.transactions || [], deferredQuery, 6, envelopeLabel)
+    : recentLedger(data?.transactions || [], 5);
   const openLedger = (term: string) => {
     writeJournalQuery(window.sessionStorage, term);
     onGo("journal");

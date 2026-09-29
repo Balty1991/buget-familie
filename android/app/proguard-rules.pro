@@ -1,21 +1,17 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Release micșorat. Clasele noastre rămân întregi: punțile JS, widgetul, dala și reminderul
+# sunt chemate din JavaScript sau din manifest, nu din codul Java pe care R8 îl vede.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,JavascriptInterface
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+-keep class ro.balty1991.bugetfamilie.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-keep @com.getcapacitor.annotation.CapacitorPlugin class * { *; }
+-keepclassmembers class * {
+    @com.getcapacitor.PluginMethod public <methods>;
+}
+-keep class * extends com.getcapacitor.Plugin { *; }
+-keep class * extends androidx.work.ListenableWorker { *; }
+-keep class * extends android.appwidget.AppWidgetProvider { *; }
+-keep class * extends android.service.quicksettings.TileService { *; }

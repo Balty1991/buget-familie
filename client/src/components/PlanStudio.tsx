@@ -10,7 +10,7 @@ import "../plan-studio.css";
 import "../envelope-source.css";
 import "../envelope-transfer.css";
 import "../envelope-insights.css";
-import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useFocusTrap, useFocusTrapOn } from "@/hooks/use-focus-trap";
 import { BookmarkPlus, Check, ChevronDown, FileDown, Pencil, Plus, Sparkles, Trash2, WalletCards } from "lucide-react";
@@ -135,6 +135,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const [showGlossary, setShowGlossary] = useState(() => !hasSeenEnvelopeGlossary());
   /** Formularul de plic stă închis sub listă; „+ Plic”, „Modifică” și pornirea rapidă îl deschid. */
   const [builderOpen, setBuilderOpen] = useState(false);
+  /** Graficele și lunile unui plic se calculează doar când „Detalii” e deschis, nu la fiecare literă din „+ Plic”. */
+  const [openDetails, setOpenDetails] = useState<ReadonlySet<string>>(() => new Set());
   const closeBuilder = () => { setBuilderOpen(false); setEditingAllocationId(""); };
   const builderRef = useRef<HTMLDetailsElement>(null);
   // D16: pe telefon, formularul deschis se randează la nivelul aplicației (peste barele de sus și de jos).
@@ -162,9 +164,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const weeklyPacedTotal = plan.allocations.filter((item) => isWeeklyPaced(item, plan)).reduce((sum, item) => sum + item.amount, 0);
   const activeCycle = planWeeklyCycle(data) || (planEnd && weeklyPacedTotal > 0 ? calendarBudget(weeklyPacedTotal, plan.periodStart, planEnd) : undefined);
   const activeWeek = activeCycle?.weeks.find((week) => isoToday() >= week.start && isoToday() <= week.end);
-  const runOutById = new Map(envelopeRunOut(data).map((entry) => [entry.allocationId, entry]));
-  const burnById = new Map(envelopeBurnPace(data).map((entry) => [entry.allocationId, entry]));
-  const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: isWeeklyPaced(item, plan) ? allocationWeekStatus(data, item) : undefined, weeks: isWeeklyPaced(item, plan) ? allocationWeeksStatus(data, item) : [] }));
+  const runOutById = useMemo(() => new Map(envelopeRunOut(data).map((entry) => [entry.allocationId, entry])), [data]);
+  const burnById = useMemo(() => new Map(envelopeBurnPace(data).map((entry) => [entry.allocationId, entry])), [data]);
+  const envelopes = useMemo(() => plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: isWeeklyPaced(item, plan) ? allocationWeekStatus(data, item) : undefined, weeks: isWeeklyPaced(item, plan) ? allocationWeeksStatus(data, item) : [] })), [data, plan]);
   const [funded, setFunded] = useState<Record<string, number>>({});
   const [importText, setImportText] = useState("");
   const [importNotice, setImportNotice] = useState("");
@@ -182,7 +184,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   }, [plan.allocations]);
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const weekSpentByIndex = envelopes.reduce((all, envelope) => { envelope.weeks.forEach((week) => all.set(week.index, (all.get(week.index) || 0) + week.spent)); return all; }, new Map<number, number>());
-  const { availableSources, scheduled, scheduledInEnvelopes, reservedInEnvelopes, unrepartized } = planAllocationMath(data);
+  const { availableSources, scheduled, scheduledInEnvelopes, reservedInEnvelopes, unrepartized } = useMemo(() => planAllocationMath(data), [data]);
   // Tichetele nu intră în plicuri, dar sunt tot bani de mâncare: se arată lângă plicul de alimente (utilizator #9).
   const mealLeft = data.settings.paymentSources.filter((source) => source.kind === "meal").reduce((sum, source) => sum + Math.max(0, sourceBalance(data, source.id)), 0);
   const isFoodCategory = (category?: string) => category === "Alimente" || category === "Mâncare";
@@ -498,7 +500,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><b>{item.label}</b>{(item.memberId || item.sourceId || item.note) && <small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small>}</div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>{t("rămași din {amount}", { amount: money(budget) })}</small>{mealLeft > 0 && isFoodCategory(item.category) && <small className="bf-allocation-meal">{t("+ tichete: {amount}", { amount: money(mealLeft) })}</small>}</div>
           <div className={`bf-envelope-meter${(week ? week.state : state) === "over" ? " is-over" : (!fixed && (week ? week.budget : budget) > 0 && (week ? week.spent : spent) / (week ? week.budget : budget) >= (item.alertThreshold || 80) / 100) ? " is-watch" : ""}`}><span>{week ? t("Săptămâna S{index}", { index: week.index }) : t("Tot plicul")}{" · "}{t("cheltuit")}</span><b>{money(week ? week.spent : spent)} <small>/ {money(week ? week.budget : budget)}</small></b><i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.max(0, ((week ? week.budget : budget) > 0 ? (week ? week.spent : spent) / (week ? week.budget : budget) : 0) * 100))}%` }} />{!fixed && (() => { const mark = todayMark(week ? week.start : plan.periodStart, week ? week.end : plan.nextPayday); return mark === undefined ? null : <u className="bf-meter-today" style={{ left: `${mark}%` }} title={t("Aici ar trebui să fii azi")} />; })()}</i></div>
-          <details className="bf-envelope-more"><summary>{t("Detalii")}<ChevronDown size={15} aria-hidden="true" /></summary>
+          <details className="bf-envelope-more" onToggle={(event) => { const open = event.currentTarget.open; setOpenDetails((current) => { if (open === current.has(item.id)) return current; const next = new Set(current); if (open) next.add(item.id); else next.delete(item.id); return next; }); }}><summary>{t("Detalii")}<ChevronDown size={15} aria-hidden="true" /></summary>
+          {openDetails.has(item.id) && <>
           {(() => { const chart = fixed ? undefined : envelopeBurndown(data, item); return chart ? <EnvelopeBurndownChart chart={chart} /> : null; })()}
           {(() => {
             const until = envelopeUntilPayday(data, item);
@@ -564,7 +567,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             </details>;
           })()}
           <div className="bf-allocation-actions"><button aria-label={t("Editează {label}", { label: item.label })} onClick={() => editAllocation(item)}><Pencil size={15} /> {t("Editează")}</button><button aria-label={t("Șterge {label}", { label: item.label })} onClick={() => deleteAllocation(item.id, item.label)}><Trash2 size={15} /> {t("Șterge")}</button></div>
-          </details>
+          </>}</details>
         </article></Fragment>)}
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Un plic e o limită pe o categorie: Mâncare, Transport, Chirie. Începe cu unul, restul le adaugi când ai nevoie.")}</span><button type="button" className="bf-primary" onClick={() => setBuilderOpen(true)}><Plus size={16} /> {t("Fă primul plic")}</button></div>}
             </div>

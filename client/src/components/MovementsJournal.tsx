@@ -66,6 +66,9 @@ const haystackOf = (item: Transaction) => {
   return text;
 };
 
+/** Cele mai noi întâi. Datele sunt ISO: comparația de șiruri ține locul lui localeCompare. */
+const byNewest = (a: Transaction, b: Transaction) => (b.date > a.date ? 1 : b.date < a.date ? -1 : (b.createdAt || "") > (a.createdAt || "") ? 1 : (b.createdAt || "") < (a.createdAt || "") ? -1 : 0);
+
 export function MovementsJournal({ data, onEdit, onDelete, onAdd, onOpenReview, onChange }: { data: AppData; onEdit: (item: Transaction) => void; onDelete: (id: string) => void; onAdd: () => void; onOpenReview?: () => void; onChange?: (next: AppData) => void }) {
   const [kind, setKind] = useState<"all" | TransactionKind>("all"); const [member, setMember] = useState("all"); const [source, setSource] = useState("all"); const [shareScope, setShareScope] = useState<"all" | ShareScope>("all"); const [query, setQuery] = useState(() => (typeof window === "undefined" ? "" : takeJournalQuery(window.sessionStorage))); const [fromDate, setFromDate] = useState(""); const [toDate, setToDate] = useState(""); const [focusDay, setFocusDay] = useState(""); const [filtersOpen, setFiltersOpen] = useState(false); const [showSaved, setShowSaved] = useState(false); const [saveName, setSaveName] = useState(""); const [renamingId, setRenamingId] = useState<string | null>(null); const [renameValue, setRenameValue] = useState("");
   // P2-5: lista se refiltrează după tastare, nu la fiecare tastă; textul căutat al fiecărei mișcări se face o dată.
@@ -76,7 +79,12 @@ export function MovementsJournal({ data, onEdit, onDelete, onAdd, onOpenReview, 
   // Pe telefon filtrele sunt o foaie peste listă; Escape o închide ca pe orice foaie.
   useEffect(() => { if (!filtersOpen) return; const root = document.documentElement; root.classList.add("bf-journal-sheet-open"); const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") setFiltersOpen(false); }; window.addEventListener("keydown", onKey); return () => { root.classList.remove("bf-journal-sheet-open"); window.removeEventListener("keydown", onKey); }; }, [filtersOpen]);
   const filtersActive = [kind !== "all", member !== "all", source !== "all", shareScope !== "all", Boolean(query), Boolean(fromDate), Boolean(toDate), Boolean(focusDay)].filter(Boolean).length;
-  const narrowed = useMemo(() => data.transactions.filter((item) => (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && (!fromDate || item.date >= fromDate) && (!toDate || item.date <= toDate) && matchesQuery(item)).sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : (b.createdAt || "") > (a.createdAt || "") ? 1 : (b.createdAt || "") < (a.createdAt || "") ? -1 : 0)), [data.transactions, fromDate, kind, member, normalizedQuery, shareScope, source, toDate]);
+  const ordered = useMemo(() => data.transactions.slice().sort(byNewest), [data.transactions]);
+  const narrowed = useMemo(() => {
+    const quiet = kind === "all" && member === "all" && source === "all" && shareScope === "all" && !fromDate && !toDate && !normalizedQuery;
+    if (quiet) return ordered;
+    return ordered.filter((item) => (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && (!fromDate || item.date >= fromDate) && (!toDate || item.date <= toDate) && matchesQuery(item));
+  }, [ordered, fromDate, kind, member, normalizedQuery, shareScope, source, toDate]);
   const list = useMemo(() => focusDay ? narrowed.filter((item) => item.date === focusDay) : narrowed, [focusDay, narrowed]);
   const today = isoToday(); const todayMoves = useMemo(() => data.transactions.filter((item) => item.date === today && (kind === "all" || item.kind === kind) && (member === "all" || item.memberId === member) && (source === "all" || item.sourceId === source) && (shareScope === "all" || transactionShareScope(item) === shareScope) && matchesQuery(item)), [data.transactions, today, kind, member, source, shareScope, normalizedQuery]); const todayIncome = todayMoves.filter((item) => item.kind === "income" && !isBalanceAdjustment(item)).reduce((sum, item) => sum + item.amount, 0); const todayExpense = todayMoves.filter((item) => item.kind === "expense" && !isBalanceAdjustment(item)).reduce((sum, item) => sum + item.amount, 0);
   const knownIds = useRef("");

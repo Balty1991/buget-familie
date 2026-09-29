@@ -41,6 +41,12 @@ const byDateDesc = <T extends LedgerSearchItem>(items: T[]): T[] => {
   if (!sorted) { sorted = items.slice().sort((a, b) => ((b.date || "") > (a.date || "") ? 1 : (b.date || "") < (a.date || "") ? -1 : 0)); sortedCache.set(items, sorted); }
   return sorted;
 };
+
+/** Primele mișcări, cele mai noi, fără a sorta din nou la fiecare deschidere a căutării. */
+export function recentLedger<T extends LedgerSearchItem>(items: T[], limit = 5): T[] {
+  return byDateDesc(items).slice(0, limit);
+}
+
 const foldedCache = new WeakMap<object, string>();
 
 export function searchLedgerHits<T extends LedgerSearchItem>(items: T[], query: string, limit = 6, extra?: (item: T) => string): T[] {
