@@ -20,14 +20,29 @@ export function SettleUpCard({ data, onChange }: { data: AppData; onChange: (nex
     if (!debt) return;
     onChange(applySettlement(data, undefined, { fromSourceId: wallets?.from?.id, toSourceId: wallets?.to?.id }));
   };
+  const plan = data.settings.salaryPlan;
+  const bySalary = plan.settleShare === "income";
+  const setShare = (next: "equal" | "income") => {
+    if ((next === "income") === bySalary) return;
+    onChange({ ...data, settings: { ...data.settings, salaryPlan: { ...plan, settleShare: next === "income" ? "income" : undefined, updatedAt: new Date().toISOString() } } });
+  };
+  const [first, second] = socoteala.rows;
+  const shareOf = (row: { paid: number; balance: number }) => money(Math.round((row.paid - row.balance) * 100) / 100);
 
   return (
     <section className="bf-settle" aria-labelledby="bf-settle-title">
       <p className="bf-kicker">{t("CINE CUI DATOREAZĂ")}</p>
       <h2 id="bf-settle-title">{t("Cheltuieli comune de pe {date}", { date: formatDate(socoteala.since) })}</h2>
+      <div className="bf-segment" role="group" aria-label={t("Cum se împarte")}>
+        <button type="button" className={bySalary ? "" : "active"} onClick={() => setShare("equal")}>{t("Jumătate")}</button>
+        <button type="button" className={bySalary ? "active" : ""} onClick={() => setShare("income")}>{t("După salariu")}</button>
+      </div>
       <p className="bf-settle-lead">
-        {t("{total} în total, adică {each} de fiecare.", { total: money(socoteala.total), each: money(socoteala.perPerson) })}
+        {socoteala.shareMode === "income" && first && second
+          ? t("{total} în total, după salariu: {one} {oneAmount}, {two} {twoAmount}.", { total: money(socoteala.total), one: first.name, oneAmount: shareOf(first), two: second.name, twoAmount: shareOf(second) })
+          : t("{total} în total, adică {each} de fiecare.", { total: money(socoteala.total), each: money(socoteala.perPerson) })}
       </p>
+      {bySalary && socoteala.shareMode !== "income" && <p className="bf-helper">{t("Fără salariu declarat la amândoi, rămâne jumătate-jumătate.")}</p>}
       <ul className="bf-settle-rows">
         {socoteala.rows.map((row) => (
           <li key={row.memberId}>

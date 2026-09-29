@@ -41,13 +41,34 @@ export function calendarBudget(total: number, start: string, end: string, weekly
     const toSunday = (7 - new Date(cursor).getUTCDay()) % 7;
     const sliceEnd = Math.min(cursor + toSunday * dayMs, last);
     const sliceDays = Math.round((sliceEnd - cursor) / dayMs) + 1;
-    const amount = sliceEnd === last
-      ? roundMoney(Math.max(0, safeTotal - distributed))
-      : perWeek
-        ? roundMoney(Math.min(Math.round(perWeek * sliceDays / 7), Math.max(0, safeTotal - distributed)))
-        : roundMoney(safeTotal * sliceDays / days);
+    const fair = perWeek
+      ? roundMoney(Math.round(perWeek * sliceDays / 7))
+      : roundMoney(safeTotal * sliceDays / days);
+    const rest = roundMoney(Math.max(0, safeTotal - distributed));
+    let amount: number;
+    if (!perWeek) {
+      amount = sliceEnd === last ? rest : roundMoney(safeTotal * sliceDays / days);
+    } else if (sliceEnd !== last) {
+      amount = roundMoney(Math.min(fair, rest));
+    } else if (rest <= fair + 1) {
+      // Restul de un leu din rotunjire rămâne pe ultima tranșă.
+      amount = rest;
+    } else {
+      // Al doilea salariu nu varsă toată mâncarea rămasă într-o singură săptămână.
+      amount = fair;
+    }
     weeks.push({ index: weeks.length + 1, start: toIso(cursor), end: toIso(sliceEnd), days: sliceDays, amount });
     distributed = roundMoney(distributed + amount); cursor = sliceEnd + dayMs;
+  }
+  const extra = perWeek ? roundMoney(safeTotal - distributed) : 0;
+  if (extra > 1 && weeks.length) {
+    const daySum = weeks.reduce((sum, week) => sum + week.days, 0) || 1;
+    let left = extra;
+    weeks.forEach((week, index) => {
+      const add = index === weeks.length - 1 ? left : roundMoney(Math.min(left, extra * week.days / daySum));
+      week.amount = roundMoney(week.amount + add);
+      left = roundMoney(Math.max(0, left - add));
+    });
   }
   return { total: roundMoney(safeTotal), start, end, days, exactWeeks: days / 7, weeklyAmount, weeks };
 }

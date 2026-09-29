@@ -31,6 +31,27 @@ export function CycleClosePanel({ data, onChange }: { data: AppData; onChange: (
       <p className="bf-cycle-close-lead">
         {t("Ai cheltuit {spent} și au rămas {left} în plicuri.", { spent: money(close.spent), left: money(close.leftInEnvelopes) })}
       </p>
+      <p className="bf-cycle-close-lead">
+        {close.envelopes.some((item) => item.left < -1)
+          ? t("S-a trecut la: {names}.", { names: close.envelopes.filter((item) => item.left < -1).map((item) => item.label).join(", ") })
+          : t("Ați rămas în plicuri.")}
+      </p>
+      {(data.settings.salaryPlan.cycleMemory || []).length > 0 && (
+        <div className="bf-cycle-close-lessons">
+          <b>{t("Ciclurile trecute")}</b>
+          <ul className="bf-cycle-close-list">
+            {(data.settings.salaryPlan.cycleMemory || []).map((item) => (
+              <li key={`${item.periodStart}:${item.periodEnd}`}>
+                <div>
+                  <b>{zi(item.periodStart)} – {zi(item.periodEnd)}</b>
+                  <small>{item.over.length ? t("S-a trecut la: {names}.", { names: item.over.join(", ") }) : t("Ați rămas în plicuri.")}</small>
+                </div>
+                <span>{money(item.leftInEnvelopes)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {close.envelopes.length > 0 && (
         <ul className="bf-cycle-close-list">

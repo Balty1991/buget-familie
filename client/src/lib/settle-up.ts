@@ -7,8 +7,8 @@
  * deosebirea dintre comun și personal — dar nu făcea niciodată scăderea.
  *
  * Se numără doar cheltuielile comune, din ciclul curent, de la ultima decontare încoace.
- * Împărțirea e în părți egale, spusă pe față: orice altă regulă ar fi o părere pe care
- * aplicația nu are de unde s-o știe.
+ * Implicit, părți egale. Dacă familia alege „după salariu” și amândoi au un venit
+ * declarat, partea fiecăruia urmează salariul. Fără venit la unul dintre ei, rămâne jumătate.
  */
 import {
   inPlanPeriod,
@@ -31,6 +31,8 @@ export type SettleUp = {
   settledAt?: string;
   total: number;
   perPerson: number;
+  /** „income” doar când regula e după salariu și amândoi au venit declarat. */
+  shareMode: "equal" | "income";
   rows: SettleRow[];
   /** Cine, cui, cât. Lipsește când diferența e neglijabilă. */
   debt?: { fromId: string; fromName: string; toId: string; toName: string; amount: number };
@@ -69,10 +71,17 @@ export function settleUp(data: AppData, today = isoToday()): SettleUp | undefine
     && inCycle(item)
     && afterSettlement(item));
   const total = round(comune.reduce((sum, item) => sum + item.amount, 0));
-  const perPerson = round(total / membri.length);
-  const rows: SettleRow[] = membri.map((member) => {
+  const useIncome = plan.settleShare === "income";
+  const weights = membri.map((member) => (plan.incomes || []).filter((item) => !item.archived && item.memberId === member.id).reduce((sum, item) => sum + item.amount, 0));
+  const byIncome = useIncome && weights.every((item) => item > 0);
+  const portions = byIncome ? weights : membri.map(() => 1);
+  const portionSum = portions.reduce((sum, item) => sum + item, 0);
+  const shares = portions.map((item) => round(total * item / portionSum));
+  shares[shares.length - 1] = round(total - shares.slice(0, -1).reduce((sum, item) => sum + item, 0));
+  const perPerson = shares.length === 2 && shares[0] === shares[1] ? shares[0] : round(total / membri.length);
+  const rows: SettleRow[] = membri.map((member, index) => {
     const paid = round(comune.filter((item) => item.memberId === member.id).reduce((sum, item) => sum + item.amount, 0));
-    return { memberId: member.id, name: member.name, paid, balance: round(paid - perPerson) };
+    return { memberId: member.id, name: member.name, paid, balance: round(paid - shares[index]) };
   });
   const creditor = rows.reduce((cel, item) => item.balance > cel.balance ? item : cel, rows[0]);
   const debitor = rows.reduce((cel, item) => item.balance < cel.balance ? item : cel, rows[0]);
@@ -82,6 +91,7 @@ export function settleUp(data: AppData, today = isoToday()): SettleUp | undefine
     settledAt: ultima?.date,
     total,
     perPerson,
+    shareMode: byIncome ? "income" : "equal",
     rows,
     // Sub un leu nu se cheamă datorie, se cheamă rotunjire.
     debt: diferenta >= 1 && creditor.memberId !== debitor.memberId

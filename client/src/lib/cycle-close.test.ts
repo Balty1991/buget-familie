@@ -93,6 +93,7 @@ describe("închiderea ciclului", () => {
     expect(plan.allocations.find((item) => item.id === "env-trans")!.amount).toBe(500);
     expect(plan.transfers).toEqual([]);
     expect((plan.allocationHistory || [])[0]).toMatchObject({ kind: "updated", allocationId: "env-food", previousAmount: 2000 });
+    expect(plan.cycleMemory?.[0]).toEqual({ periodStart: "2026-08-09", periodEnd: "2026-09-09", spent: 900, leftInEnvelopes: 1600, over: [] });
   });
 
   it("o întârziere mare mută startul pe azi, ca planul să nu se nască consumat", () => {

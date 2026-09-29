@@ -44,6 +44,25 @@ describe("decontarea între doi oameni", () => {
     expect(out.debt).toMatchObject({ fromName: "Ea", toName: "Eu", amount: 300 });
   });
 
+  it("după salariu împarte 3 la 1, iar fără venit la unul rămâne jumătate", () => {
+    const data = casa();
+    data.settings.salaryPlan.settleShare = "income";
+    data.settings.salaryPlan.incomes = [
+      { id: "i1", memberId: "m1", label: "Eu", amount: 6000, day: 10 },
+      { id: "i2", memberId: "m2", label: "Ea", amount: 2000, day: 25 },
+    ];
+    data.transactions = [tx("t1", 800, "m1")];
+    const weighted = settleUp(data, "2026-09-21")!;
+    expect(weighted.shareMode).toBe("income");
+    expect(weighted.rows.map((row) => row.balance)).toEqual([200, -200]);
+    expect(weighted.debt).toMatchObject({ fromName: "Ea", toName: "Eu", amount: 200 });
+    data.settings.salaryPlan.incomes = [data.settings.salaryPlan.incomes[0]];
+    const equal = settleUp(data, "2026-09-21")!;
+    expect(equal.shareMode).toBe("equal");
+    expect(equal.perPerson).toBe(400);
+    expect(equal.debt).toMatchObject({ amount: 400 });
+  });
+
   it("cheltuielile personale nu intră în socoteală", () => {
     const data = casa();
     data.transactions = [tx("t1", 800, "m1", { shareScope: "personal" }), tx("t2", 200, "m2")];

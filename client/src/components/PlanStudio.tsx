@@ -25,6 +25,7 @@ import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
 import { amountInput, sourceBalance, allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { applyPlanRows, parsePlanTable } from "@/lib/plan-import";
 import { nextCycleIncomeArrived, envelopeBurnPace, envelopeMonthlyHistory, envelopeRunOut, envelopeUntilPayday, weekDayCap, envelopeBurndown} from "@/lib/household-insights";
 import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
 import { EnvelopeBurndownChart } from "@/components/EnvelopeBurndownChart";
@@ -165,6 +166,8 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const burnById = new Map(envelopeBurnPace(data).map((entry) => [entry.allocationId, entry]));
   const envelopes = plan.allocations.map((item) => ({ item, ...allocationStatus(data, item), week: isWeeklyPaced(item, plan) ? allocationWeekStatus(data, item) : undefined, weeks: isWeeklyPaced(item, plan) ? allocationWeeksStatus(data, item) : [] }));
   const [funded, setFunded] = useState<Record<string, number>>({});
+  const [importText, setImportText] = useState("");
+  const [importNotice, setImportNotice] = useState("");
   useEffect(() => {
     const gains: Record<string, number> = {};
     for (const item of plan.allocations) {
@@ -455,6 +458,21 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         </>}
       </div>
     </header>
+    <details className="bf-plan-import">
+      <summary>{t("Adu plicuri dintr-un tabel")}</summary>
+      <p className="bf-helper">{t("Câte o linie: nume, apoi sumă, pe ciclu. Plicurile care există deja rămân neschimbate.")}</p>
+      <label className="bf-field">
+        <textarea aria-label={t("Adu plicuri dintr-un tabel")} value={importText} onChange={(event) => setImportText(event.target.value)} rows={4} placeholder={"Mâncare, 600\nChirie, 1800"} />
+      </label>
+      <button type="button" className="bf-secondary" onClick={() => {
+        const rows = parsePlanTable(importText);
+        if (!rows.length) { setImportNotice(t("Nu am găsit linii cu nume și sumă.")); return; }
+        const result = applyPlanRows(data, rows);
+        if (result.added > 0) { onChange(result.data); setImportText(""); }
+        setImportNotice(t("Am adăugat {count} plicuri.", { count: String(result.added) }));
+      }}>{t("Adaugă plicurile noi")}</button>
+      {importNotice && <p className="bf-helper" role="status">{importNotice}</p>}
+    </details>
 
     {/* Lista plicurilor e primul lucru de pe ecran; înainte începea abia după ~3.400 px de setări. */}
     <section className="bf-envelope-list-first" aria-labelledby="bf-envelope-list-title">

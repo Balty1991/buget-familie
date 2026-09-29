@@ -10,7 +10,7 @@ import { Field, Modal, fmtExact, money } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
 import { hasInvalidRoDate, RoDateInput } from "@/components/RoDateInput";
 
-export function TransactionForm({ data, initial, onSave, onClose }: { data: AppData; initial?: Transaction; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number }) => void; onClose: () => void }) {
+export function TransactionForm({ data, initial, onSave, onClose }: { data: AppData; initial?: Transaction; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => void; onClose: () => void }) {
   const [kind, setKind] = useState<TransactionKind>(initial?.kind || "expense");
   const [title, setTitle] = useState(initial?.title || "");
   const [amount, setAmount] = useState(initial ? amountInput(initial.amount) : "");
@@ -153,7 +153,8 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
       const edited: Transaction = { ...(initial && initial.id === captureIdRef.current ? initial : {}), id: captureIdRef.current, title: title.trim(), amount: stored, originalAmount: isForeign ? originalTyped : undefined, originalCurrency: isForeign ? entryCurrency : undefined, exchangeRate: isForeign ? activeRate : undefined, kind, category: kind === "income" ? "Venit" : category, sourceId: source.id, source: source.name, memberId: member.id, person: member.name, date, note: note.trim() || undefined, allocationId: kind === "expense" ? allocationId : undefined, outsideChosen: kind === "expense" && allocationId === "outside" && (initial ? Boolean(initial.outsideChosen) || (initial.allocationId !== undefined && initial.allocationId !== "outside") : allocationChoiceTouched) ? true : undefined, shareScope, createdAt: initial?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString(), receiptId: initial?.receiptId };
       // Transferul are două jumătăți: suma și data se corectează pe amândouă, altfel cardurile nu mai bat.
       const pair = initial?.transferId ? data.transactions.find((item) => item.transferId === initial.transferId && item.id !== initial.id) : undefined;
-      onSave(pair && !pair.originalCurrency && !edited.originalCurrency ? [edited, { ...pair, amount: edited.amount, date: edited.date, updatedAt: edited.updatedAt }] : edited, { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined });
+      const learnRule = kind === "expense" && title.trim().length >= 3 && allocationId !== "outside" && allocationId !== initial?.allocationId ? { match: title.trim(), category, allocationId } : undefined;
+      onSave(pair && !pair.originalCurrency && !edited.originalCurrency ? [edited, { ...pair, amount: edited.amount, date: edited.date, updatedAt: edited.updatedAt }] : edited, { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined, ...(learnRule ? { learnRule } : {}) });
       onClose();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("Nu am putut salva mișcarea."));

@@ -20,6 +20,7 @@ import {
   type AllocationHistoryEntry,
   type AppData,
   type BudgetAllocation,
+  type CycleMemory,
   isBalanceAdjustment,
 } from "./finance-data";
 import { nextPaydayAfter } from "./monthly-needs";
@@ -177,6 +178,13 @@ export function startNextCycle(data: AppData, lessonIds: string[] = [], today = 
   const plan = data.settings.salaryPlan;
   const alese = close.lessons.filter((item) => lessonIds.includes(item.allocationId));
   const now = new Date().toISOString();
+  const memory: CycleMemory = {
+    periodStart: close.periodStart,
+    periodEnd: close.periodEnd,
+    spent: close.spent,
+    leftInEnvelopes: close.leftInEnvelopes,
+    over: close.envelopes.filter((item) => item.left < -1).map((item) => item.label),
+  };
   const istoric: AllocationHistoryEntry[] = alese.map((item) => ({
     id: newId("allocation-history"),
     kind: "updated" as const,
@@ -203,6 +211,7 @@ export function startNextCycle(data: AppData, lessonIds: string[] = [], today = 
         transfers: [],
         weekTransfers: [],
         joinedMidCycle: false,
+        cycleMemory: [memory, ...(plan.cycleMemory || [])].slice(0, 6),
         allocationHistory: [...istoric, ...(plan.allocationHistory || [])].slice(0, 400),
         updatedAt: now,
       },

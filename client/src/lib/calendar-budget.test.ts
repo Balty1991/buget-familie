@@ -13,4 +13,9 @@ describe("tranșele pe săptămâni", () => {
     const calendar = calendarBudget(1500, "2026-10-10", "2026-11-10", 600)!;
     expect(calendar.weeks.map((week) => week.amount)).toEqual([171, 600, 600, 129, 0, 0]);
   });
+  it("al doilea salariu nu varsă tot restul de mâncare în ultima săptămână", () => {
+    const calendar = calendarBudget(5000, "2026-10-10", "2026-11-10", 600)!;
+    expect(calendar.weeks.map((week) => week.amount)).toEqual([312.13, 1093.94, 1093.94, 1093.94, 1093.94, 312.11]);
+    expect(calendar.weeks.reduce((sum, week) => sum + week.amount, 0)).toBeCloseTo(5000, 2);
+  });
 });

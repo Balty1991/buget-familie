@@ -42,7 +42,7 @@ export const inviteLink = (invite: FamilyInvite) => `${PUBLIC_SITE_URL}#${INVITE
 
 /** Textul trimis partenerului. Fragmentul `#…` nu pleacă la niciun server când se deschide linkul. */
 export const inviteMessage = (invite: FamilyInvite) =>
-  `Hai în bugetul familiei. Deschide linkul sau lipește codul în Buget Familie → Sync → „Am primit o invitație”:\n${inviteLink(invite)}`;
+  `Hai în bugetul familiei. Pe Android deschide aplicația. Pe iPhone deschide linkul în browser — nu e nevoie de App Store.\n${inviteLink(invite)}`;
 
 /** Invitația venită prin link (`#alatura=…`), apoi scoasă din adresă ca să nu rămână în istoric. */
 export function takeInviteFromLocation(): FamilyInvite | undefined {

@@ -72,6 +72,8 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
   const [needs, setNeeds] = useState<NeedDraft[]>(START_NEEDS.map((item) => ({ ...item, label: t(item.label) })));
   const [flex, setFlex] = useState(3);
   const [onHand, setOnHand] = useState("");
+  /** Facturile bifate se rezervă din banii de acum: „Poți folosi azi” nu le mai promite. */
+  const [dueBefore, setDueBefore] = useState<Record<string, boolean>>({});
   /** Salariile venite de curând: sunt deja în suma de acum? Altfel se adunau de două ori (8.400 în loc de 4.100). */
   const [alreadyIn, setAlreadyIn] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
@@ -139,6 +141,11 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
       // Ciclul pornește din ziua salariului deja intrat, ca venitul să fie al ciclului de acum.
       cycleStart = rows.filter((row) => row.kind === "income").map((row) => row.date).sort()[0] || today;
     }
+    // Doar ce a bifat omul, și doar din banii scriși acum. Soldul de pornire rămâne suma lui.
+    const dueSum = Math.round(needs.filter((item) => item.on && item.priority === "fixed" && item.cadence === "monthly" && dueBefore[item.label] && parseRomanianAmount(item.amount) > 0).reduce((sum, item) => sum + parseRomanianAmount(item.amount), 0) * 100) / 100;
+    const reserved = cash > 0 && main && dueSum > 0 && !data.transactions.length && !(main.openingBalance > 0) ? Math.round(Math.min(dueSum, cash) * 100) / 100 : 0;
+    const dueId = reserved > 0 ? newId("allocation") : "";
+    const dueEnvelope = reserved > 0 && main ? { id: dueId, label: t("De plătit până la salariu"), amount: reserved, category: "Casă & facturi", sourceId: main.id, weeklyPace: false as const, updatedAt: now } : undefined;
     const plan = data.settings.salaryPlan;
     const earliest = firstDay && flex > 0 ? (() => { const date = new Date(`${firstDay}T12:00:00`); date.setDate(date.getDate() - flex); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; })() : undefined;
     onFinish({
@@ -153,6 +160,7 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
           ...plan,
           incomes: [...(plan.incomes || []), ...expected],
           needs: [...(plan.needs || []), ...declared],
+          allocations: dueEnvelope ? [...plan.allocations, dueEnvelope] : plan.allocations,
           paydayFlexDays: flex,
           ...(firstDay && !plan.nextPayday ? { periodStart: cycleStart, nextPayday: firstDay, earliestPayday: earliest && earliest > today ? earliest : today } : {}),
           updatedAt: now,
@@ -239,6 +247,15 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
             </select>
           </label>
           <label className="bf-field"><span>{t("Cât aveți acum, pe card și cash? (opțional)")}</span><input inputMode="decimal" value={onHand} onChange={(event) => setOnHand(event.target.value)} placeholder={t("ex. 1.250")} /></label>
+          {needs.some((item) => item.on && item.priority === "fixed" && item.cadence === "monthly" && parseRomanianAmount(item.amount) > 0) && (
+            <>
+              <p className="bf-kicker">{t("Ce mai ai de plătit până la salariu?")}</p>
+              <p className="bf-helper">{t("Bifează facturile și ratele care se plătesc din banii de acum. Nu intră în „Poți folosi azi”.")}</p>
+              {needs.filter((item) => item.on && item.priority === "fixed" && item.cadence === "monthly" && parseRomanianAmount(item.amount) > 0).map((item) => (
+                <label className="bf-needs-meal" key={item.label}><input type="checkbox" checked={Boolean(dueBefore[item.label])} onChange={(event) => setDueBefore((current) => ({ ...current, [item.label]: event.target.checked }))} /> {item.label} · {money(parseRomanianAmount(item.amount))}</label>
+              ))}
+            </>
+          )}
           {parseRomanianAmount(onHand) > 0 && recentIncomes.map(({ item, date }) => (
             <label className="bf-needs-meal" key={item.id}><input type="checkbox" checked={alreadyIn[item.id] !== false} onChange={(event) => setAlreadyIn((current) => ({ ...current, [item.id]: event.target.checked }))} /> {t("{label} din {date} a intrat deja și e în suma de mai sus", { label: item.who === "partner" && partnerName.trim() && item.label.trim() === t("Salariul partenerului") ? t("Salariul {name}", { name: genitiveName(partnerName.trim()) }) : item.label, date: formatDate(date, { day: "numeric", month: "long" }) })}</label>
           ))}
