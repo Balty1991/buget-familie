@@ -103,15 +103,22 @@ public class MainActivity extends BridgeActivity {
     webView.setBackgroundColor(Color.parseColor(launchDark ? "#0B0F0E" : "#E4E9E6"));
     final WebSettings settings = webView.getSettings();
     settings.setGeolocationEnabled(false);
-    /* Pagina e în APK. Nu ținem o a doua copie în cache-ul WebView.
-       Golirea se face înainte de conținut, nu la 2,5 s — altfel pagina clipește
-       și se re-citește cât omul derulează. */
-    settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-    webView.clearCache(true);
+    /* Pagina e în APK. Cache-ul WebView se golește o singură dată pe versiune,
+       nu la fiecare deschidere: altfel JS-ul se recompilează de fiecare dată
+       și a doua pornire e la fel de grea ca prima. */
+    final int version = installedVersionCode();
+    final android.content.SharedPreferences webCache = getSharedPreferences("bf_webview", MODE_PRIVATE);
+    if (webCache.getInt("cache-version", -1) != version) {
+      webView.clearCache(true);
+      webCache.edit().putInt("cache-version", version).apply();
+    }
+    settings.setCacheMode(WebSettings.LOAD_DEFAULT);
     if (Build.VERSION.SDK_INT >= 23) {
       settings.setOffscreenPreRaster(true);
     }
-    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+    if (Build.VERSION.SDK_INT >= 26) {
+      webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true);
+    }
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");
@@ -126,6 +133,19 @@ public class MainActivity extends BridgeActivity {
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
     attachSplashOverlay(webView);
     webView.postDelayed(this::pruneStaleBackupCache, 2500);
+  }
+
+  /** versionCode din APK, ca să golim cache-ul o dată după update, nu la fiecare pornire. */
+  @SuppressWarnings("deprecation")
+  private int installedVersionCode() {
+    try {
+      if (Build.VERSION.SDK_INT >= 28) {
+        return (int) getPackageManager().getPackageInfo(getPackageName(), 0).getLongVersionCode();
+      }
+      return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+    } catch (PackageManager.NameNotFoundException error) {
+      return 0;
+    }
   }
 
   /**
@@ -223,8 +243,8 @@ public class MainActivity extends BridgeActivity {
     if (!tight) return;
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
-    /* În fundal eliberăm cache-ul din RAM. Discul s-a golit deja la pornire,
-       înainte ca pagina să fie pe ecran. */
+    /* În fundal eliberăm cache-ul din RAM. Pe disc rămâne, ca redeschiderea
+       să nu recompileze pagina; la versiune nouă discul se golește la pornire. */
     if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
       || level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
       webView.post(() -> webView.clearCache(false));

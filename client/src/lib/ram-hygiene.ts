@@ -1,7 +1,7 @@
 /**
  * Memorie pe telefon (WebView):
  * — pe APK nu înregistrăm service worker (cache dublu peste fișierele din pachet)
- * — WebView nu mai scrie cache HTTP: pagina e deja în APK (MainActivity, LOAD_NO_CACHE)
+ * — WebView păstrează cache-ul între deschideri și îl golește doar la versiune nouă (MainActivity)
  * — foile atelier (~1 MB CSS) nu se parsează la 1 s după first paint
  * — la background / trim-memory eliberăm ce putem din JS
  */

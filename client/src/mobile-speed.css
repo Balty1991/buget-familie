@@ -283,3 +283,14 @@ html.capacitor-android body *::after {
   animation-duration: 0.01ms !important;
   transition-duration: 0.01ms !important;
 }
+
+/* Zilele din Mișcări care nu sunt pe ecran nu se pictează. Foaia Notează rămâne. */
+html.capacitor-android .bf-movement-day {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 148px;
+}
+
+html.capacitor-android .bf-today-activity-list article,
+html.capacitor-android .bf-today-empty-activity {
+  will-change: auto;
+}
