@@ -897,12 +897,18 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
     : undefined;
   const fromEnvelopes = flexibleLeft == null ? undefined : dayShareLeft(flexibleLeft);
   const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromEnvelopes ?? fromPace, fromLiquid, safe.available)) : 0;
+  const fixedNames = plan.allocations.filter((item) => fixedIds.has(item.id) && allocationStatus(data, item).remaining > 1).map((item) => item.label);
+  const fixedAside = fixedLeft > 1 && fixedNames.length
+    ? t("Am lăsat deoparte {amount} pentru {labels}.", { amount: stripLei(fixedLeft, getLocale()), labels: fixedNames.slice(0, 3).join(", ") })
+    : "";
   const reason = nextCycleIncome > 0 && !expired && hasPayday
     ? t("Venitul de azi e pentru ciclul următor: repartizează-l în plicuri. Cifra zilei vine din banii ciclului care se încheie.")
     : !hasPayday
     ? t("Setează următorul venit sau, la venituri neregulate, câte zile să-ți ajungă banii (Plan), ca să calculăm cât poți cheltui azi.")
     : expired
       ? t("Ciclul s-a încheiat pe {date} — pornește ciclul nou ca să-ți spun din nou ritmul zilei.", { date: formatDate(planEndDate(data.settings.salaryPlan)) })
+      : spendable <= 0 && fixedAside && spentToday < 0.5
+      ? t("Azi nu mai sunt bani liberi: {amount} stau deoparte pentru {labels}.", { amount: stripLei(fixedLeft, getLocale()), labels: fixedNames.slice(0, 3).join(", ") })
       : spendable <= 0 && remainingDays > 1 && (fromWeek != null ? rhythm.remaining : safe.available) > 0
       ? t("Azi ai folosit partea zilei; banii nu s-au terminat, doar partea de azi. De mâine: {daily} lei/zi ({available} pe {days}).", fromWeek != null
         ? { daily: stripLei(rhythm.futureShare, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(Math.max(1, rhythm.remainingDays - 1)) }
@@ -910,10 +916,12 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
       : spendable <= 0
       ? t("Azi nu mai sunt bani liberi: verifică plicurile sau plățile rezervate.")
       : fromWeek != null
-        ? t("Azi poți {pace} lei. În plicul săptămânii mai sunt {available} pentru {days}.", { pace: stripLei(fromWeek, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(rhythm.remainingDays) })
+        ? t("Azi poți {pace} lei. În plicul săptămânii mai sunt {available} pentru {days}.", { pace: stripLei(spendable, getLocale()), available: stripLei(rhythm.remaining, getLocale()), days: daysLabel(rhythm.remainingDays) })
           + (rhythm.days[0] && rhythm.days[0].day < asOf && rhythm.days[0].day === plan.periodStart && weekdayIndex(rhythm.days[0].day) !== 0 ? ` ${t("Săptămâna plicului a început {day}, în ziua salariului.", { day: new Date(`${rhythm.days[0].day}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "long" }) })}` : "")
+          + (fixedAside ? ` ${fixedAside}` : "")
         : flexibleLeft != null
           ? t("Azi poți {pace} lei. În plicurile de cheltuieli curente mai sunt {available} lei pentru {days}.", { pace: stripLei(spendable, getLocale()), available: stripLei(flexibleLeft, getLocale()), days: daysLabel(remainingDays) })
+            + (fixedAside ? ` ${fixedAside}` : "")
           : t("Azi poți {pace} lei. Mai sunt {available} lei liberi pentru {days}.", { pace: stripLei(fromPace, getLocale()), available: stripLei(safe.available, getLocale()), days: daysLabel(remainingDays) })
             + (obligationsDue > 0 ? ` ${t("Am scăzut deja {amount} lei pentru {labels}, până la salariu.", { amount: stripLei(obligationsDue, getLocale()), labels: obligations.slice(0, 3).map((item) => item.need.label).join(", ") })}` : "");
 
@@ -1469,7 +1477,9 @@ export const weeklyDigestHeadline = (data: AppData, asOf = isoToday()) => {
       detail: t("{label} cere atenție · {step}", { label: over[0].label, step: check.nextStep }),
     };
   }
-  if (check.cashflow < 0) {
+  // Salariul vine o dată pe lună. În săptămânile fără el, „cheltuieli peste venit” nu spune nimic
+  // dacă plicurile sunt în ritm.
+  if (check.cashflow < 0 && data.settings.salaryPlan.allocations.length === 0) {
     return {
       tone: "watch" as const,
       title: t("Cheltuielile depășesc veniturile cu {amount}", { amount: lei(Math.abs(check.cashflow)) }),

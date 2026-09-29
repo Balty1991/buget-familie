@@ -10,7 +10,7 @@ import "../receipt-form-fix.css";
 import "../capture-amount-first.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, Ellipsis, HeartPulse, House, Plus, ShoppingCart, Ticket, Trash2, X } from "lucide-react";
-import { allocationFromText, guessAllocationFromText, matchMerchantRule, amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, guessCategoryFromText, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { amountError, BASE_CURRENCY, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, spendTargetFromText, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
@@ -121,6 +121,8 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
    * plicul o urmează. Altfel rămânea Mâncare și benzina golea săptămâna de mâncare.
    */
   const previousCategory = useRef(category);
+  /** Text necunoscut, ținut în afara plicurilor până apare un magazin pe care îl cunoaștem. */
+  const heldOutside = useRef(false);
   useEffect(() => {
     if (previousCategory.current === category) return;
     previousCategory.current = category;
@@ -238,20 +240,29 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
         const next = event.target.value;
         setMerchant(next);
         if (categoryTouched) return;
-        // Plicul spus de text („taxi”, „Enel”) bate categoria: Lumină și Apă au aceeași categorie.
-        // O regulă învățată („Engie → Gaz”) bate ghicitul din text.
-        const ruleId = guessAllocationFromText(data, next);
-        const ruled = ruleId && matchMerchantRule(next, data.settings.merchantRules || [])?.allocationId === ruleId ? data.settings.salaryPlan.allocations.find((item) => item.id === ruleId) : undefined;
-        const envelope = ruled || allocationFromText(data, next, { memberId, sourceId });
-        if (envelope) {
-          // Categoria vine odată cu plicul: efectul „plicul urmează categoria” nu trebuie să-l
-          // mute pe primul plic al categoriei (Engie ajungea în Chirie, nu în Gaz).
-          if (envelope.category && envelope.category !== category) { previousCategory.current = envelope.category; setCategory(envelope.category); }
-          setAllocationId(envelope.id);
+        const target = spendTargetFromText(data, next, { memberId, sourceId });
+        if (target.kind === "keep") {
+          if (heldOutside.current) { heldOutside.current = false; setAllocationChoiceTouched(false); }
           return;
         }
-        const guessed = guessCategoryFromText(next, [...expenseCategories, ...data.settings.customCategories], data.settings.merchantRules || []);
-        if (guessed && guessed !== category) { setCategory(guessed); setAllocationChoiceTouched(false); }
+        if (target.kind === "envelope") {
+          heldOutside.current = false;
+          if (target.category && target.category !== category) { previousCategory.current = target.category; setCategory(target.category); }
+          setAllocationId(target.allocationId);
+          setAllocationChoiceTouched(false);
+          return;
+        }
+        if (target.kind === "category") {
+          heldOutside.current = false;
+          if (target.category !== category) setCategory(target.category);
+          setAllocationChoiceTouched(false);
+          return;
+        }
+        if (!allocationChoiceTouched || heldOutside.current) {
+          heldOutside.current = true;
+          setAllocationId("outside");
+          setAllocationChoiceTouched(true);
+        }
       }} placeholder={t("ex. Lidl")} /></label> : null}{kind === "expense" ? <label className="bf-field"><span>{t("Sau altă categorie")}</span><select value={category} onChange={(event) => { setCategory(event.target.value); setCategoryTouched(true); setAllocationChoiceTouched(false); }}>{[...expenseCategories, ...data.settings.customCategories].map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label> : <label className="bf-field"><span>{t("Ce venit?")}</span><input value={incomeLabel} onChange={(event) => setIncomeLabel(event.target.value)} placeholder={t("ex. Salariu, Bonus")} /></label>}{data.settings.members.length > 1 && <label className="bf-field"><span>{t("Cine a înregistrat")}</span><select value={memberId} onChange={(event) => { setMemberId(event.target.value); setAllocationChoiceTouched(false); }}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>}<label className="bf-field"><span>{kind === "expense" ? t("Plătit din") : t("Încasat în")}</span><select value={sourceId} onChange={(event) => { setSourceId(event.target.value); setAllocationChoiceTouched(false); }}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}{data.settings.members.length > 1 && source.memberId && !source.name.includes(sourceOwner(source.id)) ? ` · ${sourceOwner(source.id)}` : ""} · {money.format(sourceBalance(data, source.id))}{source.currency ? ` (${source.currency})` : ""}</option>)}</select></label></div>{isForeign && <section className={`bf-currency-preview ${convertedPreview ? "" : "pending"}`}><p className="bf-kicker">{t("SE ÎNREGISTREAZĂ ÎN LEI")}</p>{convertedPreview ? <><b>{money.format(convertedPreview)}</b><span>{t("La cursul de {rate} lei pentru 1 {currency}, salvat în Setări.", { rate: entryRate?.toLocaleString(getLocale(), { maximumFractionDigits: 4 }) || "", currency: entryCurrency })}</span></> : <span>{entryRate ? t("Completează suma în {currency}.", { currency: entryCurrency }) : t("Adaugă în Setări cursul pentru {currency} înainte de a folosi această sursă.", { currency: entryCurrency })}</span>}</section>}
       {parsedAmount > 0 && projectedSourceBalance != null && selectedSourceBalance > 0 && <p className={`bf-quick-source-preview ${projectedSourceBalance < 0 ? "over" : ""}`} aria-live="polite">{kind === "expense" ? t("După această plată") : t("După această încasare")}: <b>{money.format(Math.max(0, projectedSourceBalance))}</b> {t("rămân în")} {data.settings.paymentSources.find((source) => source.id === sourceId)?.name || t("sursa aleasă")}{projectedSourceBalance < 0 ? t(" — suma depășește soldul curent") : ""}.</p>}
       {kind === "expense" && data.settings.salaryPlan.allocations.length > 0 && <section className="bf-quick-envelope"><p className="bf-kicker">{t("PLICUL SĂPTĂMÂNII")}</p><label className="bf-field"><span>{t("Se consumă din")}</span><select value={allocationId} onChange={(event) => { setAllocationId(event.target.value); setAllocationChoiceTouched(true); }}>{(!hideUnallocated || allocationId === "outside") && <option value="outside">{t("În afara plicurilor")}{unrepartized > 0 ? ` · ${money.format(unrepartized)}` : ""}</option>}{candidates.map((allocation) => { const activeWeek = isWeeklyPaced(allocation, data.settings.salaryPlan) ? allocationWeekStatus(data, allocation) : undefined; const totalRemaining = isWeeklyPaced(allocation, data.settings.salaryPlan) ? undefined : allocationStatus(data, allocation).remaining; return <option key={allocation.id} value={allocation.id}>{allocation.label} · {activeWeek ? t("{amount} în S{index}", { amount: money.format(Math.max(0, activeWeek.remaining)), index: activeWeek.index }) : totalRemaining !== undefined ? t("{amount} rămași", { amount: money.format(Math.max(0, totalRemaining)) }) : t("fără tranșă activă")}</option>; })}</select></label>{weeks.length > 1 && <label className="bf-field"><span>{t("Din ce săptămână")}</span><select value={String(fromWeekIndex || week?.index || "")} onChange={(event) => setFromWeekIndex(Number(event.target.value) || undefined)}>{weeks.map((item) => <option key={item.index} value={item.index}>{t("S{index}: {remaining} rămași din {budget}{after}", { index: item.index, remaining: money.format(Math.max(0, item.remaining)), budget: money.format(item.budget), after: "" })}</option>)}</select></label>}{matchedAllocation && <p className={(week && ledgerAmount != null && week.remaining - ledgerAmount < 0) || (matchedTotal && ledgerAmount != null && matchedTotal.remaining - ledgerAmount < 0) ? "over" : ""}>{week ? t("S{index}: {remaining} rămași din {budget}{after}", { index: week.index, remaining: money.format(Math.max(0, week.remaining)), budget: money.format(week.budget), after: ledgerAmount != null && ledgerAmount > 0 ? t(" · după plată {left}", { left: money.format(Math.max(0, week.remaining - ledgerAmount)) }) : "" }) : matchedTotal ? t("{remaining} rămași din {budget}{after}", { remaining: money.format(Math.max(0, matchedTotal.remaining)), budget: money.format(matchedTotal.budget), after: ledgerAmount != null && ledgerAmount > 0 ? t(" · după plată {left}", { left: money.format(Math.max(0, matchedTotal.remaining - ledgerAmount)) }) : "" }) : t("Plic selectat; încă nu este activă o tranșă calendaristică.")}</p>}{!candidates.length && <p>{t("Nu există plic pentru această categorie și sursă. Poți salva în afara plicurilor.")}</p>}</section>}

@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { Check, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { formatDate, isoToday, newId, parseRomanianAmount, type AppData, type ExpectedIncome, type MonthlyNeed, type Transaction } from "@/lib/finance-data";
+import { billsDueEnvelopes } from "@/lib/bills-due";
 import { t } from "@/lib/i18n";
 import { lei as money } from "@/lib/money-format";
 import { genitiveName } from "@/lib/member-mode";
@@ -141,11 +142,14 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
       // Ciclul pornește din ziua salariului deja intrat, ca venitul să fie al ciclului de acum.
       cycleStart = rows.filter((row) => row.kind === "income").map((row) => row.date).sort()[0] || today;
     }
-    // Doar ce a bifat omul, și doar din banii scriși acum. Soldul de pornire rămâne suma lui.
-    const dueSum = Math.round(needs.filter((item) => item.on && item.priority === "fixed" && item.cadence === "monthly" && dueBefore[item.label] && parseRomanianAmount(item.amount) > 0).reduce((sum, item) => sum + parseRomanianAmount(item.amount), 0) * 100) / 100;
-    const reserved = cash > 0 && main && dueSum > 0 && !data.transactions.length && !(main.openingBalance > 0) ? Math.round(Math.min(dueSum, cash) * 100) / 100 : 0;
-    const dueId = reserved > 0 ? newId("allocation") : "";
-    const dueEnvelope = reserved > 0 && main ? { id: dueId, label: t("De plătit până la salariu"), amount: reserved, category: "Casă & facturi", sourceId: main.id, weeklyPace: false as const, updatedAt: now } : undefined;
+    // Fiecare factură bifată își ia plicul ei, din banii scriși acum. Soldul de pornire rămâne suma lui.
+    const onHandPath = Boolean(cash > 0 && main && !data.transactions.length && !(main.openingBalance > 0));
+    const dueBills = onHandPath ? needs.filter((item) => item.on && item.priority === "fixed" && item.cadence === "monthly" && dueBefore[item.label] && parseRomanianAmount(item.amount) > 0).map((item) => ({ label: item.label, category: item.category, amount: parseRomanianAmount(item.amount) })) : [];
+    const dueEnvelopes = main && dueBills.length ? billsDueEnvelopes(dueBills, main.id, cash, now) : [];
+    const declaredLinked = declared.map((need) => {
+      const envelope = dueEnvelopes.find((item) => item.label === need.label);
+      return envelope ? { ...need, allocationId: envelope.id } : need;
+    });
     const plan = data.settings.salaryPlan;
     const earliest = firstDay && flex > 0 ? (() => { const date = new Date(`${firstDay}T12:00:00`); date.setDate(date.getDate() - flex); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; })() : undefined;
     onFinish({
@@ -159,8 +163,8 @@ export function NeedsQuickStart({ data, yourName, onYourName, partnerName, onPar
         salaryPlan: {
           ...plan,
           incomes: [...(plan.incomes || []), ...expected],
-          needs: [...(plan.needs || []), ...declared],
-          allocations: dueEnvelope ? [...plan.allocations, dueEnvelope] : plan.allocations,
+          needs: [...(plan.needs || []), ...declaredLinked],
+          allocations: dueEnvelopes.length ? [...plan.allocations, ...dueEnvelopes] : plan.allocations,
           paydayFlexDays: flex,
           ...(firstDay && !plan.nextPayday ? { periodStart: cycleStart, nextPayday: firstDay, earliestPayday: earliest && earliest > today ? earliest : today } : {}),
           updatedAt: now,

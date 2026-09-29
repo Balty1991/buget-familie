@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { Check, WalletCards } from "lucide-react";
 import { formatDate, type AppData } from "@/lib/finance-data";
 import { applyIncomeSplit, proposeIncomeSplit } from "@/lib/monthly-needs";
-import { t } from "@/lib/i18n";
+import { daysLabel, t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
 
 const money = lei;
@@ -41,7 +41,7 @@ export function IncomeSplitCard({ data, incomeId, onChange, onDismiss }: { data:
               <b>{line.need.label}</b>
               <small>
                 {line.perWeek ? (line.extraDays
-                  ? t("{weekly} × {weeks} săpt. + {days} zile = {target}", { weekly: money(line.perWeek), weeks: line.weeks ?? 0, days: line.extraDays, target: money(line.target) })
+                  ? t("{weekly} × {weeks} săpt. + {extra} = {target}", { weekly: money(line.perWeek), weeks: line.weeks ?? 0, extra: daysLabel(line.extraDays), target: money(line.target) })
                   : t("{weekly} × {weeks} săpt. = {target}", { weekly: money(line.perWeek), weeks: line.weeks ?? 0, target: money(line.target) })) : money(line.target)}
                 {line.note ? ` · ${line.note}` : ""}
                 {line.fundedBefore > 0 ? ` · ${t("{amount} deja acoperiți", { amount: money(line.fundedBefore) })}` : ""}

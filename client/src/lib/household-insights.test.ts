@@ -435,6 +435,20 @@ describe("fereastra de comparație Analiză", () => {
     expect(digest.title).toMatch(/\d\s?lei/);
   });
 
+  it("cu plicuri în ritm, o săptămână fără salariu nu spune că veniturile au fost depășite", () => {
+    const { data, source } = base();
+    source.openingBalance = 4000;
+    data.settings.salaryPlan.periodStart = "2026-09-07";
+    data.settings.salaryPlan.nextPayday = "2026-10-07";
+    data.settings.salaryPlan.allocations = [{ id: "food", label: "Alimente", amount: 2000, category: "Alimente", sourceId: source.id, weeklyPace: true }];
+    data.transactions = [
+      { id: "e1", title: "Lidl", amount: 80, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-09-10", allocationId: "food" },
+    ];
+    const digest = weeklyDigestHeadline(data, "2026-09-10");
+    expect(digest.title).not.toMatch(/depășesc veniturile/);
+    expect(digest.tone).not.toBe("risk");
+  });
+
 });
 
 

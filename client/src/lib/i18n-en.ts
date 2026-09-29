@@ -3688,4 +3688,7 @@ export const en: Record<string, string> = {
   "Adaugă plicurile noi": "Add the new envelopes",
   "Am adăugat {count} plicuri.": "Added {count} envelopes.",
   "Nu am găsit linii cu nume și sumă.": "Couldn't find lines with a name and an amount.",
+  "Am lăsat deoparte {amount} pentru {labels}.": "Set aside {amount} for {labels}.",
+  "Azi nu mai sunt bani liberi: {amount} stau deoparte pentru {labels}.": "Nothing left to use today: {amount} is set aside for {labels}.",
+  "{weekly} × {weeks} săpt. + {extra} = {target}": "{weekly} × {weeks} wk + {extra} = {target}",
 };

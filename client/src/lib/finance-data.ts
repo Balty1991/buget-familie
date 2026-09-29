@@ -1997,6 +1997,31 @@ export const guessAllocationFromText = (data: AppData, raw: string) => {
 };
 
 /**
+ * Unde cade o cheltuială din text, înainte ca omul să aleagă el.
+ * „Lidl” și „Enel” își găsesc plicul. „Florăria” nu are de unde să știe, și nu mănâncă
+ * săptămâna de mâncare doar fiindcă formularul pornește pe Alimente.
+ */
+export type SpendTarget =
+  | { kind: "keep" }
+  | { kind: "outside" }
+  | { kind: "category"; category: string }
+  | { kind: "envelope"; allocationId: string; category?: string };
+
+export const spendTargetFromText = (data: AppData, raw: string, ctx: { memberId?: string; sourceId?: string } = {}): SpendTarget => {
+  const text = raw.trim();
+  if (text.length < 3) return { kind: "keep" };
+  const rules = data.settings.merchantRules || [];
+  const rule = matchMerchantRule(text, rules);
+  const ruled = rule?.allocationId ? data.settings.salaryPlan.allocations.find((item) => item.id === rule.allocationId) : undefined;
+  if (ruled) return { kind: "envelope", allocationId: ruled.id, category: ruled.category || rule?.category };
+  const fromText = allocationFromText(data, text, ctx);
+  if (fromText) return { kind: "envelope", allocationId: fromText.id, category: fromText.category };
+  const guessed = guessCategoryFromText(text, [...expenseCategories, ...data.settings.customCategories], rules);
+  if (guessed) return { kind: "category", category: guessed };
+  return { kind: "outside" };
+};
+
+/**
  * Interpretează local expresii românești scurte, fără un model extern. Rezultatul
  * este doar o previzualizare de simulator; nu creează nicio tranzacție.
  */
