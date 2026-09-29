@@ -2311,7 +2311,7 @@ export const en: Record<string, string> = {
   "Ce am citit din mesaj": "What I read from the message",
   "Confirmare": "Confirmation",
   "Bon": "Receipt",
-  "Conversația rămâne pe telefon. Dacă ghidul local n-a înțeles, pleacă la Google Gemini (sau Groq) întrebarea, ultimele mesaje și un rezumat al plicurilor. Poza unui bon pleacă la Gemini doar dacă telefonul nu l-a citit sigur.": "The conversation stays on this phone. If the local guide did not understand, the question, the last messages and a summary of your envelopes go to Google Gemini (or Groq). A receipt photo goes to Gemini only if the phone could not read it reliably.",
+  "Conversația rămâne pe telefon. Dacă ghidul local n-a înțeles, pleacă la Google Gemini (sau Groq) întrebarea, ultimele mesaje și un rezumat al plicurilor. Poza unui bon încărcat aici pleacă la Google Gemini, care citește totalul.": "The conversation stays on this phone. If the local guide did not understand, the question, the last messages and a summary of your envelopes go to Google Gemini (or Groq). A receipt photo you upload here goes to Google Gemini, which reads the total.",
   "Alege ritmul casei.": "Choose the household pace.",
   "După repartizare rămân {amount} nealocați, disponibili pentru o nevoie viitoare.": "After allocating, {amount} remain unassigned for a future need.",
   "ritm total": "total pace",
@@ -3737,4 +3737,8 @@ export const en: Record<string, string> = {
   "Alege o sugestie sau scrie cel puțin 2 litere.": "Pick a suggestion or type at least 2 letters.",
   "Gol": "Empty",
   "Niciun articol. Caută mai sus.": "No items yet. Search above.",
+  "Pot citi doar poze de bon (JPG, PNG). Fă o poză bonului sau notează-l din + Notează.": "I can only read receipt photos (JPG, PNG). Take a photo of the receipt or add it from + Add.",
+  "Nu am putut citi sigur totalul de pe poză. Fă o poză dreaptă, cu rândul TOTAL în cadru, sau notează bonul din + Notează.": "I couldn't read the total from the photo reliably. Take a straight photo with the TOTAL line in frame, or add the receipt from + Add.",
+  "Citit de Gemini din poză.": "Read by Gemini from the photo.",
+  "Citit pe telefon, fără internet.": "Read on this phone, offline.",
 };

@@ -11,6 +11,7 @@ import { parseModelIntents, type AssistantIntent } from "@/lib/assistant-intents
 import { dateCopy, noDoubleStop, retimeText, shiftDay, today } from "@/lib/proposal-date";
 import { analyze, answerToText } from "@/lib/analyst";
 import { dominantReceiptCategory, looksLikeProductSearch } from "@/lib/product-catalog";
+import type { ModelReceiptRead } from "@/lib/receipt-trust";
 import { buildSuggestions } from "@/lib/suggestions";
 import { RoDateInput } from "@/components/RoDateInput";
 import {
@@ -465,6 +466,66 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     return false;
   };
 
+  /**
+   * Poza de bon: întâi Gemini, care citește și bonurile mototolite; OCR-ul de pe telefon doar fără
+   * internet. Ce citește modelul trece prin checkModelReceipt (CASH nu e total, produsele trebuie
+   * să dea totalul), iar dacă nimeni nu citește sigur, omul notează bonul el, nu primește o sumă ghicită.
+   */
+  const readReceiptPhotos = async (sentAttachments: ChatAttachment[], requestText: string, blocked: boolean) => {
+    const images = sentAttachments.filter((item) => item.mimeType.startsWith("image/")).slice(0, 2);
+    if (!images.length) {
+      addMessage({ role: "assistant", text: t("Pot citi doar poze de bon (JPG, PNG). Fă o poză bonului sau notează-l din + Notează.") });
+      return;
+    }
+    const cannotRead = () => addMessage({ role: "assistant", text: t("Nu am putut citi sigur totalul de pe poză. Fă o poză dreaptă, cu rândul TOTAL în cadru, sau notează bonul din + Notează.") });
+    const propose = (read: { amount: number; vendor?: string; date?: string; category?: string; confidence: "high" | "low"; items: Array<{ label: string; amount: number; category: string }> }, by: string) => {
+      const category = read.category || dominantReceiptCategory(read.items) || "Alimente";
+      pendingReceiptRef.current = { vendor: read.vendor || t("Bon"), amount: read.amount, date: read.date, items: read.items.map((item) => ({ ...item, category: item.category || category })) };
+      const proposal = expenseProposal(requestText, { amount: read.amount, title: read.vendor || t("Bon"), vendor: read.vendor, date: read.date, category, confidence: read.confidence }, data, guideMemory.current, true);
+      if (!proposal) { cannotRead(); return; }
+      offerSpend({ ...proposal, text: `${proposal.text}\n${by}` });
+    };
+    setTyping(true);
+    try {
+      if (!blocked) {
+        try {
+          const [token, identity] = await Promise.all([appCheckHeader(), authHeader()]);
+          const headers: Record<string, string> = { "content-type": "application/json" };
+          if (token) headers["X-Firebase-AppCheck"] = token;
+          if (identity) headers.Authorization = identity;
+          const response = await fetch("https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/aiGuide", {
+            method: "POST", headers,
+            body: JSON.stringify({
+              messages: [{ role: "user", text: `${requestText}\n\nCitește bonul din poză.`, attachments: images.map((item) => ({ name: item.name, mimeType: item.mimeType, data: item.data })) }],
+              context: { ...compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }), language: getLanguage() },
+            }),
+          });
+          const payload = await response.json() as { extracted?: ModelReceiptRead; receiptLines?: ModelReceiptRead["receiptLines"]; quota?: { remaining?: number | null; limit?: number | null; resetAt?: string | null }; code?: string };
+          setQuota(consumeQuota(quota, payload.quota, response.ok, response.status === 429 || payload.code === "quota"));
+          if (response.ok) {
+            const { checkModelReceipt } = await import("@/lib/receipt-trust");
+            const checked = checkModelReceipt({ ...payload.extracted, receiptLines: payload.extracted?.receiptLines || payload.receiptLines });
+            if (!checked) { cannotRead(); return; }
+            propose({ ...checked, items: checked.lines.map((line) => ({ label: line.name || t("Produs"), amount: line.amount || 0, category: "" })) }, t("Citit de Gemini din poză."));
+            return;
+          }
+        } catch {
+          // Fără rețea: încercăm pe telefon.
+        }
+      }
+      const [{ readReceiptLocally }, { receiptReadIsTrustworthy }] = await Promise.all([import("@/lib/receipt-utils"), import("@/lib/receipt-trust")]);
+      const local = await readReceiptLocally(images.map((item) => item.data));
+      if (local.amount && receiptReadIsTrustworthy(local)) {
+        propose({ amount: local.amount, vendor: local.vendor, date: local.date, category: dominantReceiptCategory(local.items), confidence: "high", items: local.items.map((item) => ({ label: item.label, amount: item.amount, category: item.category })) }, t("Citit pe telefon, fără internet."));
+        return;
+      }
+      cannotRead();
+    } catch {
+      cannotRead();
+    } finally {
+      setTyping(false);
+    }
+  };
   const send = (draft?: string) => {
     const raw = (draft ?? message).trim();
     if (!raw && !attachments.length) return;
@@ -528,13 +589,16 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
      * De aici veneau confuziile — o cerere de plic citită ca venit, o întrebare
      * citită ca cheltuială. Acum toți citesc, iar `decide` compară.
      *
-     * Bonul fotografiat nu trece pe înțelegerea din cuvinte: suma e în imagine.
-     * OCR-ul rămâne pe telefon. La Gemini pleacă doar textul citit local, niciodată poza.
+     * Bonul fotografiat nu trece pe înțelegerea din cuvinte: suma e în imagine (readReceiptPhotos).
      */
     const sentPhotos = sentAttachments.length > 0;
     const readings = sentPhotos ? [] : understand(requestText, data, { memory: guideMemory.current, asOf: isoToday() });
     const { winner, runnerUp, ambiguous } = decide(readings);
     const blocked = quota.mode === "local" || quota.remaining <= 0;
+    if (sentPhotos) {
+      void readReceiptPhotos(sentAttachments, requestText, blocked);
+      return;
+    }
     /**
      * Două citiri la fel de bune nu înseamnă că omul a vorbit neclar — înseamnă că noi
      * citim cu reguli. Până acum îi puneam lui întrebarea („alege ce-ai vrut”) chiar
@@ -597,65 +661,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     setTyping(true);
     void (async () => {
       try {
-        let onlineRequestText = requestText;
-        let localReceiptAmount: number | undefined;
-        const imageData = sentAttachments.filter((item) => item.mimeType.startsWith("image/") || !item.mimeType).map((item) => item.data);
-        if (imageData.length) {
-          try {
-            const [{ readReceiptLocally, receiptReadIsReconciled }, { receiptReadIsTrustworthy }] = await Promise.all([
-              import("@/lib/receipt-utils"),
-              import("@/lib/receipt-trust"),
-            ]);
-            const local = await readReceiptLocally(imageData);
-            // Citirea de pe telefon decide singură doar când se leagă: produsele dau totalul și
-            // magazinul nu e un produs. Altfel (bon mototolit, 7,99/kg luat drept total) e doar indiciu.
-            const trusted = Boolean(local.amount) && receiptReadIsTrustworthy(local);
-            if (trusted) localReceiptAmount = local.amount;
-            const ocrItems = local.items.slice(0, 40).map((item) => `${item.label}=${item.amount}`).join("; ");
-            const ocrLines = local.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).slice(0, 80).join("\n").slice(0, 1600);
-            const ocrHint = [
-              "[OCR local de pe telefon: indiciu, nu autoritate. Poza bonului e atașată.]",
-              local.vendor ? `magazin candidat: ${local.vendor}` : "",
-              local.date ? `data: ${local.date}` : "",
-              local.amount ? `total candidat: ${local.amount}` : "",
-              ocrItems ? `produse: ${ocrItems}` : "",
-              "Reguli: TOTAL/SUBTOTAL e suma plătită; CASH/NUMERAR e banul dat, nu totalul; „0,506 Kg × 7,99” e prețul pe kg, nu totalul; titlul bonului e magazinul (Mega Image, Profi), nu primul produs.",
-              ocrLines ? `rânduri OCR:\n${ocrLines}` : "",
-            ].filter(Boolean).join("\n");
-            if (trusted && local.amount) {
-              pendingReceiptRef.current = {
-                vendor: local.vendor || t("Bon"),
-                amount: local.amount,
-                date: local.date,
-                items: local.items.map((item) => ({ label: item.label, amount: item.amount, category: item.category })),
-              };
-              const extracted: ExtractedGuide = {
-                amount: local.amount,
-                title: local.vendor || t("Bon"),
-                vendor: local.vendor,
-                date: local.date,
-                category: dominantReceiptCategory(local.items),
-                confidence: receiptReadIsReconciled(local) && local.vendor ? "high" : "low",
-              };
-              const localProposal = expenseProposal(requestText, extracted, data, guideMemory.current, true);
-              if (localProposal) {
-                setTyping(false);
-                offerSpend(localProposal);
-                return;
-              }
-            }
-            // „Adaugă partea de jos” doar când chiar nu e nimic de citit; altfel poza merge la model.
-            if (sentAttachments.length === 1 && !local.amount && local.items.length < 3) {
-              setTyping(false);
-              setAttachments(sentAttachments);
-              addMessage({ role: "assistant", text: t("Nu văd TOTAL pe această poză. Adaugă și partea de jos a bonului — a doua fotografie — apoi trimite din nou.") });
-              return;
-            }
-            onlineRequestText = `${requestText}\n\n${ocrHint}`;
-          } catch {
-            // Analiza vizuală online rămâne disponibilă și fără OCR local.
-          }
-        }
+        const onlineRequestText = requestText;
         if (blocked) {
           setQuota((current) => ({ ...current, mode: "local", remaining: Math.min(current.remaining, 0) }));
           setTyping(false);
@@ -668,12 +674,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         if (identity) headers.Authorization = identity;
         const response = await fetch("https://europe-central2-buget-familie-a6a0d.cloudfunctions.net/aiGuide", {
           method: "POST", headers,
-          body: JSON.stringify({ messages: [...messages, {
-            role: "user",
-            text: onlineRequestText,
-            // Doar pozele (nu PDF-uri): citirea de pe telefon n-a fost sigură, modelul citește bonul.
-            attachments: sentAttachments.filter((item) => item.mimeType.startsWith("image/")).slice(0, 2).map((item) => ({ name: item.name, mimeType: item.mimeType, data: item.data })),
-          }].slice(-8), context: { ...compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }), language: getLanguage() } }),
+          body: JSON.stringify({ messages: [...messages, { role: "user", text: onlineRequestText }].slice(-8), context: { ...compactGuideContext(data, { view, income: monthSummary.income, expense: monthSummary.expense }), language: getLanguage() } }),
         });
         const payload = await response.json() as {
           reply?: string;
@@ -739,15 +740,12 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
             return;
           }
         }
-        const receiptExtracted = sentPhotos && localReceiptAmount && localReceiptAmount > 0
-          ? { ...payload.extracted, amount: localReceiptAmount }
-          : payload.extracted;
         const lastSpendText = [...messages].reverse().find((item) => item.role === "user" && expenseProposal(item.text, undefined, data, guideMemory.current))?.text || requestText;
         const extractedText = payload.extracted?.vendor ? `${sourceTextSafe(requestText)} ${payload.extracted.vendor}` : requestText;
         const sourceText = isConfirm(raw) ? lastSpendText : extractedText;
         const proposal = payload.intent === "income" || payload.intent === "allocation" || payload.intent === "debt"
           ? undefined
-          : expenseProposal(sourceText, receiptExtracted, data, guideMemory.current, Boolean(sentPhotos) || payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
+          : expenseProposal(sourceText, payload.extracted, data, guideMemory.current, payload.intent === "expense" || /cheltuial/.test(payload.reply || ""));
         if (proposal) {
           offerSpend(proposal);
           return;
@@ -804,7 +802,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
   const pendingSpend = Boolean(pendingKind);
   const shown = shownChatMessages(messages, historyOpen);
   const hiddenCount = hiddenChatCount(messages);
-  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel${historyOpen ? "" : " is-history-collapsed"}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? t("Ghid local până {when}", { when: formatReset(quota.resetAt) }) : t("Îți răspund din contextul bugetului tău")}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" aria-label={t("Golește")} onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} />{hiddenCount > 0 ? <button type="button" className="ai-history-toggle" onClick={() => setHistoryOpen((current) => !current)}>{historyOpen ? <><ChevronUp size={13} /> {t("Restrânge istoricul")}</> : <><ChevronDown size={13} /> {t("Istoric ({count})", { count: String(hiddenCount) })}</>}</button> : null}<div className={`ai-chat-history${shown.length ? "" : " is-empty"}`} ref={historyRef} aria-live="polite">{shown.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.role === "assistant" && <button type="button" className="ai-chat-report" disabled={reportedIds.includes(item.id)} onClick={() => void reportAnswer(item.id, item.text)}>{reportedIds.includes(item.id) ? t("Semnalat. Mulțumim!") : t("Semnalează răspunsul")}</button>}{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: t("Am anulat {title} {amount}.", { title: undone.title, amount: money(undone.amount) }) } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className={pickedChoice?.label === choice.label ? "ai-chat-action is-on" : "ai-chat-action"} key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.picks && item.picks.length > 0 && <div className="ai-chat-choices">{item.picks.map((pick) => <button type="button" className="ai-chat-action" key={pick.label} onClick={() => { setMemory(markLocalSave()); act(pick.reading); }}>{pick.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{!shown.length && !typing ? <p className="ai-chat-empty">{t("Conversația începe aici. Scrie-mi orice despre banii tăi.")}</p> : null}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingFunds ? <div className="ai-date-bar ai-source-bar"><p>{t("Unde sunt banii?")} · {money(pendingFunds.amount)}</p><small>{pendingFunds.sourceId ? t("Îi trec pe „{name}”.", { name: pickFundsSource(data, pendingFunds.sourceHint, pendingFunds.sourceId)?.name || "" }) : t("Atinge locul lor; altfel îi trec pe „{name}”.", { name: pickFundsSource(data, pendingFunds.sourceHint, pendingFunds.sourceId)?.name || "" })}</small><div className="ai-date-row">{data.settings.paymentSources.map((source) => { const persoana = data.settings.members.find((item) => item.id === source.memberId)?.name; return <button type="button" key={source.id} className={`ai-date-chip ${fundsSourceId === source.id ? "is-on" : ""}`} onClick={() => applyFundsSource(source.id)}>{source.name}{persoana && data.settings.members.length > 1 ? ` · ${persoana}` : ""}</button>; })}</div></div> : null}{pendingSpend ? <div className="ai-date-bar"><p>{pendingKind === "funds" ? t("Din ce zi sunt banii?") : (pendingKind === "income" ? t("Pe ce zi treci venitul?") : t("Pe ce zi treci mișcarea?"))} · {dateCopy(spendDay)}</p><div className="ai-date-row"><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-1))}>{t("Ieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(0))}>{t("Azi")}</button><label className="ai-date-field"><RoDateInput aria-label={t("Calendar")} value={spendDay} onChange={(event) => event.target.value && applySpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", t("Vreau să adaug o mișcare"))}>{t("+ Adaugă o mișcare")}</button><button type="button" onClick={() => { window.dispatchEvent(new CustomEvent("buget-familie:open-catalog")); setOpen(false); }}>{t("Caută un produs")}</button>{suggestions.map((item) => <button type="button" key={item.text} title={item.why} onClick={() => send(item.text)}>{item.text}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachments.length > 0 && <div className="ai-attachment-list">{attachments.map((item, index) => <div className="ai-attachment-chip" key={`${item.name}-${index}`}><FileText size={14} /><span>{item.name}</span><button type="button" onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={t("Elimină atașamentul")}>×</button></div>)}{attachments.length === 1 ? <p className="ai-attachment-hint">{t("Mai poți adăuga o poză — partea de jos, unde scrie TOTAL.")}</p> : null}</div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachments.length ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" title={t("Atașează bon (până la 2 poze)")}><Paperclip size={16} aria-hidden="true" /><input type="file" aria-label={t("Atașează bon (până la 2 poze)")} accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf,image/*" multiple onChange={(event) => { void handleAttachments(event.target.files); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing || attachments.length >= 2} /></label><button type="submit" aria-label={t("Trimite mesajul")} disabled={attachmentBusy || typing || (!message.trim() && !attachments.length)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Exemple: „am dat 50 lei pe benzină”. Bon lung: 2 poze — sus și jos. Salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> {t("Conversația rămâne pe telefon. Dacă ghidul local n-a înțeles, pleacă la Google Gemini (sau Groq) întrebarea, ultimele mesaje și un rezumat al plicurilor. Poza unui bon pleacă la Gemini doar dacă telefonul nu l-a citit sigur.")}</p></aside>}</>;
+  return <><button type="button" className="os-ghid" hidden aria-hidden="true" tabIndex={-1}><span className="os-ghid-bf">BF</span><span className="os-ghid-label">{t("Ghidul tău")}</span>{open ? <ChevronDown size={14} /> : <span className="os-ghid-pace">Azi {todayPace} RON</span>}</button>{open && <aside className={`ai-companion-panel ai-chat-panel${historyOpen ? "" : " is-history-collapsed"}`} aria-label={t("Conversație cu ghidul tău AI")}><header className="ai-companion-head"><div className="ai-avatar"><Bot size={18} /></div><div className="ai-head-copy"><p className="ai-eyebrow">GHIDUL TĂU · {quota.mode === "local" ? "LOCAL" : "ONLINE"}</p><h2>{t("Sunt aici cu tine")}</h2><span className={`ai-status ${quota.mode === "local" ? "is-local" : ""}`}><i /> {quota.mode === "local" ? t("Ghid local până {when}", { when: formatReset(quota.resetAt) }) : t("Îți răspund din contextul bugetului tău")}</span></div><div className="ai-head-actions"><button type="button" className="ai-tool" aria-label={t("Golește")} onClick={clearChat}><Trash2 size={15} /><span>{t("Golește")}</span></button><button type="button" className="ai-tool ai-tool-close" aria-label={t("Închide ghidul")} onClick={() => { setOpen(false); }}><X size={16} /></button></div></header><GuideQuotaBar quota={quota} habits={memory.phrases.filter((item) => item.count >= 2).length} />{hiddenCount > 0 ? <button type="button" className="ai-history-toggle" onClick={() => setHistoryOpen((current) => !current)}>{historyOpen ? <><ChevronUp size={13} /> {t("Restrânge istoricul")}</> : <><ChevronDown size={13} /> {t("Istoric ({count})", { count: String(hiddenCount) })}</>}</button> : null}<div className={`ai-chat-history${shown.length ? "" : " is-empty"}`} ref={historyRef} aria-live="polite">{shown.map((item) => <div className={`ai-chat-row ${item.role}`} key={item.id}><div className="ai-chat-bubble">{item.role === "assistant" && <Bot size={14} /> }<GuideText text={item.text} /></div>{item.role === "assistant" && <button type="button" className="ai-chat-report" disabled={reportedIds.includes(item.id)} onClick={() => void reportAnswer(item.id, item.text)}>{reportedIds.includes(item.id) ? t("Semnalat. Mulțumim!") : t("Semnalează răspunsul")}</button>}{item.action && <button type="button" className="ai-chat-action" onClick={() => handleAction(item)}><CircleCheck size={14} /> {item.action.label}</button>}{item.undo && onRevert && <button type="button" className="ai-chat-action" onClick={() => { const undone = item.undo; if (!undone) return; onRevert(undone); setMessages((current) => current.map((entry) => entry.id === item.id ? { ...entry, undo: undefined, text: t("Am anulat {title} {amount}.", { title: undone.title, amount: money(undone.amount) }) } : entry)); }}>{t("Anulează")}</button>}{item.choices && item.choices.length > 0 && <div className="ai-chat-choices">{item.choices.map((choice) => <button type="button" className={pickedChoice?.label === choice.label ? "ai-chat-action is-on" : "ai-chat-action"} key={choice.label} onClick={() => applyChoice(choice)}>{choice.label}</button>)}</div>}{item.picks && item.picks.length > 0 && <div className="ai-chat-choices">{item.picks.map((pick) => <button type="button" className="ai-chat-action" key={pick.label} onClick={() => { setMemory(markLocalSave()); act(pick.reading); }}>{pick.label}</button>)}</div>}{item.followUps && item.followUps.length > 0 && <div className="ai-chat-followups">{item.followUps.map((question) => <button type="button" key={question} onClick={() => send(question)}>{question}</button>)}</div>}</div>)}{!shown.length && !typing ? <p className="ai-chat-empty">{t("Conversația începe aici. Scrie-mi orice despre banii tăi.")}</p> : null}{typing && <div className="ai-chat-row assistant"><div className="ai-chat-bubble ai-typing"><i /><i /><i /></div></div>}</div>{pendingFunds ? <div className="ai-date-bar ai-source-bar"><p>{t("Unde sunt banii?")} · {money(pendingFunds.amount)}</p><small>{pendingFunds.sourceId ? t("Îi trec pe „{name}”.", { name: pickFundsSource(data, pendingFunds.sourceHint, pendingFunds.sourceId)?.name || "" }) : t("Atinge locul lor; altfel îi trec pe „{name}”.", { name: pickFundsSource(data, pendingFunds.sourceHint, pendingFunds.sourceId)?.name || "" })}</small><div className="ai-date-row">{data.settings.paymentSources.map((source) => { const persoana = data.settings.members.find((item) => item.id === source.memberId)?.name; return <button type="button" key={source.id} className={`ai-date-chip ${fundsSourceId === source.id ? "is-on" : ""}`} onClick={() => applyFundsSource(source.id)}>{source.name}{persoana && data.settings.members.length > 1 ? ` · ${persoana}` : ""}</button>; })}</div></div> : null}{pendingSpend ? <div className="ai-date-bar"><p>{pendingKind === "funds" ? t("Din ce zi sunt banii?") : (pendingKind === "income" ? t("Pe ce zi treci venitul?") : t("Pe ce zi treci mișcarea?"))} · {dateCopy(spendDay)}</p><div className="ai-date-row"><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-2) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-2))}>{t("Alaltăieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(-1) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(-1))}>{t("Ieri")}</button><button type="button" className={`ai-date-chip ${spendDay === shiftDay(0) ? "is-on" : ""}`} onClick={() => applySpendDay(shiftDay(0))}>{t("Azi")}</button><label className="ai-date-field"><RoDateInput aria-label={t("Calendar")} value={spendDay} onChange={(event) => event.target.value && applySpendDay(event.target.value)} /></label></div></div> : null}<div className="ai-chat-suggestions"><button type="button" onClick={() => runAction("add", t("Vreau să adaug o mișcare"))}>{t("+ Adaugă o mișcare")}</button><button type="button" onClick={() => { window.dispatchEvent(new CustomEvent("buget-familie:open-catalog")); setOpen(false); }}>{t("Caută un produs")}</button>{suggestions.map((item) => <button type="button" key={item.text} title={item.why} onClick={() => send(item.text)}>{item.text}</button>)}</div><form className="ai-natural-form ai-chat-input" onSubmit={(event) => { event.preventDefault(); send(); }}><label htmlFor="ai-natural-message">{t("Scrie-mi orice despre banii tăi sau încarcă un bon")}</label>{attachments.length > 0 && <div className="ai-attachment-list">{attachments.map((item, index) => <div className="ai-attachment-chip" key={`${item.name}-${index}`}><FileText size={14} /><span>{item.name}</span><button type="button" onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={t("Elimină atașamentul")}>×</button></div>)}{attachments.length === 1 ? <p className="ai-attachment-hint">{t("Mai poți adăuga o poză — partea de jos, unde scrie TOTAL.")}</p> : null}</div>}<div><input id="ai-natural-message" value={message} onChange={(event) => setMessage(event.target.value)} placeholder={attachments.length ? t("Opțional: spune-mi ceva despre bon") : t("ex. am dat 50 lei pe benzină")} /><label className="ai-attach-button" title={t("Atașează bon (până la 2 poze)")}><Paperclip size={16} aria-hidden="true" /><input type="file" aria-label={t("Atașează bon (până la 2 poze)")} accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf,image/*" multiple onChange={(event) => { void handleAttachments(event.target.files); event.currentTarget.value = ""; }} disabled={attachmentBusy || typing || attachments.length >= 2} /></label><button type="submit" aria-label={t("Trimite mesajul")} disabled={attachmentBusy || typing || (!message.trim() && !attachments.length)}><Send size={16} /></button></div><p><Lightbulb size={12} /> {t("Exemple: „am dat 50 lei pe benzină”. Bon lung: 2 poze — sus și jos. Salvez doar după confirmarea ta.")}</p></form><p className="ai-privacy"><WalletCards size={13} /> {t("Conversația rămâne pe telefon. Dacă ghidul local n-a înțeles, pleacă la Google Gemini (sau Groq) întrebarea, ultimele mesaje și un rezumat al plicurilor. Poza unui bon încărcat aici pleacă la Google Gemini, care citește totalul.")}</p></aside>}</>;
 }
 
 export default AICompanion;

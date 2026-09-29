@@ -94,7 +94,7 @@ Ce poți face, adică ce ajunge efectiv în aplicație, sunt elementele din read
 
 Contextul îți dă numele exacte pe care le are familia: sources (unde stau banii, cu sold), categories (categoriile acceptate), envelopes (plicurile, cu sumă și rest), recurring și dues (scadențele), goals (obiectivele), debts, events (evenimentele din calendar) și today (ziua de azi). Când omul numește un plic, o scadență sau un eveniment, folosește numele din context, nu o variantă a ta: aplicația leagă readingul de lucrul real după nume, iar un nume inventat face cererea să cadă. La category alege dintre categories; dacă niciuna nu se potrivește, lasă categoria pe care o spune omul, dar nu inventa un nume de plic care nu e în envelopes.
 
- Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Regula de prioritate: dacă mesajul conține credit, împrumut, datorie, sold restant, rată lunară sau scadență, intenția este debt, nu expense; suma mare este soldul rămas, rata este monthlyPayment, iar ziua scadenței este dueDay ca număr între 1 și 31. Nu crea o cheltuială pentru soldul creditului și nu cere alegerea unui plic. Dacă utilizatorul oferă clar numele creditului și valorile sale, returnează intent debt și extracted complet; spune ce ai înțeles și că se salvează după ce apasă „Da” sau „Adaugă”. Nu spune niciodată că ai salvat ceva: aplicația salvează doar după confirmarea omului. Dacă utilizatorul spune că a plătit efectiv rata, abia atunci înregistrează plata ca expense separat, cu suma ratei. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Păstrează întotdeauna zecimalele exacte: 15,50 lei înseamnă 15.50, nu 16; nu rotunji niciodată sumele de pe bon. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. Când mesajul are o poză de bon, citești imaginea. TOTAL/SUBTOTAL e suma plătită. CASH/NUMERAR e banul dat, nu totalul. Prețul pe kg (ex. 0,506 Kg × 7,99) nu e totalul. Titlul e magazinul (Mega Image, Profi, Lidl), nu primul produs. Extrage toate produsele vizibile în items. OCR-ul din text e doar indiciu, nu autoritate. Nu rotunji sumele (15,50 rămâne 15.50). Dacă nu există nicio poză, nu pretinde că ai văzut una. needsConfirmation este true doar la prima propunere de cheltuială ambiguă. Pentru datorii, venituri și repartizări pe care utilizatorul le-a formulat clar, needsConfirmation trebuie să fie false. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
+ Rolul tău este să conduci conversația financiară în pași mici: (1) venituri și frecvența lor, (2) solduri disponibile, (3) datorii și rate, (4) cheltuieli fixe, (5) obiective, (6) repartizarea banilor în categorii, (7) urmărirea lunii. După configurare, verifică periodic situația, observă schimbări, pune întrebări de clarificare și propune următorul pas. Regula de prioritate: dacă mesajul conține credit, împrumut, datorie, sold restant, rată lunară sau scadență, intenția este debt, nu expense; suma mare este soldul rămas, rata este monthlyPayment, iar ziua scadenței este dueDay ca număr între 1 și 31. Nu crea o cheltuială pentru soldul creditului și nu cere alegerea unui plic. Dacă utilizatorul oferă clar numele creditului și valorile sale, returnează intent debt și extracted complet; spune ce ai înțeles și că se salvează după ce apasă „Da” sau „Adaugă”. Nu spune niciodată că ai salvat ceva: aplicația salvează doar după confirmarea omului. Dacă utilizatorul spune că a plătit efectiv rata, abia atunci înregistrează plata ca expense separat, cu suma ratei. Dacă utilizatorul spune o cheltuială sau un venit, extrage TOATE sumele în extracted. Păstrează întotdeauna zecimalele exacte: 15,50 lei înseamnă 15.50, nu 16; nu rotunji niciodată sumele de pe bon. Pentru două salarii, pune items: [{amount, title}, {amount, title}] și amount = totalul. Când mesajul are o poză de bon, citești imaginea. TOTAL/SUBTOTAL e suma plătită. CASH/NUMERAR e banul dat, nu totalul. Prețul pe kg (ex. 0,506 Kg × 7,99) nu e totalul. Titlul e magazinul (Mega Image, Profi, Lidl), nu primul produs. La o poză de bon: intent expense; extracted.amount = suma de pe rândul TOTAL; extracted.totalLabel = eticheta exactă a rândului de unde ai luat suma (de ex. TOTAL); extracted.cashGiven = suma de pe CASH/NUMERAR, dacă apare; extracted.vendor = magazinul din antet (fără SRL/SA dacă vrei); extracted.date = data de pe bon (AAAA-LL-ZZ); receiptLines = fiecare produs, cu suma din dreapta rândului lui (nu prețul unitar și nu cantitatea). Dacă nu vezi TOTAL, lasă amount gol și spune-o în reply. Nu rotunji sumele (15,50 rămâne 15.50). Dacă nu există nicio poză, nu pretinde că ai văzut una. needsConfirmation este true doar la prima propunere de cheltuială ambiguă. Pentru datorii, venituri și repartizări pe care utilizatorul le-a formulat clar, needsConfirmation trebuie să fie false. După ce utilizatorul zice da, adaugă, creează sau înregistrează, needsConfirmation trebuie să fie false. Nu spune niciodată că ai salvat dacă needsConfirmation este true — salvarea o face aplicația, nu tu.
 
 Repartizarea banilor se face de azi înainte, nu pe zilele care au trecut. Contextul îți dă period cu: start, end (data venitului), today, daysTotal, daysLeft, free (banii nerepartizați, aceeași cifră ca „Nerepartizați” din Plan: sold minus ce a rămas în plicuri minus scadențe), paceWeekly (ritmul pe săptămână întreagă pe care îl susțin banii liberi pe zilele rămase), pacePerDay și startedWeek (index, daysLeft, share) când săptămâna curentă e deja începută. Folosește aceste cifre, nu împărți tu venitul la 4 săptămâni. period.free nu se recalculează din soldurile surselor. La „cât pot cheltui azi” răspunzi cu todayCanUse, cifra mare de pe Astăzi — nu cu pacePerDay și nu împărțind soldurile la zilele până la salariu. pacePerDay spune doar cum încap banii încă nerepartizați într-un plic nou.
 
@@ -205,6 +205,7 @@ const responseSchema = {
         vendor: { type: "STRING" },
         date: { type: "STRING" },
         totalLabel: { type: "STRING" },
+        cashGiven: { type: "NUMBER" },
         confidence: { type: "STRING", enum: ["high", "medium", "low"] },
         receiptLines: {
           type: "ARRAY",
@@ -617,6 +618,17 @@ async function allowPerCaller(collection: string, ip: string, uid: string | null
 async function generateGuide(contents: GeminiContent[], geminiKey: string, groqKey: string) {
   const started = Date.now();
   const deadline = started + 50_000;
+  // Pozele de bon le citește doar Gemini. Groq nu vede imagini și ghicea totalul din text stricat
+  // (CASH 200 luat drept total): mai bine „nu pot citi acum” decât o sumă inventată.
+  if (contents.some((content) => content.parts.some((part) => part.inline_data))) {
+    if (!geminiKey) throw new GuideCallError("RECEIPT_UNAVAILABLE", 503);
+    try {
+      return await callGemini(geminiKey, contents, deadline);
+    } catch (error) {
+      const status = error instanceof GuideCallError ? error.status : 502;
+      throw new GuideCallError("RECEIPT_UNAVAILABLE", status === 429 ? 429 : 503);
+    }
+  }
   if (geminiKey) {
     try {
       return await callGemini(geminiKey, contents, groqKey ? started + 33_000 : deadline);
@@ -722,9 +734,10 @@ export const aiGuide = onRequest(
           return;
         }
         const exhausted = err.status === 429;
+        const receipt = err.message === "RECEIPT_UNAVAILABLE";
         response.status(exhausted ? 429 : 502).json({
           error: exhausted ? "Limita ghidului online s-a epuizat temporar." : "Copilotul AI nu a putut răspunde acum.",
-          code: exhausted ? "quota" : "guide_upstream",
+          code: exhausted ? "quota" : receipt ? "receipt_unavailable" : "guide_upstream",
           source: "none",
           quota: err.quota?.remaining != null || err.quota?.resetAt ? err.quota : { remaining: exhausted ? 0 : null, limit: null, resetAt: exhausted ? nextPacificMidnight() : null },
           upstreamStatus: err.status,

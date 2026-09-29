@@ -44,10 +44,10 @@ Fără vânzare de date. Backup-ul sistem Android este dezactivat (allowBackup=f
 
 ### 2. Fotografii și videoclipuri (bonuri): colectate, prelucrate temporar, opțional
 
-De la 1.1.111, poza unui bon încărcat în ghid pleacă la Google Gemini **doar** când citirea de pe
-telefon nu se leagă (totalul nu iese din produse sau magazinul arată a produs). Cel mult două poze,
-doar imagini (nu PDF), doar la Gemini (nu la Groq), nepăstrate pe server. Bonurile din Mișcări / De
-verificat rămân pe telefon, iar pozele nu intră în sync.
+De la 1.1.111, poza unui bon încărcat **în ghid** pleacă la Google Gemini, care citește totalul
+(când e internet; fără internet se citește pe telefon). Cel mult două poze, doar imagini (nu PDF),
+doar la Gemini (nu la Groq), nepăstrate pe server. Bonurile din Mișcări / De verificat rămân pe
+telefon, iar pozele nu intră în sync.
 
 | Câmp Play | Alegere |
 |---|---|
@@ -59,8 +59,8 @@ verificat rămân pe telefon, iar pozele nu intră în sync.
 | Scop | **Funcționalitatea aplicației** |
 
 ```
-Poza bonului pleacă la Google Gemini doar când omul încarcă bonul în ghid și citirea de pe telefon
-nu e sigură. Nu se păstrează pe server și nu intră în sincronizare.
+Poza bonului pleacă la Google Gemini doar când omul încarcă bonul în ghid. Nu se păstrează pe
+server și nu intră în sincronizare.
 ```
 
 ### 3. Identificatori de dispozitiv / aplicație (identitate anonimă)
@@ -179,7 +179,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 ## G. Checklist rapid înainte de Submit
 
 - [ ] Informații financiare = Da, pe dispozitiv, scop Funcționalitate  
-- [ ] Fotografii = **Da**, prelucrate temporar, opțional (poza bonului la Gemini doar când citirea de pe telefon nu e sigură)  
+- [ ] Fotografii = **Da**, prelucrate temporar, opțional (poza bonului încărcat în ghid, la Gemini)  
 - [ ] Sync = opțional, criptat, dezvoltator fără plaintext  
 - [ ] AI online = opțional: conținut utilizator + informații financiare + nume; efemer; Gemini + Groq furnizori  
 - [ ] Identificatori = Da (ID anonim Firebase), funcționalitate + securitate, nu partajare  
