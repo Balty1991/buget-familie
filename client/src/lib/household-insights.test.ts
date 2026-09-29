@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationStatus, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { ageOfMoney, ageOfMoneyLine, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, mealRunway, mealRunwayLine, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, envelopeUntilPayday } from "./household-insights";
+import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, extendRunOutMove, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, mealRunway, mealRunwayLine, monthlyRecap, nextTrueExpense, paydayTrack, pocketSlices, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, envelopeUntilPayday } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
@@ -57,6 +57,26 @@ describe("analize de gospodărie", () => {
     data.transactions = [];
     data.settings.paymentSources.find((item) => item.id === "meal")!.openingBalance = 150;
     expect(mealRunway(data, "2026-09-14")).toBeUndefined();
+  });
+
+  it("grupează banii pe felul sursei și tace la un singur fel", () => {
+    const { data, source } = base();
+    source.openingBalance = 1200;
+    expect(pocketSlices(data).map((item) => item.kind)).toEqual(["card"]);
+    data.settings.paymentSources.push({ id: "cash", name: "Cash", kind: "cash", openingBalance: 80 });
+    const slices = pocketSlices(data);
+    expect(slices.find((item) => item.kind === "card")?.amount).toBe(1200);
+    expect(slices.find((item) => item.kind === "cash")?.amount).toBe(80);
+  });
+
+  it("arată costul care vine în 90 de zile și încă nu e strâns", () => {
+    const { data } = base();
+    data.settings.plannedEvents = [{ id: "cr", name: "Crăciun", date: "2026-12-20", estimate: 800, kind: "holiday", repeat: "yearly", contributions: [{ id: "c1", amount: 200, date: "2026-10-01" }] }];
+    const near = nextTrueExpense(data, "2026-11-10");
+    expect(near).toMatchObject({ name: "Crăciun", left: 600 });
+    expect(near!.monthly).toBeGreaterThan(50);
+    data.settings.plannedEvents[0].date = "2027-08-01";
+    expect(nextTrueExpense(data, "2026-11-10")).toBeUndefined();
   });
 
   it("construiește recapitularea lunii cu categoria dominantă și comparația anterioară", () => {
@@ -599,6 +619,9 @@ describe("abonamente: scumpiri și cost", () => {
     ];
     data.transactions = [tx("n", "NETFLIX.COM LU", 59.99, "2026-08-08"), tx("e", "Enel", 260, "2026-08-12"), tx("d", "Digi", 600, "2026-08-15")];
     expect(recurringPriceChanges(data, "2026-08-20")).toEqual([{ recurringId: "r1", name: "Netflix", from: 49.99, to: 59.99, date: "2026-08-08" }]);
+    const next = acceptRecurringPrice(data, "r1", "2026-08-20");
+    expect(next?.recurring.find((item) => item.id === "r1")?.amount).toBe(59.99);
+    expect(recurringPriceChanges(next!, "2026-08-20")).toEqual([]);
   });
 
   it("adună abonamentele pe lună și pe an", () => {
@@ -694,6 +717,20 @@ describe("plicul care se termină înainte de salariu", () => {
     expect(hit).toMatchObject({ label: "Alimente", remaining: 500, dailyRate: 100, runOutDate: "2026-09-24", payday: "2026-10-09" });
     expect(hit.daysShort).toBe(15);
     expect(hit.safeDaily).toBe(23.8); // 500 / 21 zile, rotunjit în jos la bani
+  });
+
+  it("propune mutarea dintr-un plic liber ca să ajungă până la salariu, nu din chirie", () => {
+    const data = setup(1000);
+    data.settings.salaryPlan.allocations.push(
+      { id: "liber", label: "Timp liber", amount: 2000, category: "Timp liber", weeklyPace: false },
+      { id: "chirie", label: "Chirie", amount: 1800, category: "Casă & facturi", weeklyPace: false },
+    );
+    const move = extendRunOutMove(data, "a1", "2026-09-19");
+    expect(move).toMatchObject({ fromId: "liber", toId: "a1", covers: true });
+    expect(move!.amount).toBeGreaterThan(100);
+    const onlyRent = setup(1000);
+    onlyRent.settings.salaryPlan.allocations.push({ id: "chirie", label: "Chirie", amount: 1800, category: "Casă & facturi", weeklyPace: false });
+    expect(extendRunOutMove(onlyRent, "a1", "2026-09-19")).toBeUndefined();
   });
 
   it("tace când plicul ajunge, la începutul ciclului și când e deja depășit", () => {

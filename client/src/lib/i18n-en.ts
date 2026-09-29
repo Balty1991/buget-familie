@@ -3703,4 +3703,12 @@ export const en: Record<string, string> = {
   "mai lipsesc {amount}, vin din {label} ({date})": "{amount} still missing, coming from {label} ({date})",
   "Mai lipsesc {amount} din ce ai declarat.": "{amount} still missing from what you declared.",
   "mai lipsesc {amount} din ce ai declarat": "{amount} still missing from what you declared",
+  "Unde stau banii": "Where the money sits",
+  "Plicurile, dintr-o privire": "Envelopes at a glance",
+  "mai sunt {left} · cam {monthly} pe lună": "{left} to go · about {monthly} a month",
+  "pe {date} · mai lipsesc {left}": "on {date} · {left} still to set aside",
+  "{name} s-a scumpit: {from} → {to}.": "{name} went up: {from} → {to}.",
+  "Pune prețul nou": "Use the new price",
+  "Poți muta {move} din {from}.": "You can move {move} from {from}.",
+  "Am mutat {amount} din {from} în {to}.": "Moved {amount} from {from} into {to}.",
 };

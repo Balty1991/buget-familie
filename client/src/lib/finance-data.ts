@@ -1358,6 +1358,13 @@ export const transferBetweenEnvelopes = (data: AppData, input: { fromAllocationI
   return { ...data, settings: { ...data.settings, salaryPlan: { ...plan, transfers: [transfer, ...plan.transfers], updatedAt: transfer.createdAt } } };
 };
 
+/** Anulează o mutare între plicuri. Nu atinge sursele și nici registrul. */
+export const dropEnvelopeTransfer = (data: AppData, transferId: string): AppData | undefined => {
+  const plan = data.settings.salaryPlan;
+  if (!plan.transfers.some((item) => item.id === transferId)) return undefined;
+  return { ...data, settings: { ...data.settings, salaryPlan: { ...plan, transfers: plan.transfers.filter((item) => item.id !== transferId), updatedAt: new Date().toISOString() } } };
+};
+
 /** Corecția de sold („Bani disponibili” / „Corecție de sold”): contează la soldul sursei, nu la venituri și cheltuieli. */
 export const isBalanceAdjustment = (item: Pick<Transaction, "id" | "adjustment" | "transferId">) => item.adjustment === true || Boolean(item.transferId) || item.id.startsWith("balance-check");
 

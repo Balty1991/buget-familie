@@ -157,6 +157,11 @@ export default function Home() {
     window.addEventListener("buget-familie:open-income", openIncome);
     return () => window.removeEventListener("buget-familie:open-income", openIncome);
   }, []);
+  useEffect(() => {
+    const openEvents = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("events"); setView("utilities"); };
+    window.addEventListener("buget-familie:open-events", openEvents);
+    return () => window.removeEventListener("buget-familie:open-events", openEvents);
+  }, []);
   useEffect(() => { if (modal !== "quick") setQuickKind(undefined); }, [modal]);
   const [editTx, setEditTx] = useState<Transaction>();
   const [editGoal, setEditGoal] = useState<Debt | SavingsGoal>();

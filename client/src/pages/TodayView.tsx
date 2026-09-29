@@ -8,8 +8,8 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BookOpen, BellRing, CalendarClock, CreditCard, Inbox, Info, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { addIsoDays, calculateHealthScore, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
+import { BookOpen, BellRing, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { addIsoDays, calculateHealthScore, dropEnvelopeTransfer, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey } from "@/lib/calendar-budget";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { ChartTip } from "@/components/ChartFrame";
@@ -17,7 +17,7 @@ import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { ageOfMoney, ageOfMoneyLine, checkInRebalance, envelopeRunOut, mealRunway, mealRunwayLine, savingsSuggestion, weekTooFast, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
+import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, savingsSuggestion, weekTooFast, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   dateText,
@@ -185,6 +185,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [safeSheetOpen, setSafeSheetOpen] = useState(false);
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
   const [dayMore, setDayMore] = useState(false);
+  const [priceLater, setPriceLater] = useState(false);
+  const [moved, setMoved] = useState<{ id: string; amount: number; from: string; to: string } | null>(null);
   const envelopes = useMemo(() => tickMemo([data], `envelopes:${isoToday()}`, () => data.settings.salaryPlan.allocations.map((item) => ({ item, ...envelopeDecisionStatus(data, item) }))), [data]);
   const ageLine = useMemo(() => tickMemo([data], `age-line:${isoToday()}`, () => ageOfMoneyLine(ageOfMoney(data))), [data]);
   const mealLine = useMemo(() => tickMemo([data], `meal-run:${isoToday()}`, () => mealRunwayLine(mealRunway(data))), [data]);
@@ -194,8 +196,11 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     const goal = dated[0] || [...open].sort((a, b) => (b.target - b.current) - (a.target - a.current))[0];
     if (!goal) return undefined;
     const suggestion = savingsSuggestion(data, goal);
-    return suggestion && suggestion.monthly >= 1 ? { name: goal.name, left: suggestion.left, monthly: suggestion.monthly } : undefined;
+    return suggestion && suggestion.monthly >= 1 ? { name: goal.name, left: suggestion.left, monthly: suggestion.monthly, current: Math.max(0, goal.current), target: goal.target } : undefined;
   }), [data]);
+  const pockets = useMemo(() => pocketSlices(data), [data]);
+  const trueExpense = useMemo(() => nextTrueExpense(data), [data]);
+  const rise = useMemo(() => (priceLater ? undefined : recurringPriceChanges(data)[0]), [data, priceLater]);
   const weekShare = useMemo(() => tickMemo([data], `week-share:${isoToday()}`, () => {
     if (data.settings.members.length < 2) return "";
     const spent = weeklyCheckIn(data).members.filter((item) => item.expense >= 1);
@@ -230,9 +235,18 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       return proposal && proposal.toId === activeEnvelopeAlert.item.id ? proposal : undefined;
     })()
     : undefined;
-  const moveCover = () => {
-    if (!cover) return;
-    const next = transferBetweenEnvelopes(data, { fromAllocationId: cover.fromId, toAllocationId: cover.toId, amount: cover.amount, note: t("Acoperit din {from}", { from: cover.fromLabel }) });
+  const extend = runOutAlert && topNotice === "runout" ? extendRunOutMove(data, runOutAlert.allocationId) : undefined;
+  const applyMove = (proposal: { fromId: string; toId: string; amount: number; fromLabel: string; toLabel: string }) => {
+    const next = transferBetweenEnvelopes(data, { fromAllocationId: proposal.fromId, toAllocationId: proposal.toId, amount: proposal.amount, note: t("Acoperit din {from}", { from: proposal.fromLabel }) });
+    if (!next) return;
+    const added = next.settings.salaryPlan.transfers.find((item) => !data.settings.salaryPlan.transfers.some((old) => old.id === item.id));
+    if (added) setMoved({ id: added.id, amount: proposal.amount, from: proposal.fromLabel, to: proposal.toLabel });
+    onChange(next);
+  };
+  const undoMove = () => {
+    if (!moved) return;
+    const next = dropEnvelopeTransfer(data, moved.id);
+    setMoved(null);
     if (next) onChange(next);
   };
   // Restul se numără pe plicuri, nu pe tipuri de bandă: trei plicuri depășite sunt „încă 2”.
@@ -275,6 +289,10 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     () => data.settings.paymentSources.map((source) => ({ ...source, balance: sourceBalance(data, source.id) })),
     [data],
   );
+  const glance = [...envelopes]
+    .filter((item) => item.budget > 0 || item.spent > 0)
+    .sort((a, b) => (b.state === "over" ? 2 : b.state === "watch" ? 1 : 0) - (a.state === "over" ? 2 : a.state === "watch" ? 1 : 0) || b.usage - a.usage)
+    .slice(0, 4);
 
   /** Pornirea în 3 pași e făcută: cheltuielile lunare sunt declarate, doar plicurile vin la primul salariu. */
   const declaredNeeds = (data.settings.salaryPlan.needs || []).filter((item) => !item.archived).length;
@@ -288,6 +306,12 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       {/* Modul simplu nu mai are bandă permanentă de avertizare: se oprește din „Mai mult” → Setări. */}
       <EnvelopeConflictBanner data={data} onChange={onChange} />
       <MovementConflictBanner data={data} onChange={onChange} />
+      {moved && (
+        <aside className="bf-income-split-done" role="status">
+          <span>{t("Am mutat {amount} din {from} în {to}.", { amount: money(moved.amount), from: moved.from, to: moved.to })}</span>
+          <button type="button" className="bf-secondary" onClick={undoMove}>{t("Anulează")}</button>
+        </aside>
+      )}
       {!simpleMode && showTrancheNotice && activeTranche && !topNotice && (
         <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
           <CalendarClock size={19} />
@@ -322,9 +346,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <div>
             <p>{t("SE TERMINĂ ÎNAINTE DE SALARIU")}</p>
             <strong>{runOutAlert.label}</strong>
-            <span>{t("Ajunge la zero pe {date}. Ca să țină până la salariu: cel mult {safe} pe zi (acum {rate}).", { date: formatDate(runOutAlert.runOutDate, { day: "numeric", month: "long" }), safe: money(runOutAlert.safeDaily), rate: money(runOutAlert.dailyRate) })}</span>
+            <span>{t("Ajunge la zero pe {date}. Ca să țină până la salariu: cel mult {safe} pe zi (acum {rate}).", { date: formatDate(runOutAlert.runOutDate, { day: "numeric", month: "long" }), safe: money(runOutAlert.safeDaily), rate: money(runOutAlert.dailyRate) })}{extend ? ` ${t("Poți muta {move} din {from}.", { move: money(extend.amount), from: extend.fromLabel })}` : ""}</span>
           </div>
-          <button onClick={() => onGo("plan")}>{t("Vezi")}</button>
+          <button onClick={() => (extend ? applyMove(extend) : onGo("plan"))}>{extend ? t("Mută") : t("Vezi")}</button>
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: runOutAlert.label })} onClick={() => setDismissedAlerts((current) => [...current, runOutAlert.allocationId])}><X size={16} /></button>
         </aside>
       )}
@@ -340,7 +364,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 : t("{amount} peste limita alocată.", { amount: money(Math.abs(activeEnvelopeAlert.remaining)) })
               : t("{pct}% din limită este deja consumată.", { pct: Math.round(activeEnvelopeAlert.usage * 100) })}</span>
           </div>
-          <button onClick={() => (cover ? moveCover() : onGo("plan"))}>{cover ? t("Mută") : t("Vezi")}</button>
+          <button onClick={() => (cover ? applyMove(cover) : onGo("plan"))}>{cover ? t("Mută") : t("Vezi")}</button>
           <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: activeEnvelopeAlert.item.label })} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
         </aside>
       )}
@@ -433,7 +457,28 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             {ageLine && <p className="os-hint">{ageLine}</p>}
             {mealLine && <p className="os-hint">{mealLine}</p>}
             {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
-            {!simpleMode && focusGoal && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("goals")}>{t("{name}: mai sunt {left}. Cam {monthly} pe lună.", { name: focusGoal.name, left: money(focusGoal.left), monthly: money(focusGoal.monthly) })} <ChevronRight size={14} aria-hidden="true" /></button>}
+            {!simpleMode && focusGoal && (
+              <button type="button" className="bf-glance-goal" onClick={() => onGo("goals")}>
+                <PiggyBank size={16} aria-hidden="true" />
+                <span>
+                  <b>{focusGoal.name}</b>
+                  <small>{t("mai sunt {left} · cam {monthly} pe lună", { left: money(focusGoal.left), monthly: money(focusGoal.monthly) })}</small>
+                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((focusGoal.current / Math.max(1, focusGoal.target)) * 100))}%` }} /></i>
+                </span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
+            {!simpleMode && trueExpense && (
+              <button type="button" className="bf-glance-goal is-event" onClick={() => window.dispatchEvent(new Event("buget-familie:open-events"))}>
+                <Gift size={16} aria-hidden="true" />
+                <span>
+                  <b>{trueExpense.name}</b>
+                  <small>{t("pe {date} · mai lipsesc {left}", { date: formatDate(trueExpense.date, { day: "numeric", month: "short" }), left: money(trueExpense.left) })}</small>
+                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((trueExpense.saved / Math.max(1, trueExpense.estimate)) * 100))}%` }} /></i>
+                </span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
             {(periodIncome > 0 || periodExpense > 0) && (
               <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
                 <span><small>{t("Intrat")}</small><b>+{fmtExact.format(periodIncome)}</b></span>
@@ -441,6 +486,17 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               </div>
             )}
             {!simpleMode && weekShare && <p className="os-hint">{weekShare}</p>}
+            {pockets.length > 1 && (
+              <ul className="bf-pocket-row" aria-label={t("Unde stau banii")}>
+                {pockets.map((pocket) => (
+                  <li key={pocket.kind} className={`bf-pocket ${pocket.kind}`}>
+                    <SourceGlyph kind={pocket.kind} />
+                    <b>{money(pocket.amount)}</b>
+                    <small>{sourceKindName[pocket.kind]}</small>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="bf-os-actions">
               <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
             </div>
@@ -497,9 +553,37 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
 
       {/* D10: pe desktop coloana din dreapta; pe telefon, doar un grup în flux. */}
       <div className="bf-today-side">
+      {glance.length > 0 && (
+        <section className="bf-glance" aria-labelledby="bf-glance-title">
+          <div className="bf-section-heading">
+            <h2 id="bf-glance-title">{t("Plicurile, dintr-o privire")}</h2>
+            <button type="button" onClick={() => onGo("plan")}>{t("Plicuri")} <ChevronRight size={15} /></button>
+          </div>
+          <ul>
+            {glance.map((row) => (
+              <li key={row.item.id} className={row.state === "over" ? "is-over" : row.state === "watch" ? "is-watch" : "is-ok"}>
+                <CategoryGlyph category={row.item.category || row.item.label} />
+                <span>
+                  <b>{row.item.label}</b>
+                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round(Math.max(0, row.usage) * 100))}%` }} /></i>
+                </span>
+                <strong>{row.remaining < -0.5 ? "−" : ""}{money(Math.abs(row.remaining))}</strong>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {!simpleMode && <OpeningBalanceCard data={data} onChange={onChange} />}
 
       <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenRecurring={onOpenRecurring} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => { setDayMore(true); window.setTimeout(() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }} />
+      {rise && (
+        <aside className="bf-price-rise" role="status">
+          <CreditCard size={18} aria-hidden="true" />
+          <span>{t("{name} s-a scumpit: {from} → {to}.", { name: rise.name, from: money(rise.from), to: money(rise.to) })}</span>
+          <button type="button" className="bf-secondary" onClick={() => { const next = acceptRecurringPrice(data, rise.recurringId); if (next) onChange(next); }}>{t("Pune prețul nou")}</button>
+          <button type="button" className="bf-brief-check-later" onClick={() => setPriceLater(true)}>{t("Mai târziu")}</button>
+        </aside>
+      )}
 
       <section className="bf-today-activity">
           <div className="bf-section-heading">

@@ -62,7 +62,7 @@
 /* Atelierul Financiar — măsurare funcțională, semantica strictă verde/miere/coral și monogramă B/F vizibilă la dimensiuni mici. */.bf-topline .bf-primary{background:#143c36!important;color:#fff!important;border-color:#143c36!important;box-shadow:var(--bf-shadow-rest) !important}.dark .bf-topline .bf-primary{background:#236a59!important;border-color:#236a59!important}
 /* ── sfârșit atelier-semantic-pass.css ── */
 /* ── fost dark-night-premium.css ── */
-/* Atelierul Financiar Nocturn — contrast în straturi, nu simplă inversare: verde adânc pentru control, miere pentru revizuire, coral numai pentru atenție. */
+
 .dark .bf-app{background:radial-gradient(circle at 82% -12%,#1d4b3d 0,transparent 30%),linear-gradient(165deg,#10251f 0%,#0b1b16 100%);color:#edf7ef}.dark .bf-appbar{border-bottom-color:rgba(212,234,220,.14);background:rgba(10,27,22,.93);box-shadow:var(--bf-shadow-rest)}.dark .bf-appbar nav button{color:#bdd0c3}.dark .bf-appbar nav button.active{color:#fbf6e6;background:#1e4c3d;box-shadow:inset 0 0 0 1px rgba(147,194,165,.14)}.dark .bf-topline h1,.dark .bf-section-heading h2{color:#f8f3e8}.dark .bf-topline h1 em{color:#87bca2}.dark .bf-topline>div>p:not(.bf-kicker),.dark .bf-kicker{color:#abc3b5}.dark .bf-empty-inline{color:#dceadd}@media(max-width:760px){.dark .bf-appbar{background:rgba(10,27,22,.97)}.dark .bf-page{padding-bottom:112px}.dark .bf-topline .bf-primary{box-shadow:var(--bf-shadow-raise) !important}}
 /* ── sfârșit dark-night-premium.css ── */
 /* ── fost mobile-decision-fix.css ── */
@@ -96,11 +96,7 @@
 @media (max-width: 640px) { .bf-more-grid button::after { width: 2px; } }
 /* ── sfârșit workbench-surface-system.css ── */
 /* ── fost redesign-major-mobile.css ── */
-/**
- * Atelierul Financiar 3.0 — redesign mobil major.
- * Filosofie: bandă de situație, decizie explicită, cronologie și măsurători verificabile.
- * Verde = control, miere = revizuire/alocare, coral = atenție/obligație; culorile nu sunt decorative.
- */
+
 .bf-app {
   --bf-major-bg: #f5f4ed;
   --bf-major-sheet: #fffef9;
@@ -263,10 +259,7 @@
 }
 /* ── sfârșit redesign-major-mobile.css ── */
 /* ── fost clarity-rebuild.css ── */
-/**
- * Buget Familie — sistemul Clarity Mobile.
- * Regula acestui strat final: informația financiară precedă stilul; contrastul și ierarhia nu depind de temă.
- */
+
 :root { --cf-sheet:var(--cf-surface); --cf-forest:var(--cf-primary-strong); --cf-honey:var(--cf-warning); --cf-coral:var(--cf-danger); --cf-link:var(--cf-info); }.bf-app{ min-height:100svh; color:var(--cf-ink); background:var(--cf-bg); font-family:"IBM Plex Sans",system-ui,sans-serif; }
 .bf-app * { font-family:"IBM Plex Sans",system-ui,sans-serif; }.bf-appbar{ padding:7px 16px; border-bottom:1px solid var(--cf-line); background:var(--cf-surface); box-shadow:none; backdrop-filter:none; }
 .bf-appbar nav button { color:var(--cf-muted)!important; border-color:transparent!important; background:transparent!important; box-shadow:none!important; }.bf-appbar nav button.active { color:var(--cf-primary-strong)!important; background:color-mix(in srgb,var(--cf-primary) 11%,var(--cf-surface))!important; }
@@ -372,7 +365,6 @@ html.bf-high-contrast{--cf-muted:var(--cf-ink);--cf-line:color-mix(in srgb,var(-
 /* Alertă de tranșă: semnal in-app, afișat la prima deschidere în fiecare nouă săptămână calendaristică. */
 .bf-weekly-tranche-notice{display:grid;grid-template-columns:21px minmax(0,1fr) auto 28px;gap:10px;align-items:center;margin-top:12px;padding:12px;border:1px solid color-mix(in srgb,var(--cf-info),var(--cf-line) 45%)!important;border-left:3px solid var(--cf-info)!important;border-radius:12px;background:color-mix(in srgb,var(--cf-info),var(--cf-surface) 94%);color:var(--cf-ink);box-shadow:var(--cf-shadow)}.bf-weekly-tranche-notice>svg{color:var(--cf-info)}.bf-weekly-tranche-notice>div{min-width:0}.bf-weekly-tranche-notice p{margin:0 0 3px;color:var(--cf-info);font:600 9px/1 "IBM Plex Sans",sans-serif;letter-spacing:.08em}.bf-weekly-tranche-notice strong,.bf-weekly-tranche-notice span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bf-weekly-tranche-notice strong{color:var(--cf-ink);font:600 13px/1.2 "IBM Plex Sans",sans-serif}.bf-weekly-tranche-notice span{margin-top:3px;color:var(--cf-muted);font:600 12px/1.25 "IBM Plex Sans",sans-serif}.bf-weekly-tranche-notice>button:not(.dismiss){min-height:34px;padding:0 9px;border:0;border-radius:12px;background:var(--cf-info);color:#fff;font:600 11px/1 "IBM Plex Sans",sans-serif}.bf-weekly-tranche-notice .dismiss{display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--cf-muted)}@media(max-width:380px){.bf-weekly-tranche-notice{grid-template-columns:21px minmax(0,1fr) 28px!important}.bf-weekly-tranche-notice>button:not(.dismiss){grid-column:2!important;justify-self:start!important}.bf-weekly-tranche-notice .dismiss{grid-column:3!important;grid-row:1!important}}
 
-
 /* Înregistrare rapidă: decizii cu o atingere, fără să încărcăm formularul. */
 .bf-quick-entry-panel .bf-amount-field { gap: 7px; }
 .bf-amount-suggestions { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 2px; color: var(--cf-muted); font-size:12px; line-height: 1.2; }
@@ -393,20 +385,13 @@ html.bf-high-contrast{--cf-muted:var(--cf-ink);--cf-line:color-mix(in srgb,var(-
 /* Ledger Flow — prima vedere este un instrument unic de decizie; bilanțul devine registru semantic, nu grilă generică. */.bf-today-activity-list,.bf-today-empty-activity{border-left:3px solid var(--cf-info)!important}.bf-today-activity-list article{border-bottom-style:dashed!important}
 /* ── sfârșit ledger-decision-pass.css ── */
 /* ── fost ledger-movements-pass.css ── */
-/**
- * Atelierul Financiar / Ledger Flow — corecție mobilă: prima vedere este un instrument de decizie,
- * nu un hero decorativ; registrele goale și sertarul de instrumente păstrează aceeași gramatică.
- */
+
 .bf-movements-ledger .bf-movements-header{display:flex;align-items:flex-start!important;justify-content:space-between;gap:13px;width:100%;min-height:0;height:auto;padding:0 2px 14px}.bf-movements-ledger .bf-movements-header>div{display:block;position:static;order:0;flex:1 1 auto;width:auto;min-width:0;max-width:none;margin:0;transform:none}.bf-movements-ledger .bf-movements-header>div>*{max-width:100%}.bf-movements-ledger .bf-movements-header h1{max-width:16ch!important;margin-top:4px}.bf-movements-ledger .bf-movements-header>button{position:static;order:1;flex:0 0 46px;align-self:flex-end;margin:0 0 1px}.bf-movements-ledger .bf-movements-header::before{display:none}.bf-movements-ledger .bf-movements-header>div::before{content:"REGISTRU · VERIFICARE ZILNICĂ";display:inline-block;margin-bottom:9px;padding:4px 7px;border:1px dashed var(--cf-line);border-left:3px solid var(--cf-primary);color:var(--cf-primary-strong);font:600 9px/1 "IBM Plex Sans",sans-serif;letter-spacing:.09em}.bf-movements-ledger .bf-movements-header .bf-kicker{display:none}.bf-movements-ledger .bf-journal-quickbar{padding:11px 0 13px;border-bottom:1px dashed var(--cf-line)}
 .bf-movements-ledger .bf-empty-state{position:relative;min-height:282px!important;padding:70px 20px 26px!important;border:1px solid var(--cf-line)!important;border-top:3px solid var(--cf-info)!important;border-radius:4px 4px 12px 12px !important;background:repeating-linear-gradient(to bottom,var(--cf-surface) 0 31px,color-mix(in srgb,var(--cf-line),transparent 52%) 31px 32px)!important;box-shadow:var(--cf-shadow)!important}.bf-movements-ledger .bf-empty-state::before{content:"REGISTRU PREGĂTIT\AURMĂTOAREA LINIE APARȚINE GOSPODĂRIEI";position:absolute;top:16px;left:18px;white-space:pre-line;color:var(--cf-info);font:600 9px/1.45 "IBM Plex Sans",sans-serif;letter-spacing:.08em;text-align:left}.bf-movements-ledger .bf-empty-state>svg{color:var(--cf-primary)!important}.bf-movements-ledger .bf-empty-state h2{max-width:19ch;color:var(--cf-ink)!important;font:600 23px/1.05 "IBM Plex Sans",Georgia,serif!important}.bf-movements-ledger .bf-empty-state p{max-width:29ch;margin-inline:auto;color:var(--cf-muted)!important}.bf-movements-ledger .bf-empty-state .bf-primary{border-radius:4px!important}
 .bf-utilities-workspace .bf-topline{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:1px 2px 10px}.bf-utilities-workspace .bf-topline::before{display:none}.bf-utilities-workspace .bf-topline>div::before{content:none;display:none;margin-bottom:7px;color:var(--cf-info);font:600 9px/1 "IBM Plex Sans",sans-serif;letter-spacing:.09em}.bf-utilities-workspace .bf-topline .bf-kicker{display:none!important}.bf-utilities-workspace .bf-topline h1{max-width:18ch;font-size:22px}.bf-utilities-workspace .bf-more-grid{position:relative;border-radius:4px 4px 12px 12px;background:repeating-linear-gradient(to bottom,var(--cf-surface) 0 35px,color-mix(in srgb,var(--cf-line),transparent 70%) 35px 36px)}.bf-utilities-workspace .bf-more-grid::before{content:none;display:none;padding:12px 14px 9px;border-bottom:1px dashed var(--cf-line);color:var(--cf-muted);font:600 9px/1.2 "IBM Plex Sans",sans-serif;letter-spacing:.075em}.bf-utilities-workspace .bf-more-grid button{background:transparent}.bf-utilities-workspace .bf-more-grid button:nth-child(3n+1),.bf-utilities-workspace .bf-more-grid button:nth-child(3n+2),.bf-utilities-workspace .bf-more-grid button:nth-child(3n){box-shadow:inset 3px 0 0 var(--cf-info)!important}.bf-utilities-workspace .bf-more-grid button:nth-child(2n){box-shadow:inset 3px 0 0 var(--cf-primary)!important}
 @media(max-width:390px){.bf-movements-ledger .bf-movements-header h1{font-size:22px}.bf-movements-ledger .bf-movements-header>div::before{font-size:12px}.bf-movements-ledger .bf-empty-state h2{font-size:22px !important}.bf-utilities-workspace .bf-topline>div::before{font-size:12px}.bf-utilities-workspace .bf-topline h1{font-size:22px}}
 /* ── sfârșit ledger-movements-pass.css ── */
 /* ── fost priority-focus-pass.css ── */
-/**
- * Trece Obligații și Analiză printr-o singură axă dominantă, urmată de secțiunile de detaliu ca dovezi de registru
- * compacte, în loc de o stivă de panouri cu aceeași greutate vizuală.
- */
 
 .bf-analysis-month{padding:26px;border-radius:20px;box-shadow:0 16px 34px color-mix(in srgb,var(--bf-major-green,#1f5648),transparent 82%)}
 .bf-analysis-month-heading h2{font-size:29px!important}
@@ -461,11 +446,8 @@ html.bf-high-contrast{--cf-muted:var(--cf-ink);--cf-line:color-mix(in srgb,var(-
 }
 /* ── sfârșit secondary-button-contrast.css ── */
 /* ── fost mono-theme.css ── */
-/**
- * Temă Alb — Atelier Platinum (default).
- * Suprafețe moi, pin cald, ierarhie clară. Fără blocuri ink stark, fără neon.
- * --cf-on-primary este obligatoriu pe umplutura de accent.
- */html.theme-white{
+
+html.theme-white{
   --cf-bg: #f1f0ec;
   --cf-surface: #fbfaf7;
   --cf-surface-alt: #e7e4dc;
@@ -566,10 +548,6 @@ html.theme-dark{
 }
 /* ── sfârșit theme-picker-scroll.css ── */
 /* ── fost modernization-pass.css ── */
-/* Buget Familie — modernization pass 2026-08-29
- * Mobile-first: lizibilitate la 360–390 px, acțiuni clare și feedback tactil discret.
- * Se aplică după straturile existente pentru a evita regresii în temele memorate.
- */
 
 .bf-app button,
 .bf-app a,
@@ -1037,7 +1015,6 @@ html.theme-dark{
 @media(min-width:761px){.bf-plan-workspace>.bf-allocation-period,.bf-plan-workspace>.bf-allocation-recommendations{order:initial}}
 @media(prefers-reduced-motion:reduce){.bf-plan-flow-toggle svg{transition:none!important}}
 
-
 /* Visual refresh — suprafețe mai clare, ierarhie mai calmă și accente contemporane. */
 :root {
   --bf-radius-lg: 22px;
@@ -1183,24 +1160,19 @@ html.theme-dark{
   }
 }
 
-
 /* AI coach — parcurs ghidat, nu chat aglomerat. */
 .bf-coach-card{display:grid;gap:16px;margin:16px 0;padding:20px;border:1px solid color-mix(in srgb,var(--cf-info) 28%,var(--cf-line));border-left:4px solid var(--cf-info);border-radius:var(--bf-radius-lg,22px);background:linear-gradient(135deg,color-mix(in srgb,var(--cf-info) 7%,var(--cf-surface)),var(--cf-surface));box-shadow:var(--bf-shadow-soft,0 18px 48px color-mix(in srgb,var(--cf-ink) 9%,transparent))}.bf-coach-heading{display:flex;align-items:start;justify-content:space-between;gap:16px}.bf-coach-heading h2{margin:4px 0 6px;color:var(--cf-ink);font:600 clamp(22px,4vw,30px)/1.05 "IBM Plex Sans",Georgia,serif;letter-spacing:-.035em}.bf-coach-heading p:last-child{margin:0;color:var(--cf-muted);font-size:12px;line-height:1.45}.bf-coach-progress{display:flex;gap:5px;padding-top:4px}.bf-coach-progress i{display:block;width:24px;height:5px;border-radius:999px;background:var(--cf-line);transition:background-color 160ms ease}.bf-coach-progress i.done{background:var(--cf-primary)}.bf-coach-welcome{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;padding:14px;border:1px solid var(--cf-line);border-radius:12px;background:color-mix(in srgb,var(--cf-surface) 78%,transparent)}.bf-coach-welcome>span,.bf-coach-result-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;color:var(--cf-info);background:color-mix(in srgb,var(--cf-info) 14%,var(--cf-surface))}.bf-coach-welcome p{margin:0;color:var(--cf-ink);font-size:12px;line-height:1.45}.bf-coach-welcome button,.bf-coach-actions button,.bf-coach-complete button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:0 12px;border:1px solid var(--cf-line);border-radius:12px;color:var(--cf-ink);background:var(--cf-surface);font-size:12px;font-weight:600}.bf-coach-welcome .bf-primary,.bf-coach-actions .bf-primary{border-color:var(--cf-primary);color:var(--cf-on-forest);background:var(--cf-primary)}.bf-coach-options{display:grid;gap:8px}.bf-coach-question{margin:0 0 3px;color:var(--cf-ink);font-size:14px;font-weight:600}.bf-coach-options>button{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;padding:12px 13px;border:1px solid var(--cf-line);border-radius:12px;color:var(--cf-ink);background:var(--cf-surface);text-align:left}.bf-coach-options>button:hover{border-color:color-mix(in srgb,var(--cf-info) 45%,var(--cf-line));box-shadow:0 8px 20px color-mix(in srgb,var(--cf-info) 10%,transparent);transform:translateY(-1px)}.bf-coach-options>button span{display:grid;gap:4px}.bf-coach-options b{font-size:12px}.bf-coach-options small{color:var(--cf-muted);font-size:12px;line-height:1.35}.bf-coach-result{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;align-items:start;padding:14px;border:1px solid color-mix(in srgb,var(--cf-primary) 30%,var(--cf-line));border-radius:12px;background:color-mix(in srgb,var(--cf-primary) 6%,var(--cf-surface))}.bf-coach-result>div:nth-child(2){display:grid;gap:6px}.bf-coach-result p{margin:0;color:var(--cf-ink);font-size:12px;line-height:1.5}.bf-coach-result small{color:var(--cf-muted);font-size:12px;line-height:1.4}.bf-coach-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;padding-top:4px}.bf-coach-complete{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:start;gap:10px;padding:13px;border-radius:12px;background:color-mix(in srgb,var(--cf-primary) 9%,var(--cf-surface));color:var(--cf-primary-strong)}.bf-coach-complete>div{display:grid;gap:4px}.bf-coach-complete b{color:var(--cf-ink);font-size:12px}.bf-coach-complete p{margin:0;color:var(--cf-muted);font-size:12px;line-height:1.45}.bf-coach-complete button{color:var(--cf-primary-strong)}
 @media(max-width:640px){.bf-coach-card{padding:15px;border-radius:20px}.bf-coach-heading{display:grid;grid-template-columns:minmax(0,1fr) auto}.bf-coach-heading h2{font-size:22px}.bf-coach-welcome{grid-template-columns:36px minmax(0,1fr)}.bf-coach-welcome button{grid-column:1/-1;width:100%}.bf-coach-actions{display:grid;grid-template-columns:1fr}.bf-coach-actions button{width:100%}.bf-coach-complete{grid-template-columns:24px minmax(0,1fr)}.bf-coach-complete button{grid-column:1/-1;width:100%}}
 @media(prefers-reduced-motion:reduce){.bf-coach-progress i{transition:none}.bf-coach-options>button:hover{transform:none}}
 
-
 /* Guided money setup and expense capture. */
 .bf-guided-expense{display:grid;gap:12px;padding:16px;border:1px solid var(--cf-line);border-radius:12px;background:color-mix(in srgb,var(--cf-surface) 88%,var(--cf-info) 4%)}.bf-guided-expense>p{margin:0;color:var(--cf-muted);font-size:12px;line-height:1.45}.bf-guided-expense-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.bf-guided-expense-grid label{display:grid;gap:5px;color:var(--cf-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}.bf-guided-expense-grid input,.bf-guided-expense-grid select{width:100%;min-height:40px;padding:0 10px;border:1px solid var(--cf-line);border-radius:12px;color:var(--cf-ink);background:var(--cf-surface);font-size:12px;text-transform:none;letter-spacing:0}.bf-guided-expense-hint{padding:9px 10px;border-radius:12px;background:color-mix(in srgb,var(--cf-info) 8%,var(--cf-surface));color:var(--cf-muted)}.bf-guided-expense-confirm{display:grid;gap:7px;padding:13px;border:1px solid color-mix(in srgb,var(--cf-primary) 35%,var(--cf-line));border-radius:12px;background:color-mix(in srgb,var(--cf-primary) 7%,var(--cf-surface))}.bf-guided-expense-confirm b{color:var(--cf-ink);font-size:12px}.bf-guided-expense-confirm p,.bf-guided-expense-confirm small{margin:0;color:var(--cf-muted);font-size:12px}.bf-guided-expense-confirm footer{display:flex;justify-content:flex-end;gap:8px;padding-top:5px}.bf-guided-expense-confirm footer button{min-height:36px;padding:0 11px;border:1px solid var(--cf-line);border-radius:12px;color:var(--cf-ink);background:var(--cf-surface);font-size:12px;font-weight:600}.bf-guided-expense-confirm footer .bf-primary{border-color:var(--cf-primary);color:var(--cf-on-forest);background:var(--cf-primary)}
 @media(max-width:640px){.bf-guided-expense-grid{grid-template-columns:1fr}.bf-guided-expense-confirm footer{display:grid;grid-template-columns:1fr}.bf-guided-expense-confirm footer button{width:100%}}
-
 
 /* Accessibility and mobile resilience pass. */
 :where(button,a,input,select,textarea,summary):focus-visible{outline:3px solid color-mix(in srgb,var(--cf-primary) 72%,#fff);outline-offset:3px}.bf-wizard-footer button, .bf-coach-actions button, .bf-guided-expense-confirm footer button{min-height:42px}.bf-advisor-prompts button,.bf-scenario-actions button{min-height:40px}.bf-lazy-panel{contain:layout style;min-height:120px}.bf-saving-suggestions,.bf-advisor-answer,.bf-advisor-prompts{content-visibility:auto;contain-intrinsic-size:0 180px}@media(max-width:640px){.bf-page,.bf-insights-workspace{padding-bottom:calc(104px + env(safe-area-inset-bottom))}.bf-coach-options>button{min-height:58px}.bf-wizard-footer{gap:8px}.bf-wizard-footer button{flex:1}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
 /* ── sfârșit modernization-pass.css ── */
 /* ── fost health-score.css ── */
-/* Scor de sănătate financiară — badge pe Astăzi + sheet explicabil.
-   Culorile vin EXCLUSIV din --cf-*, ca inelul și textul să rămână lizibile pe orice temă. */
 
 .bf-health-sheet {
   max-width: 22rem;
@@ -1341,13 +1313,8 @@ html.theme-dark{
 }
 /* ── sfârșit health-score.css ── */
 /* ── fost theme-contrast-pass.css ── */
-/**
- * Contrast pass — un singur sistem de culoare pentru TOATE temele și fundalurile.
- *
- * Problema: --card / --muted-foreground / --bf-major-* rămâneau pe paleta ivory
- * (crem + gri) și pe temele închise produceau text deschis pe card deschis
- * sau text gri pe verde închis. Aici toate token-urile urmează --cf-*.
- */html.theme-white, html.theme-dark, html.theme-navy, html.dark{
+
+html.theme-white, html.theme-dark, html.theme-navy, html.dark{
   --background: var(--cf-bg);
   --foreground: var(--cf-ink);
   --card: var(--cf-surface);
@@ -1510,12 +1477,6 @@ html.bf-high-contrast {
   border-color: var(--cf-line) !important;
 }
 
-/*
- * Hero-urile cu text deschis pe gradient rămân lizibile (text forțat deschis).
- * Selectorii dublați (`.x.x`) și `html body .os-shell` cresc specificitatea peste regulile
- * de temă `:is(html.theme-white) .os-shell .bf-kicker` și peste culoarea gri a paragrafelor,
- * care altfel lăsau eticheta verde pe verde (testare cu utilizatori, M5).
- */
 .bf-recurring-hero,
 .bf-advisor-hero {
   color: #f4faf6 !important;
@@ -1686,11 +1647,6 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 .bf-saving-plan button { justify-self: start; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
 /* ── sfârșit play-studio.css ── */
 /* ── fost atelier-graphic-pass.css ── */
-/**
- * Atelier graphic pass — redesenare de aspect, fără a rupe contrastul.
- * Ultimul CSS încărcat. Culorile rămân pe --cf-*; hero-urile branded
- * folosesc text deschis pe un amestec întunecat al accentului, pe orice temă.
- */
 
 .bf-app {
   --bf-on-hero: #f4faf6;
@@ -2353,7 +2309,6 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 @media (max-width: 760px) {
   .bf-allocation-list.bf-envelope-desk { grid-template-columns: 1fr; }
 }
-
 
 /* —— Calibrare afișare: plicuri, titluri, nav, stări goale —— */
 :root {
@@ -3284,12 +3239,6 @@ html.dark .bf-today-envelopes {
 }
 /* ── sfârșit brand-mark.css ── */
 /* ── fost surface-texture.css ── */
-/**
- * Ultimul strat pentru textura suprafeței.
- * theme-contrast-pass punea border-color !important pe TOATE dalele,
- * deci starea .selected era invizibilă. Aici inelul, bifa,
- * previzualizarea și fundalul real câștigă în sfârșit.
- */
 
 .bf-theme-backdrop,
 .bf-theme-picker,
@@ -3444,11 +3393,6 @@ html.dark .bf-today-envelopes {
   background-size: 12px 12px, auto !important;
 }
 
-/*
- * Fundalul real al aplicației. Shorthand-ul `.theme-rosewood .bf-app { background: ... }`
- * ștergea background-image. Specificitatea html.theme-*.background-* bate
- * atât tema cât și straturile anterioare.
- */
 html.background-plain .bf-app,
 html[class*="theme-"].background-plain .bf-app {
   background-color: var(--cf-bg);
@@ -3732,7 +3676,6 @@ html.background-dots .bf-app::before {
   .bf-app *, .bf-app *::before, .bf-app *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }
 
-
 /* Theme bridge: redesignul folosește semantica temei active, nu o paletă fixă. */
 .bf-app {
   --neo-ink: var(--cf-ink, #10231f);
@@ -3792,7 +3735,6 @@ html.background-dots .bf-app::before {
 }
 .bf-appbar nav button.active { border-bottom-color: var(--neo-active, var(--cf-primary, #185849)) !important; }
 
-
 /* Header lock: regulile directe ale app-ului nu trebuie să împingă logo-ul în jos. */
 .bf-app > .bf-skip-link {
   position: fixed !important;
@@ -3812,7 +3754,6 @@ html.background-dots .bf-app::before {
   flex: 0 0 auto;
   align-self: stretch;
 }
-
 
 /* Page surfaces: paginile secundare nu mai pot combina suprafață Ivory cu textul unei teme dark. */
 .bf-page {
@@ -3896,10 +3837,6 @@ html.background-dots .bf-app::before {
 .dark .bf-journal-save-filter input { background: var(--cf-surface-alt, #123027) !important; }
 /* ── sfârșit redesign-2026.css ── */
 /* ── fost atelier-platinum-elevate.css ── */
-/**
- * Atelier Platinum elevate — tipografie, ierarhie butoane, foi, micro-interacțiuni.
- * Mobile-first; respectă prefers-reduced-motion; fără neon.
- */
 
 :root {
   --font-display: "Fraunces", Georgia, serif;
@@ -4068,11 +4005,6 @@ html.theme-navy .os-dock button.is-on {
 }
 /* ── sfârșit atelier-platinum-elevate.css ── */
 /* ── fost atelier-premium-redesign.css ── */
-/**
- * Atelier Premium — bold fintech redesign (mobile-first).
- * Distinctive deeper surfaces, glass hero, floating pill dock, springy sheets.
- * Loaded after platinum elevate; contrast-fix stays last for safety.
- */
 
 :root {
   --bf-premium-motion: 220ms cubic-bezier(.22, 1.15, .36, 1);
@@ -4577,11 +4509,6 @@ html.theme-navy .bf-whats-new {
 }
 /* ── sfârșit atelier-premium-redesign.css ── */
 /* ── fost ui-chrome-redesign.css ── */
-/**
- * UI Chrome 2026-09 — structural redesign: fonts, buttons, menus, secondary tabs.
- * Loaded after atelier-premium-redesign; contrast-fix stays last.
- * Squircle system (14–18px) for buttons/fields; chips share the same language.
- */
 
 :root {
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
@@ -5561,12 +5488,6 @@ html.theme-navy .os-shell .bf-advisor-metrics b {
 /* visual-polish.css se încarcă o singură dată, imediat după această foaie (deferred-styles.ts). */
 
 /* ── fost shell-menu-delight.css ── */
-/**
- * Shell + menus + motion delight (2026-09-12).
- * Atmospheric depth, premium Mai mult rows, tasteful transitions.
- * Does NOT restyle primary/secondary action buttons.
- * Respects prefers-reduced-motion and Mod simplu.
- */
 
 :root {
   --bf-delight-ms: 420ms;
@@ -5574,10 +5495,6 @@ html.theme-navy .os-shell .bf-advisor-metrics b {
   --bf-delight-sheet: cubic-bezier(.16, 1.12, .24, 1);
   --bf-delight-stagger: 38ms;
 }
-
-/* ============================================================
- * 1) Shell graphics — mesh / aurora / soft noise per theme
- * ============================================================ */
 
 .os-shell.bf-app {
   --bf-mesh-a: color-mix(in srgb, var(--cf-primary, var(--os-mint)) 26%, transparent);
@@ -5652,10 +5569,6 @@ html.theme-dark .os-shell.bf-app {
 /* Plain background preference: quieter wash */
 html.background-plain .os-shell.bf-app::after { opacity: .012; }
 html.background-plain .os-shell.bf-app::before { opacity: .55 !important; }
-
-/* ============================================================
- * 2) Menus — Mai mult / app-bar tools / section headers
- * ============================================================ */
 
 /* App-bar overflow cluster */
 .os-shell .os-tools {
@@ -5952,10 +5865,6 @@ body .bf-command-palette,
   background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 10%, transparent);
 }
 
-/* ============================================================
- * 3) Effects & animations — page / tab / card / dock / sheet
- * ============================================================ */
-
 @keyframes bf-delight-page-in {
   from {
     opacity: 0;
@@ -6105,10 +6014,6 @@ body .bf-command-palette,
   }
 }
 
-/* ============================================================
- * Reduced motion + Simple mode (calmer)
- * ============================================================ */
-
 @media (prefers-reduced-motion: reduce) {
   .os-shell.bf-app::before,
   .os-shell.bf-app::after {
@@ -6208,8 +6113,6 @@ html[data-simple-mode="1"] .os-shell .os-dock button.active {
 }
 /* ── sfârșit shell-menu-delight.css ── */
 
-/* Primul ecran e deja desenat când ajunge foaia. Animațiile `both` ar porni
-   de la opacity 0 și ar face flash — le oprim pe suprafețele de start. */
 .bf-first-run-backdrop,
 .bf-first-run-backdrop.bf-modal-backdrop,
 .bf-onboarding.bf-first-run,

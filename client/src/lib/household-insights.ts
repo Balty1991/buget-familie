@@ -48,6 +48,7 @@ import { daysLabel, getLocale, t } from "./i18n";
 import { safeSetItem } from "@/lib/safe-storage";
 import { selfMemberIdOf } from "./member-identity";
 import { pendingTransfers } from "./monthly-needs";
+import { upcomingPlannedEvents } from "./planned-events";
 
 const fold = foldRomanian;
 const daysBetween = (from: string, to: string) => Math.round((new Date(`${to}T12:00:00`).valueOf() - new Date(`${from}T12:00:00`).valueOf()) / 86_400_000);
@@ -385,6 +386,40 @@ export const recurringPriceChanges = (data: AppData, asOf = isoToday()): Recurri
     }
   }
   return changes.sort((a, b) => (b.to - b.from) - (a.to - a.from));
+};
+
+/** Scrie prețul nou pe scadența urmărită. Nu atinge registrul: următoarea plată pleacă de la suma reală. */
+export const acceptRecurringPrice = (data: AppData, recurringId: string, asOf = isoToday()): AppData | undefined => {
+  const change = recurringPriceChanges(data, asOf).find((item) => item.recurringId === recurringId);
+  if (!change) return undefined;
+  const now = new Date().toISOString();
+  return { ...data, recurring: data.recurring.map((item) => item.id === recurringId ? { ...item, amount: change.to, updatedAt: now } : item) };
+};
+
+export type PocketKind = "cash" | "card" | "meal" | "transfer";
+export type PocketSlice = { kind: PocketKind; amount: number };
+
+/** Unde stau banii lichizi, pe felul sursei. Un singur fel nu merită un rând: cifra mare spune deja totalul. */
+export const pocketSlices = (data: AppData): PocketSlice[] => {
+  const totals: Record<PocketKind, number> = { cash: 0, card: 0, meal: 0, transfer: 0 };
+  for (const source of data.settings.paymentSources) {
+    const balance = sourceBalance(data, source.id);
+    if (balance < 1 || !(source.kind in totals)) continue;
+    totals[source.kind] += balance;
+  }
+  return (["cash", "card", "meal", "transfer"] as const)
+    .filter((kind) => totals[kind] >= 1)
+    .map((kind) => ({ kind, amount: Math.round(totals[kind] * 100) / 100 }));
+};
+
+export type TrueExpenseNudge = { id: string; name: string; date: string; left: number; saved: number; estimate: number; monthly: number };
+
+/** Următorul cost care nu încape în plicul lunii (Crăciun, RCA, școală), doar dacă mai e aproape și încă nu e strâns. */
+export const nextTrueExpense = (data: AppData, asOf = isoToday()): TrueExpenseNudge | undefined => {
+  const next = upcomingPlannedEvents(data.settings.plannedEvents || [], asOf, 90)
+    .find((item) => !item.passed && item.remaining >= 50 && item.daysLeft >= 1 && item.estimate > 0);
+  if (!next || next.perMonth < 1) return undefined;
+  return { id: next.event.id, name: next.event.name, date: next.date, left: next.remaining, saved: next.saved, estimate: next.estimate, monthly: Math.max(1, Math.round(next.perMonth)) };
 };
 
 /** Cât costă abonamentele urmărite, adus la o lună și la un an (trimestrialele și anualele împărțite). */
@@ -1669,6 +1704,34 @@ export const monthVsAverage = (data: AppData, asOf = isoToday()): { rows: MonthV
 
 /** Aceeași socoteală chemată de mai multe componente în aceeași randare se face o singură dată. */
 export const envelopeRunOut = (data: AppData, asOf = isoToday()): EnvelopeRunOut[] => tickMemo([data], `envelopeRunOut:${asOf}`, () => envelopeRunOutUncached(data, asOf));
+
+/**
+ * Cât de mutat dintr-un plic liber ca cel care se golește înainte de salariu să ajungă.
+ * Nu ia din chirie sau rate. Lasă 10 lei în plicul din care se mută, ca să nu apară o gaură nouă.
+ */
+export const extendRunOutMove = (data: AppData, allocationId: string, asOf = isoToday()): CheckInRebalance | undefined => {
+  const run = envelopeRunOut(data, asOf).find((item) => item.allocationId === allocationId);
+  const track = paydayTrack(data, asOf);
+  if (!run || !track || track.remaining < 2) return undefined;
+  const need = Math.round((run.dailyRate * track.remaining - run.remaining) * 100) / 100;
+  if (need < 10) return undefined;
+  const donor = data.settings.salaryPlan.allocations
+    .map((allocation) => ({ allocation, ...allocationStatus(data, allocation) }))
+    .filter((item) => item.allocation.id !== allocationId && item.remaining > 20 && !isFixedEnvelope(data.settings.salaryPlan, item.allocation))
+    .sort((left, right) => right.remaining - left.remaining)[0];
+  if (!donor) return undefined;
+  const amount = Math.round(Math.min(need, donor.remaining - 10) * 100) / 100;
+  if (amount < 10) return undefined;
+  return {
+    fromId: donor.allocation.id,
+    fromLabel: donor.allocation.label,
+    toId: allocationId,
+    toLabel: run.label,
+    amount,
+    deficit: need,
+    covers: amount >= need - 0.5,
+  };
+};
 
 /** Aceeași socoteală chemată de mai multe componente în aceeași randare se face o singură dată. */
 export const todayBrief = (data: AppData, asOf = isoToday()): TodayBrief => tickMemo([data], `todayBrief:${asOf}`, () => todayBriefUncached(data, asOf));
