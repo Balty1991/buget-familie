@@ -1007,7 +1007,7 @@ body .bf-command-backdrop,
 .os-shell .bf-modal-backdrop,
 body > .bf-modal-backdrop {
   background: color-mix(in srgb, var(--cf-bg, #07090c) 55%, transparent) !important;
-  backdrop-filter: blur(14px) !important;
+  backdrop-filter: blur(14px) ;
 }
 
 body .bf-command-palette {

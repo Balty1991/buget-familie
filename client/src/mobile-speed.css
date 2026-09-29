@@ -270,3 +270,16 @@ html {
     transition: none;
   }
 }
+
+/* Aplicația din magazin folosește WebView, mai lent decât Chrome la sticlă blurată.
+   Regula e pe foaia de start, nu după cele 10 secunde de foi amânate. */
+html.capacitor-android,
+html.capacitor-android body,
+html.capacitor-android body *,
+html.capacitor-android body *::before,
+html.capacitor-android body *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}

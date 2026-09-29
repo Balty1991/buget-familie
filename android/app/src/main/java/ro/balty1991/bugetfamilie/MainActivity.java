@@ -103,12 +103,15 @@ public class MainActivity extends BridgeActivity {
     webView.setBackgroundColor(Color.parseColor(launchDark ? "#0B0F0E" : "#E4E9E6"));
     final WebSettings settings = webView.getSettings();
     settings.setGeolocationEnabled(false);
-    /* Pagina e în APK. Cache-ul HTTP al WebView-ului era o a doua copie, vizibilă
-       la Stocare → Cache. Nu-l mai umplem; copia veche se șterge după prima pictare. */
+    /* Pagina e în APK. Nu ținem o a doua copie în cache-ul WebView.
+       Golirea se face înainte de conținut, nu la 2,5 s — altfel pagina clipește
+       și se re-citește cât omul derulează. */
     settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+    webView.clearCache(true);
     if (Build.VERSION.SDK_INT >= 23) {
-      settings.setOffscreenPreRaster(false);
+      settings.setOffscreenPreRaster(true);
     }
+    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");
@@ -122,10 +125,7 @@ public class MainActivity extends BridgeActivity {
     ViewCompat.requestApplyInsets(webView);
     webView.post(() -> ViewCompat.requestApplyInsets(webView));
     attachSplashOverlay(webView);
-    webView.postDelayed(() -> {
-      webView.clearCache(true);
-      pruneStaleBackupCache();
-    }, 2500);
+    webView.postDelayed(this::pruneStaleBackupCache, 2500);
   }
 
   /**
@@ -223,8 +223,8 @@ public class MainActivity extends BridgeActivity {
     if (!tight) return;
     final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
-    /* În fundal eliberăm cache-ul din RAM. Nu atingem discul cât ecranul e deschis:
-       clearCache(true) e o dată, la pornire, ca să nu clipească pagina. */
+    /* În fundal eliberăm cache-ul din RAM. Discul s-a golit deja la pornire,
+       înainte ca pagina să fie pe ecran. */
     if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
       || level >= ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
       webView.post(() -> webView.clearCache(false));
