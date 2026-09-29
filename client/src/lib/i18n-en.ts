@@ -1494,7 +1494,7 @@ export const en: Record<string, string> = {
 
   // Trecerea completă peste ecranele adânci: tot ce vede omul în interfață
   // trece acum prin t(), iar testul de acoperire nu lasă să scape nimic nou.
-  " Verifică atent suma; fotografia nu este suficient de clară.": " Check the amount carefully; the photo is not clear enough.",
+  " Verifică atent suma. Dacă nu e asta, scrie «totalul e …».": " Check the amount carefully. If that isn't it, write “the total is …”.",
   " achitată": " paid off",
   " · nefolosit de nicio sursă": " · not used by any source",
   " · neplătită": " · unpaid",

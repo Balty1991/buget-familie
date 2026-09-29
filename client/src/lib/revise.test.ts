@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData } from "./finance-data";
-import { paidRecurringProposal, reviseProposal } from "./understand";
+import { paidRecurringProposal, reviseProposal, correctPendingSpend, receiptDetails } from "./understand";
 
 const house = (): AppData => {
   const data = createEmptyAppData();
@@ -89,5 +89,47 @@ describe("o scadență plătită, fără să repeți suma", () => {
       recurringId: "rec-chirie",
       allocationId: "env-house",
     });
+  });
+});
+
+describe("corectura propunerii încă deschise", () => {
+  const pending = { amount: 7.99, title: "Jud. teleorman", category: "Alimente", date: "2026-09-29", vendor: "Jud. teleorman", receipt: true };
+
+  it("«nu e 7,99, e 66» schimbă totalul, nu caută o mișcare salvată", () => {
+    const out = correctPendingSpend("nu e 7,99, e 66", pending, createEmptyAppData());
+    expect(out?.spend?.amount).toBe(66);
+    expect(out?.text).toMatch(/66/);
+    expect(out?.text).not.toMatch(/7[,.]99/);
+    expect(out?.text).toMatch(/Total bon/);
+  });
+
+  it("«totalul e 66» și «the total is 66» spun aceeași sumă", () => {
+    expect(correctPendingSpend("totalul e 66 lei", pending, createEmptyAppData())?.spend?.amount).toBe(66);
+    expect(correctPendingSpend("the total is 66", pending, createEmptyAppData())?.spend?.amount).toBe(66);
+    expect(correctPendingSpend("nu, e 66", pending, createEmptyAppData())?.spend?.amount).toBe(66);
+  });
+
+  it("«magazinul e Mega Image» înlocuiește județul", () => {
+    const out = correctPendingSpend("magazinul e Mega Image", pending, createEmptyAppData());
+    expect(out?.spend?.title).toBe("Mega Image");
+    expect(out?.text).toMatch(/Mega Image/);
+    expect(out?.text).not.toMatch(/teleorman/i);
+  });
+
+  it("«nu e teleorman, e mega image» e magazin, iar «categoria e transport» e categorie", () => {
+    expect(correctPendingSpend("nu e teleorman, e mega image", pending, createEmptyAppData())?.spend?.title).toBe("Mega Image");
+    const moved = correctPendingSpend("categoria e transport", { ...pending, title: "Mega Image" }, createEmptyAppData());
+    expect(moved?.spend?.category).toBe("Transport");
+    expect(moved?.text).toMatch(/Transport/);
+  });
+
+  it("nu confundă o cheltuială nouă și nici corectura unei mișcări deja salvate", () => {
+    expect(correctPendingSpend("am dat 20 lei pe pâine", pending, createEmptyAppData())).toBeUndefined();
+    expect(correctPendingSpend("era 60 nu 50", pending, createEmptyAppData())).toBeUndefined();
+    expect(correctPendingSpend("era 66 nu 7,99", pending, createEmptyAppData())?.spend?.amount).toBe(66);
+  });
+
+  it("când poza nu se închide, spune cum se corectează suma", () => {
+    expect(receiptDetails({ amount: 7.99, confidence: "low" })).toMatch(/totalul e/);
   });
 });

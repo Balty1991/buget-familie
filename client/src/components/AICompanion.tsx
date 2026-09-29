@@ -16,6 +16,7 @@ import { RoDateInput } from "@/components/RoDateInput";
 import {
   decide,
   expenseProposal,
+  correctPendingSpend,
   foldRo,
   isConfirm,
   isCorrection,
@@ -48,7 +49,7 @@ export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
 export type { FinancialUpdate } from "@/lib/understand";
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void; initiallyOpen?: boolean };
-export type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "apply" | "catalog" | MainView; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
+export type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "apply" | "catalog" | MainView; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; pendingSpend?: { amount: number; title: string; category: string; date: string }; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[] };
 type ChatAttachment = { name: string; mimeType: string; data: string };
 type PendingReceiptDraft = { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
@@ -311,11 +312,11 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     else onGo(item.action.type as MainView);
     setOpen(false);
   };
-  const offerSpend = (proposal: { text: string; choices: ChatChoice[] }) => {
+  const offerSpend = (proposal: { text: string; choices: ChatChoice[]; spend?: { amount: number; title: string; category: string; date: string } }) => {
     resetSpendDraft();
     const dated = proposal.choices.find((item) => (item.update.kind === "expense" || item.update.kind === "income") && item.update.date);
     if ((dated?.update.kind === "expense" || dated?.update.kind === "income") && dated.update.date) setSpendDay(dated.update.date);
-    addMessage({ role: "assistant", text: proposal.text, choices: proposal.choices });
+    addMessage({ role: "assistant", text: proposal.text, choices: proposal.choices, pendingSpend: proposal.spend });
   };
   const offerCatalog = (name: string) => {
     const q = name.trim();
@@ -469,7 +470,7 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     if (!raw && !attachments.length) return;
     const requestText = raw || t("Analizează bonul atașat și propune cheltuiala.");
     const sentAttachments = attachments;
-    if (!sentAttachments.length) pendingReceiptRef.current = null;
+    const receiptDraft = pendingReceiptRef.current;
     setMessage("");
     setAttachments([]);
     setHistoryOpen(false);
@@ -490,6 +491,35 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         offerSpend(recovered);
         return;
       }
+    }
+    /**
+     * Propunerea e încă pe ecran. „Totalul e 66” sau „magazinul e Mega Image” o rescriu,
+     * nu deschid o cheltuială nouă și nu caută o mișcare deja salvată.
+     */
+    if (!sentAttachments.length) {
+      const open = [...messages].reverse().find((item) => item.role === "assistant" && (item.pendingSpend || item.choices?.some((choice) => choice.update.kind === "expense")));
+      const fromChoice = open?.choices?.find((choice) => choice.update.kind === "expense");
+      const heard = open?.pendingSpend || (fromChoice?.update.kind === "expense" ? { amount: fromChoice.update.amount, title: fromChoice.update.title, category: fromChoice.update.category, date: fromChoice.update.date } : undefined);
+      if (heard) {
+        const corrected = correctPendingSpend(raw, { amount: heard.amount, title: heard.title, category: heard.category, date: heard.date || today(), vendor: receiptDraft?.vendor, receipt: Boolean(receiptDraft) }, data, guideMemory.current);
+        if (corrected?.spend) {
+          if (receiptDraft) pendingReceiptRef.current = { ...receiptDraft, amount: corrected.spend.amount, vendor: corrected.spend.title || receiptDraft.vendor };
+          setMessages((current) => {
+            const next = [...current];
+            for (let index = next.length - 1; index >= 0; index -= 1) {
+              const item = next[index];
+              if (item.role === "assistant" && item.choices?.some((choice) => choice.update.kind === "expense")) {
+                next[index] = { ...item, choices: undefined };
+                break;
+              }
+            }
+            return next;
+          });
+          offerSpend(corrected);
+          return;
+        }
+      }
+      pendingReceiptRef.current = null;
     }
     /**
      * O singură citire a mesajului, un singur loc unde se alege. Înainte, fiecare
