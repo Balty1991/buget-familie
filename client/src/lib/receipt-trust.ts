@@ -5,7 +5,8 @@ import { receiptReadIsReconciled, type LocalReceiptOcr } from "./receipt-utils";
 export function looksLikeKnownProduct(label: string) {
   const folded = foldRomanian(label);
   if (!folded || folded.length < 4) return false;
-  return /\b(mentos|portocal|banana|banane|kinder|ketchup|crenvurst|actimel|akadika|delaco|iaurt|punga|biodegradabil|pepermint|peppermint|mega image|profi|kaufland|lidl|carrefour)\b/.test(folded) && !/\b(mega image|profi|kaufland|lidl|carrefour)\b/.test(folded);
+  if (/\b(mega image|profi|kaufland|lidl|carrefour|penny|auchan|megaimage)\b/.test(folded)) return false;
+  return /\b(mentos|portocal|banana|banane|kinder|ketchup|crenvurst|actimel|akadika|delaco|iaurt|punga|biodegradabil|pepermint|peppermint)\b/.test(folded);
 }
 
 /** Destul de sigură ca ghidul să propună cheltuiala fără model. */
