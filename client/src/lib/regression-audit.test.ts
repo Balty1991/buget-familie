@@ -270,6 +270,15 @@ describe("propunerea de reechilibrare din check-in", () => {
     expect(checkInRebalance(withEnvelopes([["alimente", 100]]))).toBeUndefined();
   });
 
+  it("nu ia din chirie cât timp un plic de cheltuieli are de unde da, și tace dacă doar facturile au rest", () => {
+    const data = withEnvelopes([["alimente", 1120], ["liber", 100], ["transport", 50]]);
+    data.settings.salaryPlan.allocations.push({ id: "chirie", label: "Chirie", category: "Casă & facturi", amount: 2000, weeklyPace: false });
+    expect(checkInRebalance(data)?.fromId).toBe("liber");
+    const onlyBills = withEnvelopes([["alimente", 1120], ["liber", 600], ["transport", 300]]);
+    onlyBills.settings.salaryPlan.allocations.push({ id: "chirie", label: "Chirie", category: "Casă & facturi", amount: 2000, weeklyPace: false });
+    expect(checkInRebalance(onlyBills)).toBeUndefined();
+  });
+
   it("tace când niciun plic nu are de unde da", () => {
     const data = withEnvelopes([["alimente", 1100], ["liber", 600], ["transport", 300]]);
     expect(checkInRebalance(data)).toBeUndefined();

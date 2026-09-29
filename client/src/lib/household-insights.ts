@@ -40,6 +40,7 @@ import {
   isFixedEnvelope,
   expenseBelongsTo,
   isBalanceAdjustment,
+  sourceBalance,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
 import { floorCents, lei as leiExact, perDay } from "./money-format";
@@ -113,6 +114,53 @@ export const ageOfMoney = (data: AppData, asOf = isoToday()): AgeOfMoney | undef
     expenseCount: expenses.length,
   };
 };
+
+/**
+ * O propoziție pentru Astăzi, nu o a doua cifră. Cu prea puține cheltuieli, sau când o
+ * parte din bani n-are încasare în urmă, vârsta ar minți — atunci tace.
+ */
+export const ageOfMoneyLine = (age: AgeOfMoney | undefined): string | undefined => {
+  if (!age || age.expenseCount < 4 || age.sampleAmount < 100) return undefined;
+  if (age.unfundedAmount > age.sampleAmount * 0.2) return undefined;
+  const days = Math.round(age.days);
+  if (days < 1) return undefined;
+  if (days < 7) return t("Cheltuiți din banii care tocmai au intrat.");
+  return t("Un leu stă la voi cam {days} înainte să plece.", { days: daysLabel(days) });
+};
+
+export type MealRunway = {
+  balance: number;
+  /** Câte zile mai țin bonurile la ritmul ultimelor 4 săptămâni. */
+  days: number;
+  daysToPayday: number;
+};
+
+/**
+ * Bonurile de masă, pe ciclul de salariu: doar când ritmul real (cel puțin 3 plăți
+ * în 28 de zile) le termină înainte de salariu. Altfel soldul stă la surse, fără alarmă.
+ */
+export const mealRunway = (data: AppData, asOf = isoToday()): MealRunway | undefined => {
+  const meals = data.settings.paymentSources.filter((item) => item.kind === "meal");
+  if (!meals.length) return undefined;
+  const balance = Math.round(meals.reduce((sum, source) => sum + Math.max(0, sourceBalance(data, source.id)), 0) * 100) / 100;
+  if (balance < 1) return undefined;
+  const payday = planEndDate(data.settings.salaryPlan);
+  if (!payday || payday <= asOf) return undefined;
+  const daysToPayday = daysBetween(asOf, payday);
+  if (daysToPayday < 1) return undefined;
+  const since = addIsoDays(asOf, -27);
+  const mealIds = new Set(meals.map((item) => item.id));
+  const spent = data.transactions.filter((item) => item.kind === "expense" && !isBalanceAdjustment(item) && item.date >= since && item.date <= asOf && mealIds.has(item.sourceId || ""));
+  if (spent.length < 3) return undefined;
+  const daily = spent.reduce((sum, item) => sum + item.amount, 0) / 28;
+  if (daily < 1) return undefined;
+  const days = Math.max(0, Math.floor(balance / daily));
+  if (days >= daysToPayday) return undefined;
+  return { balance, days, daysToPayday };
+};
+
+export const mealRunwayLine = (run: MealRunway | undefined): string | undefined =>
+  run ? t("Bonurile ({amount}) se termină cam în {days}, înainte de salariu.", { amount: lei(run.balance), days: daysLabel(run.days) }) : undefined;
 
 export type MonthlyRecap = {
   month: string;
@@ -1397,8 +1445,9 @@ export const checkInRebalance = (data: AppData): CheckInRebalance | undefined =>
   // Deficitul și donatorul se măsoară pe ciclu, nu pe săptămână: limitele plicurilor sunt ale ciclului.
   const short = status.filter((item) => item.remaining < -0.005).sort((left, right) => left.remaining - right.remaining)[0];
   if (!short) return undefined;
+  // Chiria și ratele nu se golesc ca să acopere mâncarea. Dacă doar ele au rest, tăcem.
   const donor = status
-    .filter((item) => item.allocation.id !== short.allocation.id && item.remaining > 0.005)
+    .filter((item) => item.allocation.id !== short.allocation.id && item.remaining > 0.005 && !isFixedEnvelope(data.settings.salaryPlan, item.allocation))
     .sort((left, right) => right.remaining - left.remaining)[0];
   if (!donor) return undefined;
   const deficit = roundMoney(Math.abs(short.remaining));

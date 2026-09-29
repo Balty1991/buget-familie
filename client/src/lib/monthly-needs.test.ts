@@ -152,6 +152,17 @@ describe("repartizarea la salariu", () => {
     expect(split.lines.find((line) => line.need.id === "gradinita")).toMatchObject({ amount: 0, remaining: 250, skipped: "other-payer" });
   });
 
+  it("grădinița celuilalt nu se numără ca lipsă a salariului care a acoperit restul", () => {
+    const data = family();
+    data.settings.salaryPlan.needs = data.settings.salaryPlan.needs!.map((item) => item.id === "gradinita" ? { ...item, payerId: "sotia" } : item);
+    data.transactions = [income("s-eu", "eu", 8000, "2026-10-10")];
+    const split = proposeIncomeSplit(data, "s-eu");
+    if (!split.ok) throw new Error(split.message);
+    expect(split.lines.find((line) => line.need.id === "gradinita")?.skipped).toBe("other-payer");
+    expect(split.uncovered).toBe(0);
+    expect(split.free).toBeGreaterThan(0);
+  });
+
   it("tichetele de masă nu intră în repartizare", () => {
     const data = family();
     data.transactions = [income("t", "eu", 800, "2026-10-05", "tichete")];

@@ -283,8 +283,9 @@ export function proposeIncomeSplit(data: AppData, incomeId: string): IncomeSplit
     lines,
     covered,
     free: money,
-    // Rezerva de neprevăzute nu e o lipsă: dacă nu încape acum, nu înseamnă că venitul nu ajunge.
-    uncovered: round2(lines.filter((item) => item.need.priority !== "buffer").reduce((sum, item) => sum + item.remaining, 0)),
+    // Rezerva de neprevăzute nu e o lipsă. Nici ce e scris „din celălalt salariu”:
+    // altfel cardul spune „neacoperiți” lângă „liberi”, deși salariul ăsta și-a făcut treaba.
+    uncovered: round2(lines.filter((item) => item.need.priority !== "buffer" && item.skipped !== "other-payer").reduce((sum, item) => sum + item.remaining, 0)),
     nextIncome,
     transfers: splitTransfers(lines, income.memberId),
   };
@@ -445,14 +446,16 @@ export function splitPreviewText(split: Extract<IncomeSplit, { ok: true }>, mone
   const parts = split.lines.filter((line) => line.amount > 0).map((line) => line.amount < line.target - line.fundedBefore
     ? t("{label} {amount} din {target}", { label: line.need.label, amount: money(line.amount), target: money(line.target) })
     : `${line.need.label} ${money(line.amount)}`);
-  const tail = split.uncovered > 0
+  const gap = split.uncovered > 0
     ? split.nextIncome
-      ? t("rămân {amount} pentru {label} ({date})", { amount: money(split.uncovered), label: split.nextIncome.label, date: date(split.nextIncome.date) })
-      : t("rămân neacoperiți {amount}", { amount: money(split.uncovered) })
+      ? t("mai lipsesc {amount}, vin din {label} ({date})", { amount: money(split.uncovered), label: split.nextIncome.label, date: date(split.nextIncome.date) })
+      : split.free > 0
+        ? t("mai lipsesc {amount} din ce ai declarat", { amount: money(split.uncovered) })
+        : t("rămân neacoperiți {amount}", { amount: money(split.uncovered) })
     : split.free > 0 ? t("liberi {amount}", { amount: money(split.free) }) : "";
   // Fără nimic de pus în plicuri (ciclul e deja acoperit), fraza spune asta, nu o listă goală „:  · liberi”.
   if (!parts.length) return t("cheltuielile ciclului sunt deja acoperite; {amount} rămân liberi", { amount: money(split.free) });
-  return [t("repartizează {amount} după Ce plătim lunar", { amount: money(split.income.amount) }) + ":", [...parts, ...(tail ? [tail] : [])].join(" · ")].join(" ");
+  return [t("repartizează {amount} după Ce plătim lunar", { amount: money(split.income.amount) }) + ":", [...parts, ...(gap ? [gap] : [])].join(" · ")].join(" ");
 }
 
 export type NeedAdjustment = { need: MonthlyNeed; months: Array<{ month: string; amount: number }>; min: number; max: number; direction: "up" | "down" };

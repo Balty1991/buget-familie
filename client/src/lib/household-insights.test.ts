@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, allocationStatus, allocationWeekStatus } from "./finance-data";
 import { levelStartedWeek } from "./started-week";
-import { ageOfMoney, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, envelopeUntilPayday } from "./household-insights";
+import { ageOfMoney, ageOfMoneyLine, analysisCompareWindow, detectSubscriptions, envelopeBurnPace, formatWeeklyCheckInShare, householdActivity, householdActivityInCycle, lastDaysPulse, mealRunway, mealRunwayLine, monthlyRecap, paydayTrack, recurringFromDetection, recurringPriceChanges, savingsSuggestion, monthlySurplus, envelopeRunOut, monthlyFamilyReport, formatMonthlyReportShare, subscriptionSpend, safeSpendBreakdown, todayBrief, trackModeHero, weeklyCheckIn, weeklyDigestHeadline, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, envelopeUntilPayday } from "./household-insights";
 import { buildTodaySummary } from "./today-summary";
 
 const base = () => {
@@ -24,6 +24,39 @@ describe("analize de gospodărie", () => {
       { id: "out-2", title: "Alimente", amount: 1000, kind: "expense", category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-07-21" },
     ];
     expect(ageOfMoney(data, "2026-07-31")).toMatchObject({ days: 15, sampleAmount: 2000, unfundedAmount: 0 });
+    expect(ageOfMoneyLine(ageOfMoney(data, "2026-07-31"))).toBeUndefined();
+  });
+
+  it("spune vârsta banilor doar când sunt destule cheltuieli ca să nu fie zgomot", () => {
+    const { data, source } = base();
+    const spend = (id: string, day: string) => ({ id, title: "Piață", amount: 100, kind: "expense" as const, category: "Alimente", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: day });
+    data.transactions = [
+      { id: "in-1", title: "Salariu", amount: 2000, kind: "income", category: "Venit", sourceId: source.id, source: source.name, memberId: "member-me", person: "Eu", date: "2026-07-01" },
+      spend("a", "2026-07-10"),
+      spend("b", "2026-07-16"),
+      spend("c", "2026-07-20"),
+      spend("d", "2026-07-24"),
+    ];
+    const line = ageOfMoneyLine(ageOfMoney(data, "2026-07-31"));
+    expect(line).toMatch(/înainte să plece/);
+    expect(line).not.toMatch(/undefined/);
+  });
+
+  it("avertizează că bonurile se termină înainte de salariu, și tace când ajung", () => {
+    const { data } = base();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-09-01", nextPayday: "2026-09-30" };
+    data.settings.paymentSources.push({ id: "meal", name: "Bonuri", kind: "meal", openingBalance: 150 });
+    const lunch = (id: string, date: string) => ({ id, title: "Prânz", amount: 40, kind: "expense" as const, category: "Alimente", sourceId: "meal", source: "Bonuri", memberId: "member-me", person: "Eu", date });
+    data.transactions = [lunch("m1", "2026-09-02"), lunch("m2", "2026-09-08"), lunch("m3", "2026-09-12")];
+    const short = mealRunway(data, "2026-09-14");
+    expect(short).toBeDefined();
+    expect(short!.days).toBeLessThan(short!.daysToPayday);
+    expect(mealRunwayLine(short)).toMatch(/înainte de salariu/);
+    data.settings.paymentSources.find((item) => item.id === "meal")!.openingBalance = 4000;
+    expect(mealRunway(data, "2026-09-14")).toBeUndefined();
+    data.transactions = [];
+    data.settings.paymentSources.find((item) => item.id === "meal")!.openingBalance = 150;
+    expect(mealRunway(data, "2026-09-14")).toBeUndefined();
   });
 
   it("construiește recapitularea lunii cu categoria dominantă și comparația anterioară", () => {

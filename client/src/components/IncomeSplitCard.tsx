@@ -56,8 +56,10 @@ export function IncomeSplitCard({ data, incomeId, onChange, onDismiss }: { data:
         <p>
           {split.free > 0 ? t("Liberi după repartizare: {amount}.", { amount: money(split.free) }) : t("Tot venitul are un loc.")}
           {split.uncovered > 0 ? ` ${split.nextIncome
-            ? t("Rămân {amount} pentru {label} ({date}).", { amount: money(split.uncovered), label: split.nextIncome.label, date: formatDate(split.nextIncome.date, { day: "numeric", month: "long" }) })
-            : t("Rămân neacoperiți {amount} — venitul nu ajunge pentru tot ce ai declarat.", { amount: money(split.uncovered) })}` : ""}
+            ? t("Mai lipsesc {amount}. Vin din {label} ({date}).", { amount: money(split.uncovered), label: split.nextIncome.label, date: formatDate(split.nextIncome.date, { day: "numeric", month: "long" }) })
+            : split.free > 0
+              ? t("Mai lipsesc {amount} din ce ai declarat.", { amount: money(split.uncovered) })
+              : t("Rămân neacoperiți {amount} — venitul nu ajunge pentru tot ce ai declarat.", { amount: money(split.uncovered) })}` : ""}
         </p>
         {split.transfers.map((entry) => (
           <p key={entry.toMemberId} className="bf-split-transfer">{t("De trimis după repartizare: {amount} către {name}, pentru {labels}.", { amount: money(entry.amount), name: data.settings.members.find((item) => item.id === entry.toMemberId)?.name || t("celălalt"), labels: entry.labels.join(", ") })}</p>
