@@ -24,6 +24,16 @@ html:not(.dark) .bf-today-workspace {
   --os-warn: #b4532a;
 }
 
+html.theme-navy .bf-today-workspace {
+  --os-bg: #071428;
+  --os-surface: #102646;
+  --os-line: #2c4d7a;
+  --os-mint: #d4b06a;
+  --os-ink: #eef2f8;
+  --os-muted: #9aa8be;
+  --os-warn: #e0b15a;
+}
+
 .bf-today-add,
 .bf-os-decide {
   display: inline-flex;
@@ -747,13 +757,21 @@ html:not(.dark) .bf-os-decide {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.bf-pocket svg {
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
 .bf-pocket.cash svg { color: var(--cf-warning, #b4741f); }
 .bf-pocket.card svg { color: var(--cf-primary); }
 .bf-pocket.meal svg { color: var(--cf-primary-strong, var(--cf-primary)); }
 .bf-pocket.transfer svg { color: var(--cf-muted, var(--os-muted)); }
 .bf-glance-goal {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 16px;
+  grid-template-columns: 32px minmax(0, 1fr) 16px;
   gap: 8px;
   align-items: center;
   width: 100%;
@@ -768,11 +786,19 @@ html:not(.dark) .bf-os-decide {
 .bf-glance-goal b, .bf-glance-goal small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bf-glance-goal b { font-size: 13px; }
 .bf-glance-goal small { color: var(--cf-muted, var(--os-muted)); font-size: 11px; }
-.bf-glance-goal svg { color: var(--cf-primary); }
+.bf-glance-goal svg {
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  color: var(--cf-primary);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
 .bf-glance-goal.is-event svg { color: var(--cf-warning, #b4741f); }
 .bf-glance-goal i {
   display: block;
-  height: 6px;
+  height: 8px;
   margin-top: 6px;
   overflow: hidden;
   border-radius: 999px;
@@ -798,19 +824,27 @@ html:not(.dark) .bf-os-decide {
 .bf-glance ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .bf-glance li {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
 }
-.bf-glance li > svg { color: var(--cf-primary); }
+.bf-glance li > svg {
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  color: var(--cf-primary);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}
 .bf-glance li.is-watch > svg { color: var(--cf-warning, #b4741f); }
 .bf-glance li.is-over > svg { color: var(--cf-danger, #a44e3e); }
 .bf-glance li b { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .bf-glance li strong { font-size: 13px; font-variant-numeric: tabular-nums; }
 .bf-glance li i {
   display: block;
-  height: 7px;
-  margin-top: 4px;
+  height: 10px;
+  margin-top: 5px;
   overflow: hidden;
   border-radius: 999px;
   background: color-mix(in srgb, var(--cf-line, var(--os-line)) 65%, transparent);

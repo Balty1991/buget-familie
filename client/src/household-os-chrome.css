@@ -1375,21 +1375,21 @@ html.dark .bf-onboarding.bf-first-run {
 
 .os-shell .bf-first-run-intents button,
 .bf-first-run-intents button {
-  background: #ffffff !important;
-  color: #12201b !important;
-  border: 1px solid #b7c4be !important;
+  background: color-mix(in srgb, var(--lu-accent, var(--cf-primary)) 10%, var(--lu-card, var(--cf-surface))) !important;
+  color: var(--lu-ink, var(--cf-ink)) !important;
+  border: 1px solid var(--lu-line, var(--cf-line)) !important;
 }
 .os-shell .bf-first-run-intents button b,
 .bf-first-run-intents button b {
-  color: #12201b !important;
+  color: var(--lu-ink, var(--cf-ink)) !important;
 }
 .os-shell .bf-first-run-intents button small,
 .bf-first-run-intents button small {
-  color: #3a4a44 !important;
+  color: var(--lu-muted, var(--cf-muted)) !important;
 }
 .os-shell .bf-first-run-intents button svg,
 .bf-first-run-intents button svg {
-  color: var(--bf-tint-primary, #176b54) !important;
+  color: var(--lu-accent, var(--cf-primary)) !important;
 }
 
 .os-shell .bf-guide-hero {

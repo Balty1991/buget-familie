@@ -481,15 +481,19 @@ html.theme-navy .os-shell .os-dock button.is-on {
 }
 .bf-first-run-more > .bf-first-run-intents { margin-top: 6px; }
 .bf-first-run-recommended {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   margin-left: 6px;
-  padding: 1px 8px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
   vertical-align: middle;
-  background: color-mix(in srgb, var(--cf-primary) 14%, transparent);
-  color: var(--cf-primary);
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--lu-accent, var(--cf-primary)) 18%, var(--lu-card, var(--cf-surface)));
+  color: var(--lu-accent, var(--cf-primary));
 }
 
 
@@ -606,10 +610,14 @@ html.theme-navy .os-shell .os-dock button.is-on {
 
 /* Plicuri gol: butonul „Fă primul plic”, nu doar text (testul cu 30 de persoane). */
 .bf-allocation-empty > .bf-primary {
-  justify-self: start;
+  justify-self: center;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  width: max-content;
+  min-width: max-content;
+  max-width: 100%;
   min-height: 44px;
   margin-top: 8px;
   padding: 0 16px;
@@ -618,6 +626,12 @@ html.theme-navy .os-shell .os-dock button.is-on {
   background: var(--cf-primary-strong);
   color: var(--cf-on-forest);
   font: 750 14px/1 "IBM Plex Sans", sans-serif;
+  white-space: nowrap;
+}
+.bf-allocation-empty > .bf-primary svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
 }
 
 /* Prima pornire: alegerea limbii stă sus, în locul butonului „Înapoi”, compactă. */

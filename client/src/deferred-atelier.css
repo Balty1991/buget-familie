@@ -1804,10 +1804,11 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 .bf-envelope-mark.over .bf-envelope-fill { fill: var(--cf-danger); }
 .bf-envelope-mark.over .bf-envelope-body { stroke: var(--cf-danger); }
 
-.bf-envelope-empty-art .bf-envelope-body { fill: var(--cf-surface); stroke: var(--cf-line); stroke-width: 1.6; }
-.bf-envelope-empty-art .bf-envelope-flap { fill: none; stroke: var(--cf-muted); stroke-width: 1.5; }
-.bf-envelope-empty-art .bf-envelope-lip { fill: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface)); stroke: var(--cf-line); }
+.bf-envelope-empty-art .bf-envelope-body { fill: color-mix(in srgb, var(--cf-primary) 34%, var(--cf-surface)); stroke: var(--cf-primary); stroke-width: 1.6; }
+.bf-envelope-empty-art .bf-envelope-flap { fill: none; stroke: var(--cf-primary); stroke-width: 1.6; }
+.bf-envelope-empty-art .bf-envelope-lip { fill: color-mix(in srgb, var(--cf-primary) 55%, var(--cf-surface)); stroke: var(--cf-primary); }
 .bf-envelope-empty-art .bf-envelope-seal { fill: var(--cf-warning); }
+.bf-envelope-empty-art .bf-envelope-shadow { fill: color-mix(in srgb, var(--cf-primary) 28%, transparent); }
 
 .bf-today-pulse,
 .bf-today-envelopes {
