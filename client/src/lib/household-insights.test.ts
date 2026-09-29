@@ -90,6 +90,11 @@ describe("analize de gospodărie", () => {
     ];
     const row = weekVersusLast(data, "2026-09-09");
     expect(row).toMatchObject({ days: 3, thisSpent: 150, lastSpent: 40, delta: 110 });
+    expect(row?.byDay.map((day) => [day.weekday, day.thisSpent, day.lastSpent])).toEqual([
+      [0, 100, 0],
+      [1, 50, 40],
+      [2, 0, 0],
+    ]);
     expect(weekVersusLastLine(row)).toMatch(/mai mult/);
     expect(weekVersusLastLine(row)).toMatch(/3 zile/);
     data.transactions = [expense("only", "2026-09-08", 80)];

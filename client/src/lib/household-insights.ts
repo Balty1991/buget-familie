@@ -1146,6 +1146,13 @@ export const safeSpendBreakdown = (data: AppData, asOf = isoToday()): SafeSpendB
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
+export type WeekDayVersus = {
+  /** 0 = luni, aceeași ordine ca banda de zile. */
+  weekday: number;
+  thisSpent: number;
+  lastSpent: number;
+};
+
 export type WeekVersusLast = {
   /** Zile scurse din săptămâna asta, inclusiv azi. Săptămâna trecută se taie la același număr. */
   days: number;
@@ -1153,6 +1160,8 @@ export type WeekVersusLast = {
   lastSpent: number;
   /** Cheltuit acum minus aceleași zile din săptămâna trecută. Negativ = mai puțin. */
   delta: number;
+  /** Aceeași fereastră, zi cu zi. Duminica dinaintea săptămânii nu intră. */
+  byDay: WeekDayVersus[];
 };
 
 /**
@@ -1166,13 +1175,31 @@ export const weekVersusLast = (data: AppData, asOf = isoToday()): WeekVersusLast
   if (days < 1 || days > 7) return undefined;
   const lastStart = addIsoDays(week.start, -7);
   const lastEnd = addIsoDays(asOf, -7);
-  const spent = (from: string, to: string) => data.transactions
-    .filter((item) => item.kind === "expense" && !isBalanceAdjustment(item) && item.date >= from && item.date <= to)
-    .reduce((sum, item) => sum + item.amount, 0);
-  const thisSpent = roundMoney(spent(week.start, asOf));
-  const lastSpent = roundMoney(spent(lastStart, lastEnd));
+  const byDate = new Map<string, number>();
+  for (const item of data.transactions) {
+    if (item.kind !== "expense" || isBalanceAdjustment(item)) continue;
+    if (item.date < lastStart || item.date > asOf) continue;
+    byDate.set(item.date, (byDate.get(item.date) || 0) + item.amount);
+  }
+  const sum = (from: string, to: string) => {
+    let total = 0;
+    byDate.forEach((amount, date) => {
+      if (date >= from && date <= to) total += amount;
+    });
+    return roundMoney(total);
+  };
+  const thisSpent = sum(week.start, asOf);
+  const lastSpent = sum(lastStart, lastEnd);
   if (lastSpent < 1) return undefined;
-  return { days, thisSpent, lastSpent, delta: roundMoney(thisSpent - lastSpent) };
+  const byDay: WeekDayVersus[] = [];
+  for (let index = 0; index < days; index += 1) {
+    byDay.push({
+      weekday: index,
+      thisSpent: roundMoney(byDate.get(addIsoDays(week.start, index)) || 0),
+      lastSpent: roundMoney(byDate.get(addIsoDays(lastStart, index)) || 0),
+    });
+  }
+  return { days, thisSpent, lastSpent, delta: roundMoney(thisSpent - lastSpent), byDay };
 };
 
 export const weekVersusLastLine = (row: WeekVersusLast | undefined): string | undefined => {

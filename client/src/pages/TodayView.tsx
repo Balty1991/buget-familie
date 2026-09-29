@@ -515,6 +515,23 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 </span>
               </div>
             )}
+            {!simpleMode && weekRow && weekRow.byDay.length > 1 && (
+              <div className="bf-week-days" style={{ ["--d" as string]: String(weekRow.byDay.length) }} aria-label={t("Față de săptămâna trecută")}>
+                {weekRow.byDay.map((day) => {
+                  const peak = Math.max(1, ...weekRow.byDay.flatMap((item) => [item.thisSpent, item.lastSpent]));
+                  const bar = (amount: number) => (amount > 0 ? `${Math.max(14, Math.round((amount / peak) * 100))}%` : "0");
+                  return (
+                    <span key={day.weekday}>
+                      <small>{weekdayShort()[day.weekday]}</small>
+                      <i aria-hidden="true">
+                        <em style={{ height: bar(day.thisSpent) }} />
+                        <em style={{ height: bar(day.lastSpent) }} />
+                      </i>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
             {!simpleMode && weekLine && <p className="os-hint">{weekLine}</p>}
             {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
             {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}

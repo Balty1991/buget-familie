@@ -3722,4 +3722,12 @@ export const en: Record<string, string> = {
   "{label} a luat {usage}% din plic, iar ciclul e la {expected}%.": "{label} has used {usage}% of the envelope, and the cycle is at {expected}%.",
   "Și ciclul trecut s-a depășit {name}.": "{name} went over last cycle too.",
   "Și ciclul trecut s-au depășit {names}.": "{names} went over last cycle too.",
+  " — depășește soldul cu {over}": " — exceeds the balance by {over}",
+  "{over} peste în S{index}": "{over} over in W{index}",
+  "cu {over} peste": "{over} over",
+  "S{index}: cu {over} peste din {budget}": "W{index}: {over} over of {budget}",
+  " · după plată, cu {over} peste": " · {over} over after paying",
+  "S{index}: deja cu {over} peste{after}": "W{index}: already {over} over{after}",
+  "Deja cu {over} peste{after}": "Already {over} over{after}",
+  "SE VA LUA DIN S{index}": "TAKEN FROM W{index}",
 };
