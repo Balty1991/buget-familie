@@ -17,6 +17,7 @@ import {
   foldRomanian,
   formatDate,
   guessCategoryFromText,
+  categoryAliasFor,
   inPlanPeriod,
   isoDate,
   isoToday,
@@ -82,6 +83,29 @@ const MONTH_NAMES = ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie
 /** Citește perioada cerută în text. Implicit: luna curentă. */
 export function readPeriod(folded: string, asOf: string): Period {
   const base = new Date(`${asOf}T12:00:00`);
+  const monthIndex = (name: string) => MONTH_NAMES.findIndex((item) => item === name || (name.length >= 3 && item.startsWith(name)));
+  const yearFor = (month: number, said?: string) => (said ? Number(said) : month > base.getMonth() ? base.getFullYear() - 1 : base.getFullYear());
+
+  // „între 1 și 15 septembrie”, „de la 3 la 10 august”, „din 1 pana pe 15 sept”.
+  const range = /\b(?:intre|de la|din)\s+(\d{1,2})(?:\s+([a-z]{3,10}))?\s+(?:si|la|pana (?:pe|la|in))\s+(\d{1,2})\s+([a-z]{3,10})(?:\s+(20\d\d))?/.exec(folded);
+  if (range) {
+    const endMonth = monthIndex(range[4]);
+    const startMonth = range[2] ? monthIndex(range[2]) : endMonth;
+    if (endMonth >= 0 && startMonth >= 0) {
+      const endYear = yearFor(endMonth, range[5]);
+      const startYear = startMonth > endMonth ? endYear - 1 : endYear;
+      const start = isoDate(new Date(startYear, startMonth, Math.min(31, Number(range[1]))));
+      const end = isoDate(new Date(endYear, endMonth, Math.min(new Date(endYear, endMonth + 1, 0).getDate(), Number(range[3]))));
+      if (start <= end) return { start, end, label: `${formatDate(start)} – ${formatDate(end)}` };
+    }
+  }
+  // „de la 1 septembrie încoace”, „din 10 august pana azi”.
+  const since = /\b(?:de la|din|incepand cu)\s+(\d{1,2})\s+([a-z]{3,10})(?:\s+(20\d\d))?\s*(?:incoace|pana azi|pana acum|pana astazi)?/.exec(folded);
+  if (since && monthIndex(since[2]) >= 0) {
+    const month = monthIndex(since[2]);
+    const start = isoDate(new Date(yearFor(month, since[3]), month, Number(since[1])));
+    if (start <= asOf) return { start, end: asOf, label: `din ${formatDate(start)} până azi` };
+  }
 
   if (/\bazi\b|\bastazi\b/.test(folded)) return { start: asOf, end: asOf, label: "azi" };
   if (/\bieri\b/.test(folded)) {
@@ -102,6 +126,10 @@ export function readPeriod(folded: string, asOf: string): Period {
     const previous = new Date(base.getFullYear(), base.getMonth() - 1, 1);
     return { start: monthStart(previous), end: monthEnd(previous), label: `luna trecută (${MONTH_NAMES[previous.getMonth()]})` };
   }
+  if (/anul trecut/.test(folded)) {
+    const year = base.getFullYear() - 1;
+    return { start: `${year}-01-01`, end: `${year}-12-31`, label: `anul ${year}` };
+  }
   if (/anul (asta|acesta|curent)/.test(folded)) {
     return { start: `${base.getFullYear()}-01-01`, end: `${base.getFullYear()}-12-31`, label: `anul ${base.getFullYear()}` };
   }
@@ -113,7 +141,7 @@ export function readPeriod(folded: string, asOf: string): Period {
   }
   // „mai” este și lună, și cuvânt obișnuit („cea mai mare”). Cerem deci un semn
   // limpede: „în mai”, „luna mai” sau „mai 2026”.
-  const named = MONTH_NAMES.findIndex((name) => new RegExp(`\\b(?:in|din|luna)\\s+${name}\\b|\\b${name}\\s+20\\d\\d\\b`).test(folded));
+  const named = MONTH_NAMES.findIndex((name) => new RegExp(`\\b(?:in|din|luna|fata de|decat in|comparat cu|comparativ cu|vs)\\s+${name}\\b|\\b${name}\\s+20\\d\\d\\b`).test(folded));
   if (named >= 0) {
     const year = named > base.getMonth() ? base.getFullYear() - 1 : base.getFullYear();
     const month = new Date(year, named, 1);
@@ -137,6 +165,24 @@ const byCategory = (items: Transaction[]) => {
   return Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
 };
 
+/**
+ * „…față de august”, „comparat cu luna trecută”, „decât în iulie”: perioada cu care
+ * compară omul. Textul se taie în două: perioada principală din stânga, referința din dreapta.
+ */
+const REFERENCE = /\b(?:fata de|comparat cu|comparativ cu|decat (?:in|pe|din)?|vs\.?|versus)\s+(.+)$/;
+
+export function readComparison(folded: string, asOf: string): { period: Period; reference?: Period } {
+  const hit = REFERENCE.exec(folded);
+  if (!hit) return { period: readPeriod(folded, asOf) };
+  const tail = hit[1];
+  const said = /\b(azi|ieri|saptamana|luna|anul|ultimele|intre|de la|ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\b/.test(tail);
+  const period = readPeriod(folded.slice(0, hit.index), asOf);
+  if (!said) return { period };
+  // „luna asta față de august”: fără prefix, un nume de lună singur e tot o lună.
+  const reference = readPeriod(/^(ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\b/.test(tail) ? `in ${tail}` : tail, asOf);
+  return { period, reference: { ...reference, label: reference.label } };
+}
+
 /** Perioada de aceeași lungime, imediat înainte — pentru comparații oneste. */
 const previousPeriod = (period: Period): Period => {
   const start = new Date(`${period.start}T12:00:00`);
@@ -147,12 +193,12 @@ const previousPeriod = (period: Period): Period => {
   return { start: isoDate(priorStart), end: isoDate(priorEnd), label: "perioada dinainte" };
 };
 
-const changeLine = (now: number, before: number) => {
-  if (before <= 0) return now > 0 ? "nu am cu ce compara: nu există cheltuieli în perioada dinainte" : undefined;
+const changeLine = (now: number, before: number, than = "perioada dinainte") => {
+  if (before <= 0) return now > 0 ? `nu am cu ce compara: nu există cheltuieli în ${than}` : undefined;
   const diff = round(now - before);
-  if (Math.abs(diff) < 0.5) return "cam cât în perioada dinainte";
+  if (Math.abs(diff) < 0.5) return `cam cât în ${than}`;
   const percent = Math.abs(Math.round((diff / before) * 100));
-  return `${diff > 0 ? "cu " + money(Math.abs(diff)) + " mai mult" : "cu " + money(Math.abs(diff)) + " mai puțin"} decât în perioada dinainte (${percent}%)`;
+  return `${diff > 0 ? "cu " + money(Math.abs(diff)) + " mai mult" : "cu " + money(Math.abs(diff)) + " mai puțin"} decât în ${than} (${percent}%)`;
 };
 
 // ------------------------------------------------------------- recunoaștere
@@ -248,7 +294,7 @@ const noSuchMember = (data: AppData, folded: string): AnalystAnswer | undefined 
 };
 
 function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer {
-  const period = readPeriod(folded, asOf);
+  const { period, reference } = readComparison(folded, asOf);
   /**
    * Ordinea nu e întâmplătoare. Un magazin scris în registru este mai precis decât
    * o categorie ghicită: „cât am dat la Kaufland” întreabă de magazin, chiar dacă
@@ -267,10 +313,19 @@ function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer
     if (missing) return missing;
   }
 
+  /**
+   * „Pe haine” cade în „Altele”, unde stau și cadourile și electronicele. Atunci căutăm
+   * după aceeași regulă de vocabular în titluri (Zara, H&M), nu toată categoria.
+   */
+  const rule = guessed === "Altele" ? categoryAliasFor(folded) : undefined;
+  const word = rule ? folded.match(rule)?.[0] : undefined;
+  const topic = rule && word ? (item: Transaction) => rule.test(foldRomanian(item.title)) || foldRomanian(item.category) === word : undefined;
+
   let items = expensesIn(data, period);
   if (member) items = items.filter((item) => item.memberId === member.id);
   let subject = "";
-  if (category) { items = items.filter((item) => item.category === category); subject = ` pe ${category}`; }
+  if (topic) { items = items.filter(topic); subject = ` pe ${word}`; }
+  else if (category) { items = items.filter((item) => item.category === category); subject = ` pe ${category}`; }
   else if (vendor) { items = items.filter((item) => foldRomanian(item.title) === foldRomanian(vendor)); subject = ` la ${vendor}`; }
   if (member) subject += `, ${member.name}`;
 
@@ -284,12 +339,13 @@ function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer
     };
   }
 
-  const prior = previousPeriod(period);
+  const prior = reference || previousPeriod(period);
   let priorItems = expensesIn(data, prior);
   if (member) priorItems = priorItems.filter((item) => item.memberId === member.id);
-  if (category) priorItems = priorItems.filter((item) => item.category === category);
+  if (topic) priorItems = priorItems.filter(topic);
+  else if (category) priorItems = priorItems.filter((item) => item.category === category);
   else if (vendor) priorItems = priorItems.filter((item) => foldRomanian(item.title) === foldRomanian(vendor));
-  const change = changeLine(total, totalOf(priorItems));
+  const change = changeLine(total, totalOf(priorItems), reference ? `${reference.label} (${money(totalOf(priorItems))})` : undefined);
 
   const days = Math.max(1, Math.round((new Date(`${period.end}T12:00:00`).getTime() - new Date(`${period.start}T12:00:00`).getTime()) / 86400000) + 1);
   const rows: AnalystRow[] = (category || vendor)
@@ -571,27 +627,39 @@ function answerPayday(data: AppData, asOf: string): AnalystAnswer {
 }
 
 function answerCompare(data: AppData, folded: string, asOf: string): AnalystAnswer {
-  const period = readPeriod(folded, asOf);
-  const prior = previousPeriod(period);
-  const now = totalOf(expensesIn(data, period));
-  const before = totalOf(expensesIn(data, prior));
+  const { period, reference } = readComparison(folded, asOf);
+  const prior = reference || previousPeriod(period);
+  const than = reference ? reference.label : undefined;
+  // „pe mâncare față de august”, „Ana față de luna trecută”: aceeași comparație, restrânsă.
+  const category = namedCategory(folded, data) || guessedCategory(folded, data);
+  const member = readMember(data, folded);
+  const narrow = (items: Transaction[]) => items.filter((item) => (!category || item.category === category) && (!member || item.memberId === member.id));
+  const nowItems = narrow(expensesIn(data, period));
+  const beforeItems = narrow(expensesIn(data, prior));
+  const now = totalOf(nowItems);
+  const before = totalOf(beforeItems);
   const nowIncome = totalOf(incomeIn(data, period));
+  const subject = `${category ? ` pe ${category}` : ""}${member ? `, ${member.name}` : ""}`;
 
-  if (!now && !before) return { kind: "compare", headline: "Nu am cheltuieli de comparat în perioadele astea." };
+  if (!now && !before) return { kind: "compare", headline: `Nu am cheltuieli${subject} de comparat în perioadele astea.` };
 
-  const nowCats = new Map<string, number>(byCategory(expensesIn(data, period)));
-  const beforeCats = new Map<string, number>(byCategory(expensesIn(data, prior)));
+  const nowCats = new Map<string, number>(byCategory(nowItems));
+  const beforeCats = new Map<string, number>(byCategory(beforeItems));
   const names = Array.from(new Set<string>([...Array.from(nowCats.keys()), ...Array.from(beforeCats.keys())]));
   const moves = names
     .map((name) => ({ name, delta: round((nowCats.get(name) || 0) - (beforeCats.get(name) || 0)) }))
     .filter((entry) => Math.abs(entry.delta) >= 1)
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  const change = changeLine(now, before, than && `${than} (${money(before)})`);
 
   return {
     kind: "compare",
-    headline: sentences(changeLine(now, before) ? `${money(now)} în ${period.label}, ${changeLine(now, before)}` : `${money(now)} în ${period.label}`),
-    detail: sentences(`Venituri înregistrate în perioadă: ${money(nowIncome)}`, `Comparația se face cu intervalul de aceeași lungime dinainte (${formatDate(prior.start)} – ${formatDate(prior.end)})`),
-    rows: moves.slice(0, 6).map((entry) => ({ label: entry.name, value: `${entry.delta > 0 ? "+" : "−"}${money(Math.abs(entry.delta))}`, hint: entry.delta > 0 ? "mai mult" : "mai puțin" })),
+    headline: sentences(change ? `${money(now)}${subject} în ${period.label}, ${change}` : `${money(now)}${subject} în ${period.label}`),
+    detail: sentences(
+      !category && !member && `Venituri înregistrate în perioadă: ${money(nowIncome)}`,
+      reference ? `Comparația e cu ${formatDate(prior.start)} – ${formatDate(prior.end)}` : `Comparația se face cu intervalul de aceeași lungime dinainte (${formatDate(prior.start)} – ${formatDate(prior.end)})`,
+    ),
+    rows: category ? undefined : moves.slice(0, 6).map((entry) => ({ label: entry.name, value: `${entry.delta > 0 ? "+" : "−"}${money(Math.abs(entry.delta))}`, hint: entry.delta > 0 ? "mai mult" : "mai puțin" })),
     followUps: ["Unde se duc banii?", "Am cheltuit prea mult?", "Ce fac azi?"],
   };
 }
@@ -935,7 +1003,7 @@ const MATCHERS: Matcher[] = [
   { kind: "save-by", test: /\b(ca sa (am|strang|adun|ajung la)|cat (ar trebui |trebuie )?(sa )?pun (deoparte|pe luna)|cat pe luna ca sa|cat pe saptamana ca sa|ca sa imi ajunga pentru)/, run: (d, f, a) => answerSaveBy(d, f, a) },
   { kind: "savings", test: /\b(economi|strans|obiectiv|pusi deoparte)/, run: (d) => answerSavings(d) },
   { kind: "biggest", test: /\b(cea mai mare|cel mai mare|top cheltui|cele mai mari)/, run: (d, f, a) => answerBiggest(d, f, a) },
-  { kind: "compare", test: /\b(compar|fata de luna|mai mult (ca|decat)|mai putin (ca|decat)|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
+  { kind: "compare", test: /\b(compar|fata de|versus|\bvs\b|mai mult (ca|decat)|mai putin (ca|decat)|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
   { kind: "where", test: /\b(unde (pot|as putea) (sa )?(tai|reduc|economisesc)|ce (pot|as putea) (sa )?(tai|reduc)|unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui|a dat|am dat)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
   { kind: "spend", test: /\b(ce cheltuieli am (avut|facut)|ce am (cheltuit|platit|cumparat|dat)|cat m-?a costat|cat ne-?a costat|cat am (cheltuit|dat|platit)|cat a (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos|ce am cumparat|de cate ori am dat|arata[- ]?mi cheltuielile|listeaza cheltuielile)/, run: (d, f, a) => answerSpend(d, f, a) },
   // „mi-a scăzut”, „mi a scazut”, „s-a dus” — aceeași întrebare, scrisă în trei feluri.

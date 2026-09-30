@@ -18,6 +18,7 @@ import {
   decide,
   expenseProposal,
   correctPendingSpend,
+  addOnSpend,
   foldRo,
   isConfirm,
   isCorrection,
@@ -38,10 +39,12 @@ import {
   type ExtractedGuide,
   type FinancialUpdate,
   type GuideMemory,
+  type Proposal,
   type Reading,
 } from "@/lib/understand";
 import { shownChatMessages, hiddenChatCount } from "@/lib/shown-chat";
-import { consumeQuota, emptyQuota, formatReset, GuideQuotaBar, GuideText, guideMemory, learn, learnPhrasing, loadMemory, loadQuota, markLocalSave, MEMORY_KEY, money, naturalTitle, QUOTA_KEY, seedMemory, type QuotaInfo } from "@/components/ai-companion-parts";
+import { recordMissed } from "@/lib/guide-missed";
+import { consumeQuota, emptyQuota, formatReset, GuideQuotaBar, GuideText, guideMemory, learn, learnPhrasing, loadMemory, loadQuota, markLocalSave, MEMORY_KEY, GUIDE_MEMORY_EVENT, money, naturalTitle, QUOTA_KEY, seedMemory, type QuotaInfo } from "@/components/ai-companion-parts";
 import { intentToUpdate, pickFundsSource, proposalText, SCREEN_NAMES, spendAlternatives, updatesFromGuide } from "@/components/ai-companion-logic";
 
 export { pickFundsSource } from "@/components/ai-companion-logic";
@@ -50,7 +53,7 @@ export type NaturalDraft = Pick<Transaction, "amount" | "category" | "title" | "
 export type GuidedRevert = { kind: "income" | "expense"; title: string; amount: number; date: string };
 export type { FinancialUpdate } from "@/lib/understand";
 type Props = { data: AppData; view: MainView; onAdd: () => void; onGo: (view: MainView) => void; onNaturalEntry: (draft: NaturalDraft) => void; onFinancialUpdate: (update: FinancialUpdate) => void; onRevert?: (item: GuidedRevert) => void; initiallyOpen?: boolean };
-export type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "apply" | "catalog" | MainView; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; pendingSpend?: { amount: number; title: string; category: string; date: string }; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[]; /** Cine a răspuns: ghidul de pe telefon, Gemini sau Groq (ledul de lângă răspuns). */ by?: AnswerSource };
+export type ChatMessage = { id: string; role: "assistant" | "user"; text: string; action?: { label: string; type: "add" | "apply" | "catalog" | MainView; query?: string }; updates?: FinancialUpdate[]; intents?: AssistantIntent[]; choices?: ChatChoice[]; pendingSpend?: Proposal["spend"]; picks?: Array<{ label: string; reading: Reading }>; undo?: GuidedRevert; /** Întrebări firești de după un răspuns de analiză; se trimit cu o atingere. */ followUps?: string[]; /** Cine a răspuns: ghidul de pe telefon, Gemini sau Groq (ledul de lângă răspuns). */ by?: AnswerSource };
 type AnswerSource = "local" | "gemini" | "groq";
 type PendingReceiptDraft = { vendor: string; amount: number; date?: string; items: Array<{ label: string; amount: number; category: string }> };
 type GuideStage = "income" | "debts" | "rate" | "allocation" | "ready";
@@ -106,6 +109,12 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
     };
   }, [open]);
   useEffect(() => { try { window.localStorage.setItem(QUOTA_KEY, JSON.stringify(quota)); } catch { /* ignore */ } }, [quota]);
+  useEffect(() => {
+    // „Ce a învățat ghidul”, din Setări, poate șterge fraze și obiceiuri.
+    const reload = () => setMemory(loadMemory());
+    window.addEventListener(GUIDE_MEMORY_EVENT, reload);
+    return () => window.removeEventListener(GUIDE_MEMORY_EVENT, reload);
+  }, []);
   useEffect(() => {
     guideMemory.current = memory;
     try { window.localStorage.setItem(MEMORY_KEY, JSON.stringify(memory)); } catch { /* ignore */ }
@@ -478,7 +487,14 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
       const fromChoice = open?.choices?.find((choice) => choice.update.kind === "expense");
       const heard = open?.pendingSpend || (fromChoice?.update.kind === "expense" ? { amount: fromChoice.update.amount, title: fromChoice.update.title, category: fromChoice.update.category, date: fromChoice.update.date } : undefined);
       if (heard) {
-        const corrected = correctPendingSpend(raw, { amount: heard.amount, title: heard.title, category: heard.category, date: heard.date || today(), vendor: receiptDraft?.vendor, receipt: Boolean(receiptDraft) }, data, guideMemory.current);
+        const onScreen = { ...heard, date: (dateTapped && spendDay) || heard.date || today(), vendor: receiptDraft?.vendor, receipt: Boolean(receiptDraft) };
+        // „Și 30 parcare”: încă o cheltuială, în aceeași zi; prima propunere rămâne pe ecran.
+        const another = addOnSpend(raw, onScreen, data, guideMemory.current);
+        if (another) {
+          offerSpend(another);
+          return;
+        }
+        const corrected = correctPendingSpend(raw, onScreen, data, guideMemory.current);
         if (corrected?.spend) {
           if (receiptDraft) pendingReceiptRef.current = { ...receiptDraft, amount: corrected.spend.amount, vendor: corrected.spend.title || receiptDraft.vendor };
           setMessages((current) => {
@@ -557,6 +573,8 @@ export function AICompanion({ data, view, onAdd, onGo, onNaturalEntry: _onNatura
         return;
       }
     }
+    // Ghidul de pe telefon n-a înțeles singur: fraza intră în lista din Setări (rămâne pe telefon).
+    if (!english) recordMissed(requestText);
     if (blocked) {
       setQuota((current) => ({ ...current, mode: "local", remaining: Math.min(current.remaining, 0) }));
       // Ghidul de pe telefon citește doar româna; în engleză nu-i dăm răspunsuri românești.

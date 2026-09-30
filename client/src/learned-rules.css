@@ -34,3 +34,5 @@
   font-size: 12px;
   font-weight:600;
 }
+.bf-learned-sub { margin-top: 10px; }
+.bf-learned-actions { display: flex; flex-wrap: wrap; gap: 8px; }

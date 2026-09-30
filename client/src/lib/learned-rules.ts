@@ -10,6 +10,8 @@ import { type AppData, type MerchantRule } from "./finance-data";
 import { type GuideMemory, type PhraseHabit } from "./understand";
 
 const MEMORY_KEY = "buget-familie:ai-memory-v1";
+/** Trimis când memoria ghidului se schimbă din afara conversației, ca ghidul deschis să o recitească. */
+export const GUIDE_MEMORY_EVENT = "buget-familie:guide-memory-changed";
 
 export type LearnedRule = {
   id: string;
@@ -73,12 +75,18 @@ export function forgetHabit(memory: GuideMemory, key: string): GuideMemory {
   return { ...memory, phrases: (memory.phrases || []).filter((item) => item.key !== key) };
 }
 
+/** Uitarea unei fraze învățate de la model: data viitoare, fraza pleacă iar online. */
+export function forgetPhrase(memory: GuideMemory, shape: string): GuideMemory {
+  return { ...memory, learned: (memory.learned || []).filter((item) => item.shape !== shape) };
+}
+
 export function readGuideMemory(): GuideMemory {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(MEMORY_KEY) || "null") as Partial<GuideMemory> | null;
-    return { phrases: Array.isArray(parsed?.phrases) ? parsed!.phrases! : [], skippedOnline: Number(parsed?.skippedOnline) || 0 };
+    // Frazele învățate se păstrează: uitarea unui obicei nu are voie să le șteargă și pe ele.
+    return { phrases: Array.isArray(parsed?.phrases) ? parsed!.phrases! : [], skippedOnline: Number(parsed?.skippedOnline) || 0, learned: Array.isArray(parsed?.learned) ? parsed!.learned! : [] };
   } catch {
-    return { phrases: [], skippedOnline: 0 };
+    return { phrases: [], skippedOnline: 0, learned: [] };
   }
 }
 
@@ -88,4 +96,5 @@ export function writeGuideMemory(memory: GuideMemory): void {
   } catch {
     // Fără localStorage, obiceiurile se uită oricum la închiderea aplicației.
   }
+  if (typeof window.dispatchEvent === "function") window.dispatchEvent(new Event(GUIDE_MEMORY_EVENT));
 }

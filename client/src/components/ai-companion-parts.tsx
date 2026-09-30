@@ -31,6 +31,7 @@ export function GuideText({ text }: { text: string }) {
 
 export const QUOTA_KEY = "buget-familie:ai-quota-v3";
 export const MEMORY_KEY = "buget-familie:ai-memory-v1";
+export { GUIDE_MEMORY_EVENT } from "@/lib/learned-rules";
 
 const emptyMemory = emptyGuideMemory;
 

@@ -18,6 +18,7 @@
  */
 import { spokenAmountsToDigits } from "./ro-numbers";
 import { recallPhrasing, type LearnedPhrase } from "./guide-learning";
+import { repeatedSpend, usualSpend } from "./guide-habits";
 import { genitiveName } from "./member-mode";
 import {
   allocationStatus,
@@ -476,7 +477,8 @@ export function expenseProposal(raw: string, extracted: ExtractedGuide | undefin
   const category = (parsed.category && parsed.category !== "Altele") ? parsed.category : (habit?.category || extracted?.category || "Altele");
   const title = draftTitle === "Altele" && habit ? habit.title : draftTitle;
   const date = extracted?.date && /^20\d{2}-\d{2}-\d{2}$/.test(extracted.date) ? extracted.date : spendDate(raw);
-  const offer = buildExpenseOffer(data, { amount, title, category, date, sourceHint: payment.sourceHint, ownerHint: payment.ownerHint }, memory);
+  const built = buildExpenseOffer(data, { amount, title, category, date, sourceHint: payment.sourceHint, ownerHint: payment.ownerHint }, memory);
+  const offer = payment.sourceHint && built.spend ? { ...built, spend: { ...built.spend, sourceHint: payment.sourceHint, ownerHint: payment.ownerHint } } : built;
   const extra = receiptDetails(extracted, title);
   if (!extra) return offer;
   return { ...offer, text: withReceiptDetails(offer.text, extra) };
@@ -727,7 +729,7 @@ export function reviseProposal(raw: string, data: AppData): Proposal | undefined
  * Propunerea e încă pe ecran, nu în registru. „Nu e 7,99, e 66” și „magazinul e Mega Image”
  * rescriu oferta, nu caută o mișcare salvată și nu deschid o cheltuială nouă.
  */
-export type PendingSpend = { amount: number; title: string; category: string; date: string; vendor?: string; receipt?: boolean };
+export type PendingSpend = { amount: number; title: string; category: string; date: string; vendor?: string; receipt?: boolean; sourceHint?: "meal" | "cash" | "card"; ownerHint?: string; allocationId?: string };
 
 const SPOKEN_AMOUNT = String.raw`(\d{1,6}(?:[.,]\d{1,2})?)`;
 const CATEGORY_ALIASES: Array<[RegExp, string]> = [
@@ -774,15 +776,65 @@ function namedCategory(phrase: string, data: AppData) {
   return undefined;
 }
 
+/**
+ * „Și 30 parcare” cu o propunere pe ecran: încă o cheltuială, în aceeași zi cu prima,
+ * dacă omul n-a spus alta.
+ */
+export function addOnSpend(raw: string, pending: PendingSpend, data: AppData, memory: GuideMemory = emptyGuideMemory()): Proposal | undefined {
+  const hit = raw.trim().match(/^(?:și|si|plus|iar|încă|inca|apoi)\s+(.*\d.*)$/i);
+  if (!hit) return undefined;
+  const rest = hit[1];
+  const said = expenseProposal(rest, undefined, data, memory, true) as Proposal | undefined;
+  if (!said?.spend) return undefined;
+  const namesDay = /\b(azi|astazi|ieri|alaltaieri|maine|pe \d{1,2}\b|\d{1,2}[./]\d{1,2})/.test(foldRo(rest));
+  if (namesDay || said.spend.date === pending.date) return said;
+  const payment = readPaymentHint(rest);
+  return buildExpenseOffer(data, { ...said.spend, date: pending.date, sourceHint: payment.sourceHint, ownerHint: payment.ownerHint }, memory);
+}
+
+/** „A fost ieri”, „de fapt pe 25”, „era alaltăieri”: doar ziua se schimbă. */
+const DAY_ONLY = /^(?:(?:nu azi|nu ieri)[, ]*)?(?:(?:a fost|era|de fapt|am uitat,?|scuze,?|nu,?|ba)\s+)*(?:(?:tot\s+)?(azi|astazi|ieri|alaltaieri)|pe\s+(\d{1,2})(?:\s+[a-z]+)?|(\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?))$/;
+
+/** „Pune-o pe cash”, „cu tichete”, „de pe cardul Anei”: doar sursa se schimbă. */
+const SOURCE_ONLY = /^(?:(?:nu|ba|de fapt|scuze)[, ]+)*(?:(?:pune-?o|pune-?l|trece-?o|trece-?l|treci-?o|pune|treci|am platit|platit|a fost|era|dar|de fapt)\s+)*(?:(?:pe|cu|din|de pe|in)\s+)?(?:cash|numerar|bani gheata|tichete(?:le)?(?: de masa)?|bonuri(?:le)? de masa|card(?:ul)?(?:\s+[a-z]+)?)$/;
+
 export function correctPendingSpend(raw: string, pending: PendingSpend, data: AppData, memory: GuideMemory = emptyGuideMemory()): Proposal | undefined {
   const folded = foldRo(raw).replace(/[?!]/g, " ").replace(/\s+/g, " ").trim();
   if (!folded || !(pending.amount > 0)) return undefined;
-  if (/\b(am dat|am platit|am cumparat|adauga|noteaza|treci)\b/.test(folded) && !/\b(nu|totalul|suma|de fapt|corect|magazin|categoria|categorie)\b/.test(folded)) return undefined;
+  if (/\b(am dat|am platit|am cumparat|adauga|noteaza|treci)\b/.test(folded) && !/\b(nu|totalul|suma|de fapt|corect|magazin|categoria|categorie)\b/.test(folded) && !SOURCE_ONLY.test(folded)) return undefined;
 
   let amount = pending.amount;
   let title = pending.title;
   let category = pending.category;
+  let date = pending.date;
+  let sourceHint = pending.sourceHint;
+  let ownerHint = pending.ownerHint;
+  let allocationId = pending.allocationId;
   let changed = false;
+
+  const dayOnly = folded.replace(/[.,]$/, "").match(DAY_ONLY);
+  if (dayOnly) {
+    const next = spendDate(raw);
+    if (next !== date) { date = next; changed = true; }
+  }
+  if (SOURCE_ONLY.test(folded.replace(/[.,]$/, ""))) {
+    const payment = readPaymentHint(raw);
+    if (payment.sourceHint && (payment.sourceHint !== sourceHint || payment.ownerHint !== ownerHint)) {
+      sourceHint = payment.sourceHint;
+      ownerHint = payment.ownerHint;
+      changed = true;
+    }
+  }
+  const envelope = folded.match(/^(?:(?:nu|de fapt|scuze|ba)[, ]+)*(?:(?:scoate-?o|scoate-?l|ia-?i|pune-?o|trece-?o)\s+)?din\s+plic(?:ul)?\s+(?:de\s+|pentru\s+)?([a-z][a-z &]{1,30})$/);
+  if (envelope) {
+    const found = matchEnvelope(data, envelope[1]);
+    if (found && found.id !== allocationId) { allocationId = found.id; changed = true; }
+  }
+  const meant = folded.match(new RegExp(`^(?:(?:nu|scuze|ba)[, ]+)*(?:am vrut sa (?:zic|scriu)|voiam sa (?:zic|scriu)|era(?:u)?|au fost|a fost|de fapt(?: au fost| a fost| era)?)\\s+${SPOKEN_AMOUNT}\\s*(?:lei|ron)?$`));
+  if (meant) {
+    const next = spokenAmount(meant[1]);
+    if (next && next !== amount) { amount = next; changed = true; }
+  }
 
   const notThen = folded.match(new RegExp(`\\b(?:nu e|not)\\s+${SPOKEN_AMOUNT}\\s*(?:lei|ron)?\\s*[,.]?\\s*(?:e|este|it's|it is)\\s+${SPOKEN_AMOUNT}`));
   const era = folded.match(new RegExp(`\\bera\\s+${SPOKEN_AMOUNT}\\s*(?:lei|ron)?[,\\s]+(?:nu|nu era)\\s+${SPOKEN_AMOUNT}`));
@@ -825,12 +877,43 @@ export function correctPendingSpend(raw: string, pending: PendingSpend, data: Ap
     title = nextTitle;
     changed = true;
   }
-  if (!changed || (amount === pending.amount && title === pending.title && category === pending.category)) return undefined;
+  if (!changed) return undefined;
+  if (amount === pending.amount && title === pending.title && category === pending.category && date === pending.date && sourceHint === pending.sourceHint && ownerHint === pending.ownerHint && allocationId === pending.allocationId) return undefined;
 
-  const offer = buildExpenseOffer(data, { amount, title, category, date: pending.date }, memory);
+  const built = preferEnvelope(buildExpenseOffer(data, { amount, title, category, date, sourceHint, ownerHint }, memory), allocationId);
+  const offer: Proposal = { ...built, spend: built.spend && { ...built.spend, sourceHint, ownerHint, allocationId } };
+  if (allocationId && !offer.choices.some((choice) => choice.update.kind === "expense" && choice.update.allocationId === allocationId)) {
+    const label = data.settings.salaryPlan.allocations.find((item) => item.id === allocationId)?.label || "";
+    offer.text = noDoubleStop(`${offer.text} În **${label}** nu mai sunt destui bani pentru suma asta.`);
+  }
   if (!pending.receipt) return { ...offer, text: noDoubleStop(`Corectat. ${offer.text}`) };
   const extra = receiptDetails({ amount, vendor: title, title, category, confidence: "high" }, title);
   return { ...offer, text: noDoubleStop(`Corectat. ${withReceiptDetails(offer.text, extra)}`) };
+}
+
+/** Plicul folosit de obicei urcă primul în listă. */
+const preferEnvelope = (offer: Proposal, allocationId?: string): Proposal => {
+  if (!allocationId) return offer;
+  const first = offer.choices.filter((choice) => choice.update?.kind === "expense" && choice.update.allocationId === allocationId);
+  return { ...offer, choices: [...first, ...offer.choices.filter((choice) => !first.includes(choice))] };
+};
+
+/**
+ * „Cafea”, fără sumă: suma pe care o dai de obicei, din registru. „La fel ca ieri”,
+ * „ca data trecută la Lidl”: aceeași cheltuială încă o dată, azi. Tot o propunere.
+ */
+export function habitProposal(raw: string, data: AppData, memory: GuideMemory, asOf: string): { proposal: Proposal; repeat: boolean } | undefined {
+  const again = repeatedSpend(data, raw, asOf);
+  if (again) {
+    const offer = buildExpenseOffer(data, { amount: again.amount, title: again.title, category: again.category, date: asOf }, memory);
+    const lead = `Ca ${/^(azi|ieri|alalt)/.test(dateCopy(again.date, asOf)) ? "" : "pe "}${dateCopy(again.date, asOf)}: **${again.title}**, ${money(again.amount)}.`;
+    return { repeat: true, proposal: { ...preferEnvelope(offer, again.allocationId), text: noDoubleStop(`${lead} ${offer.text}`) } };
+  }
+  const usual = usualSpend(data, raw, asOf);
+  if (!usual) return undefined;
+  const offer = buildExpenseOffer(data, { amount: usual.amount, title: usual.title, category: usual.category, date: spendDate(raw) }, memory);
+  const lead = `De obicei dai **${money(usual.amount)}** pe **${usual.title}** (de ${usual.count} ori în ultimele luni). Dacă a fost altă sumă, scrie-mi-o.`;
+  return { repeat: false, proposal: { ...preferEnvelope(offer, usual.allocationId), text: noDoubleStop(`${lead} ${offer.text}`) } };
 }
 
 /**
@@ -876,7 +959,7 @@ export function paidRecurringProposal(raw: string, data: AppData): Proposal | un
    Citirea mesajului
    --------------------------------------------------------------------------- */
 
-export type Proposal = { text: string; choices: ChatChoice[]; /** Ce s-a înțeles, ca o corectură din chat să rescrie propunerea chiar dacă nu există plic. */ spend?: { amount: number; title: string; category: string; date: string } };
+export type Proposal = { text: string; choices: ChatChoice[]; /** Ce s-a înțeles, ca o corectură din chat să rescrie propunerea chiar dacă nu există plic. */ spend?: { amount: number; title: string; category: string; date: string; sourceHint?: "meal" | "cash" | "card"; ownerHint?: string; allocationId?: string } };
 
 /** O citire posibilă a mesajului, cu cât de tare o susține textul și de ce. */
 /**
@@ -1221,6 +1304,14 @@ export function understand(text: string, data: AppData, ctx: UnderstandContext =
 
   const income = incomeProposal(raw, data);
   if (income) readings.push({ kind: "income", score: BASE.income, why: "sumă plus un cuvânt de venit", proposal: income });
+
+  // Obiceiurile vin ultimele: intră doar când nimic mai precis n-a înțeles mesajul.
+  if (!readings.some((item) => ["intents", "expense", "due", "transfer", "income", "revise"].includes(item.kind))) {
+    const habit = habitProposal(raw, data, memory, ctx.asOf || isoToday());
+    if (habit && (habit.repeat || !answer)) {
+      readings.push({ kind: "expense", score: habit.repeat ? BASE.expense + 15 : BASE.expense - 5, why: habit.repeat ? "„la fel ca…”, din registru" : "suma de obicei, din registru", proposal: habit.proposal });
+    }
+  }
 
   const insight = localInsight(raw, data, memory);
   if (insight) readings.push({ kind: "insight", score: BASE.insight, why: "întreabă ce mai are disponibil", text: insight, ...(guessy ? { soft: true as const } : {}) });

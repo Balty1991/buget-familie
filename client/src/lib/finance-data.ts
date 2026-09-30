@@ -1896,6 +1896,9 @@ export type BudgetQuestionAnswer = { kind: "daily-average" | "weekly-average" | 
 export const foldRomanian = memoString((value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
 
 /** O singură listă de indicii, folosită și de simulatorul de scenarii, și de importul de extras. */
+/** Regula de vocabular care a recunoscut textul („haine” → regula hainelor), ca să caute după ea și în titluri. */
+export const categoryAliasFor = (folded: string): RegExp | undefined => categoryAliases.find(([pattern]) => pattern.test(folded))?.[0];
+
 const categoryAliases: Array<[RegExp, string]> = [
   // Biletele de teatru, film sau concert sunt timp liber, nu transport.
   [/\bbilet\w* (la|de|pentru) (teatru|cinema|film|concert|meci|spectacol|opera)\b/, "Timp liber"],
