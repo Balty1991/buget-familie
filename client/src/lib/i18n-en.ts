@@ -3706,6 +3706,8 @@ export const en: Record<string, string> = {
   "mai lipsesc {amount} din ce ai declarat": "{amount} still missing from what you declared",
   "Unde stau banii": "Where the money sits",
   "Plicurile, dintr-o privire": "Envelopes at a glance",
+  "Niciun plic nu e aproape de limită.": "No envelope is close to its limit.",
+  "Aproape de limită": "Close to the limit",
   "mai sunt {left} · cam {monthly} pe lună": "{left} to go · about {monthly} a month",
   "pe {date} · mai lipsesc {left}": "on {date} · {left} still to set aside",
   "{name} s-a scumpit: {from} → {to}.": "{name} went up: {from} → {to}.",

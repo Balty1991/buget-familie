@@ -885,11 +885,12 @@ html:not(.dark) .bf-os-decide {
 .bf-today-more-toggle {
   width: 100%;
   min-height: 48px;
-  border-radius:12px;
+  margin-top: 12px;
+  border-radius: 12px;
   border: 1px solid var(--os-line, var(--cf-line, #d7ddd8));
   background: transparent;
   color: inherit;
-  font-weight: 750;
+  font-weight: 600;
 }
 /* Contrast sub 3,6:1 pe închis. */
 html.theme-dark .bf-cycle-flow span:first-child b,

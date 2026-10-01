@@ -186,6 +186,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
   const [weekOpen, setWeekOpen] = useState(false);
   const [moneyOpen, setMoneyOpen] = useState(false);
+  const [glanceOpen, setGlanceOpen] = useState(false);
   const [dayMore, setDayMore] = useState(false);
   const [priceLater, setPriceLater] = useState(false);
   const [moved, setMoved] = useState<{ id: string; amount: number; from: string; to: string } | null>(null);
@@ -299,6 +300,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     .filter((item) => item.budget > 0 || item.spent > 0)
     .sort((a, b) => (b.state === "over" ? 2 : b.state === "watch" ? 1 : 0) - (a.state === "over" ? 2 : a.state === "watch" ? 1 : 0) || b.usage - a.usage)
     .slice(0, 4);
+  const hotGlance = glance.filter((row) => row.state === "over" || row.state === "watch");
 
   /** Pornirea în 3 pași e făcută: cheltuielile lunare sunt declarate, doar plicurile vin la primul salariu. */
   const declaredNeeds = (data.settings.salaryPlan.needs || []).filter((item) => !item.archived).length;
@@ -500,7 +502,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               </div>
             )}
             {!simpleMode && weekRow && (
-              <button type="button" className="os-explainer" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>
+              <button type="button" className="bf-today-more-toggle" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>
                 {t("Față de săptămâna trecută")}
               </button>
             )}
@@ -540,7 +542,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             {mealLine && <p className="os-hint">{mealLine}</p>}
             {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
             {((!simpleMode && (focusGoal || trueExpense || weekShare)) || periodIncome > 0 || periodExpense > 0 || pockets.length > 1) && (
-              <button type="button" className="os-explainer" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>
+              <button type="button" className="bf-today-more-toggle" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>
                 {t("Obiectiv, ciclu și bani")}
               </button>
             )}
@@ -589,52 +591,11 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
           </>
         )}
-        {!fresh && (
-          <>
-            <div className="bf-today-explainers">
-            <button type="button" className="os-explainer" onClick={() => setSafeSheetOpen(true)}>
-              <Info size={16} aria-hidden="true" /> {t("Cum se citește?")}
-            </button>
-            </div>
-          </>
-        )}
       </section>
       {coach}
 
       {/* D10: pe desktop coloana din dreapta; pe telefon, doar un grup în flux. */}
       <div className="bf-today-side">
-      {glance.length > 0 && (
-        <section className="bf-glance" aria-labelledby="bf-glance-title">
-          <div className="bf-section-heading">
-            <h2 id="bf-glance-title">{t("Plicurile, dintr-o privire")}</h2>
-            <button type="button" onClick={() => onGo("plan")}>{t("Plicuri")} <ChevronRight size={15} /></button>
-          </div>
-          <ul>
-            {glance.map((row) => (
-              <li key={row.item.id} className={row.state === "over" ? "is-over" : row.state === "watch" ? "is-watch" : "is-ok"}>
-                <CategoryGlyph category={row.item.category || row.item.label} />
-                <span>
-                  <b>{row.item.label}</b>
-                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round(Math.max(0, row.usage) * 100))}%` }} /></i>
-                </span>
-                <strong>{row.remaining < -0.5 ? "−" : ""}{money(Math.abs(row.remaining))}</strong>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {!simpleMode && <OpeningBalanceCard data={data} onChange={onChange} />}
-
-      <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenRecurring={onOpenRecurring} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => { setDayMore(true); window.setTimeout(() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }} />
-      {rise && (
-        <aside className="bf-price-rise" role="status">
-          <CreditCard size={18} aria-hidden="true" />
-          <span>{t("{name} s-a scumpit: {from} → {to}.", { name: rise.name, from: money(rise.from), to: money(rise.to) })}</span>
-          <button type="button" className="bf-secondary" onClick={() => { const next = acceptRecurringPrice(data, rise.recurringId); if (next) onChange(next); }}>{t("Pune prețul nou")}</button>
-          <button type="button" className="bf-brief-check-later" onClick={() => setPriceLater(true)}>{t("Mai târziu")}</button>
-        </aside>
-      )}
-
       <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
@@ -684,6 +645,52 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           )}
         </section>
 
+
+      {glance.length > 0 && (
+        <>
+          <button type="button" className="bf-today-more-toggle" id="bf-glance-title" aria-expanded={glanceOpen} onClick={() => setGlanceOpen((open) => !open)}>
+            {t("Plicurile, dintr-o privire")}
+          </button>
+          {glanceOpen && (
+            <section className="bf-glance" aria-labelledby="bf-glance-title">
+              {hotGlance.length > 0 ? (
+                <>
+                  <div className="bf-section-heading">
+                    <h2>{t("Aproape de limită")}</h2>
+                    <button type="button" onClick={() => onGo("plan")}>{t("Plicuri")} <ChevronRight size={15} /></button>
+                  </div>
+                  <ul>
+                    {hotGlance.map((row) => (
+                      <li key={row.item.id} className={row.state === "over" ? "is-over" : "is-watch"}>
+                        <CategoryGlyph category={row.item.category || row.item.label} />
+                        <span>
+                          <b>{row.item.label}</b>
+                          <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round(Math.max(0, row.usage) * 100))}%` }} /></i>
+                        </span>
+                        <strong>{row.remaining < -0.5 ? "−" : ""}{money(Math.abs(row.remaining))}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <p className="os-hint">{t("Niciun plic nu e aproape de limită.")} <button type="button" className="bf-link-button" onClick={() => onGo("plan")}>{t("Plicuri")}</button></p>
+              )}
+            </section>
+          )}
+        </>
+      )}
+      {!simpleMode && <OpeningBalanceCard data={data} onChange={onChange} />}
+
+      <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenRecurring={onOpenRecurring} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => { setDayMore(true); window.setTimeout(() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }} />
+      {rise && (
+        <aside className="bf-price-rise" role="status">
+          <CreditCard size={18} aria-hidden="true" />
+          <span>{t("{name} s-a scumpit: {from} → {to}.", { name: rise.name, from: money(rise.from), to: money(rise.to) })}</span>
+          <button type="button" className="bf-secondary" onClick={() => { const next = acceptRecurringPrice(data, rise.recurringId); if (next) onChange(next); }}>{t("Pune prețul nou")}</button>
+          <button type="button" className="bf-brief-check-later" onClick={() => setPriceLater(true)}>{t("Mai târziu")}</button>
+        </aside>
+      )}
+
       {!simpleMode && (
         <section className="bf-today-more">
           <button type="button" className="bf-today-more-toggle" aria-expanded={dayMore} onClick={() => setDayMore((value) => !value)}>
@@ -693,6 +700,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             <>
               {data.pendingReview.length === 0 && nextStep && <NextStepCard signal={nextStep} onOpen={() => openSignal(nextStep.action)} />}
               <div className="bf-today-explainers">
+                <button type="button" className="os-explainer secondary" onClick={() => setSafeSheetOpen(true)}>
+                  <Info size={16} aria-hidden="true" /> {t("Cum se citește?")}
+                </button>
                 <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
                   <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}
                 </button>
