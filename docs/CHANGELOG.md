@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.124
+
+Aspect nou, cu culoare, și o buclă de creștere. Cercetarea din spate: [`cercetare-concurenta-2026-10.md`](cercetare-concurenta-2026-10.md).
+
+- Fiecare categorie are culoarea ei (aceeași ca în diagrama din Analiză): iconițele din Mișcări, Astăzi și căutare, punctul și bara fiecărui plic.
+- Notează: categoriile sunt la vedere, sub magazin, ca butoane colorate; înainte stăteau sub „Gata”, unde nu ajungea nimeni.
+- Imaginea lunii (Analiză → Gospodărie, și pe Astăzi în primele 7 zile ale lunii): o poză 4:5 cu ce a rămas și unde s-au dus banii, de trimis pe WhatsApp sau Instagram. Implicit doar procente; sumele doar la cerere. Se face pe telefon.
+- Tema Alb e mai luminoasă (carduri albe), iar cardul „Poți folosi azi” are o lumină verde discretă.
+- Mai mult: iconițele stau pe plăcuțe colorate, pe secțiuni; dungile colorate din stânga au ieșit.
+- Primul ecran: o frază clară și trei promisiuni — fără parola băncii, fără reclame, datele stau pe telefon.
+- Recenzia din Play se cere și după a zecea zi cu cheltuieli notate sau după ce trimiți imaginea lunii (tot o singură dată, după o săptămână).
+- Linia dintre mișcări pe Navy nu mai pică verificarea de contrast.
+- Capturile din magazin refăcute (RO, EN, tabletă), cu imaginea lunii pe locul 3; datele lor (`seed.mjs`) sunt acum în repo.
+
 ## 1.1.96
 
 - Import de extras mult mai deștept: titlul e numele magazinului („Plata la POS non-BT … LIDL DISCOUNT 0123 BUCURESTI RO” → „Lidl”), categoria e cea aleasă data trecută la același magazin, Raiffeisen și antetul real BT recunoscute, rândurile de detalii ING lipite de mișcare, date cu luna în litere, fișiere Windows-1250 (ș, ț).

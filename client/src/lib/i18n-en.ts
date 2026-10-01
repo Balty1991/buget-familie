@@ -3796,4 +3796,9 @@ export const en: Record<string, string> = {
   "Fără parola băncii": "No bank password",
   "Fără reclame": "No ads",
   "Datele stau pe telefon": "Your data stays on the phone",
+  "Aplicația are culoare și un drum mai scurt până la notare.": "The app has colour now, and a shorter path to logging.",
+  "Fiecare categorie are culoarea ei — în Mișcări, pe Astăzi, pe plicuri și în Analiză.": "Every category has its own colour — in Movements, on Today, on envelopes and in Analysis.",
+  "Notează: categoriile sunt la vedere, sub magazin. O atingere și gata.": "Log it: categories are right there, under the shop. One tap and done.",
+  "Imaginea lunii: toată luna într-o poză de trimis familiei, doar cu procente dacă vrei.": "Picture of the month: the whole month in one image to send the family, percentages only if you like.",
+  "Tema Alb e mai luminoasă, iar Mai mult are iconițe colorate pe secțiuni.": "The White theme is brighter, and More has coloured icons by section.",
 };
