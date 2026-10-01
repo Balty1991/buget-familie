@@ -91,7 +91,8 @@ html body .os-shell .bf-tx-icon {
   background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface));
   color: var(--cf-primary);
 }
+/* Fiecare categorie are culoarea ei din Analiză (--bf-cat); fără ea, roșul de cheltuială. */
 html body .os-shell .bf-tx-icon.expense {
-  background: color-mix(in srgb, var(--cf-danger, #a44e3e) 12%, var(--cf-surface));
-  color: var(--cf-danger, #a44e3e);
+  background: color-mix(in srgb, var(--bf-cat, var(--cf-danger, #a44e3e)) 14%, var(--cf-surface));
+  color: var(--bf-cat, var(--cf-danger, #a44e3e));
 }

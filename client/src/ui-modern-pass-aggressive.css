@@ -325,7 +325,14 @@ html body .os-shell .os-dock button svg {
 }
 
 /* ========== 9. Light Alb / Atelier ========== */
-:is(html.theme-ink, html.theme-white) body .os-shell .os-hero,
+/* Cifra zilei: o lumină verde discretă din colț, ca un card de bancă modern; restul rămân albe. */
+:is(html.theme-ink, html.theme-white) body .os-shell .os-hero{
+  background:
+    radial-gradient(140% 80% at 100% 0%, color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) 0, transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 5%, var(--cf-surface)), var(--cf-surface) 55%) !important;
+  border: 1px solid color-mix(in srgb, var(--cf-primary) 22%, var(--cf-line)) !important;
+  box-shadow: 0 1px 2px rgba(8, 18, 14, 0.05), 0 12px 32px -18px color-mix(in srgb, var(--cf-primary) 55%, transparent) !important;
+}
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulator,
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulation,
 :is(html.theme-ink, html.theme-white) body .bf-app .bf-allocation-period,
