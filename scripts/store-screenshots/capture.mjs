@@ -49,13 +49,14 @@ const frames = {
   async add(page) { await dock(page, 2).click(); await page.waitForTimeout(1200); const amount = page.locator(".bf-quick-entry-panel input[inputmode=decimal]").first(); await amount.fill("86,40"); const shop = page.locator(".bf-quick-entry-panel input[placeholder]").nth(1); if (await shop.count()) await shop.fill("Lidl"); await page.keyboard.press("Tab"); },
   async journal(page) { await dock(page, 3).click(); await page.waitForTimeout(1600); },
   async obligations(page) { await more(page, /Obligații|Obligations|Bills/); },
+  async month(page) { await more(page, /Analiză|Analysis|Insights/); await page.getByRole("tab", { name: /Gospodărie|Household/ }).first().click(); await page.waitForTimeout(1200); await page.locator("button:visible", { hasText: /Imaginea lunii|Picture of the month/ }).first().click(); await page.waitForTimeout(2200); },
   async insights(page) { await more(page, /Analiză|Analysis|Insights/); await page.evaluate(() => { document.querySelector(".bf-spend-compass")?.scrollIntoView({ block: "start" }); window.scrollBy(0, -80); }); },
 };
 
 for (const lang of LANGS) {
   for (const [name, go] of Object.entries(frames)) {
     if (only && only !== name) continue;
-    const { browser, page } = await open(lang, { pendingIncome: name === "split" });
+    const { browser, page } = await open(lang, { pendingIncome: name === "split" || name === "month" });
     try { await go(page); await shot(page, `${PREFIX}${lang}-${name}`); } catch (e) { console.log("✗", lang, name, e.message.split("\n")[0]); }
     await browser.close();
   }
