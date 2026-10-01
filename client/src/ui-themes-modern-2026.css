@@ -42,7 +42,7 @@ background:linear-gradient(165deg,#fffcf8,#f7f5f0)!important;border:1px solid #d
 box-shadow:var(--bf-shadow-raise) !important}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock{background:#eef1ef;box-shadow:0 -8px 22px rgba(26,36,32,.12)!important;filter:none}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.is-on,
-:is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#fff!important;background:var(--bf-tint-primary,#176b54)!important}
+:is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#176b54!important;background:color-mix(in srgb,#176b54 16%,#eef1ef)!important;box-shadow:none!important}
 /* tokens.css */
 html.theme-dark body,html.theme-dark body .os-shell.bf-app{background:#0c0d0f;color:#eceff3}
 html.theme-dark body .os-shell .os-hero,
@@ -52,7 +52,7 @@ html.theme-dark body .bf-app .bf-plan-simulator,
 html.theme-dark body .bf-app .bf-allocation-period,
 html.theme-dark body .bf-app .bf-analysis-snapshot{background:#16181c!important;border:1px solid #2a2e35!important;box-shadow:var(--bf-shadow-raise) !important}
 html.theme-dark body .os-shell .os-dock{background:#121418!important;box-shadow:0 -6px 20px rgba(0,0,0,.45)!important;filter:none;border-top:1px solid #2a2e35!important}
-html.theme-dark body .os-shell .os-dock button.is-on,html.theme-dark body .os-shell .os-dock button.active{color:#062018!important;background:#7dcfab!important}
+html.theme-dark body .os-shell .os-dock button.is-on,html.theme-dark body .os-shell .os-dock button.active{color:#7dcfab!important;background:color-mix(in srgb,#7dcfab 18%,#121418)!important;box-shadow:none!important}
 /* tokens.css */
 /* tokens.css */
 html.theme-navy body,html.theme-navy body .os-shell.bf-app{
@@ -64,7 +64,7 @@ html.theme-navy body .bf-app .bf-plan-simulator,
 html.theme-navy body .bf-app .bf-allocation-period,
 html.theme-navy body .bf-app .bf-analysis-snapshot{background:#102646!important;border:1px solid #2c4d7a!important;box-shadow:var(--bf-shadow-raise) !important}
 html.theme-navy body .os-shell .os-dock{background:#0a1a36!important;box-shadow:0 -6px 20px rgba(0,0,0,.42)!important;filter:none}
-html.theme-navy body .os-shell .os-dock button.is-on,html.theme-navy body .os-shell .os-dock button.active{color:#12100a!important;background:#d4b06a!important}
+html.theme-navy body .os-shell .os-dock button.is-on,html.theme-navy body .os-shell .os-dock button.active{color:#d4b06a!important;background:color-mix(in srgb,#d4b06a 18%,#0a1a36)!important;box-shadow:none!important}
 /* tokens.css */
 .bf-theme-option.white .bf-theme-swatch,.bf-theme-option.ink .bf-theme-swatch{background:linear-gradient(135deg,#e8ece9 0 48%,#176b54 49% 72%,#0c1612 73%)!important}
 .bf-theme-option.dark .bf-theme-swatch{background:linear-gradient(135deg,#0c0d0f 0 48%,#7dcfab 49% 72%,#16181c 73%)}

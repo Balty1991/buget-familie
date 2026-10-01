@@ -124,7 +124,7 @@
 .bf-today-activity .bf-section-heading { margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--bf-major-line); }
 .bf-today-activity .bf-section-heading h2 { margin-top: 3px; color: var(--bf-major-ink); font-family: "IBM Plex Sans", Georgia, serif; font-size:22px; }
 .bf-today-activity-list { display: grid; }
-.bf-today-activity-list article { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 62px; padding: 11px 0; border-bottom: 1px solid var(--bf-major-line); }
+.bf-today-activity-list article { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 62px; padding: 12px 14px; border-bottom: 1px solid var(--bf-major-line); }
 .bf-today-activity-list article > div { display: grid; gap: 3px; min-width: 0; }
 .bf-today-activity-list b { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .bf-today-activity-list small { overflow: hidden; color: var(--bf-major-muted); font-size:12px; text-overflow: ellipsis; white-space: nowrap; }
@@ -267,7 +267,7 @@
 .bf-page, .bf-today-workspace, .bf-obligations-workspace, .bf-plan-workspace, .bf-insights-workspace { margin:0 auto; padding:20px 16px 102px!important; color:var(--cf-ink); }
 .bf-topline, .bf-movements-header, .bf-plan-studio-header, .bf-insights-header { margin:0; border:0; }.bf-topline h1, .bf-movements-header h1, .bf-plan-studio-header h1, .bf-insights-header h1 { max-width:22ch; margin:4px 0 0; color:var(--cf-ink); font-weight:750; line-height:1.14; }.bf-topline h1 em, .bf-movements-header h1 em, .bf-plan-studio-header h1 em, .bf-insights-header h1 em { color:inherit!important; font-style:normal!important; }.bf-kicker { color:var(--cf-muted); font-weight:600; }.bf-topline>div>p:not(.bf-kicker), .bf-movements-header p:not(.bf-kicker), .bf-plan-studio-header p:not(.bf-kicker), .bf-insights-header p:not(.bf-kicker) { color:var(--cf-muted)!important; font-size:14px !important; line-height:1.45!important; }
 
-.bf-today-workspace{display:grid}.bf-today-add,.bf-primary,.bf-movement-add{min-height:44px;border-radius:12px;color:#fff;background:var(--cf-primary-strong);box-shadow:none;font-size:14px}.bf-today-activity .bf-section-heading>button{color:var(--cf-info)!important;font-size:12px}.bf-today-activity .bf-section-heading{padding-bottom:9px;border-bottom:1px solid var(--cf-line)}.bf-today-activity .bf-section-heading h2{color:var(--cf-ink);font-size:17px !important}.bf-today-activity-list article{min-height:60px!important;border-bottom:1px solid var(--cf-line)!important}.bf-today-empty-activity{border:1px solid var(--cf-line)!important;border-left:1px solid var(--cf-line)!important;background:var(--cf-surface)!important}.bf-today-empty-activity b{color:var(--cf-ink)!important}.bf-today-empty-activity small{color:var(--cf-muted)!important}
+.bf-today-workspace{display:grid}.bf-today-add,.bf-primary,.bf-movement-add{min-height:44px;border-radius:12px;color:#fff;background:var(--cf-primary-strong);box-shadow:none;font-size:14px}.bf-today-activity .bf-section-heading>button{color:var(--cf-info)!important;font-size:12px}.bf-today-activity .bf-section-heading{padding-bottom:2px;border-bottom:0}.bf-today-activity .bf-section-heading h2{color:var(--cf-ink);font-size:17px !important}.bf-today-activity-list article{min-height:60px!important;border-bottom:1px solid var(--cf-line)!important}.bf-today-empty-activity{border:1px solid var(--cf-line)!important;border-left:1px solid var(--cf-line)!important;background:var(--cf-surface)!important}.bf-today-empty-activity b{color:var(--cf-ink)!important}.bf-today-empty-activity small{color:var(--cf-muted)!important}
 
 .bf-obligations-workspace, .bf-plan-workspace, .bf-insights-workspace{gap:16px}.bf-movements-header, .bf-plan-studio-header, .bf-insights-header{border-bottom:1px solid var(--cf-line)}.bf-movement-add{width:44px;padding:0;font-size:0}.bf-analysis-control{grid-template-columns:1fr!important;gap:12px;padding:14px 0;border-bottom:1px solid var(--cf-line);background:transparent}.bf-movement-kind,.bf-analysis-scope,.bf-insights-switch{border:1px solid var(--cf-line);background:var(--cf-surface)}.bf-movement-kind button,.bf-insights-switch button,.bf-analysis-scope button{color:var(--cf-muted);background:transparent}.bf-movement-kind button.active,.bf-insights-switch button.active,.bf-analysis-scope button.active{color:#fff;background:var(--cf-primary-strong)}.bf-movement-filter-selects{grid-template-columns:1fr 1fr!important}.bf-movement-filter-selects select,.bf-plan-field input,.bf-plan-field select,.bf-analysis-control input{min-height:44px!important;border:1px solid var(--cf-line)!important;border-radius:12px !important;color:var(--cf-ink)!important;background:var(--cf-surface)!important}.bf-movement-day>header{border-bottom:1px solid var(--cf-line)}.bf-movement-day time{color:var(--cf-ink);font-size:17px}.bf-movement-day article{grid-template-columns:34px minmax(0,1fr) auto;min-height:66px;border-bottom:1px solid var(--cf-line)}.bf-movement-actions{grid-column:2/-1;margin:0}.bf-movement-actions button{width:36px;height:36px;border:1px solid var(--cf-line);color:var(--cf-muted)!important;background:var(--cf-surface)}.bf-movement-day article b{color:var(--cf-ink)}.bf-movement-day article small,.bf-movement-day article em{color:var(--cf-muted)!important}.bf-plan-sheet-heading h2{color:var(--cf-ink);font-size:22px}.bf-more-grid{display:grid;grid-template-columns:1fr;gap:0;border:1px solid var(--cf-line);overflow:hidden;background:var(--cf-surface)}.bf-more-grid button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;border:0!important;border-bottom:1px solid var(--cf-line)!important;border-radius:0;color:var(--cf-ink);box-shadow:none;text-align:left}.bf-more-grid button:last-child{border-bottom:0}.bf-more-grid button svg{grid-row:1/span 2;color:var(--cf-info)}.bf-more-grid button b{font-size:15px}.bf-more-grid button span{color:var(--cf-muted);font-size:12px}.bf-more-grid button::after{content:"›"}
 
@@ -1098,9 +1098,9 @@ html.theme-dark{
 .bf-today-activity-list article:hover,
 .bf-allocation-list > article:hover,
 .bf-plan-simulation-list label:focus-within {
-  border-color: color-mix(in srgb, var(--cf-info) 42%, var(--cf-line));
-  box-shadow: 0 10px 26px color-mix(in srgb, var(--cf-info) 9%, transparent);
-  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--cf-line) 70%, transparent);
+  box-shadow: none;
+  transform: none;
 }
 
 .bf-primary,
@@ -4193,9 +4193,7 @@ html.theme-navy .os-dock button.is-on {
 .os-shell .os-dock button.active {
   color: var(--os-mint-fg, #fff) !important;
   background: var(--os-mint, var(--cf-primary)) !important;
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 25%, transparent) inset,
-    0 10px 22px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 36%, transparent) !important;
+  box-shadow: none !important;
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
@@ -4209,9 +4207,9 @@ html.theme-navy .os-dock button.is-on {
 }
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.is-on,
 :is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
-  color: #ffffff !important;
-  background: linear-gradient(180deg, var(--bf-tint-primary-hi, #1d8064), var(--bf-tint-strong, #0e4f3e)) !important;
-  box-shadow:var(--bf-shadow-raise) !important;
+  color: #176b54 !important;
+  background: color-mix(in srgb, #176b54 16%, #eef1ef) !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 430px) {
@@ -4434,9 +4432,9 @@ html.theme-dark .os-shell .os-dock {
 }
 html.theme-dark .os-shell .os-dock button.is-on,
 html.theme-dark .os-shell .os-dock button.active {
-  color: #0c0e11 !important;
-  background: linear-gradient(180deg, #e2e6ec, #c5cbd4) !important;
-  box-shadow:var(--bf-shadow-raise) !important;
+  color: #7dcfab !important;
+  background: color-mix(in srgb, #7dcfab 18%, #121418) !important;
+  box-shadow: none !important;
 }
 html.theme-dark .os-shell .bf-today-add,
 html.theme-dark .os-shell .bf-os-decide {
@@ -4454,9 +4452,9 @@ html.theme-navy .os-shell .os-dock {
 }
 html.theme-navy .os-shell .os-dock button.is-on,
 html.theme-navy .os-shell .os-dock button.active {
-  color: #14100a !important;
-  background: linear-gradient(180deg, #e0c07a, #c49a4a) !important;
-  box-shadow:var(--bf-shadow-raise) !important;
+  color: #d4b06a !important;
+  background: color-mix(in srgb, #d4b06a 18%, #0a1a36) !important;
+  box-shadow: none !important;
 }
 html.theme-navy .os-shell .bf-today-add,
 html.theme-navy .os-shell .bf-os-decide {

@@ -257,12 +257,12 @@
 
 .os-shell .os-dock button.active,
 .os-shell .os-dock button.is-on {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .os-shell .os-dock button.active svg,
 .os-shell .os-dock button.is-on svg {
-  transform: scale(1.06);
+  transform: none;
 }
 
 .os-shell .bf-primary:active,
@@ -900,11 +900,9 @@ html.theme-white .bf-plan-workspace > .bf-plan-studio-header h1 em {
 
 .os-shell .os-dock button.active,
 .os-shell .os-dock button.is-on {
-  color: var(--os-mint-fg, #fff) !important;
-  background: var(--os-mint) !important;
-  box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 22%, transparent) inset,
-    0 8px 16px color-mix(in srgb, var(--os-mint) 32%, transparent) !important;
+  color: var(--os-mint, #176b54) !important;
+  background: color-mix(in srgb, var(--os-mint, #176b54) 16%, transparent) !important;
+  box-shadow: none !important;
 }
 
 .os-shell .os-dock button.active::after,

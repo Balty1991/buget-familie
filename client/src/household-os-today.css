@@ -77,7 +77,7 @@ html:not(.dark) .bf-os-decide {
 .bf-os-rhythm-grid {
   display: grid;
   grid-template-columns: repeat(var(--bf-rhythm-days, 7), minmax(0, 1fr));
-  gap: 6px;
+  gap: 4px;
   margin-top: 14px;
 }
 
@@ -85,14 +85,14 @@ html:not(.dark) .bf-os-decide {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 2px 8px;
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--os-bg) 80%, transparent);
+  padding: 6px 2px 8px;
+  border-radius: 12px;
+  background: transparent;
 }
 
 .bf-os-day.is-today {
-  background: color-mix(in srgb, var(--os-mint) 14%, var(--os-bg));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-mint) 40%, transparent);
+  background: color-mix(in srgb, var(--os-mint) 12%, var(--os-surface, #fff));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-mint) 32%, transparent);
 }
 
 .bf-os-day span {
@@ -118,12 +118,12 @@ html:not(.dark) .bf-os-decide {
 .bf-os-bar {
   display: flex;
   align-items: flex-end;
-  width: 6px;
-  height: 32px;
+  width: min(100%, 16px);
+  height: 28px;
   margin-top: 8px;
   overflow: hidden;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--os-ink) 8%, transparent);
+  background: color-mix(in srgb, var(--os-ink) 10%, transparent);
 }
 
 .bf-os-bar i {
