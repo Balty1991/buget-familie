@@ -106,10 +106,11 @@ html:not(.dark) .bf-os-decide {
 .bf-os-day.is-today span { color: var(--os-mint); }
 
 .bf-os-day b {
-  margin-top: 6px;
-  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  margin-top: 4px;
+  font-family: Fraunces, Georgia, serif;
   font-size: 14px;
   font-weight: 560;
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -118,18 +119,18 @@ html:not(.dark) .bf-os-decide {
 .bf-os-bar {
   display: flex;
   align-items: flex-end;
-  width: min(100%, 16px);
-  height: 28px;
+  width: min(100%, 18px);
+  height: 46px;
   margin-top: 8px;
   overflow: hidden;
-  border-radius: 99px;
+  border-radius: 6px;
   background: color-mix(in srgb, var(--os-ink) 10%, transparent);
 }
 
 .bf-os-bar i {
   display: block;
   width: 100%;
-  border-radius: 99px;
+  border-radius: 5px 5px 2px 2px;
   background: var(--os-mint);
 }
 
@@ -377,9 +378,9 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-tx-icon {
-  background: #14352b;
-  color: #7cffc4;
-  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface, #10141a));
+  color: var(--cf-primary);
+  border-radius: 12px !important;
 }
 
 .dark .bf-tx-icon.expense {

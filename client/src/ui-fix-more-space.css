@@ -62,3 +62,36 @@ html body .os-shell .bf-utilities-workspace {
     var(--ui-agg-dock-clear, calc(88px + env(safe-area-inset-bottom, 0px) + 28px))
   );
 }
+
+/* Cifrele de bani sunt același Fraunces ca suma de pe Astăzi. Rândurile stau într-o foaie, cu linia doar sub text. */
+html body .os-shell .bf-today-activity-list strong,
+html body .os-shell .bf-obligation-entry strong {
+  font-family: Fraunces, Georgia, serif;
+  font-weight: 560;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+html body .os-shell .bf-today-activity-list article {
+  border-radius: 0;
+  background-color: transparent;
+  background-image: linear-gradient(var(--cf-line), var(--cf-line));
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: calc(100% - 62px) 1px;
+}
+html body .os-shell .bf-today-activity-list article:last-child {
+  background-image: none;
+}
+html body .os-shell .bf-tx-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--cf-primary) 14%, var(--cf-surface));
+  color: var(--cf-primary);
+}
+html body .os-shell .bf-tx-icon.expense {
+  background: color-mix(in srgb, var(--cf-danger, #a44e3e) 12%, var(--cf-surface));
+  color: var(--cf-danger, #a44e3e);
+}

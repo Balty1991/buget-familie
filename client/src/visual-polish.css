@@ -106,22 +106,35 @@
   position: relative;
 }
 
+.bf-hero-week .bf-os-rhythm-grid {
+  gap: 2px;
+  padding: 10px 6px 8px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--cf-ink, #10241e) 6%, transparent);
+}
+
 .bf-os-rhythm-grid > button {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  padding: 10px 2px 8px;
+  padding: 4px 0 6px;
   border: 0;
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--os-bg) 80%, transparent);
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
   color: inherit;
   cursor: pointer;
 }
 
+.bf-os-rhythm-grid > button .bf-os-bar {
+  order: -1;
+  margin: 0 0 6px;
+}
+
 .bf-os-rhythm-grid > button.is-today {
-  background: color-mix(in srgb, var(--os-mint) 14%, var(--os-bg));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-mint) 40%, transparent);
+  background: color-mix(in srgb, var(--os-mint, var(--cf-primary)) 16%, transparent);
+  box-shadow: none;
 }
 
 .bf-os-rhythm-grid > button.is-over b { color: var(--os-warn); }

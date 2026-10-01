@@ -60,8 +60,14 @@ details.bf-plan-tools:not([open]) > :not(summary) {
 }
 
 .bf-movement-timeline strong,
-.bf-settings-row b,
 .bf-obligation-entry strong {
+  font-family: Fraunces, Georgia, serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 560;
+  font-size: 16px;
+  letter-spacing: -0.03em;
+}
+.bf-settings-row b {
   font-family: var(--bf-font-sans);
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -385,7 +391,7 @@ html.theme-navy {
   --ds-shadow-card: 0 1px 2px rgba(0, 0, 0, .28), 0 8px 18px rgba(0, 0, 0, .22);
 }
 @layer ds {
-  html body .os-shell :is(.os-hero, .bf-today-brief, .bf-today-activity, .bf-movements-header, .bf-journal-quickbar, .bf-movement-day,
+  html body .os-shell :is(.os-hero, .bf-today-brief, .bf-today-activity, .bf-movements-header, .bf-journal-quickbar,
     .bf-plan-studio-header, .bf-cycle-setup, .bf-allocation-progress-card, .bf-allocation-guidance, .bf-envelope-glossary-tip, .bf-active-week,
     .bf-insights-header, .bf-analysis-control, .bf-analysis-snapshot, .bf-analysis-month, .bf-analysis-next-step,
     .bf-upcoming-hero, .bf-obligation-lane, .bf-obligation-ledger, .bf-obligation-ai, .bf-sync-hero, .bf-sync-session,
