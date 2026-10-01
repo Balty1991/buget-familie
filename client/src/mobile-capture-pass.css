@@ -167,30 +167,14 @@
   }
 }
 
-.bf-cat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  margin: 4px 0 8px;
-}
-.bf-cat-grid button {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  min-height: 64px;
-  padding: 8px 4px;
-  border: 1px solid var(--cf-line, #e3e2d9);
-  border-radius:12px;
-  background: var(--cf-surface, #fff);
-  color: var(--cf-ink, #1b332c);
-  font: 600 11px/1.15 "IBM Plex Sans", system-ui, sans-serif;
-}
-.bf-cat-grid button span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bf-cat-grid button.is-on {
-  border-color: transparent;
-  background: var(--cf-primary-strong, #174b3d);
-  color: var(--cf-on-primary, #fff);
-}
+/* Categoriile, deasupra „Sau altă categorie”: un rând care derulează, fiecare în culoarea ei. */
+.bf-cat-strip { grid-column: 1 / -1; display: flex; gap: 8px; margin: 2px 0 4px; padding: 2px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+.bf-cat-strip::-webkit-scrollbar { display: none; }
+.bf-cat-strip button { flex: 0 0 auto; min-width: 72px; display: grid; justify-items: center; gap: 4px; min-height: 62px; padding: 6px 12px; border: 1px solid var(--cf-line, #e3e2d9); border-radius: 16px; background: var(--cf-surface, #fff); color: var(--cf-ink, #1b332c); font: 600 12px/1.15 "IBM Plex Sans", system-ui, sans-serif; scroll-snap-align: start; }
+.bf-cat-strip i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: var(--bf-cat, var(--cf-primary)); background: color-mix(in srgb, var(--bf-cat, var(--cf-primary)) 15%, var(--cf-surface, #fff)); }
+.bf-cat-strip span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bf-cat-strip button.is-on { border-color: var(--bf-cat, var(--cf-primary)); background: color-mix(in srgb, var(--bf-cat, var(--cf-primary)) 12%, var(--cf-surface, #fff)); box-shadow: inset 0 0 0 1px var(--bf-cat, var(--cf-primary)); }
+.bf-cat-strip button.is-on i { color: #fff; background: var(--bf-cat, var(--cf-primary)); }
 
 /* Produs #2: mutarea între surse. */
 .bf-quick-entry-panel .bf-quick-move { display: block; margin: 8px 0 4px; font-size: 13px; }
