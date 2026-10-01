@@ -185,6 +185,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [safeSheetOpen, setSafeSheetOpen] = useState(false);
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
   const [weekOpen, setWeekOpen] = useState(false);
+  const [moneyOpen, setMoneyOpen] = useState(false);
   const [dayMore, setDayMore] = useState(false);
   const [priceLater, setPriceLater] = useState(false);
   const [moved, setMoved] = useState<{ id: string; amount: number; from: string; to: string } | null>(null);
@@ -498,49 +499,6 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 {(!heroTracksWeek || rhythm.days.some((row) => row.isFuture)) && <p className="bf-os-note">{rhythmNote}</p>}
               </div>
             )}
-            {ageLine && <p className="os-hint">{ageLine}</p>}
-            {mealLine && <p className="os-hint">{mealLine}</p>}
-            {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
-            {!simpleMode && focusGoal && (
-              <button type="button" className="bf-glance-goal" onClick={() => onGo("goals")}>
-                <PiggyBank size={16} aria-hidden="true" />
-                <span>
-                  <b>{focusGoal.name}</b>
-                  <small>{t("mai sunt {left} · cam {monthly} pe lună", { left: money(focusGoal.left), monthly: money(focusGoal.monthly) })}</small>
-                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((focusGoal.current / Math.max(1, focusGoal.target)) * 100))}%` }} /></i>
-                </span>
-                <ChevronRight size={16} aria-hidden="true" />
-              </button>
-            )}
-            {!simpleMode && trueExpense && (
-              <button type="button" className="bf-glance-goal is-event" onClick={() => window.dispatchEvent(new Event("buget-familie:open-events"))}>
-                <Gift size={16} aria-hidden="true" />
-                <span>
-                  <b>{trueExpense.name}</b>
-                  <small>{t("pe {date} · mai lipsesc {left}", { date: formatDate(trueExpense.date, { day: "numeric", month: "short" }), left: money(trueExpense.left) })}</small>
-                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((trueExpense.saved / Math.max(1, trueExpense.estimate)) * 100))}%` }} /></i>
-                </span>
-                <ChevronRight size={16} aria-hidden="true" />
-              </button>
-            )}
-            {(periodIncome > 0 || periodExpense > 0) && (
-              <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
-                <span><small>{t("Intrat")}</small><b>+{fmtExact.format(periodIncome)}</b></span>
-                <span><small>{t("Ieșit")}</small><b>{periodExpense > 0.004 ? "−" : ""}{fmtExact.format(periodExpense)}</b></span>
-              </div>
-            )}
-            {!simpleMode && weekShare && <p className="os-hint">{weekShare}</p>}
-            {pockets.length > 1 && (
-              <ul className="bf-pocket-row" aria-label={t("Unde stau banii")}>
-                {pockets.map((pocket) => (
-                  <li key={pocket.kind} className={`bf-pocket ${pocket.kind}`}>
-                    <SourceGlyph kind={pocket.kind} />
-                    <b>{money(pocket.amount)}</b>
-                    <small>{sourceKindName[pocket.kind]}</small>
-                  </li>
-                ))}
-              </ul>
-            )}
             {!simpleMode && weekRow && (
               <button type="button" className="os-explainer" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>
                 {t("Față de săptămâna trecută")}
@@ -578,6 +536,54 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               </div>
             )}
             {weekOpen && !simpleMode && weekLine && <p className="os-hint">{weekLine}</p>}
+            {ageLine && <p className="os-hint">{ageLine}</p>}
+            {mealLine && <p className="os-hint">{mealLine}</p>}
+            {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
+            {((!simpleMode && (focusGoal || trueExpense || weekShare)) || periodIncome > 0 || periodExpense > 0 || pockets.length > 1) && (
+              <button type="button" className="os-explainer" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>
+                {t("Obiectiv, ciclu și bani")}
+              </button>
+            )}
+            {moneyOpen && !simpleMode && focusGoal && (
+              <button type="button" className="bf-glance-goal" onClick={() => onGo("goals")}>
+                <PiggyBank size={16} aria-hidden="true" />
+                <span>
+                  <b>{focusGoal.name}</b>
+                  <small>{t("mai sunt {left} · cam {monthly} pe lună", { left: money(focusGoal.left), monthly: money(focusGoal.monthly) })}</small>
+                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((focusGoal.current / Math.max(1, focusGoal.target)) * 100))}%` }} /></i>
+                </span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
+            {moneyOpen && !simpleMode && trueExpense && (
+              <button type="button" className="bf-glance-goal is-event" onClick={() => window.dispatchEvent(new Event("buget-familie:open-events"))}>
+                <Gift size={16} aria-hidden="true" />
+                <span>
+                  <b>{trueExpense.name}</b>
+                  <small>{t("pe {date} · mai lipsesc {left}", { date: formatDate(trueExpense.date, { day: "numeric", month: "short" }), left: money(trueExpense.left) })}</small>
+                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((trueExpense.saved / Math.max(1, trueExpense.estimate)) * 100))}%` }} /></i>
+                </span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
+            {moneyOpen && (periodIncome > 0 || periodExpense > 0) && (
+              <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
+                <span><small>{t("Intrat")}</small><b>+{fmtExact.format(periodIncome)}</b></span>
+                <span><small>{t("Ieșit")}</small><b>{periodExpense > 0.004 ? "−" : ""}{fmtExact.format(periodExpense)}</b></span>
+              </div>
+            )}
+            {moneyOpen && !simpleMode && weekShare && <p className="os-hint">{weekShare}</p>}
+            {moneyOpen && pockets.length > 1 && (
+              <ul className="bf-pocket-row" aria-label={t("Unde stau banii")}>
+                {pockets.map((pocket) => (
+                  <li key={pocket.kind} className={`bf-pocket ${pocket.kind}`}>
+                    <SourceGlyph kind={pocket.kind} />
+                    <b>{money(pocket.amount)}</b>
+                    <small>{sourceKindName[pocket.kind]}</small>
+                  </li>
+                ))}
+              </ul>
+            )}
             {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
             {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
             {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}

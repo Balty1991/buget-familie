@@ -285,7 +285,7 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
           <button type="button" className="bf-primary" disabled={!lines.length} onClick={saveBon}>
             {lines.length ? `${t("Salvează bonul")} · ${fmtExact.format(basketTotal)}` : t("Salvează bonul")}
           </button>
-          <button type="button" className="bf-ghost" onClick={onOpenReceiptForm}><ReceiptText size={16} /> {t("Bon cu fotografie")}</button>
+          <button type="button" className="bf-ghost" onClick={onOpenReceiptForm}><ReceiptText size={16} /> {t("Adaugă bon")}</button>
         </div>
         {error ? <p className="bf-form-error" role="alert">{error}</p> : null}
         {notice ? <p className="bf-helper" role="status">{notice}</p> : null}

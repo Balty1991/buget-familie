@@ -41,7 +41,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
       <div className="bf-empty-state slim">
         <ShoppingBasket size={23} />
         <h2>{t("Încă nu există istoric de prețuri")}</h2>
-        <p>{t("Fotografiază câteva bonuri și păstrează liniile de produse. După ce același produs apare pe două bonuri, aici vei vedea cum i-a evoluat prețul și în ce magazin a fost mai ieftin.")}</p>
+        <p>{t("Notează produsele pe bonuri. După ce același produs apare pe două bonuri, aici vei vedea cum i-a evoluat prețul și în ce magazin a fost mai ieftin.")}</p>
       </div>
     );
   }
