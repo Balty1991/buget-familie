@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { Image as ImageIcon, Share2, X } from "lucide-react";
 import type { MonthlyFamilyReport } from "@/lib/household-insights";
 import { renderMonthCard, shareMonthCard } from "@/lib/month-share-card";
+import { askReviewAfterMilestone } from "@/lib/review-prompt";
 import { t } from "@/lib/i18n";
 
 export function MonthShareSheet({ report, onClose }: { report: MonthlyFamilyReport; onClose: () => void }) {
@@ -42,6 +43,7 @@ export function MonthShareSheet({ report, onClose }: { report: MonthlyFamilyRepo
     try {
       const result = await shareMonthCard(preview.blob, `buget-familie-${report.month}.png`, t("Luna noastră în Buget Familie"));
       setState(result === "cancelled" ? "idle" : result);
+      if (result === "shared") window.setTimeout(() => void askReviewAfterMilestone(), 1200);
     } catch {
       setState("error");
     }
