@@ -157,6 +157,16 @@ jobs:
             done
           done
 
+      # Imaginile funcțiilor din Artifact Registry se adunau la fiecare deploy; peste 0.5 GB se plătesc.
+      # Deploy-ul încearcă singur, dar raportează doar „Failed”; aici se vede motivul.
+      - name: Politică de ștergere a imaginilor vechi (Artifact Registry)
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          pnpm exec firebase functions:artifacts:setpolicy --location "$FUNCTIONS_REGION" --days 1 \
+            --project "$FIREBASE_PROJECT_ID" --non-interactive --force \
+            || { echo "::warning::Politica de ștergere a imaginilor nu s-a putut seta (rolul Artifact Registry Administrator pe contul de serviciu)."; exit 1; }
+
       - name: Check aiGuide endpoint
         run: |
           set -euo pipefail
