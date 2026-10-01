@@ -17,13 +17,13 @@ box-shadow:var(--ui-theme-elev)!important;filter:none!important;--cf-glow:transp
 min-height:48px!important;padding:0 18px!important;border:0!important;border-radius:999px!important;
 font-weight:600!important;color:var(--os-mint-fg,var(--cf-on-forest,#04140e))!important;
 background:var(--os-mint,var(--cf-primary))!important;
-box-shadow:0 6px 16px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 22%,transparent)!important}
+box-shadow:none!important}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-pace-switch,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-insights-switch,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-analysis-scope,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-movement-kind{
 border:0;box-shadow:none!important;gap:6px;padding:4px!important;border-radius:12px !important;
 background:color-mix(in srgb,var(--os-surface-2,var(--cf-surface-alt)) 94%,transparent)!important}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button.active,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button[aria-selected="true"],:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-pace-switch button.active,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-movement-kind button.active{
 border:1px solid transparent;color:var(--os-mint-fg,var(--cf-on-forest,#04140e));
-background:var(--os-mint,var(--cf-primary))!important;font-weight:600}
+background:color-mix(in srgb,var(--cf-primary) 16%,var(--cf-surface))!important;font-weight:600}
 :is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-page,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-today-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-movements-ledger,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-obligations-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-analysis,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-utilities-workspace{
 padding-bottom:calc(88px + env(safe-area-inset-bottom,0px) + 24px)!important;
 scroll-padding-bottom:calc(88px + env(safe-area-inset-bottom,0px) + 24px)}
@@ -38,9 +38,9 @@ background:var(--cf-bg,#e8ece9);color:#0c1612}
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-plan-simulator,
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-allocation-period,
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-analysis-snapshot{
-background:linear-gradient(165deg,#fffcf8,#f7f5f0)!important;border:1px solid #d4d2c9!important;
-box-shadow:var(--bf-shadow-raise) !important}
-:is(html.theme-white,html.theme-ink) body .os-shell .os-dock{background:#eef1ef;box-shadow:0 -8px 22px rgba(26,36,32,.12)!important;filter:none}
+background:var(--cf-surface)!important;border:1px solid var(--cf-line)!important;
+box-shadow:var(--ds-shadow-card)!important}
+:is(html.theme-white,html.theme-ink) body .os-shell .os-dock{background:#eef1ef;box-shadow:none!important;filter:none}
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.is-on,
 :is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#176b54!important;background:color-mix(in srgb,#176b54 16%,#eef1ef)!important;box-shadow:none!important}
 /* tokens.css */
@@ -50,8 +50,8 @@ html.theme-dark body .bf-app .bf-insights-header,
 html.theme-dark body .bf-app .bf-analysis-control,
 html.theme-dark body .bf-app .bf-plan-simulator,
 html.theme-dark body .bf-app .bf-allocation-period,
-html.theme-dark body .bf-app .bf-analysis-snapshot{background:#16181c!important;border:1px solid #2a2e35!important;box-shadow:var(--bf-shadow-raise) !important}
-html.theme-dark body .os-shell .os-dock{background:#121418!important;box-shadow:0 -6px 20px rgba(0,0,0,.45)!important;filter:none;border-top:1px solid #2a2e35!important}
+html.theme-dark body .bf-app .bf-analysis-snapshot{background:var(--cf-surface)!important;border:1px solid var(--cf-line)!important;box-shadow:var(--ds-shadow-card)!important}
+html.theme-dark body .os-shell .os-dock{background:#121418!important;box-shadow:none!important;filter:none;border-top:1px solid #2a2e35!important}
 html.theme-dark body .os-shell .os-dock button.is-on,html.theme-dark body .os-shell .os-dock button.active{color:#7dcfab!important;background:color-mix(in srgb,#7dcfab 18%,#121418)!important;box-shadow:none!important}
 /* tokens.css */
 /* tokens.css */
@@ -62,8 +62,8 @@ html.theme-navy body .bf-app .bf-insights-header,
 html.theme-navy body .bf-app .bf-analysis-control,
 html.theme-navy body .bf-app .bf-plan-simulator,
 html.theme-navy body .bf-app .bf-allocation-period,
-html.theme-navy body .bf-app .bf-analysis-snapshot{background:#102646!important;border:1px solid #2c4d7a!important;box-shadow:var(--bf-shadow-raise) !important}
-html.theme-navy body .os-shell .os-dock{background:#0a1a36!important;box-shadow:0 -6px 20px rgba(0,0,0,.42)!important;filter:none}
+html.theme-navy body .bf-app .bf-analysis-snapshot{background:var(--cf-surface)!important;border:1px solid var(--cf-line)!important;box-shadow:var(--ds-shadow-card)!important}
+html.theme-navy body .os-shell .os-dock{background:#0a1a36!important;box-shadow:none!important;filter:none}
 html.theme-navy body .os-shell .os-dock button.is-on,html.theme-navy body .os-shell .os-dock button.active{color:#d4b06a!important;background:color-mix(in srgb,#d4b06a 18%,#0a1a36)!important;box-shadow:none!important}
 /* tokens.css */
 .bf-theme-option.white .bf-theme-swatch,.bf-theme-option.ink .bf-theme-swatch{background:linear-gradient(135deg,#e8ece9 0 48%,#176b54 49% 72%,#0c1612 73%)!important}

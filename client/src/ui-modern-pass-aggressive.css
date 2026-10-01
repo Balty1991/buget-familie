@@ -158,9 +158,9 @@ html body .os-shell .bf-analysis-scope button.active,
 html body .os-shell .bf-movement-kind button.active {
   border: 1px solid transparent !important;
   outline: none;
-  color: var(--os-mint-fg, var(--cf-on-forest, #04140e)) !important;
-  background: var(--os-mint, var(--cf-primary, #7cffc4)) !important;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 22%, transparent) !important;
+  color: var(--cf-primary) !important;
+  background: color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) !important;
+  box-shadow: none !important;
   font-weight:600;
 }
 
