@@ -12,14 +12,14 @@
 |---|---|---|---|
 | 1 | `01-today` | Cât poți cheltui azi | What you can spend today |
 | 2 | `02-split` | A intrat salariul? Se împarte singur. | Payday? It splits itself. |
-| 3 | `03-plan` | Fiecare leu are un loc. | Every leu has a place. |
-| 4 | `04-needs` | Două salarii, zile diferite. | Two salaries, different days. |
+| 3 | `03-month` | Toată luna, într-o imagine. | The whole month, in one picture. |
+| 4 | `04-plan` | Fiecare leu are un loc. | Every leu has a place. |
 | 5 | `05-add` | Notezi în 3 secunde. | Log it in 3 seconds. |
 | 6 | `06-journal` | Toate mișcările familiei. | Every family transaction. |
 | 7 | `07-obligations` | Rate și facturi la timp. | Bills and loans on time. |
 | 8 | `08-insights` | Vezi unde se duc banii. | See where the money goes. |
 
-Date inventate (familia Andrei și Maria), scrise doar în localStorage-ul browserului de test, nu în Firebase.
+Date inventate (familia Andrei și Maria, `scripts/store-screenshots/seed.mjs`), scrise doar în localStorage-ul browserului de test, nu în Firebase. Refăcute pe 2 octombrie 2026, cu culorile pe categorii și imaginea lunii (cadrul 3 înlocuiește „Două salarii, zile diferite”; `raw/*-needs.png` rămâne disponibil).
 Tot aici: `icon-512.png` (iconul Play) și `feature-graphic-ro.png` / `feature-graphic-en.png` (1024×500, `node feature.mjs`).
 
 Refacere: pornește `vite --port 5174`, apoi din `scripts/store-screenshots/`:

@@ -16,7 +16,7 @@ async function open(lang, opts = {}) {
   const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: DPR, locale: lang === "ro" ? "ro-RO" : "en-GB" });
   await ctx.addInitScript(([lang]) => {
     if (sessionStorage.getItem("store-init")) return; sessionStorage.setItem("store-init", "1");
-    const set = { "buget-familie:setup-complete": "true", "buget-familie:onboarding-complete": "true", "buget-familie:first-week-tour-dismissed": "1", "buget-familie:theme": "white", "buget-familie:whats-new-ledger-unify-2026-09": "1", "buget-familie:language": lang, "buget-familie:envelope-glossary-seen": "1", "buget-familie:last-balance-check": new Date().toISOString().slice(0, 10) };
+    const set = { "buget-familie:setup-complete": "true", "buget-familie:onboarding-complete": "true", "buget-familie:first-week-tour-dismissed": "1", "buget-familie:theme": "white", "buget-familie:whats-new-2026-10": "1", "buget-familie:language": lang, "buget-familie:envelope-glossary-seen": "1", "buget-familie:last-balance-check": new Date().toISOString().slice(0, 10) };
     for (const [k, v] of Object.entries(set)) localStorage.setItem(k, v);
     for (const k of ["catalog", "ink", "atelier", "premium", "ui-chrome"]) localStorage.setItem(`buget-familie:theme-migrated-${k}-2026-09`, "1");
   }, [lang]);
@@ -49,13 +49,14 @@ const frames = {
   async add(page) { await dock(page, 2).click(); await page.waitForTimeout(1200); const amount = page.locator(".bf-quick-entry-panel input[inputmode=decimal]").first(); await amount.fill("86,40"); const shop = page.locator(".bf-quick-entry-panel input[placeholder]").nth(1); if (await shop.count()) await shop.fill("Lidl"); await page.keyboard.press("Tab"); },
   async journal(page) { await dock(page, 3).click(); await page.waitForTimeout(1600); },
   async obligations(page) { await more(page, /Obligații|Obligations|Bills/); },
+  async month(page) { await more(page, /Analiză|Analysis|Insights/); await page.getByRole("tab", { name: /Gospodărie|Household/ }).first().click(); await page.waitForTimeout(1200); await page.locator("button:visible", { hasText: /Imaginea lunii|Picture of the month/ }).first().click(); await page.waitForTimeout(2200); },
   async insights(page) { await more(page, /Analiză|Analysis|Insights/); await page.evaluate(() => { document.querySelector(".bf-spend-compass")?.scrollIntoView({ block: "start" }); window.scrollBy(0, -80); }); },
 };
 
 for (const lang of LANGS) {
   for (const [name, go] of Object.entries(frames)) {
     if (only && only !== name) continue;
-    const { browser, page } = await open(lang, { pendingIncome: name === "split" });
+    const { browser, page } = await open(lang, { pendingIncome: name === "split" || name === "month" });
     try { await go(page); await shot(page, `${PREFIX}${lang}-${name}`); } catch (e) { console.log("✗", lang, name, e.message.split("\n")[0]); }
     await browser.close();
   }

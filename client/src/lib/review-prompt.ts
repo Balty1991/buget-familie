@@ -47,3 +47,25 @@ export async function requestInAppReview(): Promise<boolean> {
     return false;
   }
 }
+
+/** Zile diferite cu măcar o cheltuială notată: semnul că notarea a devenit obicei. */
+export const REVIEW_AFTER_LOGGED_DAYS = 10;
+
+export function loggedDays(items: ReadonlyArray<{ date: string; kind: string }>): number {
+  return new Set(items.filter((item) => item.kind === "expense").map((item) => item.date)).size;
+}
+
+/**
+ * Alte momente reușite, pentru cine nu repartizează salariul: a zecea zi cu cheltuieli notate
+ * sau imaginea lunii trimisă. Aceleași reguli (o săptămână de folosire, o singură dată).
+ */
+export async function askReviewAfterMilestone(storage: Storage = window.localStorage): Promise<boolean> {
+  try {
+    const { Capacitor } = await import("@capacitor/core");
+    if (!reviewPromptDue(storage, REVIEW_AFTER_SUCCESSES, Capacitor.isNativePlatform())) return false;
+    answerReviewPrompt(storage, "done");
+  } catch {
+    return false;
+  }
+  return requestInAppReview();
+}

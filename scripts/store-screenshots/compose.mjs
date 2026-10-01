@@ -12,12 +12,13 @@ const C = {
   add: { ro: ["Notezi în", "3 secunde.", "Suma, magazinul, gata. Categoria se alege singură."], en: ["Log it in", "3 seconds.", "Amount, shop, done. The category picks itself."] },
   journal: { ro: ["Toate mișcările", "familiei.", "Comune sau personale, pe zile, cu căutare."], en: ["Every family", "transaction.", "Shared or personal, by day, searchable."] },
   obligations: { ro: ["Rate și facturi", "la timp.", "Vezi ce urmează și confirmi cu o atingere."], en: ["Bills and loans", "on time.", "See what's next and confirm with one tap."] },
+  month: { ro: ["Toată luna,", "într-o imagine.", "Trimite-o familiei. Doar procente, fără sume."], en: ["The whole month,", "in one picture.", "Send it to the family. Percentages, no amounts."] },
   insights: { ro: ["Vezi unde", "se duc banii.", "Pe categorii, pentru ciclul curent."], en: ["See where", "the money goes.", "By category, for the current cycle."] },
 };
 // DEVICE=tablet → capturi de tabletă (1440×2560) din raw/tab-*.png, în screenshots/tableta-<limbă>.
 const tablet = process.env.DEVICE === "tablet";
 const LANGS = (process.env.LANGS || "ro,en").split(",");
-const order = ["today", "split", "plan", "needs", "add", "journal", "obligations", "insights"];
+const order = ["today", "split", "month", "plan", "add", "journal", "obligations", "insights"];
 const html = (img, [a, b, sub], i) => `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face{font-family:Fr;src:url(${font("fraunces-640-latin.woff2")});unicode-range:U+0000-00FF}
 @font-face{font-family:Fr;src:url(${font("fraunces-640-ro.woff2")});unicode-range:U+0100-02FF}

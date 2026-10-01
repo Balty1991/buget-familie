@@ -1090,13 +1090,6 @@ body .bf-weekly-tranche-notice > div > span {
   overflow: visible;
   text-overflow: clip;
 }
-body .bf-cat-grid button span {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  line-height: 1.15;
-  text-align: center;
-}
 
 /* Pe telefon „＋ Notează” stă în bara de jos; al doilea buton în cifra zilei era în plus.
    Stă după regula de mai sus, cu același selector, ca să câștige pe ecran îngust. */

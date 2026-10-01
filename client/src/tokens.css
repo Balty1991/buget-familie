@@ -15,12 +15,12 @@
 }
 
 :is(html.theme-white, html.theme-ink):not(.bf-tint-sepia, .bf-tint-kid) {
-  --cf-bg: #e8ece9 !important;
-  --cf-surface: #fafbfa !important;
-  --cf-surface-alt: #eef1ef !important;
+  --cf-bg: #eef2ef !important;
+  --cf-surface: #ffffff !important;
+  --cf-surface-alt: #f1f5f2 !important;
   --cf-ink: #0c1612;
   --cf-muted: #4a5852;
-  --cf-line: #c9d2cc !important;
+  --cf-line: #d6dfd9 !important;
   --cf-primary: #176b54;
   --cf-primary-strong: #125643 !important;
   --cf-on-forest: #fff !important;

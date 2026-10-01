@@ -305,10 +305,10 @@ button.danger,
   box-shadow: none !important;
 }
 
-/* Mai mult: un rând, pictogramă 20px, chevron real la dreapta. */
+/* Mai mult: un rând, plăcuța iconiței 36px, chevron real la dreapta. */
 html body .os-shell .bf-more-grid > button.bf-settings-row {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) 18px;
+  grid-template-columns: 36px minmax(0, 1fr) 18px;
   grid-template-rows: auto;
   align-items: center;
   gap: 12px !important;
@@ -318,17 +318,25 @@ html body .os-shell .bf-more-grid > button.bf-settings-row {
 html body .os-shell .bf-more-grid > button.bf-settings-row::after {
   content: none;
 }
+/* Iconița fiecărui rând stă într-o plăcuță în culoarea secțiunii (--bf-tile), ca în setările telefonului. */
 html body .os-shell .bf-more-grid > button.bf-settings-row > svg:first-child {
   grid-column: 1;
   grid-row: 1;
-  width: 20px !important;
-  height: 20px !important;
-  padding: 0;
-  border-radius: 0 !important;
-  color: var(--cf-muted) !important;
-  background: none !important;
+  box-sizing: border-box;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 8px;
+  border-radius: 11px !important;
+  color: var(--bf-tile-ink, var(--bf-tile, var(--cf-primary))) !important;
+  background: color-mix(in srgb, var(--bf-tile, var(--cf-primary)) 14%, var(--cf-surface)) !important;
   box-shadow: none !important;
 }
+.bf-more-group { --bf-tile: #2e8b57; }
+.bf-more-group.bf-more-screens { --bf-tile: #3b6fb6; }
+.bf-more-group[aria-labelledby="more-daily-title"] { --bf-tile: #b07d12; }
+.bf-more-group[aria-labelledby="more-house-title"] { --bf-tile: #7e6bc4; }
+.bf-more-group[aria-labelledby="more-help-title"] { --bf-tile: #1e9aa8; }
+:is(html.dark, html.theme-dark, html.theme-navy) .bf-more-group { --bf-tile-ink: color-mix(in srgb, var(--bf-tile) 60%, #fff); }
 html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-copy {
   grid-column: 2;
   grid-row: 1;

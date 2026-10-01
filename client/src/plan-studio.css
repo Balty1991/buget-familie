@@ -285,7 +285,9 @@
 .bf-envelope-meter b { justify-self: end; font-size:14px; font-variant-numeric: tabular-nums; }
 .bf-envelope-meter b small { font-weight: 600; color: var(--cf-muted, #6d7c74); }
 .bf-envelope-meter i { grid-column: 1 / -1; display: block; height: 10px; border-radius: 99px; background: color-mix(in srgb, var(--cf-line, #dce6dd) 80%, #fff); overflow: hidden; }
-.bf-envelope-meter em { display: block; height: 100%; border-radius: inherit; background: var(--cf-primary, #256b5b); }
+.bf-envelope-meter em { display: block; height: 100%; border-radius: inherit; background: var(--bf-cat, var(--cf-primary, #256b5b)); }
+/* Culoarea plicului = culoarea categoriei lui din Analiză și Mișcări. */
+.bf-envelope-list-first .bf-allocation-list-heading > b::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: var(--bf-cat, var(--cf-primary)); vertical-align: 1px; }
 .bf-envelope-meter.is-over em { background: var(--cf-danger, #c45b45); }
 
 /* Banda S1–S5: coloane umplute cât s-a cheltuit din fiecare tranșă. */

@@ -2,14 +2,16 @@
  * Gospodărie: recapitulare lunară, vârstă a banilor, el și ea, vânător de abonamente.
  * Confirmarea unei detecții creează o scadență în registrul deja sincronizat.
  */
-import { useMemo, useState } from "react";
-import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, PiggyBank, Repeat, Share2, Shield, Users } from "lucide-react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, Image as ImageIcon, PiggyBank, Repeat, Share2, Shield, Users } from "lucide-react";
 import { addIsoDays, autoPostDueRecurring, formatDate, isoToday, type AppData } from "@/lib/finance-data";
 import { CashNote, EmptyMark } from "@/components/LedgerArt";
 import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, formatMonthlyReportShare, householdActivity, liquidSafeToSpend, monthlyFamilyReport, monthlyRecap, readClosedMonths, recurringFromDetection, subscriptionSpend, type SubscriptionDetection } from "@/lib/household-insights";
 import { countLabel, envelopesLabel, t } from "@/lib/i18n";
 import { SettleUpCard } from "@/components/SettleUpCard";
+
+const MonthShareSheet = lazy(() => import("@/components/MonthShareSheet").then((module) => ({ default: module.MonthShareSheet })));
 import { lei } from "@/lib/money-format";
 
 const money = lei;
@@ -21,6 +23,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   const [month, setMonth] = useState(() => (Number(isoToday().slice(8, 10)) <= 7 ? lastMonth : thisMonth));
   const report = useMemo(() => monthlyFamilyReport(data, month), [data, month]);
   const [shareState, setShareState] = useState<"idle" | "shared" | "copied">("idle");
+  const [cardOpen, setCardOpen] = useState(false);
   const shareReport = async () => {
     const text = formatMonthlyReportShare(report);
     try {
@@ -67,6 +70,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   };
   return (
     <div className="bf-household">
+      {cardOpen && <Suspense fallback={null}><MonthShareSheet report={report} onClose={() => setCardOpen(false)} /></Suspense>}
       {/* Scăderea pe care o aștepta orice casă cu doi oameni. */}
       <SettleUpCard data={data} onChange={onChange} />
       <section className={`bf-household-recap bf-statement ${recap.tone}`}>
@@ -100,6 +104,9 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           </div>
         )}
         <div className="bf-household-actions">
+          <button type="button" className="bf-primary bf-month-share-open" disabled={report.empty} onClick={() => setCardOpen(true)}>
+            <ImageIcon size={16} /> {t("Imaginea lunii")}
+          </button>
           <button type="button" className="bf-secondary" disabled={report.empty} onClick={() => void shareReport()}>
             <Share2 size={16} /> {shareState === "copied" ? t("Copiat — lipește-l în WhatsApp") : shareState === "shared" ? t("Trimis") : t("Trimite raportul familiei")}
           </button>

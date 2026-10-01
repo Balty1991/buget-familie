@@ -35,10 +35,18 @@ Salariul vine, aplicația îl împarte pe plicuri. Buget pentru cuplu și famili
 
 (78 de caractere)
 
+Varianta C (octombrie 2026, după cercetarea din `cercetare-concurenta-2026-10.md`), pentru experimentul 50/50:
+
+```
+Cât poți cheltui azi, până la salariu. Buget de familie fără parola băncii.
+```
+
+(76 de caractere)
+
 ## Descriere completă
 
 ```
-Buget Familie e aplicația de buget pentru familie și cuplu, gratuită, în limba română: îți spune câți bani poți cheltui azi, din plic, până la salariu. Ții evidența cheltuielilor, a facturilor, a ratelor și a economiilor, împreună cu partenerul, fără parola băncii și fără reclame.
+Buget Familie e aplicația de buget pentru familie și cuplu — și de buget personal — gratuită, în limba română: îți spune câți bani poți cheltui azi, din plic, până la salariu. Ții evidența cheltuielilor, a facturilor, a ratelor și a economiilor, împreună cu partenerul, fără parola băncii și fără reclame.
 
 De ce e diferită
 • Bugetul merge pe ciclul salariului vostru, nu pe luna calendaristică. Două salarii în zile diferite? Merge.
@@ -65,6 +73,8 @@ Plicuri
 Casă
 • Până la 6 persoane, fără conturi separate. Sync opțional, criptat; serverul nu vede sumele.
 • Bilanțul săptămânii, gata de trimis pe WhatsApp.
+• Imaginea lunii: toată luna într-o poză colorată — ce a rămas și unde s-au dus banii. Implicit doar procente, fără sume.
+• Fiecare categorie are culoarea ei: vezi dintr-o privire unde merg banii.
 • Ghidul răspunde la „cât mai am la mâncare?” din datele de pe telefon.
 • Bonuri citite pe telefon. Pozele nu pleacă. Un extras (CSV sau Excel) intră doar după ce confirmi; salariul din extras e recunoscut.
 

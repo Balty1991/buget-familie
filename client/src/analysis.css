@@ -59,3 +59,16 @@
   text-transform: none;
   letter-spacing: 0;
 }
+
+/* Imaginea lunii: previzualizare 4:5, comutator pentru sume, un singur buton. */
+.bf-month-share { display: grid; gap: 14px; width: min(440px, 100%); }
+.bf-month-share header h2 { font-size: 24px; }
+.bf-month-share-preview { display: grid; place-items: center; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 18px; background: color-mix(in srgb, var(--cf-primary) 12%, var(--cf-surface)); color: var(--cf-muted); }
+.bf-month-share-preview img { width: 100%; height: 100%; object-fit: cover; }
+.bf-month-share-preview span { display: grid; justify-items: center; gap: 8px; font-size: 14px; }
+.bf-month-share-toggle { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 12px 14px; border: 1px solid var(--cf-line); border-radius: 14px; background: var(--cf-surface-alt); cursor: pointer; }
+.bf-month-share-toggle input { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--cf-primary); }
+.bf-month-share-toggle b { display: block; color: var(--cf-ink); font-size: 15px; }
+.bf-month-share-toggle small { display: block; margin-top: 2px; color: var(--cf-muted); font-size: 13px; line-height: 1.4; }
+.bf-month-share-send { width: 100%; min-height: 50px; }
+.bf-month-share .bf-helper { margin: 0; font-size: 12px; text-align: center; }

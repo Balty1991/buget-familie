@@ -8,16 +8,17 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BookOpen, BellRing, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BookOpen, BellRing, Image as ImageIcon, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { addIsoDays, calculateHealthScore, dropEnvelopeTransfer, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey } from "@/lib/calendar-budget";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { ChartTip } from "@/components/ChartFrame";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
+import { categoryTone } from "@/lib/category-color";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, calendarPace, calendarPaceLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, repeatedOverLine, savingsSuggestion, weekTooFast, weekVersusLast, weekVersusLastLine, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief } from "@/lib/household-insights";
+import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, calendarPace, calendarPaceLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, repeatedOverLine, savingsSuggestion, weekTooFast, weekVersusLast, weekVersusLastLine, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief, currentMonthKey, monthlyFamilyReport } from "@/lib/household-insights";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   dateText,
@@ -35,6 +36,7 @@ import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/Env
 
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
 const WeeklySummaryPanel = lazy(() => import("@/components/WeeklySummaryPanel").then((module) => ({ default: module.WeeklySummaryPanel })));
+const MonthShareSheet = lazy(() => import("@/components/MonthShareSheet").then((module) => ({ default: module.MonthShareSheet })));
 const SafeSpendSheet = lazy(() => import("@/components/SafeSpendSheet").then((module) => ({ default: module.SafeSpendSheet })));
 const AllocationHistoryChart = lazy(() => import("@/components/AllocationHistoryChart").then((module) => ({ default: module.AllocationHistoryChart })));
 
@@ -291,6 +293,13 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   };
 
   const todayIso = isoToday();
+  // În prima săptămână a lunii: imaginea lunii trecute, o singură dată (se poate ascunde).
+  const recapMonth = currentMonthKey(addIsoDays(`${todayIso.slice(0, 7)}-01`, -1));
+  const recapKey = `buget-familie:month-card-${recapMonth}`;
+  const [recapHidden, setRecapHidden] = useState(() => { try { return localStorage.getItem(recapKey) === "1"; } catch { return true; } });
+  const [recapOpen, setRecapOpen] = useState(false);
+  const recapReport = useMemo(() => (Number(todayIso.slice(8, 10)) <= 7 && !recapHidden ? monthlyFamilyReport(data, recapMonth) : undefined), [data, todayIso, recapHidden, recapMonth]);
+  const hideRecap = () => { safeSetItem(localStorage, recapKey, "1"); setRecapHidden(true); };
 
   const sourceRows = useMemo(
     () => data.settings.paymentSources.map((source) => ({ ...source, balance: sourceBalance(data, source.id) })),
@@ -399,6 +408,17 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         </aside>
       )}
 
+      {recapReport && !recapReport.empty && (
+        <aside className="bf-month-card-cta" aria-label={t("Imaginea lunii")}>
+          <span className="bf-month-card-cta-icon" aria-hidden="true"><ImageIcon size={18} /></span>
+          <button type="button" className="bf-month-card-cta-open" onClick={() => setRecapOpen(true)}>
+            <b>{t("{month} s-a încheiat", { month: recapReport.title.charAt(0).toLocaleUpperCase() + recapReport.title.slice(1) })}</b>
+            <small>{t("Vezi luna într-o imagine și trimite-o familiei.")}</small>
+          </button>
+          <button type="button" className="bf-month-card-cta-close" aria-label={t("Ascunde imaginea lunii")} onClick={hideRecap}><X size={16} /></button>
+        </aside>
+      )}
+      {recapOpen && recapReport && <Suspense fallback={null}><MonthShareSheet report={recapReport} onClose={() => { setRecapOpen(false); hideRecap(); }} /></Suspense>}
       <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
         <div className="os-hero-top">
           <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Cifra zilei")}</span>
@@ -613,7 +633,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                     : undefined;
                 return (
                 <article key={item.id} role="button" tabIndex={0} onClick={() => onEdit(item)} onKeyDown={(event) => { if (event.key === "Enter") onEdit(item); }}>
-                  <span className={`bf-tx-icon ${item.kind}`}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <CategoryGlyph category={item.category} size={16} />}</span>
+                  <span className={`bf-tx-icon ${item.kind}`} style={item.kind === "income" ? undefined : categoryTone(item.category)}>{item.kind === "income" ? <ArrowDownRight size={16} /> : <CategoryGlyph category={item.category} size={16} />}</span>
                   <div>
                     <b>{item.title}</b>
                     <small>{(() => {

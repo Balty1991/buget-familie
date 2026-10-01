@@ -64,15 +64,25 @@ html body .os-shell .bf-movements-ledger .bf-movement-day > div > article {
   border: 0;
   border-bottom: 0;
   border-radius: 0;
+  position: relative;
   background-color: transparent;
-  background-image: linear-gradient(var(--cf-line, rgba(0, 0, 0, 0.08)), var(--cf-line, rgba(0, 0, 0, 0.08)));
-  background-repeat: no-repeat;
-  background-position: right bottom;
-  background-size: calc(100% - 52px) 1px;
+  background-image: none;
   box-shadow: none;
 }
-html body .os-shell .bf-movements-ledger .bf-movement-day > div > article:last-child {
-  background-image: none;
+/* Linia dintre rânduri, după iconiță. Pseudo-element, nu gradient: un gradient plin
+   e citit drept fundal de verificarea de contrast și dădea 3,5:1 pe Navy. */
+html body .os-shell .bf-movements-ledger .bf-movement-day > div > article::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 52px;
+  height: 1px;
+  background: var(--cf-line, rgba(0, 0, 0, 0.08));
+  pointer-events: none;
+}
+html body .os-shell .bf-movements-ledger .bf-movement-day > div > article:last-child::after {
+  content: none;
 }
 html body .os-shell .bf-movements-ledger .bf-movement-open {
   display: grid;

@@ -1719,3 +1719,7 @@ html[data-simple-mode="1"] .os-dock button {
   font-size: 14px;
   font-weight: 600;
 }
+
+/* Primul ecran: trei promisiuni ca etichete, nu un paragraf. */
+.bf-first-run-trust { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; padding: 0; list-style: none; }
+.bf-first-run-trust li { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px 4px 10px; border-radius: 999px; color: var(--cf-primary-strong, var(--cf-primary)); background: color-mix(in srgb, var(--cf-primary) 11%, var(--cf-surface)); font-size: 13px; font-weight: 600; }

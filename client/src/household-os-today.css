@@ -384,8 +384,8 @@ html:not(.dark) .bf-os-decide {
 }
 
 .dark .bf-tx-icon.expense {
-  background: color-mix(in srgb, #ff8a7a 16%, #10141a);
-  color: #ff8a7a;
+  background: color-mix(in srgb, color-mix(in srgb, var(--bf-cat, #ff8a7a) 70%, #fff) 16%, #10141a);
+  color: color-mix(in srgb, var(--bf-cat, #ff8a7a) 70%, #fff);
 }
 
 /* Rândurile iau suprafața temei (Navy rămâne albastru), nu negrul fix al vechii teme OLED. */

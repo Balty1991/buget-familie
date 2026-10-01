@@ -132,17 +132,17 @@ export function WhatsNewSheet({ onClose, onOpenTheme, onOpenMore }: { onClose: (
           </div>
           <button type="button" className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button>
         </header>
-        <p>{t("Patru lucruri, la vedere. O singură dată.")}</p>
+        <p>{t("Aplicația are culoare și un drum mai scurt până la notare.")}</p>
         <ul className="bf-whats-new-list">
-          <li>{t("Cele 5 teme — Alb, Întunecat, Aurora, Navy, Cyber — au materiale distincte, aceeași semantică.")}</li>
-          <li>{t("Astăzi pornește de la o fișă de decizie: cât poți folosi și ce urmează.")}</li>
-          <li>{t("La prima deschidere alegi o intenție: urmărești, începi din săptămâna începută, organizezi luna sau buget de familie. Mai târziu e permis.")}</li>
-          <li>{t("Obligații începe cu „Ce urmează”: rate, facturi și obiective pe o singură listă.")}</li>
+          <li>{t("Fiecare categorie are culoarea ei — în Mișcări, pe Astăzi, pe plicuri și în Analiză.")}</li>
+          <li>{t("Notează: categoriile sunt la vedere, sub magazin. O atingere și gata.")}</li>
+          <li>{t("Imaginea lunii: toată luna într-o poză de trimis familiei, doar cu procente dacă vrei.")}</li>
+          <li>{t("Tema Alb e mai luminoasă, iar Mai mult are iconițe colorate pe secțiuni.")}</li>
         </ul>
         <div className="bf-whats-new-actions">
-          <button type="button" className="bf-primary" onClick={onOpenTheme}>{t("Alege tema")}</button>
-          <button type="button" className="bf-secondary" onClick={onOpenMore}>{t("Deschide Mai mult")}</button>
-          <button type="button" className="bf-link-button" onClick={onClose}>{t("Am înțeles")}</button>
+          <button type="button" className="bf-primary" onClick={onClose}>{t("Am înțeles")}</button>
+          <button type="button" className="bf-secondary" onClick={onOpenTheme}>{t("Alege tema")}</button>
+          <button type="button" className="bf-link-button" onClick={onOpenMore}>{t("Deschide Mai mult")}</button>
         </div>
       </section>
     </div>

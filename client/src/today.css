@@ -31,3 +31,11 @@
   position: static;
   bottom: auto;
 }
+
+/* Prima săptămână a lunii: imaginea lunii trecute, un rând discret deasupra cifrei zilei. */
+.bf-month-card-cta { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; margin: 0 0 12px; padding: 10px 8px 10px 14px; border: 1px solid color-mix(in srgb, var(--cf-primary) 28%, var(--cf-line)); border-radius: 18px; background: linear-gradient(120deg, color-mix(in srgb, var(--cf-primary) 12%, var(--cf-surface)), var(--cf-surface) 70%); }
+.bf-month-card-cta-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: var(--cf-on-forest, #fff); background: var(--cf-primary); }
+.bf-month-card-cta-open { display: grid; gap: 2px; min-height: 44px; padding: 0; border: 0; color: var(--cf-ink); background: transparent; text-align: left; }
+.bf-month-card-cta-open b { font-size: 15px; font-weight: 600; }
+.bf-month-card-cta-open small { color: var(--cf-muted); font-size: 13px; line-height: 1.35; }
+.bf-month-card-cta-close { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; color: var(--cf-muted); background: transparent; }
