@@ -113,7 +113,10 @@ jobs:
                 --data-file=-
               return
             fi
-            if [ -n "$value" ]; then
+            # Fiecare versiune activă se plătește lunar (Secret Manager): una nouă doar dacă cheia chiar s-a schimbat.
+            if [ -n "$value" ] && [ "$(gcloud secrets versions access latest --secret "$name" --project "$FIREBASE_PROJECT_ID" 2>/dev/null || true)" = "$value" ]; then
+              echo "$name is unchanged; no new version."
+            elif [ -n "$value" ]; then
               printf '%s' "$value" | gcloud secrets versions add "$name" \
                 --project "$FIREBASE_PROJECT_ID" \
                 --data-file=-
@@ -139,6 +142,20 @@ jobs:
 
       - name: Deploy Firebase Functions
         run: pnpm exec firebase deploy --only functions --project "$FIREBASE_PROJECT_ID" --non-interactive --force
+
+      # Funcțiile publicate folosesc doar ultima versiune; celelalte rămâneau active și se plăteau în fiecare lună.
+      - name: Distruge versiunile vechi ale secretelor
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          for name in GEMINI_API_KEY GROQ_API_KEY; do
+            latest=$(gcloud secrets versions describe latest --secret "$name" --project "$FIREBASE_PROJECT_ID" --format='value(name.basename())') || continue
+            for version in $(gcloud secrets versions list "$name" --project "$FIREBASE_PROJECT_ID" --filter='state!=DESTROYED' --format='value(name.basename())'); do
+              [ "$version" = "$latest" ] && continue
+              gcloud secrets versions destroy "$version" --secret "$name" --project "$FIREBASE_PROJECT_ID" --quiet \
+                || echo "::warning::$name versiunea $version nu s-a putut distruge (rolul Secret Manager Admin pe contul de serviciu)."
+            done
+          done
 
       - name: Check aiGuide endpoint
         run: |
