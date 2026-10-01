@@ -3791,4 +3791,9 @@ export const en: Record<string, string> = {
   "{month} s-a încheiat": "{month} is over",
   "Vezi luna într-o imagine și trimite-o familiei.": "See the month in one picture and send it to your family.",
   "Ascunde imaginea lunii": "Hide the picture of the month",
+  "Îți spunem cât poți cheltui azi și împărțim salariul pe plicuri. Alegi un început; restul se schimbă oricând.": "We tell you what you can spend today and split your salary into envelopes. Pick a start; everything else can change anytime.",
+  "Ce promitem": "What we promise",
+  "Fără parola băncii": "No bank password",
+  "Fără reclame": "No ads",
+  "Datele stau pe telefon": "Your data stays on the phone",
 };

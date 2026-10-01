@@ -3,7 +3,7 @@
  * Banii de azi întâi; plicurile rămân opționale, în Plan.
  */
 import { useLayoutEffect, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Eye, Home, PiggyBank, ReceiptText, Users, Wallet, WalletCards } from "lucide-react";
+import { BadgeCheck, Check, ChevronLeft, ChevronRight, Eye, Home, Lock, PiggyBank, ReceiptText, Smartphone, Users, Wallet, WalletCards } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { isoDate, isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type PaymentKind } from "@/lib/finance-data";
@@ -267,8 +267,13 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
           <div className="bf-setup-copy">
             <p className="bf-kicker">{t("PRIMUL PAS")}</p>
             <h2 id="bf-setup-title">{t("Ce vrei să faci")} <em>{t("acum?")}</em></h2>
-            <p>{t("Plicuri pe ciclul de salariu, fără bancă. Alege o intenție — poți schimba totul mai târziu, sau Mai târziu fără nicio pierdere.")}</p>
-            <p className="bf-helper bf-first-run-legal">{t("Datele stau pe telefon. Sync-ul e opțional și criptat — fără login bancar.")}</p>
+            <p>{t("Îți spunem cât poți cheltui azi și împărțim salariul pe plicuri. Alegi un început; restul se schimbă oricând.")}</p>
+            {/* Trei promisiuni scurte, înaintea alegerii: de ce pot avea încredere cu banii familiei. */}
+            <ul className="bf-first-run-trust" aria-label={t("Ce promitem")}>
+              <li><Lock size={16} aria-hidden="true" />{t("Fără parola băncii")}</li>
+              <li><BadgeCheck size={16} aria-hidden="true" />{t("Fără reclame")}</li>
+              <li><Smartphone size={16} aria-hidden="true" />{t("Datele stau pe telefon")}</li>
+            </ul>
             <div className="bf-first-run-intents" role="group" aria-label={t("Intenții de start")}>
               <button type="button" onClick={() => setIntent("salary")}>
                 <WalletCards size={20} />
