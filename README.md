@@ -4,7 +4,7 @@
 
 ## Stare Play (sept 2026)
 
-Versiune **1.1.109** / `versionCode` **111**. Billing **off** (`BILLING_LIVE=false`). Text de lipit: [`docs/play-store-listing-ro.md`](docs/play-store-listing-ro.md). Capturi: [`docs/play-store-assets/SCREENSHOTS.md`](docs/play-store-assets/SCREENSHOTS.md).
+Versiune **1.1.116** / `versionCode` **117**. Billing **off** (`BILLING_LIVE=false`). Text de lipit: [`docs/play-store-listing-ro.md`](docs/play-store-listing-ro.md). Capturi: [`docs/play-store-assets/SCREENSHOTS.md`](docs/play-store-assets/SCREENSHOTS.md).
 
 ## Funcții implementate
 

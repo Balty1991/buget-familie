@@ -184,6 +184,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [openHint, setOpenHint] = useState(false);
   const [safeSheetOpen, setSafeSheetOpen] = useState(false);
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
+  const [weekOpen, setWeekOpen] = useState(false);
   const [dayMore, setDayMore] = useState(false);
   const [priceLater, setPriceLater] = useState(false);
   const [moved, setMoved] = useState<{ id: string; amount: number; from: string; to: string } | null>(null);
@@ -458,6 +459,45 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               <small>RON</small>
             </h1>
             <p className="os-hint">{heroHint}</p>
+            <div className="bf-os-actions">
+              <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
+            </div>
+            {simpleMode || !rhythm.hasWeekly || brief.expired ? null : (
+              <div className="bf-hero-week" aria-label={t("Pe zi")}>
+                <div className="bf-os-rhythm-grid" style={{ ["--bf-rhythm-days" as string]: String(Math.max(1, rhythm.days.length)) }}>
+                  {rhythm.days.map((row) => {
+                    const figure = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
+                    const figureLabel = `${stripLei(figure, getLocale())} lei`;
+                    return (
+                    <button
+                      key={row.day}
+                      type="button"
+                      className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
+                      aria-pressed={rhythmTip === row.day}
+                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: row.isToday || row.isFuture ? t("{amount} de cheltuit", { amount: figureLabel }) : t("{amount} cheltuiți", { amount: figureLabel }) })}
+                      onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
+                    >
+                      <span>{weekdayShort()[row.weekday]}</span>
+                      <b>{Math.round(figure).toLocaleString(getLocale())}</b>
+                      <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
+                    </button>
+                    );
+                  })}
+                </div>
+                {/* Zilele trecute arată ce s-a cheltuit, azi și viitorul ce se poate cheltui: se spune, nu se ghicește. */}
+                {rhythm.days.some((row) => !row.isToday && !row.isFuture) && rhythm.days.some((row) => row.isToday || row.isFuture) && <p className="bf-os-legend">{t("Zilele trecute: cheltuit · de azi: cât poți cheltui")}</p>}
+                {(() => {
+                  // D13: detaliul zilei apare doar la atingerea unei zile; pentru azi, cifra e deja în erou.
+                  const row = rhythm.days.find((item) => item.day === rhythmTip);
+                  if (!row) return null;
+                  const shown = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
+                  const leiExact = (value: number) => `${stripLei(value, getLocale())} lei`;
+                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiExact(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiExact(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiExact(row.out) });
+                  return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiExact(row.out) })}</span></ChartTip>;
+                })()}
+                {(!heroTracksWeek || rhythm.days.some((row) => row.isFuture)) && <p className="bf-os-note">{rhythmNote}</p>}
+              </div>
+            )}
             {ageLine && <p className="os-hint">{ageLine}</p>}
             {mealLine && <p className="os-hint">{mealLine}</p>}
             {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
@@ -502,6 +542,11 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               </ul>
             )}
             {!simpleMode && weekRow && (
+              <button type="button" className="os-explainer" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>
+                {t("Față de săptămâna trecută")}
+              </button>
+            )}
+            {weekOpen && !simpleMode && weekRow && (
               <div className="bf-week-vs" aria-label={t("Față de săptămâna trecută")}>
                 <span>
                   <small>{t("Săptămâna asta")}</small>
@@ -515,7 +560,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 </span>
               </div>
             )}
-            {!simpleMode && weekRow && weekRow.byDay.length > 1 && (
+            {weekOpen && !simpleMode && weekRow && weekRow.byDay.length > 1 && (
               <div className="bf-week-days" style={{ ["--d" as string]: String(weekRow.byDay.length) }} aria-label={t("Față de săptămâna trecută")}>
                 {weekRow.byDay.map((day) => {
                   const peak = Math.max(1, ...weekRow.byDay.flatMap((item) => [item.thisSpent, item.lastSpent]));
@@ -532,48 +577,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 })}
               </div>
             )}
-            {!simpleMode && weekLine && <p className="os-hint">{weekLine}</p>}
+            {weekOpen && !simpleMode && weekLine && <p className="os-hint">{weekLine}</p>}
             {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
             {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
-            <div className="bf-os-actions">
-              <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
-            </div>
-            {simpleMode || !rhythm.hasWeekly || brief.expired ? null : (
-              <div className="bf-hero-week" aria-label={t("Pe zi")}>
-                <div className="bf-os-rhythm-grid" style={{ ["--bf-rhythm-days" as string]: String(Math.max(1, rhythm.days.length)) }}>
-                  {rhythm.days.map((row) => {
-                    const figure = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
-                    const figureLabel = `${stripLei(figure, getLocale())} lei`;
-                    return (
-                    <button
-                      key={row.day}
-                      type="button"
-                      className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
-                      aria-pressed={rhythmTip === row.day}
-                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: row.isToday || row.isFuture ? t("{amount} de cheltuit", { amount: figureLabel }) : t("{amount} cheltuiți", { amount: figureLabel }) })}
-                      onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
-                    >
-                      <span>{weekdayShort()[row.weekday]}</span>
-                      <b>{Math.round(figure).toLocaleString(getLocale())}</b>
-                      <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
-                    </button>
-                    );
-                  })}
-                </div>
-                {/* Zilele trecute arată ce s-a cheltuit, azi și viitorul ce se poate cheltui: se spune, nu se ghicește. */}
-                {rhythm.days.some((row) => !row.isToday && !row.isFuture) && rhythm.days.some((row) => row.isToday || row.isFuture) && <p className="bf-os-legend">{t("Zilele trecute: cheltuit · de azi: cât poți cheltui")}</p>}
-                {(() => {
-                  // D13: detaliul zilei apare doar la atingerea unei zile; pentru azi, cifra e deja în erou.
-                  const row = rhythm.days.find((item) => item.day === rhythmTip);
-                  if (!row) return null;
-                  const shown = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
-                  const leiExact = (value: number) => `${stripLei(value, getLocale())} lei`;
-                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiExact(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiExact(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiExact(row.out) });
-                  return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiExact(row.out) })}</span></ChartTip>;
-                })()}
-                {(!heroTracksWeek || rhythm.days.some((row) => row.isFuture)) && <p className="bf-os-note">{rhythmNote}</p>}
-              </div>
-            )}
             {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
           </>
         )}

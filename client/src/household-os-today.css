@@ -61,7 +61,7 @@ html:not(.dark) .bf-today-add {
 
 .bf-os-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
 }
 
@@ -192,7 +192,7 @@ html:not(.dark) .bf-os-decide {
 
 @media (max-width: 760px) {
   .bf-os-actions {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .bf-os-day b { font-size: 12px; }
@@ -456,7 +456,7 @@ html:not(.dark) .bf-os-decide {
 .dark .bf-health-sheet-ring-wrap { max-width: 260px; margin: 0 auto; }
 
 .dark .bf-os-actions {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 760px) {
