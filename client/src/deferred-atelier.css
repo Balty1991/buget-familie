@@ -4059,19 +4059,15 @@ html.theme-navy .os-dock button.is-on {
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell.bf-app {
-  background:
-    radial-gradient(720px 420px at 108% -8%, rgba(23, 107, 84, .14), transparent 58%),
-    radial-gradient(480px 320px at -12% 18%, rgba(42, 106, 138, .08), transparent 55%),
-    linear-gradient(180deg, #d9e0dc 0, #e4e9e6 160px),
-    #e4e9e6;
+  background: var(--cf-bg, #e4e9e6);
   color: #0c1612;
 }
 
 :is(html.theme-ink, html.theme-white) .os-appbar.bf-appbar {
   border-bottom-color: color-mix(in srgb, #0c1612 10%, transparent) !important;
-  background: rgba(245, 247, 246, .82) !important;
-  backdrop-filter: blur(18px) saturate(1.15) ;
-  -webkit-backdrop-filter: blur(18px) saturate(1.15) ;
+  background: var(--cf-bg, #e8ece9) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 :is(html.theme-ink, html.theme-white) .os-brand-copy b {
@@ -4430,10 +4426,7 @@ html.theme-dark {
 }
 
 html.theme-dark .os-shell.bf-app {
-  background:
-    radial-gradient(680px 400px at 100% -10%, rgba(197, 203, 212, .1), transparent 55%),
-    linear-gradient(180deg, #101318 0, #0c0e11 150px),
-    #0c0e11;
+  background: var(--cf-bg, #0c0d0f);
 }
 html.theme-dark .os-shell .os-dock {
   background: rgba(22, 25, 30, .82);
@@ -4453,11 +4446,7 @@ html.theme-dark .os-shell .bf-os-decide {
 }
 
 html.theme-navy .os-shell.bf-app {
-  background:
-    radial-gradient(720px 420px at 100% -8%, rgba(212, 176, 106, .16), transparent 55%),
-    radial-gradient(480px 320px at 0% 40%, rgba(139, 180, 232, .1), transparent 50%),
-    linear-gradient(180deg, #10182a 0, #0b1220 160px),
-    #0b1220;
+  background: var(--cf-bg, #071428);
 }
 html.theme-navy .os-shell .os-dock {
   background: rgba(20, 28, 46, .84);
@@ -4817,10 +4806,10 @@ html.theme-navy .bf-whats-new {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--os-surface, var(--cf-surface)) 70%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 80%, transparent);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
 
 .os-shell .os-tool {
@@ -5497,96 +5486,14 @@ html.theme-navy .os-shell .bf-advisor-metrics b {
   --bf-delight-stagger: 38ms;
 }
 
-.os-shell.bf-app {
-  --bf-mesh-a: color-mix(in srgb, var(--cf-primary, var(--os-mint)) 26%, transparent);
-  --bf-mesh-b: color-mix(in srgb, var(--cf-info, #6aa8ff) 16%, transparent);
-  --bf-mesh-c: color-mix(in srgb, var(--cf-warning, #e8c38a) 10%, transparent);
-}
-
-.os-shell.bf-app::before {
-  content: "" !important;
-  display: block;
-  position: fixed;
-  inset: -28% -18% auto -18%;
-  height: min(58vh, 480px);
-  width: auto;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(42% 58% at 86% 8%, var(--bf-mesh-a), transparent 68%),
-    radial-gradient(36% 48% at 8% 4%, var(--bf-mesh-b), transparent 62%),
-    radial-gradient(28% 36% at 62% 42%, var(--bf-mesh-c), transparent 70%),
-    conic-gradient(from 210deg at 70% 12%, transparent 0 55%, color-mix(in srgb, var(--cf-primary) 8%, transparent) 72%, transparent 100%);
-  opacity: .92;
-  filter: saturate(1.05);
-  transform: translateZ(0);
-}
-
-/* Soft film grain / mesh veil — cheap, no animation by default */
-.os-shell.bf-app::after {
-  content: "" !important;
-  display: block;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: .035;
-  background-image:
-    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--cf-ink) 55%, transparent) .6px, transparent .7px),
-    radial-gradient(circle at 80% 40%, color-mix(in srgb, var(--cf-ink) 45%, transparent) .5px, transparent .65px),
-    radial-gradient(circle at 40% 80%, color-mix(in srgb, var(--cf-ink) 40%, transparent) .45px, transparent .6px);
-  background-size: 18px 18px, 22px 22px, 26px 26px;
-  mix-blend-mode: soft-light;
-}
-
-html.theme-white .os-shell.bf-app {
-  --bf-mesh-a: color-mix(in srgb, #0e7a5c 16%, transparent);
-  --bf-mesh-b: color-mix(in srgb, #2f6fed 10%, transparent);
-  --bf-mesh-c: color-mix(in srgb, #c9a227 8%, transparent);
-}
-html.theme-white .os-shell.bf-app::before { opacity: .62; }
-html.theme-white .os-shell.bf-app::after {
-  opacity: .028;
-  mix-blend-mode: multiply;
-}
-html.theme-navy .os-shell.bf-app {
-  --bf-mesh-a: rgba(212, 176, 106, .24);
-  --bf-mesh-b: rgba(139, 180, 232, .16);
-  --bf-mesh-c: rgba(90, 130, 200, .1);
-}
-html.theme-dark .os-shell.bf-app {
-  --bf-mesh-a: rgba(197, 203, 212, .14);
-  --bf-mesh-b: rgba(120, 140, 170, .1);
-  --bf-mesh-c: rgba(160, 170, 190, .06);
-}
-
-@media (max-width: 640px) {
-  .os-shell.bf-app::before {
-    height: min(46vh, 340px);
-  }
-  .os-shell.bf-app::after { opacity: .022; }
-}
-
-/* Plain background preference: quieter wash */
-html.background-plain .os-shell.bf-app::after { opacity: .012; }
-html.background-plain .os-shell.bf-app::before { opacity: .55 !important; }
-
 /* App-bar overflow cluster */
 .os-shell .os-tools {
   gap: 4px !important;
-  padding: 5px;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 88%, transparent),
-      color-mix(in srgb, var(--os-surface, var(--cf-surface)) 72%, transparent)
-    );
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--os-line, var(--cf-line)) 75%, transparent),
-    0 8px 20px color-mix(in srgb, var(--os-ink, var(--cf-ink)) 8%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
-  backdrop-filter: blur(14px) saturate(1.12);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .os-shell .os-tool {
@@ -5599,16 +5506,11 @@ html.background-plain .os-shell.bf-app::before { opacity: .55 !important; }
 }
 
 .os-shell .os-tool.is-on {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 35%, transparent),
-    0 0 18px color-mix(in srgb, var(--os-mint, var(--cf-primary)) 28%, transparent) !important;
+  box-shadow: none !important;
 }
 
 html.theme-white .os-shell .os-tools {
-  box-shadow:
-    0 0 0 1px rgba(18, 32, 28, .08),
-    0 8px 18px rgba(18, 32, 28, .08),
-    inset 0 1px 0 rgba(255, 255, 255, .9);
+  box-shadow: none;
 }
 
 /* Section headers — clearer grouping */

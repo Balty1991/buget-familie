@@ -615,36 +615,17 @@ html.theme-dark .bf-plan-workspace > .bf-plan-studio-header {
  * Simple mode untouched structurally; motion respects reduce.
  * ============================================================ */
 
-@keyframes bf-hero-shimmer {
-  0% { transform: translate3d(-12%, -8%, 0) rotate(0deg); opacity: .55; }
-  50% { transform: translate3d(8%, 4%, 0) rotate(8deg); opacity: .85; }
-  100% { transform: translate3d(-12%, -8%, 0) rotate(0deg); opacity: .55; }
-}
-
-@keyframes bf-dock-pulse {
-  0%, 100% { opacity: .55; }
-  50% { opacity: .95; }
-}
-
-/* ---- App shell: soft atmospheric wash behind content ---- */
+/* Fundal liniștit: fără auroră și fără granulare deasupra cardurilor. */
 .os-shell.bf-app {
   position: relative;
   isolation: isolate;
 }
 
-.os-shell.bf-app::before {
-  content: "";
-  display: block;
-  position: fixed;
-  inset: -20% -10% auto -10%;
-  height: min(52vh, 420px) !important;
-  width: auto;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(55% 70% at 78% 18%, color-mix(in srgb, var(--cf-primary, var(--os-mint)) 22%, transparent), transparent 70%),
-    radial-gradient(45% 60% at 12% 0%, color-mix(in srgb, var(--cf-info, #6aa8ff) 14%, transparent), transparent 65%) !important;
-  opacity: .9;
+.os-shell.bf-app::before,
+.os-shell.bf-app::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
 }
 
 .os-shell.bf-app > :not(.os-dock):not(.os-nav-fill) {
@@ -655,25 +636,6 @@ html.theme-dark .bf-plan-workspace > .bf-plan-studio-header {
 .os-shell.bf-app > .bf-modal-backdrop,
 .os-shell.bf-app > .bf-onboarding-backdrop {
   z-index: 200 !important;
-}
-
-html.theme-white .os-shell.bf-app::before {
-  background:
-    radial-gradient(55% 70% at 82% 12%, color-mix(in srgb, #0e7a5c 14%, transparent), transparent 70%),
-    radial-gradient(40% 55% at 8% 8%, color-mix(in srgb, #2f6fed 8%, transparent), transparent 65%);
-  opacity: .7;
-}
-
-html.theme-navy .os-shell.bf-app::before {
-  background:
-    radial-gradient(55% 70% at 80% 10%, rgba(212, 176, 106, .2), transparent 70%),
-    radial-gradient(40% 55% at 10% 5%, rgba(139, 180, 232, .14), transparent 65%);
-}
-
-html.theme-dark .os-shell.bf-app::before {
-  background:
-    radial-gradient(55% 70% at 80% 10%, rgba(197, 203, 212, .12), transparent 70%),
-    radial-gradient(40% 55% at 10% 5%, rgba(120, 140, 170, .08), transparent 65%);
 }
 
 /* ---- Cinematic Plan hero ---- */
@@ -700,31 +662,11 @@ html.theme-dark .os-shell.bf-app::before {
   backdrop-filter: blur(22px) saturate(1.22);
 }
 
-.bf-plan-workspace > .bf-plan-studio-header::before {
-  content: "";
-  position: absolute;
-  inset: -30% 35% auto -20%;
-  height: 140%;
-  background: linear-gradient(
-    115deg,
-    transparent 30%,
-    color-mix(in srgb, #fff 14%, transparent) 48%,
-    transparent 62%
-  );
-  pointer-events: none;
-  opacity: .55;
-  animation: bf-hero-shimmer 9s ease-in-out infinite;
-}
-
+.bf-plan-workspace > .bf-plan-studio-header::before,
 .bf-plan-workspace > .bf-plan-studio-header::after {
-  right: -28px;
-  bottom: -56px;
-  width: 190px;
-  height: 190px;
-  border-width: 22px;
-  border-color: color-mix(in srgb, var(--cf-primary) 42%, transparent);
-  opacity: .5;
-  filter: blur(.2px);
+  content: none !important;
+  display: none !important;
+  animation: none !important;
 }
 
 .bf-plan-workspace > .bf-plan-studio-header h1 {
@@ -1048,9 +990,6 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
   }
   .bf-plan-workspace > .bf-plan-studio-header h1 {
     font-size: clamp(32px, 9vw, 42px);
-  }
-  .os-shell.bf-app::before {
-    height: min(42vh, 320px);
   }
 }
 

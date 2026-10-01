@@ -125,18 +125,14 @@ html.theme-dark {
 }
 
 :is(html.theme-ink, html.theme-white) .os-shell.bf-app {
-  background:
-    radial-gradient(720px 420px at 108% -8%, rgba(23, 107, 84, .14), transparent 58%),
-    radial-gradient(480px 320px at -12% 18%, rgba(42, 106, 138, .08), transparent 55%),
-    linear-gradient(180deg, #d9e0dc 0, #e4e9e6 160px),
-    #e4e9e6;
+  background: var(--cf-bg, #e4e9e6);
   color: #0c1612;
 }
 
 :is(html.theme-ink, html.theme-white) .os-appbar.bf-appbar {
   border-bottom-color: #d5d2c8;
-  background: rgba(251, 250, 247, .92);
-  backdrop-filter: blur(14px);
+  background: var(--cf-bg, #e4e9e6);
+  backdrop-filter: none;
 }
 
 :is(html.theme-ink, html.theme-white) .os-brand-copy b {

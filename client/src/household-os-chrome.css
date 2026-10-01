@@ -220,19 +220,7 @@ html.capacitor-android {
   box-shadow: 0 0 0 1px var(--os-line, #c9d2cc), 0 16px 36px rgba(12, 22, 18, .08);
 }
 
-.os-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: .7;
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--os-mint) 5.5%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--os-mint) 5.5%, transparent) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 20%, transparent 75%);
-}
-
+.os-hero::before,
 .os-hero::after { display: none; content: none; }
 
 .os-hero-top,
@@ -261,7 +249,7 @@ html.capacitor-android {
   font-family: "IBM Plex Sans", sans-serif !important;
   font-size:12px;
   font-weight: 600;
-  letter-spacing: .14em;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
@@ -287,14 +275,14 @@ html.capacitor-android {
   color: var(--os-subtle);
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: .22em;
+  letter-spacing: .08em;
 }
 
 .os-date span {
   color: var(--os-muted);
   font-size:12px;
   font-weight: 500;
-  letter-spacing: .18em;
+  letter-spacing: .04em;
 }
 
 .os-kicker-lg {
@@ -305,7 +293,7 @@ html.capacitor-android {
   font-family: "IBM Plex Sans", sans-serif !important;
   font-size:12px;
   font-weight: 500 !important;
-  letter-spacing: .22em !important;
+  letter-spacing: .06em !important;
   text-transform: uppercase;
 }
 
@@ -332,7 +320,7 @@ html.capacitor-android {
   font-family: "IBM Plex Sans", sans-serif !important;
   font-size: 17px !important;
   font-weight: 500 !important;
-  letter-spacing: .28em !important;
+  letter-spacing: .04em !important;
   text-transform: uppercase;
 }
 
@@ -1602,7 +1590,7 @@ html.dark .bf-onboarding.bf-first-run {
     max-width: 100% !important;
     white-space: normal !important;
     line-height: 1.35 !important;
-    letter-spacing: .1em !important;
+    letter-spacing: .04em !important;
   }
 
   .os-kicker-lg {
@@ -1610,7 +1598,7 @@ html.dark .bf-onboarding.bf-first-run {
     max-width: 100% !important;
     white-space: normal !important;
     overflow-wrap: anywhere !important;
-    letter-spacing: .14em !important;
+    letter-spacing: .06em !important;
     line-height: 1.35 !important;
   }
 
@@ -1621,7 +1609,7 @@ html.dark .bf-onboarding.bf-first-run {
   }
 
   .os-amount small {
-    letter-spacing: .16em !important;
+    letter-spacing: .04em !important;
     font-size: 14px !important;
   }
 

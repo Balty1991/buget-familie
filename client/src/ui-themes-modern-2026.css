@@ -34,7 +34,7 @@ font-size:clamp(1.12rem,4.6vw,1.38rem)!important;letter-spacing:-.02em!important
 }
 /* Paletele white/dark/aurora/navy/cyber stau în tokens.css, încărcat imediat după. */
 :is(html.theme-white,html.theme-ink) body,:is(html.theme-white,html.theme-ink) body .os-shell.bf-app{
-background:radial-gradient(640px 360px at 100% -6%,rgba(23,107,84,.1),transparent 55%),linear-gradient(180deg,#dfe6e1 0,#e8ece9 140px),#e8ece9;color:#0c1612}
+background:var(--cf-bg,#e8ece9);color:#0c1612}
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-plan-simulator,
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-allocation-period,
 :is(html.theme-white,html.theme-ink) body .bf-app .bf-analysis-snapshot{
@@ -56,7 +56,7 @@ html.theme-dark body .os-shell .os-dock button.is-on,html.theme-dark body .os-sh
 /* tokens.css */
 /* tokens.css */
 html.theme-navy body,html.theme-navy body .os-shell.bf-app{
-background:radial-gradient(560px 320px at 100% -8%,rgba(212,176,106,.22),transparent 52%),#071428;color:#eef2f8}
+background:var(--cf-bg,#071428);color:#eef2f8}
 html.theme-navy body .os-shell .os-hero,
 html.theme-navy body .bf-app .bf-insights-header,
 html.theme-navy body .bf-app .bf-analysis-control,

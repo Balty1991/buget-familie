@@ -115,7 +115,7 @@ html body .bf-app .bf-allocation-empty span,html body .os-shell .bf-allocation-e
   .os-shell .os-kicker-lg {
     margin-top: 28px !important;
     margin-bottom: 0;
-    letter-spacing: 0.18em !important;
+    letter-spacing: 0.06em !important;
     font-size:12px;
     font-weight: 600;
     opacity: 0.88;
@@ -139,7 +139,7 @@ html body .bf-app .bf-allocation-empty span,html body .os-shell .bf-allocation-e
   }
 
   .os-shell .os-amount small {
-    letter-spacing: 0.16em !important;
+    letter-spacing: 0.04em !important;
     font-size:14px !important;
     opacity: 0.78;
     align-self: flex-end;
@@ -177,7 +177,7 @@ html body .bf-app .bf-allocation-empty span,html body .os-shell .bf-allocation-e
   }
 
   .os-shell .os-chip {
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
     font-size:12px;
     min-height: 26px;
     padding: 3px 10px;
@@ -188,12 +188,12 @@ html body .bf-app .bf-allocation-empty span,html body .os-shell .bf-allocation-e
   }
 
   .os-shell .os-date b {
-    letter-spacing: 0.14em;
+    letter-spacing: 0.06em;
     font-size:12px;
   }
 
   .os-shell .os-date span {
-    letter-spacing: 0.12em;
+    letter-spacing: 0.04em;
     font-size:12px;
     opacity: 0.85;
   }

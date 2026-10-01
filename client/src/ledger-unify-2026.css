@@ -47,16 +47,12 @@ html.theme-navy {
   padding: 22px 20px 20px;
   border-radius:20px;
   border: 1px solid color-mix(in srgb, var(--lu-line, var(--os-line, #c9d2cc)) 80%, transparent);
-  background:
-    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--lu-accent, #143c36) 14%, transparent), transparent 56%),
-    var(--lu-card, var(--os-surface, #f7f8f6));
+  background: var(--lu-card, var(--os-surface, #f7f8f6));
   color: var(--lu-ink, var(--os-fg, #0c1612));
   box-shadow: 0 18px 40px color-mix(in srgb, var(--lu-ink, #0c1612) 8%, transparent);
 }
 .os-shell .os-hero.is-risk {
-  background:
-    radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--lu-coral, #c2473c) 18%, transparent), transparent 58%),
-    var(--lu-card, var(--os-surface, #f7f8f6));
+  background: color-mix(in srgb, var(--lu-coral, #c2473c) 7%, var(--lu-card, var(--os-surface, #f7f8f6)));
 }
 .os-shell .os-hero .os-kicker-lg {
   margin: 0;
@@ -70,7 +66,7 @@ html.theme-navy {
   align-items: baseline;
   gap: 8px;
   margin: 0;
-  font-family: "IBM Plex Sans", Fraunces, Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-weight: 560;
   font-size: clamp(2.4rem, 9vw, 3.4rem);
   letter-spacing: -0.04em;

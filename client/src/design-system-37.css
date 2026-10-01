@@ -378,11 +378,11 @@ html body .os-shell .bf-more-grid > button.bf-settings-row > .bf-settings-chevro
  */
 :root {
   --ds-radius-card: 20px;
-  --ds-shadow-card: 0 1px 2px rgba(8, 18, 14, .06), 0 10px 26px rgba(8, 18, 14, .07);
+  --ds-shadow-card: 0 1px 2px rgba(8, 18, 14, .05), 0 6px 16px rgba(8, 18, 14, .045);
 }
 html.theme-dark,
 html.theme-navy {
-  --ds-shadow-card: 0 1px 2px rgba(0, 0, 0, .32), 0 10px 26px rgba(0, 0, 0, .26);
+  --ds-shadow-card: 0 1px 2px rgba(0, 0, 0, .28), 0 8px 18px rgba(0, 0, 0, .22);
 }
 @layer ds {
   html body .os-shell :is(.os-hero, .bf-today-brief, .bf-today-activity, .bf-movements-header, .bf-journal-quickbar, .bf-movement-day,
@@ -403,7 +403,7 @@ html.theme-navy {
   }
   html body .os-shell .bf-page .bf-kicker {
     color: var(--cf-primary) !important;
-    letter-spacing: .14em !important;
+    letter-spacing: .06em !important;
   }
   /*
    * Culorile etichetelor și ale „RON” de lângă suma mare sunt deja alese pentru 4,5:1; o opacitate
