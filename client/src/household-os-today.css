@@ -888,7 +888,7 @@ html:not(.dark) .bf-os-decide {
   margin-top: 12px;
   border-radius: 12px;
   border: 1px solid var(--os-line, var(--cf-line, #d7ddd8));
-  background: transparent;
+  background: var(--os-surface, var(--cf-surface, #f7f8f6));
   color: inherit;
   font-weight: 600;
 }
