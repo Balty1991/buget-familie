@@ -2,7 +2,7 @@
 
 ## 1.1.132
 
-- Scurtături pe iconiță: ții apăsat pe iconița aplicației → „Notează cheltuială”, „Notează din voce”, „Lista de cumpărături”.
+- Scurtături pe iconiță: ții apăsat pe iconița aplicației → „Notează o cheltuială”, „Spune ce ai cumpărat”, „Lista de cumpărături”.
 - Harta lunii în Mișcări: fiecare zi a lunii colorată după cât s-a cheltuit; atingi o zi și vezi doar mișcările ei.
 - Textul mărit din setările telefonului se vede și în aplicație (între 85% și 130%, ca nimic să nu iasă din ecran). Butoanele mici (obiective, catalog) au acum cel puțin 40 px.
 - „Ce e nou” arată noutățile ultimelor versiuni: voce, lista de cumpărături, widget, abonamente, PDF, pușculița copilului.
