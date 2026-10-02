@@ -68,11 +68,11 @@
 .bf-envelope-strip li.is-watch button { border-color: color-mix(in srgb, var(--cf-warning, #b07d12) 45%, var(--cf-line)); }
 
 /* Detaliile cifrei se deschid din pastile mici, una lângă alta, nu din butoane pe toată lățimea. */
-.bf-hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
-.bf-hero-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--cf-line); border-radius: 999px; color: var(--cf-ink); background: var(--cf-surface); font-size: 14px; font-weight: 600; }
-.bf-hero-chip::after { content: ""; width: 7px; height: 7px; margin-left: 2px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); opacity: 0.6; }
-.bf-hero-chip[aria-expanded="true"] { border-color: var(--cf-primary); color: var(--cf-primary-strong, var(--cf-primary)); background: color-mix(in srgb, var(--cf-primary) 9%, var(--cf-surface)); }
-.bf-hero-chip[aria-expanded="true"]::after { transform: translateY(2px) rotate(-135deg); }
+.bf-hero-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.bf-hero-chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border:1px solid var(--cf-line);border-radius:999px;color:var(--cf-ink);background:var(--cf-surface);font-size:14px;font-weight:600}
+.bf-hero-chip:not([aria-pressed])::after{content:"";width:7px;height:7px;margin-left:2px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);opacity:0.6}
+.bf-hero-chip[aria-expanded="true"],.bf-hero-chip[aria-pressed="true"]{border-color:var(--cf-primary);color:var(--cf-primary-strong,var(--cf-primary));background:color-mix(in srgb,var(--cf-primary) 9%,var(--cf-surface))}
+.bf-hero-chip[aria-expanded="true"]::after{transform:translateY(2px) rotate(-135deg)}
 
 /* Provocarea lunii: o singură țintă, în culoarea categoriei ei. */
 .bf-challenge { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; margin: 4px 0 10px; padding: 14px 10px 14px 14px; border: 1px solid color-mix(in srgb, var(--bf-cat, var(--cf-primary)) 30%, var(--cf-line)); border-radius: 18px; background: color-mix(in srgb, var(--bf-cat, var(--cf-primary)) 7%, var(--cf-surface)); }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.135
+
+- „Îmi permit…?” (pe Astăzi, lângă cifra zilei): scrii suma și răspunsul se schimbă pe loc — verde „Da”, galben „încape, dar strâmt”, roșu „nu acum, ar lipsi X”. Poți alege plicul (se socotește tranșa săptămânii) sau banii liberi; arată și câte săptămâni de economii pentru primul obiectiv ar însemna suma. „Am cumpărat — notează” deschide Notează.
+- Viitorul banilor (Obiective): un glisor „cât puneți deoparte pe lună” și curba economiilor pe 3 ani, cu steaguri în luna în care se atinge fiecare obiectiv (întâi cele cu termen) și cât mai devreme ați ajunge cu 100 de lei în plus.
+- „Ce e nou” arată noutățile ultimelor trei versiuni.
+
 ## 1.1.134
 
 - Banii mărunți (Analiză): sumele mici care se repetă (cafeaua, covrigii) din ultimele 30 de zile, de câte ori și cât fac pe un an, cu cât ar însemna jumătate pentru primul obiectiv.

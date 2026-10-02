@@ -135,11 +135,11 @@ export function WhatsNewSheet({ onClose, onOpenTrip, onOpenMore }: { onClose: ()
         </header>
         <p>{t("Mai puțin de scris, mai mult de văzut.")}</p>
         <ul className="bf-whats-new-list">
+          <li>{t("„Îmi permit…?” pe Astăzi: scrii suma și vezi pe loc dacă încape, din ce plic și cât vă întârzie obiectivul.")}</li>
+          <li>{t("Viitorul banilor, în Obiective: tragi de glisor și vezi în ce lună atingeți fiecare obiectiv.")}</li>
+          <li>{t("Banii mărunți, în Analiză: cafeaua de zi cu zi, socotită pe un an.")}</li>
           <li>{t("Mod vacanță, în Mai mult: bugetul călătoriei, cât mai e pe zi, și în euro; ce notezi acolo nu atinge plicurile.")}</li>
-          <li>{t("Lista de cumpărături arată cât va costa coșul, după bonurile voastre, și unde iese mai ieftin.")}</li>
-          <li>{t("Fond de urgență, în Obligații: câte luni ați rezista fără venit și cât să puneți deoparte.")}</li>
-          <li>{t("Cu 5 zile înainte de salariu, Astăzi arată ce mai e de plătit și unde pot merge banii rămași.")}</li>
-          <li>{t("Notează din voce, widgetul „Plicurile mele” și scurtăturile de pe iconița aplicației.")}</li>
+          <li>{t("Fond de urgență și asistentul de sfârșit de lună, plus o felicitare când atingeți un obiectiv.")}</li>
         </ul>
         <div className="bf-whats-new-actions">
           <button type="button" className="bf-primary" onClick={onClose}>{t("Am înțeles")}</button>

@@ -453,8 +453,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
             {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
             {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
-            {((!simpleMode && weekRow) || (!simpleMode && (focusGoal || trueExpense || weekShare)) || pockets.length > 1) && (
+            {(!simpleMode || pockets.length > 1) && (
               <div className="bf-hero-chips">
+                {!simpleMode && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-afford"))}>{t("Îmi permit…?")}</button>}
                 {!simpleMode && weekRow && <button type="button" className="bf-hero-chip" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>{t("Față de săptămâna trecută")}</button>}
                 {((!simpleMode && (focusGoal || trueExpense || weekShare)) || pockets.length > 1) && <button type="button" className="bf-hero-chip" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>{t("Obiectiv și unde stau banii")}</button>}
               </div>
