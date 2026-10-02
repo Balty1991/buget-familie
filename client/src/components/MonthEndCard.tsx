@@ -29,7 +29,7 @@ export function MonthEndCard({ data, today, onChange }: { data: AppData; today: 
     <section className="bf-challenge bf-month-end" aria-label={t("Sfârșit de lună")}>
       <span className="bf-challenge-icon" aria-hidden="true"><CalendarClock size={18} /></span>
       <div>
-        <p className="bf-challenge-kicker">{countLabel(end.days, { one: "SALARIUL VINE MÂINE", few: "{count} ZILE PÂNĂ LA SALARIU", many: "{count} DE ZILE PÂNĂ LA SALARIU" })}</p>
+        <span className="bf-challenge-kicker">{countLabel(end.days, { one: "SALARIUL VINE MÂINE", few: "{count} ZILE PÂNĂ LA SALARIU", many: "{count} DE ZILE PÂNĂ LA SALARIU" })}</span>
         <b>{t("Mai aveți {left} în plicuri, ~{perDay} pe zi.", { left: lei(end.flexLeft), perDay: lei(end.perDay) })}</b>
         {end.bills.length > 0 && <small>{t("De plătit până atunci: {list}.", { list: end.bills.slice(0, 3).map((bill) => `${bill.label} ${lei(bill.amount)}`).join(", ") })}</small>}
         {end.over.length > 0 && <small>{t("Peste plic: {list}.", { list: end.over.join(", ") })}</small>}

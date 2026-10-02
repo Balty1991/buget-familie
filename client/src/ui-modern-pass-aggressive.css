@@ -155,7 +155,8 @@ html body .os-shell .bf-allocation-period-tabs button.active,
 html body .os-shell .bf-pace-switch button.active,
 html body .os-shell .bf-insights-switch button.active,
 html body .os-shell .bf-analysis-scope button.active,
-html body .os-shell .bf-movement-kind button.active {
+html body .os-shell .bf-movement-kind button.active,
+html body .os-shell .bf-movement-scope button.active {
   border: 1px solid transparent !important;
   outline: none;
   color: var(--cf-primary) !important;
