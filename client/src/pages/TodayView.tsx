@@ -556,7 +556,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         <aside className={`bf-envelope-live-notice ${fastWeek.over ? "over" : "watch"}`} role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
-            <p>{fastWeek.over ? t("SĂPTĂMÂNA E DEPĂȘITĂ") : t("SĂPTĂMÂNA MERGE REPEDE")}</p>
+            <small>{fastWeek.over ? t("SĂPTĂMÂNA E DEPĂȘITĂ") : t("SĂPTĂMÂNA MERGE REPEDE")}</small>
             <strong>{t("{label} · S{index}", { label: fastWeek.label, index: fastWeek.weekIndex })}</strong>
             <span>{fastWeek.over
               ? t("{spent} din {budget}, peste cu {amount}. Se scade din ce rămâne în plic.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), amount: money(-fastWeek.remaining) })
@@ -572,7 +572,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         <aside className="bf-envelope-live-notice watch" role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
-            <p>{t("SE TERMINĂ ÎNAINTE DE SALARIU")}</p>
+            <small>{t("SE TERMINĂ ÎNAINTE DE SALARIU")}</small>
             <strong>{runOutAlert.label}</strong>
             <span>{t("Ajunge la zero pe {date}. Ca să țină până la salariu: cel mult {safe} pe zi (acum {rate}).", { date: formatDate(runOutAlert.runOutDate, { day: "numeric", month: "long" }), safe: money(runOutAlert.safeDaily), rate: money(runOutAlert.dailyRate) })}{extend ? ` ${t("Poți muta {move} din {from}.", { move: money(extend.amount), from: extend.fromLabel })}` : ""}</span>
           </div>
@@ -584,7 +584,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         <aside className={`bf-envelope-live-notice ${activeEnvelopeAlert.state}`} role="status" aria-live="polite">
           <BellRing size={19} />
           <div>
-            <p>{activeEnvelopeAlert.state === "over" ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ")}</p>
+            <small>{activeEnvelopeAlert.state === "over" ? t("PLIC DEPĂȘIT") : t("APROAPE DE LIMITĂ")}</small>
             <strong>{activeEnvelopeAlert.item.label}</strong>
             <span>{activeEnvelopeAlert.state === "over"
               ? cover

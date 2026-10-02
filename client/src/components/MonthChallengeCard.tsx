@@ -34,7 +34,7 @@ export function MonthChallengeCard({ data, today }: { data: AppData; today: stri
       <section className={`bf-challenge is-${progress.state}`} style={categoryTone(active.category)} aria-label={t("Provocarea lunii")}>
         <span className="bf-challenge-icon" aria-hidden="true"><CategoryGlyph category={active.category} size={18} /></span>
         <div>
-          <p className="bf-challenge-kicker">{t("PROVOCAREA LUNII")}</p>
+          <span className="bf-challenge-kicker">{t("PROVOCAREA LUNII")}</span>
           <b>{t("{category} sub {target}", { category: t(active.category), target: lei(active.target) })}</b>
           <i className="bf-challenge-bar" aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round(progress.share * 100))}%` }} /></i>
           <small>{t("{spent} din {target}", { spent: lei(progress.spent), target: lei(active.target) })} · {line}</small>
@@ -48,7 +48,7 @@ export function MonthChallengeCard({ data, today }: { data: AppData; today: stri
     <section className="bf-challenge is-offer" style={categoryTone(suggestion.category)} aria-label={t("Provocarea lunii")}>
       <span className="bf-challenge-icon" aria-hidden="true"><Target size={18} /></span>
       <div>
-        <p className="bf-challenge-kicker">{t("PROVOCAREA LUNII")}</p>
+        <span className="bf-challenge-kicker">{t("PROVOCAREA LUNII")}</span>
         <b>{t("{category} sub {target} luna asta?", { category: t(suggestion.category), target: lei(suggestion.target) })}</b>
         <small>{t("Luna trecută: {last}. Cu 10% mai puțin rămân bani pentru altceva.", { last: lei(suggestion.last) })}</small>
         <div className="bf-challenge-actions">

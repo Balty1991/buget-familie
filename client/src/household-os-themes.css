@@ -149,10 +149,11 @@ html.theme-white .os-brand-copy i {
 
 html.theme-white .os-tool {
   color: #1a2420;
-  background: #fbfaf7;
-  box-shadow: 0 0 0 1px #d5d2c8;
   border-radius:12px !important;
 }
+/* Ca în tema întunecată: pictograme fără chenar. */
+html.theme-white body .os-shell .os-tool:not(.is-on) { background: transparent; box-shadow: none; }
+html.theme-white body .os-shell .os-tool:not(.is-on):active { background: color-mix(in srgb, var(--cf-ink) 7%, transparent); }
 html.theme-white .os-tool.is-on {
   background: #2f6b55;
   color: #ffffff;

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.138
+
+Mai frumos, fără funcții noi:
+- Bara de sus în tema Alb: căutarea, meniul și asistentul sunt pictograme curate, fără chenar și umbră, ca în tema Întunecat.
+- Astăzi: dispare golul de sub cifra zilei (rămăsese locul butonului „Notează”, care pe telefon stă în bara de jos).
+- Toate linkurile („Detalii”, „Adaugă notiță…”, „Toate mișcările”) sunt în verdele aplicației, nu în albastru; „+ Adaugă notiță” stă pe un singur rând.
+- Plicuri: „Fixe / Variabile / Economii” sunt etichete mici, ca restul titlurilor de secțiune, nu titluri mari gri.
+- Mișcări: „Toate / Comune / Personale” are același stil liniștit ca „Toate / Ieșiri / Intrări”.
+- Alertele de plic („Se termină înainte de salariu”) și „Provocarea lunii” au titlul mic și colorat, cum fusese gândit (o regulă globală pentru paragrafe le mărea).
+- „Îmi permit…?” nu mai are săgeata de meniu; săgeata rămâne doar la butoanele care chiar se desfac.
+
 ## 1.1.137
 
 Verificare generală după valurile 1.1.132–1.1.136:
