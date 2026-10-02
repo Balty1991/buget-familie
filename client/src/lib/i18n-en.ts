@@ -3830,4 +3830,5 @@ export const en: Record<string, string> = {
   "datele sunt inventate": "the data is made up",
   "Sincronizarea pornește cu datele tale": "Sync starts with your own data",
   "Acum vezi familia exemplu. Apasă „Încep cu datele mele” sus, apoi poți invita partenerul.": "You're viewing the example family. Tap “Start with my data” at the top, then you can invite your partner.",
+  "Pentru tine și partener, pe un telefon.": "For you and your partner, on one phone.",
 };
