@@ -38,6 +38,7 @@ import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/Env
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
 const WeeklySummaryPanel = lazy(() => import("@/components/WeeklySummaryPanel").then((module) => ({ default: module.WeeklySummaryPanel })));
 const MonthShareSheet = lazy(() => import("@/components/MonthShareSheet").then((module) => ({ default: module.MonthShareSheet })));
+const MonthChallengeCard = lazy(() => import("@/components/MonthChallengeCard").then((module) => ({ default: module.MonthChallengeCard })));
 const SafeSpendSheet = lazy(() => import("@/components/SafeSpendSheet").then((module) => ({ default: module.SafeSpendSheet })));
 const AllocationHistoryChart = lazy(() => import("@/components/AllocationHistoryChart").then((module) => ({ default: module.AllocationHistoryChart })));
 
@@ -642,6 +643,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           </ul>
         </section>
       )}
+      {!simpleMode && <Suspense fallback={null}><MonthChallengeCard data={data} today={todayIso} /></Suspense>}
       <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
