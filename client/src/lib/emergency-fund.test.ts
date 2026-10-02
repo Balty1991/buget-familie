@@ -33,3 +33,10 @@ describe("fondul de urgență", () => {
     expect(findEmergencyGoal([goal("Mașină")])).toBeUndefined();
   });
 });
+
+describe("fondul de urgență, după nume", () => {
+  it("o rezervare nu e fond de urgență", async () => {
+    const { findEmergencyGoal: find } = await import("./emergency-fund");
+    expect(find([{ id: "r", name: "Rezervare cazare", current: 0, target: 1, due: "", tone: "forest" }])).toBeUndefined();
+  });
+});

@@ -147,6 +147,8 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const convertedPreview = isForeign && typedAmount > 0 ? ledgerAmount : undefined;
   const chooseManual = () => { setTemplateId(""); setTemplateLabel(""); setError(""); };
   const selectTemplate = (template: QuickTransactionTemplate) => {
+    // Șablonul e o plată obișnuită (chiria, rata): nu intră din oficiu în bugetul vacanței.
+    setForTrip(false);
     setTemplateId(template.id); setKind(template.kind); setCategory(template.category); setAmount(template.amount ? String(template.amount) : "");
     if (template.memberId) setMemberId(template.memberId); if (template.sourceId) setSourceId(template.sourceId); setTemplateLabel(template.label); setIncomeLabel(template.kind === "income" ? template.label : ""); setAllocationChoiceTouched(false); setCategoryTouched(false); setError("");
   };
