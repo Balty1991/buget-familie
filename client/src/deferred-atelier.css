@@ -1796,9 +1796,6 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
 .bf-envelope-fill { fill: var(--cf-primary-strong); opacity: .88; }
 .bf-envelope-flap { fill: none; stroke: var(--cf-ink); stroke-width: 1.6; stroke-linejoin: round; }
 .bf-envelope-lip { fill: color-mix(in srgb, var(--cf-surface) 70%, var(--cf-primary)); stroke: var(--cf-line); stroke-width: 1.2; }
-.bf-envelope-mark.watch .bf-envelope-fill { fill: var(--cf-warning); }
-.bf-envelope-mark.over .bf-envelope-fill { fill: var(--cf-danger); }
-.bf-envelope-mark.over .bf-envelope-body { stroke: var(--cf-danger); }
 
 .bf-envelope-empty-art .bf-envelope-body { fill: color-mix(in srgb, var(--cf-primary) 34%, var(--cf-surface)); stroke: var(--cf-primary); stroke-width: 1.6; }
 .bf-envelope-empty-art .bf-envelope-flap { fill: none; stroke: var(--cf-primary); stroke-width: 1.6; }
@@ -1832,8 +1829,6 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
   letter-spacing: -.04em;
 }
 
-.bf-today-pulse-copy p { margin: 0; color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
-
 .bf-today-pulse-chart {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1842,32 +1837,12 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
   min-height: 92px;
 }
 
-.bf-today-pulse-chart span {
-  display: grid;
-  grid-template-rows: 72px auto;
-  justify-items: center;
-  gap: 6px;
-}
-
 .bf-today-pulse-chart i {
   align-self: end;
   width: 70%;
   min-height: 6px;
   border-radius: 5px 5px 2px 2px;
   background: linear-gradient(180deg, var(--cf-primary), var(--cf-primary-strong));
-}
-
-.bf-today-pulse-chart span.today i {
-  background: var(--cf-warning);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cf-warning) 28%, transparent);
-}
-
-.bf-today-pulse-chart b {
-  color: var(--cf-muted);
-  font-size:12px;
-  font-weight:600;
-  letter-spacing: .04em;
-  text-transform: uppercase;
 }
 
 .bf-today-envelopes-heading {
@@ -1930,9 +1905,6 @@ html body .os-shell .bf-advisor-hero.bf-advisor-hero .bf-kicker.bf-kicker {
   background: color-mix(in srgb, var(--cf-primary) 7%, var(--cf-surface));
   text-align: left;
 }
-
-.bf-today-envelopes-empty b { display: block; font-size: 15px; }
-.bf-today-envelopes-empty small { color: var(--cf-muted); font-size: 12px; line-height: 1.45; }
 
 .bf-allocation-list article {
   grid-template-columns: 64px minmax(0, 1fr) auto auto 33px;

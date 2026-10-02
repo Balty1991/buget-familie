@@ -1621,15 +1621,13 @@ html[data-simple-mode="1"] .os-dock button {
   outline: 2px solid #1f6b4a;
   background: color-mix(in srgb, #1f6b4a 8%, transparent);
 }
-.bf-alert-kinds {
-  margin: 10px 0 16px;
-  padding: 0 0 0 1.15em;
-  display: grid;
-  gap: 6px;
-  color: inherit;
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
+.bf-alert-kinds { display: grid; margin: 12px 0 14px; border-top: 1px solid var(--cf-line, rgba(0, 0, 0, 0.1)); }
+.bf-alert-kind { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 0; border-bottom: 1px solid var(--cf-line, rgba(0, 0, 0, 0.1)); }
+.bf-alert-kind span { display: grid; gap: 2px; }
+.bf-alert-kind b { font-size: 15px; font-weight: 650; }
+.bf-alert-kind small { color: var(--cf-muted); font-size: 13px; line-height: 1.35; }
+.bf-alert-kind input[type="checkbox"] { flex: none; width: 22px; height: 22px; accent-color: var(--cf-primary); }
+.bf-alert-kind select { flex: none; width: auto; min-width: 88px; }
 
 .bf-notification-actions {
   display: flex;

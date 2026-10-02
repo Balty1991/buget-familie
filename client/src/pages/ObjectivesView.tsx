@@ -6,13 +6,13 @@ import "../objective-edit.css";
 import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
-import { allocationStatus, debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
-import { BudgetBar, dateText, money } from "@/pages/home-kit";
+import { addIsoDays, allocationStatus, debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { dateText, money } from "@/pages/home-kit";
 import { amortize, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type PayoffStrategy } from "@/lib/debt-plan";
 import { getLocale, monthsLabel, t } from "@/lib/i18n";
 import { PaidCheck } from "@/components/PaidCheck";
 import { monthTitle, savingsSuggestion } from "@/lib/household-insights";
-import { upcomingPlannedEvents } from "@/lib/planned-events";
+import { daysBetween, upcomingPlannedEvents } from "@/lib/planned-events";
 import { activeNeeds, reserveOf } from "@/lib/monthly-needs";
 
 export function DebtPaymentHistory({ data, debt }: { data: AppData; debt: Debt }) { const history = debtPaymentHistory(data, debt.id); if (!history.length) return <p className="bf-debt-history empty">{t("Nu există încă plăți confirmate pentru această datorie.")}</p>; return <div className="bf-debt-history"><p>{t("PLĂȚI ÎNREGISTRATE")}</p>{history.slice(0, 4).map((payment) => <div key={payment.id}><span><b>{payment.title.includes("achitată integral") ? t("Achitată integral") : t("Plată parțială")}</b><small>{dateText(payment.date, true)} · {payment.source}</small></span><span><strong>{money(payment.amount)}</strong><small>{t("rămân {amount}", { amount: money(payment.debtRemainingAfter ?? debt.remaining) })}</small></span></div>)}</div>; }
@@ -118,7 +118,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
     const lastNext = new Date(now.getFullYear(), now.getMonth() + 2, 0).getDate();
     return isoDate(new Date(now.getFullYear(), now.getMonth() + 1, Math.min(day, lastNext), 12));
   };
-  const upcoming = [
+  const allUpcoming = [
     ...data.debts.filter((item) => item.remaining > 0).map((item) => ({
       id: `debt-${item.id}`,
       kind: "debt" as const,
@@ -165,7 +165,13 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
       const due = nextNeedDue(data, need, today);
       return due ? [{ id: `need-${need.id}`, kind: "need" as const, date: due.date, label: need.label, detail: t(need.category), amount: due.amount, onConfirm: onOpenCalendar }] : [];
     }),
-  ].filter((entry) => !laterIds.includes(entry.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+  ].filter((entry) => !laterIds.includes(entry.id)).sort((a, b) => a.date.localeCompare(b.date));
+  const upcoming = allUpcoming.slice(0, 8);
+  /** Următoarele 30 de zile dintr-o privire: cât e de plătit și când (obiectivele nu sunt plăți). */
+  const horizon = addIsoDays(today, 30);
+  const dueSoon = allUpcoming.filter((entry) => entry.kind !== "saving" && entry.date <= horizon);
+  const dueTotal = dueSoon.reduce((sum, entry) => sum + entry.amount, 0);
+  const overdue = dueSoon.filter((entry) => entry.date < today).length;
   const kindLabel = (kind: "debt" | "saving" | "recurring" | "event" | "need") => kind === "debt" ? t("Rată") : kind === "saving" ? t("Obiectiv") : kind === "event" ? t("Eveniment") : kind === "need" ? t("Ce plătim lunar") : t("Factură / abonament");
   const whenLabel = (date: string) => {
     if (date < today) return t("Întârziată");
@@ -185,7 +191,11 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
         <div>
           <p className="bf-kicker">{t("CE URMEAZĂ")}</p>
           <h1 id="bf-upcoming-title">{t("Ce trebuie")} <em>{t("plătit, rezervat sau amânat.")}</em></h1>
-          <p>{t("Rate, facturi și obiective pe o singură listă. Confirmarea creează mișcarea — nu trimite bani din bancă.")}</p>
+          {dueSoon.length > 0 ? <div className="bf-due-summary">
+            <p><b>{money(dueTotal)}</b> {t("de plătit în următoarele 30 de zile")}{overdue > 0 ? <em> · {t("{count} întârziate", { count: overdue })}</em> : null}</p>
+            <div className="bf-due-track" aria-hidden="true"><span className="is-today" />{dueSoon.map((entry) => <i key={entry.id} className={`kind-${entry.kind}${entry.date < today ? " is-overdue" : ""}`} style={{ left: `${Math.max(0, Math.min(30, daysBetween(today, entry.date))) / 30 * 100}%` }} />)}</div>
+            <div className="bf-due-scale" aria-hidden="true"><span>{t("azi")}</span><span>{dateText(addIsoDays(today, 15), true)}</span><span>{dateText(horizon, true)}</span></div>
+          </div> : <p>{t("Rate, facturi și obiective pe o singură listă. Confirmarea creează mișcarea — nu trimite bani din bancă.")}</p>}
         </div>
         <div className="bf-obligations-links">
           <button className="bf-goals-link" aria-label={t("Obiective pe termen lung")} onClick={onOpenGoals}><PiggyBank size={16} /> {t("Obiective")}</button>
@@ -259,15 +269,6 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
           </ul>
         </section>
       )}
-      <section className="bf-obligation-ai">
-        <div className="bf-obligation-ai-icon"><Bot size={22} /></div>
-        <div>
-          <p className="bf-kicker">{t("GHIDUL TĂU PENTRU OBLIGAȚII")}</p>
-          <h2>{t("Îți urmăresc ratele, pas cu pas.")}</h2>
-          <p>{t("Spune-mi ce datorie ai, ce rată ai plătit și îți arăt imediat ce urmează și cât mai rămâne.")}</p>
-        </div>
-        <button type="button" onClick={onOpenAssistant} className="bf-primary">{t("Deschide ghidul")} <ChevronRight size={16} /></button>
-      </section>
       <section className="bf-obligation-ledger">
         <article className="debt"><span>{t("Sold datorii")}</span><b>{money(totalDebt)}</b><small>{t("{amount} rate declarate / lună", { amount: money(monthlyRates) })}</small></article>
         <article className="savings"><span>{t("Economii urmărite")}</span><b>{money(totalSavings)}</b><small>{t("{count} obiective înregistrate", { count: data.savings.length })}</small></article>
@@ -288,6 +289,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
                   <b>{debt.name}</b>
                   {snowball.next?.debt.id === debt.id ? <em className="bf-snowball-tag">{t("01 · următoarea")}</em> : null}
                   <small>{debt.due} · {t("rată {amount}/lună", { amount: money(debt.monthly) })}</small>
+                  {(() => { const months = debt.monthly > 0 ? amortize(debt.remaining, debt.annualRate, debt.monthly).months : null; return months ? <small className="bf-debt-free">{t("Scapi de ea în {month}", { month: monthYear(monthAfter(months)) })}</small> : null; })()}
                 </div>
                 <strong>{money(debt.remaining)}</strong>
               </div>
@@ -313,12 +315,11 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
           {data.savings.map((saving) => (
             <article className="bf-obligation-entry" key={saving.id}>
               <div className="bf-obligation-entry-main">
-                <span><PiggyBank size={17} /></span>
+                <span className="bf-goal-ring-slot"><i className="bf-goal-ring" style={{ ["--bf-goal" as string]: `${Math.min(100, saving.target > 0 ? Math.round((saving.current / saving.target) * 100) : 0)}` }} role="img" aria-label={t("{share}% strâns", { share: Math.min(100, saving.target > 0 ? Math.round((saving.current / saving.target) * 100) : 0) })}><b>{Math.min(100, saving.target > 0 ? Math.round((saving.current / saving.target) * 100) : 0)}%</b></i></span>
                 <div><b>{saving.name}</b><small>{saving.due}</small></div>
                 <strong>{money(saving.current)}</strong>
               </div>
               <div className="bf-obligation-progress">
-                <BudgetBar used={saving.current} total={saving.target} tone="gold" />
                 <small>{t("{left} rămași până la {target}", { left: money(Math.max(0, saving.target - saving.current)), target: money(saving.target) })}</small>
               </div>
               {(() => {
@@ -354,6 +355,15 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
           )}
         </section>
       </div>
+      <section className="bf-obligation-ai">
+        <div className="bf-obligation-ai-icon"><Bot size={22} /></div>
+        <div>
+          <p className="bf-kicker">{t("GHIDUL TĂU PENTRU OBLIGAȚII")}</p>
+          <h2>{t("Îți urmăresc ratele, pas cu pas.")}</h2>
+          <p>{t("Spune-mi ce datorie ai, ce rată ai plătit și îți arăt imediat ce urmează și cât mai rămâne.")}</p>
+        </div>
+        <button type="button" onClick={onOpenAssistant} className="bf-primary">{t("Deschide ghidul")} <ChevronRight size={16} /></button>
+      </section>
     </div>
   );
 }

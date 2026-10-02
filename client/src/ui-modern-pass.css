@@ -12,7 +12,6 @@
 }
 .os-shell .os-dock{padding:8px 10px max(12px,var(--os-inset-bottom,env(safe-area-inset-bottom,0px)));box-shadow:0 -6px 18px color-mix(in srgb,#000 12%,transparent)}
 .os-shell .os-dock button{min-width:0;min-height:max(48px,var(--ui-tap));height:max(48px,var(--ui-tap));gap:2px;padding:6px 4px;border-radius:12px;font-size:12px;font-weight:600;letter-spacing:0.01em;color:var(--os-muted,var(--cf-muted));background:transparent;box-shadow:none;transition:color 160ms ease,background-color 160ms ease,transform 160ms ease}
-.os-shell .os-dock button svg{width:18px;height:18px}
 .os-shell .os-dock button.is-on,.os-shell .os-dock button.active{color:var(--os-mint-fg,var(--cf-on-forest,#fff)) !important;background:var(--os-mint,var(--cf-primary,#176b54)) !important;box-shadow:0 4px 12px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 28%,transparent) !important}
 .os-shell .os-dock button:active{transform:scale(0.97)}
 .os-shell .os-tool{min-width:var(--ui-tap);min-height:var(--ui-tap)}
