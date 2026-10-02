@@ -3801,4 +3801,9 @@ export const en: Record<string, string> = {
   "Notează: categoriile sunt la vedere, sub magazin. O atingere și gata.": "Log it: categories are right there, under the shop. One tap and done.",
   "Imaginea lunii: toată luna într-o poză de trimis familiei, doar cu procente dacă vrei.": "Picture of the month: the whole month in one image to send the family, percentages only if you like.",
   "Tema Alb e mai luminoasă, iar Mai mult are iconițe colorate pe secțiuni.": "The White theme is brighter, and More has coloured icons by section.",
+  "Obiectiv și unde stau banii": "Goal and where the money is",
+  "Până la salariu": "Until payday",
+  "Plicurile tale": "Your envelopes",
+  "peste cu {amount}": "over by {amount}",
+  "{label}: {left} rămași, {label2}": "{label}: {left} left, {label2}",
 };
