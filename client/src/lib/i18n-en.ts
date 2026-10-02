@@ -3993,4 +3993,6 @@ export const en: Record<string, string> = {
   "Pentru copii: pușculița, pe telefonul lor.": "For kids: a piggy bank, on their own phone.",
   "Raportul lunar PDF, refăcut, și „Anul vostru”: retrospectiva anului, de trimis familiei.": "A redesigned monthly PDF report, and “Your year”: the year in review, to send to the family.",
   "Widget nou pe ecranul telefonului: „Plicurile mele”, cu cât a mai rămas.": "New home screen widget: “My envelopes”, with what is left.",
+  "Harta lunii: cât s-a cheltuit în fiecare zi": "Month map: what was spent each day",
+  "nimic cheltuit": "nothing spent",
 };

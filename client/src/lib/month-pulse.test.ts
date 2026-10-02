@@ -42,3 +42,16 @@ describe("eticheta zilei", () => {
     expect(dayLabel("2025-12-30", "2026-10-02")).toMatch(/2025/);
   });
 });
+
+describe("harta lunii", () => {
+  it("o zi pe căsuță, cu treapta după cât s-a cheltuit", async () => {
+    const { monthHeat } = await import("./month-pulse");
+    const heat = monthHeat([tx("2026-10-01", "Alimente", 20), tx("2026-10-02", "Alimente", 40), tx("2026-10-03", "Casă & facturi", 1800), tx("2026-09-30", "Alimente", 99)], "2026-10-04");
+    expect(heat).toHaveLength(31);
+    expect(heat[0]).toMatchObject({ date: "2026-10-01", amount: 20, future: false });
+    expect(heat[2].level).toBe(4);
+    expect(heat[1].level).toBeGreaterThan(heat[0].level);
+    expect(heat[3]).toMatchObject({ amount: 0, level: 0, future: false });
+    expect(heat[4].future).toBe(true);
+  });
+});

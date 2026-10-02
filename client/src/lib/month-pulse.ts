@@ -47,3 +47,29 @@ export function dayLabel(date: string, today: string, translate: (text: string) 
   const text = formatDate(date, sameYear ? { weekday: "long", day: "numeric", month: "long" } : { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   return text.charAt(0).toLocaleUpperCase() + text.slice(1);
 }
+
+export type HeatDay = { date: string; amount: number; level: 0 | 1 | 2 | 3 | 4; future: boolean };
+
+/**
+ * Harta lunii: fiecare zi cu cât s-a cheltuit și o treaptă de culoare (0 = nimic, 4 = cea mai
+ * scumpă zi). Treptele sunt față de cea mai mare zi a lunii, ca o chirie să nu le „spele” pe
+ * toate: peste de trei ori ziua obișnuită (mediana), ziua e oricum în treapta de sus.
+ */
+export function monthHeat(items: ReadonlyArray<Move>, today: string): HeatDay[] {
+  const month = monthOf(today);
+  const lastDay = Number(addIsoDays(`${addIsoDays(`${month}-01`, 32).slice(0, 7)}-01`, -1).slice(8, 10));
+  const byDay = new Map<string, number>();
+  for (const item of items) {
+    if (item.kind !== "expense" || isBalanceAdjustment(item) || !(item.amount > 0) || monthOf(item.date) !== month) continue;
+    byDay.set(item.date, (byDay.get(item.date) || 0) + item.amount);
+  }
+  const spent = Array.from(byDay.values()).sort((a, b) => a - b);
+  const median = spent.length ? spent[Math.floor(spent.length / 2)] : 0;
+  const cap = Math.max(1, Math.min(spent[spent.length - 1] || 0, median * 3 || Infinity));
+  return Array.from({ length: lastDay }, (_, index) => {
+    const date = `${month}-${String(index + 1).padStart(2, "0")}`;
+    const amount = round(byDay.get(date) || 0);
+    const level = (amount <= 0 ? 0 : Math.min(4, Math.max(1, Math.ceil((amount / cap) * 4)))) as HeatDay["level"];
+    return { date, amount, level, future: date > today };
+  });
+}

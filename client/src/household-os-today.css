@@ -843,16 +843,10 @@ html body .bf-today-workspace > .bf-today-side { display: grid; gap: inherit; al
 
 /* D10: două coloane de la 900px (tabletă, pliabil deschis): cifra zilei stă fixă în stânga,
    tot restul (alerte, plicuri, mișcări) curge în dreapta. */
-@media (min-width: 900px) {
-  html body .os-shell .bf-today-workspace:not(.is-simple) {
-    display: grid;
-    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
-    column-gap: 24px;
-    align-items: start;
-  }
-  html body .os-shell .bf-today-workspace:not(.is-simple) > * { grid-column: 2; min-width: 0; }
-  html body .os-shell .bf-today-workspace:not(.is-simple) > .os-hero { grid-column: 1; grid-row: 1 / span 40; position: sticky; top: 16px; margin-bottom: 0; }
-  html body .os-shell .bf-today-workspace:not(.is-simple) > .bf-today-side > .bf-today-brief { padding: 16px 18px; }
+@media (min-width: 900px){html body .os-shell .bf-today-workspace:not(.is-simple){display:grid;grid-template-columns:minmax(0,6fr) minmax(0,5fr);column-gap:24px;align-items:start}
+html body .os-shell .bf-today-workspace:not(.is-simple) > *{grid-column:2;min-width:0}
+html body .os-shell .bf-today-workspace:not(.is-simple) > .os-hero{grid-column:1;grid-row:1 / span 40;position:sticky;top:16px;margin-bottom:0}
+html body .os-shell .bf-today-workspace:not(.is-simple) > .bf-today-side > .bf-today-brief{padding:16px 18px}
 }
 
 /* D10: pe ecrane late, navigația devine bară laterală: marcă, „+ Notează”, ecranele, iar jos căutare și instrumente.
