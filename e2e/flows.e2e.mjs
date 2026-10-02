@@ -42,7 +42,7 @@ const KEYS = {
   "buget-familie:setup-complete": "true",
   "buget-familie:onboarding-complete": "true",
   "buget-familie:first-week-tour-dismissed": "1",
-  "buget-familie:whats-new-2026-10d": "1",
+  "buget-familie:whats-new-2026-10e": "1",
 };
 
 /** Un telefon nou. `seed` completează registrul (salariu, plicuri, o datorie) prin stocarea aplicației. */

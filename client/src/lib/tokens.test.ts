@@ -79,7 +79,8 @@ describe("plafonul de !important", () => {
     // 02.10 (2): 946, pușculița copilului (borcanul, butoanele, formularul); nu mai sunt reguli moarte sau dublate.
     // 02.10 (3): 947, harta lunii din Mișcări; blocurile noi din sesiune sunt compactate.
     // 02.10 (4): 950, coșul estimat, fondul de urgență și modul vacanță (asistentul de final de lună refolosește cardul provocării).
-    expect(kb).toBeLessThanOrEqual(950);
+    // 02.10 (5): 951, salutul și intrarea animată de pe Astăzi.
+    expect(kb).toBeLessThanOrEqual(951);
   });
 
   it("calc() are spații în jurul lui + și -", () => {

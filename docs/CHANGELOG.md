@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.136
+
+- Astăzi, pornire nouă: „Bună dimineața, Andrei” (după oră și pe numele de pe telefon) și fraza zilei, aleasă din ce contează azi — salariul de azi, vacanța în curs, ultimele zile dinainte de salariu, seria de notat, cum a fost ieri față de o zi obișnuită; altfel, un sfat scurt care se schimbă zilnic.
+- La prima deschidere din zi, cardurile intră pe rând și cifra zilei urcă de la 0 (fără animație cu „mișcare redusă”).
+- Scrisoare pentru viitor: în formularul obiectivului, un mesaj pentru voi, care rămâne ascuns până când atingeți ținta și apare atunci în felicitare.
+- „Ce e nou” arată noutățile, cu scrisoarea și salutul în față.
+- Plafonul CSS: 951 KB (+1 KB, salutul și intrarea animată).
+
 ## 1.1.135
 
 - „Îmi permit…?” (pe Astăzi, lângă cifra zilei): scrii suma și răspunsul se schimbă pe loc — verde „Da”, galben „încape, dar strâmt”, roșu „nu acum, ar lipsi X”. Poți alege plicul (se socotește tranșa săptămânii) sau banii liberi; arată și câte săptămâni de economii pentru primul obiectiv ar însemna suma. „Am cumpărat — notează” deschide Notează.
