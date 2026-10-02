@@ -3,6 +3,7 @@
  * Filosofie: o familie adaugă bani direct pe categorii, unele cu ritm săptămânal, altele doar cu un total.
  * Perioada e opțională și comună — servește doar categoriilor cu ritm săptămânal; nu există o sumă „generală” separată.
  */
+import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { categoryColor } from "@/lib/category-color";
 import "../envelope-weekly-toggle.css";
 import "../week-transfer.css";
@@ -452,7 +453,12 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     <CycleClosePanel data={data} onChange={onChange} />
     <EnvelopeConflictBanner data={data} onChange={onChange} />
     <header className="bf-plan-studio-header bf-plan-hero-glass">
-      <div className="bf-plan-hero-copy"><p className="bf-kicker">{t("PLANUL FAMILIEI, PE CATEGORII")}</p><h1>{t("Fiecare leu")} <em>{t("are un loc.")}</em></h1><p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p></div>
+      <div className="bf-plan-hero-copy"><p className="bf-kicker">{t("PLANUL FAMILIEI, PE CATEGORII")}</p><h1>{t("Fiecare leu")} <em>{t("are un loc.")}</em></h1>{allocated > 0 ? (
+        <div className="bf-plan-split" aria-label={t("Cum e împărțit planul")}>
+          <i className="bf-plan-split-bar" aria-hidden="true">{envelopes.filter((entry) => entry.budget > 0).map((entry) => <em key={entry.item.id} style={{ flexGrow: entry.budget, background: categoryColor(entry.item.category || entry.item.label) }} />)}</i>
+          <ul>{[...envelopes].filter((entry) => entry.budget > 0).sort((a, b) => b.budget - a.budget).slice(0, 4).map((entry) => <li key={entry.item.id}><i style={{ background: categoryColor(entry.item.category || entry.item.label) }} aria-hidden="true" />{entry.item.label} <b>{Math.round((entry.budget / allocated) * 100)}%</b></li>)}</ul>
+        </div>
+      ) : <p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p>}</div>
       <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{t("NEREPARTIZAȚI")}</small><b>{money(unrepartized)}</b>
         {/* D12: cele trei cifre se leagă: disponibili = în plicuri (și scadențe) + liberi. */}
         {availableSources > 0 && <>
@@ -461,21 +467,6 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         </>}
       </div>
     </header>
-    <details className="bf-plan-import">
-      <summary>{t("Adu plicuri dintr-un tabel")}</summary>
-      <p className="bf-helper">{t("Câte o linie: nume, apoi sumă, pe ciclu. Plicurile care există deja rămân neschimbate.")}</p>
-      <label className="bf-field">
-        <textarea aria-label={t("Adu plicuri dintr-un tabel")} value={importText} onChange={(event) => setImportText(event.target.value)} rows={4} placeholder={"Mâncare, 600\nChirie, 1800"} />
-      </label>
-      <button type="button" className="bf-secondary" onClick={() => {
-        const rows = parsePlanTable(importText);
-        if (!rows.length) { setImportNotice(t("Nu am găsit linii cu nume și sumă.")); return; }
-        const result = applyPlanRows(data, rows);
-        if (result.added > 0) { onChange(result.data); setImportText(""); }
-        setImportNotice(t("Am adăugat {count} plicuri.", { count: String(result.added) }));
-      }}>{t("Adaugă plicurile noi")}</button>
-      {importNotice && <p className="bf-helper" role="status">{importNotice}</p>}
-    </details>
 
     {/* Lista plicurilor e primul lucru de pe ecran; înainte începea abia după ~3.400 px de setări. */}
     <section className="bf-envelope-list-first" aria-labelledby="bf-envelope-list-title">
@@ -498,7 +489,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             // D11: „în ritm” e starea obișnuită; eticheta apare doar când spune ceva.
             if (tone === "healthy" && !fixed) return null;
             return <span className={`bf-allocation-state ${tone}`} title={burn?.reason}>{label}</span>;
-          })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><b>{item.label}</b>{(item.memberId || item.sourceId || item.note) && <small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small>}</div>
+          })()}<EnvelopeConflictBadge allocationId={item.id} data={data} /></div><span className="bf-envelope-name"><span className="bf-envelope-ring is-small" style={{ ["--bf-used" as string]: String(Math.min(100, Math.round(Math.max(0, usage) * 100))) }} aria-hidden="true"><CategoryGlyph category={item.category || item.label} size={15} /></span><b>{item.label}</b></span>{(item.memberId || item.sourceId || item.note) && <small>{personName(data, item.memberId)} · {sourceName(data, item.sourceId)}{item.note ? ` · ${item.note}` : ""}</small>}</div>
           <div className="bf-allocation-list-total"><strong>{money(Math.max(0, remaining))}</strong><small>{t("rămași din {amount}", { amount: money(budget) })}</small>{mealLeft > 0 && isFoodCategory(item.category) && <small className="bf-allocation-meal">{t("+ tichete: {amount}", { amount: money(mealLeft) })}</small>}</div>
           <div className={`bf-envelope-meter${(week ? week.state : state) === "over" ? " is-over" : (!fixed && (week ? week.budget : budget) > 0 && (week ? week.spent : spent) / (week ? week.budget : budget) >= (item.alertThreshold || 80) / 100) ? " is-watch" : ""}`}><span>{week ? t("Săptămâna S{index}", { index: week.index }) : t("Tot plicul")}{" · "}{t("cheltuit")}</span><b>{money(week ? week.spent : spent)} <small>/ {money(week ? week.budget : budget)}</small></b><i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.max(0, ((week ? week.budget : budget) > 0 ? (week ? week.spent : spent) / (week ? week.budget : budget) : 0) * 100))}%` }} />{!fixed && (() => { const mark = todayMark(week ? week.start : plan.periodStart, week ? week.end : plan.nextPayday); return mark === undefined ? null : <u className="bf-meter-today" style={{ left: `${mark}%` }} title={t("Aici ar trebui să fii azi")} />; })()}</i></div>
           <details className="bf-envelope-more" onToggle={(event) => { const open = event.currentTarget.open; setOpenDetails((current) => { if (open === current.has(item.id)) return current; const next = new Set(current); if (open) next.add(item.id); else next.delete(item.id); return next; }); }}><summary>{t("Detalii")}<ChevronDown size={15} aria-hidden="true" /></summary>
@@ -573,6 +564,21 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         {!envelopes.length && <div className="bf-allocation-empty"><EnvelopeEmptyArt size={88} /><b>{t("Așază primii lei într-un plic.")}</b><span>{t("Un plic e o limită pe o categorie: Mâncare, Transport, Chirie. Începe cu unul, restul le adaugi când ai nevoie.")}</span><button type="button" className="bf-primary" onClick={() => setBuilderOpen(true)}><Plus size={16} /> {t("Fă primul plic")}</button></div>}
             </div>
     </section>
+    <details className="bf-plan-import">
+      <summary>{t("Adu plicuri dintr-un tabel")}</summary>
+      <p className="bf-helper">{t("Câte o linie: nume, apoi sumă, pe ciclu. Plicurile care există deja rămân neschimbate.")}</p>
+      <label className="bf-field">
+        <textarea aria-label={t("Adu plicuri dintr-un tabel")} value={importText} onChange={(event) => setImportText(event.target.value)} rows={4} placeholder={"Mâncare, 600\nChirie, 1800"} />
+      </label>
+      <button type="button" className="bf-secondary" onClick={() => {
+        const rows = parsePlanTable(importText);
+        if (!rows.length) { setImportNotice(t("Nu am găsit linii cu nume și sumă.")); return; }
+        const result = applyPlanRows(data, rows);
+        if (result.added > 0) { onChange(result.data); setImportText(""); }
+        setImportNotice(t("Am adăugat {count} plicuri.", { count: String(result.added) }));
+      }}>{t("Adaugă plicurile noi")}</button>
+      {importNotice && <p className="bf-helper" role="status">{importNotice}</p>}
+    </details>
     {/* D16: pe telefon formularul e o foaie peste pagină; fundalul și Escape o închid. */}
     {sheetOrInline(<>
     {(builderOpen || Boolean(editingAllocationId)) && <div className="bf-plan-builder-backdrop" aria-hidden="true" onClick={closeBuilder} />}

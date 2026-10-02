@@ -97,11 +97,15 @@
     padding-inline: 13px;
   }
 
+  /* Perioada și lista lunilor pe un singur rând: diagrama urcă în primul ecran. */
   .bf-analysis .bf-analysis-control {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     gap: 12px;
     padding: 14px;
   }
+  .bf-analysis .bf-analysis-control label { font-size: 0; }
+  .bf-analysis .bf-analysis-control select { font-size: 15px; }
 
   .bf-analysis .bf-analysis-control h2 {
     max-width: 15ch;

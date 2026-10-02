@@ -3821,4 +3821,5 @@ export const en: Record<string, string> = {
   "Nu luna asta": "Not this month",
   "Ascunde provocarea lunii": "Hide the challenge of the month",
   "Mai sunt {left} până la țintă.": "{left} left until the target.",
+  "Cum e împărțit planul": "How the plan is split",
 };
