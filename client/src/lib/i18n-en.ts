@@ -3832,4 +3832,10 @@ export const en: Record<string, string> = {
   "Acum vezi familia exemplu. Apasă „Încep cu datele mele” sus, apoi poți invita partenerul.": "You're viewing the example family. Tap “Start with my data” at the top, then you can invite your partner.",
   "Pentru tine și partener, pe un telefon.": "For you and your partner, on one phone.",
   "Sumele sunt de pe {date} — deschide aplicația": "Amounts are from {date} — open the app",
+  "cât luna trecută până azi": "same as last month so far",
+  "cu {amount} mai puțin decât luna trecută până azi": "{amount} less than last month so far",
+  "cu {amount} mai mult decât luna trecută până azi": "{amount} more than last month so far",
+  "ieșit": "out",
+  "intrat": "in",
+  "Filtrează după categorie": "Filter by category",
 };
