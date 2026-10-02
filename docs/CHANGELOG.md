@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.129
+
+- Lista de cumpărături a familiei (Mai mult → Cumpărături, și pe Astăzi când are produse): mai multe deodată, prin virgulă; bifă în magazin; „Am terminat — notează plata” scoate ce s-a luat și deschide Notează pe Alimente. Se sincronizează cu partenerul.
+- Tabletă și ecran lat (de la 900 px): pe Astăzi, cifra zilei stă în stânga, iar alertele, plicurile și mișcările în dreapta.
+- Capturi Play noi (telefon RO/EN, tabletă RO): notarea din voce, lista de cumpărături, „Anul vostru”, pulsul lunii în Mișcări.
+
 ## 1.1.128
 
 - Obligații: sus, cât e de plătit în următoarele 30 de zile și o bandă cu scadențele (întârzierile marcate); la fiecare datorie, luna în care scapi de ea; obiectivele au un cerc de progres; ghidul a coborât la final.
