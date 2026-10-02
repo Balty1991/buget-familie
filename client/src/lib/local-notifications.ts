@@ -18,7 +18,7 @@ import {
 } from "@/lib/finance-data";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { daysLabel, getLocale, t } from "./i18n";
-import { weekTooFast } from "./household-insights";
+import { monthTitle, weekTooFast } from "./household-insights";
 import { lei } from "@/lib/money-format";
 import { isAppLockEnabled } from "@/lib/app-lock";
 
@@ -517,6 +517,20 @@ function buildAlerts(data: AppData): PlannedAlert[] {
       body: t("{name}: mai ai {remaining} până la {date}.", { name: goal.name, remaining: money(remaining), date: formatDate(dueIso) }),
       at: when,
       tag: `goal-due-${goal.id}-${dueIso}`,
+    });
+  }
+
+  // Pe 1 ale lunii, la 10: luna trecută într-o imagine (Astăzi o arată în primele 7 zile).
+  const nextFirst = `${addIsoDaysLocal(`${today.slice(0, 7)}-28`, 4).slice(0, 7)}-01`;
+  const toFirst = Math.round((new Date(`${nextFirst}T12:00:00`).valueOf() - new Date(`${today}T12:00:00`).valueOf()) / 86_400_000);
+  if (toFirst >= 1 && toFirst <= 7 && (data.transactions || []).some((item) => item.kind === "expense" && item.date.startsWith(today.slice(0, 7)))) {
+    const title = monthTitle(today.slice(0, 7));
+    alerts.push({
+      id: id++,
+      title: t("{month} s-a încheiat", { month: title.charAt(0).toLocaleUpperCase() + title.slice(1) }),
+      body: t("Vezi luna într-o imagine și trimite-o familiei."),
+      at: atLocalHour(toFirst, 10, 0),
+      tag: `month-card-${today.slice(0, 7)}`,
     });
   }
 

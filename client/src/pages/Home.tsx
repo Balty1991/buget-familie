@@ -2,6 +2,7 @@
  * Atelierul Financiar — tablou mobil pentru o persoană sau o gospodărie, cu decizia următoare în prim-plan.
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
+import { loggingStreak } from "@/lib/logging-habits";
 import { askReviewAfterMilestone, loggedDays, REVIEW_AFTER_LOGGED_DAYS } from "@/lib/review-prompt";
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, Users, RotateCcw, Inbox, LayoutGrid, MessagesSquare, MoreHorizontal, Plus, ReceiptText, Search, ShieldCheck, Wallet, X } from "lucide-react";
@@ -358,9 +359,12 @@ export default function Home() {
     });
     if (failed) throw failed;
     if (fresh && saved.length) {
-      const label = saved.length === 1
+      const base = saved.length === 1
         ? t("Notat · {title} · {amount}", { title: saved[0].title, amount: money(saved[0].amount) })
         : t("Notat · {count} mișcări", { count: saved.length });
+      // De la 3 zile la rând, „Notat” spune și seria: obiceiul se vede, fără puncte și medalii.
+      const streak = loggingStreak([...data.transactions, ...saved], isoToday());
+      const label = streak >= 3 ? `${base} · ${t("{count} zile la rând", { count: streak })}` : base;
       offerUndo(buildUndoSave(label, saved.map((entry) => entry.id)));
       // A zecea zi cu cheltuieli notate e un moment bun pentru fereastra de recenzie a Play.
       if (loggedDays([...data.transactions, ...saved]) >= REVIEW_AFTER_LOGGED_DAYS) void askReviewAfterMilestone();

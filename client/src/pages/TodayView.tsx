@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { noSpendDays } from "@/lib/logging-habits";
 import { safeSetItem } from "@/lib/safe-storage";
 import { tickMemo } from "@/lib/tick-cache";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -308,6 +309,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     .filter((item) => item.budget > 0 || item.spent > 0)
     .sort((a, b) => (b.state === "over" ? 2 : b.state === "watch" ? 1 : 0) - (a.state === "over" ? 2 : a.state === "watch" ? 1 : 0) || b.usage - a.usage)
     .slice(0, 8);
+  const spendFree = useMemo(() => noSpendDays(data.transactions, todayIso), [data.transactions, todayIso]);
   const paydayIn = data.settings.salaryPlan.nextPayday && data.settings.salaryPlan.nextPayday >= todayIso
     ? Math.round((Date.parse(`${data.settings.salaryPlan.nextPayday}T12:00:00`) - Date.parse(`${todayIso}T12:00:00`)) / 86_400_000)
     : undefined;
@@ -440,6 +442,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               </dl>
             )}
             {ageLine && <p className="os-hint">{ageLine}</p>}
+            {!simpleMode && spendFree >= 2 && <p className="os-hint bf-no-spend">{t("{count} zile fără cheltuieli luna asta. Fiecare lasă bani în plic.", { count: spendFree })}</p>}
             {mealLine && <p className="os-hint">{mealLine}</p>}
             {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
             {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}

@@ -3806,4 +3806,6 @@ export const en: Record<string, string> = {
   "Plicurile tale": "Your envelopes",
   "peste cu {amount}": "over by {amount}",
   "{label}: {left} rămași, {label2}": "{label}: {left} left, {label2}",
+  "{count} zile la rând": "{count} days in a row",
+  "{count} zile fără cheltuieli luna asta. Fiecare lasă bani în plic.": "{count} no-spend days this month. Each one leaves money in the envelope.",
 };
