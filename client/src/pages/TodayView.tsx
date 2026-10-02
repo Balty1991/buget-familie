@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { visibleShopping } from "@/lib/shopping-list";
 import { YearRecapEntry } from "@/components/YearRecapEntry";
 import { noSpendDays } from "@/lib/logging-habits";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -10,7 +11,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BookOpen, BellRing, Image as ImageIcon, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BookOpen, BellRing, ListChecks, Image as ImageIcon, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { addIsoDays, calculateHealthScore, dropEnvelopeTransfer, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey } from "@/lib/calendar-budget";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
@@ -296,6 +297,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
 
   const todayIso = isoToday();
   // În prima săptămână a lunii: imaginea lunii trecute, o singură dată (se poate ascunde).
+  const shoppingTodo = useMemo(() => visibleShopping(data.settings.shoppingList || []).todo.length, [data.settings.shoppingList]);
   const recapMonth = currentMonthKey(addIsoDays(`${todayIso.slice(0, 7)}-01`, -1));
   const recapKey = `buget-familie:month-card-${recapMonth}`;
   const [recapHidden, setRecapHidden] = useState(() => { try { return localStorage.getItem(recapKey) === "1"; } catch { return true; } });
@@ -616,6 +618,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         </aside>
       )}
       <YearRecapEntry data={data} seasonal />
+      {shoppingTodo > 0 && <button type="button" className="bf-shop-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-shopping"))}><ListChecks size={17} aria-hidden="true" /><span>{t("Lista de cumpărături")}</span><b>{t("{count} de luat", { count: shoppingTodo })}</b></button>}
       {recapOpen && recapReport && <Suspense fallback={null}><MonthShareSheet report={recapReport} onClose={() => { setRecapOpen(false); hideRecap(); }} /></Suspense>}
       {coach}
 

@@ -5,7 +5,7 @@ import { isDemoMode } from "@/lib/demo-data";
 import "../mobile-settings-pass.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useState } from "react";
-import { MessageSquareWarning, BarChart3, Bell, BellRing, BrainCircuit, BookOpen, CalendarClock, Check, Inbox, ChevronLeft, ChevronRight, Cloud, Download, Search, Palette, PiggyBank, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
+import { MessageSquareWarning, BarChart3, Bell, BellRing, BrainCircuit, BookOpen, CalendarClock, Check, Inbox, ChevronLeft, ChevronRight, Cloud, Download, ListChecks, Search, Palette, PiggyBank, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
 import { createEmptyAppData, type AppData, type Debt, type Receipt, type SavingsGoal } from "@/lib/finance-data";
 import { clearReceiptImageStorage } from "@/lib/receipt-storage";
 import { setSimpleMode } from "@/lib/ui-prefs";
@@ -20,6 +20,7 @@ import {
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { t } from "@/lib/i18n";
 import { askConfirm } from "@/lib/confirm-dialog";
+import { visibleShopping } from "@/lib/shopping-list";
 const ReportsPanel = lazy(() => import("@/components/ReportsPanel").then((module) => ({ default: module.ReportsPanel })));
 const RecurringPanel = lazy(() => import("@/components/RecurringPanel").then((module) => ({ default: module.RecurringPanel })));
 const ReviewCenterPanel = lazy(() => import("@/components/ReviewCenterPanel").then((module) => ({ default: module.ReviewCenterPanel })));
@@ -29,6 +30,7 @@ const PlannedEventsPanel = lazy(() => import("@/components/PlannedEventsPanel").
 const AdvisorPanel = lazy(() => import("@/components/AdvisorPanel").then((module) => ({ default: module.AdvisorPanel })));
 const ReceiptsStudio = lazy(() => import("@/components/ReceiptsStudio").then((module) => ({ default: module.ReceiptsStudio })));
 const LearnedRulesPanel = lazy(() => import("@/components/LearnedRulesPanel").then((module) => ({ default: module.LearnedRulesPanel })));
+const ShoppingListPanel = lazy(() => import("@/components/ShoppingListPanel").then((module) => ({ default: module.ShoppingListPanel })));
 const ProductCatalogPanel = lazy(() => import("@/components/ProductCatalogPanel").then((module) => ({ default: module.ProductCatalogPanel })));
 const SettingsPanel = lazy(() => import("./SettingsPanel").then((module) => ({ default: module.SettingsPanel })));
 const SyncPanel = lazy(() => import("./SyncPanel").then((module) => ({ default: module.SyncPanel })));
@@ -69,6 +71,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
     };
     window.setTimeout(tick, 40);
   };
+  const shoppingCount = visibleShopping(data.settings.shoppingList || []).todo.length;
   const content = () => {
     if (tab === "overview") return <div className="bf-more-overview">
       {simpleMode ? (
@@ -111,6 +114,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
       <section className="bf-more-group" aria-labelledby="more-shop-title">
         <p className="bf-kicker bf-more-section-label" id="more-shop-title">{t("CUMPĂRĂTURI")}</p>
         <div className="bf-more-grid bf-settings-group">
+          <button type="button" className="bf-settings-row" onClick={() => setTab("shopping")}><ListChecks size={20} /><span className="bf-settings-copy"><b>{t("Lista de cumpărături")}</b><small>{shoppingCount ? t("{count} de luat", { count: shoppingCount }) : t("comună pentru toată familia")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("catalog")}><Search size={20} /><span className="bf-settings-copy"><b>{t("Catalog")}</b><small>{t("caută Napolact, Ariel, lapte — liste online")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => setTab("prices")}><ShoppingBasket size={20} /><span className="bf-settings-copy"><b>{t("Prețuri")}</b><small>{t("istoric și coșul etalon")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
           <button type="button" className="bf-settings-row" onClick={() => openSettingsSection("bf-merchant-rules")}><Store size={20} /><span className="bf-settings-copy"><b>{t("Reguli comerciant")}</b><small>{t("categorie și plic după magazin")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
@@ -140,6 +144,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
     if (tab === "receipts") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim bonurile…")}</div>}><div>{receiptStorageNotice && <p className="bf-notice" role="status"><ShieldCheck size={15} /> {receiptStorageNotice}</p>}<ReceiptsStudio data={data} onAddReceipt={onAddReceipt} /><div className="bf-receipt-list">{data.receipts.map((receipt) => <article key={receipt.id}><ReceiptThumbnail receipt={receipt} /><div><b>{receipt.vendor}</b><small>{dateText(receipt.date)} · {receipt.lines?.length || 1} {t("produse")}</small><p>{receipt.lines?.map((line) => `${line.label || line.category}: ${money(line.amount)}`).join(" · ") || receipt.note || t("Fără detalii")}</p>{(receipt.imageKeys?.length || (receipt.imageData2 ? 2 : receipt.imageData ? 1 : 0)) > 1 && <small>{t("Bon în două fotografii")}</small>}</div><strong>{money(receipt.amount)}</strong><button aria-label={t("Șterge bonul {vendor}", { vendor: receipt.vendor })} onClick={() => onDeleteReceipt(receipt.id)}><Trash2 size={16} /></button></article>)}{!data.receipts.length && <div className="bf-empty-state slim"><ReceiptText size={23} /><h2>{t("Niciun bon")}</h2><p>{t("Fotografiază un bon din ghid sau de aici, ori caută un produs în catalog.")}</p></div>}</div></div></Suspense>;
     if (tab === "catalog") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim catalogul…")}</div>}><ProductCatalogPanel data={data} onSaveReceipt={onSaveReceipt} onOpenReceiptForm={onAddReceipt} /></Suspense>;
     if (tab === "review") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim revizuirea…")}</div>}><ReviewCenterPanel data={data} onChange={onChange} /></Suspense>;
+    if (tab === "shopping") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim lista…")}</div>}><ShoppingListPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "prices") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim prețurile…")}</div>}><PriceWatchPanel data={data} onChange={onChange} /></Suspense>;
     if (tab === "pocket") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim buzunarul…")}</div>}><PocketPanel data={data} /></Suspense>;
     if (tab === "events") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim evenimentele…")}</div>}><PlannedEventsPanel data={data} onChange={onChange} /></Suspense>;

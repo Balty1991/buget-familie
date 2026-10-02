@@ -1,0 +1,19 @@
+/* Lista de cumpărături: rânduri mari, bifă rotundă; cele luate, tăiate și mai jos. */
+.bf-shopping,.bf-shopping header{display:grid;gap:14px}
+.bf-shopping header{gap:4px}
+.bf-shopping header *{margin:0}
+.bf-shopping header p:last-child,.bf-shop-list small,.bf-shop-empty{color:var(--cf-muted)}
+.bf-shop-add,.bf-shop-list li,.bf-shop-empty{display:flex;align-items:center;gap:10px}
+html body .bf-shopping .bf-shop-add input{flex:1;min-width:0;min-height:48px;padding:0 14px;border:1px solid var(--cf-line);border-radius:14px;background:var(--cf-surface)}
+.bf-shop-list{margin:0;padding:0;list-style:none;border-top:1px solid var(--cf-line)}
+.bf-shop-list li{min-height:56px;border-bottom:1px solid var(--cf-line)}
+.bf-shop-list span{display:grid;flex:1;min-width:0}
+.bf-shop-list b{overflow:hidden;font-size:16px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.bf-shop-list small{font-size:12px}
+.bf-shop-list .is-done b,.bf-shop-list.is-done b{color:var(--cf-muted);font-weight:500;text-decoration:line-through}
+html body .bf-shopping button.bf-shop-check{display:grid;place-items:center;width:30px;height:30px;min-height:0;padding:0;border:2px solid var(--cf-primary);border-radius:50%;background:none;color:#fff;box-shadow:none}
+html body .bf-shopping .is-done button.bf-shop-check{background:var(--cf-primary)}
+html body .bf-shopping button.bf-shop-remove{width:40px;height:40px;min-height:0;padding:0;border:0;background:none;color:var(--cf-muted);box-shadow:none}
+.bf-shop-empty{padding:16px;border:1px dashed var(--cf-line);border-radius:16px}
+.bf-shop-empty p{margin:0}
+html body .bf-shopping .bf-shop-finish{width:100%;min-height:52px}

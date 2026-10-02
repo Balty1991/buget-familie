@@ -1684,3 +1684,6 @@ html[data-simple-mode="1"] .os-dock button {
 .bf-year-cta > span:first-child { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 14px; background: rgba(255, 255, 255, 0.16); font: 600 15px Fraunces, Georgia, serif; }
 .bf-year-cta-wrap { position: relative; }
 .bf-year-cta-wrap > .bf-year-cta-close { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.16); color: #fff; }
+.bf-shop-chip{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 16px;border:1px solid var(--cf-line);border-radius:18px;background:var(--cf-surface);color:var(--cf-ink)}
+.bf-shop-chip span{flex:1;font-weight:600}
+.bf-shop-chip b{color:var(--cf-primary)}
