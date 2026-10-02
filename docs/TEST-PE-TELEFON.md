@@ -53,4 +53,9 @@ Construiește întâi AAB-ul (Actions → Release Android AAB) și instalează-l
 - [ ] Pe B, după sincronizare: aceeași vacanță și același „mai aveți”.
 - [ ] Încheie vacanța pe B; pe A, după sincronizare, Notează nu mai arată chipul.
 
+## 10. Obiectiv atins și notificarea de final de lună (2 min)
+- [ ] Obligații → un obiectiv aproape plin → „Pune deoparte” până la țintă: apare felicitarea, „Spune familiei” deschide lista de aplicații.
+- [ ] Redeschide aplicația: felicitarea nu mai apare.
+- [ ] Cu 5 zile înainte de salariu, la 18:45, vine „Mai sunt 5 zile până la salariu”.
+
 Ce nu merge: o captură de ecran și modelul telefonului, în aplicație la Mai mult → „Spune-ne ce nu merge”.

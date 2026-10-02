@@ -10,6 +10,7 @@ describe("preferințele notificărilor", () => {
     expect(notifyKindOf("payday-eve-2026-10-18")).toBe("income");
     expect(notifyKindOf("goal-due-s1-2027-07-09")).toBe("goals");
     expect(notifyKindOf("month-card-2026-10")).toBe("summaries");
+    expect(notifyKindOf("month-end-2026-10-18")).toBe("summaries");
     expect(notifyKindOf("checkin-2026-10-02")).toBe("checkin");
   });
 

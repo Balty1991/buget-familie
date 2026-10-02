@@ -428,6 +428,16 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     alerts.push({ id: id++, title: t("Bilanțul săptămânii e gata"), body: t("Vezi cât ați cheltuit și trimite-l familiei."), at: summaryAt, tag: `weekly-summary-${addIsoDaysLocal(today, sunday)}` });
   }
 
+  // Cu 5 zile înainte de salariu, seara: asistentul de sfârșit de lună de pe Astăzi.
+  const cycleEnd = planEndDate(data.settings.salaryPlan);
+  if (cycleEnd && plan.allocations.length) {
+    const lead = Math.round((new Date(`${cycleEnd}T12:00:00`).valueOf() - new Date(`${today}T12:00:00`).valueOf()) / 86_400_000) - 5;
+    const monthEndAt = lead >= 0 && lead <= 14 ? atLocalHour(lead, 18, 45) : undefined;
+    if (monthEndAt && monthEndAt.getTime() > Date.now()) {
+      alerts.push({ id: id++, title: t("Mai sunt 5 zile până la salariu"), body: t("Vezi ce mai e de plătit și unde pot merge banii care rămân."), at: monthEndAt, tag: `month-end-${cycleEnd}` });
+    }
+  }
+
   // Ritmul zilnic: dacă proiecția arată că plicurile rămase nu ajung până la salariu
   const forecast = planForecast(data);
   if (forecast.remainingDays > 0 && forecast.spentToDate > 0 && forecast.projectedRemaining < 0) {
