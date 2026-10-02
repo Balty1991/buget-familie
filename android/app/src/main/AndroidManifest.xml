@@ -24,6 +24,8 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Scurtăturile de pe iconiță (ține apăsat): Notează, Spune, Lista. -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
 
             <!-- Invitația în camera familiei, deschisă din browser după scanarea codului QR. -->
             <intent-filter>

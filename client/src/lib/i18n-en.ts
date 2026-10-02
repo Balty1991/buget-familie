@@ -3985,4 +3985,12 @@ export const en: Record<string, string> = {
   "Scrie ce vrei și cât costă.": "Write what you want and how much it costs.",
   "ex. o bicicletă": "e.g. a bike",
   "Îmi fac o pușculiță": "Start a piggy bank",
+  "Deschide lista de cumpărături": "Open the shopping list",
+  "Lista de cumpărături a familiei, în Mai mult: bifezi în magazin, plata intră în plic.": "The family shopping list, in More: tick it off in the shop, the payment goes into its envelope.",
+  "Mai puțin de scris, mai mult de văzut.": "Less typing, more to see.",
+  "Notează din voce: „cincizeci de lei la Lidl” completează suma, magazinul și plicul.": "Log by voice: “fifty lei at Lidl” fills in the amount, the shop and the envelope.",
+  "Obligații: cât vă costă abonamentele pe lună și pe an, și ce s-a scumpit.": "Bills: what your subscriptions cost per month and per year, and what went up.",
+  "Pentru copii: pușculița, pe telefonul lor.": "For kids: a piggy bank, on their own phone.",
+  "Raportul lunar PDF, refăcut, și „Anul vostru”: retrospectiva anului, de trimis familiei.": "A redesigned monthly PDF report, and “Your year”: the year in review, to send to the family.",
+  "Widget nou pe ecranul telefonului: „Plicurile mele”, cu cât a mai rămas.": "New home screen widget: “My envelopes”, with what is left.",
 };

@@ -20,4 +20,10 @@
     <string name="widget_env_empty">Deschide aplicația o dată ca să apară plicurile.</string>
     <string name="widget_env_description">Arată pe ecranul principal primele trei plicuri: cât a rămas în fiecare și cât s-a consumat.</string>
     <string name="voice_prompt">Spune suma și magazinul</string>
+    <string name="shortcut_note_short">Notează</string>
+    <string name="shortcut_note_long">Notează o cheltuială</string>
+    <string name="shortcut_voice_short">Spune</string>
+    <string name="shortcut_voice_long">Spune ce ai cumpărat</string>
+    <string name="shortcut_shopping_short">Lista</string>
+    <string name="shortcut_shopping_long">Lista de cumpărături</string>
 </resources>

@@ -118,7 +118,7 @@ export function DeferBelowFold({ children }: { children: ReactNode }) {
 }
 
 
-export function WhatsNewSheet({ onClose, onOpenTheme, onOpenMore }: { onClose: () => void; onOpenTheme: () => void; onOpenMore: () => void }) {
+export function WhatsNewSheet({ onClose, onOpenShopping, onOpenMore }: { onClose: () => void; onOpenShopping: () => void; onOpenMore: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget }) => {
     if (event.target === event.currentTarget) onClose();
@@ -133,16 +133,18 @@ export function WhatsNewSheet({ onClose, onOpenTheme, onOpenMore }: { onClose: (
           </div>
           <button type="button" className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button>
         </header>
-        <p>{t("Aplicația are culoare și un drum mai scurt până la notare.")}</p>
+        <p>{t("Mai puțin de scris, mai mult de văzut.")}</p>
         <ul className="bf-whats-new-list">
-          <li>{t("Fiecare categorie are culoarea ei — în Mișcări, pe Astăzi, pe plicuri și în Analiză.")}</li>
-          <li>{t("Notează: categoriile sunt la vedere, sub magazin. O atingere și gata.")}</li>
-          <li>{t("Imaginea lunii: toată luna într-o poză de trimis familiei, doar cu procente dacă vrei.")}</li>
-          <li>{t("Tema Alb e mai luminoasă, iar Mai mult are iconițe colorate pe secțiuni.")}</li>
+          <li>{t("Notează din voce: „cincizeci de lei la Lidl” completează suma, magazinul și plicul.")}</li>
+          <li>{t("Lista de cumpărături a familiei, în Mai mult: bifezi în magazin, plata intră în plic.")}</li>
+          <li>{t("Widget nou pe ecranul telefonului: „Plicurile mele”, cu cât a mai rămas.")}</li>
+          <li>{t("Obligații: cât vă costă abonamentele pe lună și pe an, și ce s-a scumpit.")}</li>
+          <li>{t("Raportul lunar PDF, refăcut, și „Anul vostru”: retrospectiva anului, de trimis familiei.")}</li>
+          <li>{t("Pentru copii: pușculița, pe telefonul lor.")}</li>
         </ul>
         <div className="bf-whats-new-actions">
           <button type="button" className="bf-primary" onClick={onClose}>{t("Am înțeles")}</button>
-          <button type="button" className="bf-secondary" onClick={onOpenTheme}>{t("Alege tema")}</button>
+          <button type="button" className="bf-secondary" onClick={onOpenShopping}>{t("Deschide lista de cumpărături")}</button>
           <button type="button" className="bf-link-button" onClick={onOpenMore}>{t("Deschide Mai mult")}</button>
         </div>
       </section>

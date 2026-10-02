@@ -12,9 +12,11 @@ export type QuickAction =
   | "expense"
   | "receipt"
   | "today"
+  | "voice"
+  | "shopping"
   | { kind: "template"; templateId: string };
 
-const KNOWN = new Set(["expense", "receipt", "today"]);
+const KNOWN = new Set(["expense", "receipt", "today", "voice", "shopping"]);
 
 type NativeBridge = {
   consume?: () => string;
