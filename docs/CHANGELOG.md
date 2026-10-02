@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.139
+
+Mai profesional:
+- Astăzi, „Ultimele mișcări”: cheltuielile sunt negre, nu roșii — ca în Mișcări. Roșul rămâne doar pentru ce e depășit.
+- Antetele de pagină (de ex. „Mai mult”) nu mai au cercul decorativ albăstrui; Obligații nu mai are o pată roșiatică în colț.
+- Jos în Mai mult: versiunea aplicației, Confidențialitate, Termeni și Suport, ca în aplicațiile serioase.
+- Versiunea internă (`APP_VERSION_CODE`) rămăsese la 124; acum e la zi, iar un test nou verifică la fiecare versiune că aplicația, package.json și build.gradle spun același lucru.
+- Bulele zilelor din Astăzi arată sumele în formatul aplicației.
+
 ## 1.1.138
 
 Mai frumos, fără funcții noi:

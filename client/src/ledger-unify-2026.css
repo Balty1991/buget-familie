@@ -279,7 +279,7 @@ html.theme-navy .os-shell .os-dock button.is-on {
   border-radius:20px;
   border: 1px solid var(--lu-line, #c9d2cc);
   background:
-    radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, var(--lu-coral, #c2473c) 12%, transparent), transparent 55%),
+    radial-gradient(90% 80% at 100% 0%, color-mix(in srgb, var(--cf-primary) 9%, transparent), transparent 55%),
     var(--lu-card, #f7f8f6);
 }
 .bf-upcoming-hero h1 {

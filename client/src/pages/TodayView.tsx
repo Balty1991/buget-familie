@@ -442,7 +442,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                   const row = rhythm.days.find((item) => item.day === rhythmTip);
                   if (!row) return null;
                   const shown = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
-                  const leiExact = (value: number) => `${stripLei(value, getLocale())} lei`;
+                  const leiExact = (value: number) => money(value);
                   const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiExact(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiExact(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiExact(row.out) });
                   return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiExact(row.out) })}</span></ChartTip>;
                 })()}

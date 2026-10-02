@@ -4139,4 +4139,7 @@ export const en: Record<string, string> = {
   "Lista de cumpărături scurtează drumul prin magazin.": "A shopping list shortens the trip through the store.",
   "Scrisoare pentru viitor: lăsați un mesaj pe un obiectiv; îl citiți abia când îl atingeți.": "A letter to the future: leave a message on a goal; you read it only when you reach it.",
   "Astăzi vă salută pe nume, cu fraza zilei: salariul, vacanța, seria sau cum a fost ieri.": "Today greets you by name, with the line of the day: payday, the trip, your streak or how yesterday went.",
+  "Buget Familie {version}": "Buget Familie {version}",
+  "Confidențialitate": "Privacy",
+  "Termeni": "Terms",
 };

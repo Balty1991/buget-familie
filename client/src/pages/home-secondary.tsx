@@ -21,6 +21,10 @@ import { FeedbackPanel } from "@/components/FeedbackPanel";
 import { t } from "@/lib/i18n";
 import { askConfirm } from "@/lib/confirm-dialog";
 import { visibleShopping } from "@/lib/shopping-list";
+import { APP_PRIVACY_PATH, APP_SUPPORT_EMAIL, APP_TERMS_PATH, APP_VERSION, publicLegalUrl } from "@/lib/app-version";
+
+/** Subsolul din Mai mult: linkuri mici la vedere, dar cu loc de atins de 44 px. */
+const FOOT_LINK = { display: "inline-flex", alignItems: "center", minHeight: 44, padding: "0 4px", color: "inherit" } as const;
 const ReportsPanel = lazy(() => import("@/components/ReportsPanel").then((module) => ({ default: module.ReportsPanel })));
 const RecurringPanel = lazy(() => import("@/components/RecurringPanel").then((module) => ({ default: module.RecurringPanel })));
 const ReviewCenterPanel = lazy(() => import("@/components/ReviewCenterPanel").then((module) => ({ default: module.ReviewCenterPanel })));
@@ -139,6 +143,12 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
           <button type="button" className="bf-settings-row" onClick={() => setTab("guide")}><BookOpen size={20} /><span className="bf-settings-copy"><b>{t("Tutorial")}</b><small>{t("cum notezi, cum citești cifra")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button><button type="button" className="bf-settings-row" onClick={() => setTab("feedback")}><MessageSquareWarning size={20} /><span className="bf-settings-copy"><b>{t("Spune-ne ce nu merge")}</b><small>{t("o problemă sau o idee, direct la noi")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
         </div>
       </section>
+      <footer style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px 14px", margin: "8px 0 0", color: "var(--cf-muted)", fontSize: 12 }}>
+        <span style={FOOT_LINK}>{t("Buget Familie {version}", { version: APP_VERSION })}</span>
+        <a href={publicLegalUrl(APP_PRIVACY_PATH)} target="_blank" rel="noreferrer" style={FOOT_LINK}>{t("Confidențialitate")}</a>
+        <a href={publicLegalUrl(APP_TERMS_PATH)} target="_blank" rel="noreferrer" style={FOOT_LINK}>{t("Termeni")}</a>
+        <a href={`mailto:${APP_SUPPORT_EMAIL}`} style={FOOT_LINK}>{t("Suport")}</a>
+      </footer>
         </>
       )}
     </div>;
