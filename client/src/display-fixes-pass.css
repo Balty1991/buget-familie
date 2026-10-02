@@ -156,12 +156,14 @@
    ca desenul să se miște. Confirmarea unei rate mișcă bani — nu poate cere ochire. */
 .bf-schedule-check,
 .bf-weekly-tranche-notice .dismiss,
+.bf-envelope-live-notice .dismiss,
 .bf-week-transfer-toggle,
 .bf-plan-toggle > input[type="checkbox"] {
   position: relative;
 }
 .bf-schedule-check::after,
 .bf-weekly-tranche-notice .dismiss::after,
+.bf-envelope-live-notice .dismiss::after,
 .bf-week-transfer-toggle::after,
 .bf-plan-toggle > input[type="checkbox"]::after {
   content: "";

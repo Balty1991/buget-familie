@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.137
+
+Verificare generală după valurile 1.1.132–1.1.136:
+- Viteză: asistentul de sfârșit de lună (și fișierul lui) se încarcă doar în ultimele 5 zile dinainte de salariu. Pornirea până la cifra zilei, pe un telefon lent simulat (CPU ×4): ~0,95 s, cât era înainte de valuri (~0,98 s). Pachetul principal: +8,5 KB față de 1.1.131.
+- Notează în vacanță: o plată din șablon (chiria, rata) nu mai intră din oficiu în bugetul vacanței.
+- Fondul de urgență nu mai ia drept fond un obiectiv cu „rezervare” în nume.
+- Intrarea animată de pe Astăzi apare o dată pe zi, nu la fiecare repornire a aplicației.
+- Butoane mai ușor de atins: „Ascunde alerta” pe ecrane înguste și sumele recente din Notează pe ecran lat.
+- Toate ecranele verificate la 320, 390, 768 și 1280 px, în temele Alb, Întunecat și Navy, în română și engleză.
+
 ## 1.1.136
 
 - Astăzi, pornire nouă: „Bună dimineața, Andrei” (după oră și pe numele de pe telefon) și fraza zilei, aleasă din ce contează azi — salariul de azi, vacanța în curs, ultimele zile dinainte de salariu, seria de notat, cum a fost ieri față de o zi obișnuită; altfel, un sfat scurt care se schimbă zilnic.

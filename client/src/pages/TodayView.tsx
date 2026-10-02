@@ -15,7 +15,7 @@ import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBala
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BookOpen, BellRing, ListChecks, Image as ImageIcon, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
-import { addIsoDays, calculateHealthScore, dropEnvelopeTransfer, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
+import { addIsoDays, planEndDate, calculateHealthScore, dropEnvelopeTransfer, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey } from "@/lib/calendar-budget";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
 import { ChartTip } from "@/components/ChartFrame";
@@ -186,7 +186,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const summary = useTodaySummary(data);
   const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
   // Prima deschidere a zilei: salutul, intrarea pe rând a cardurilor și cifra care urcă de la 0.
-  const [intro] = useState(() => { try { if (navigator.webdriver || window.sessionStorage.getItem(INTRO_KEY) === isoToday()) return false; safeSetItem(window.sessionStorage, INTRO_KEY, isoToday()); return true; } catch { return false; } });
+  const [intro] = useState(() => { try { if (navigator.webdriver || window.localStorage.getItem(INTRO_KEY) === isoToday()) return false; safeSetItem(window.localStorage, INTRO_KEY, isoToday()); return true; } catch { return false; } });
+  // Asistentul de final de lună (și fișierul lui) se încarcă doar în ultimele 5 zile dinainte de salariu.
+  const nearPayday = useMemo(() => { const end = planEndDate(data.settings.salaryPlan); const days = end ? Math.round((Date.parse(`${end}T12:00:00Z`) - Date.parse(`${isoToday()}T12:00:00Z`)) / 86_400_000) : -1; return days >= 1 && days <= 5; }, [data.settings.salaryPlan]);
   const greeting = useMemo(() => dayGreeting(data, isoToday(), new Date().getHours()), [data]);
   const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0, intro ? 1100 : 480, intro ? 0 : undefined);
   const signals = useMemo(() => tickMemo([data], `signals:${isoToday()}`, () => advisorSignals(data)), [data]);
@@ -659,7 +661,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         </section>
       )}
       {data.settings.trip && <Suspense fallback={null}><TripTodayCard data={data} today={todayIso} /></Suspense>}
-      <Suspense fallback={null}><MonthEndCard data={data} today={todayIso} onChange={onChange} /></Suspense>
+      {nearPayday && <Suspense fallback={null}><MonthEndCard data={data} today={todayIso} onChange={onChange} /></Suspense>}
       {!simpleMode && <Suspense fallback={null}><MonthChallengeCard data={data} today={todayIso} /></Suspense>}
       <section className="bf-today-activity">
           <div className="bf-section-heading">
