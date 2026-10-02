@@ -61,15 +61,6 @@
 
 .bf-quick-entry-panel .bf-quick-category-picks::-webkit-scrollbar { display: none; }
 
-.bf-quick-entry-panel .bf-quick-category-picks > span {
-  flex: 0 0 auto;
-  align-self: center;
-  color: var(--cf-muted);
-  font-size:12px;
-  font-weight:600;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-}
 
 .bf-quick-entry-panel .bf-quick-category-picks button,
 .bf-quick-entry-panel .bf-quick-template-rail button {

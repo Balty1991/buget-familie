@@ -4,45 +4,45 @@
 --ui-theme-elev:0 10px 24px rgba(0,0,0,.08)}
 html.theme-dark,html.theme-navy{
 --ui-theme-elev:0 10px 28px rgba(0,0,0,.38)}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .os-shell,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app{
 --cf-glow:transparent;--os-glow:transparent}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .os-dock,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .os-dock::before{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .os-shell .os-dock,:is(html.theme-white,html.theme-dark,html.theme-navy) body .os-shell .os-dock::before{
 filter:none;background-image:none;outline:none;
 box-shadow:0 -6px 20px rgba(0,0,0,.1)}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .os-hero,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulation,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-allocation-period,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-analysis-snapshot,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-household-card,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-settings>section,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-sync{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .os-shell .os-hero,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulation,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-allocation-period,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-analysis-snapshot,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-household-card,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-settings>section,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-sync{
 padding:var(--ui-theme-card-pad) 20px!important;gap:var(--ui-theme-stack-gap)!important;
 line-height:var(--ui-theme-lh)!important;border-radius:1.15rem!important;
 box-shadow:var(--ui-theme-elev)!important;filter:none!important;--cf-glow:transparent!important}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-primary,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .os-shell .bf-primary,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator-action,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-movement-add,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-empty-state .bf-primary,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-onboarding-actions .bf-primary{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-primary,:is(html.theme-white,html.theme-dark,html.theme-navy) body .os-shell .bf-primary,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-simulator-action,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-movement-add,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-empty-state .bf-primary,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-onboarding-actions .bf-primary{
 min-height:48px!important;padding:0 18px!important;border:0!important;border-radius:999px!important;
 font-weight:600!important;color:var(--os-mint-fg,var(--cf-on-forest,#04140e))!important;
 background:var(--os-mint,var(--cf-primary))!important;
 box-shadow:none!important}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-pace-switch,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-insights-switch,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-analysis-scope,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-movement-kind{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-pace-switch,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-insights-switch,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-analysis-scope,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-movement-kind{
 border:0;box-shadow:none!important;gap:6px;padding:4px!important;border-radius:12px !important;
 background:color-mix(in srgb,var(--os-surface-2,var(--cf-surface-alt)) 94%,transparent)!important}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button.active,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button[aria-selected="true"],:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-pace-switch button.active,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-movement-kind button.active{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button.active,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-allocation-period-tabs button[aria-selected="true"],:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-pace-switch button.active,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-movement-kind button.active{
 border:1px solid transparent;color:var(--os-mint-fg,var(--cf-on-forest,#04140e));
 background:color-mix(in srgb,var(--cf-primary) 16%,var(--cf-surface))!important;font-weight:600}
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-page,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-today-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-movements-ledger,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-obligations-workspace,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-analysis,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-utilities-workspace{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-page,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-today-workspace,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-movements-ledger,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-obligations-workspace,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-analysis,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-utilities-workspace{
 padding-bottom:calc(88px + env(safe-area-inset-bottom,0px) + 24px)!important;
 scroll-padding-bottom:calc(88px + env(safe-area-inset-bottom,0px) + 24px)}
 @media (max-width:640px){
-:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace h1,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace h2,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-movements-header h1,:is(html.theme-white,html.theme-ink,html.theme-dark,html.theme-navy) body .bf-app .bf-today-workspace>header h1{
+:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace h1,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-plan-workspace h2,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-movements-header h1,:is(html.theme-white,html.theme-dark,html.theme-navy) body .bf-app .bf-today-workspace>header h1{
 font-family:"IBM Plex Sans", system-ui,sans-serif!important;font-weight:600!important;
 font-size:clamp(1.12rem,4.6vw,1.38rem)!important;letter-spacing:-.02em!important}
 }
 /* Paletele white/dark/aurora/navy/cyber stau în tokens.css, încărcat imediat după. */
-:is(html.theme-white,html.theme-ink) body,:is(html.theme-white,html.theme-ink) body .os-shell.bf-app{
+html.theme-white body,html.theme-white body .os-shell.bf-app{
 background:var(--cf-bg,#e8ece9);color:#0c1612}
-:is(html.theme-white,html.theme-ink) body .bf-app .bf-plan-simulator,
-:is(html.theme-white,html.theme-ink) body .bf-app .bf-allocation-period,
-:is(html.theme-white,html.theme-ink) body .bf-app .bf-analysis-snapshot{
+html.theme-white body .bf-app .bf-plan-simulator,
+html.theme-white body .bf-app .bf-allocation-period,
+html.theme-white body .bf-app .bf-analysis-snapshot{
 background:var(--cf-surface)!important;border:1px solid var(--cf-line)!important;
 box-shadow:var(--ds-shadow-card)!important}
-:is(html.theme-white,html.theme-ink) body .os-shell .os-dock{background:#eef1ef;box-shadow:none!important;filter:none}
-:is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.is-on,
-:is(html.theme-white,html.theme-ink) body .os-shell .os-dock button.active{color:#176b54!important;background:color-mix(in srgb,#176b54 16%,#eef1ef)!important;box-shadow:none!important}
+html.theme-white body .os-shell .os-dock{background:#eef1ef;box-shadow:none!important;filter:none}
+html.theme-white body .os-shell .os-dock button.is-on,
+html.theme-white body .os-shell .os-dock button.active{color:#176b54!important;background:color-mix(in srgb,#176b54 16%,#eef1ef)!important;box-shadow:none!important}
 /* tokens.css */
 html.theme-dark body,html.theme-dark body .os-shell.bf-app{background:#0c0d0f;color:#eceff3}
 html.theme-dark body .os-shell .os-hero,

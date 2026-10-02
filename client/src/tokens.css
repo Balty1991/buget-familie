@@ -14,7 +14,7 @@
   --bf-hit: 44px;
 }
 
-:is(html.theme-white, html.theme-ink):not(.bf-tint-sepia, .bf-tint-kid) {
+html.theme-white:not(.bf-tint-sepia, .bf-tint-kid) {
   --cf-bg: #eef2ef !important;
   --cf-surface: #ffffff !important;
   --cf-surface-alt: #f1f5f2 !important;

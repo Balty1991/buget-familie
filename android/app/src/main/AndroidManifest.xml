@@ -96,6 +96,12 @@
 
     <!-- Permissions -->
 
+    <!-- Android 11+: fără asta, aplicația nu vede dialogul de recunoaștere vocală (notarea din voce). -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!--

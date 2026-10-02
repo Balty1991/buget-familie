@@ -2,6 +2,7 @@
  * Gospodărie: recapitulare lunară, vârstă a banilor, el și ea, vânător de abonamente.
  * Confirmarea unei detecții creează o scadență în registrul deja sincronizat.
  */
+import { YearRecapEntry } from "@/components/YearRecapEntry";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, Image as ImageIcon, PiggyBank, Repeat, Share2, Shield, Users } from "lucide-react";
 import { addIsoDays, autoPostDueRecurring, formatDate, isoToday, type AppData } from "@/lib/finance-data";
@@ -73,6 +74,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
       {cardOpen && <Suspense fallback={null}><MonthShareSheet report={report} onClose={() => setCardOpen(false)} /></Suspense>}
       {/* Scăderea pe care o aștepta orice casă cu doi oameni. */}
       <SettleUpCard data={data} onChange={onChange} />
+      <YearRecapEntry data={data} />
       <section className={`bf-household-recap bf-statement ${recap.tone}`}>
         <div>
           <p className="bf-kicker">{t("RITUALUL LUNII")}</p>

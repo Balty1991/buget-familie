@@ -46,7 +46,7 @@ export function monthCardHeadline(report: MonthlyFamilyReport, showAmounts: bool
 const FONT_SANS = '"IBM Plex Sans", system-ui, sans-serif';
 const FONT_DISPLAY = 'Fraunces, Georgia, serif';
 
-const roundRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+export const roundRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -57,7 +57,7 @@ const roundRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 };
 
 /** Taie textul cu „…” ca să încapă în lățimea dată. */
-const fit = (ctx: CanvasRenderingContext2D, text: string, width: number) => {
+export const fit = (ctx: CanvasRenderingContext2D, text: string, width: number) => {
   if (ctx.measureText(text).width <= width) return text;
   let cut = text;
   while (cut.length > 1 && ctx.measureText(`${cut}…`).width > width) cut = cut.slice(0, -1);
@@ -212,12 +212,12 @@ const toBase64 = async (blob: Blob) => {
  * Trimite imaginea: pe Android prin lista de aplicații (WhatsApp, Instagram), pe web prin
  * Web Share cu fișier, altfel o descarcă. Întoarce ce s-a întâmplat.
  */
-export async function shareMonthCard(blob: Blob, name: string, text: string): Promise<"shared" | "saved" | "cancelled"> {
+export async function shareMonthCard(blob: Blob, name: string, text: string, dialogTitle = t("Trimite imaginea lunii")): Promise<"shared" | "saved" | "cancelled"> {
   if (isNativeApp()) {
     const [{ Filesystem, Directory }, { Share }] = await Promise.all([import("@capacitor/filesystem"), import("@capacitor/share")]);
     const written = await Filesystem.writeFile({ path: name, data: await toBase64(blob), directory: Directory.Cache, recursive: true });
     try {
-      await Share.share({ title: name, text, files: [written.uri], dialogTitle: t("Trimite imaginea lunii") });
+      await Share.share({ title: name, text, files: [written.uri], dialogTitle });
       return "shared";
     } catch {
       return "cancelled";

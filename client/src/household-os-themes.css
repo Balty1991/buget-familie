@@ -94,15 +94,15 @@ html.theme-dark {
  * Alb (White) — Atelier Premium (default). Alias theme-ink.
  * Fintech premium: suprafețe mai adânci, contrast tipografic, accent pin.
  * ============================================================ */
-:is(html.theme-ink, html.theme-white) {
+html.theme-white {
   --cf-bg: #e4e9e6;
   --cf-surface: #f7f8f6;
   --cf-surface-alt: #eef1ef;
   --cf-ink: #0c1612;
   --cf-line: #c9d2cc;
 }
-:is(html.theme-ink, html.theme-white) .os-shell.bf-app,
-:is(html.theme-ink, html.theme-white) .bf-today-workspace {
+html.theme-white .os-shell.bf-app,
+html.theme-white .bf-today-workspace {
   --os-bg: #e4e9e6;
   --os-surface: #f7f8f6;
   --os-surface-2: #d8e0db;
@@ -119,48 +119,48 @@ html.theme-dark {
   --os-out: #b93d36;
 }
 
-:is(html.theme-ink, html.theme-white),
-:is(html.theme-ink, html.theme-white) body {
+html.theme-white,
+html.theme-white body {
   background: #e4e9e6;
 }
 
-:is(html.theme-ink, html.theme-white) .os-shell.bf-app {
+html.theme-white .os-shell.bf-app {
   background: var(--cf-bg, #e4e9e6);
   color: #0c1612;
 }
 
-:is(html.theme-ink, html.theme-white) .os-appbar.bf-appbar {
+html.theme-white .os-appbar.bf-appbar {
   border-bottom-color: #d5d2c8;
   background: var(--cf-bg, #e4e9e6);
   backdrop-filter: none;
 }
 
-:is(html.theme-ink, html.theme-white) .os-brand-copy b {
+html.theme-white .os-brand-copy b {
   color: #1a2420;
   font-weight:600;
   letter-spacing: -0.02em;
 }
-:is(html.theme-ink, html.theme-white) .os-brand-copy i {
+html.theme-white .os-brand-copy i {
   color: #5a675f;
   font-style: normal;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-:is(html.theme-ink, html.theme-white) .os-tool {
+html.theme-white .os-tool {
   color: #1a2420;
   background: #fbfaf7;
   box-shadow: 0 0 0 1px #d5d2c8;
   border-radius:12px !important;
 }
-:is(html.theme-ink, html.theme-white) .os-tool.is-on {
+html.theme-white .os-tool.is-on {
   background: #2f6b55;
   color: #ffffff;
   box-shadow:var(--bf-shadow-rest);
 }
 
 /* Dock: frosted warm platinum, active = pin — distinct de look-ul stark negru */
-:is(html.theme-ink, html.theme-white) .os-shell .os-dock {
+html.theme-white .os-shell .os-dock {
   left: 0;
   right: 0;
   bottom: 0;
@@ -170,42 +170,42 @@ html.theme-dark {
   box-shadow: 0 -8px 22px rgba(26, 36, 32, .14);
   backdrop-filter: none;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .os-dock button {
+html.theme-white .os-shell .os-dock button {
   color: #5a675f;
   font-size:12px;
   font-weight: 680;
   letter-spacing: 0.01em;
   border-radius: 999px;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .os-dock button.is-on,
-:is(html.theme-ink, html.theme-white) .os-shell .os-dock button.active {
+html.theme-white .os-shell .os-dock button.is-on,
+html.theme-white .os-shell .os-dock button.active {
   color: #ffffff !important;
   background: #2f6b55 !important;
   box-shadow:var(--bf-shadow-rest) !important;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .os-dock button svg {
+html.theme-white .os-shell .os-dock button svg {
   width: 18px;
   height: 18px;
 }
 
-:is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
+html.theme-white .os-shell .bf-today-workspace {
   gap: 14px;
   padding-left: max(14px, var(--os-inset-left));
   padding-right: max(14px, var(--os-inset-right));
 }
 
-:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker,
-:is(html.theme-ink, html.theme-white) .bf-today-workspace .bf-kicker {
+html.theme-white .os-shell .bf-kicker,
+html.theme-white .bf-today-workspace .bf-kicker {
   color: #2f6b55 !important;
   font-size:12px !important;
   letter-spacing: 0.14em !important;
   font-weight: 750 !important;
 }
 
-:is(html.theme-ink, html.theme-white) .os-shell .bf-page > header h1,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace > header h1,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-plan-studio-header h1,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-movements-header h1 {
+html.theme-white .os-shell .bf-page > header h1,
+html.theme-white .os-shell .bf-today-workspace > header h1,
+html.theme-white .os-shell .bf-plan-studio-header h1,
+html.theme-white .os-shell .bf-movements-header h1 {
   color: #1a2420 !important;
   font-family: Fraunces, Georgia, serif !important;
   font-size: clamp(1.5rem, 6vw, 1.9rem) !important;
@@ -213,9 +213,9 @@ html.theme-dark {
   letter-spacing: -0.03em !important;
   line-height: 1.1 !important;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .bf-page > header h1 em,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace > header h1 em,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-movements-header h1 em {
+html.theme-white .os-shell .bf-page > header h1 em,
+html.theme-white .os-shell .bf-today-workspace > header h1 em,
+html.theme-white .os-shell .bf-movements-header h1 em {
   font-style: italic !important;
   color: #2f6b55 !important;
 }
@@ -223,10 +223,10 @@ html.theme-dark {
 /* Astăzi — card erou moale, hârtie caldă */
 
 /* Mișcări — registru clar, distinct de Astăzi */
-:is(html.theme-ink, html.theme-white) .os-shell .bf-movements-ledger {
+html.theme-white .os-shell .bf-movements-ledger {
   gap: 12px;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .bf-movements-header > div::before {
+html.theme-white .os-shell .bf-movements-header > div::before {
   border-color: #c9d8d0 !important;
   border-left-color: #2f6b55 !important;
   color: #1f5240;
@@ -234,52 +234,52 @@ html.theme-dark {
   border-radius:12px;
   padding: 5px 8px;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .bf-movement-day {
+html.theme-white .os-shell .bf-movement-day {
   border: 1px solid #d5d2c8;
   border-radius:20px;
   background: #fbfaf7;
   box-shadow:var(--bf-shadow-rest);
 }
 
-:is(html.theme-ink, html.theme-white) .os-shell .bf-sync,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-settings > section,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-more-grid,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-household-card,
-:is(html.theme-ink, html.theme-white) .os-shell .bf-household-recap {
+html.theme-white .os-shell .bf-sync,
+html.theme-white .os-shell .bf-settings > section,
+html.theme-white .os-shell .bf-more-grid,
+html.theme-white .os-shell .bf-household-card,
+html.theme-white .os-shell .bf-household-recap {
   border-radius:20px !important;
   border-color: #d5d2c8 !important;
   box-shadow:var(--bf-shadow-rest) !important;
 }
 
-:is(html.theme-ink, html.theme-white) .os-shell .bf-primary {
+html.theme-white .os-shell .bf-primary {
   color: #ffffff;
   background: #1f5240;
   box-shadow:var(--bf-shadow-rest);
   border-radius:12px;
 }
-:is(html.theme-ink, html.theme-white) .os-shell .bf-secondary {
+html.theme-white .os-shell .bf-secondary {
   color: #1a2420 !important;
   background: #fbfaf7 !important;
   border: 1px solid #d5d2c8 !important;
 }
 
-:is(html.theme-ink, html.theme-white) .os-desktop-nav button.is-on,
-:is(html.theme-ink, html.theme-white) .os-desktop-nav button.active {
+html.theme-white .os-desktop-nav button.is-on,
+html.theme-white .os-desktop-nav button.active {
   color: #ffffff !important;
   background: #2f6b55 !important;
   box-shadow:var(--bf-shadow-rest) !important;
 }
 
-:is(html.theme-ink, html.theme-white) .bf-nav-count {
+html.theme-white .bf-nav-count {
   background: #2f6b55;
   color: #ffffff;
 }
-:is(html.theme-ink, html.theme-white) .os-tool.is-on .bf-nav-count {
+html.theme-white .os-tool.is-on .bf-nav-count {
   background: #ffffff;
   color: #1f5240;
 }
 
-:is(html.theme-ink, html.theme-white) .bf-whats-new {
+html.theme-white .bf-whats-new {
   background: #fbfaf7 !important;
   color: #1a2420 !important;
   border: 1px solid #d5d2c8 !important;
@@ -288,16 +288,16 @@ html.theme-dark {
 }
 
 @media (max-width: 430px) {
-  :is(html.theme-ink, html.theme-white) .os-shell .os-dock button span {
+  html.theme-white .os-shell .os-dock button span {
     font-size:12px;
   }
-  :is(html.theme-ink, html.theme-white) .os-shell .bf-today-workspace {
+  html.theme-white .os-shell .bf-today-workspace {
     gap: 12px;
   }
-  :is(html.theme-ink, html.theme-white) .os-shell .bf-movements-ledger .bf-movement-day {
+  html.theme-white .os-shell .bf-movements-ledger .bf-movement-day {
     border-radius:12px;
   }
-  :is(html.theme-ink, html.theme-white) .os-shell .os-dock {
+  html.theme-white .os-shell .os-dock {
     left: 0;
     right: 0;
   }

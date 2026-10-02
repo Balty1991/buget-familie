@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { YearRecapEntry } from "@/components/YearRecapEntry";
 import { noSpendDays } from "@/lib/logging-habits";
 import { safeSetItem } from "@/lib/safe-storage";
 import { tickMemo } from "@/lib/tick-cache";
@@ -614,6 +615,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button type="button" className="bf-month-card-cta-close" aria-label={t("Ascunde imaginea lunii")} onClick={hideRecap}><X size={16} /></button>
         </aside>
       )}
+      <YearRecapEntry data={data} seasonal />
       {recapOpen && recapReport && <Suspense fallback={null}><MonthShareSheet report={recapReport} onClose={() => { setRecapOpen(false); hideRecap(); }} /></Suspense>}
       {coach}
 
