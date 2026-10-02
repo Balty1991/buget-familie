@@ -89,7 +89,7 @@ html.dark .bf-receipts-search input {
 .bf-spend-stack.is-debt .is-other { background: #b54b40; }
 .bf-catalog-starters { display: flex; flex-wrap: wrap; gap: 8px; }
 .bf-catalog-starters button {
-  appearance: none; border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer;
+  appearance: none; border: 0; border-radius: 999px; padding: 8px 12px; min-height: 40px; cursor: pointer;
   background: var(--os-surface-2, var(--cf-surface-alt)); color: var(--os-fg, var(--cf-ink));
   box-shadow: 0 0 0 1px var(--os-line, var(--cf-line)); font: 600 12px "IBM Plex Sans", sans-serif;
 }

@@ -124,6 +124,12 @@ public class MainActivity extends BridgeActivity {
     if (Build.VERSION.SDK_INT >= 26) {
       webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true);
     }
+    /*
+     * Textul mărit din setările telefonului ajunge și în pagină, dar plafonat: la 200% butoanele
+     * și cifrele ieșeau din ecran. Între 85% și 130% aplicația rămâne întreagă și lizibilă.
+     */
+    final float fontScale = getResources().getConfiguration().fontScale;
+    settings.setTextZoom(Math.round(Math.max(0.85f, Math.min(1.3f, fontScale)) * 100));
     settings.setSupportZoom(false);
     settings.setBuiltInZoomControls(false);
     settings.setDisplayZoomControls(false);

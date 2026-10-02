@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.132
+
+- Scurtături pe iconiță: ții apăsat pe iconița aplicației → „Notează cheltuială”, „Notează din voce”, „Lista de cumpărături”.
+- Harta lunii în Mișcări: fiecare zi a lunii colorată după cât s-a cheltuit; atingi o zi și vezi doar mișcările ei.
+- Textul mărit din setările telefonului se vede și în aplicație (între 85% și 130%, ca nimic să nu iasă din ecran). Butoanele mici (obiective, catalog) au acum cel puțin 40 px.
+- „Ce e nou” arată noutățile ultimelor versiuni: voce, lista de cumpărături, widget, abonamente, PDF, pușculița copilului.
+
 ## 1.1.131
 
 - Abonamente (Obligații): cât costă pe lună și pe an toate plățile care se repetă, ce s-a scumpit și abonamentele găsite în mișcări, cu „Adaugă” sau „Nu e abonament”.
