@@ -124,7 +124,7 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
     : currentFlow < 0
       ? { title: t("Verifică ritmul până la următorul venit"), detail: t("Cheltuielile lunii au depășit veniturile înregistrate. O ajustare în Plicuri poate preveni o surpriză la final de perioadă."), label: t("Verifică Planul"), view: "plan" as MainView }
       : categories[0]
-        ? { title: t("Urmărește {category}", { category: categories[0][0] }), detail: t("{amount} reprezintă categoria principală din luna aleasă. Deschide registrul pentru a verifica mișcările care au format suma.", { amount: money(categories[0][1]) }), label: t("Vezi Mișcările"), view: "journal" as MainView }
+        ? { title: t("Urmărește {category}", { category: t(categories[0][0]) }), detail: t("{amount} reprezintă categoria principală din luna aleasă. Deschide registrul pentru a verifica mișcările care au format suma.", { amount: money(categories[0][1]) }), label: t("Vezi Mișcările"), view: "journal" as MainView }
         : { title: t("Înregistrează prima mișcare"), detail: t("Analiza devine mai utilă după ce există date reale în registru."), label: t("Deschide Registrul"), view: "journal" as MainView };
 
   return <div className="bf-analysis">

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.130
+
+- Verificare înainte de lansare: toate ecranele și instrumentele, în română și engleză, cu familia exemplu și fără date, pe telefoane mici, normale și tablete — fără erori și fără ecrane care ies din lățime.
+- În engleză: Aspectul (teme și fundaluri), familia exemplu și câteva nume de categorii rămăseseră în română; acum sunt traduse.
+- `docs/TEST-PE-TELEFON.md`: lista de verificat pe un telefon real (voce, widgeturi, notificări, lista de cumpărături pe două telefoane).
+
 ## 1.1.129
 
 - Lista de cumpărături a familiei (Mai mult → Cumpărături, și pe Astăzi când are produse): mai multe deodată, prin virgulă; bifă în magazin; „Am terminat — notează plata” scoate ce s-a luat și deschide Notează pe Alimente. Se sincronizează cu partenerul.
