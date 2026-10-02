@@ -43,4 +43,8 @@ Construiește întâi AAB-ul (Actions → Release Android AAB) și instalează-l
 ## 7. Tabletă sau telefon pliabil (dacă ai)
 - [ ] Pe Astăzi, cifra zilei în stânga, restul în dreapta.
 
+## 8. Scurtături și text mărit (2 min)
+- [ ] Ține apăsat pe iconița aplicației: apar „Notează o cheltuială”, „Spune ce ai cumpărat”, „Lista de cumpărături”; fiecare deschide ecranul lui.
+- [ ] Setări telefon → Afișaj → Dimensiunea fontului la maxim: textul din aplicație e mai mare, dar nimic nu iese din ecran.
+
 Ce nu merge: o captură de ecran și modelul telefonului, în aplicație la Mai mult → „Spune-ne ce nu merge”.

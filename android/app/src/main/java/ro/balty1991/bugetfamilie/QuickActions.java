@@ -14,6 +14,9 @@ public final class QuickActions {
   public static final String ACTION_EXPENSE = "expense";
   public static final String ACTION_RECEIPT = "receipt";
   public static final String ACTION_TODAY = "today";
+  /** Scurtăturile de pe iconiță: notare din voce și lista de cumpărături. */
+  public static final String ACTION_VOICE = "voice";
+  public static final String ACTION_SHOPPING = "shopping";
   /** Prefix pentru un șablon local: „template:&lt;id&gt;”. */
   public static final String ACTION_TEMPLATE_PREFIX = "template:";
 
@@ -60,6 +63,8 @@ public final class QuickActions {
     return ACTION_EXPENSE.equals(action)
       || ACTION_RECEIPT.equals(action)
       || ACTION_TODAY.equals(action)
+      || ACTION_VOICE.equals(action)
+      || ACTION_SHOPPING.equals(action)
       || action.startsWith(ACTION_TEMPLATE_PREFIX);
   }
 }

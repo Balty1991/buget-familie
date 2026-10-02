@@ -165,6 +165,7 @@ export default function Home() {
   const [modal, setModal] = useState<"quick" | "transaction" | "receipt" | "debt" | "saving" | "debt-payment" | null>(null);
   const [quickTemplateId, setQuickTemplateId] = useState<string | undefined>(undefined);
   const [quickKind, setQuickKind] = useState<"income" | undefined>(undefined);
+  const [quickVoice, setQuickVoice] = useState(false);
   useEffect(() => {
     // „Notează salariul” de pe Astăzi: formularul rapid, direct pe Venit.
     const openIncome = () => { setQuickTemplateId(undefined); setQuickKind("income"); setModal("quick"); };
@@ -620,6 +621,9 @@ export default function Home() {
   // Widgetul și dala din Setări rapide deschid direct ecranul cerut, fără pași intermediari.
   useEffect(() => observeQuickActions((action) => {
     if (action === "receipt") { setModal("receipt"); return; }
+    // Scurtăturile de pe iconița aplicației: „Spune” deschide Notează și pornește microfonul.
+    if (action === "voice") { setQuickTemplateId(undefined); setEditTx(undefined); setQuickVoice(true); setModal("quick"); return; }
+    if (action === "shopping") { window.dispatchEvent(new Event("buget-familie:open-shopping")); return; }
     if (action === "expense") { setQuickTemplateId(undefined); setEditTx(undefined); setModal("quick"); return; }
     if (typeof action === "object" && action.kind === "template") {
       setQuickTemplateId(action.templateId);
@@ -729,12 +733,12 @@ export default function Home() {
     })}</nav>}
     {!simpleMode && !memberModeActive && guideOn && <Suspense fallback={null}><AICompanion initiallyOpen data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>}
     {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={activeTheme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={null}><FirstRunSetup data={data} onChange={applyData} onClose={() => { setSetupOpen(false); setDemo(isDemoMode()); }} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={() => { setMore("sync"); go("utilities"); }} /></Suspense>}
-    {modal === "quick" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialKind={quickKind} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); setQuickKind(undefined); }} onMore={(draft) => { setEditTx(draft); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
+    {modal === "quick" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} autoVoice={quickVoice} initialKind={quickKind} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); setQuickKind(undefined); setQuickVoice(false); }} onMore={(draft) => { setEditTx(draft); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
     {modal === "transaction" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); }} /></Suspense>}
     {modal === "receipt" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim bonul…")}</div></div>}><ReceiptForm data={data} onSave={saveReceipt} onClose={() => setModal(null)} /></Suspense>}
     {modal === "debt" && <Suspense fallback={null}><GoalForm data={data} type="debt" item={editGoal} onSave={saveDebt} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "saving" && <Suspense fallback={null}><GoalForm data={data} type="saving" item={editGoal} onSave={saveSaving} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
-    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTheme={() => { dismissWhatsNew(); setThemePickerOpen(true); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
+    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenShopping={() => { dismissWhatsNew(); window.dispatchEvent(new Event("buget-familie:open-shopping")); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;
 }

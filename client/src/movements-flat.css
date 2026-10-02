@@ -179,3 +179,14 @@ html body .os-shell .bf-month-pulse-chips button{display:inline-flex;flex:none;a
 .bf-month-pulse-chips button i{width:9px;height:9px;border-radius:50%;background:var(--bf-cat)}
 .bf-month-pulse-chips button b{color:var(--cf-muted);font-weight:600;font-variant-numeric:tabular-nums}
 html body .os-shell .bf-month-pulse-chips button.is-on{border-color:var(--bf-cat);background:color-mix(in srgb,var(--bf-cat) 14%,transparent)}
+/* Harta lunii: o căsuță pe zi, mai închisă unde s-a cheltuit mai mult; atingerea arată ziua. */
+.bf-month-heat{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.bf-month-heat small{color:var(--cf-muted);font-size:11px;font-weight:700;text-align:center}
+html body .os-shell .bf-month-heat button{min-width:0;height:34px;min-height:0;margin:0;padding:0;border:0;border-radius:9px;background:color-mix(in srgb,var(--cf-ink) 5%,transparent);color:var(--cf-ink);font-size:12px;font-weight:600;box-shadow:none}
+html body .os-shell .bf-month-heat button.l1{background:color-mix(in srgb,var(--cf-primary) 18%,transparent)}
+html body .os-shell .bf-month-heat button.l2{background:color-mix(in srgb,var(--cf-primary) 36%,transparent)}
+html body .os-shell .bf-month-heat button.l3{background:color-mix(in srgb,var(--cf-primary) 60%,transparent);color:var(--cf-on-primary,#fff)}
+html body .os-shell .bf-month-heat button.l4{background:var(--cf-primary);color:var(--cf-on-primary,#fff)}
+html body .os-shell .bf-month-heat button:disabled{opacity:.35}
+html body .os-shell .bf-month-heat button.is-today{outline:2px solid var(--cf-ink);outline-offset:-2px}
+html body .os-shell .bf-month-heat button.is-on{outline:3px solid var(--cf-coral,#b5523b);outline-offset:-3px}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ții apăsat pe iconiță: trei drumuri scurte. Fiecare deschide aplicația cu o acțiune cunoscută (QuickActions). -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="note"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_add"
+        android:shortcutShortLabel="@string/shortcut_note_short"
+        android:shortcutLongLabel="@string/shortcut_note_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="ro.balty1991.bugetfamilie"
+            android:targetClass="ro.balty1991.bugetfamilie.MainActivity">
+            <extra android:name="ro.balty1991.bugetfamilie.QUICK_ACTION" android:value="expense" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="voice"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_mic"
+        android:shortcutShortLabel="@string/shortcut_voice_short"
+        android:shortcutLongLabel="@string/shortcut_voice_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="ro.balty1991.bugetfamilie"
+            android:targetClass="ro.balty1991.bugetfamilie.MainActivity">
+            <extra android:name="ro.balty1991.bugetfamilie.QUICK_ACTION" android:value="voice" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="shopping"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_list"
+        android:shortcutShortLabel="@string/shortcut_shopping_short"
+        android:shortcutLongLabel="@string/shortcut_shopping_long">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="ro.balty1991.bugetfamilie"
+            android:targetClass="ro.balty1991.bugetfamilie.MainActivity">
+            <extra android:name="ro.balty1991.bugetfamilie.QUICK_ACTION" android:value="shopping" />
+        </intent>
+    </shortcut>
+</shortcuts>

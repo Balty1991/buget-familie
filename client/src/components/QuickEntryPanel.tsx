@@ -45,9 +45,9 @@ const CAPTURE_CATEGORIES: Array<[string, typeof ShoppingCart]> = [
   ["Altele", Ellipsis],
 ];
 
-type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; };
+type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; /** Scurtătura „Spune” de pe iconiță: microfonul pornește singur. */ autoVoice?: boolean; };
 
-export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind }: Props) {
+export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind, autoVoice }: Props) {
   const amountRef = useRef<HTMLInputElement>(null);
   /**
    * Pe telefon foaia se deschide întreagă, fără tastatură: omul vede tot formularul, iar
@@ -229,6 +229,12 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     setKind("expense");
     if (spoken.text) applyMerchant(spoken.text);
   };
+  const autoVoiceStarted = useRef(false);
+  useEffect(() => {
+    if (!autoVoice || !canSpeak || autoVoiceStarted.current) return;
+    autoVoiceStarted.current = true;
+    void speak();
+  }, [autoVoice, canSpeak]);
   const save = async () => {
     const numeric = parseRomanianAmount(amount); const member = data.settings.members.find((item) => item.id === memberId); const source = data.settings.paymentSources.find((item) => item.id === sourceId);
     if (numeric < 0.005) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
