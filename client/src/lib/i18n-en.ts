@@ -3949,4 +3949,8 @@ export const en: Record<string, string> = {
   "Salariul lui Andrei": "Andrei’s salary",
   "Utilități": "Utilities",
   "Vacanță la mare": "Seaside holiday",
+  "AM GĂSIT ÎN MIȘCĂRI": "FOUND IN YOUR TRANSACTIONS",
+  "Nu e abonament": "Not a subscription",
+  "s-a scumpit: {from} → {to}": "went up: {from} → {to}",
+  "{amount} pe an": "{amount} a year",
 };
