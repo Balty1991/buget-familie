@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.125
+
+- Astăzi, refăcut: cifra zilei e prima, avertizările vin sub ea; eticheta stă pe rândul datei; un rând mereu vizibil cu zilele până la salariu, intrat și ieșit.
+- „Plicurile tale” pe Astăzi: carduri care derulează, cu inel de progres în culoarea categoriei și cât a rămas.
+- „Față de săptămâna trecută” și „Obiectiv și unde stau banii” sunt pastile mici, nu butoane pe toată lățimea.
+- Provocarea lunii: în primele 10 zile, o țintă propusă pentru categoria flexibilă cea mai mare de luna trecută; acceptată, arată progresul și unde ajunge luna.
+- „Notat” arată seria de la 3 zile la rând; Astăzi numără zilele fără cheltuieli din lună.
+- Notificare pe 1 ale lunii, la 10: imaginea lunii trecute.
+- Pagina de prezentare `despre.html` (GitHub Pages) și textele de lansare (`docs/lansare-texte.md`).
+
 ## 1.1.124
 
 Aspect nou, cu culoare, și o buclă de creștere. Cercetarea din spate: [`cercetare-concurenta-2026-10.md`](cercetare-concurenta-2026-10.md).

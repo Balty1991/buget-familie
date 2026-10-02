@@ -707,27 +707,6 @@ html:not(.dark) .bf-os-decide {
   margin-top: 8px;
 }
 .bf-today-below-gauge { margin: 8px 0 16px; }
-.bf-cycle-flow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 12px;
-}
-.bf-cycle-flow span {
-  display: grid;
-  gap: 2px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--os-surface, #fff) 72%, transparent);
-  border: 1px solid var(--os-line, rgba(13, 59, 50, 0.12));
-}
-.bf-cycle-flow small {
-  font-size:12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--os-muted, #5c6b64);
-}
-.bf-cycle-flow b { font-size:15px; font-variant-numeric: tabular-nums; }
 
 .bf-pocket-row {
   display: grid;
@@ -812,47 +791,6 @@ html:not(.dark) .bf-os-decide {
   background: var(--cf-primary);
 }
 .bf-glance-goal.is-event em { background: var(--cf-warning, #b4741f); }
-.bf-glance {
-  display: grid;
-  gap: 8px;
-  margin: 0 0 12px;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--cf-line, var(--os-line)) 80%, transparent);
-  border-radius: 1.1rem;
-  background: color-mix(in srgb, var(--cf-surface, var(--os-surface)) 94%, transparent);
-  color: var(--cf-ink, var(--os-ink));
-}
-.bf-glance ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.bf-glance li {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
-}
-.bf-glance li > svg {
-  width: 32px;
-  height: 32px;
-  padding: 7px;
-  box-sizing: border-box;
-  border-radius: 10px;
-  color: var(--cf-primary);
-  background: color-mix(in srgb, currentColor 16%, transparent);
-}
-.bf-glance li.is-watch > svg { color: var(--cf-warning, #b4741f); }
-.bf-glance li.is-over > svg { color: var(--cf-danger, #a44e3e); }
-.bf-glance li b { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.bf-glance li strong { font-size: 13px; font-variant-numeric: tabular-nums; }
-.bf-glance li i {
-  display: block;
-  height: 10px;
-  margin-top: 5px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--cf-line, var(--os-line)) 65%, transparent);
-}
-.bf-glance li em { display: block; height: 100%; border-radius: inherit; background: var(--cf-primary); }
-.bf-glance li.is-watch em { background: var(--cf-warning, #b4741f); }
-.bf-glance li.is-over em { background: var(--cf-danger, #a44e3e); }
 .bf-price-rise {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
@@ -870,9 +808,6 @@ html:not(.dark) .bf-os-decide {
 .bf-price-rise button { justify-self: start; }
 .bf-today-activity-list strong.income { color: var(--cf-primary); }
 .bf-today-activity-list strong.expense { color: var(--cf-danger, #a44e3e); }
-
-.bf-cycle-flow span:first-child b { color: #1f7a4d; }
-.bf-cycle-flow span:last-child b { color: #b5523c; }
 
 .os-hero .bf-hero-week {
   margin-top: 14px;
@@ -894,10 +829,6 @@ html:not(.dark) .bf-os-decide {
   font-weight: 600;
 }
 /* Contrast sub 3,6:1 pe închis. */
-html.theme-dark .bf-cycle-flow span:first-child b,
-html.theme-navy .bf-cycle-flow span:first-child b { color: #86dcae; }
-html.theme-dark .bf-cycle-flow span:last-child b,
-html.theme-navy .bf-cycle-flow span:last-child b { color: #ffa493; }
 
 /* Utilizator #16: ce înseamnă cifrele din banda zilelor. */
 .os-hero .bf-hero-week .bf-os-legend {

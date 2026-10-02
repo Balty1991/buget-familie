@@ -39,3 +39,51 @@
 .bf-month-card-cta-open b { font-size: 15px; font-weight: 600; }
 .bf-month-card-cta-open small { color: var(--cf-muted); font-size: 13px; line-height: 1.35; }
 .bf-month-card-cta-close { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; color: var(--cf-muted); background: transparent; }
+
+/* Antetul cifrei: eticheta „Poți folosi azi” stă pe rândul datei, fără pastila de deasupra. */
+.os-shell .bf-today-workspace .os-hero-top .os-hero-label { margin: 0; color: var(--cf-muted); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; line-height: 1.6; text-transform: uppercase; }
+
+/* Ciclul dintr-o privire: zile până la salariu, intrat, ieșit. */
+.bf-cycle-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin: 16px 0 4px; }
+.bf-cycle-strip > div { display: grid; gap: 2px; min-width: 0; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--cf-primary) 7%, var(--cf-surface)); }
+.bf-cycle-strip dt { color: var(--cf-muted); font-size: 12px; font-weight: 500; white-space: nowrap; }
+.bf-cycle-strip dd { margin: 0; color: var(--cf-ink); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bf-cycle-strip dd.income { color: var(--cf-primary-strong, var(--cf-primary)); }
+
+/* Plicurile tale: un rând care derulează, fiecare plic cu inelul lui în culoarea categoriei. */
+.bf-envelope-strip-wrap { display: grid; gap: 10px; margin: 4px 0 8px; }
+.bf-envelope-strip-wrap .bf-section-heading { margin: 0; }
+.bf-envelope-strip { display: flex; gap: 10px; margin: 0; padding: 2px 2px 6px; overflow-x: auto; list-style: none; scrollbar-width: none; scroll-snap-type: x proximity; }
+.bf-envelope-strip::-webkit-scrollbar { display: none; }
+.bf-envelope-strip li { flex: 0 0 152px; scroll-snap-align: start; }
+.bf-envelope-strip button { display: grid; gap: 4px; width: 100%; height: 100%; padding: 14px; border: 1px solid var(--cf-line); border-radius: 18px; color: var(--cf-ink); background: var(--cf-surface); text-align: left; }
+.bf-envelope-strip b { overflow: hidden; margin-top: 6px; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.bf-envelope-strip strong { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.bf-envelope-strip small { color: var(--cf-muted); font-size: 12px; }
+.bf-envelope-ring { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; color: var(--bf-cat, var(--cf-primary)); background: conic-gradient(var(--bf-cat, var(--cf-primary)) calc(var(--bf-used, 0) * 1%), color-mix(in srgb, var(--cf-line) 80%, transparent) 0); }
+.bf-envelope-ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--cf-surface); }
+.bf-envelope-ring svg { position: relative; }
+.bf-envelope-strip li.is-over { --bf-cat: var(--bf-alert, #b42318); }
+.bf-envelope-strip li.is-over small { color: var(--bf-alert, #b42318); font-weight: 600; }
+.bf-envelope-strip li.is-watch button { border-color: color-mix(in srgb, var(--cf-warning, #b07d12) 45%, var(--cf-line)); }
+
+/* Detaliile cifrei se deschid din pastile mici, una lângă alta, nu din butoane pe toată lățimea. */
+.bf-hero-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.bf-hero-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 1px solid var(--cf-line); border-radius: 999px; color: var(--cf-ink); background: var(--cf-surface); font-size: 14px; font-weight: 600; }
+.bf-hero-chip::after { content: ""; width: 7px; height: 7px; margin-left: 2px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); opacity: 0.6; }
+.bf-hero-chip[aria-expanded="true"] { border-color: var(--cf-primary); color: var(--cf-primary-strong, var(--cf-primary)); background: color-mix(in srgb, var(--cf-primary) 9%, var(--cf-surface)); }
+.bf-hero-chip[aria-expanded="true"]::after { transform: translateY(2px) rotate(-135deg); }
+
+/* Provocarea lunii: o singură țintă, în culoarea categoriei ei. */
+.bf-challenge { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; margin: 4px 0 10px; padding: 14px 10px 14px 14px; border: 1px solid color-mix(in srgb, var(--bf-cat, var(--cf-primary)) 30%, var(--cf-line)); border-radius: 18px; background: color-mix(in srgb, var(--bf-cat, var(--cf-primary)) 7%, var(--cf-surface)); }
+.bf-challenge > div { display: grid; gap: 6px; min-width: 0; }
+.bf-challenge-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: #fff; background: var(--bf-cat, var(--cf-primary)); }
+.bf-challenge-kicker { margin: 0; color: var(--cf-muted); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; }
+.bf-challenge b { color: var(--cf-ink); font-size: 16px; font-weight: 600; }
+.bf-challenge small { color: var(--cf-muted); font-size: 13px; line-height: 1.45; }
+.bf-challenge-bar { display: block; height: 8px; overflow: hidden; border-radius: 99px; background: color-mix(in srgb, var(--cf-line) 80%, transparent); }
+.bf-challenge-bar em { display: block; height: 100%; border-radius: inherit; background: var(--bf-cat, var(--cf-primary)); }
+.bf-challenge.is-over .bf-challenge-bar em { background: var(--bf-alert, #b42318); }
+.bf-challenge-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 4px; }
+.bf-challenge-actions .bf-primary { min-height: 44px; }
+.bf-challenge-close { display: grid; place-items: center; width: 40px; height: 40px; margin: -6px 0 0; border: 0; border-radius: 12px; color: var(--cf-muted); background: transparent; }

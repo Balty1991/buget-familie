@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { noSpendDays } from "@/lib/logging-habits";
 import { safeSetItem } from "@/lib/safe-storage";
 import { tickMemo } from "@/lib/tick-cache";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -37,6 +38,7 @@ import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/Env
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
 const WeeklySummaryPanel = lazy(() => import("@/components/WeeklySummaryPanel").then((module) => ({ default: module.WeeklySummaryPanel })));
 const MonthShareSheet = lazy(() => import("@/components/MonthShareSheet").then((module) => ({ default: module.MonthShareSheet })));
+const MonthChallengeCard = lazy(() => import("@/components/MonthChallengeCard").then((module) => ({ default: module.MonthChallengeCard })));
 const SafeSpendSheet = lazy(() => import("@/components/SafeSpendSheet").then((module) => ({ default: module.SafeSpendSheet })));
 const AllocationHistoryChart = lazy(() => import("@/components/AllocationHistoryChart").then((module) => ({ default: module.AllocationHistoryChart })));
 
@@ -188,7 +190,6 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
   const [weekOpen, setWeekOpen] = useState(false);
   const [moneyOpen, setMoneyOpen] = useState(false);
-  const [glanceOpen, setGlanceOpen] = useState(false);
   const [dayMore, setDayMore] = useState(false);
   const [priceLater, setPriceLater] = useState(false);
   const [moved, setMoved] = useState<{ id: string; amount: number; from: string; to: string } | null>(null);
@@ -308,8 +309,11 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const glance = [...envelopes]
     .filter((item) => item.budget > 0 || item.spent > 0)
     .sort((a, b) => (b.state === "over" ? 2 : b.state === "watch" ? 1 : 0) - (a.state === "over" ? 2 : a.state === "watch" ? 1 : 0) || b.usage - a.usage)
-    .slice(0, 4);
-  const hotGlance = glance.filter((row) => row.state === "over" || row.state === "watch");
+    .slice(0, 8);
+  const spendFree = useMemo(() => noSpendDays(data.transactions, todayIso), [data.transactions, todayIso]);
+  const paydayIn = data.settings.salaryPlan.nextPayday && data.settings.salaryPlan.nextPayday >= todayIso
+    ? Math.round((Date.parse(`${data.settings.salaryPlan.nextPayday}T12:00:00`) - Date.parse(`${todayIso}T12:00:00`)) / 86_400_000)
+    : undefined;
 
   /** Pornirea în 3 pași e făcută: cheltuielile lunare sunt declarate, doar plicurile vin la primul salariu. */
   const declaredNeeds = (data.settings.salaryPlan.needs || []).filter((item) => !item.archived).length;
@@ -329,6 +333,198 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button type="button" className="bf-secondary" onClick={undoMove}>{t("Anulează")}</button>
         </aside>
       )}
+      <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
+        <div className="os-hero-top">
+          {overPlan || fresh ? <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Cifra zilei")}</span> : <p className="os-hero-label">{heroLabel}</p>}
+          {/* D13: data pe un singur rând („dum., 27 sept.”), nu pe trei. */}
+          <time className="os-date-line" dateTime={todayIso}>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}</time>
+        </div>
+        {fresh && planDeclared ? (
+          <div className="os-start os-start-ready">
+            <p className="os-kicker-lg">{t("Gata")}</p>
+            <h1 className="os-start-title">{t("Planul e pregătit.")}</h1>
+            <p className="os-start-note">
+              {data.settings.salaryPlan.nextPayday
+                ? t("Când îți vine salariul (în jur de {date}), notează-l și îți propun împărțirea pe plicuri, după cele {count} cheltuieli declarate.", { date: formatDate(data.settings.salaryPlan.nextPayday, { day: "numeric", month: "long" }), count: declaredNeeds })
+                : t("Când îți vine salariul, notează-l și îți propun împărțirea pe plicuri, după cele {count} cheltuieli declarate.", { count: declaredNeeds })}
+            </p>
+            <button type="button" className="bf-primary os-start-cta" onClick={() => window.dispatchEvent(new Event("buget-familie:open-income"))}>{t("Notează salariul")}</button>
+            <button type="button" className="bf-secondary" onClick={onAdd}>{t("Notează o cheltuială")}</button>
+          </div>
+        ) : fresh ? (
+          <div className="os-start">
+            <p className="os-kicker-lg">{t("De unde începi")}</p>
+            <h1 className="os-start-title">{t("Trei pași și cifrele devin ale tale.")}</h1>
+            <ol className="os-start-steps">
+              <li>
+                <button type="button" onClick={onAdd}>
+                  <span className="os-start-step-text">
+                    <b>{t("Treci prima mișcare")}</b>
+                    <small>{t("Un salariu încasat sau o cumpărătură de azi")}</small>
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => onGo("plan")}>
+                  <span className="os-start-step-text">
+                    <b>{t("Fă primul plic")}</b>
+                    <small>{t("Alimente, transport, facturi — cât aloci pentru fiecare")}</small>
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => onGo("plan")}>
+                  <span className="os-start-step-text">
+                    <b>{t("Spune când vine salariul")}</b>
+                    <small>{t("De aici se calculează cât poți cheltui pe zi")}</small>
+                  </span>
+                  <ChevronRight size={16} aria-hidden="true" />
+                </button>
+              </li>
+            </ol>
+            <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
+              <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}
+            </button>
+          </div>
+        ) : (
+          <>
+            {overPlan && <p className="os-kicker-lg">{heroLabel}</p>}
+            <h1 className="os-amount">
+              <span>{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <small>RON</small>
+            </h1>
+            <p className="os-hint">{heroHint}</p>
+            <div className="bf-os-actions">
+              <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
+            </div>
+            {simpleMode || !rhythm.hasWeekly || brief.expired ? null : (
+              <div className="bf-hero-week" aria-label={t("Pe zi")}>
+                <div className="bf-os-rhythm-grid" style={{ ["--bf-rhythm-days" as string]: String(Math.max(1, rhythm.days.length)) }}>
+                  {rhythm.days.map((row) => {
+                    const figure = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
+                    const figureLabel = `${stripLei(figure, getLocale())} lei`;
+                    return (
+                    <button
+                      key={row.day}
+                      type="button"
+                      className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
+                      aria-pressed={rhythmTip === row.day}
+                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: row.isToday || row.isFuture ? t("{amount} de cheltuit", { amount: figureLabel }) : t("{amount} cheltuiți", { amount: figureLabel }) })}
+                      onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
+                    >
+                      <span>{weekdayShort()[row.weekday]}</span>
+                      <b>{Math.round(figure).toLocaleString(getLocale())}</b>
+                      <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
+                    </button>
+                    );
+                  })}
+                </div>
+                {/* Zilele trecute arată ce s-a cheltuit, azi și viitorul ce se poate cheltui: se spune, nu se ghicește. */}
+                {rhythm.days.some((row) => !row.isToday && !row.isFuture) && rhythm.days.some((row) => row.isToday || row.isFuture) && <p className="bf-os-legend">{t("Zilele trecute: cheltuit · de azi: cât poți cheltui")}</p>}
+                {(() => {
+                  // D13: detaliul zilei apare doar la atingerea unei zile; pentru azi, cifra e deja în erou.
+                  const row = rhythm.days.find((item) => item.day === rhythmTip);
+                  if (!row) return null;
+                  const shown = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
+                  const leiExact = (value: number) => `${stripLei(value, getLocale())} lei`;
+                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiExact(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiExact(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiExact(row.out) });
+                  return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiExact(row.out) })}</span></ChartTip>;
+                })()}
+                {(!heroTracksWeek || rhythm.days.some((row) => row.isFuture)) && <p className="bf-os-note">{rhythmNote}</p>}
+              </div>
+            )}
+            {(periodIncome > 0 || periodExpense > 0 || paydayIn !== undefined) && (
+              <dl className="bf-cycle-strip" aria-label={t("În ciclul ăsta")}>
+                {paydayIn !== undefined && <div><dt>{t("Până la salariu")}</dt><dd>{paydayIn === 0 ? t("azi") : daysLabel(paydayIn)}</dd></div>}
+                <div><dt>{t("Intrat")}</dt><dd className="income">+{Math.round(periodIncome).toLocaleString(getLocale())} lei</dd></div>
+                <div><dt>{t("Ieșit")}</dt><dd>{periodExpense >= 0.5 ? "−" : ""}{Math.round(periodExpense).toLocaleString(getLocale())} lei</dd></div>
+              </dl>
+            )}
+            {ageLine && <p className="os-hint">{ageLine}</p>}
+            {!simpleMode && spendFree >= 2 && <p className="os-hint bf-no-spend">{t("{count} zile fără cheltuieli luna asta. Fiecare lasă bani în plic.", { count: spendFree })}</p>}
+            {mealLine && <p className="os-hint">{mealLine}</p>}
+            {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
+            {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
+            {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
+            {((!simpleMode && weekRow) || (!simpleMode && (focusGoal || trueExpense || weekShare)) || pockets.length > 1) && (
+              <div className="bf-hero-chips">
+                {!simpleMode && weekRow && <button type="button" className="bf-hero-chip" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>{t("Față de săptămâna trecută")}</button>}
+                {((!simpleMode && (focusGoal || trueExpense || weekShare)) || pockets.length > 1) && <button type="button" className="bf-hero-chip" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>{t("Obiectiv și unde stau banii")}</button>}
+              </div>
+            )}
+            {weekOpen && !simpleMode && weekRow && (
+              <div className="bf-week-vs" aria-label={t("Față de săptămâna trecută")}>
+                <span>
+                  <small>{t("Săptămâna asta")}</small>
+                  <b>{money(weekRow.thisSpent)}</b>
+                  <i aria-hidden="true"><em style={{ width: `${Math.round(weekRow.thisSpent / Math.max(weekRow.thisSpent, weekRow.lastSpent, 1) * 100)}%` }} /></i>
+                </span>
+                <span>
+                  <small>{t("Săptămâna trecută")}</small>
+                  <b>{money(weekRow.lastSpent)}</b>
+                  <i aria-hidden="true"><em style={{ width: `${Math.round(weekRow.lastSpent / Math.max(weekRow.thisSpent, weekRow.lastSpent, 1) * 100)}%` }} /></i>
+                </span>
+              </div>
+            )}
+            {weekOpen && !simpleMode && weekRow && weekRow.byDay.length > 1 && (
+              <div className="bf-week-days" style={{ ["--d" as string]: String(weekRow.byDay.length) }} aria-label={t("Față de săptămâna trecută")}>
+                {weekRow.byDay.map((day) => {
+                  const peak = Math.max(1, ...weekRow.byDay.flatMap((item) => [item.thisSpent, item.lastSpent]));
+                  const bar = (amount: number) => (amount > 0 ? `${Math.max(14, Math.round((amount / peak) * 100))}%` : "0");
+                  return (
+                    <span key={day.weekday}>
+                      <small>{weekdayShort()[day.weekday]}</small>
+                      <i aria-hidden="true">
+                        <em style={{ height: bar(day.thisSpent) }} />
+                        <em style={{ height: bar(day.lastSpent) }} />
+                      </i>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+            {weekOpen && !simpleMode && weekLine && <p className="os-hint">{weekLine}</p>}
+            {moneyOpen && !simpleMode && focusGoal && (
+              <button type="button" className="bf-glance-goal" onClick={() => onGo("goals")}>
+                <PiggyBank size={16} aria-hidden="true" />
+                <span>
+                  <b>{focusGoal.name}</b>
+                  <small>{t("mai sunt {left} · cam {monthly} pe lună", { left: money(focusGoal.left), monthly: money(focusGoal.monthly) })}</small>
+                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((focusGoal.current / Math.max(1, focusGoal.target)) * 100))}%` }} /></i>
+                </span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
+            {moneyOpen && !simpleMode && trueExpense && (
+              <button type="button" className="bf-glance-goal is-event" onClick={() => window.dispatchEvent(new Event("buget-familie:open-events"))}>
+                <Gift size={16} aria-hidden="true" />
+                <span>
+                  <b>{trueExpense.name}</b>
+                  <small>{t("pe {date} · mai lipsesc {left}", { date: formatDate(trueExpense.date, { day: "numeric", month: "short" }), left: money(trueExpense.left) })}</small>
+                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((trueExpense.saved / Math.max(1, trueExpense.estimate)) * 100))}%` }} /></i>
+                </span>
+                <ChevronRight size={16} aria-hidden="true" />
+              </button>
+            )}
+            {moneyOpen && !simpleMode && weekShare && <p className="os-hint">{weekShare}</p>}
+            {moneyOpen && pockets.length > 1 && (
+              <ul className="bf-pocket-row" aria-label={t("Unde stau banii")}>
+                {pockets.map((pocket) => (
+                  <li key={pocket.kind} className={`bf-pocket ${pocket.kind}`}>
+                    <SourceGlyph kind={pocket.kind} />
+                    <b>{money(pocket.amount)}</b>
+                    <small>{sourceKindName[pocket.kind]}</small>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
+          </>
+        )}
+      </section>
+      {/* Cifra zilei întâi: avertizările vin imediat sub ea, nu o împing sub pliu. */}
       {!simpleMode && showTrancheNotice && activeTranche && !topNotice && (
         <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
           <CalendarClock size={19} />
@@ -419,203 +615,35 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         </aside>
       )}
       {recapOpen && recapReport && <Suspense fallback={null}><MonthShareSheet report={recapReport} onClose={() => { setRecapOpen(false); hideRecap(); }} /></Suspense>}
-      <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
-        <div className="os-hero-top">
-          <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Cifra zilei")}</span>
-          {/* D13: data pe un singur rând („dum., 27 sept.”), nu pe trei. */}
-          <time className="os-date-line" dateTime={todayIso}>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}</time>
-        </div>
-        {fresh && planDeclared ? (
-          <div className="os-start os-start-ready">
-            <p className="os-kicker-lg">{t("Gata")}</p>
-            <h1 className="os-start-title">{t("Planul e pregătit.")}</h1>
-            <p className="os-start-note">
-              {data.settings.salaryPlan.nextPayday
-                ? t("Când îți vine salariul (în jur de {date}), notează-l și îți propun împărțirea pe plicuri, după cele {count} cheltuieli declarate.", { date: formatDate(data.settings.salaryPlan.nextPayday, { day: "numeric", month: "long" }), count: declaredNeeds })
-                : t("Când îți vine salariul, notează-l și îți propun împărțirea pe plicuri, după cele {count} cheltuieli declarate.", { count: declaredNeeds })}
-            </p>
-            <button type="button" className="bf-primary os-start-cta" onClick={() => window.dispatchEvent(new Event("buget-familie:open-income"))}>{t("Notează salariul")}</button>
-            <button type="button" className="bf-secondary" onClick={onAdd}>{t("Notează o cheltuială")}</button>
-          </div>
-        ) : fresh ? (
-          <div className="os-start">
-            <p className="os-kicker-lg">{t("De unde începi")}</p>
-            <h1 className="os-start-title">{t("Trei pași și cifrele devin ale tale.")}</h1>
-            <ol className="os-start-steps">
-              <li>
-                <button type="button" onClick={onAdd}>
-                  <span className="os-start-step-text">
-                    <b>{t("Treci prima mișcare")}</b>
-                    <small>{t("Un salariu încasat sau o cumpărătură de azi")}</small>
-                  </span>
-                  <ChevronRight size={16} aria-hidden="true" />
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => onGo("plan")}>
-                  <span className="os-start-step-text">
-                    <b>{t("Fă primul plic")}</b>
-                    <small>{t("Alimente, transport, facturi — cât aloci pentru fiecare")}</small>
-                  </span>
-                  <ChevronRight size={16} aria-hidden="true" />
-                </button>
-              </li>
-              <li>
-                <button type="button" onClick={() => onGo("plan")}>
-                  <span className="os-start-step-text">
-                    <b>{t("Spune când vine salariul")}</b>
-                    <small>{t("De aici se calculează cât poți cheltui pe zi")}</small>
-                  </span>
-                  <ChevronRight size={16} aria-hidden="true" />
-                </button>
-              </li>
-            </ol>
-            <button type="button" className="os-explainer secondary" onClick={() => window.dispatchEvent(new Event("buget-familie:open-usage-tutorial"))}>
-              <BookOpen size={16} aria-hidden="true" /> {t("Cum se folosește")}
-            </button>
-          </div>
-        ) : (
-          <>
-            <p className="os-kicker-lg">{heroLabel}</p>
-            <h1 className="os-amount">
-              <span>{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              <small>RON</small>
-            </h1>
-            <p className="os-hint">{heroHint}</p>
-            <div className="bf-os-actions">
-              <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
-            </div>
-            {simpleMode || !rhythm.hasWeekly || brief.expired ? null : (
-              <div className="bf-hero-week" aria-label={t("Pe zi")}>
-                <div className="bf-os-rhythm-grid" style={{ ["--bf-rhythm-days" as string]: String(Math.max(1, rhythm.days.length)) }}>
-                  {rhythm.days.map((row) => {
-                    const figure = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
-                    const figureLabel = `${stripLei(figure, getLocale())} lei`;
-                    return (
-                    <button
-                      key={row.day}
-                      type="button"
-                      className={`bf-os-day${row.isToday ? " is-today" : ""}${row.over ? " is-over" : ""}${row.isFuture ? " is-future" : ""}`}
-                      aria-pressed={rhythmTip === row.day}
-                      aria-label={t("{label}: {amount}", { label: weekdayShort()[row.weekday], amount: row.isToday || row.isFuture ? t("{amount} de cheltuit", { amount: figureLabel }) : t("{amount} cheltuiți", { amount: figureLabel }) })}
-                      onClick={() => setRhythmTip((current) => current === row.day ? null : row.day)}
-                    >
-                      <span>{weekdayShort()[row.weekday]}</span>
-                      <b>{Math.round(figure).toLocaleString(getLocale())}</b>
-                      <span className="bf-os-bar" aria-hidden="true"><i className={row.fill <= 0 ? "is-empty" : ""} style={{ height: `${row.fill}%` }} /></span>
-                    </button>
-                    );
-                  })}
-                </div>
-                {/* Zilele trecute arată ce s-a cheltuit, azi și viitorul ce se poate cheltui: se spune, nu se ghicește. */}
-                {rhythm.days.some((row) => !row.isToday && !row.isFuture) && rhythm.days.some((row) => row.isToday || row.isFuture) && <p className="bf-os-legend">{t("Zilele trecute: cheltuit · de azi: cât poți cheltui")}</p>}
-                {(() => {
-                  // D13: detaliul zilei apare doar la atingerea unei zile; pentru azi, cifra e deja în erou.
-                  const row = rhythm.days.find((item) => item.day === rhythmTip);
-                  if (!row) return null;
-                  const shown = dayStripFigure(row, heroTracksWeek ? brief.spendable : row.left, heroTracksWeek);
-                  const leiExact = (value: number) => `${stripLei(value, getLocale())} lei`;
-                  const when = row.isToday ? t("Azi · {amount} rămași", { amount: leiExact(shown) }) : row.isFuture ? t("Viitor · {amount} pe zi", { amount: leiExact(row.left) }) : t("Trecut · {amount} cheltuiți", { amount: leiExact(row.out) });
-                  return <ChartTip><b>{weekdayShort()[row.weekday]}</b><span>{when}</span><span>{t("Cheltuieli {amount}", { amount: leiExact(row.out) })}</span></ChartTip>;
-                })()}
-                {(!heroTracksWeek || rhythm.days.some((row) => row.isFuture)) && <p className="bf-os-note">{rhythmNote}</p>}
-              </div>
-            )}
-            {!simpleMode && weekRow && (
-              <button type="button" className="bf-today-more-toggle" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>
-                {t("Față de săptămâna trecută")}
-              </button>
-            )}
-            {weekOpen && !simpleMode && weekRow && (
-              <div className="bf-week-vs" aria-label={t("Față de săptămâna trecută")}>
-                <span>
-                  <small>{t("Săptămâna asta")}</small>
-                  <b>{money(weekRow.thisSpent)}</b>
-                  <i aria-hidden="true"><em style={{ width: `${Math.round(weekRow.thisSpent / Math.max(weekRow.thisSpent, weekRow.lastSpent, 1) * 100)}%` }} /></i>
-                </span>
-                <span>
-                  <small>{t("Săptămâna trecută")}</small>
-                  <b>{money(weekRow.lastSpent)}</b>
-                  <i aria-hidden="true"><em style={{ width: `${Math.round(weekRow.lastSpent / Math.max(weekRow.thisSpent, weekRow.lastSpent, 1) * 100)}%` }} /></i>
-                </span>
-              </div>
-            )}
-            {weekOpen && !simpleMode && weekRow && weekRow.byDay.length > 1 && (
-              <div className="bf-week-days" style={{ ["--d" as string]: String(weekRow.byDay.length) }} aria-label={t("Față de săptămâna trecută")}>
-                {weekRow.byDay.map((day) => {
-                  const peak = Math.max(1, ...weekRow.byDay.flatMap((item) => [item.thisSpent, item.lastSpent]));
-                  const bar = (amount: number) => (amount > 0 ? `${Math.max(14, Math.round((amount / peak) * 100))}%` : "0");
-                  return (
-                    <span key={day.weekday}>
-                      <small>{weekdayShort()[day.weekday]}</small>
-                      <i aria-hidden="true">
-                        <em style={{ height: bar(day.thisSpent) }} />
-                        <em style={{ height: bar(day.lastSpent) }} />
-                      </i>
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-            {weekOpen && !simpleMode && weekLine && <p className="os-hint">{weekLine}</p>}
-            {ageLine && <p className="os-hint">{ageLine}</p>}
-            {mealLine && <p className="os-hint">{mealLine}</p>}
-            {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
-            {((!simpleMode && (focusGoal || trueExpense || weekShare)) || periodIncome > 0 || periodExpense > 0 || pockets.length > 1) && (
-              <button type="button" className="bf-today-more-toggle" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>
-                {t("Obiectiv, ciclu și bani")}
-              </button>
-            )}
-            {moneyOpen && !simpleMode && focusGoal && (
-              <button type="button" className="bf-glance-goal" onClick={() => onGo("goals")}>
-                <PiggyBank size={16} aria-hidden="true" />
-                <span>
-                  <b>{focusGoal.name}</b>
-                  <small>{t("mai sunt {left} · cam {monthly} pe lună", { left: money(focusGoal.left), monthly: money(focusGoal.monthly) })}</small>
-                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((focusGoal.current / Math.max(1, focusGoal.target)) * 100))}%` }} /></i>
-                </span>
-                <ChevronRight size={16} aria-hidden="true" />
-              </button>
-            )}
-            {moneyOpen && !simpleMode && trueExpense && (
-              <button type="button" className="bf-glance-goal is-event" onClick={() => window.dispatchEvent(new Event("buget-familie:open-events"))}>
-                <Gift size={16} aria-hidden="true" />
-                <span>
-                  <b>{trueExpense.name}</b>
-                  <small>{t("pe {date} · mai lipsesc {left}", { date: formatDate(trueExpense.date, { day: "numeric", month: "short" }), left: money(trueExpense.left) })}</small>
-                  <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round((trueExpense.saved / Math.max(1, trueExpense.estimate)) * 100))}%` }} /></i>
-                </span>
-                <ChevronRight size={16} aria-hidden="true" />
-              </button>
-            )}
-            {moneyOpen && (periodIncome > 0 || periodExpense > 0) && (
-              <div className="bf-cycle-flow" aria-label={t("În ciclul ăsta")}>
-                <span><small>{t("Intrat")}</small><b>+{fmtExact.format(periodIncome)}</b></span>
-                <span><small>{t("Ieșit")}</small><b>{periodExpense > 0.004 ? "−" : ""}{fmtExact.format(periodExpense)}</b></span>
-              </div>
-            )}
-            {moneyOpen && !simpleMode && weekShare && <p className="os-hint">{weekShare}</p>}
-            {moneyOpen && pockets.length > 1 && (
-              <ul className="bf-pocket-row" aria-label={t("Unde stau banii")}>
-                {pockets.map((pocket) => (
-                  <li key={pocket.kind} className={`bf-pocket ${pocket.kind}`}>
-                    <SourceGlyph kind={pocket.kind} />
-                    <b>{money(pocket.amount)}</b>
-                    <small>{sourceKindName[pocket.kind]}</small>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
-            {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
-            {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
-          </>
-        )}
-      </section>
       {coach}
 
       {/* D10: pe desktop coloana din dreapta; pe telefon, doar un grup în flux. */}
       <div className="bf-today-side">
+      {!simpleMode && glance.length > 0 && (
+        <section className="bf-envelope-strip-wrap" aria-labelledby="bf-glance-title">
+          <div className="bf-section-heading">
+            <h2 id="bf-glance-title">{t("Plicurile tale")}</h2>
+            <button type="button" onClick={() => onGo("plan")}>{t("Toate plicurile")} <ChevronRight size={15} /></button>
+          </div>
+          <ul className="bf-envelope-strip">
+            {glance.map((row) => {
+              const used = Math.min(100, Math.round(Math.max(0, row.usage) * 100));
+              const label = row.state === "over" ? t("peste cu {amount}", { amount: money(Math.abs(row.remaining)) }) : t("din {amount}", { amount: money(row.budget) });
+              return (
+                <li key={row.item.id} className={row.state === "over" ? "is-over" : row.state === "watch" ? "is-watch" : ""} style={{ ...categoryTone(row.item.category || row.item.label), ["--bf-used" as string]: String(used) }}>
+                  <button type="button" onClick={() => onGo("plan")} aria-label={t("{label}: {left} rămași, {label2}", { label: row.item.label, left: money(Math.max(0, row.remaining)), label2: label })}>
+                    <span className="bf-envelope-ring" aria-hidden="true"><CategoryGlyph category={row.item.category || row.item.label} size={18} /></span>
+                    <b>{row.item.label}</b>
+                    <strong>{money(Math.max(0, row.remaining))}</strong>
+                    <small>{label}</small>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+      {!simpleMode && <Suspense fallback={null}><MonthChallengeCard data={data} today={todayIso} /></Suspense>}
       <section className="bf-today-activity">
           <div className="bf-section-heading">
             <div>
@@ -666,39 +694,6 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         </section>
 
 
-      {glance.length > 0 && (
-        <>
-          <button type="button" className="bf-today-more-toggle" id="bf-glance-title" aria-expanded={glanceOpen} onClick={() => setGlanceOpen((open) => !open)}>
-            {t("Plicurile, dintr-o privire")}
-          </button>
-          {glanceOpen && (
-            <section className="bf-glance" aria-labelledby="bf-glance-title">
-              {hotGlance.length > 0 ? (
-                <>
-                  <div className="bf-section-heading">
-                    <h2>{t("Aproape de limită")}</h2>
-                    <button type="button" onClick={() => onGo("plan")}>{t("Plicuri")} <ChevronRight size={15} /></button>
-                  </div>
-                  <ul>
-                    {hotGlance.map((row) => (
-                      <li key={row.item.id} className={row.state === "over" ? "is-over" : "is-watch"}>
-                        <CategoryGlyph category={row.item.category || row.item.label} />
-                        <span>
-                          <b>{row.item.label}</b>
-                          <i aria-hidden="true"><em style={{ width: `${Math.min(100, Math.round(Math.max(0, row.usage) * 100))}%` }} /></i>
-                        </span>
-                        <strong>{row.remaining < -0.5 ? "−" : ""}{money(Math.abs(row.remaining))}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <p className="os-hint">{t("Niciun plic nu e aproape de limită.")} <button type="button" className="bf-link-button" onClick={() => onGo("plan")}>{t("Plicuri")}</button></p>
-              )}
-            </section>
-          )}
-        </>
-      )}
       {!simpleMode && <OpeningBalanceCard data={data} onChange={onChange} />}
 
       <TodayBrief data={data} onGo={onGo} onChange={onChange} onOpenRecurring={onOpenRecurring} hideSpendStamp simpleMode={simpleMode} onOpenWeek={simpleMode ? undefined : () => { setDayMore(true); window.setTimeout(() => document.getElementById("bf-week-checkin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40); }} />
