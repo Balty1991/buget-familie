@@ -91,11 +91,6 @@ html {
   contain-intrinsic-size: auto 76px;
 }
 
-.bf-receipt-preview-grid img,
-.bf-receipt-preview-grid figure {
-  content-visibility: auto;
-}
-
 @media (hover: none) {
   .bf-app button:hover,
   .bf-app .bf-primary:hover,

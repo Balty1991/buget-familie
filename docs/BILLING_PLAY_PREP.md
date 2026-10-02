@@ -14,7 +14,7 @@ Cât e `false`, toată lumea are Familia (perioada de testare), iar butoanele de
 
 ## Pași de activare (în ordine)
 
-1. **Play Console → Monetizare → Abonamente:** creează `familie_lunar` (plan de bază `lunar`, 19,99 lei/lună) și `familie_anual` (plan de bază `anual`, 149 lei/an). ID-urile planurilor de bază trebuie să fie exact acestea (`PLAY_BASE_PLANS`). Oferta de probă de 14 zile se pune pe planuri.
+1. **Play Console → Monetizare → Abonamente:** creează `familie_lunar` (plan de bază `lunar`, 19,99 lei/lună) și `familie_anual` (plan de bază `anual`, 149 lei/an). ID-urile planurilor de bază trebuie să fie exact acestea (`PLAY_BASE_PLANS`). Oferta de probă de **30 de zile** se pune pe planuri (aceeași cifră ca `TRIAL_DAYS` din `entitlements.ts`, pe care o arată ecranul de abonament).
 2. **Play Console → Utilizatori și permisiuni:** invită contul de serviciu al funcțiilor (`<număr-proiect>-compute@developer.gserviceaccount.com` sau cel afișat la funcția `verifyPlayPurchase` în Google Cloud Console) cu dreptul „Vizualizează date financiare, comenzi și răspunsuri la anulări” și „Gestionează comenzi și abonamente”.
 3. **Google Cloud Console:** activează **Google Play Android Developer API** pe proiectul `buget-familie-a6a0d`.
 4. **Firestore → Rules:** lipește din nou `firestore.rules` (au apărut `familyEntitlements` și `playPurchases`).
@@ -32,7 +32,7 @@ Cât e `false`, toată lumea are Familia (perioada de testare), iar butoanele de
 
 Casa rămâne free (fără SKU). Family+ (29,99 / 229) — SKU-uri separate doar când P2 e justificat.
 
-În Consolă: tip **Subscription**, bază RON, trial 14 zile pe ambele SKU (sau pe anual), clear cancel path.
+În Consolă: tip **Subscription**, bază RON, trial 30 de zile pe ambele SKU (`TRIAL_DAYS`), clear cancel path.
 
 ---
 
@@ -60,7 +60,7 @@ Fișier: `client/src/lib/entitlements.ts`
 | Export | Rol |
 |---|---|
 | `BILLING_LIVE` | Master switch. `false` → `currentPlan()` = `"familie"` (totul deblocat pentru test). |
-| `PLANS` | Limite + prețuri catalog (Casa 10 plicuri; Familia 19.99 / 149, 6 membri). |
+| `PLANS` | Limite + prețuri catalog (Casa: plicuri fără limită, 2 persoane, 1 telefon; Familia 19,99 / 149, 6 persoane, 6 telefoane). |
 | `PLAY_PRODUCT_IDS` | Mapare SKU → lună/an. |
 | `TRIAL_DAYS` | 14 — copy UI + Play Console. |
 | `formatPlanPriceRon` | UI catalog („19,99 lei/lună”). |
@@ -83,7 +83,7 @@ Fișier: `client/src/lib/entitlements.ts`
 |---|---|
 | Restore | Reîncarcă SKU-uri; dacă Familia e activ → unlock sync/plicuri; registrul local neschimbat. |
 | Expirare / anulare | Downgrade la Casa: **păstrează** toate plicurile și mișcările; blochează doar *crearea* peste limită + sync nou. |
-| Downgrade cu >10 plicuri | Read-only pe plicurile extra; copy clar: „poți cheltui din ele; nu poți adăuga altele până la Familia”. |
+| Downgrade cu al doilea telefon sau >2 persoane | Sincronizarea se oprește pe telefoanele în plus; registrul și persoanele rămân. Mesaj clar: „datele rămân, sincronizarea revine cu Familia”. |
 | Schimb device | Restore pe noul telefon înainte de a cere upgrade. |
 | Conflict sync după expirare | Datele rămân pe telefon; sync push poate fi refuzat cu mesaj uman, nu wipe. |
 
@@ -98,7 +98,7 @@ Regulă de aur: **Billing controlează feature flags, nu ledger-ul.**
 - [ ] License testers pot cumpăra / anula / restore pe build semnat release.
 - [ ] Soft paywall doar pe gate-uri Casa; cheltuiala rămâne free.
 - [ ] Buton „Restaurează cumpărăturile” vizibil în catalog.
-- [ ] Downgrade >10 plicuri testat manual (fără ștergere).
+- [ ] Downgrade de la Familia testat manual: al doilea telefon nu mai sincronizează, nimic nu se șterge.
 - [ ] Privacy **§11** actualizat (abonamente via Google Play; anulare din Play).
 - [ ] Data safety + listing: prețuri IAP **doar acum** (nu înainte).
 - [ ] `pnpm test` verde pe `entitlements.test.ts`.
@@ -109,7 +109,7 @@ Regulă de aur: **Billing controlează feature flags, nu ledger-ul.**
 ## Reminder privacy §11
 
 Cât `BILLING_LIVE === false`, privacy poate spune că nu se vând abonamente în app.  
-**La go-live:** actualizează `client/public/privacy.html` §11 + termenii: plăți prin Google Play, trial 14 zile, anulare din abonamentele Google, datele financiare rămân pe dispozitiv după anulare.
+**La go-live:** actualizează `client/public/privacy.html` §11 + termenii: plăți prin Google Play, probă de 30 de zile, anulare din abonamentele Google, datele financiare rămân pe dispozitiv după anulare.
 
 ---
 

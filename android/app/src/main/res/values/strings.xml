@@ -16,4 +16,7 @@
     <string name="widget_spend_empty">Deschide aplicația o dată ca să apară cifra.</string>
     <string name="widget_spend_add">+ Notează</string>
     <string name="widget_spend_description">Arată pe ecranul principal cât poți cheltui azi și câte zile mai sunt până la salariu.</string>
+    <string name="widget_env_title">Plicurile mele · rămași</string>
+    <string name="widget_env_empty">Deschide aplicația o dată ca să apară plicurile.</string>
+    <string name="widget_env_description">Arată pe ecranul principal primele trei plicuri: cât a rămas în fiecare și cât s-a consumat.</string>
 </resources>

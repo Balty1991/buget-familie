@@ -83,7 +83,6 @@
   border-radius:12px;
 }
 
-.bf-analysis .bf-spend-category-pills button,
 .bf-analysis .bf-analysis-category-rows button,
 .bf-analysis .bf-analysis-watch article,
 .bf-analysis .bf-analysis-balance article {
@@ -97,11 +96,15 @@
     padding-inline: 13px;
   }
 
+  /* Perioada și lista lunilor pe un singur rând: diagrama urcă în primul ecran. */
   .bf-analysis .bf-analysis-control {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     gap: 12px;
     padding: 14px;
   }
+  .bf-analysis .bf-analysis-control label { font-size: 0; }
+  .bf-analysis .bf-analysis-control select { font-size: 15px; }
 
   .bf-analysis .bf-analysis-control h2 {
     max-width: 15ch;
@@ -277,28 +280,6 @@
     margin-inline: auto;
   }
 
-  .bf-analysis .bf-spend-category-pills {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-
-  .bf-analysis .bf-spend-category-pills button {
-    min-width: 0;
-    padding: 9px;
-  }
-
-  .bf-analysis .bf-spend-category-pills button span {
-    min-width: 0;
-  }
-
-  .bf-analysis .bf-spend-category-pills b,
-  .bf-analysis .bf-spend-category-pills small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .bf-analysis .bf-analysis-category-rows button {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
@@ -331,10 +312,6 @@
 
 @media (max-width: 370px) {
   .bf-analysis .bf-analysis-snapshot-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .bf-analysis .bf-spend-category-pills {
     grid-template-columns: 1fr;
   }
 }

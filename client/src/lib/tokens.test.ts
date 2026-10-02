@@ -57,7 +57,8 @@ describe("plafonul de !important", () => {
     // 8.344 la re-audit → 5.410 (curățenie verificată) → 3.819 (reguli moarte) → 3.426 (a doua rundă) → 3442 (ținte de atingere în @layer ds) → 3446 (eticheta de pe bannerul scadențelor, opacitatea etichetelor și a „RON”, descrierea temelor) → 3448 (codul de recuperare) → 3369 (reguli cu clase inexistente în cod) → 3364 (declarații umbrite în același fișier) → 3320 (temele Aurora și Cyber, trei texturi); vezi docs/CSS_IMPORTANT_CLEANUP.md.
     // Curățenia poate scădea numărul; o foaie nouă nu are voie să-l urce.
     // 27.09: 3263 după scoaterea regulilor moarte (clase care nu mai apar în cod).
-    expect(count).toBeLessThanOrEqual(3263);
+    // 02.10: 3241 după clasele moarte (ghidul vechi, fotografiile de bon, pastilele din Analiză) și dungile din Mai mult.
+    expect(count).toBeLessThanOrEqual(3241);
   });
 
   it("CSS-ul sursă nu crește: bugetul de mărime (P2-10 / D24)", () => {

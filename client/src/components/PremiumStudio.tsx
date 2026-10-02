@@ -16,7 +16,7 @@ export function PremiumStudio() {
         <article>
           <p className="bf-kicker">{t("CASA")}</p>
           <h3>{t("Gratuit")}</h3>
-          <p>{t("Pentru un om, pe un telefon.")}</p>
+          <p>{t("Pentru tine și partener, pe un telefon.")}</p>
           <ul>
             <li><Check size={14} /> {t("Plicuri fără limită")}</li>
             <li><Check size={14} /> {t("Doi oameni, un telefon")}</li>

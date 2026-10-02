@@ -183,21 +183,6 @@ html body .bf-app .bf-allocation-empty span,html body .os-shell .bf-allocation-e
     padding: 3px 10px;
   }
 
-  .os-shell .os-date {
-    gap: 3px;
-  }
-
-  .os-shell .os-date b {
-    letter-spacing: 0.06em;
-    font-size:12px;
-  }
-
-  .os-shell .os-date span {
-    letter-spacing: 0.04em;
-    font-size:12px;
-    opacity: 0.85;
-  }
-
   /* Situation card (legacy Astăzi path) */
 
   .os-shell .bf-today-workspace {
