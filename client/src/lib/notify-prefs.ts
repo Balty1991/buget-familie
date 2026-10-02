@@ -16,7 +16,7 @@ export function notifyKindOf(tag: string): NotifyKind {
   if (/^(due|debt)-/.test(tag)) return "bills";
   if (/^payday-/.test(tag)) return "income";
   if (/^goal-/.test(tag)) return "goals";
-  if (/^(weekly-summary|month-card)-/.test(tag)) return "summaries";
+  if (/^(weekly-summary|month-card|month-end)-/.test(tag)) return "summaries";
   if (/^checkin-/.test(tag)) return "checkin";
   return "envelopes";
 }

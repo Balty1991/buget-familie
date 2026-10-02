@@ -57,7 +57,7 @@ export function ShoppingListPanel({ data, onChange }: { data: AppData; onChange:
       <button type="submit" className="bf-primary" disabled={!draft.trim()}><Plus size={18} aria-hidden="true" /> {t("Adaugă")}</button>
     </form>
     {estimate.known > 0 && <div className="bf-shop-estimate">
-      <p><small>{t("COȘ ESTIMAT")}</small><b>~{lei(estimate.total)}</b></p>
+      <p><small className="bf-kicker">{t("COȘ ESTIMAT")}</small><b>~{lei(estimate.total)}</b></p>
       <span>{estimate.known === todo.length ? t("după prețurile de pe bonurile voastre") : t("pentru {known} din {count} produse, după bonurile voastre", { known: estimate.known, count: todo.length })}</span>
       {estimate.bestVendor && <span className="is-tip">{t("La {vendor} ar ieși ~{total}, cu {saves} mai puțin.", { vendor: estimate.bestVendor.vendor, total: lei(estimate.bestVendor.total), saves: lei(estimate.bestVendor.saves) })}</span>}
     </div>}

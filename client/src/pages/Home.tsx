@@ -14,6 +14,7 @@ import { applyDeclaredBalance } from "@/lib/balance-check";
 import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
 import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
 import { queueReceiptForReview } from "@/lib/receipt-review";
+import { markCelebrated, pendingCelebration } from "@/lib/goal-celebration";
 import { safeSetItem } from "@/lib/safe-storage";
 import { closeTopDialog } from "@/hooks/use-focus-trap";
 import { BrandMark } from "@/components/BrandMark";
@@ -60,6 +61,7 @@ export { recentActivityMoves } from "@/pages/TodayView";
 
 const PlanStudio = lazy(safeImport(() => import("@/components/PlanStudio").then((module) => ({ default: stableView(module.PlanStudio) }))));
 const MovementsJournal = lazy(safeImport(() => import("@/components/MovementsJournal").then((module) => ({ default: stableView(module.MovementsJournal) }))));
+const GoalCelebration = lazy(safeImport(() => import("@/components/GoalCelebration").then((module) => ({ default: module.GoalCelebration }))));
 const QuickEntryPanel = lazy(safeImport(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel }))));
 const FirstWeekTour = lazy(safeImport(() => import("@/components/FirstWeekTour").then((module) => ({ default: module.FirstWeekTour }))));
 const FinancialCalendarView = lazy(safeImport(() => import("@/components/FinancialCalendarView").then((module) => ({ default: module.FinancialCalendarView }))));
@@ -193,6 +195,9 @@ export default function Home() {
   const [receiptStorageNotice, setReceiptStorageNotice] = useState("");
   const legacyReceiptMigrationStarted = useRef(false);
   const setupOffered = useRef(setupOpen);
+  // Obiectiv atins: o felicitare pe obiectiv, pe telefonul acesta.
+  const [celebrate, setCelebrate] = useState<SavingsGoal | undefined>(undefined);
+  useEffect(() => { const goal = pendingCelebration(data.savings, typeof window !== "undefined" ? window.localStorage : undefined); if (goal) setCelebrate(goal); }, [data.savings]);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false); const [firstWeekTourOpen, setFirstWeekTourOpen] = useState(false);
   const {
     themePickerOpen, setThemePickerOpen,
@@ -741,6 +746,7 @@ export default function Home() {
     {modal === "debt" && <Suspense fallback={null}><GoalForm data={data} type="debt" item={editGoal} onSave={saveDebt} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "saving" && <Suspense fallback={null}><GoalForm data={data} type="saving" item={editGoal} onSave={saveSaving} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
+    {celebrate && !modal && <Suspense fallback={null}><GoalCelebration goal={celebrate} onClose={() => { markCelebrated(window.localStorage, celebrate.id); setCelebrate(undefined); }} /></Suspense>}
     {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTrip={() => { dismissWhatsNew(); window.dispatchEvent(new Event("buget-familie:open-trip")); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.134
+
+- Banii mărunți (Analiză): sumele mici care se repetă (cafeaua, covrigii) din ultimele 30 de zile, de câte ori și cât fac pe un an, cu cât ar însemna jumătate pentru primul obiectiv.
+- Obiectiv atins: când un obiectiv de economisire ajunge la țintă, apare o felicitare cu confetti (fără animație dacă telefonul cere mișcare redusă) și „Spune familiei”. O singură dată pe obiectiv; obiectivele deja atinse la actualizare nu sunt felicitate din nou.
+- Notificare cu 5 zile înainte de salariu, seara: ce mai e de plătit și unde pot merge banii care rămân (se oprește din Setări, la „Rezumate”).
+- În Mișcări, cheltuielile din vacanță au „✈ numele vacanței” lângă categorie.
+- Familia exemplu are câteva cafele și covrigi, ca „Banii mărunți” să se vadă din prima.
+
 ## 1.1.133
 
 - Mod vacanță (Mai mult → Vacanță): o călătorie cu bugetul ei, cu prima și ultima zi și, opțional, o monedă (EUR, BGN…) în care se arată ce a rămas. Cât ține, Notează pune cheltuielile în bugetul vacanței, nu în plicurile lunii (chipul „Din bugetul vacanței” le poate scoate). Pe Astăzi: cât mai e și pe zi; la final, rezumatul. Se sincronizează cu familia.

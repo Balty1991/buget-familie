@@ -83,6 +83,8 @@ export function buildDemoData(today: string): AppData {
     tx(-2, "Pizza", 78, "Timp liber", partner, "source-maria", "expense", "a-timp"),
     tx(-11, "Netflix", 59.99, "Abonamente", me, "source-debit"),
     tx(0, t("Cafea"), 14, "Alimente", me, "source-cash", "expense", "a-mancare"),
+    ...[-1, -3, -5, -8, -11].map((offset) => tx(offset, t("Cafea"), 14, "Alimente", me, "source-cash", "expense", "a-mancare")),
+    ...[-2, -6, -9, -13].map((offset) => tx(offset, t("Covrigi"), 6, "Alimente", partner, "source-maria", "expense", "a-mancare")),
   ];
   // Bonuri cu produse: din ele vin istoricul prețurilor și coșul estimat al listei de cumpărături.
   const [milk, bread, eggs, bananas] = [t("Lapte"), t("Pâine"), t("Ouă"), t("Banane")];
