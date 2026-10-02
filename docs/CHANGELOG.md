@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.128
+
+- Obligații: sus, cât e de plătit în următoarele 30 de zile și o bandă cu scadențele (întârzierile marcate); la fiecare datorie, luna în care scapi de ea; obiectivele au un cerc de progres; ghidul a coborât la final.
+- Notificări pe tipuri, din Setări → Mementouri: scadențe, plicuri și ritm, venit, obiective, bilanțuri, amintirea de seară — fiecare se poate opri. Ora amintirii de seară se alege (18–22). Cu o serie de 3+ zile notate, amintirea spune „Nu pierde seria”.
+- Setări: căutare („backup”, „card”, „notificări”) și grupuri cu o descriere scurtă; limba, modul simplu și doar offline stau într-un grup.
+
 ## 1.1.127
 
 - Notare din voce: în Notează, „Spune ce ai cumpărat” — „cincizeci de lei la Lidl” completează suma, magazinul, categoria și plicul; omul verifică și apasă Gata. Pe Android prin recunoașterea vocală a telefonului, fără permisiunea microfonului.
