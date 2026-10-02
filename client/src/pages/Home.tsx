@@ -172,6 +172,14 @@ export default function Home() {
     return () => window.removeEventListener("buget-familie:open-income", openIncome);
   }, []);
   useEffect(() => {
+    // Lista de cumpărături: „Notează plata” deschide formularul rapid pe Alimente (implicit).
+    const openExpense = () => { setQuickTemplateId(undefined); setQuickKind(undefined); setEditTx(undefined); setModal("quick"); };
+    const openShopping = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("shopping"); setView("utilities"); };
+    window.addEventListener("buget-familie:open-expense", openExpense);
+    window.addEventListener("buget-familie:open-shopping", openShopping);
+    return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-shopping", openShopping); };
+  }, []);
+  useEffect(() => {
     const openEvents = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("events"); setView("utilities"); };
     window.addEventListener("buget-familie:open-events", openEvents);
     return () => window.removeEventListener("buget-familie:open-events", openEvents);

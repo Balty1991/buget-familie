@@ -1,0 +1,63 @@
+/**
+ * Lista de cumpărături a familiei: scrii „lapte, pâine, ouă”, bifezi în magazin, iar la final
+ * „Notează plata” golește ce ai luat și deschide formularul rapid pe Alimente. Lista se
+ * sincronizează cu partenerul ca restul datelor familiei.
+ */
+import "../shopping-list.css";
+import { useState } from "react";
+import { Check, ListChecks, Plus, ReceiptText, X } from "lucide-react";
+import { newId, type AppData } from "@/lib/finance-data";
+import { t } from "@/lib/i18n";
+import { selfMemberIdOf } from "@/lib/member-identity";
+import { SHOPPING_LIMIT, splitShoppingText, visibleShopping, type ShoppingItem } from "@/lib/shopping-list";
+
+export function ShoppingListPanel({ data, onChange }: { data: AppData; onChange: (next: AppData) => void }) {
+  const [draft, setDraft] = useState("");
+  const list = data.settings.shoppingList || [];
+  const { todo, done } = visibleShopping(list);
+  const me = selfMemberIdOf(data);
+  const nameOf = (id?: string) => (data.settings.members.length > 1 && id && id !== me ? data.settings.members.find((member) => member.id === id)?.name : undefined);
+  const save = (next: ShoppingItem[]) => onChange({ ...data, settings: { ...data.settings, shoppingList: next.slice(0, SHOPPING_LIMIT) } });
+  const touch = (id: string, patch: Partial<ShoppingItem>) => save(list.map((item) => item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item));
+
+  const add = () => {
+    const names = splitShoppingText(draft);
+    if (!names.length) return;
+    const now = Date.now();
+    // Același produs încă de luat nu se dublează; unul golit demult revine ca nou.
+    const open = new Set(todo.map((item) => item.text.toLocaleLowerCase("ro-RO")));
+    const fresh = names.filter((name) => !open.has(name.toLocaleLowerCase("ro-RO"))).map((text, index) => ({ id: newId("shop"), text, by: me, updatedAt: new Date(now + index).toISOString() }));
+    if (fresh.length) save([...fresh, ...list]);
+    setDraft("");
+  };
+  const finish = () => {
+    const stamp = new Date().toISOString();
+    save(list.map((item) => item.done && !item.cleared ? { ...item, cleared: true, updatedAt: stamp } : item));
+    window.dispatchEvent(new Event("buget-familie:open-expense"));
+  };
+
+  const row = (item: ShoppingItem) => <li key={item.id} className={item.done ? "is-done" : ""}>
+    <button type="button" className="bf-shop-check" aria-pressed={Boolean(item.done)} aria-label={item.done ? t("Scoate bifa de la {item}", { item: item.text }) : t("Bifează {item}", { item: item.text })} onClick={() => touch(item.id, { done: !item.done })}>{item.done ? <Check size={16} aria-hidden="true" /> : null}</button>
+    <span><b>{item.text}</b>{nameOf(item.by) && <small>{t("adăugat de {name}", { name: nameOf(item.by)! })}</small>}</span>
+    <button type="button" className="bf-shop-remove" aria-label={t("Scoate {item} din listă", { item: item.text })} onClick={() => touch(item.id, { cleared: true })}><X size={16} aria-hidden="true" /></button>
+  </li>;
+
+  return <section className="bf-shopping" aria-labelledby="bf-shopping-title">
+    <header>
+      <p className="bf-kicker">{t("CUMPĂRĂTURI")}</p>
+      <h2 id="bf-shopping-title">{t("Lista familiei")}</h2>
+      <p>{data.settings.members.length > 1 ? t("Ce scrie unul apare și pe telefonul celuilalt, la sincronizare.") : t("Scrie ce trebuie luat; bifezi în magazin.")}</p>
+    </header>
+    <form className="bf-shop-add" onSubmit={(event) => { event.preventDefault(); add(); }}>
+      <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={t("lapte, pâine, ouă…")} aria-label={t("Ce trebuie luat")} enterKeyHint="done" />
+      <button type="submit" className="bf-primary" disabled={!draft.trim()}><Plus size={18} aria-hidden="true" /> {t("Adaugă")}</button>
+    </form>
+    {todo.length > 0 ? <ul className="bf-shop-list">{todo.map(row)}</ul> : <div className="bf-shop-empty"><ListChecks size={22} aria-hidden="true" /><p>{done.length ? t("Ai luat tot de pe listă.") : t("Lista e goală. Scrie mai multe deodată, despărțite prin virgulă.")}</p></div>}
+    {done.length > 0 && <>
+      <p className="bf-kicker bf-shop-done-title">{t("ÎN COȘ · {count}", { count: done.length })}</p>
+      <ul className="bf-shop-list is-done">{done.map(row)}</ul>
+      <button type="button" className="bf-primary bf-shop-finish" onClick={finish}><ReceiptText size={18} aria-hidden="true" /> {t("Am terminat — notează plata")}</button>
+      <p className="bf-helper">{t("Scoate din listă ce ai luat și deschide Notează pe Alimente, cu plicul lui.")}</p>
+    </>}
+  </section>;
+}

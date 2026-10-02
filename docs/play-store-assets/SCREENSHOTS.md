@@ -12,14 +12,14 @@
 |---|---|---|---|
 | 1 | `01-today` | Cât poți cheltui azi | What you can spend today |
 | 2 | `02-split` | A intrat salariul? Se împarte singur. | Payday? It splits itself. |
-| 3 | `03-month` | Toată luna, într-o imagine. | The whole month, in one picture. |
+| 3 | `03-voice` | Spui ce ai cumpărat. | Say what you bought. |
 | 4 | `04-plan` | Fiecare leu are un loc. | Every leu has a place. |
-| 5 | `05-add` | Notezi în 3 secunde. | Log it in 3 seconds. |
-| 6 | `06-journal` | Toate mișcările familiei. | Every family transaction. |
+| 5 | `05-journal` | Toate mișcările familiei. | Every family transaction. |
+| 6 | `06-shopping` | Lista de cumpărături a familiei. | The family shopping list. |
 | 7 | `07-obligations` | Rate și facturi la timp. | Bills and loans on time. |
-| 8 | `08-insights` | Vezi unde se duc banii. | See where the money goes. |
+| 8 | `08-year` | Anul vostru, pe scurt. | Your year, at a glance. |
 
-Date inventate (familia Andrei și Maria, `scripts/store-screenshots/seed.mjs`), scrise doar în localStorage-ul browserului de test, nu în Firebase. Refăcute pe 2 octombrie 2026, cu culorile pe categorii și imaginea lunii (cadrul 3 înlocuiește „Două salarii, zile diferite”; `raw/*-needs.png` rămâne disponibil).
+Date inventate (familia Andrei și Maria, `scripts/store-screenshots/seed.mjs`), scrise doar în localStorage-ul browserului de test, nu în Firebase. Refăcute pe 2 octombrie 2026 (1.1.129): notarea din voce, lista de cumpărături și „Anul vostru” au intrat în locul cadrelor „Imaginea lunii”, „Notezi în 3 secunde” și „Unde se duc banii” (`raw/*-month.png`, `raw/*-add.png`, `raw/*-insights.png` rămân disponibile). Vocea e simulată în browserul de test.
 Tot aici: `icon-512.png` (iconul Play) și `feature-graphic-ro.png` / `feature-graphic-en.png` (1024×500, `node feature.mjs`).
 
 Refacere: pornește `vite --port 5174`, apoi din `scripts/store-screenshots/`:

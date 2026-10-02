@@ -10,7 +10,10 @@ const C = {
   plan: { ro: ["Fiecare leu", "are un loc.", "Plicuri pentru chirie, mâncare, economii."], en: ["Every leu", "has a place.", "Envelopes for rent, groceries, savings."] },
   needs: { ro: ["Două salarii,", "zile diferite.", "Fiecare salariu umple plicurile în ziua în care intră."], en: ["Two salaries,", "different days.", "Each salary fills the envelopes on the day it arrives."] },
   add: { ro: ["Notezi în", "3 secunde.", "Suma, magazinul, gata. Categoria se alege singură."], en: ["Log it in", "3 seconds.", "Amount, shop, done. The category picks itself."] },
-  journal: { ro: ["Toate mișcările", "familiei.", "Comune sau personale, pe zile, cu căutare."], en: ["Every family", "transaction.", "Shared or personal, by day, searchable."] },
+  journal: { ro: ["Toate mișcările", "familiei.", "Luna pe categorii, față de luna trecută."], en: ["Every family", "transaction.", "The month by category, versus last month."] },
+  voice: { ro: ["Spui ce ai", "cumpărat.", "„Cincizeci de lei la Lidl” — suma, magazinul și plicul se completează."], en: ["Say what", "you bought.", "Amount, shop and envelope fill themselves in."] },
+  shopping: { ro: ["Lista de cumpărături", "a familiei.", "Bifezi în magazin; plata intră direct în plic."], en: ["The family", "shopping list.", "Tick it off in the shop; the payment lands in its envelope."] },
+  year: { ro: ["Anul vostru,", "pe scurt.", "Zile notate, cea mai bună lună, unde s-au dus banii."], en: ["Your year,", "at a glance.", "Days logged, best month, where the money went."] },
   obligations: { ro: ["Rate și facturi", "la timp.", "Vezi ce urmează și confirmi cu o atingere."], en: ["Bills and loans", "on time.", "See what's next and confirm with one tap."] },
   month: { ro: ["Toată luna,", "într-o imagine.", "Trimite-o familiei. Doar procente, fără sume."], en: ["The whole month,", "in one picture.", "Send it to the family. Percentages, no amounts."] },
   insights: { ro: ["Vezi unde", "se duc banii.", "Pe categorii, pentru ciclul curent."], en: ["See where", "the money goes.", "By category, for the current cycle."] },
@@ -18,7 +21,7 @@ const C = {
 // DEVICE=tablet → capturi de tabletă (1440×2560) din raw/tab-*.png, în screenshots/tableta-<limbă>.
 const tablet = process.env.DEVICE === "tablet";
 const LANGS = (process.env.LANGS || "ro,en").split(",");
-const order = ["today", "split", "month", "plan", "add", "journal", "obligations", "insights"];
+const order = ["today", "split", "voice", "plan", "journal", "shopping", "obligations", "year"];
 const html = (img, [a, b, sub], i) => `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face{font-family:Fr;src:url(${font("fraunces-640-latin.woff2")});unicode-range:U+0000-00FF}
 @font-face{font-family:Fr;src:url(${font("fraunces-640-ro.woff2")});unicode-range:U+0100-02FF}
