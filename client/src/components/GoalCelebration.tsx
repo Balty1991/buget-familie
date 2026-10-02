@@ -26,7 +26,7 @@ export function GoalCelebration({ goal, onClose }: { goal: SavingsGoal; onClose:
         <p className="bf-kicker">{t("OBIECTIV ATINS")}</p>
         <h2 id="bf-celebrate-title">{goal.name}</h2>
         <b>{lei(goal.target)}</b>
-        <p className="bf-helper">{t("Ați strâns tot ce v-ați propus. Felicitări, pas cu pas a mers!")}</p>
+        {goal.message ? <blockquote style={{ margin: 0, padding: "12px 14px", borderLeft: "3px solid var(--cf-primary)", borderRadius: 10, background: "color-mix(in srgb, var(--cf-primary) 8%, var(--cf-surface))", textAlign: "left" }}><small className="bf-kicker">{t("SCRISOARE DE LA VOI, DIN TRECUT")}</small><p style={{ margin: "4px 0 0", fontStyle: "italic" }}>„{goal.message}”</p></blockquote> : <p className="bf-helper">{t("Ați strâns tot ce v-ați propus. Felicitări, pas cu pas a mers!")}</p>}
         <div className="bf-celebrate-actions" style={{ display: "grid", gap: 10, width: "100%", marginTop: 8 }}>
           <button type="button" className="bf-primary" onClick={onClose}>{t("Minunat")}</button>
           <button type="button" className="bf-secondary" onClick={() => void share()}><Share2 size={16} aria-hidden="true" /> {t("Spune familiei")}</button>

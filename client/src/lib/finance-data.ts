@@ -60,7 +60,7 @@ export type Transaction = {
 };
 
 export type Debt = { id: string; name: string; remaining: number; monthly: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; updatedAt?: string; /** Dobânda anuală, în procente (DAE sau dobânda din contract). */ annualRate?: number; /** Credit bancar, card de credit, IFN sau bani de la persoane. */ kind?: "credit" | "card" | "ifn" | "persoane"; /** Data ultimei rate din contract, dacă e știută. */ endDate?: string };
-export type SavingsGoal = { id: string; name: string; current: number; target: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; updatedAt?: string };
+export type SavingsGoal = { id: string; name: string; current: number; target: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; /** „Scrisoare pentru viitor”: se arată abia când obiectivul e atins. */ message?: string; updatedAt?: string };
 export type RecurringFrequency = "monthly" | "quarterly" | "yearly";
 export type RecurringPayment = { id: string; name: string; amount: number; category: string; sourceId: string; memberId: string; dueDay: number; active: boolean; /** Lipsă = lunar. Trimestrial/anual: RCA, impozit, abonamente anuale. */ frequency?: RecurringFrequency; /** Luna (1–12) a unei scadențe, pentru trimestrial și anual. */ month?: number; /** Suma e o estimare (curent, gaz): valoarea reală se scrie la plată și nu se adaugă automat. */ variable?: boolean; /** Creează local plata la prima deschidere din ziua scadenței sau după aceasta. */ autoPost?: boolean; note?: string; updatedAt?: string };
 export type ReceiptLine = { id: string; category: string; amount: number; label?: string; allocationId?: string };

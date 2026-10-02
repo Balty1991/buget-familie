@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from "react";
  * schimbat, nu doar să apară alt număr. Prima afișare nu se animă; cu „Reduce mișcarea” din
  * telefon, valoarea se schimbă direct.
  */
-export function useCountUp(target: number, duration = 480): number {
-  const [shown, setShown] = useState(target);
-  const from = useRef(target);
+export function useCountUp(target: number, duration = 480, initial?: number): number {
+  // `initial`: prima afișare pornește de aici (de la 0, la prima deschidere a zilei).
+  const [shown, setShown] = useState(initial ?? target);
+  const from = useRef(initial ?? target);
   useEffect(() => {
     const start = from.current;
     from.current = target;

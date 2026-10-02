@@ -58,4 +58,8 @@ Construiește întâi AAB-ul (Actions → Release Android AAB) și instalează-l
 - [ ] Redeschide aplicația: felicitarea nu mai apare.
 - [ ] Cu 5 zile înainte de salariu, la 18:45, vine „Mai sunt 5 zile până la salariu”.
 
+## 11. Pornirea și scrisoarea (1 min)
+- [ ] Închide aplicația de tot și deschide-o: salutul pe nume, cardurile intră pe rând, cifra urcă de la 0. A doua deschidere în aceeași zi: fără animație.
+- [ ] Un obiectiv nou cu „Scrisoare pentru voi, din viitor”; pune deoparte până la țintă: mesajul apare în felicitare.
+
 Ce nu merge: o captură de ecran și modelul telefonului, în aplicație la Mai mult → „Spune-ne ce nu merge”.

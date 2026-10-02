@@ -8,6 +8,9 @@ import { noSpendDays } from "@/lib/logging-habits";
 import { safeSetItem } from "@/lib/safe-storage";
 import { tickMemo } from "@/lib/tick-cache";
 import { useCountUp } from "@/hooks/useCountUp";
+import { dayGreeting } from "@/lib/day-greeting";
+
+const INTRO_KEY = "buget-familie:today-intro";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
@@ -182,7 +185,10 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const math = usePlanCycle(data);
   const summary = useTodaySummary(data);
   const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
-  const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0);
+  // Prima deschidere a zilei: salutul, intrarea pe rând a cardurilor și cifra care urcă de la 0.
+  const [intro] = useState(() => { try { if (navigator.webdriver || window.sessionStorage.getItem(INTRO_KEY) === isoToday()) return false; safeSetItem(window.sessionStorage, INTRO_KEY, isoToday()); return true; } catch { return false; } });
+  const greeting = useMemo(() => dayGreeting(data, isoToday(), new Date().getHours()), [data]);
+  const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0, intro ? 1100 : 480, intro ? 0 : undefined);
   const signals = useMemo(() => tickMemo([data], `signals:${isoToday()}`, () => advisorSignals(data)), [data]);
   // „Poți folosi azi” e deja cifra mare de sus; dacă un plic se golește înainte de salariu, aceea e recomandarea.
   const nextStep = signals[0] && signals[0].id !== "daily-pace" ? signals[0] : signals.find((item) => item.id.startsWith("runout-"));
@@ -328,7 +334,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
 
   return (
-    <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "")}>
+    <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "") + (intro ? " is-entering" : "")}>
+      <header className="bf-greet"><b>{greeting.hello}</b><span>{greeting.line}</span></header>
       {/* Modul simplu nu mai are bandă permanentă de avertizare: se oprește din „Mai mult” → Setări. */}
       <EnvelopeConflictBanner data={data} onChange={onChange} />
       <MovementConflictBanner data={data} onChange={onChange} />
