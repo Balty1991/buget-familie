@@ -83,7 +83,6 @@
   border-radius:12px;
 }
 
-.bf-analysis .bf-spend-category-pills button,
 .bf-analysis .bf-analysis-category-rows button,
 .bf-analysis .bf-analysis-watch article,
 .bf-analysis .bf-analysis-balance article {
@@ -281,28 +280,6 @@
     margin-inline: auto;
   }
 
-  .bf-analysis .bf-spend-category-pills {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-
-  .bf-analysis .bf-spend-category-pills button {
-    min-width: 0;
-    padding: 9px;
-  }
-
-  .bf-analysis .bf-spend-category-pills button span {
-    min-width: 0;
-  }
-
-  .bf-analysis .bf-spend-category-pills b,
-  .bf-analysis .bf-spend-category-pills small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .bf-analysis .bf-analysis-category-rows button {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
@@ -335,10 +312,6 @@
 
 @media (max-width: 370px) {
   .bf-analysis .bf-analysis-snapshot-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .bf-analysis .bf-spend-category-pills {
     grid-template-columns: 1fr;
   }
 }

@@ -3822,4 +3822,12 @@ export const en: Record<string, string> = {
   "Ascunde provocarea lunii": "Hide the challenge of the month",
   "Mai sunt {left} până la țintă.": "{left} left until the target.",
   "Cum e împărțit planul": "How the plan is split",
+  "Vezi întâi cu o familie exemplu": "First, see it with an example family",
+  "Date inventate, ca să vezi cum arată. Pornești de la zero oricând.": "Made-up data, so you can see how it looks. Start from scratch anytime.",
+  "Ștergem familia exemplu și pornești cu datele tale.": "We'll clear the example family and you start with your own data.",
+  "Încep cu datele mele": "Start with my data",
+  "Familie exemplu": "Example family",
+  "datele sunt inventate": "the data is made up",
+  "Sincronizarea pornește cu datele tale": "Sync starts with your own data",
+  "Acum vezi familia exemplu. Apasă „Încep cu datele mele” sus, apoi poți invita partenerul.": "You're viewing the example family. Tap “Start with my data” at the top, then you can invite your partner.",
 };

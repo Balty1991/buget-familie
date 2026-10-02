@@ -263,28 +263,6 @@ html.capacitor-android {
 
 .os-hero.is-risk .os-chip i { background: var(--os-warn) !important; }
 
-.os-date {
-  display: grid;
-  justify-items: end;
-  gap: 1px;
-  font-family: ui-monospace, "IBM Plex Mono", monospace !important;
-  text-transform: uppercase;
-}
-
-.os-date b {
-  color: var(--os-subtle);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: .08em;
-}
-
-.os-date span {
-  color: var(--os-muted);
-  font-size:12px;
-  font-weight: 500;
-  letter-spacing: .04em;
-}
-
 .os-kicker-lg {
   position: relative;
   z-index: 1;
@@ -789,22 +767,6 @@ html body .bf-command-search input::placeholder {
   margin-bottom: 12px;
 }
 
-.os-shell .ai-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  color: var(--os-mint);
-  background: var(--os-mint-dim);
-}
-
-.os-shell .ai-eyebrow {
-  color: var(--os-muted);
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size:12px !important;
-  font-weight: 600;
-  letter-spacing: .16em;
-}
-
 .os-shell .ai-companion-head h2 {
   color: var(--os-fg);
   font-family: Fraunces, Georgia, serif !important;
@@ -812,9 +774,6 @@ html body .bf-command-search input::placeholder {
   font-weight: 560;
   letter-spacing: -.03em !important;
 }
-
-.os-shell .ai-status { color: var(--os-muted); font-size:12px; }
-.os-shell .ai-status i { background: var(--os-mint); box-shadow: 0 0 0 3px color-mix(in srgb, var(--os-mint) 22%, transparent); }
 
 .os-shell .ai-tool,
 .os-shell .ai-tool-close {
@@ -1435,11 +1394,6 @@ html.dark .bf-onboarding.bf-first-run {
   padding-bottom: 2px !important;
 }
 
-.bf-first-run-chrome-spacer {
-  width: 44px !important;
-  min-height: 44px !important;
-}
-
 .bf-onboarding-back,
 .bf-first-run .bf-onboarding-back {
   position: static !important;
@@ -1504,9 +1458,6 @@ html.dark .bf-onboarding.bf-first-run {
   .bf-first-run .os-mark svg {
     width: 52px !important;
     height: 52px !important;
-  }
-  .bf-first-run .bf-first-run-legal {
-    display: none !important;
   }
   .bf-first-run-intents {
     gap: 8px !important;
@@ -1580,10 +1531,6 @@ html.dark .bf-onboarding.bf-first-run {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 10px !important;
-  }
-
-  .os-date {
-    justify-items: start !important;
   }
 
   .os-chip {
@@ -1723,3 +1670,11 @@ html[data-simple-mode="1"] .os-dock button {
 /* Primul ecran: trei promisiuni ca etichete, nu un paragraf. */
 .bf-first-run-trust { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; padding: 0; list-style: none; }
 .bf-first-run-trust li { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px 4px 10px; border-radius: 999px; color: var(--cf-primary-strong, var(--cf-primary)); background: color-mix(in srgb, var(--cf-primary) 11%, var(--cf-surface)); font-size: 13px; font-weight: 600; }
+
+/* Familia exemplu: o bandă sus, cu ieșirea la vedere. */
+.bf-demo-banner { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 8px 12px 0; padding: 10px 10px 10px 14px; border-radius: 16px; color: var(--cf-ink); background: color-mix(in srgb, var(--cf-warning, #b07d12) 16%, var(--cf-surface)); border: 1px solid color-mix(in srgb, var(--cf-warning, #b07d12) 40%, var(--cf-line)); font-size: 14px; }
+.bf-demo-banner .bf-primary { min-height: 40px; padding: 0 14px; }
+.bf-first-run-demo { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; width: 100%; margin-top: 10px; padding: 14px; border: 1.5px dashed color-mix(in srgb, var(--cf-primary) 45%, var(--cf-line)); border-radius: 16px; color: var(--cf-ink); background: color-mix(in srgb, var(--cf-primary) 6%, var(--cf-surface)); text-align: left; }
+.bf-first-run-demo svg { color: var(--cf-primary); }
+.bf-first-run-demo b { display: block; font-size: 15px; }
+.bf-first-run-demo small { display: block; margin-top: 2px; color: var(--cf-muted); font-size: 13px; line-height: 1.4; }

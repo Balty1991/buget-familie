@@ -229,32 +229,6 @@ button.danger,
   height: 100%;
   border-radius: inherit;
 }
-.bf-spend-category-pills {
-  display: grid;
-  gap: 8px;
-}
-.bf-spend-category-pills button {
-  display: grid;
-  grid-template-columns: 8px minmax(0, 1fr);
-  align-items: center;
-  position: relative;
-  min-height: 44px;
-  overflow: hidden;
-}
-.bf-spend-category-pills button::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: var(--cf-line);
-}
-.bf-spend-category-pills button i {
-  width: 8px;
-  height: 28px;
-  border-radius: 99px;
-}
 
 .bf-modal,
 .bf-command-palette,

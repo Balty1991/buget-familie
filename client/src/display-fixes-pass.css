@@ -254,9 +254,6 @@ html:not(.dark) .bf-os-day.is-today span {
 html:not(.dark) .bf-os-day.is-over b {
   color: #8a5f0c;
 }
-html:not(.dark) .os-date b {
-  color: #5f6d67;
-}
 
 /* —— 11. Legătura „Sari la conținut” și mesajul din vrăjitor —— */
 /* Legătura de accesibilitate apare doar la navigarea cu tastatura, iar acolo ieșea

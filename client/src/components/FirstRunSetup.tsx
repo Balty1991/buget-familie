@@ -2,8 +2,9 @@
  * Primul flux: 4 intenții egale + Mai târziu.
  * Banii de azi întâi; plicurile rămân opționale, în Plan.
  */
+import { buildDemoData, setDemoMode } from "@/lib/demo-data";
 import { useLayoutEffect, useState } from "react";
-import { BadgeCheck, Check, ChevronLeft, ChevronRight, Eye, Home, Lock, PiggyBank, ReceiptText, Smartphone, Users, Wallet, WalletCards } from "lucide-react";
+import { BadgeCheck, Sparkles, Check, ChevronLeft, ChevronRight, Eye, Home, Lock, PiggyBank, ReceiptText, Smartphone, Users, Wallet, WalletCards } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { isoDate, isoToday, newId, parseRomanianAmount, type AppData, type BudgetAllocation, type PaymentKind } from "@/lib/finance-data";
@@ -274,6 +275,11 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
               <li><BadgeCheck size={16} aria-hidden="true" />{t("Fără reclame")}</li>
               <li><Smartphone size={16} aria-hidden="true" />{t("Datele stau pe telefon")}</li>
             </ul>
+            {/* Întâi vezi cum arată plină, apoi pornești de la zero: fără să scrii ceva ca să înțelegi. */}
+            <button type="button" className="bf-first-run-demo" onClick={() => { onChange(buildDemoData(isoToday())); setDemoMode(true); complete(); }}>
+              <Sparkles size={18} aria-hidden="true" />
+              <span><b>{t("Vezi întâi cu o familie exemplu")}</b><small>{t("Date inventate, ca să vezi cum arată. Pornești de la zero oricând.")}</small></span>
+            </button>
             <div className="bf-first-run-intents" role="group" aria-label={t("Intenții de start")}>
               <button type="button" onClick={() => setIntent("salary")}>
                 <WalletCards size={20} />
