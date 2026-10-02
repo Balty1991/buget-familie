@@ -380,6 +380,15 @@ public class MainActivity extends BridgeActivity {
         SpendTodayWidgetProvider.updateAll(app);
       });
     }
+
+    @JavascriptInterface
+    public void publishEnvelopes(String json) {
+      final android.content.Context app = MainActivity.this.getApplicationContext();
+      WIDGET_WORK.execute(() -> {
+        EnvelopesWidgetProvider.save(app, json);
+        EnvelopesWidgetProvider.updateAll(app);
+      });
+    }
   }
 
   private void injectSafeArea(WebView webView, Insets bars) {

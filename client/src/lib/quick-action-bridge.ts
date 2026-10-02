@@ -20,6 +20,7 @@ type NativeBridge = {
   consume?: () => string;
   publishTemplates?: (json: string) => void;
   publishSpendToday?: (json: string) => void;
+  publishEnvelopes?: (json: string) => void;
 };
 
 const bridge = (): NativeBridge | undefined => {
@@ -136,6 +137,19 @@ export function publishSpendToday(payload: SpendTodayWidget): void {
   try {
     if (!bridge()?.publishSpendToday) return;
     publishLater("spend-today", JSON.stringify(payload), (value) => bridge()?.publishSpendToday?.(value));
+  } catch {
+    /* widgetul e opțional */
+  }
+}
+
+/** Rândurile widgetului „Plicurile mele”: nume, cât a rămas (text gata format) și procentul consumat. */
+export type EnvelopesWidget = { rows: Array<{ label: string; left: string; used: number }>; date: string; stale: string; zone?: string };
+
+/** Ca la „Poți cheltui azi”: widgetul doar arată; fără punte nativă, nu face nimic. */
+export function publishEnvelopes(payload: EnvelopesWidget): void {
+  try {
+    if (!bridge()?.publishEnvelopes) return;
+    publishLater("envelopes", JSON.stringify(payload), (value) => bridge()?.publishEnvelopes?.(value));
   } catch {
     /* widgetul e opțional */
   }

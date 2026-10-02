@@ -8,7 +8,7 @@ import { loggingStreak } from "@/lib/logging-habits";
 import { askReviewAfterMilestone, loggedDays, REVIEW_AFTER_LOGGED_DAYS } from "@/lib/review-prompt";
 import { lazy, startTransition, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, Users, RotateCcw, Inbox, LayoutGrid, MessagesSquare, MoreHorizontal, Plus, ReceiptText, Search, ShieldCheck, Wallet, X } from "lucide-react";
-import { createEmptyAppData, TOMBSTONE_MAX, rollIncomeHorizon, deviceTimeZone, setFamilyTimeZone, getFamilyTimeZone, adoptOutsideExpenses, commitLedgerEntry, learnMerchantRule, confirmRecurringPayment, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { allocationStatus, createEmptyAppData, TOMBSTONE_MAX, rollIncomeHorizon, deviceTimeZone, setFamilyTimeZone, getFamilyTimeZone, adoptOutsideExpenses, commitLedgerEntry, learnMerchantRule, confirmRecurringPayment, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
 import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
@@ -22,7 +22,7 @@ import { isAppLockEnabled } from "@/lib/app-lock";
 import { useToday } from "@/hooks/useToday";
 import { safeImport } from "@/lib/lazy-safe";
 import { applySecureScreen } from "@/lib/secure-screen";
-import { observeQuickActions, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
+import { observeQuickActions, publishEnvelopes, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { hasQueuedFeedback } from "@/lib/feedback-queue";
 import { useMemberMode } from "@/lib/member-mode";
 import { MemberModeScreen } from "@/components/MemberModeScreen";
@@ -639,6 +639,21 @@ export default function Home() {
       zone: getFamilyTimeZone(),
       stale: t("Cifra e de pe {date} — deschide aplicația pentru azi", { date: formatDate(today, { day: "numeric", month: "long" }) }),
     });
+  }, [data, memberModeActive, today]);
+  useEffect(() => {
+    // Widgetul „Plicurile mele”: primele trei plicuri cu buget, cele mai apăsate întâi.
+    const today = isoToday();
+    if (isAppLockEnabled() || memberModeActive) {
+      publishEnvelopes({ rows: [], date: today, stale: "" });
+      return;
+    }
+    const rows = data.settings.salaryPlan.allocations
+      .map((item) => ({ item, status: allocationStatus(data, item) }))
+      .filter((row) => row.status && row.status.budget > 0 && !(row.status.fixed && row.status.remaining <= 0.5))
+      .sort((a, b) => (b.status!.usage - a.status!.usage))
+      .slice(0, 3)
+      .map(({ item, status }) => ({ label: item.label, left: status!.remaining < 0 ? `−${fmtExact.format(-status!.remaining)}` : fmtExact.format(status!.remaining), used: Math.round(Math.min(1, Math.max(0, status!.usage)) * 100) }));
+    publishEnvelopes({ rows, date: today, zone: getFamilyTimeZone(), stale: t("Sumele sunt de pe {date} — deschide aplicația", { date: formatDate(today, { day: "numeric", month: "long" }) }) });
   }, [data, memberModeActive, today]);
   // Copia săptămânală, pe telefon: o dată la 7 zile, după ce omul a spus „da”.
   useEffect(() => { void import("@/components/AutoBackupCard").then(({ runAutoBackupIfDue }) => runAutoBackupIfDue(data)).catch(() => undefined); }, [data]);
