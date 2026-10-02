@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.126
+
+- Plicuri, refăcute: sus, o bară colorată cu împărțirea banilor pe plicuri și primele patru procente; fiecare plic are inelul lui de progres cu iconița categoriei; importul de plan a coborât sub listă.
+- Analiză: diagrama cu categoriile e prima; controlul de perioadă stă pe două coloane pe telefon.
+- Mod demo la prima pornire: „Vezi întâi cu o familie exemplu” umple aplicația cu familia Popescu (date relative la azi). Cât ține exemplul, sincronizarea e oprită; „Încep cu datele mele” golește tot și deschide pornirea.
+- Abonamentul Familia: textele și documentele de billing aliniate cu codul (Casa: plicuri nelimitate, 2 persoane, un telefon; probă 30 de zile).
+- Widget Android nou, „Plicurile mele”: cele mai folosite trei plicuri, cu bară și cât a rămas, plus buton de notare. Ascuns cu blocarea aplicației sau în modul membru.
+- CSS mai mic: reguli pentru clase care nu mai există, scoase (933 KB, 3241 `!important`).
+
 ## 1.1.125
 
 - Astăzi, refăcut: cifra zilei e prima, avertizările vin sub ea; eticheta stă pe rândul datei; un rând mereu vizibil cu zilele până la salariu, intrat și ieșit.
