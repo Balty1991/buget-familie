@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.127
+
+- Notare din voce: în Notează, „Spune ce ai cumpărat” — „cincizeci de lei la Lidl” completează suma, magazinul, categoria și plicul; omul verifică și apasă Gata. Pe Android prin recunoașterea vocală a telefonului, fără permisiunea microfonului.
+- „Anul vostru”: retrospectiva anului ca poveste (zile notate, seria, unde s-au dus banii, magazinul de bază, cea mai bună lună, zile fără cheltuieli) și o imagine de trimis, implicit fără sume. În Analiză → Gospodărie și, din decembrie până în ianuarie, pe Astăzi.
+- Mișcări: pulsul lunii (cât a ieșit, bară pe categorii, față de luna trecută până azi); categoriile filtrează lista; zilele se citesc „Ieri”, „Miercuri, 30 septembrie”.
+- Notează: plicul și o bară cu ce rămâne după plată stau imediat sub categorie; categoriile proprii folosite recent intră în șirul de butoane.
+- CSS: selectorii temei retrase „ink” simplificați (fără schimbare vizuală).
+
 ## 1.1.126
 
 - Plicuri, refăcute: sus, o bară colorată cu împărțirea banilor pe plicuri și primele patru procente; fiecare plic are inelul lui de progres cu iconița categoriei; importul de plan a coborât sub listă.
