@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.131
+
+- Abonamente (Obligații): cât costă pe lună și pe an toate plățile care se repetă, ce s-a scumpit și abonamentele găsite în mișcări, cu „Adaugă” sau „Nu e abonament”.
+- Raportul lunar PDF refăcut: cu diacritice, în limba aplicației, cu intrat / ieșit / rămas, inelul categoriilor față de luna trecută, plicurile ciclului, abonamentele și mișcările lunii. Exportul CSV are antetul în limba aplicației.
+- Pușculița copilului: pe telefonul copilului, un obiectiv cu desen, un borcan care se umple și „+5 / +10 / +20 lei”.
+
 ## 1.1.130
 
 - Verificare înainte de lansare: toate ecranele și instrumentele, în română și engleză, cu familia exemplu și fără date, pe telefoane mici, normale și tablete — fără erori și fără ecrane care ies din lățime.

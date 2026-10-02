@@ -10,7 +10,7 @@ import { CalendarDays, PiggyBank, Wallet } from "lucide-react";
 import { type AppData } from "@/lib/finance-data";
 import { childMembers, childPocket } from "@/lib/allowance";
 import { dateText, fmtExact, money } from "@/pages/home-kit";
-import { t } from "@/lib/i18n";
+import { getLocale, t } from "@/lib/i18n";
 
 export function PocketPanel({ data }: { data: AppData }) {
   const children = childMembers(data);
@@ -21,7 +21,7 @@ export function PocketPanel({ data }: { data: AppData }) {
     return (
       <div className="bf-empty-state slim">
         <PiggyBank size={23} />
-        <h2>Niciun copil marcat</h2>
+        <h2>{t("Niciun copil marcat")}</h2>
         <p>{t("În Setări → Membri poți marca un membru drept copil. Dă-i apoi un plic pe numele lui, în Plicuri, iar aici va vedea cât mai are din banii de buzunar.")}</p>
       </div>
     );
@@ -42,7 +42,7 @@ export function PocketPanel({ data }: { data: AppData }) {
   return (
     <div className="bf-pocket-workspace">
       {children.length > 1 && (
-        <div className="bf-pocket-switch" role="group" aria-label="Al cui buzunar">
+        <div className="bf-pocket-switch" role="group" aria-label={t("Al cui buzunar")}>
           {children.map((item) => (
             <button key={item.id} className={item.id === pocket.member.id ? "active" : ""} onClick={() => setMemberId(item.id)}>
               {item.name}
@@ -52,7 +52,7 @@ export function PocketPanel({ data }: { data: AppData }) {
       )}
 
       <section className={`bf-pocket-hero ${tone}`} aria-labelledby="pocket-title">
-        <p className="bf-kicker">BANII LUI {pocket.member.name.toLocaleUpperCase("ro-RO")}</p>
+        <p className="bf-kicker">{t("BANII LUI {name}", { name: pocket.member.name.toLocaleUpperCase(getLocale()) })}</p>
         <h2 id="pocket-title">{fmtExact.format(Math.max(0, pocket.remaining))}</h2>
         <p className="bf-pocket-line">
           {pocket.remaining < 0

@@ -6,12 +6,18 @@ import "../objective-edit.css";
 import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
-import { addIsoDays, allocationStatus, debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { addIsoDays, allocationStatus, debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type RecurringPayment, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { dateText, money } from "@/pages/home-kit";
 import { amortize, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type PayoffStrategy } from "@/lib/debt-plan";
 import { getLocale, monthsLabel, t } from "@/lib/i18n";
 import { PaidCheck } from "@/components/PaidCheck";
-import { monthTitle, savingsSuggestion } from "@/lib/household-insights";
+import { detectSubscriptions, monthTitle, recurringFromDetection, recurringPriceChanges, savingsSuggestion } from "@/lib/household-insights";
+import { safeSetItem } from "@/lib/safe-storage";
+
+/** Comercianții pe care omul a spus că nu-s abonamente: rămân pe telefon, nu-i mai propunem. */
+const DISMISSED_HITS = "buget-familie:subscription-dismissed";
+/** Toate plățile active care se repetă (abonamente, facturi), aduse la lună: anualul împărțit la 12. */
+const subscriptionSpendAll = (data: AppData) => { const monthly = data.recurring.filter((item) => item.active).reduce((sum, item) => sum + (item.frequency === "yearly" ? item.amount / 12 : item.frequency === "quarterly" ? item.amount / 3 : item.amount), 0); return { monthly: Math.round(monthly * 100) / 100, yearly: Math.round(monthly * 1200) / 100 }; };
 import { daysBetween, upcomingPlannedEvents } from "@/lib/planned-events";
 import { activeNeeds, reserveOf } from "@/lib/monthly-needs";
 
@@ -94,7 +100,7 @@ function DebtPayoffSimulator({ data }: { data: AppData }) {
         {hasRates && other.months !== null && withExtra.totalInterest - other.totalInterest > 1 && <p className="bf-helper">{t("Cealaltă ordine ar costa cu {amount} mai puțin în dobânzi.", { amount: money(withExtra.totalInterest - other.totalInterest) })}</p>}</>}
     <div className="bf-debt-simulator-summary"><span><b>{base.months ?? "∞"}</b><small>{t("luni acum")}</small></span><span><b>{withExtra.months ?? "∞"}</b><small>{t("luni cu extra")}</small></span><span><b>{money(minimum + extra)}</b><small>{t("efort lunar")}</small></span></div></section>;
 }
-export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onOpenGoals, onOpenCalendar, onOpenEvents, onOpenAssistant }: { data: AppData; onSaveToGoal?: (id: string, amount: number) => void; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenEvents: () => void; onOpenAssistant: () => void }) {
+export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onAddRecurring, onOpenGoals, onOpenCalendar, onOpenEvents, onOpenAssistant }: { data: AppData; onAddRecurring?: (item: RecurringPayment) => void; onSaveToGoal?: (id: string, amount: number) => void; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenEvents: () => void; onOpenAssistant: () => void }) {
   const [laterIds, setLaterIds] = useState<string[]>([]);
   /** Obiectivele alimentate acum: butonul devine „Pus deoparte”, ca o dublă atingere să nu pună de două ori. */
   const [savedNow, setSavedNow] = useState<string[]>([]);
@@ -118,6 +124,11 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
     const lastNext = new Date(now.getFullYear(), now.getMonth() + 2, 0).getDate();
     return isoDate(new Date(now.getFullYear(), now.getMonth() + 1, Math.min(day, lastNext), 12));
   };
+  const spend = subscriptionSpendAll(data);
+  const rises = recurringPriceChanges(data);
+  const [dismissed, setDismissed] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem(DISMISSED_HITS) || "[]") as string[]; } catch { return []; } });
+  const dismissHit = (key: string) => { const next = [...dismissed, key].slice(-60); setDismissed(next); try { safeSetItem(localStorage, DISMISSED_HITS, JSON.stringify(next)); } catch { /* fără stocare: revine data viitoare */ } };
+  const suggestions = detectSubscriptions(data).filter((hit) => !dismissed.includes(hit.key)).slice(0, 3);
   const allUpcoming = [
     ...data.debts.filter((item) => item.remaining > 0).map((item) => ({
       id: `debt-${item.id}`,
@@ -207,6 +218,7 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
             <div>
               <p className="bf-kicker">{t("ABONAMENTE")}</p>
               <h2>{t("Plăți care se repetă")}</h2>
+              {spend.monthly > 0 && <p className="bf-sub-total"><b>{money(spend.monthly)}</b> {t("pe lună")} · {t("{amount} pe an", { amount: money(spend.yearly) })}</p>}
             </div>
             <button type="button" onClick={onOpenRecurring}>{data.recurring.some((item) => item.active) ? t("Gestionează") : t("Adaugă")}</button>
           </div>
@@ -222,6 +234,15 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
               ))}
             </ul>
           ) : <p>{t("Chirie, telefon, Netflix — un nume și o sumă. Fără logo.")}</p>}
+          {rises.length > 0 && <ul className="bf-sub-rises">{rises.map((rise) => <li key={rise.recurringId}><b>{rise.name}</b> {t("s-a scumpit: {from} → {to}", { from: money(rise.from), to: money(rise.to) })}</li>)}</ul>}
+          {suggestions.length > 0 && <div className="bf-sub-found">
+            <p className="bf-kicker">{t("AM GĂSIT ÎN MIȘCĂRI")}</p>
+            {suggestions.map((hit) => <div key={hit.key} className="bf-sub-found-row">
+              <span><b>{hit.name}</b><small>{money(hit.amount)} · {hit.reason}</small></span>
+              {onAddRecurring && <button type="button" className="bf-secondary" onClick={() => { const draft = recurringFromDetection(data, hit); if (draft) onAddRecurring(draft); }}><Plus size={15} aria-hidden="true" /> {t("Adaugă")}</button>}
+              <button type="button" className="bf-link-button" onClick={() => dismissHit(hit.key)}>{t("Nu e abonament")}</button>
+            </div>)}
+          </div>}
         </section>
         {upcoming.length ? (
           <div className="bf-upcoming-list">

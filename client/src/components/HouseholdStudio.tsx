@@ -7,7 +7,7 @@ import { lazy, Suspense, useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, Image as ImageIcon, PiggyBank, Repeat, Share2, Shield, Users } from "lucide-react";
 import { addIsoDays, autoPostDueRecurring, formatDate, isoToday, type AppData } from "@/lib/finance-data";
 import { CashNote, EmptyMark } from "@/components/LedgerArt";
-import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
+import { downloadMonthlyReportPdf } from "@/lib/monthly-report-pdf";
 import { ageOfMoney, closeMonthLocally, currentMonthKey, detectSubscriptions, formatMonthlyReportShare, householdActivity, liquidSafeToSpend, monthlyFamilyReport, monthlyRecap, readClosedMonths, recurringFromDetection, subscriptionSpend, type SubscriptionDetection } from "@/lib/household-insights";
 import { countLabel, envelopesLabel, t } from "@/lib/i18n";
 import { SettleUpCard } from "@/components/SettleUpCard";
@@ -63,7 +63,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   const close = async () => {
     setExporting(true);
     try {
-      await downloadMonthlyBalancePdf(data, month);
+      await downloadMonthlyReportPdf(data, month);
       setClosed((current) => ({ ...current, [month]: closeMonthLocally(recap) }));
     } finally {
       setExporting(false);
@@ -204,7 +204,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
         <p className="bf-helper">{t("Feed-ul se calculează din registrul deja sincronizat. Nu creăm un jurnal separat pe server.")}</p>
       </section>
 
-      <button className="bf-household-pdf" type="button" disabled={exporting} onClick={() => void downloadMonthlyBalancePdf(data, month)}>
+      <button className="bf-household-pdf" type="button" disabled={exporting} onClick={() => void downloadMonthlyReportPdf(data, month)}>
         <Download size={16} /> {t("Descarcă bilanțul lunii, fără a o închide")}
       </button>
     </div>

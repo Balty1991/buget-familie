@@ -219,3 +219,11 @@ html body .bf-obligation-entry-main > span.bf-goal-ring-slot{width:52px;height:5
 .bf-goal-ring{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:radial-gradient(closest-side,var(--cf-surface,#fff) 76%,transparent 78%),conic-gradient(var(--cf-honey,#c9973f) calc(var(--bf-goal) * 1%),color-mix(in srgb,var(--cf-honey,#c9973f) 18%,transparent) 0)}
 .bf-goal-ring{font-style:normal}
 .bf-goal-ring b{color:var(--cf-ink);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.bf-sub-total{margin:4px 0 0;color:var(--cf-muted);font-size:14px}
+.bf-sub-total b{color:var(--cf-ink);font-weight:700}
+.bf-sub-rises{margin:8px 0 0;padding:0;list-style:none;color:var(--cf-coral,#b5523b);font-size:13px}
+.bf-sub-found{display:grid;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--cf-line)}
+.bf-sub-found .bf-kicker{margin:0}
+.bf-sub-found-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.bf-sub-found-row>span{display:grid;flex:1 1 100%;gap:2px}
+.bf-sub-found-row small{color:var(--cf-muted);font-size:12px}

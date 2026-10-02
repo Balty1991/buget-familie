@@ -15,7 +15,7 @@ import { analysisCompareWindow } from "@/lib/household-insights";
 import { EmptyMark } from "@/components/LedgerArt";
 import { ChartEmpty, ChartTip, ChartYAxis } from "@/components/ChartFrame";
 import { chartBarHeight, hasChartValues, leiAxisTicks, leiLabel } from "@/lib/chart-ui";
-import { downloadMonthlyBalancePdf } from "@/lib/monthly-balance-pdf";
+import { downloadMonthlyReportPdf } from "@/lib/monthly-report-pdf";
 import type { MainView } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
@@ -116,7 +116,7 @@ export function ReportsPanel({ data, onGo }: { data: AppData; onGo?: (view: Main
           ? { tone: "watch", eyebrow: t("RITM DE URMĂRIT"), title: t("Cheltuielile au depășit veniturile."), detail: t("{count} {word} înregistrate; verifică distribuția pe categorii înainte de a ajusta planul.", { count: selected.length, word: selected.length === 1 ? t("mișcare este") : t("mișcări sunt") }) }
           : { tone: "good", eyebrow: t("SITUAȚIE LUNARĂ"), title: t("Luna rămâne pe plus."), detail: t("{moves} și {cats}; folosește comparația pentru următorul pas.", { moves: `${selected.length} ${selected.length === 1 ? t("mișcare") : t("mișcări")}`, cats: `${categories.length} ${categories.length === 1 ? t("categorie urmărită") : t("categorii urmărite")}` }) };
   const snapshotIcon = snapshot.tone === "risk" ? <AlertTriangle size={18} /> : snapshot.tone === "watch" ? <TrendingDown size={18} /> : snapshot.tone === "good" ? <TrendingUp size={18} /> : <CalendarDays size={18} />;
-  const exportPdf = async () => { setExporting(true); try { await downloadMonthlyBalancePdf(data, focusMonth, memberId); } finally { setExporting(false); } };
+  const exportPdf = async () => { setExporting(true); try { await downloadMonthlyReportPdf(data, focusMonth, memberId); } finally { setExporting(false); } };
   const nextStep = awaitingIncome
     ? { title: t("Așteaptă venitul înainte de a trage concluzii"), detail: t("Gospodăriile plătite la mijlocul sau la finalul lunii au mereu cheltuieli înaintea încasării. Compară pe ciclul de salariu, în Plicuri."), label: t("Deschide Planul"), view: "plan" as MainView }
     : alerts.some((entry) => entry.state === "over")
