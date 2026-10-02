@@ -807,7 +807,7 @@ html:not(.dark) .bf-os-decide {
 .bf-price-rise span { font-size: 13px; line-height: 1.35; }
 .bf-price-rise button { justify-self: start; }
 .bf-today-activity-list strong.income { color: var(--cf-primary); }
-.bf-today-activity-list strong.expense { color: var(--cf-danger, #a44e3e); }
+.bf-today-activity-list strong.expense { color: var(--cf-ink); }
 
 .os-hero .bf-hero-week {
   margin-top: 14px;

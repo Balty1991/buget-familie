@@ -125,7 +125,7 @@
 .bf-today-activity-list b { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .bf-today-activity-list small { overflow: hidden; color: var(--bf-major-muted); font-size:12px; text-overflow: ellipsis; white-space: nowrap; }
 .bf-today-activity-list strong { font-size:14px; font-variant-numeric: tabular-nums; }
-.bf-today-activity-list strong.expense { color: var(--bf-major-coral); }
+.bf-today-activity-list strong.expense { color: var(--cf-ink); }
 .bf-today-activity-list strong.income { color: var(--bf-major-green); }
 .bf-today-empty-activity { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr) 22px; align-items: center; gap: 12px; min-height: 76px; padding: 14px 12px; border: 1px dashed var(--bf-major-line); border-left: 4px solid var(--bf-major-honey); color: var(--bf-major-ink); background: repeating-linear-gradient(0deg, transparent 0 26px, color-mix(in srgb, var(--bf-major-line) 52%, transparent) 26px 27px), var(--bf-major-sheet); text-align: left; }
 .bf-today-empty-activity > span { display: grid; gap: 3px; }
@@ -1056,19 +1056,6 @@ html.theme-dark{
   overflow: hidden;
   isolation: isolate;
   border: 1px solid color-mix(in srgb, var(--cf-line) 78%, transparent);
-}
-
-.bf-topline::after {
-  position: absolute;
-  z-index: -1;
-  top: -6rem;
-  right: -5rem;
-  width: 15rem;
-  height: 15rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--cf-info) 10%, transparent);
-  content: "";
-  filter: blur(2px);
 }
 
 .bf-analysis-snapshot,
