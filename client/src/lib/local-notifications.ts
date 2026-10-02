@@ -21,6 +21,8 @@ import { daysLabel, getLocale, t } from "./i18n";
 import { monthTitle, weekTooFast } from "./household-insights";
 import { lei } from "@/lib/money-format";
 import { isAppLockEnabled } from "@/lib/app-lock";
+import { loggingStreak } from "@/lib/logging-habits";
+import { notifyKindOf, readNotifyPrefs } from "@/lib/notify-prefs";
 
 /** Cu PIN pe aplicație, notificarea spune doar ce s-a întâmplat, fără sume sau nume. */
 const lockSafeBody = (body: string) => isAppLockEnabled() ? t("Deschide aplicația ca să vezi detaliile.") : body;
@@ -534,20 +536,22 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     });
   }
 
-  // Check-in calm de seară, doar dacă azi nu e nicio cheltuială.
-  const spentToday = (data.transactions || []).some((item) => item.kind === "expense" && item.date === today);
-  if (!spentToday) {
-    const when = atLocalHour(0, 20, 0);
+  // Check-in de seară, doar dacă azi nu e nimic notat, la ora aleasă. Cu o serie de 3+ zile, o apără.
+  const prefs = readNotifyPrefs();
+  const loggedToday = (data.transactions || []).some((item) => item.date === today && !item.adjustment && !item.transferId);
+  if (!loggedToday) {
+    const streak = loggingStreak(data.transactions || [], today);
+    const when = atLocalHour(0, prefs.eveningHour, 0);
     if (when.getTime() > Date.now() - 60_000) {
       alerts.push({
         id: id++,
-        title: t("Check-in de seară"),
-        body: t("Nicio cheltuială înregistrată azi. Un minut de ordine e de ajuns."),
+        title: streak >= 3 ? t("Nu pierde seria de {days} zile", { days: streak }) : t("Check-in de seară"),
+        body: streak >= 3 ? t("Notează ce s-a cheltuit azi. Dacă n-a fost nimic, e o zi fără cheltuieli — și asta contează.") : t("Nicio cheltuială înregistrată azi. Un minut de ordine e de ajuns."),
         at: when,
         tag: `checkin-${today}`,
       });
     } else {
-      const tomorrow = atLocalHour(1, 20, 0);
+      const tomorrow = atLocalHour(1, prefs.eveningHour, 0);
       alerts.push({
         id: id++,
         title: t("Check-in de seară"),
@@ -558,7 +562,8 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     }
   }
 
-  return alerts.slice(0, 10);
+  // Ce a oprit omul din Setări nu se programează deloc.
+  return alerts.filter((alert) => !prefs.off.includes(notifyKindOf(alert.tag))).slice(0, 10);
 }
 
 /** Expus pentru teste: aceleași alerte ca programarea locală. */
