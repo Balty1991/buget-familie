@@ -326,37 +326,37 @@ html body .os-shell .os-dock button svg {
 
 /* ========== 9. Light Alb / Atelier ========== */
 /* Cifra zilei: o lumină verde discretă din colț, ca un card de bancă modern; restul rămân albe. */
-:is(html.theme-ink, html.theme-white) body .os-shell .os-hero{
+html.theme-white body .os-shell .os-hero{
   background:
     radial-gradient(140% 80% at 100% 0%, color-mix(in srgb, var(--cf-primary) 16%, var(--cf-surface)) 0, transparent 62%),
     linear-gradient(180deg, color-mix(in srgb, var(--cf-primary) 5%, var(--cf-surface)), var(--cf-surface) 55%) !important;
   border: 1px solid color-mix(in srgb, var(--cf-primary) 22%, var(--cf-line)) !important;
   box-shadow: 0 1px 2px rgba(8, 18, 14, 0.05), 0 12px 32px -18px color-mix(in srgb, var(--cf-primary) 55%, transparent) !important;
 }
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulator,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulation,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-allocation-period,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-analysis-snapshot{
+html.theme-white body .bf-app .bf-plan-simulator,
+html.theme-white body .bf-app .bf-plan-simulation,
+html.theme-white body .bf-app .bf-allocation-period,
+html.theme-white body .bf-app .bf-analysis-snapshot{
   background: var(--os-surface, var(--cf-surface, #fffefa)) !important;
   border: 1px solid color-mix(in srgb, var(--os-line, #d8e0d8) 100%, transparent) !important;
   box-shadow:var(--bf-shadow-rest) !important;
   --cf-glow: transparent !important;
 }
 
-:is(html.theme-ink, html.theme-white) body .bf-allocation-period-tabs,
-:is(html.theme-ink, html.theme-white) body .bf-pace-switch,
-:is(html.theme-ink, html.theme-white) body .bf-insights-switch,
-:is(html.theme-ink, html.theme-white) body .bf-analysis-scope,
-:is(html.theme-ink, html.theme-white) body .bf-movement-kind {
+html.theme-white body .bf-allocation-period-tabs,
+html.theme-white body .bf-pace-switch,
+html.theme-white body .bf-insights-switch,
+html.theme-white body .bf-analysis-scope,
+html.theme-white body .bf-movement-kind {
   background: color-mix(in srgb, var(--os-surface-2, #f4f7f2) 96%, #fff);
   box-shadow: none;
 }
 
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-primary,
-:is(html.theme-ink, html.theme-white) body .bf-app .bf-plan-simulator-action,
-:is(html.theme-ink, html.theme-white) body .os-shell .os-dock button.is-on,
-:is(html.theme-ink, html.theme-white) body .bf-allocation-period-tabs button.active,
-:is(html.theme-ink, html.theme-white) body .bf-pace-switch button.active {
+html.theme-white body .bf-app .bf-primary,
+html.theme-white body .bf-app .bf-plan-simulator-action,
+html.theme-white body .os-shell .os-dock button.is-on,
+html.theme-white body .bf-allocation-period-tabs button.active,
+html.theme-white body .bf-pace-switch button.active {
   color: var(--os-mint-fg, #04140e);
   background: var(--os-mint, var(--cf-primary, #176b54));
 }

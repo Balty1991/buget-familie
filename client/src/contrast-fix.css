@@ -713,7 +713,7 @@ html .bf-advisor-metrics b {
   color: var(--cf-ink, #0c1612) !important;
 }
 
-:is(html.theme-ink, html.theme-white) .bf-advisor-hero, :is(html.theme-ink, html.theme-white) .bf-sync-hero {
+html.theme-white .bf-advisor-hero, html.theme-white .bf-sync-hero {
   background: linear-gradient(160deg, #ffffff, #eef2f0) !important;
   border-color: #c5cec8 !important;
   color: #0c1612 !important;

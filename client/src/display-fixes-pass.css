@@ -278,10 +278,10 @@ html:not(.dark) .bf-os-day.is-over b {
 
 /* Kicker-ul global e vopsit cu `--cf-primary-strong !important`; pe cardul verde-închis
    al ghidului asta însemna verde pe verde (1,94). Cardul își păstrează perechea proprie. */
-/* Regula temei deschise („:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker”)
+/* Regula temei deschise („html.theme-white .os-shell .bf-kicker”)
    are specificitate 0,3,1; ca s-o depășim fără un al doilea „!important” inutil, repetăm
    același prefix de temă și adăugăm cardul. */
-:is(html.theme-ink, html.theme-white) .os-shell .bf-guide-hero .bf-kicker, :is(html.dark, html.theme-dark, html.theme-navy) .os-shell .bf-guide-hero .bf-kicker, .os-shell .bf-guide-hero .bf-kicker, .bf-guide-hero > .bf-kicker {
+html.theme-white .os-shell .bf-guide-hero .bf-kicker, :is(html.dark, html.theme-dark, html.theme-navy) .os-shell .bf-guide-hero .bf-kicker, .os-shell .bf-guide-hero .bf-kicker, .bf-guide-hero > .bf-kicker {
   color: #d4e3d9;
 }
 
@@ -306,9 +306,9 @@ html:not(.dark) .bf-source-edit label small {
 /* —— 14. Ultimele texte la un fir de prag, în tema deschisă —— */
 /* Titlurile de secțiune din „Mai mult” (4,44) și eticheta „Confirmare manuală” (4,30)
    stăteau sub 4,5 pe pastilele lor verzi-pal. Un pas mai închis le trece pragul. */
-/* Regula de temă „:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker” are 0,3,1;
+/* Regula de temă „html.theme-white .os-shell .bf-kicker” are 0,3,1;
    adăugăm învelișul `.os-shell` ca să trecem peste ea fără alt „!important”. */
-:is(html.theme-ink, html.theme-white) .os-shell .bf-kicker.bf-more-section-label,
+html.theme-white .os-shell .bf-kicker.bf-more-section-label,
 html:not(.dark) .os-shell .bf-kicker.bf-more-section-label,
 html:not(.dark) .bf-more-grid .bf-kicker.bf-more-section-label {
   color: #28604b !important;
