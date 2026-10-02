@@ -138,7 +138,7 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
               <header>
                 <div>
                   <b>{item.label}</b>
-                  <small>{item.observations.length} cumpărături · ultima {dateText(item.latest.date)}</small>
+                  <small>{t("{count} cumpărături · ultima {date}", { count: item.observations.length, date: dateText(item.latest.date) })}</small>
                 </div>
                 <strong>{fmtExact.format(item.latest.amount)}</strong>
               </header>

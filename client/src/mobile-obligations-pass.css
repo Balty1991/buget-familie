@@ -227,3 +227,11 @@ html body .bf-obligation-entry-main > span.bf-goal-ring-slot{width:52px;height:5
 .bf-sub-found-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
 .bf-sub-found-row>span{display:grid;flex:1 1 100%;gap:2px}
 .bf-sub-found-row small{color:var(--cf-muted);font-size:12px}
+.bf-emergency{display:grid;gap:10px;padding:18px;border:1px solid var(--cf-line);border-radius:20px;background:var(--cf-surface)}
+.bf-emergency>*{margin:0}
+.bf-emergency h2{font:600 22px/1.2 Fraunces,Georgia,serif}
+.bf-emergency>p:not(.bf-kicker){color:var(--cf-muted);font-size:14px;line-height:1.45}
+.bf-emergency-bar{position:relative;height:10px;margin:4px 0 18px;border-radius:9px;background:color-mix(in srgb,var(--cf-ink) 9%,transparent)}
+.bf-emergency-bar em{display:block;height:100%;border-radius:inherit;background:var(--cf-primary)}
+.bf-emergency-bar b{position:absolute;top:14px;transform:translateX(-50%);color:var(--cf-muted);font-size:11px;font-style:normal}
+.bf-emergency button{justify-self:start}

@@ -78,7 +78,8 @@ describe("plafonul de !important", () => {
     // pe drum au ieșit selectorii temei „ink” și regulile dublate (~3 KB).
     // 02.10 (2): 946, pușculița copilului (borcanul, butoanele, formularul); nu mai sunt reguli moarte sau dublate.
     // 02.10 (3): 947, harta lunii din Mișcări; blocurile noi din sesiune sunt compactate.
-    expect(kb).toBeLessThanOrEqual(947);
+    // 02.10 (4): 950, coșul estimat, fondul de urgență și modul vacanță (asistentul de final de lună refolosește cardul provocării).
+    expect(kb).toBeLessThanOrEqual(950);
   });
 
   it("calc() are spații în jurul lui + și -", () => {

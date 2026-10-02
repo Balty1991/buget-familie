@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.133
+
+- Mod vacanță (Mai mult → Vacanță): o călătorie cu bugetul ei, cu prima și ultima zi și, opțional, o monedă (EUR, BGN…) în care se arată ce a rămas. Cât ține, Notează pune cheltuielile în bugetul vacanței, nu în plicurile lunii (chipul „Din bugetul vacanței” le poate scoate). Pe Astăzi: cât mai e și pe zi; la final, rezumatul. Se sincronizează cu familia.
+- Coșul estimat: lista de cumpărături arată cât va costa, după prețurile de pe bonurile voastre din ultimele 120 de zile, unde a fost mai ieftin fiecare produs și magazinul în care tot coșul iese mai ieftin.
+- Fond de urgență (Obligații): câte luni ați rezista fără venit, ținta de 3 luni de cheltuieli și cât să puneți deoparte lunar; „Începe fondul de urgență” creează obiectivul.
+- Asistentul de sfârșit de lună: cu 5 zile înainte de salariu, Astăzi arată ce mai e de plătit, cât mai e în plicuri și pe zi și propune ca jumătate din ce va rămâne să meargă în fondul de urgență sau în primul obiectiv.
+- Familia exemplu are acum bonuri cu produse și o listă de cumpărături. Butoanele bonurilor fără fotografie au nume pentru cititoarele de ecran; două texte din Prețuri sunt traduse în engleză.
+
 ## 1.1.132
 
 - Scurtături pe iconiță: ții apăsat pe iconița aplicației → „Notează o cheltuială”, „Spune ce ai cumpărat”, „Lista de cumpărături”.

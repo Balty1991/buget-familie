@@ -50,7 +50,7 @@ export function ReceiptThumbnail({ receipt }: { receipt: Receipt }) {
   return (
     <>
       <span ref={ref} className="bf-receipt-thumb">
-        <button type="button" disabled={!hasPhoto} aria-label={hasPhoto ? `Deschide fotografia bonului ${receipt.vendor}` : undefined} onClick={() => { if (hasPhoto) setOpen(true); }}>
+        <button type="button" disabled={!hasPhoto} aria-label={hasPhoto ? t("Deschide fotografia bonului {vendor}", { vendor: receipt.vendor }) : t("Bon fără fotografie: {vendor}", { vendor: receipt.vendor })} onClick={() => { if (hasPhoto) setOpen(true); }}>
           {url ? <img src={url} alt="" width={54} height={54} sizes="54px" loading="lazy" decoding="async" fetchPriority="low" /> : <span className="bf-receipt-icon"><ReceiptText size={21} /></span>}
           {photoCount > 1 ? <i className="bf-receipt-count">{photoCount}</i> : null}
         </button>

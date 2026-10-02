@@ -11,9 +11,15 @@ html body .bf-shopping .bf-shop-add input{flex:1;min-width:0;min-height:48px;pad
 .bf-shop-list b{overflow:hidden;font-size:16px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
 .bf-shop-list small{font-size:12px}
 .bf-shop-list .is-done b,.bf-shop-list.is-done b{color:var(--cf-muted);font-weight:500;text-decoration:line-through}
-html body .bf-shopping button.bf-shop-check{display:grid;place-items:center;width:30px;height:30px;min-height:0;padding:0;border:2px solid var(--cf-primary);border-radius:50%;background:none;color:#fff;box-shadow:none}
+html body .bf-shopping button.bf-shop-check{display:grid;place-items:center;width:32px;height:32px;min-height:0;padding:0;border:2px solid var(--cf-primary);border-radius:50%;background:none;color:#fff;box-shadow:none}
 html body .bf-shopping .is-done button.bf-shop-check{background:var(--cf-primary)}
 html body .bf-shopping button.bf-shop-remove{width:40px;height:40px;min-height:0;padding:0;border:0;background:none;color:var(--cf-muted);box-shadow:none}
 .bf-shop-empty{padding:16px;border:1px dashed var(--cf-line);border-radius:16px}
 .bf-shop-empty p{margin:0}
 html body .bf-shopping .bf-shop-finish{width:100%;min-height:52px}
+.bf-shop-price{color:var(--cf-ink);font-size:14px;font-weight:600;font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bf-shop-estimate{display:grid;gap:4px;padding:14px 16px;border-radius:16px;background:color-mix(in srgb,var(--cf-primary) 9%,var(--cf-surface));color:var(--cf-muted);font-size:13px}
+.bf-shop-estimate p{display:flex;align-items:baseline;justify-content:space-between;margin:0}
+.bf-shop-estimate small{font-size:12px;font-weight:700;letter-spacing:.08em}
+.bf-shop-estimate b{color:var(--cf-ink);font:600 24px/1 Fraunces,Georgia,serif}
+.bf-shop-estimate .is-tip{color:var(--cf-primary-strong);font-weight:600}

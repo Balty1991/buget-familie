@@ -47,4 +47,10 @@ Construiește întâi AAB-ul (Actions → Release Android AAB) și instalează-l
 - [ ] Ține apăsat pe iconița aplicației: apar „Notează o cheltuială”, „Spune ce ai cumpărat”, „Lista de cumpărături”; fiecare deschide ecranul lui.
 - [ ] Setări telefon → Afișaj → Dimensiunea fontului la maxim: textul din aplicație e mai mare, dar nimic nu iese din ecran.
 
+## 9. Vacanța, pe două telefoane (3 min)
+- [ ] Pe A: Mai mult → Vacanță → buget 2000, de azi pentru 3 zile, „Arată și în” EUR → Pornește.
+- [ ] Notează 50 lei: chipul „Din bugetul vacanței” e pornit; pe Astăzi cardul vacanței scade cu 50, plicurile nu.
+- [ ] Pe B, după sincronizare: aceeași vacanță și același „mai aveți”.
+- [ ] Încheie vacanța pe B; pe A, după sincronizare, Notează nu mai arată chipul.
+
 Ce nu merge: o captură de ecran și modelul telefonului, în aplicație la Mai mult → „Spune-ne ce nu merge”.

@@ -10,7 +10,7 @@ import { moneyFormat, t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
-export type MoreView = "overview" | "review" | "shopping" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
+export type MoreView = "overview" | "review" | "shopping" | "trip" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
 /** Aurora și Cyber au fost scoase; cine le avea trece pe Navy, respectiv Întunecat (theme-default). */
 export type ThemeId = "white" | "dark" | "navy";
 /** „system”: Alb sau Întunecat, după setarea telefonului (implicit pentru cei noi). */
@@ -118,7 +118,7 @@ export function DeferBelowFold({ children }: { children: ReactNode }) {
 }
 
 
-export function WhatsNewSheet({ onClose, onOpenShopping, onOpenMore }: { onClose: () => void; onOpenShopping: () => void; onOpenMore: () => void }) {
+export function WhatsNewSheet({ onClose, onOpenTrip, onOpenMore }: { onClose: () => void; onOpenTrip: () => void; onOpenMore: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const closeIfBackdrop = (event: { target: EventTarget | null; currentTarget: EventTarget }) => {
     if (event.target === event.currentTarget) onClose();
@@ -135,16 +135,15 @@ export function WhatsNewSheet({ onClose, onOpenShopping, onOpenMore }: { onClose
         </header>
         <p>{t("Mai puțin de scris, mai mult de văzut.")}</p>
         <ul className="bf-whats-new-list">
-          <li>{t("Notează din voce: „cincizeci de lei la Lidl” completează suma, magazinul și plicul.")}</li>
-          <li>{t("Lista de cumpărături a familiei, în Mai mult: bifezi în magazin, plata intră în plic.")}</li>
-          <li>{t("Widget nou pe ecranul telefonului: „Plicurile mele”, cu cât a mai rămas.")}</li>
-          <li>{t("Obligații: cât vă costă abonamentele pe lună și pe an, și ce s-a scumpit.")}</li>
-          <li>{t("Raportul lunar PDF, refăcut, și „Anul vostru”: retrospectiva anului, de trimis familiei.")}</li>
-          <li>{t("Pentru copii: pușculița, pe telefonul lor.")}</li>
+          <li>{t("Mod vacanță, în Mai mult: bugetul călătoriei, cât mai e pe zi, și în euro; ce notezi acolo nu atinge plicurile.")}</li>
+          <li>{t("Lista de cumpărături arată cât va costa coșul, după bonurile voastre, și unde iese mai ieftin.")}</li>
+          <li>{t("Fond de urgență, în Obligații: câte luni ați rezista fără venit și cât să puneți deoparte.")}</li>
+          <li>{t("Cu 5 zile înainte de salariu, Astăzi arată ce mai e de plătit și unde pot merge banii rămași.")}</li>
+          <li>{t("Notează din voce, widgetul „Plicurile mele” și scurtăturile de pe iconița aplicației.")}</li>
         </ul>
         <div className="bf-whats-new-actions">
           <button type="button" className="bf-primary" onClick={onClose}>{t("Am înțeles")}</button>
-          <button type="button" className="bf-secondary" onClick={onOpenShopping}>{t("Deschide lista de cumpărături")}</button>
+          <button type="button" className="bf-secondary" onClick={onOpenTrip}>{t("Plănuiește o vacanță")}</button>
           <button type="button" className="bf-link-button" onClick={onOpenMore}>{t("Deschide Mai mult")}</button>
         </div>
       </section>
