@@ -13,6 +13,8 @@ export function makeSeed(lang, opts = {}) {
     me: "Andrei",
     partner: "Maria",
     pendingIncome: Boolean(opts.pendingIncome),
+    yearHistory: Boolean(opts.yearHistory),
+    shopping: en ? [["Milk", 1], ["Eggs", 1], ["Bread", 0], ["Apples", 0], ["Detergent", 0], ["Coffee", 0]] : [["Lapte", 1], ["Ouă", 1], ["Pâine", 0], ["Mere", 0], ["Detergent", 0], ["Cafea", 0]],
   };
   return `(() => {
     const cfg = ${JSON.stringify(config)};
@@ -95,6 +97,22 @@ export function makeSeed(lang, opts = {}) {
       { id: "r-netflix", name: "Netflix", amount: 59.99, category: "Abonamente", sourceId: "src-andrei", memberId: me.id, dueDay: 12, active: true },
       { id: "r-tel", name: "Abonament telefon", amount: 45, category: "Abonamente", sourceId: "src-maria", memberId: partner.id, dueDay: 2, active: true },
     ];
+    // Lista de cumpărături: câteva de luat, două deja în coș (unul adăugat de Maria).
+    data.settings.shoppingList = cfg.shopping.map(([text, done], index) => ({ id: "shop-" + index, text, ...(done ? { done: true } : {}), by: index === 2 ? partner.id : me.id, updatedAt: new Date(Date.UTC(2026, 8, 24, 9, 30 - index)).toISOString() }));
+    // „Anul vostru”: ianuarie–august, ca retrospectiva să aibă un an în spate (doar pentru cadrul ei).
+    if (cfg.yearHistory) {
+      let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      const shops = [["Lidl", "Alimente", 60, 260], ["Kaufland", "Alimente", 80, 340], ["Mega Image", "Alimente", 20, 120], ["Benzină OMV", "Transport", 150, 300], ["Farmacia Catena", "Sănătate", 20, 140], ["Cinema", "Timp liber", 50, 120]];
+      for (let m = 1; m <= 8; m++) {
+        const mm = String(m).padStart(2, "0");
+        data.transactions.push(tx("2026-" + mm + "-10", "Salariul lui Andrei", 4700, "Salariu", me, "src-andrei", "income"), tx("2026-" + mm + "-25", "Salariul Mariei", 4300, "Salariu", partner, "src-maria", "income"), tx("2026-" + mm + "-12", "Chirie", 1800, "Casă & facturi", me, "src-andrei"));
+        for (let d = 1; d <= 28; d++) {
+          if (rnd() < 0.35) continue;
+          const [title, category, lo, hi] = shops[Math.floor(rnd() * shops.length) % shops.length];
+          data.transactions.push(tx("2026-" + mm + "-" + String(d).padStart(2, "0"), title, Math.round(lo + rnd() * (hi - lo)), category, rnd() < 0.5 ? me : partner, "src-andrei"));
+        }
+      }
+    }
     return data;
   })()`;
 }
