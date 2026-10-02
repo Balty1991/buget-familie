@@ -9,7 +9,7 @@ import { lei } from "@/lib/money-format";
 
 const money = lei;
 const dateTime = (value: string) => new Intl.DateTimeFormat(getLocale(), { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-const kindLabel: Record<AllocationHistoryEntry["kind"] | "all", string> = { all: t("Toate acțiunile"), created: t("Plic creat"), updated: t("Plic modificat"), deleted: t("Plic șters"), "income-applied": t("Repartizare din venit"), "income-reverted": t("Repartizare anulată"), "envelope-transfer": t("Între plicuri"), "week-transfer": t("Între săptămâni") };
+const kindLabel: Record<AllocationHistoryEntry["kind"] | "all", string> = { get all() { return t("Toate acțiunile"); }, get created() { return t("Plic creat"); }, get updated() { return t("Plic modificat"); }, get deleted() { return t("Plic șters"); }, "income-applied": t("Repartizare din venit"), "income-reverted": t("Repartizare anulată"), "envelope-transfer": t("Între plicuri"), "week-transfer": t("Între săptămâni") };
 const kindTone = (kind: AllocationHistoryEntry["kind"]) => kind === "deleted" || kind === "income-reverted" ? "danger" : kind === "created" || kind === "income-applied" ? "positive" : "neutral";
 
 function entryAllocationIds(entry: AllocationHistoryEntry) {

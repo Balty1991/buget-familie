@@ -34,3 +34,17 @@ describe("lista de cumpărături", () => {
     expect(splitShoppingText("lapte, pâine;  2 x ouă\nmere")).toEqual(["Lapte", "Pâine", "2 x ouă", "Mere"]);
   });
 });
+
+describe("lista de cumpărături în sincronizare", () => {
+  it("se unește între două telefoane și supraviețuiește normalizării", async () => {
+    const { mergeFamilyData } = await import("./family-crypto");
+    const { createEmptyAppData, normalizeAppData } = await import("./finance-data");
+    const mine = createEmptyAppData();
+    const theirs = createEmptyAppData();
+    mine.settings.shoppingList = [{ id: "a", text: "Lapte", done: true, updatedAt: at(5) }];
+    theirs.settings.shoppingList = [{ id: "a", text: "Lapte", updatedAt: at(1) }, { id: "b", text: "Pâine", by: "m-maria", updatedAt: at(2) }];
+    const merged = normalizeAppData(mergeFamilyData(mine, theirs));
+    expect(merged.settings.shoppingList?.find((item) => item.id === "a")?.done).toBe(true);
+    expect(merged.settings.shoppingList?.map((item) => item.id).sort()).toEqual(["a", "b"]);
+  });
+});
