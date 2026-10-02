@@ -3838,4 +3838,12 @@ export const en: Record<string, string> = {
   "ieșit": "out",
   "intrat": "in",
   "Filtrează după categorie": "Filter by category",
+  "Aplicația nu are voie la microfon. Îl poți permite din setările telefonului.": "The app is not allowed to use the microphone. You can allow it in your phone settings.",
+  "Recunoașterea vocală nu merge acum pe acest telefon. Scrie suma de mână.": "Voice recognition is not working on this phone right now. Type the amount instead.",
+  "Te ascult…": "Listening…",
+  "Spune ce ai cumpărat": "Say what you bought",
+  "Atinge ca să oprești": "Tap to stop",
+  "ex. „50 de lei la Lidl”": "e.g. “50 lei at Lidl”",
+  "Am auzit": "I heard",
+  "Verifică și apasă Gata.": "Check it and tap Done.",
 };

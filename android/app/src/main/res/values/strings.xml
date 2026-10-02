@@ -19,4 +19,5 @@
     <string name="widget_env_title">Plicurile mele · rămași</string>
     <string name="widget_env_empty">Deschide aplicația o dată ca să apară plicurile.</string>
     <string name="widget_env_description">Arată pe ecranul principal primele trei plicuri: cât a rămas în fiecare și cât s-a consumat.</string>
+    <string name="voice_prompt">Spune suma și magazinul</string>
 </resources>

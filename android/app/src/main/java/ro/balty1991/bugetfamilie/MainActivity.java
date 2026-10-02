@@ -1,6 +1,7 @@
 package ro.balty1991.bugetfamilie;
 
 import android.Manifest;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentCallbacks2;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.RecognizerIntent;
 import androidx.core.splashscreen.SplashScreen;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
@@ -29,9 +31,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import com.getcapacitor.BridgeActivity;
 import java.io.File;
+import java.util.ArrayList;
+import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
   private static final int REQ_POST_NOTIFICATIONS = 4101;
+  private static final int REQ_VOICE = 4102;
   /** Un singur fir, în ordine: ultima cifră publicată rămâne pe widget. */
   private static final java.util.concurrent.ExecutorService WIDGET_WORK = java.util.concurrent.Executors.newSingleThreadExecutor();
   private static final String PREFS_CHROME = "bf_chrome";
@@ -127,6 +132,7 @@ public class MainActivity extends BridgeActivity {
     webView.addJavascriptInterface(new QuickActionBridge(), "BugetFamilieQuickAction");
     webView.addJavascriptInterface(new ReminderBridge(), "BugetFamilieReminders");
     webView.addJavascriptInterface(new SplashBridge(), "BugetFamilieSplash");
+    webView.addJavascriptInterface(new VoiceBridge(), "BugetFamilieVoice");
     ViewCompat.setOnApplyWindowInsetsListener(webView, (view, insets) -> {
       final Insets bars = insets.getInsets(
         WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
@@ -354,6 +360,65 @@ public class MainActivity extends BridgeActivity {
    * Singurul lucru pe care îl expune este numele acțiunii cerute, o singură dată.
    * publishTemplates scrie doar etichete pe widget — fără sume.
    */
+  /**
+   * Notarea din voce: WebView-ul nu are SpeechRecognition, așa că fraza trece prin dialogul de
+   * recunoaștere al telefonului. Aplicația nu cere microfonul: îl folosește aplicația de voce.
+   * Textul se întoarce paginii ca eveniment; pagina completează formularul, nu salvează nimic.
+   */
+  private final class VoiceBridge {
+    @JavascriptInterface
+    public boolean available() {
+      try {
+        return !getPackageManager()
+          .queryIntentActivities(new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0)
+          .isEmpty();
+      } catch (RuntimeException ignored) {
+        return false;
+      }
+    }
+
+    @JavascriptInterface
+    public void listen(String lang) {
+      MainActivity.this.runOnUiThread(() -> {
+        final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang == null || lang.isEmpty() ? "ro-RO" : lang);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_prompt));
+        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+        try {
+          startActivityForResult(intent, REQ_VOICE);
+        } catch (ActivityNotFoundException | SecurityException e) {
+          notifyWebVoice(null, "unavailable");
+        }
+      });
+    }
+  }
+
+  private void notifyWebVoice(String text, String error) {
+    final WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView == null) return;
+    final String detail = text != null
+      ? "{text:" + JSONObject.quote(text) + "}"
+      : "{error:" + JSONObject.quote(error == null ? "cancelled" : error) + "}";
+    final String js = "try{window.dispatchEvent(new CustomEvent('buget-familie:voice',{detail:" + detail + "}))}catch(e){}";
+    webView.post(() -> webView.evaluateJavascript(js, null));
+    /* Pagina poate fi încă oprită imediat după dialog; ascultătorul ia doar primul eveniment. */
+    webView.postDelayed(() -> webView.evaluateJavascript(js, null), 500);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (requestCode == REQ_VOICE) {
+      final ArrayList<String> results = resultCode == RESULT_OK && data != null
+        ? data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+        : null;
+      final String text = results != null && !results.isEmpty() ? results.get(0) : null;
+      notifyWebVoice(text, text == null ? "cancelled" : null);
+      return;
+    }
+    super.onActivityResult(requestCode, resultCode, data);
+  }
+
   private final class QuickActionBridge {
     @JavascriptInterface
     public String consume() {

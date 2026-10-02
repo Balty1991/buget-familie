@@ -10,7 +10,7 @@ import "../mobile-capture-pass.css";
 import "../receipt-form-fix.css";
 import "../capture-amount-first.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, Ellipsis, HeartPulse, House, Plus, ShoppingCart, Ticket, Trash2, X } from "lucide-react";
+import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, Ellipsis, Mic, MicOff, HeartPulse, House, Plus, ShoppingCart, Ticket, Trash2, X } from "lucide-react";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
 import { amountError, BASE_CURRENCY, isBalanceAdjustment, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, spendTargetFromText, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -18,6 +18,8 @@ import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
 import { askConfirm } from "@/lib/confirm-dialog";
 import { lei } from "@/lib/money-format";
+import { listenOnce, voiceAvailable } from "@/lib/voice-input";
+import { parseSpokenEntry } from "@/lib/voice-entry";
 import { envelopeChargePhrase, envelopeOptionRemain, weekOptionLabel } from "@/lib/envelope-charge";
 
 const money = { format: lei };
@@ -175,6 +177,58 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
       createdAt: new Date().toISOString(),
     };
   };
+  /** Magazinul scris (sau spus) alege categoria și plicul, cât timp omul nu le-a ales singur. */
+  const applyMerchant = (next: string) => {
+    setMerchant(next);
+    if (categoryTouched) return;
+    const target = spendTargetFromText(data, next, { memberId, sourceId });
+    if (target.kind === "keep") {
+      if (heldOutside.current) { heldOutside.current = false; setAllocationChoiceTouched(false); }
+      return;
+    }
+    if (target.kind === "envelope") {
+      heldOutside.current = false;
+      if (target.category && target.category !== category) { previousCategory.current = target.category; setCategory(target.category); }
+      setAllocationId(target.allocationId);
+      setAllocationChoiceTouched(false);
+      return;
+    }
+    if (target.kind === "category") {
+      heldOutside.current = false;
+      if (target.category !== category) setCategory(target.category);
+      setAllocationChoiceTouched(false);
+      return;
+    }
+    if (!allocationChoiceTouched || heldOutside.current) {
+      heldOutside.current = true;
+      setAllocationId("outside");
+      setAllocationChoiceTouched(true);
+    }
+        };
+  const [listening, setListening] = useState(false);
+  const [heard, setHeard] = useState("");
+  const voiceCancel = useRef<() => void>(() => {});
+  useEffect(() => () => voiceCancel.current(), []);
+  const canSpeak = useMemo(() => voiceAvailable(), []);
+  const speak = async () => {
+    if (listening) { voiceCancel.current(); return; }
+    setError(""); setListening(true);
+    const session = listenOnce(getLocale().startsWith("en") ? "en-US" : "ro-RO");
+    voiceCancel.current = session.cancel;
+    const outcome = await session.result;
+    setListening(false);
+    if ("error" in outcome) {
+      if (outcome.error === "denied") setError(t("Aplicația nu are voie la microfon. Îl poți permite din setările telefonului."));
+      else if (outcome.error === "unavailable" || outcome.error === "failed") setError(t("Recunoașterea vocală nu merge acum pe acest telefon. Scrie suma de mână."));
+      return;
+    }
+    const spoken = parseSpokenEntry(outcome.text);
+    setHeard(outcome.text);
+    if (spoken.amount) setAmount(String(spoken.amount).replace(".", ","));
+    if (spoken.income) { setKind("income"); if (spoken.text) setIncomeLabel(spoken.text); return; }
+    setKind("expense");
+    if (spoken.text) applyMerchant(spoken.text);
+  };
   const save = async () => {
     const numeric = parseRomanianAmount(amount); const member = data.settings.members.find((item) => item.id === memberId); const source = data.settings.paymentSources.find((item) => item.id === sourceId);
     if (numeric < 0.005) return setError(amountError(amount) || t("Introdu o sumă mai mare decât zero."));
@@ -249,37 +303,10 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
       {(data.settings.quickTemplates.length > 0 || data.settings.archivedQuickTemplates.length > 0) && <div className="bf-template-header-actions"><span>{t("{count} șabloane active", { count: data.settings.quickTemplates.length })}</span><button type="button" onClick={() => setShowArchive((value) => !value)}><Archive size={15} /> {t("Arhivă")}{data.settings.archivedQuickTemplates.length ? ` (${data.settings.archivedQuickTemplates.length})` : ""}</button></div>}
       {showArchive && <section className="bf-template-archive" aria-label={t("Arhiva lunară a șabloanelor")}><p className="bf-kicker">{t("ARHIVĂ LOCALĂ")}</p>{archiveGroups.map(([month, items]) => <div key={month}><h3>{formatDate(`${month}-01`, { month: "long", year: "numeric" })}</h3>{items.map((item) => <article key={item.id}><div><b>{item.label}</b><small>{item.amount ? money.format(item.amount) : t("sumă liberă")} · arhivat {formatDate(item.archivedAt)}</small></div><div className="bf-template-archive-actions"><button type="button" onClick={() => onRestoreTemplate(item.id)}><ArchiveRestore size={15} /> {t("Restaurează")}</button><button type="button" className="danger" aria-label={t("Șterge definitiv {label}", { label: item.label })} onClick={() => removeArchived(item.id, item.label)}><Trash2 size={15} /></button></div></article>)}</div>)}{!archiveGroups.length && <p className="bf-empty-inline">{t("Nu ai șabloane arhivate. Arhivează un șablon activ pentru a-l păstra în istoricul local.")}</p>}</section>}
       {data.settings.quickTemplates.length > 0 && <div className="bf-quick-template-rail" role="list" aria-label={t("Șabloane locale")}><button role="listitem" className={!templateId ? "active" : ""} onClick={chooseManual}>{t("Manual")}</button>{data.settings.quickTemplates.map((item) => <button role="listitem" key={item.id} className={templateId === item.id ? "active" : ""} onClick={() => selectTemplate(item)}><b>{item.label}</b><small>{item.amount ? money.format(item.amount) : t("sumă liberă")}</small></button>)}</div>}
-      <div className="bf-segment"><button className={kind === "expense" ? "active expense" : ""} onClick={() => setKind("expense")}>{t("Cheltuială")}</button><button className={kind === "income" ? "active income" : ""} onClick={() => setKind("income")}>{t("Venit")}</button></div><button type="button" className="bf-link-button bf-quick-move" onClick={() => setMoving(true)}>{t("Am scos cash sau am mutat bani între carduri")}</button>
+      <div className="bf-segment"><button className={kind === "expense" ? "active expense" : ""} onClick={() => setKind("expense")}>{t("Cheltuială")}</button><button className={kind === "income" ? "active income" : ""} onClick={() => setKind("income")}>{t("Venit")}</button></div>{canSpeak && <div className="bf-voice-entry"><button type="button" className={`bf-voice-button${listening ? " is-listening" : ""}`} aria-pressed={listening} onClick={() => void speak()}>{listening ? <MicOff size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}<span><b>{listening ? t("Te ascult…") : t("Spune ce ai cumpărat")}</b><small>{listening ? t("Atinge ca să oprești") : t("ex. „50 de lei la Lidl”")}</small></span></button>{heard && !listening && <p aria-live="polite">{t("Am auzit")}: „{heard}”. {t("Verifică și apasă Gata.")}</p>}</div>}<button type="button" className="bf-link-button bf-quick-move" onClick={() => setMoving(true)}>{t("Am scos cash sau am mutat bani între carduri")}</button>
       {kind === "income" && declaredIncomes.length > 0 && <div className="bf-quick-category-picks bf-declared-incomes" aria-label={t("Veniturile declarate")}>{declaredIncomes.map((item) => <button type="button" key={item.id} className={incomeLabel === item.label ? "active" : ""} onClick={() => pickDeclaredIncome(item)}>{item.label} · {money.format(item.amount)}</button>)}</div>}
       {kind === "income" && <div className="bf-quick-category-picks" aria-label={t("Venituri rapide")}>{[t("Alocație"), t("Al 13-lea salariu"), t("Bonus")].map((label) => <button type="button" key={label} className={incomeLabel === label ? "active" : ""} onClick={() => setIncomeLabel(label)}>{label}</button>)}</div>}
-      <div className="bf-quick-entry-grid"><label className="bf-field bf-amount-field"><span>{t("Sumă ({currency})", { currency: isForeign ? entryCurrency : t("lei") })}</span><input ref={amountRef} value={amount} onChange={(event) => setAmount(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); save(); } }} inputMode="decimal" placeholder="0,00" aria-describedby="bf-quick-amount-hint" />{recentAmounts.length > 0 && <span className="bf-amount-suggestions" id="bf-quick-amount-hint"><span>{t("Folosit recent")}</span>{recentAmounts.map((value) => { const filled = !isForeign ? value : entryRate ? Math.round((value / entryRate) * 100) / 100 : undefined; if (filled == null) return null; return <button type="button" key={value} onClick={() => { setAmount(String(filled)); setError(""); }}>{isForeign ? `${filled.toLocaleString(getLocale(), { maximumFractionDigits: 2 })} ${entryCurrency}` : money.format(value)}</button>; })}</span>}</label>{kind === "expense" ? <label className="bf-field"><span>{t("Magazin sau denumire")}</span><input value={merchant} onChange={(event) => {
-        const next = event.target.value;
-        setMerchant(next);
-        if (categoryTouched) return;
-        const target = spendTargetFromText(data, next, { memberId, sourceId });
-        if (target.kind === "keep") {
-          if (heldOutside.current) { heldOutside.current = false; setAllocationChoiceTouched(false); }
-          return;
-        }
-        if (target.kind === "envelope") {
-          heldOutside.current = false;
-          if (target.category && target.category !== category) { previousCategory.current = target.category; setCategory(target.category); }
-          setAllocationId(target.allocationId);
-          setAllocationChoiceTouched(false);
-          return;
-        }
-        if (target.kind === "category") {
-          heldOutside.current = false;
-          if (target.category !== category) setCategory(target.category);
-          setAllocationChoiceTouched(false);
-          return;
-        }
-        if (!allocationChoiceTouched || heldOutside.current) {
-          heldOutside.current = true;
-          setAllocationId("outside");
-          setAllocationChoiceTouched(true);
-        }
-      }} placeholder={t("ex. Lidl")} /></label> : null}{kind === "expense" ? <><div className="bf-cat-strip" role="listbox" aria-label={t("Categorii rapide")}>{CAPTURE_CATEGORIES.map(([name, Icon]) => <button type="button" key={name} role="option" aria-selected={category === name} className={category === name ? "is-on" : ""} style={categoryTone(name)} onClick={() => { setCategory(name); setCategoryTouched(true); setAllocationChoiceTouched(false); }}><i><Icon size={18} aria-hidden="true" /></i><span>{t(name)}</span></button>)}{recentCategories.map((name) => <button type="button" key={name} role="option" aria-selected={category === name} className={category === name ? "is-on" : ""} style={categoryTone(name)} onClick={() => { setCategory(name); setCategoryTouched(true); setAllocationChoiceTouched(false); }}><i><CategoryGlyph category={name} size={18} /></i><span>{t(name)}</span></button>)}</div><label className="bf-field"><span>{t("Sau altă categorie")}</span><select value={category} onChange={(event) => { setCategory(event.target.value); setCategoryTouched(true); setAllocationChoiceTouched(false); }}>{[...expenseCategories, ...data.settings.customCategories].map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label></> : <label className="bf-field"><span>{t("Ce venit?")}</span><input value={incomeLabel} onChange={(event) => setIncomeLabel(event.target.value)} placeholder={t("ex. Salariu, Bonus")} /></label>}</div>
+      <div className="bf-quick-entry-grid"><label className="bf-field bf-amount-field"><span>{t("Sumă ({currency})", { currency: isForeign ? entryCurrency : t("lei") })}</span><input ref={amountRef} value={amount} onChange={(event) => setAmount(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); save(); } }} inputMode="decimal" placeholder="0,00" aria-describedby="bf-quick-amount-hint" />{recentAmounts.length > 0 && <span className="bf-amount-suggestions" id="bf-quick-amount-hint"><span>{t("Folosit recent")}</span>{recentAmounts.map((value) => { const filled = !isForeign ? value : entryRate ? Math.round((value / entryRate) * 100) / 100 : undefined; if (filled == null) return null; return <button type="button" key={value} onClick={() => { setAmount(String(filled)); setError(""); }}>{isForeign ? `${filled.toLocaleString(getLocale(), { maximumFractionDigits: 2 })} ${entryCurrency}` : money.format(value)}</button>; })}</span>}</label>{kind === "expense" ? <label className="bf-field"><span>{t("Magazin sau denumire")}</span><input value={merchant} onChange={(event) => applyMerchant(event.target.value)} placeholder={t("ex. Lidl")} /></label> : null}{kind === "expense" ? <><div className="bf-cat-strip" role="listbox" aria-label={t("Categorii rapide")}>{CAPTURE_CATEGORIES.map(([name, Icon]) => <button type="button" key={name} role="option" aria-selected={category === name} className={category === name ? "is-on" : ""} style={categoryTone(name)} onClick={() => { setCategory(name); setCategoryTouched(true); setAllocationChoiceTouched(false); }}><i><Icon size={18} aria-hidden="true" /></i><span>{t(name)}</span></button>)}{recentCategories.map((name) => <button type="button" key={name} role="option" aria-selected={category === name} className={category === name ? "is-on" : ""} style={categoryTone(name)} onClick={() => { setCategory(name); setCategoryTouched(true); setAllocationChoiceTouched(false); }}><i><CategoryGlyph category={name} size={18} /></i><span>{t(name)}</span></button>)}</div><label className="bf-field"><span>{t("Sau altă categorie")}</span><select value={category} onChange={(event) => { setCategory(event.target.value); setCategoryTouched(true); setAllocationChoiceTouched(false); }}>{[...expenseCategories, ...data.settings.customCategories].map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label></> : <label className="bf-field"><span>{t("Ce venit?")}</span><input value={incomeLabel} onChange={(event) => setIncomeLabel(event.target.value)} placeholder={t("ex. Salariu, Bonus")} /></label>}</div>
       {kind === "expense" && data.settings.salaryPlan.allocations.length > 0 && <section className="bf-quick-envelope"><p className="bf-kicker">{t("PLICUL SĂPTĂMÂNII")}</p><label className="bf-field"><span>{t("Se consumă din")}</span><select value={allocationId} onChange={(event) => { setAllocationId(event.target.value); setAllocationChoiceTouched(true); }}>{(!hideUnallocated || allocationId === "outside") && <option value="outside">{t("În afara plicurilor")}{unrepartized > 0 ? ` · ${money.format(unrepartized)}` : ""}</option>}{candidates.map((allocation) => { const activeWeek = isWeeklyPaced(allocation, data.settings.salaryPlan) ? allocationWeekStatus(data, allocation) : undefined; const totalRemaining = isWeeklyPaced(allocation, data.settings.salaryPlan) ? undefined : allocationStatus(data, allocation).remaining; return <option key={allocation.id} value={allocation.id}>{allocation.label} · {activeWeek ? envelopeOptionRemain(activeWeek.remaining, money.format, activeWeek.index) : totalRemaining !== undefined ? envelopeOptionRemain(totalRemaining, money.format) : t("fără tranșă activă")}</option>; })}</select></label>{weeks.length > 1 && <label className="bf-field"><span>{t("Din ce săptămână")}</span><select value={String(fromWeekIndex || week?.index || "")} onChange={(event) => setFromWeekIndex(Number(event.target.value) || undefined)}>{weeks.map((item) => <option key={item.index} value={item.index}>{weekOptionLabel(item.index, item.remaining, item.budget, money.format)}</option>)}</select></label>}{matchedAllocation && chargeBudget > 0 && chargeRemaining != null && <div className={`bf-quick-envelope-meter${chargeRemaining - chargePay < 0 ? " is-over" : ""}`} aria-hidden="true" style={categoryTone(matchedAllocation.category || category)}><i style={{ width: `${Math.min(100, Math.max(0, (chargeBudget - chargeRemaining) / chargeBudget) * 100)}%` }} /><em style={{ width: `${(Math.min(chargePay, Math.max(0, chargeRemaining)) / chargeBudget) * 100}%` }} /></div>}{matchedAllocation && <p className={chargePhrase?.over ? "over" : ""}>{chargePhrase ? chargePhrase.text : t("Plic selectat; încă nu este activă o tranșă calendaristică.")}</p>}{!candidates.length && <p>{t("Nu există plic pentru această categorie și sursă. Poți salva în afara plicurilor.")}</p>}</section>}
       <div className="bf-quick-entry-who">{data.settings.members.length > 1 && <label className="bf-field"><span>{t("Cine a înregistrat")}</span><select value={memberId} onChange={(event) => { setMemberId(event.target.value); setAllocationChoiceTouched(false); }}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>}<label className="bf-field"><span>{kind === "expense" ? t("Plătit din") : t("Încasat în")}</span><select value={sourceId} onChange={(event) => { setSourceId(event.target.value); setAllocationChoiceTouched(false); }}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}{data.settings.members.length > 1 && source.memberId && !source.name.includes(sourceOwner(source.id)) ? ` · ${sourceOwner(source.id)}` : ""} · {money.format(sourceBalance(data, source.id))}{source.currency ? ` (${source.currency})` : ""}</option>)}</select></label></div>{isForeign && <section className={`bf-currency-preview ${convertedPreview ? "" : "pending"}`}><p className="bf-kicker">{t("SE ÎNREGISTREAZĂ ÎN LEI")}</p>{convertedPreview ? <><b>{money.format(convertedPreview)}</b><span>{t("La cursul de {rate} lei pentru 1 {currency}, salvat în Setări.", { rate: entryRate?.toLocaleString(getLocale(), { maximumFractionDigits: 4 }) || "", currency: entryCurrency })}</span></> : <span>{entryRate ? t("Completează suma în {currency}.", { currency: entryCurrency }) : t("Adaugă în Setări cursul pentru {currency} înainte de a folosi această sursă.", { currency: entryCurrency })}</span>}</section>}
       {parsedAmount > 0 && projectedSourceBalance != null && selectedSourceBalance > 0 && <p className={`bf-quick-source-preview ${projectedSourceBalance < 0 ? "over" : ""}`} aria-live="polite">{kind === "expense" ? t("După această plată") : t("După această încasare")}: <b>{money.format(Math.max(0, projectedSourceBalance))}</b> {t("rămân în")} {data.settings.paymentSources.find((source) => source.id === sourceId)?.name || t("sursa aleasă")}{projectedSourceBalance < 0 ? t(" — depășește soldul cu {over}", { over: money.format(-projectedSourceBalance) }) : ""}.</p>}
