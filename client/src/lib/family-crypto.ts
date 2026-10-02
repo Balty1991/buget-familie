@@ -4,6 +4,7 @@
  * Pe telefon poate rămâne cheia PBKDF2 neexportabilă (vezi family-session.ts).
  */
 import { mergeShoppingLists } from "@/lib/shopping-list";
+import { mergeTrip } from "@/lib/trip-data";
 import { mergePlanScalars } from "@/lib/plan-scalars";
 import {
   buildPendingReviewMeta,
@@ -706,6 +707,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       basketProducts: local.settings.basketProducts,
       merchantRules: local.settings.merchantRules || [],
       shoppingList: mergeShoppingLists(local.settings.shoppingList || [], remote.settings.shoppingList || []),
+      trip: mergeTrip(local.settings.trip, remote.settings.trip),
       plannedEvents,
       syncDevices,
       salaryPlan,

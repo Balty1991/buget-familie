@@ -84,6 +84,19 @@ export function buildDemoData(today: string): AppData {
     tx(-11, "Netflix", 59.99, "Abonamente", me, "source-debit"),
     tx(0, t("Cafea"), 14, "Alimente", me, "source-cash", "expense", "a-mancare"),
   ];
+  // Bonuri cu produse: din ele vin istoricul prețurilor și coșul estimat al listei de cumpărături.
+  const [milk, bread, eggs, bananas] = [t("Lapte"), t("Pâine"), t("Ouă"), t("Banane")];
+  const bon = (title: string, offset: number, lines: Array<[string, number]>) => {
+    const move = data.transactions.find((item) => item.title === title && item.date === day(offset))!;
+    const known = lines.reduce((sum, [, amount]) => sum + amount, 0);
+    const all: Array<[string, number]> = [...lines, [t("Alte produse"), Math.round((move.amount - known) * 100) / 100]];
+    data.receipts.push({ id: `demo-bon-${move.id}`, vendor: title, amount: move.amount, category: "Alimente", date: move.date, linkedTransactionId: move.id, sourceId: move.sourceId, memberId: move.memberId, updatedAt: move.updatedAt, lines: all.map(([label, amount], index) => ({ id: `${move.id}-l${index}`, label, amount, category: "Alimente", allocationId: "a-mancare" })) });
+  };
+  bon("Kaufland", -12, [[`${milk} Zuzu 1,5% 1L`, 8.49], [`${bread} feliata`, 6.99], [`${eggs} M 10 buc`, 13.9], ["Detergent Ariel 2,2L", 52.9], [`${bananas} kg`, 6.49]]);
+  bon("Lidl", -9, [[`${milk} PILOS 1,5% 1L`.toUpperCase(), 6.29], [`${bread} 500g`.toUpperCase(), 4.99], [`${eggs} 10BUC`.toUpperCase(), 11.99], ["DETERGENT ARIEL 2,2L", 47.5], [bananas.toUpperCase(), 5.99]]);
+  bon("Mega Image", -6, [[`${milk} Zuzu 1L`, 9.29], [bananas, 7.49]]);
+  bon("Lidl", -2, [[`${milk} PILOS 1L`.toUpperCase(), 6.49], [`${bread} 500g`.toUpperCase(), 4.99]]);
+  data.settings.shoppingList = [milk, bread, eggs, "Detergent Ariel", bananas].map((text, index) => ({ id: `demo-shop-${index}`, text, by: index % 2 ? me.id : partner.id, updatedAt: `${day(0)}T07:0${index}:00.000Z` }));
   data.debts = [{ id: "demo-debt", name: t("Credit nevoi personale"), remaining: 18500, monthly: 1100, annualRate: 11.5, kind: "credit", due: "", tone: "coral", dueDate: day(19) }];
   data.savings = [{ id: "demo-saving", name: t("Vacanță la mare"), current: 1800, target: 5000, due: "", tone: "forest", dueDate: day(240) }];
   data.recurring = [

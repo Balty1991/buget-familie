@@ -4,9 +4,11 @@
  * sincronizează cu partenerul ca restul datelor familiei.
  */
 import "../shopping-list.css";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ListChecks, Plus, ReceiptText, X } from "lucide-react";
-import { newId, type AppData } from "@/lib/finance-data";
+import { isoToday, newId, type AppData } from "@/lib/finance-data";
+import { lei } from "@/lib/money-format";
+import { estimateShopping } from "@/lib/shopping-price";
 import { t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
 import { SHOPPING_LIMIT, splitShoppingText, visibleShopping, type ShoppingItem } from "@/lib/shopping-list";
@@ -16,6 +18,7 @@ export function ShoppingListPanel({ data, onChange }: { data: AppData; onChange:
   const list = data.settings.shoppingList || [];
   const { todo, done } = visibleShopping(list);
   const me = selfMemberIdOf(data);
+  const estimate = useMemo(() => estimateShopping(visibleShopping(list).todo, data.receipts, isoToday()), [list, data.receipts]);
   const nameOf = (id?: string) => (data.settings.members.length > 1 && id && id !== me ? data.settings.members.find((member) => member.id === id)?.name : undefined);
   const save = (next: ShoppingItem[]) => onChange({ ...data, settings: { ...data.settings, shoppingList: next.slice(0, SHOPPING_LIMIT) } });
   const touch = (id: string, patch: Partial<ShoppingItem>) => save(list.map((item) => item.id === id ? { ...item, ...patch, updatedAt: new Date().toISOString() } : item));
@@ -38,7 +41,8 @@ export function ShoppingListPanel({ data, onChange }: { data: AppData; onChange:
 
   const row = (item: ShoppingItem) => <li key={item.id} className={item.done ? "is-done" : ""}>
     <button type="button" className="bf-shop-check" aria-pressed={Boolean(item.done)} aria-label={item.done ? t("Scoate bifa de la {item}", { item: item.text }) : t("Bifează {item}", { item: item.text })} onClick={() => touch(item.id, { done: !item.done })}>{item.done ? <Check size={16} aria-hidden="true" /> : null}</button>
-    <span><b>{item.text}</b>{nameOf(item.by) && <small>{t("adăugat de {name}", { name: nameOf(item.by)! })}</small>}</span>
+    <span><b>{item.text}</b>{nameOf(item.by) && <small>{t("adăugat de {name}", { name: nameOf(item.by)! })}</small>}{!item.done && estimate.prices[item.id]?.cheapest && <small>{t("mai ieftin la {vendor}: {price}", { vendor: estimate.prices[item.id].cheapest!.vendor, price: lei(estimate.prices[item.id].cheapest!.price) })}</small>}</span>
+    {!item.done && estimate.prices[item.id] && <em className="bf-shop-price" title={t("ultimul preț, {vendor}", { vendor: estimate.prices[item.id].vendor })}>~{lei(estimate.prices[item.id].price)}</em>}
     <button type="button" className="bf-shop-remove" aria-label={t("Scoate {item} din listă", { item: item.text })} onClick={() => touch(item.id, { cleared: true })}><X size={16} aria-hidden="true" /></button>
   </li>;
 
@@ -52,6 +56,11 @@ export function ShoppingListPanel({ data, onChange }: { data: AppData; onChange:
       <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={t("lapte, pâine, ouă…")} aria-label={t("Ce trebuie luat")} enterKeyHint="done" />
       <button type="submit" className="bf-primary" disabled={!draft.trim()}><Plus size={18} aria-hidden="true" /> {t("Adaugă")}</button>
     </form>
+    {estimate.known > 0 && <div className="bf-shop-estimate">
+      <p><small>{t("COȘ ESTIMAT")}</small><b>~{lei(estimate.total)}</b></p>
+      <span>{estimate.known === todo.length ? t("după prețurile de pe bonurile voastre") : t("pentru {known} din {count} produse, după bonurile voastre", { known: estimate.known, count: todo.length })}</span>
+      {estimate.bestVendor && <span className="is-tip">{t("La {vendor} ar ieși ~{total}, cu {saves} mai puțin.", { vendor: estimate.bestVendor.vendor, total: lei(estimate.bestVendor.total), saves: lei(estimate.bestVendor.saves) })}</span>}
+    </div>}
     {todo.length > 0 ? <ul className="bf-shop-list">{todo.map(row)}</ul> : <div className="bf-shop-empty"><ListChecks size={22} aria-hidden="true" /><p>{done.length ? t("Ai luat tot de pe listă.") : t("Lista e goală. Scrie mai multe deodată, despărțite prin virgulă.")}</p></div>}
     {done.length > 0 && <>
       <p className="bf-kicker bf-shop-done-title">{t("ÎN COȘ · {count}", { count: done.length })}</p>

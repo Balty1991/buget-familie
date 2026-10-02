@@ -48,3 +48,5 @@ html body .bf-quick-entry-panel .bf-voice-button.is-listening{border-style:solid
 @media (prefers-reduced-motion:reduce){.bf-voice-button.is-listening svg{animation:none}
 }.bf-voice-entry p{margin:0;color:var(--cf-muted);font-size:13px}
 
+html body .bf-trip-chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px dashed var(--cf-line);border-radius:99px;background:none;color:var(--cf-muted);font-weight:600}
+html body .bf-trip-chip.is-on{border-style:solid;border-color:var(--cf-primary);background:color-mix(in srgb,var(--cf-primary) 10%,transparent);color:var(--cf-primary-strong)}

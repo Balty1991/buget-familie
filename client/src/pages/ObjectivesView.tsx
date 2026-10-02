@@ -6,13 +6,14 @@ import "../objective-edit.css";
 import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
-import { addIsoDays, allocationStatus, debtPaymentHistory, isoDate, isoToday, pendingRecurringInPlan, type AppData, type Debt, type RecurringPayment, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { addIsoDays, allocationStatus, debtPaymentHistory, isoDate, isoToday, newId, pendingRecurringInPlan, type AppData, type Debt, type RecurringPayment, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { dateText, money } from "@/pages/home-kit";
 import { amortize, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type PayoffStrategy } from "@/lib/debt-plan";
 import { getLocale, monthsLabel, t } from "@/lib/i18n";
 import { PaidCheck } from "@/components/PaidCheck";
 import { detectSubscriptions, monthTitle, recurringFromDetection, recurringPriceChanges, savingsSuggestion } from "@/lib/household-insights";
 import { safeSetItem } from "@/lib/safe-storage";
+import { emergencyFund } from "@/lib/emergency-fund";
 
 /** Comercianții pe care omul a spus că nu-s abonamente: rămân pe telefon, nu-i mai propunem. */
 const DISMISSED_HITS = "buget-familie:subscription-dismissed";
@@ -100,7 +101,7 @@ function DebtPayoffSimulator({ data }: { data: AppData }) {
         {hasRates && other.months !== null && withExtra.totalInterest - other.totalInterest > 1 && <p className="bf-helper">{t("Cealaltă ordine ar costa cu {amount} mai puțin în dobânzi.", { amount: money(withExtra.totalInterest - other.totalInterest) })}</p>}</>}
     <div className="bf-debt-simulator-summary"><span><b>{base.months ?? "∞"}</b><small>{t("luni acum")}</small></span><span><b>{withExtra.months ?? "∞"}</b><small>{t("luni cu extra")}</small></span><span><b>{money(minimum + extra)}</b><small>{t("efort lunar")}</small></span></div></section>;
 }
-export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onAddRecurring, onOpenGoals, onOpenCalendar, onOpenEvents, onOpenAssistant }: { data: AppData; onAddRecurring?: (item: RecurringPayment) => void; onSaveToGoal?: (id: string, amount: number) => void; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenEvents: () => void; onOpenAssistant: () => void }) {
+export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, onPayDebt, onDeleteDebt, onDeleteSaving, openDebt, openSaving, onOpenRecurring, onPayRecurring, onAddRecurring, onOpenGoals, onOpenCalendar, onOpenEvents, onOpenAssistant, onAddSaving }: { data: AppData; onAddSaving?: (goal: SavingsGoal) => void; onAddRecurring?: (item: RecurringPayment) => void; onSaveToGoal?: (id: string, amount: number) => void; onEditDebt: (item: Debt) => void; onEditSaving: (item: SavingsGoal) => void; onPayDebt: (item: Debt) => void; onDeleteDebt: (id: string) => void; onDeleteSaving: (id: string) => void; openDebt: () => void; openSaving: () => void; onOpenRecurring: () => void; onPayRecurring: (id: string) => void; onOpenGoals: () => void; onOpenCalendar: () => void; onOpenEvents: () => void; onOpenAssistant: () => void }) {
   const [laterIds, setLaterIds] = useState<string[]>([]);
   /** Obiectivele alimentate acum: butonul devine „Pus deoparte”, ca o dublă atingere să nu pună de două ori. */
   const [savedNow, setSavedNow] = useState<string[]>([]);
@@ -290,6 +291,22 @@ export function ObjectivesView({ data, onSaveToGoal, onEditDebt, onEditSaving, o
           </ul>
         </section>
       )}
+      {(() => {
+        const fund = emergencyFund(data, isoToday());
+        if (!fund) return null;
+        const months = new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(fund.months);
+        const goal = fund.goal;
+        return <section className="bf-emergency" aria-labelledby="bf-emergency-title">
+          <p className="bf-kicker">{t("FOND DE URGENȚĂ")}</p>
+          <h2 id="bf-emergency-title">{fund.months >= 1 ? t("Ați rezista {months} luni fără venit.", { months }) : t("Încă nu ați rezista o lună fără venit.")}</h2>
+          <i className="bf-emergency-bar" role="img" aria-label={t("{months} din 6 luni", { months })}><em style={{ width: `${Math.min(100, (fund.months / 6) * 100)}%` }} /><b style={{ left: "50%" }}>{t("{count} luni", { count: 3 })}</b><b style={{ right: 0, transform: "none" }}>{t("{count} luni", { count: 6 })}</b></i>
+          <p>{fund.basis === "plan" ? t("O lună vă costă ~{amount}, după plicurile din plan.", { amount: money(fund.monthly) }) : t("O lună obișnuită vă costă ~{amount}, după ultimele 3 luni.", { amount: money(fund.monthly) })} {fund.months >= 6 ? t("Aveți liniștea a șase luni; restul poate merge spre alte obiective.") : t("Ținta: {target}. Cu {step} pe lună, îl aveți într-un an.", { target: money(fund.target), step: money(fund.step) })}</p>
+          {goal ? (onSaveToGoal && fund.step > 0 && fund.months < 6 && (savedNow.includes(goal.id)
+            ? <button type="button" className="bf-secondary" disabled><Check size={15} /> {t("Pus deoparte")}</button>
+            : <button type="button" className="bf-secondary" onClick={() => { onSaveToGoal(goal.id, fund.step); setSavedNow((current) => [...current, goal.id]); }}><PiggyBank size={15} /> {t("Pune deoparte {amount}", { amount: money(fund.step) })}</button>))
+            : onAddSaving && <button type="button" className="bf-primary" onClick={() => onAddSaving({ id: newId("saving"), name: t("Fond de urgență"), current: 0, target: fund.target, due: "", tone: "forest", updatedAt: new Date().toISOString() })}><Plus size={16} /> {t("Începe fondul de urgență")}</button>}
+        </section>;
+      })()}
       <section className="bf-obligation-ledger">
         <article className="debt"><span>{t("Sold datorii")}</span><b>{money(totalDebt)}</b><small>{t("{amount} rate declarate / lună", { amount: money(monthlyRates) })}</small></article>
         <article className="savings"><span>{t("Economii urmărite")}</span><b>{money(totalSavings)}</b><small>{t("{count} obiective înregistrate", { count: data.savings.length })}</small></article>

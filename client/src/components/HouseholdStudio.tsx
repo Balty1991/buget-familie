@@ -167,7 +167,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           <article className="bf-household-hunt" key={item.key}>
             <div>
               <b>{item.name}</b>
-              <small>{item.reason} · ultima dată {formatDate(item.lastDate)}</small>
+              <small>{item.reason} · {t("ultima dată {date}", { date: formatDate(item.lastDate) })}</small>
             </div>
             <strong>{money(item.amount)}</strong>
             <button type="button" onClick={() => setPendingHunt(item)}>{t("Propune scadență")}</button>
