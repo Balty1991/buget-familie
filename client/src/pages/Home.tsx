@@ -61,6 +61,7 @@ export { recentActivityMoves } from "@/pages/TodayView";
 
 const PlanStudio = lazy(safeImport(() => import("@/components/PlanStudio").then((module) => ({ default: stableView(module.PlanStudio) }))));
 const MovementsJournal = lazy(safeImport(() => import("@/components/MovementsJournal").then((module) => ({ default: stableView(module.MovementsJournal) }))));
+const AffordSheet = lazy(safeImport(() => import("@/components/AffordSheet").then((module) => ({ default: module.AffordSheet }))));
 const GoalCelebration = lazy(safeImport(() => import("@/components/GoalCelebration").then((module) => ({ default: module.GoalCelebration }))));
 const QuickEntryPanel = lazy(safeImport(() => import("@/components/QuickEntryPanel").then((module) => ({ default: module.QuickEntryPanel }))));
 const FirstWeekTour = lazy(safeImport(() => import("@/components/FirstWeekTour").then((module) => ({ default: module.FirstWeekTour }))));
@@ -182,7 +183,9 @@ export default function Home() {
     const openTrip = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("trip"); setView("utilities"); };
     window.addEventListener("buget-familie:open-shopping", openShopping);
     window.addEventListener("buget-familie:open-trip", openTrip);
-    return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-shopping", openShopping); window.removeEventListener("buget-familie:open-trip", openTrip); };
+    const openAfford = () => setAffordOpen(true);
+    window.addEventListener("buget-familie:open-afford", openAfford);
+    return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-shopping", openShopping); window.removeEventListener("buget-familie:open-trip", openTrip); window.removeEventListener("buget-familie:open-afford", openAfford); };
   }, []);
   useEffect(() => {
     const openEvents = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("events"); setView("utilities"); };
@@ -196,6 +199,7 @@ export default function Home() {
   const legacyReceiptMigrationStarted = useRef(false);
   const setupOffered = useRef(setupOpen);
   // Obiectiv atins: o felicitare pe obiectiv, pe telefonul acesta.
+  const [affordOpen, setAffordOpen] = useState(false);
   const [celebrate, setCelebrate] = useState<SavingsGoal | undefined>(undefined);
   useEffect(() => { const goal = pendingCelebration(data.savings, typeof window !== "undefined" ? window.localStorage : undefined); if (goal) setCelebrate(goal); }, [data.savings]);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false); const [firstWeekTourOpen, setFirstWeekTourOpen] = useState(false);
@@ -746,6 +750,7 @@ export default function Home() {
     {modal === "debt" && <Suspense fallback={null}><GoalForm data={data} type="debt" item={editGoal} onSave={saveDebt} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "saving" && <Suspense fallback={null}><GoalForm data={data} type="saving" item={editGoal} onSave={saveSaving} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
+    {affordOpen && <Suspense fallback={null}><AffordSheet data={data} onClose={() => setAffordOpen(false)} onLog={() => { setAffordOpen(false); window.dispatchEvent(new Event("buget-familie:open-expense")); }} /></Suspense>}
     {celebrate && !modal && <Suspense fallback={null}><GoalCelebration goal={celebrate} onClose={() => { markCelebrated(window.localStorage, celebrate.id); setCelebrate(undefined); }} /></Suspense>}
     {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTrip={() => { dismissWhatsNew(); window.dispatchEvent(new Event("buget-familie:open-trip")); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;

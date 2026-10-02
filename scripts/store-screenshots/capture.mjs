@@ -16,7 +16,7 @@ async function open(lang, opts = {}) {
   const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: DPR, locale: lang === "ro" ? "ro-RO" : "en-GB" });
   await ctx.addInitScript(([lang]) => {
     if (sessionStorage.getItem("store-init")) return; sessionStorage.setItem("store-init", "1");
-    const set = { "buget-familie:setup-complete": "true", "buget-familie:onboarding-complete": "true", "buget-familie:first-week-tour-dismissed": "1", "buget-familie:theme": "white", "buget-familie:whats-new-2026-10c": "1", "buget-familie:language": lang, "buget-familie:envelope-glossary-seen": "1", "buget-familie:last-balance-check": new Date().toISOString().slice(0, 10) };
+    const set = { "buget-familie:setup-complete": "true", "buget-familie:onboarding-complete": "true", "buget-familie:first-week-tour-dismissed": "1", "buget-familie:theme": "white", "buget-familie:whats-new-2026-10d": "1", "buget-familie:language": lang, "buget-familie:envelope-glossary-seen": "1", "buget-familie:last-balance-check": new Date().toISOString().slice(0, 10) };
     for (const [k, v] of Object.entries(set)) localStorage.setItem(k, v);
     for (const k of ["catalog", "ink", "atelier", "premium", "ui-chrome"]) localStorage.setItem(`buget-familie:theme-migrated-${k}-2026-09`, "1");
   }, [lang]);
