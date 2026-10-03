@@ -61,8 +61,9 @@ const notifyLanguage = () => listeners.forEach((listener) => listener(current));
 export function loadEnglishDictionary(): Promise<void> {
   if (english) return Promise.resolve();
   englishLoad ??= import("./i18n-en")
-    .then((module) => {
-      english = module.en;
+    .then(async (module) => {
+      const { enPatch } = await import("./i18n-en-patch");
+      english = { ...module.en, ...enPatch };
       if (current === "en") notifyLanguage();
     })
     .catch(() => {
