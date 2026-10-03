@@ -19,7 +19,7 @@
 }
 .bf-safe-spend-sheet h2 {
   margin: 0;
-  font: 600 clamp(22px, 5vw, 28px)/1.05 "Fraunces", Georgia, serif;
+  font:640 clamp(22px, 5vw, 28px)/1.05 "Fraunces", Georgia, serif;
   letter-spacing: -.04em;
 }
 .bf-safe-spend-sheet h2 em { color: var(--cf-primary-strong, #185849); font-style: italic; }
