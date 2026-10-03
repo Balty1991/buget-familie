@@ -18,7 +18,7 @@ const money = lei;
 
 /** Rândurile cele mai des întâlnite; sumele le completează fiecare familie. */
 const PRESETS: Array<Pick<MonthlyNeed, "label" | "category" | "cadence" | "priority">> = [
-  { label: "Mâncare", category: "Alimente", cadence: "weekly", priority: "flex" },
+  { label: "Alimente", category: "Alimente", cadence: "weekly", priority: "flex" },
   { label: "Chirie", category: "Casă & facturi", cadence: "monthly", priority: "fixed" },
   { label: "Rate bancă", category: "Credite", cadence: "monthly", priority: "fixed" },
   { label: "Rate fără dobândă", category: "Rate produse", cadence: "monthly", priority: "fixed" },
