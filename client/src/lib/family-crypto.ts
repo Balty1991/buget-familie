@@ -5,6 +5,7 @@
  */
 import { mergeShoppingLists } from "@/lib/shopping-list";
 import { mergeTrip } from "@/lib/trip-data";
+import { mergeAssets } from "@/lib/asset-data";
 import { mergePlanScalars } from "@/lib/plan-scalars";
 import {
   buildPendingReviewMeta,
@@ -708,6 +709,7 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       merchantRules: local.settings.merchantRules || [],
       shoppingList: mergeShoppingLists(local.settings.shoppingList || [], remote.settings.shoppingList || []),
       trip: mergeTrip(local.settings.trip, remote.settings.trip),
+      assets: mergeAssets(local.settings.assets, remote.settings.assets),
       plannedEvents,
       syncDevices,
       salaryPlan,

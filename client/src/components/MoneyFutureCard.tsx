@@ -33,7 +33,7 @@ export function MoneyFutureCard({ data }: { data: AppData }) {
   return (
     <section className="bf-scenario-card" aria-labelledby="bf-future-title">
       <div className="bf-scenario-heading"><div><p className="bf-kicker">{t("VIITORUL BANILOR")}</p><h2 id="bf-future-title">{t("Dacă puneți deoparte {amount} pe lună", { amount: lei(monthly) })}</h2></div><span><Flag size={21} /></span></div>
-      <input type="range" min={0} max={Math.max(2000, suggested * 3)} step={50} value={monthly} onChange={(event) => setMonthly(Number(event.target.value))} aria-label={t("Cât puneți deoparte pe lună")} style={{ width: "100%", accentColor: "var(--cf-primary)" }} />
+      <input type="range" min={0} max={Math.max(2000, suggested * 3)} step={50} value={monthly} onChange={(event) => setMonthly(Number(event.target.value))} aria-label={t("Cât puneți deoparte pe lună")} style={{ width: "100%", minHeight: 32, padding: 0, border: 0, background: "transparent", boxShadow: "none", accentColor: "var(--cf-primary)" }} />
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("Economiile cresc la {amount} în 3 ani", { amount: lei(future.points[HORIZON]) })} style={{ width: "100%", height: "auto", display: "block" }}>
         <path d={`${line} L${x(HORIZON)},${H - PAD} L${x(0)},${H - PAD} Z`} fill="var(--cf-primary)" opacity="0.14" />
         <path d={line} fill="none" stroke="var(--cf-primary)" strokeWidth="2.5" strokeLinejoin="round" />

@@ -10,7 +10,7 @@ import { moneyFormat, t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
-export type MoreView = "overview" | "review" | "shopping" | "trip" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
+export type MoreView = "overview" | "review" | "shopping" | "trip" | "year-plan" | "net-worth" | "debt-exit" | "advisor" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
 /** Aurora și Cyber au fost scoase; cine le avea trece pe Navy, respectiv Întunecat (theme-default). */
 export type ThemeId = "white" | "dark" | "navy";
 /** „system”: Alb sau Întunecat, după setarea telefonului (implicit pentru cei noi). */
@@ -135,15 +135,14 @@ export function WhatsNewSheet({ onClose, onOpenTrip, onOpenMore }: { onClose: ()
         </header>
         <p>{t("Mai puțin de scris, mai mult de văzut.")}</p>
         <ul className="bf-whats-new-list">
-          <li>{t("Scrisoare pentru viitor: lăsați un mesaj pe un obiectiv; îl citiți abia când îl atingeți.")}</li>
-          <li>{t("Astăzi vă salută pe nume, cu fraza zilei: salariul, vacanța, seria sau cum a fost ieri.")}</li>
-          <li>{t("„Îmi permit…?” pe Astăzi: scrii suma și vezi pe loc dacă încape, din ce plic și cât vă întârzie obiectivul.")}</li>
-          <li>{t("Viitorul banilor, în Obiective: tragi de glisor și vezi în ce lună atingeți fiecare obiectiv.")}</li>
-          <li>{t("Mod vacanță, în Mai mult: bugetul călătoriei, cât mai e pe zi, și în euro; ce notezi acolo nu atinge plicurile.")}</li>
+          <li>{t("Planificare, în Mai mult: planul pe 12 luni cu scenarii „ce-ar fi dacă”, averea familiei și ieșirea din datorii.")}</li>
+          <li>{t("Raportul lunii: la început de lună, ce a mers, ce nu și trei lucruri de făcut, cu sume.")}</li>
+          <li>{t("„Îmi permit…?” pe Astăzi și viitorul banilor în Obiective.")}</li>
+          <li>{t("Mod vacanță, coșul estimat la cumpărături și fondul de urgență.")}</li>
         </ul>
         <div className="bf-whats-new-actions">
           <button type="button" className="bf-primary" onClick={onClose}>{t("Am înțeles")}</button>
-          <button type="button" className="bf-secondary" onClick={onOpenTrip}>{t("Plănuiește o vacanță")}</button>
+          <button type="button" className="bf-secondary" onClick={onOpenTrip}>{t("Deschide planul pe 12 luni")}</button>
           <button type="button" className="bf-link-button" onClick={onOpenMore}>{t("Deschide Mai mult")}</button>
         </div>
       </section>

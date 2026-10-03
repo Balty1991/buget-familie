@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.140
+
+Planificare (Mai mult → Planificare), patru unelte noi:
+- **Planul pe 12 luni**: lună cu lună, de la banii de azi — venitul din plan, traiul obișnuit (media ultimelor luni, fără facturi și rate), facturile care se repetă (lunar, trimestrial, anual, fiecare în luna ei), ratele cu dobândă până la ultima, obiectivele până se ating și evenimentele din calendar. Grafic cu barele lunii și linia banilor; luna în care banii nu mai ajung, scrisă sus. Scenarii „ce-ar fi dacă”: pierd un venit (câteva luni), o cheltuială lunară nouă, o cheltuială mare o dată, un credit nou — cu linia de dinainte, punctată, pentru comparație. Fiecare lună se desface pe venit, trai, facturi, rate, obiective, evenimente și scenarii.
+- **Averea familiei**: banii din toate sursele plus bunurile trecute de mână (locuință, mașină, investiții), minus datoriile. Istoricul pe 12 luni e refăcut din mișcările deja notate, cu „+X față de acum un an”. Bunurile se sincronizează cu familia.
+- **Ieșirea din datorii**: suma în plus pe lună, avalanșa față de bulgărele de zăpadă, data în care sunteți liberi, luni câștigate și dobânda economisită față de „doar rata”, ordinea datoriilor și calendarul plăților pe 6 luni.
+- **Raportul lunii**: la început de lună (și card pe Astăzi în primele 7 zile), luna trecută — intrat, ieșit, rămas, rata de economisire, categoriile față de media celor 3 luni dinainte, ce a mers, ce e de urmărit și cel mult trei recomandări cu sume (o limită realistă, cât să mutați în fondul de urgență, un plic de coborât, abonamentele). „Închide luna” îl trece în istoric. Luni urmărite doar parțial sunt marcate ca orientative.
+- „Ce e nou” arată planificarea.
+
 ## 1.1.139
 
 Mai profesional:

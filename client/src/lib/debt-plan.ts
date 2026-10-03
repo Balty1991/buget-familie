@@ -52,6 +52,8 @@ export type PayoffPlan = {
   closedAt: Record<string, number>;
   /** Totalul datoriilor la sfârșitul fiecărei luni, pentru grafic (primul element e azi). */
   totals: number[];
+  /** Calendarul plăților: pentru fiecare lună (primele 36), cât merge la fiecare datorie. */
+  schedule: Array<Record<string, number>>;
 };
 
 export const orderDebts = (debts: Debt[], strategy: PayoffStrategy) =>
@@ -72,9 +74,12 @@ export function payoffPlan(debts: Debt[], extra: number, strategy: PayoffStrateg
   let totalInterest = 0;
   let month = 0;
   const totals = [cents(open.reduce((sum, debt) => sum + debt.remaining, 0))];
+  const schedule: Array<Record<string, number>> = [];
   while (Array.from(balance.values()).some((value) => value > 0.004) && month < MAX_MONTHS) {
     month += 1;
     let available = budget;
+    const paid: Record<string, number> = {};
+    const pay = (id: string, amount: number) => { paid[id] = cents((paid[id] || 0) + amount); };
     for (const debt of order) {
       const left = balance.get(debt.id) || 0;
       if (left <= 0.004) continue;
@@ -86,25 +91,28 @@ export function payoffPlan(debts: Debt[], extra: number, strategy: PayoffStrateg
     for (const debt of order) {
       const left = balance.get(debt.id) || 0;
       if (left <= 0.004) continue;
-      const pay = Math.min(left, Math.max(0, debt.monthly), available);
-      balance.set(debt.id, cents(left - pay));
-      available = cents(available - pay);
+      const due = Math.min(left, Math.max(0, debt.monthly), available);
+      balance.set(debt.id, cents(left - due));
+      available = cents(available - due);
+      pay(debt.id, due);
     }
     for (const debt of order) {
       if (available <= 0.004) break;
       const left = balance.get(debt.id) || 0;
       if (left <= 0.004) continue;
-      const pay = Math.min(left, available);
-      balance.set(debt.id, cents(left - pay));
-      available = cents(available - pay);
+      const more = Math.min(left, available);
+      balance.set(debt.id, cents(left - more));
+      available = cents(available - more);
+      pay(debt.id, more);
     }
     for (const debt of order) {
       if (!(debt.id in closedAt) && (balance.get(debt.id) || 0) <= 0.004) closedAt[debt.id] = month;
     }
     totals.push(cents(Array.from(balance.values()).reduce((sum, value) => sum + Math.max(0, value), 0)));
+    if (schedule.length < 36) schedule.push(paid);
   }
   const done = Array.from(balance.values()).every((value) => value <= 0.004);
-  return { strategy, order, months: done ? month : null, totalInterest, closedAt, totals };
+  return { strategy, order, months: done ? month : null, totalInterest, closedAt, totals, schedule };
 }
 
 /** Avalanșa costă cel mai puțin când știm dobânzile; fără ele, mingea de zăpadă. */
