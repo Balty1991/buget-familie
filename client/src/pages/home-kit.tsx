@@ -10,7 +10,7 @@ import { moneyFormat, t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
 
 export type MainView = "today" | "journal" | "plan" | "obligations" | "goals" | "habits" | "calendar" | "insights" | "utilities";
-export type MoreView = "overview" | "review" | "shopping" | "trip" | "year-plan" | "net-worth" | "debt-exit" | "advisor" | "trends" | "invest" | "money-calendar" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
+export type MoreView = "overview" | "review" | "shopping" | "trip" | "year-plan" | "net-worth" | "debt-exit" | "advisor" | "trends" | "invest" | "money-calendar" | "charts" | "prices" | "pocket" | "debts" | "savings" | "events" | "receipts" | "catalog" | "recurring" | "reports" | "assistant" | "learned" | "settings" | "sync" | "guide" | "feedback";
 /** Aurora și Cyber au fost scoase; cine le avea trece pe Navy, respectiv Întunecat (theme-default). */
 export type ThemeId = "white" | "dark" | "navy";
 /** „system”: Alb sau Întunecat, după setarea telefonului (implicit pentru cei noi). */
@@ -135,14 +135,14 @@ export function WhatsNewSheet({ onClose, onOpenTrip, onOpenMore }: { onClose: ()
         </header>
         <p>{t("Mai puțin de scris, mai mult de văzut.")}</p>
         <ul className="bf-whats-new-list">
-          <li>{t("Povestea anului, refăcută: merge singură, cifrele numără, anul lună cu lună și personalitatea familiei.")}</li>
-          <li>{t("Tendințe și obiceiuri: ce crește, ce scade, ziua cea mai scumpă, magazinele de bază și abonamentele uitate.")}</li>
-          <li>{t("Calendarul banilor: luna ca o hartă de culori, cu facturile și soldul estimat pe zilele care vin.")}</li>
-          <li>{t("Simulator de investiții și pensie: dobândă compusă, inflație și cât să puneți deoparte lunar.")}</li>
+          <li>{t("Atelierul de grafice: fluxul banilor, categoriile ca dreptunghiuri, ritmul lunii și harta anului, toate cu valori la atingere.")}</li>
+          <li>{t("Asistentul răspunde și cu grafice: „cum au evoluat cheltuielile pe alimente?”")}</li>
+          <li>{t("Tranziții line între ecrane, vibrație scurtă la notare și, pe Android 12+, culorile telefonului.")}</li>
+          <li>{t("Widget nou: Săptămâna banilor, ultimele 7 zile pe ecranul principal.")}</li>
         </ul>
         <div className="bf-whats-new-actions">
           <button type="button" className="bf-primary" onClick={onClose}>{t("Am înțeles")}</button>
-          <button type="button" className="bf-secondary" onClick={onOpenTrip}>{t("Deschide planul pe 12 luni")}</button>
+          <button type="button" className="bf-secondary" onClick={onOpenTrip}>{t("Deschide graficele")}</button>
           <button type="button" className="bf-link-button" onClick={onOpenMore}>{t("Deschide Mai mult")}</button>
         </div>
       </section>

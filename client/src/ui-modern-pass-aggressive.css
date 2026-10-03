@@ -207,11 +207,6 @@ html body .os-shell .os-dock button.active {
   border-color: color-mix(in srgb, var(--os-mint, #7cffc4) 14%, #1a2420) !important;
 }
 
-html.theme-navy body .os-shell .os-dock {
-  box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.35);
-  filter: none;
-}
-
 /* ========== 5. Visible card air ========== */
 html body .os-shell .os-hero,
 html body .os-shell .bf-plan-studio-header,

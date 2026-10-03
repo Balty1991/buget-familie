@@ -9,42 +9,16 @@
 }
 
 /* Dock: ținte mai mari, etichete lizibile pe 360px */
-.os-shell .os-dock {
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 6px 8px max(10px, var(--os-inset-bottom, 0px));
-  border-radius: 0;
-  background: var(--os-dock-bg, var(--os-surface, #eef1ef));
-  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.18);
-}
-
-.os-shell .os-dock button {
-  min-height: 48px;
-  height: 48px;
-  gap: 1px;
-  border-radius: 999px;
-  font-size:12px;
-  font-weight: 600;
-}
-
-.os-shell .os-dock button svg {
-  width: 18px;
-  height: 18px;
-}
 
 .os-shell .os-tool {
   width: var(--os-tap);
   height: var(--os-tap);
-  min-width: var(--os-tap);
-  min-height: var(--os-tap);
   border-radius:12px;
 }
 
 /* App bar mai aerisit */
 .os-shell .os-appbar.bf-appbar {
   min-height: 68px;
-  padding-top: calc(10px + var(--os-inset-top));
   padding-bottom: 10px;
 }
 

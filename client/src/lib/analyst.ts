@@ -47,8 +47,25 @@ export type AnalystAnswer = {
   rows?: AnalystRow[];
   /** Întrebări firești de după. */
   followUps?: string[];
+  /** Graficul de sub răspuns: lunile, cu valoarea exactă la atingere. */
+  chart?: AnalystChart;
   kind: string;
 };
+
+export type AnalystChart = { kind: "bars" | "line"; title: string; points: Array<{ label: string; value: number; long?: string; ref?: number }>; refLabel?: string };
+
+/** Ultimele `count` luni (cea curentă inclusă, chiar dacă nu s-a terminat), suma cheltuielilor care trec filtrul. */
+function monthSeries(data: AppData, keep: (item: Transaction) => boolean, asOf: string, count = 6): AnalystChart["points"] {
+  const points: AnalystChart["points"] = [];
+  for (let k = count - 1; k >= 0; k -= 1) {
+    const date = new Date(`${asOf.slice(0, 7)}-15T12:00:00Z`);
+    date.setUTCMonth(date.getUTCMonth() - k);
+    const key = date.toISOString().slice(0, 7);
+    const value = round(data.transactions.filter((item) => item.kind === "expense" && !isBalanceAdjustment(item) && !item.transferId && item.date.startsWith(key) && item.date <= asOf && keep(item)).reduce((sum, item) => sum + item.amount, 0));
+    points.push({ label: date.toLocaleDateString("ro-RO", { month: "short", timeZone: "UTC" }).replace(".", ""), long: date.toLocaleDateString("ro-RO", { month: "long", year: "numeric", timeZone: "UTC" }), value });
+  }
+  return points;
+}
 
 const money = (value: number) =>
   `${Number(value.toFixed(2)).toLocaleString("ro-RO", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })} RON`;
@@ -352,8 +369,11 @@ function answerSpend(data: AppData, folded: string, asOf: string): AnalystAnswer
     ? [...items].sort((a, b) => b.amount - a.amount).slice(0, 6).map((item) => ({ label: item.title, value: money(item.amount), hint: formatDate(item.date) }))
     : byCategory(items).slice(0, 6).map(([name, value]) => ({ label: name, value: money(value), share: total > 0 ? value / total : 0 }));
 
+  const keep = (item: Transaction) => (!member || item.memberId === member.id) && (topic ? topic(item) : category ? item.category === category : vendor ? foldRomanian(item.title) === foldRomanian(vendor) : true);
+  const series = monthSeries(data, keep, asOf);
   return {
     kind: "spend",
+    ...(series.filter((point) => point.value > 0).length >= 2 ? { chart: { kind: "bars" as const, title: `Ultimele 6 luni${subject}`, points: series } } : {}),
     headline: sentences(`${money(total)}${subject} în ${period.label}`),
     detail: sentences(`${plural(items.length, "mișcare", "mișcări")}, adică ${money(round(total / days))} pe zi în medie`, change),
     rows,
@@ -626,6 +646,37 @@ function answerPayday(data: AppData, asOf: string): AnalystAnswer {
   };
 }
 
+/**
+ * „Cum au evoluat cheltuielile pe mâncare?”, „la Lidl, în ultimele 12 luni”: lunile una lângă
+ * alta, cu media, luna cea mai scumpă și cum stă luna trecută față de medie.
+ */
+function answerTrend(data: AppData, folded: string, asOf: string): AnalystAnswer {
+  const count = Math.min(12, Math.max(3, Number(folded.match(/ultimele (\d{1,2}) luni/)?.[1]) || (/\b(an|anul|12 luni)\b/.test(folded) ? 12 : 6)));
+  const named = namedCategory(folded, data);
+  const placeNamed = named ? undefined : readVendor(folded, data, true);
+  const guessed = named || placeNamed ? undefined : guessedCategory(folded, data);
+  const category = named || (guessed && guessed !== "Altele" ? guessed : undefined);
+  const vendor = placeNamed || (category ? undefined : readVendor(folded, data));
+  const member = readMember(data, folded);
+  const keep = (item: Transaction) => (!member || item.memberId === member.id) && (category ? item.category === category : vendor ? foldRomanian(item.title) === foldRomanian(vendor) : true);
+  const subject = `${category ? ` pe ${category}` : vendor ? ` la ${vendor}` : ""}${member ? `, ${member.name}` : ""}`;
+  const points = monthSeries(data, keep, asOf, count);
+  const full = points.slice(0, -1).filter((point) => point.value > 0);
+  if (!full.length) return { kind: "trend", headline: `Nu am încă luni întregi cu cheltuieli${subject}.`, followUps: ["Unde se duc banii?"] };
+  const average = round(full.reduce((sum, point) => sum + point.value, 0) / full.length);
+  const peak = full.reduce((best, point) => (point.value > best.value ? point : best));
+  const last = points[points.length - 2];
+  const versus = last && last.value > 0 && average > 0 ? round(((last.value - average) / average) * 100) : undefined;
+  return {
+    kind: "trend",
+    headline: sentences(`În medie ${money(average)} pe lună${subject}, în ultimele ${full.length} luni întregi`),
+    detail: sentences(`Cea mai scumpă a fost ${peak.long} (${money(peak.value)})`, versus !== undefined && Math.abs(versus) >= 5 ? `Luna trecută a fost cu ${Math.abs(Math.round(versus))}% ${versus > 0 ? "peste" : "sub"} medie` : "Luna trecută a fost aproape de medie", "Ultima bară e luna în curs, încă neterminată"),
+    // Lunile sunt în grafic (cu valoarea exactă la atingere): nu le mai repetăm și ca listă.
+    chart: { kind: "bars", title: `Lună cu lună${subject}`, points },
+    followUps: category ? [`Cât am cheltuit pe ${category} luna asta?`, "Unde se duc banii?"] : ["Unde se duc banii?", "Care e cea mai mare cheltuială?"],
+  };
+}
+
 function answerCompare(data: AppData, folded: string, asOf: string): AnalystAnswer {
   const { period, reference } = readComparison(folded, asOf);
   const prior = reference || previousPeriod(period);
@@ -654,6 +705,7 @@ function answerCompare(data: AppData, folded: string, asOf: string): AnalystAnsw
 
   return {
     kind: "compare",
+    chart: { kind: "bars", title: `${prior.label} față de ${period.label}`, points: [{ label: prior.label.slice(0, 18), long: prior.label, value: before }, { label: period.label.slice(0, 18), long: period.label, value: now }] },
     headline: sentences(change ? `${money(now)}${subject} în ${period.label}, ${change}` : `${money(now)}${subject} în ${period.label}`),
     detail: sentences(
       !category && !member && `Venituri înregistrate în perioadă: ${money(nowIncome)}`,
@@ -1003,6 +1055,7 @@ const MATCHERS: Matcher[] = [
   { kind: "save-by", test: /\b(ca sa (am|strang|adun|ajung la)|cat (ar trebui |trebuie )?(sa )?pun (deoparte|pe luna)|cat pe luna ca sa|cat pe saptamana ca sa|ca sa imi ajunga pentru)/, run: (d, f, a) => answerSaveBy(d, f, a) },
   { kind: "savings", test: /\b(economi|strans|obiectiv|pusi deoparte)/, run: (d) => answerSavings(d) },
   { kind: "biggest", test: /\b(cea mai mare|cel mai mare|top cheltui|cele mai mari)/, run: (d, f, a) => answerBiggest(d, f, a) },
+  { kind: "trend", test: /\b(evolu|tendint|trend|pe luni\b|luna de luna|lunar pe|in ultimele \d{1,2} luni|ultimele \d{1,2} luni|cum (au |a )?(crescut|scazut)|grafic)/, run: (d, f, a) => answerTrend(d, f, a) },
   { kind: "compare", test: /\b(compar|fata de|versus|\bvs\b|mai mult (ca|decat)|mai putin (ca|decat)|diferenta fata)/, run: (d, f, a) => answerCompare(d, f, a) },
   { kind: "where", test: /\b(unde (pot|as putea) (sa )?(tai|reduc|economisesc)|ce (pot|as putea) (sa )?(tai|reduc)|unde (se duc|se duce|pleaca|dispar)|pe ce (dau|cheltui|a dat|am dat)|distribut|pe categorii|cel mai mult)/, run: (d, f, a) => answerWhere(d, f, a) },
   { kind: "spend", test: /\b(ce cheltuieli am (avut|facut)|ce am (cheltuit|platit|cumparat|dat)|cat m-?a costat|cat ne-?a costat|cat am (cheltuit|dat|platit)|cat a (cheltuit|dat|platit)|cat cheltui|cat dau|cat platesc|cheltuit pe|cat am scos|ce am cumparat|de cate ori am dat|arata[- ]?mi cheltuielile|listeaza cheltuielile)/, run: (d, f, a) => answerSpend(d, f, a) },

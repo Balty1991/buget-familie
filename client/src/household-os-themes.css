@@ -62,10 +62,6 @@ html.theme-dark {
 .bf-theme-preview.forest { --preview-bg:#07090c; --preview-surface:#10151a; --preview-ink:#e8eeea; --preview-muted:#8a968f; --preview-line:#22302a; --preview-primary:#7cffc4; --preview-info:#7cffc4; --preview-glow:rgba(124,255,196,.22); }
 .bf-theme-preview.navy { --preview-bg:#071428; --preview-surface:#102646; --preview-ink:#eef2f8; --preview-muted:#9aa8be; --preview-line:#2c4d7a; --preview-primary:#d4b06a; --preview-info:#8bb4e8; --preview-glow:rgba(212,176,106,.2); }
 .bf-theme-preview.graphite { --preview-bg:#111214; --preview-surface:#1a1c1f; --preview-ink:#eceff3; --preview-muted:#9aa3ad; --preview-line:#2c3138; --preview-primary:#8ab4ff; --preview-info:#8ab4ff; --preview-glow:rgba(138,180,255,.2); }
-
-.bf-theme-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
 @media (max-width: 640px) {
   .bf-theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bf-theme-option { min-height: 72px; padding: 8px; gap: 8px; }

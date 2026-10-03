@@ -433,25 +433,8 @@ html:not(.dark) .bf-os-decide {
 }
 
 /* Preview lock — chrome 1:1 cu Household OS */
-
-.bf-calm-gauge { width: 100%; color: #7cffc4; }
-.bf-calm-track { stroke: #2a3a34; stroke-width: 6; stroke-linecap: round; }
-.bf-calm-arc { stroke: #7cffc4; stroke-width: 6; stroke-linecap: round; }
-.bf-calm-tick { stroke: #31463c; stroke-width: .8; }
-.bf-calm-tick.major { stroke: #8a968f; stroke-width: 1.2; }
-.bf-calm-score {
-  fill: #f3f6f4;
-  font-family: Fraunces, Georgia, serif;
-  font-size: 22px;
-  font-weight: 560;
-}
 .bf-calm-label {
-  fill: #9aa8a1;
-  font-family: "IBM Plex Sans", sans-serif;
   /* Unități SVG (desenul are 100 de unități): 8,2 ≈ 12 px pe ecran, în interiorul arcului. */
-  font-size: 8.2px;
-  font-weight: 600;
-  letter-spacing: .06em;
 }
 
 .dark .bf-health-sheet-ring-wrap { max-width: 260px; margin: 0 auto; }

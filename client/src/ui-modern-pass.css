@@ -10,9 +10,7 @@
 .os-shell .bf-today-workspace{gap:16px}
 .os-shell .bf-movements-ledger,.os-shell .bf-today-workspace,.os-shell .bf-plan-workspace{padding-left:max(14px,var(--os-inset-left,0px)) !important;padding-right:max(14px,var(--os-inset-right,0px)) !important}
 }
-.os-shell .os-dock{padding:8px 10px max(12px,var(--os-inset-bottom,env(safe-area-inset-bottom,0px)));box-shadow:0 -6px 18px color-mix(in srgb,#000 12%,transparent)}
-.os-shell .os-dock button{min-width:0;min-height:max(48px,var(--ui-tap));height:max(48px,var(--ui-tap));gap:2px;padding:6px 4px;border-radius:12px;font-size:12px;font-weight:600;letter-spacing:0.01em;color:var(--os-muted,var(--cf-muted));background:transparent;box-shadow:none;transition:color 160ms ease,background-color 160ms ease,transform 160ms ease}
-.os-shell .os-dock button.is-on,.os-shell .os-dock button.active{color:var(--os-mint-fg,var(--cf-on-forest,#fff)) !important;background:var(--os-mint,var(--cf-primary,#176b54)) !important;box-shadow:0 4px 12px color-mix(in srgb,var(--os-mint,var(--cf-primary)) 28%,transparent) !important}
+.os-shell .os-dock button{min-width:0;transition:color 160ms ease,background-color 160ms ease,transform 160ms ease}
 .os-shell .os-dock button:active{transform:scale(0.97)}
 .os-shell .os-tool{min-width:var(--ui-tap);min-height:var(--ui-tap)}
 .os-shell .bf-empty-state,.os-shell .bf-today-empty-activity{position:relative;overflow:hidden;text-align:center}
@@ -48,7 +46,6 @@ to{opacity:1;transform:translateY(0)}
 }
 .os-shell .os-appbar.bf-appbar{padding-top:calc(8px + var(--os-inset-top,env(safe-area-inset-top,0px)));padding-left:max(16px,var(--os-inset-left,env(safe-area-inset-left,0px)));padding-right:max(16px,var(--os-inset-right,env(safe-area-inset-right,0px)))}
 .os-shell main,.os-shell .bf-page,.os-shell .bf-today-workspace,.os-shell .bf-movements-ledger,.os-shell .bf-plan-workspace{padding-bottom:calc(92px + var(--os-inset-bottom,env(safe-area-inset-bottom,0px)))}
-html.capacitor-android .os-shell .os-dock,html.is-android-standalone .os-shell .os-dock{padding-bottom:max(12px,var(--os-inset-bottom,env(safe-area-inset-bottom,0px))) !important}
 /* ── sfârșit ui-modern-pass-a2.css ── */
 /* ── fost ui-modern-pass-b1.css ── */
 @media (max-width:760px){.bf-first-run-intents{display:grid;gap:10px}

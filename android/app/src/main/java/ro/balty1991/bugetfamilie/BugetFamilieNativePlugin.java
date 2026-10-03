@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.view.HapticFeedbackConstants;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import com.getcapacitor.JSObject;
@@ -56,6 +57,55 @@ public class BugetFamilieNativePlugin extends Plugin {
       else getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
       call.resolve();
     });
+  }
+
+  /**
+   * Vibrația scurtă a sistemului, nu un motor pornit de noi: „tick” la schimbarea ecranului,
+   * „confirm” la o notare salvată, „reject” la o ștergere. Respectă setarea „Vibrație la atingere”
+   * a telefonului (performHapticFeedback o verifică singur) și nu cere permisiunea VIBRATE.
+   */
+  @PluginMethod
+  public void haptic(PluginCall call) {
+    final String kind = call.getString("kind", "tick");
+    if (getActivity() == null || getBridge() == null) {
+      call.resolve();
+      return;
+    }
+    final WebView webView = getBridge().getWebView();
+    getActivity().runOnUiThread(() -> {
+      int feedback = HapticFeedbackConstants.KEYBOARD_TAP;
+      if ("tick".equals(kind)) feedback = HapticFeedbackConstants.CLOCK_TICK;
+      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && "confirm".equals(kind)) feedback = HapticFeedbackConstants.CONFIRM;
+      else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && "reject".equals(kind)) feedback = HapticFeedbackConstants.REJECT;
+      else if ("confirm".equals(kind) || "reject".equals(kind)) feedback = HapticFeedbackConstants.LONG_PRESS;
+      if (webView != null) webView.performHapticFeedback(feedback);
+      call.resolve();
+    });
+  }
+
+  /**
+   * Culorile din imaginea de fundal (Material You, Android 12+): accentul închis pentru tema
+   * deschisă, cel deschis pentru temele închise. Pe telefoane mai vechi răspunde `supported: false`.
+   */
+  @PluginMethod
+  public void systemAccent(PluginCall call) {
+    final JSObject result = new JSObject();
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || getContext() == null) {
+      result.put("supported", false);
+      call.resolve(result);
+      return;
+    }
+    result.put("supported", true);
+    result.put("accent600", hex(getContext().getColor(android.R.color.system_accent1_600)));
+    result.put("accent700", hex(getContext().getColor(android.R.color.system_accent1_700)));
+    result.put("accent800", hex(getContext().getColor(android.R.color.system_accent1_800)));
+    result.put("accent200", hex(getContext().getColor(android.R.color.system_accent1_200)));
+    result.put("accent100", hex(getContext().getColor(android.R.color.system_accent1_100)));
+    call.resolve(result);
+  }
+
+  private static String hex(int color) {
+    return String.format("#%06X", 0xFFFFFF & color);
   }
 
   /**

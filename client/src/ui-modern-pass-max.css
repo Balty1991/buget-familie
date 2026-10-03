@@ -5,8 +5,6 @@ html body .bf-onboarding.bf-setup {
   gap: 16px !important;
   border-radius: 1.35rem !important;
 }
-html body .bf-first-run-intents { display: grid !important; gap: 10px !important; }
-html body .bf-onboarding-actions { gap: 12px !important; margin-top: 10px !important; }
 html body .bf-app .bf-sync,
 html body .os-shell .bf-sync,
 html body .bf-app .bf-settings > section,

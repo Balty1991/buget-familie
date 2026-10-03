@@ -2,6 +2,7 @@
  * Anulare locală după ștergere: ține rândurile scoase câteva secunde,
  * ca o greșeală dintr-o atingere să se corecteze tot dintr-o atingere.
  */
+import { haptic } from "@/lib/native-feel";
 import { useEffect, useRef, useState } from "react";
 import { buildUndo, type UndoAction } from "@/lib/undo-delete";
 import type { AppData } from "@/lib/finance-data";
@@ -31,6 +32,7 @@ export function useUndo(data: AppData, setData: (value: AppData | ((current: App
   ) => {
     const { next, removed } = pick(data);
     setData(next);
+    haptic("reject");
     offerUndo(buildUndo(label, removed));
   };
 

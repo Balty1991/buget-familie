@@ -1,8 +1,6 @@
 /* Atelierul Financiar — temele schimbă materialul, nu semantica: venit, cheltuială și atenție rămân lizibile. */
-.bf-theme-picker { width: min(620px, calc(100vw - 28px)); }
 .bf-theme-picker-intro { margin: -4px 0 18px; color: #65766d; font-size: 12px; line-height: 1.55; }
-.bf-theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.bf-theme-option { display: grid; grid-template-columns: 46px minmax(0, 1fr) 18px; align-items: center; gap: 10px; min-height: 78px; padding: 10px; border: 1px solid #d7ded8; border-radius:20px; color: #1b4137; background: #fbfcf8; text-align: left; transition: transform .16s cubic-bezier(.23,1,.32,1), border-color .16s ease, box-shadow .16s ease; }
+.bf-theme-option { display: grid; align-items: center; gap: 10px; border: 1px solid #d7ded8; color: #1b4137; background: #fbfcf8; text-align: left; transition: transform .16s cubic-bezier(.23,1,.32,1), border-color .16s ease, box-shadow .16s ease; }
 .bf-theme-option:hover { transform: translateY(-1px); border-color: #7ea793; }
 .bf-theme-option.selected { border-color: #2f725e; box-shadow: 0 0 0 2px rgba(47, 114, 94, .16); }
 .bf-theme-option > span:nth-child(2) { display: grid; gap: 3px; min-width: 0; }
@@ -10,7 +8,7 @@
 .bf-theme-option small { color: #6d7f75; font-size:12px; line-height: 1.35; }
 .bf-theme-option i { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; color: #fff; background: #2f725e; }
 .bf-theme-option:not(.selected) i { opacity: 0; }
-.bf-theme-swatch { width: 46px; height: 52px; border: 1px solid rgba(0,0,0,.12); border-radius:12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.32); }
+.bf-theme-swatch { border: 1px solid rgba(0,0,0,.12); box-shadow: inset 0 1px 0 rgba(255,255,255,.32); }
 
 .dark .bf-theme-picker { color: #eff8f1; background: #10271f; }
 .dark .bf-theme-picker-intro { color: #b8cfbf; }
@@ -20,5 +18,4 @@
 
 @media (max-width: 640px) {
   .bf-theme-picker { width: min(100%, calc(100vw - 20px)); padding: 18px; }
-  .bf-theme-grid { grid-template-columns: 1fr; }
 }

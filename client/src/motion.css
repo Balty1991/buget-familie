@@ -11,6 +11,13 @@
 @keyframes bf-check-draw { from { stroke-dashoffset: 16; } }
 
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 320ms; }
+/* Schimbarea de ecran: vechiul se stinge repede, noul urcă 8 px; bara de jos și antetul stau pe loc. */
+.os-dock { view-transition-name: bf-dock; }
+.os-appbar { view-transition-name: bf-appbar; }
+html[data-vt="nav"]::view-transition-old(root) { animation: bf-vt-out 140ms ease-in both; }
+html[data-vt="nav"]::view-transition-new(root) { animation: bf-vt-in 280ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes bf-vt-out { to { opacity: 0; } }
+@keyframes bf-vt-in { from { opacity: 0; transform: translateY(8px); } }
 
 @media (prefers-reduced-motion: reduce) {
   .bf-envelope-list-first .bf-envelope-meter em, .bf-paid-check path { animation: none; }
@@ -34,3 +41,9 @@
   .bf-envelope-fly { animation: none; opacity: 0; }
   .bf-envelope-list-first article.is-funded .bf-envelope-meter em { animation: none; }
 }
+
+/* Încărcarea unui ecran: un schelet care sclipește (titlu, cifră, grafic, două rânduri), nu un text gol. */
+:root .bf-lazy-panel.bf-lazy-panel { --bf-sk: color-mix(in srgb, var(--cf-ink) 8%, transparent); position: relative; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; min-height: 360px; margin: 12px 0 0; padding: 18px 16px; border: 1px solid var(--cf-line); border-radius: 22px; color: var(--cf-muted); font-size: 13px; background: linear-gradient(var(--bf-sk) 0 0) 16px 20px / 38% 12px no-repeat, linear-gradient(var(--bf-sk) 0 0) 16px 42px / 64% 30px no-repeat, linear-gradient(var(--bf-sk) 0 0) 16px 92px / calc(100% - 32px) 120px no-repeat, linear-gradient(var(--bf-sk) 0 0) 16px 228px / calc(100% - 32px) 44px no-repeat, linear-gradient(var(--bf-sk) 0 0) 16px 284px / calc(100% - 32px) 44px no-repeat, var(--cf-surface); }
+:root .bf-lazy-panel.bf-lazy-panel::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 25%, color-mix(in srgb, var(--cf-surface) 75%, transparent) 50%, transparent 75%); transform: translateX(-100%); animation: bf-shimmer 1.3s ease-in-out infinite; }
+@keyframes bf-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { :root .bf-lazy-panel.bf-lazy-panel::after { animation: none; } }
