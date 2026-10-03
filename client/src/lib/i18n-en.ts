@@ -4448,7 +4448,7 @@ export const en: Record<string, string> = {
   "Nu am auzit nimic. Atinge microfonul și spune, de exemplu, „30 de lei taxi”.": "I did not hear anything. Tap the microphone and say, for example, “30 lei taxi”.",
   "Notează cheltuiala pe loc: seara n-o mai ții minte.": "Log the expense right away: by evening you won't remember it.",
   "Un plic pe săptămână se ține mai ușor decât un buget pe toată luna.": "A weekly envelope is easier to keep than a budget for the whole month.",
-  "Verifică o dată pe lună abonamentele: unul pe care nu-l mai folosești e bani dați degeaba.": "Check your subscriptions once a month: one you no longer use is money thrown away.",
+  "Verifică o dată pe lună abonamentele: cele pe care nu le mai folosești sunt bani dați degeaba.": "Check your subscriptions once a month: the ones you no longer use are money thrown away.",
   "Sumele mici, adunate pe un an, ajung cât o vacanță.": "Small amounts, added up over a year, are worth a holiday.",
   "Fondul de urgență nu se vede până nu ai nevoie de el. Atunci contează.": "You don't notice an emergency fund until you need it. Then it matters.",
   "O zi pe săptămână fără cheltuieli lasă mereu ceva în plic.": "One no-spend day a week always leaves something in the envelope.",
