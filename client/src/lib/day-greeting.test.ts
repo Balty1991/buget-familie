@@ -8,6 +8,16 @@ describe("salutul zilei", () => {
     expect(helloFor(13)).toBe("Bună ziua");
     expect(helloFor(20)).toBe("Bună seara");
     expect(helloFor(2)).toBe("Noapte bună");
+    // La 11:59 e deja ziua, nu dimineața.
+    expect(helloFor(10)).toBe("Bună dimineața");
+    expect(helloFor(11)).toBe("Bună ziua");
+  });
+
+  it("nu pune numele implicit „Eu” în salut", () => {
+    const data = buildDemoData("2026-10-02");
+    for (const member of data.settings.members) member.name = "Eu";
+    data.settings.memberName = "Eu";
+    expect(dayGreeting(data, "2026-10-02", 14).hello).toBe("Bună ziua");
   });
 
   it("pe nume, cu fraza cea mai potrivită", () => {

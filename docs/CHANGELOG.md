@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.145
+
+Salutul de pe Astăzi:
+- „Bună dimineața” doar până la 11; de la 11 e „Bună ziua” (la 11:59 spunea încă „dimineața”).
+- Fără „Bună dimineața, Eu”: numele pus implicit de aplicație („Eu”) nu mai apare în salut până nu-l schimbați.
+- Sfaturile zilei, rescrise să fie limpezi. „Un abonament neuitat e cel mai ieftin abonament” devine „Verifică o dată pe lună abonamentele: unul pe care nu-l mai folosești e bani dați degeaba.”
+
 ## 1.1.144
 
 - „10 lei jucării” (scris sau spus) ajunge la **Consumabile copil**, nu la Alimente. Categoria se ghicea doar după magazin (Noriel, Smyk); acum și după lucrul cumpărat: jucării, Lego, păpușă, pluș, cărucior, suzete, hăinuțe, „pentru copii”.
