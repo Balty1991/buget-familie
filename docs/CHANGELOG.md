@@ -1,11 +1,15 @@
 # Changelog
 
+## 1.1.146
+
+- Sfatul zilei despre abonamente, corect gramatical: „cele pe care nu le mai folosești sunt bani dați degeaba” (era „unul … e bani dați degeaba”).
+
 ## 1.1.145
 
 Salutul de pe Astăzi:
 - „Bună dimineața” doar până la 11; de la 11 e „Bună ziua” (la 11:59 spunea încă „dimineața”).
 - Fără „Bună dimineața, Eu”: numele pus implicit de aplicație („Eu”) nu mai apare în salut până nu-l schimbați.
-- Sfaturile zilei, rescrise să fie limpezi. „Un abonament neuitat e cel mai ieftin abonament” devine „Verifică o dată pe lună abonamentele: unul pe care nu-l mai folosești e bani dați degeaba.”
+- Sfaturile zilei, rescrise să fie limpezi. „Un abonament neuitat e cel mai ieftin abonament” devine „Verifică o dată pe lună abonamentele: cele pe care nu le mai folosești sunt bani dați degeaba.”
 
 ## 1.1.144
 

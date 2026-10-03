@@ -15,7 +15,7 @@ export type DayGreeting = { hello: string; line: string };
 const TIPS = [
   "Notează cheltuiala pe loc: seara n-o mai ții minte.",
   "Un plic pe săptămână se ține mai ușor decât un buget pe toată luna.",
-  "Verifică o dată pe lună abonamentele: unul pe care nu-l mai folosești e bani dați degeaba.",
+  "Verifică o dată pe lună abonamentele: cele pe care nu le mai folosești sunt bani dați degeaba.",
   "Sumele mici, adunate pe un an, ajung cât o vacanță.",
   "Fondul de urgență nu se vede până nu ai nevoie de el. Atunci contează.",
   "O zi pe săptămână fără cheltuieli lasă mereu ceva în plic.",
