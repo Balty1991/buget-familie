@@ -4452,4 +4452,5 @@ export const en: Record<string, string> = {
   "Tranziții line între ecrane, vibrație scurtă la notare și, pe Android 12+, culorile telefonului.": "Smooth transitions between screens, a short vibration when logging and, on Android 12+, your phone's colors.",
   "Widget nou: Săptămâna banilor, ultimele 7 zile pe ecranul principal.": "New widget: Money week, the last 7 days on your home screen.",
   "Deschide graficele": "Open charts",
+  "Nu am auzit nimic. Atinge microfonul și spune, de exemplu, „30 de lei taxi”.": "I did not hear anything. Tap the microphone and say, for example, “30 lei taxi”.",
 };

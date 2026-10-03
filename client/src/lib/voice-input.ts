@@ -4,7 +4,8 @@
  * Fără niciuna, butonul de microfon nu apare.
  */
 type VoiceBridge = { available?: () => boolean; listen?: (lang: string) => void };
-type Recognition = { lang: string; interimResults: boolean; maxAlternatives: number; start: () => void; abort: () => void; onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null };
+type RecognitionResult = ArrayLike<{ transcript: string }> & { isFinal?: boolean };
+type Recognition = { lang: string; interimResults: boolean; continuous?: boolean; maxAlternatives: number; start: () => void; stop: () => void; abort: () => void; onresult: ((event: { resultIndex?: number; results: ArrayLike<RecognitionResult> }) => void) | null; onerror: ((event: { error?: string }) => void) | null; onend: (() => void) | null };
 
 const nativeVoice = (): VoiceBridge | undefined => {
   if (typeof window === "undefined") return undefined;
@@ -26,10 +27,12 @@ export function voiceAvailable(): boolean {
   }
 }
 
-export type VoiceResult = { text: string } | { error: "cancelled" | "unavailable" | "denied" | "failed" };
+/** `silent`: s-a oprit fără să audă nimic (prea încet, prea departe, sau microfonul a pornit târziu). */
+export type VoiceResult = { text: string } | { error: "cancelled" | "silent" | "unavailable" | "denied" | "failed" };
 
 /** O frază; `cancel` oprește ascultarea în browser (pe Android, dialogul telefonului are butonul lui). */
-export function listenOnce(lang = "ro-RO"): { result: Promise<VoiceResult>; cancel: () => void } {
+/** `onPartial`: textul auzit până acum, ca omul să vadă că e ascultat (doar în browser). */
+export function listenOnce(lang = "ro-RO", onPartial?: (text: string) => void): { result: Promise<VoiceResult>; cancel: () => void } {
   const native = nativeVoice();
   if (native?.listen) {
     let done = false;
@@ -53,15 +56,44 @@ export function listenOnce(lang = "ro-RO"): { result: Promise<VoiceResult>; canc
   if (!Ctor) return { result: Promise.resolve({ error: "unavailable" }), cancel: () => {} };
   const recognition = new Ctor();
   recognition.lang = lang;
-  recognition.interimResults = false;
+  /*
+   * Chrome pe Android dă rar rezultatul „final” la o frază scurtă și uneori se oprește fără el.
+   * Ținem și textul parțial: la oprire (de la om sau de la browser) folosim ce s-a auzit.
+   * Atingerea „oprește” cheamă stop(), nu abort(): abort() arunca tot ce se auzise.
+   */
+  recognition.interimResults = true;
+  recognition.continuous = false;
   recognition.maxAlternatives = 1;
+  let heard = "";
+  let settled = false;
+  let finish: (value: VoiceResult) => void = () => {};
   const result = new Promise<VoiceResult>((resolve) => {
-    let settled = false;
-    const finish = (value: VoiceResult) => { if (!settled) { settled = true; resolve(value); } };
-    recognition.onresult = (event) => finish({ text: (event.results[0]?.[0]?.transcript || "").trim() });
-    recognition.onerror = (event) => finish({ error: event.error === "not-allowed" || event.error === "service-not-allowed" ? "denied" : event.error === "aborted" || event.error === "no-speech" ? "cancelled" : "failed" });
-    recognition.onend = () => finish({ error: "cancelled" });
+    finish = (value: VoiceResult) => { if (!settled) { settled = true; resolve(value); onPartial?.(""); } };
+    recognition.onresult = (event) => {
+      const parts: string[] = [];
+      let final = false;
+      for (let i = 0; i < event.results.length; i += 1) {
+        const item = event.results[i];
+        parts.push(item?.[0]?.transcript || "");
+        if (item?.isFinal) final = true;
+      }
+      heard = parts.join(" ").replace(/\s+/g, " ").trim();
+      onPartial?.(heard);
+      if (final && heard) { finish({ text: heard }); try { recognition.stop(); } catch { /* deja oprită */ } }
+    };
+    recognition.onerror = (event) => {
+      if (heard) { finish({ text: heard }); return; }
+      finish({ error: event.error === "not-allowed" || event.error === "service-not-allowed" ? "denied" : event.error === "no-speech" ? "silent" : event.error === "aborted" ? "cancelled" : "failed" });
+    };
+    recognition.onend = () => finish(heard ? { text: heard } : { error: "silent" });
     try { recognition.start(); } catch { finish({ error: "failed" }); }
   });
-  return { result, cancel: () => { try { recognition.abort(); } catch { /* deja oprită */ } } };
+  return {
+    result,
+    cancel: () => {
+      try { recognition.stop(); } catch { /* deja oprită */ }
+      // Dacă browserul nu mai trimite nimic după stop(), nu lăsăm butonul agățat.
+      window.setTimeout(() => finish(heard ? { text: heard } : { error: "cancelled" }), 1500);
+    },
+  };
 }

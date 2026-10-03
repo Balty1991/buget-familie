@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.143
+
+Notarea cu vocea în browser (Chrome pe Android, versiunea web):
+- „30 de lei taxi” nu se mai pierde. Chrome dă rar rezultatul final la o frază scurtă și uneori se oprește fără el; acum aplicația ține și textul parțial și îl folosește când ascultarea se termină.
+- Atingerea „oprește” încheie ascultarea păstrând ce s-a auzit (înainte o anula și arunca tot).
+- Cât ascultă, sub „Te ascult…” apare ce a auzit până atunci.
+- Dacă nu a auzit nimic, spune asta, cu un exemplu, în loc să tacă.
+
 ## 1.1.142
 
 Aspect, grafică, modernizare:
