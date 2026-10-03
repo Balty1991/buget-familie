@@ -136,7 +136,11 @@ html.theme-white.bf-tint-kid {
   --os-mint: var(--cf-primary);
   --os-mint-fg: var(--cf-on-forest);
   --os-line: var(--cf-line);
+  /* Bara de jos și butonul ei activ urmează nuanța, nu verdele temei Alb. */
+  --bf-dock-bg: color-mix(in srgb, var(--cf-surface) 65%, var(--cf-bg));
+  --bf-dock-accent: var(--cf-primary-strong);
 }
+html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) #root,
 html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) body,
 html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) body .os-shell.bf-app {
   background: linear-gradient(180deg, color-mix(in srgb, var(--cf-bg) 88%, var(--cf-primary)) 0, var(--cf-bg) 160px), var(--cf-bg);

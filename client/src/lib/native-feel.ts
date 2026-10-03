@@ -61,7 +61,7 @@ export const readDynamicColor = () => { try { return localStorage.getItem(DYNAMI
 const SCOPES = ["", " .os-shell.bf-app", " .bf-today-workspace", " .bf-modal", " .bf-command-palette"];
 export function dynamicColorCss(primary: string, strong: string) {
   const selector = SCOPES.map((scope) => `html[data-dynamic-color]${scope}`).join(", ");
-  return `${selector} { --cf-primary: ${primary} !important; --cf-primary-strong: ${strong} !important; --os-mint: ${primary} !important; --bf-green: ${primary} !important; --cf-forest: ${strong} !important; --cf-link: ${strong} !important; --boot-accent: ${primary} !important; --cf-glow: color-mix(in srgb, ${primary} 18%, transparent) !important; }`;
+  return `${selector} { --cf-primary: ${primary} !important; --cf-primary-strong: ${strong} !important; --os-mint: ${primary} !important; --bf-green: ${primary} !important; --cf-forest: ${strong} !important; --cf-link: ${strong} !important; --boot-accent: ${primary} !important; --bf-dock-accent: ${strong} !important; --cf-glow: color-mix(in srgb, ${primary} 18%, transparent) !important; }`;
 }
 
 /** Pune accentul telefonului peste tema aleasă; tema închisă primește nuanțele deschise. */

@@ -103,6 +103,8 @@
 }
 .bf-usage-replay {
   margin-top: .25rem;
+  /* Butoanele de la final nu mai stau lipite de marginea cardului. */
+  padding: 0 16px 18px;
 }
 .dark .bf-usage-step-visual { color: #e8f5ec; }
 .dark .bf-usage-step-visual b { color: rgba(232, 245, 236, .45); }

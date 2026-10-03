@@ -40,9 +40,9 @@ html.theme-white body .bf-app .bf-allocation-period,
 html.theme-white body .bf-app .bf-analysis-snapshot{
 background:var(--cf-surface)!important;border:1px solid var(--cf-line)!important;
 box-shadow:var(--ds-shadow-card)!important}
-html.theme-white body .os-shell .os-dock{background:#eef1ef;box-shadow:none!important;filter:none}
+html.theme-white body .os-shell .os-dock{background:var(--bf-dock-bg,#eef1ef);box-shadow:none!important;filter:none}
 html.theme-white body .os-shell .os-dock button.is-on,
-html.theme-white body .os-shell .os-dock button.active{color:#176b54!important;background:color-mix(in srgb,#176b54 16%,#eef1ef)!important;box-shadow:none!important}
+html.theme-white body .os-shell .os-dock button.active{color:var(--bf-dock-accent,#176b54)!important;background:color-mix(in srgb,var(--bf-dock-accent,#176b54) 16%,var(--bf-dock-bg,#eef1ef))!important;box-shadow:none!important}
 /* tokens.css */
 html.theme-dark body,html.theme-dark body .os-shell.bf-app{background:#0c0d0f;color:#eceff3}
 html.theme-dark body .os-shell .os-hero,
