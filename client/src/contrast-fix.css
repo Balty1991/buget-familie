@@ -589,6 +589,7 @@ html.theme-dark .os-dock button.is-on svg {
   gap: 10px;
   margin: 0;
   padding: 10px 14px;
+  padding-top: calc(10px + var(--os-inset-top, env(safe-area-inset-top, 0px)));
   border-bottom: 1px solid color-mix(in srgb, var(--cf-warning, #c49a2a) 45%, transparent);
   background: color-mix(in srgb, var(--cf-warning, #c49a2a) 16%, var(--cf-surface, #fffdf7));
   color: var(--cf-ink, #1a2420);
@@ -598,6 +599,7 @@ html.theme-dark .os-dock button.is-on svg {
 }
 .bf-offline-banner svg { flex: 0 0 auto; color: var(--cf-warning, #8d6515); }
 .bf-offline-banner > span { flex: 1 1 auto; }
+.bf-offline-banner + .bf-offline-banner { padding-top: 10px; }
 .bf-sync-off-banner button {
   flex: 0 0 auto;
   min-height: 36px;
