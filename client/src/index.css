@@ -126,18 +126,8 @@
 .bf-backup-paste-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 
 /* Factori care nu intră în scor: prezenți, dar vizibil inactivi. */
-.bf-health-factor.unknown { opacity: 0.55; }
-.bf-health-factor.unknown .bf-health-factor-top span { font-style: italic; }
-.bf-health-missing { margin: 12px 0; padding: 12px 14px; border-radius:12px; background: var(--cf-surface-alt, var(--cf-surface, transparent)); }
-.bf-health-missing ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
-.bf-health-missing li { font-size: 14px; line-height: 1.45; color: var(--cf-ink, inherit); }
 
 /* Ținte de atins: Android cere 48dp, filtrele coborâseră la 29–33px. */
-.bf-analysis-scope button,
-.bf-pocket-switch button,
-.bf-price-window button,
-.bf-segment button { min-height: 44px; }
-.bf-chip-list span button { min-width: 32px; min-height: 32px; }
 
 /* Primul ecran, cât timp registrul e gol: pașii țin locul cifrei. */
 .os-start { display: grid; gap: 10px; }
@@ -188,8 +178,7 @@
   border: 1px solid var(--cf-line, currentColor);
   background: var(--cf-surface, transparent); color: inherit;
 }
-.ai-chat-suggestions { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-.ai-chat-suggestions::-webkit-scrollbar { display: none; }
+.ai-chat-suggestions { padding-bottom: 4px; }
 .ai-chat-suggestions button { flex: 0 0 auto; white-space: nowrap; min-height: 36px; }
 
 /* „Arată mișcările mai vechi”: registrul se deschide pe porții. */

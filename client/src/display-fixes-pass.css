@@ -14,10 +14,6 @@
 
 /* —— 1. Plic: rândul de etichete nu se mai suprapune peste text —— */
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
   margin-bottom: 7px;
 }
 .bf-allocation-list .bf-allocation-list-heading .bf-allocation-flags > * {

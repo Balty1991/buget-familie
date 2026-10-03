@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.142
+
+Aspect, grafică, modernizare:
+- **Atelierul de grafice** (Mai mult → Planificare): fluxul banilor (de unde vin, unde se duc, cu benzi proporționale; atingeți o sursă sau o categorie ca s-o urmăriți), categoriile ca dreptunghiuri pe măsura sumei, lunile anului cu veniturile peste cheltuieli, ritmul lunii față de luna trecută (în primele zile: luna trecută întreagă) și harta anului — fiecare zi din ultimele 53 de săptămâni, colorată după cât s-a cheltuit. Perioadă: luna asta, trecută, 3 luni, 12 luni. Graficele se „citesc cu degetul” (sau cu săgețile): o bulă arată valoarea exactă. Desenate în aplicație, fără bibliotecă nouă.
+- **Asistentul răspunde cu grafice**: „cum au evoluat cheltuielile pe alimente?”, „la Lidl în ultimele 12 luni” — media pe lună, luna cea mai scumpă și barele lunilor; „cât am cheltuit pe…” vine cu ultimele 6 luni; comparațiile cu cele două perioade una lângă alta.
+- **Mișcare**: tranziție între ecrane (vechiul se stinge, noul urcă ușor; bara de jos și antetul stau pe loc), vibrația scurtă a sistemului la schimbarea ecranului, la o notare salvată și la o ștergere (pe Android, fără permisiuni noi), ecranele care se încarcă arată un schelet care sclipește în loc de un text. Cu „Reduce mișcarea” din telefon, nimic din toate astea nu se mișcă.
+- **Culorile telefonului** (Aspect, Android 12+): accentul aplicației se potrivește cu imaginea de fundal (Material You); tema închisă primește nuanțele deschise.
+- **Widget nou: Săptămâna banilor** — ultimele 7 zile ca bare colorate (aceleași praguri ca în Calendarul banilor), totalul și comparația cu săptămâna dinainte; arată când datele sunt de altă zi și nu arată sume cu aplicația blocată.
+- **Curățenie CSS dovedită**: 556 de declarații CSS care nu se vedeau niciodată (aceeași regulă, aceeași proprietate, acoperită mai târziu în același grup de foi) au ieșit: stilurile scad de la 951 la 931 KB și de la 3241 la 3215 `!important`, cu ecranele nou adăugate incluse. Dovada: stilul calculat al fiecărui element, plus ::before/::after, e identic înainte și după pe 163 de stări (34 de ecrane × 3 teme, plus tabletă, desktop și modul simplu). Un test nou (`css-shadow.test.ts`) nu lasă declarațiile umbrite să se adune din nou, iar plafoanele de mărime și de `!important` coboară la noile valori.
+
 ## 1.1.141
 
 Mai complex, mai frumos, mai modern — patru lucruri noi în Mai mult → Planificare:

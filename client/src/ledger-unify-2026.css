@@ -133,19 +133,10 @@ html.theme-navy {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 6px 8px max(10px, var(--os-inset-bottom, 0px));
   border-radius: 0;
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--lu-line, #c9d2cc) 80%, transparent);
-  background: var(--os-dock-bg, var(--lu-card, #eef1ef));
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: 0 -8px 22px color-mix(in srgb, var(--lu-ink, #0c1612) 16%, transparent);
 }
 .os-shell .os-dock button {
-  min-height: 52px;
-  border-radius:20px;
-  color: var(--lu-muted, #4a5852);
   font: 600 10px/1.1 "IBM Plex Sans", system-ui, sans-serif;
 }
 .os-shell .os-dock button.is-on {
@@ -212,30 +203,13 @@ html.theme-navy .os-shell .os-dock button.is-on {
 .bf-first-run {
   width: min(520px, calc(100vw - 20px));
   max-height: min(760px, calc(100dvh - 24px));
-  overflow: auto;
   padding: 28px 22px 22px;
   border-radius:20px;
   background: var(--lu-card, #f7f8f6);
   color: var(--lu-ink, #0c1612);
   border: 1px solid var(--lu-line, #c9d2cc);
 }
-.bf-first-run-intents {
-  display: grid;
-  gap: 10px;
-  margin-top: 1.1rem;
-}
 .bf-first-run-intents button {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: 2px 12px;
-  align-items: start;
-  min-height: 72px;
-  padding: 14px 16px;
-  text-align: left;
-  border-radius:20px;
-  border: 1px solid var(--lu-line, #c9d2cc);
-  background: color-mix(in srgb, var(--lu-card, #fff) 88%, var(--lu-accent, #143c36));
-  color: inherit;
   cursor: pointer;
 }
 .bf-first-run-intents button svg {

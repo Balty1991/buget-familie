@@ -19,6 +19,9 @@
     <string name="widget_env_title">Plicurile mele · rămași</string>
     <string name="widget_env_empty">Deschide aplicația o dată ca să apară plicurile.</string>
     <string name="widget_env_description">Arată pe ecranul principal primele trei plicuri: cât a rămas în fiecare și cât s-a consumat.</string>
+    <string name="widget_week_title">Săptămâna banilor</string>
+    <string name="widget_week_empty">Deschide aplicația o dată ca să apară săptămâna.</string>
+    <string name="widget_week_description">Arată ultimele 7 zile ca bare colorate după cât ați cheltuit, cu totalul săptămânii.</string>
     <string name="voice_prompt">Spune suma și magazinul</string>
     <string name="shortcut_note_short">Notează</string>
     <string name="shortcut_note_long">Notează o cheltuială</string>

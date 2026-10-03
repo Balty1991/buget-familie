@@ -2,6 +2,7 @@
  * Atelierul Financiar — tablou mobil pentru o persoană sau o gospodărie, cu decizia următoare în prim-plan.
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
+import { applyDynamicColor, haptic, readDynamicColor, withViewTransition } from "@/lib/native-feel";
 import { askConfirm } from "@/lib/confirm-dialog";
 import { isDemoMode, setDemoMode } from "@/lib/demo-data";
 import { loggingStreak } from "@/lib/logging-habits";
@@ -23,7 +24,8 @@ import { isAppLockEnabled } from "@/lib/app-lock";
 import { useToday } from "@/hooks/useToday";
 import { safeImport } from "@/lib/lazy-safe";
 import { applySecureScreen } from "@/lib/secure-screen";
-import { observeQuickActions, publishEnvelopes, publishSpendToday, publishWidgetTemplates } from "@/lib/quick-action-bridge";
+import { observeQuickActions, publishEnvelopes, publishSpendToday, publishWeek, publishWidgetTemplates } from "@/lib/quick-action-bridge";
+import { weekWidgetData } from "@/lib/week-widget";
 import { hasQueuedFeedback } from "@/lib/feedback-queue";
 import { useMemberMode } from "@/lib/member-mode";
 import { MemberModeScreen } from "@/components/MemberModeScreen";
@@ -188,8 +190,10 @@ export default function Home() {
     window.addEventListener("buget-familie:open-advisor", openAdvisor);
     const openYearPlan = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("year-plan"); setView("utilities"); };
     window.addEventListener("buget-familie:open-year-plan", openYearPlan);
+    const openCharts = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("charts"); setView("utilities"); };
+    window.addEventListener("buget-familie:open-charts", openCharts);
     window.addEventListener("buget-familie:open-afford", openAfford);
-    return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-shopping", openShopping); window.removeEventListener("buget-familie:open-trip", openTrip); window.removeEventListener("buget-familie:open-afford", openAfford); window.removeEventListener("buget-familie:open-advisor", openAdvisor); window.removeEventListener("buget-familie:open-year-plan", openYearPlan); };
+    return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-charts", openCharts); window.removeEventListener("buget-familie:open-shopping", openShopping); window.removeEventListener("buget-familie:open-trip", openTrip); window.removeEventListener("buget-familie:open-afford", openAfford); window.removeEventListener("buget-familie:open-advisor", openAdvisor); window.removeEventListener("buget-familie:open-year-plan", openYearPlan); };
   }, []);
   useEffect(() => {
     const openEvents = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("events"); setView("utilities"); };
@@ -258,7 +262,13 @@ export default function Home() {
   }, [storageReady, data.settings.salaryPlan.allocations, data.transactions.length]);
 
   const { undo, setUndo, runUndo, deleteWithUndo, offerUndo } = useUndo(data, applyData);
-  const go = (next: MainView) => { preloadView(next); if (next !== "utilities") setMoreReturn(null); startTransition(() => setView(next)); };
+  const go = (next: MainView) => {
+    preloadView(next);
+    if (next !== "utilities") setMoreReturn(null);
+    if (next === view) { startTransition(() => setView(next)); return; }
+    haptic("tick");
+    withViewTransition(() => setView(next), () => startTransition(() => setView(next)));
+  };
   useEffect(() => {
     if (view !== "today" || modal) void ensureDeferredStyles();
   }, [view, modal]);
@@ -395,6 +405,7 @@ export default function Home() {
     });
     if (failed) throw failed;
     if (fresh && saved.length) {
+      haptic("confirm");
       const base = saved.length === 1
         ? t("Notat · {title} · {amount}", { title: saved[0].title, amount: money(saved[0].amount) })
         : t("Notat · {count} mișcări", { count: saved.length });
@@ -649,7 +660,7 @@ export default function Home() {
     go("today");
   }), []);
   // Ecranul protejat (Setări → Securitate) se reaplică la fiecare pornire a aplicației.
-  useEffect(() => { void applySecureScreen(); }, []);
+  useEffect(() => { void applySecureScreen(); if (readDynamicColor()) void applyDynamicColor(); }, []);
   useEffect(() => {
     // Widgetul „Poți cheltui azi” arată aceeași cifră ca Astăzi; fără punte nativă nu face nimic.
     const today = isoToday();
@@ -681,6 +692,17 @@ export default function Home() {
       .slice(0, 3)
       .map(({ item, status }) => ({ label: item.label, left: status!.remaining < 0 ? `−${fmtExact.format(-status!.remaining)}` : fmtExact.format(status!.remaining), used: Math.round(Math.min(1, Math.max(0, status!.usage)) * 100) }));
     publishEnvelopes({ rows, date: today, zone: getFamilyTimeZone(), stale: t("Sumele sunt de pe {date} — deschide aplicația", { date: formatDate(today, { day: "numeric", month: "long" }) }) });
+  }, [data, memberModeActive, today]);
+  useEffect(() => {
+    // Widgetul „Săptămâna banilor”: ultimele 7 zile; cu blocarea aplicației, fără sume.
+    const today = isoToday();
+    if (isAppLockEnabled() || memberModeActive) {
+      publishWeek({ days: [], total: "", caption: "", date: today, stale: "" });
+      return;
+    }
+    const week = weekWidgetData(data, today);
+    const caption = week.change === undefined ? t("în ultimele 7 zile") : week.change > 0 ? t("+{change}% față de săptămâna dinainte", { change: week.change }) : week.change < 0 ? t("{change}% față de săptămâna dinainte", { change: week.change }) : t("ca săptămâna dinainte");
+    publishWeek({ days: week.days, total: fmtExact.format(Math.round(week.total)), caption, date: today, zone: getFamilyTimeZone(), stale: t("Sumele sunt de pe {date} — deschide aplicația", { date: formatDate(today, { day: "numeric", month: "long" }) }) });
   }, [data, memberModeActive, today]);
   // Copia săptămânală, pe telefon: o dată la 7 zile, după ce omul a spus „da”.
   useEffect(() => { void import("@/components/AutoBackupCard").then(({ runAutoBackupIfDue }) => runAutoBackupIfDue(data)).catch(() => undefined); }, [data]);
@@ -717,7 +739,7 @@ export default function Home() {
     }))} onDeleteSaving={(id) => deleteWithUndo(t("Obiectivul a fost șters."), (currentData) => ({
       next: { ...currentData, savings: currentData.savings.filter((item) => item.id !== id), deleted: [...currentData.deleted, { entity: "savings" as const, id, deletedAt: new Date().toISOString() }].slice(-TOMBSTONE_MAX) },
       removed: { savings: currentData.savings.filter((item) => item.id === id) },
-    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenEvents={() => { setMore("events"); go("utilities"); }} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMoreReturn({ view: "obligations", label: t("Înapoi la Obligații") }); setMore("recurring"); go("utilities"); }} onAddRecurring={(item) => update((currentData) => autoPostDueRecurring({ ...currentData, recurring: [...currentData.recurring, item] }))} onAddSaving={(goal) => update((currentData) => ({ ...currentData, savings: [...currentData.savings, goal] }))} onPayRecurring={(id) => { if (data.recurring.find((item) => item.id === id)?.variable) { setMoreReturn({ view: "obligations", label: t("Înapoi la Obligații") }); setMore("recurring"); go("utilities"); return; } update((currentData) => confirmRecurringPayment(currentData, id) || currentData); }} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={applyData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={(value) => { setMore(value); if (value === "overview") setMoreReturn(null); }} backTo={moreReturn ? { label: moreReturn.label, go: () => { const target = moreReturn.view; setMoreReturn(null); setMore("overview"); go(target); } } : undefined} data={data} onChange={applyData} onAddReceipt={() => setModal("receipt")} onSaveReceipt={saveReceipt} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onEditDebt={(item) => { setEditGoal(item); setModal("debt"); }} onEditSaving={(item) => { setEditGoal(item); setModal("saving"); }} onPayDebt={(item) => { setEditGoal(item); setModal("debt-payment"); }} onOpenCalendar={() => go("calendar")} onGo={go} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onEdit={openTx} onGo={go} onChange={applyData} onOpenReview={() => { setMore("review"); go("utilities"); }} onOpenSettings={() => { setMore("settings"); go("utilities"); }} onOpenRecurring={() => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("recurring"); go("utilities"); }} coach={view === "today" && firstWeekTourOpen && !onboardingOpen && !setupOpen && !modal && more !== "sync" ? <Suspense fallback={null}><FirstWeekTour onClose={dismissFirstWeekTour} onCapture={() => { dismissFirstWeekTour(); openTx(); }} onPlan={() => { dismissFirstWeekTour(); go("plan"); }} onSync={() => { dismissFirstWeekTour(); setMore("sync"); go("utilities"); }} /></Suspense> : null} />; };
+    }))} openDebt={() => { setEditGoal(undefined); setModal("debt"); }} openSaving={() => { setEditGoal(undefined); setModal("saving"); }} onOpenGoals={() => go("goals")} onOpenCalendar={() => go("calendar")} onOpenEvents={() => { setMore("events"); go("utilities"); }} onOpenAssistant={() => { setMore("assistant"); go("utilities"); }} onOpenRecurring={() => { setMoreReturn({ view: "obligations", label: t("Înapoi la Obligații") }); setMore("recurring"); go("utilities"); }} onAddRecurring={(item) => update((currentData) => autoPostDueRecurring({ ...currentData, recurring: [...currentData.recurring, item] }))} onAddSaving={(goal) => update((currentData) => ({ ...currentData, savings: [...currentData.savings, goal] }))} onPayRecurring={(id) => { if (data.recurring.find((item) => item.id === id)?.variable) { setMoreReturn({ view: "obligations", label: t("Înapoi la Obligații") }); setMore("recurring"); go("utilities"); return; } update((currentData) => confirmRecurringPayment(currentData, id) || currentData); }} /></Suspense>; if (view === "insights") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim analiza…")}</div>}><InsightsView data={data} onChange={applyData} onGo={go} /></Suspense>; if (view === "utilities") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim instrumentele…")}</div>}><MoreViewScreen tab={more} setTab={(value) => { if (value !== more) withViewTransition(() => setMore(value)); else setMore(value); if (value === "overview") setMoreReturn(null); }} backTo={moreReturn ? { label: moreReturn.label, go: () => { const target = moreReturn.view; setMoreReturn(null); setMore("overview"); go(target); } } : undefined} data={data} onChange={applyData} onAddReceipt={() => setModal("receipt")} onSaveReceipt={saveReceipt} onDeleteReceipt={deleteReceipt} onOpenDebt={() => { setEditGoal(undefined); setModal("debt"); }} onOpenSaving={() => { setEditGoal(undefined); setModal("saving"); }} onEditDebt={(item) => { setEditGoal(item); setModal("debt"); }} onEditSaving={(item) => { setEditGoal(item); setModal("saving"); }} onPayDebt={(item) => { setEditGoal(item); setModal("debt-payment"); }} onOpenCalendar={() => go("calendar")} onGo={go} receiptStorageNotice={receiptStorageNotice} sync={syncPanelProps} /></Suspense>; return <TodayView data={data} onAdd={() => openTx()} onEdit={openTx} onGo={go} onChange={applyData} onOpenReview={() => { setMore("review"); go("utilities"); }} onOpenSettings={() => { setMore("settings"); go("utilities"); }} onOpenRecurring={() => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("recurring"); go("utilities"); }} coach={view === "today" && firstWeekTourOpen && !onboardingOpen && !setupOpen && !modal && more !== "sync" ? <Suspense fallback={null}><FirstWeekTour onClose={dismissFirstWeekTour} onCapture={() => { dismissFirstWeekTour(); openTx(); }} onPlan={() => { dismissFirstWeekTour(); go("plan"); }} onSync={() => { dismissFirstWeekTour(); setMore("sync"); go("utilities"); }} /></Suspense> : null} />; };
   return <div className={"bf-app os-shell" + (setupOpen || onboardingOpen ? " is-setup" : "")}>
     <a className="bf-skip-link" href="#main-content">{t("Sari la conținut")}</a>
     {storageNotice && <div className="bf-storage-notice" role="status"><ShieldCheck size={15} /><span>{storageNotice}</span><button type="button" aria-label={t("Închide notificarea")} onClick={() => setStorageNotice(null)}><X size={14} /></button></div>}
@@ -756,6 +778,6 @@ export default function Home() {
     {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {affordOpen && <Suspense fallback={null}><AffordSheet data={data} onClose={() => setAffordOpen(false)} onLog={() => { setAffordOpen(false); window.dispatchEvent(new Event("buget-familie:open-expense")); }} /></Suspense>}
     {celebrate && !modal && <Suspense fallback={null}><GoalCelebration goal={celebrate} onClose={() => { markCelebrated(window.localStorage, celebrate.id); setCelebrate(undefined); }} /></Suspense>}
-    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTrip={() => { dismissWhatsNew(); window.dispatchEvent(new Event("buget-familie:open-year-plan")); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
+    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTrip={() => { dismissWhatsNew(); window.dispatchEvent(new Event("buget-familie:open-charts")); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;
 }

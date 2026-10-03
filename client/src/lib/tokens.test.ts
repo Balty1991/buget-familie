@@ -58,7 +58,8 @@ describe("plafonul de !important", () => {
     // Curățenia poate scădea numărul; o foaie nouă nu are voie să-l urce.
     // 27.09: 3263 după scoaterea regulilor moarte (clase care nu mai apar în cod).
     // 02.10: 3241 după clasele moarte (ghidul vechi, fotografiile de bon, pastilele din Analiză) și dungile din Mai mult.
-    expect(count).toBeLessThanOrEqual(3241);
+    // 03.10: 3215 după declarațiile umbrite (vezi css-shadow.test.ts), dovedite cu 163 de instantanee de stil calculat.
+    expect(count).toBeLessThanOrEqual(3215);
   });
 
   it("CSS-ul sursă nu crește: bugetul de mărime (P2-10 / D24)", () => {
@@ -80,7 +81,8 @@ describe("plafonul de !important", () => {
     // 02.10 (3): 947, harta lunii din Mișcări; blocurile noi din sesiune sunt compactate.
     // 02.10 (4): 950, coșul estimat, fondul de urgență și modul vacanță (asistentul de final de lună refolosește cardul provocării).
     // 02.10 (5): 951, salutul și intrarea animată de pe Astăzi.
-    expect(kb).toBeLessThanOrEqual(951);
+    // 03.10: 932, după 556 de declarații umbrite scoase (−19 KB) și cu graficele/tranzițiile noi (+1,5 KB).
+    expect(kb).toBeLessThanOrEqual(932);
   });
 
   it("calc() are spații în jurul lui + și -", () => {

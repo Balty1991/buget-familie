@@ -550,8 +550,6 @@ html.theme-dark .bf-primary svg {
   stroke: currentColor;
 }
 html.theme-dark .bf-secondary {
-  color: var(--cf-ink, #e8f0ea);
-  background-color: var(--cf-surface, #132820);
   border: 1px solid var(--cf-line, #2f4a3d);
 }
 html.theme-dark .os-dock button.is-on,

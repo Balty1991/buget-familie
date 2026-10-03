@@ -23,6 +23,7 @@ type NativeBridge = {
   publishTemplates?: (json: string) => void;
   publishSpendToday?: (json: string) => void;
   publishEnvelopes?: (json: string) => void;
+  publishWeek?: (json: string) => void;
 };
 
 const bridge = (): NativeBridge | undefined => {
@@ -152,6 +153,18 @@ export function publishEnvelopes(payload: EnvelopesWidget): void {
   try {
     if (!bridge()?.publishEnvelopes) return;
     publishLater("envelopes", JSON.stringify(payload), (value) => bridge()?.publishEnvelopes?.(value));
+  } catch {
+    /* widgetul e opțional */
+  }
+}
+
+/** Widgetul „Săptămâna banilor”: zilele (desenate de Android ca bare), totalul și o frază. */
+export type WeekWidget = { days: Array<{ label: string; amount: number; short: string; heat: number; today: boolean }>; total: string; caption: string; date: string; stale: string; zone?: string };
+
+export function publishWeek(payload: WeekWidget): void {
+  try {
+    if (!bridge()?.publishWeek) return;
+    publishLater("week", JSON.stringify(payload), (value) => bridge()?.publishWeek?.(value));
   } catch {
     /* widgetul e opțional */
   }

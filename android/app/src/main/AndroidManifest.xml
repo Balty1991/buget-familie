@@ -73,6 +73,18 @@
                 android:resource="@xml/widget_envelopes_info" />
         </receiver>
 
+        <!-- Widget separat, cu ultimele 7 zile desenate ca bare: tot opțional. -->
+        <receiver
+            android:name=".WeekWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_week_info" />
+        </receiver>
+
         <!-- Dala din Setări rapide; sistemul o pornește, de aceea este exportată. -->
         <service
             android:name=".QuickAddTileService"

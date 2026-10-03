@@ -453,6 +453,15 @@ public class MainActivity extends BridgeActivity {
     }
 
     @JavascriptInterface
+    public void publishWeek(String json) {
+      final android.content.Context app = MainActivity.this.getApplicationContext();
+      WIDGET_WORK.execute(() -> {
+        WeekWidgetProvider.save(app, json);
+        WeekWidgetProvider.updateAll(app);
+      });
+    }
+
+    @JavascriptInterface
     public void publishEnvelopes(String json) {
       final android.content.Context app = MainActivity.this.getApplicationContext();
       WIDGET_WORK.execute(() -> {
