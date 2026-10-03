@@ -577,7 +577,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 : t("{spent} din {budget}; azi mai sunt {today}.", { spent: money(fastWeek.spent), budget: money(fastWeek.budget), today: money(fastWeek.todayLeft) })}</span>
           </div>
           <button onClick={() => onGo("plan")}>{t("Vezi")}</button>
-          <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: fastWeek.label })} onClick={() => setDismissedAlerts((current) => [...current, `week-${fastWeek.allocationId}-${fastWeek.weekIndex}`])}><X size={16} /></button>
+          <button className="dismiss" style={{ flex: "none", minWidth: 36 }} aria-label={t("Ascunde alerta pentru {label}", { label: fastWeek.label })} onClick={() => setDismissedAlerts((current) => [...current, `week-${fastWeek.allocationId}-${fastWeek.weekIndex}`])}><X size={16} /></button>
         </aside>
       )}
       {!simpleMode && runOutAlert && topNotice === "runout" && (
@@ -589,7 +589,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             <span>{t("Ajunge la zero pe {date}. Ca să țină până la salariu: cel mult {safe} pe zi (acum {rate}).", { date: formatDate(runOutAlert.runOutDate, { day: "numeric", month: "long" }), safe: money(runOutAlert.safeDaily), rate: money(runOutAlert.dailyRate) })}{extend ? ` ${t("Poți muta {move} din {from}.", { move: money(extend.amount), from: extend.fromLabel })}` : ""}</span>
           </div>
           <button onClick={() => (extend ? applyMove(extend) : onGo("plan"))}>{extend ? t("Mută") : t("Vezi")}</button>
-          <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: runOutAlert.label })} onClick={() => setDismissedAlerts((current) => [...current, runOutAlert.allocationId])}><X size={16} /></button>
+          <button className="dismiss" style={{ flex: "none", minWidth: 36 }} aria-label={t("Ascunde alerta pentru {label}", { label: runOutAlert.label })} onClick={() => setDismissedAlerts((current) => [...current, runOutAlert.allocationId])}><X size={16} /></button>
         </aside>
       )}
       {activeEnvelopeAlert && topNotice === "envelope" && (!simpleMode || activeEnvelopeAlert.state === "over") && (
@@ -605,7 +605,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               : t("{pct}% din limită este deja consumată.", { pct: Math.round(activeEnvelopeAlert.usage * 100) })}</span>
           </div>
           <button onClick={() => (cover ? applyMove(cover) : onGo("plan"))}>{cover ? t("Mută") : t("Vezi")}</button>
-          <button className="dismiss" aria-label={t("Ascunde alerta pentru {label}", { label: activeEnvelopeAlert.item.label })} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
+          <button className="dismiss" style={{ flex: "none", minWidth: 36 }} aria-label={t("Ascunde alerta pentru {label}", { label: activeEnvelopeAlert.item.label })} onClick={() => setDismissedAlerts((current) => [...current, activeEnvelopeAlert.item.id])}><X size={16} /></button>
         </aside>
       )}
       {topNotice && moreNotices > 0 && (

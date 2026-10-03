@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.141
+
+Mai complex, mai frumos, mai modern — patru lucruri noi în Mai mult → Planificare:
+- **Povestea anului**, refăcută: ecranele merg singure, ca o poveste (ținut apăsat = pauză), se poate glisa, cifrele „numără” când apar. Ecrane noi: anul lună cu lună (barele cheltuielilor, linia veniturilor, cea mai bună lună luminată), cea mai mare cheltuială, pașii mari (cât s-a dat pe datorii, obiectivele atinse), averea familiei față de acum un an și „personalitatea” familiei (Economisitorii, Luptătorii, Constanții, Minimaliștii, Fidelii, Exploratorii), aleasă după ce iese în evidență în cifre. Se deschide oricând din Planificare, nu doar în decembrie–ianuarie.
+- **Tendințe și obiceiuri**: anul pe luni, ce categorii cresc și ce scad (ultimele 3 luni față de cele 3 dinainte, doar schimbările simțite în lei), ziua cea mai scumpă a săptămânii și cât merge pe weekend, fiecare categorie cu linia ei pe 12 luni, magazinele de bază (vizite, bonul mediu), abonamentele pe an și plățile care se repetă fără să fie urmărite (cu „Urmărește” le treceți la scadențe), cele mai mari cheltuieli.
+- **Calendarul banilor**: luna ca o hartă de culori — fiecare zi trecută după cât s-a cheltuit, cu praguri luate din obiceiurile familiei; zilele care vin arată facturile, ratele, salariile și soldul estimat (cu traiul obișnuit inclus). Atingeți o zi pentru tot ce s-a întâmplat sau urmează; săptămânile lunii, cu ce mai e de plătit în cele care vin.
+- **Simulator de investiții și pensie**: dobândă compusă lună de lună în trei scenarii (prudent, mediu, optimist), cu comision, inflație („în bani de azi”) și depunere care crește în fiecare an; cât să puneți lunar pentru o țintă; pentru pensie — golul față de pensia de stat, capitalul necesar, depunerea lunară și până la ce vârstă ajung banii. Simulare educativă, nu recomandare.
+- Pe Astăzi, butonul de ascuns alertele de plic are mărimea corectă și pe ecrane înguste.
+
 ## 1.1.140
 
 Planificare (Mai mult → Planificare), patru unelte noi:
