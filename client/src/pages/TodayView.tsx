@@ -14,7 +14,7 @@ const INTRO_KEY = "buget-familie:today-intro";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BookOpen, BellRing, ListChecks, Image as ImageIcon, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
+import { BookOpen, BellRing, FileBarChart, ListChecks, Image as ImageIcon, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { addIsoDays, planEndDate, calculateHealthScore, dropEnvelopeTransfer, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
 import { calendarBudgetWeekKey } from "@/lib/calendar-budget";
 import { markOpeningBalanceAsked, shouldAskOpeningBalance } from "@/lib/ui-prefs";
@@ -24,7 +24,7 @@ import { categoryTone } from "@/lib/category-color";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { acceptRecurringPrice, ageOfMoney, ageOfMoneyLine, calendarPace, calendarPaceLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, repeatedOverLine, savingsSuggestion, weekTooFast, weekVersusLast, weekVersusLastLine, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief, currentMonthKey, monthlyFamilyReport } from "@/lib/household-insights";
+import { acceptRecurringPrice, monthTitle, readClosedMonths, ageOfMoney, ageOfMoneyLine, calendarPace, calendarPaceLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, repeatedOverLine, savingsSuggestion, weekTooFast, weekVersusLast, weekVersusLastLine, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief, currentMonthKey, monthlyFamilyReport } from "@/lib/household-insights";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   dateText,
@@ -189,6 +189,18 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [intro] = useState(() => { try { if (navigator.webdriver || window.localStorage.getItem(INTRO_KEY) === isoToday()) return false; safeSetItem(window.localStorage, INTRO_KEY, isoToday()); return true; } catch { return false; } });
   // Asistentul de final de lună (și fișierul lui) se încarcă doar în ultimele 5 zile dinainte de salariu.
   const nearPayday = useMemo(() => { const end = planEndDate(data.settings.salaryPlan); const days = end ? Math.round((Date.parse(`${end}T12:00:00Z`) - Date.parse(`${isoToday()}T12:00:00Z`)) / 86_400_000) : -1; return days >= 1 && days <= 5; }, [data.settings.salaryPlan]);
+  // Raportul lunii trecute: în primele 7 zile, cât timp luna nu e închisă și are destule mișcări.
+  const [closedTick, setClosedTick] = useState(0);
+  useEffect(() => { const bump = () => setClosedTick((value) => value + 1); window.addEventListener("buget-familie:month-closed", bump); return () => window.removeEventListener("buget-familie:month-closed", bump); }, []);
+  const advisorMonth = useMemo(() => {
+    const today = isoToday();
+    if (Number(today.slice(8, 10)) > 7) return "";
+    const date = new Date(`${today.slice(0, 7)}-15T12:00:00Z`); date.setUTCMonth(date.getUTCMonth() - 1);
+    const key = date.toISOString().slice(0, 7);
+    if (readClosedMonths()[key]) return "";
+    return data.transactions.filter((item) => item.date.startsWith(key)).length >= 5 ? key : "";
+    // closedTick: după „Închide luna”, cardul dispare fără reîncărcare.
+  }, [data.transactions, closedTick]);
   const greeting = useMemo(() => dayGreeting(data, isoToday(), new Date().getHours()), [data]);
   const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0, intro ? 1100 : 480, intro ? 0 : undefined);
   const signals = useMemo(() => tickMemo([data], `signals:${isoToday()}`, () => advisorSignals(data)), [data]);
@@ -661,6 +673,10 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         </section>
       )}
       {data.settings.trip && <Suspense fallback={null}><TripTodayCard data={data} today={todayIso} /></Suspense>}
+      {advisorMonth && <button type="button" className="bf-challenge bf-trip-today" onClick={() => window.dispatchEvent(new Event("buget-familie:open-advisor"))}>
+        <span className="bf-challenge-icon" aria-hidden="true"><FileBarChart size={18} /></span>
+        <span><span className="bf-challenge-kicker">{t("RAPORTUL LUNII")}</span><b>{t("{month} e gata de citit.", { month: monthTitle(advisorMonth) })}</b><small>{t("Ce a mers, ce nu și trei lucruri de făcut luna asta.")}</small></span>
+      </button>}
       {nearPayday && <Suspense fallback={null}><MonthEndCard data={data} today={todayIso} onChange={onChange} /></Suspense>}
       {!simpleMode && <Suspense fallback={null}><MonthChallengeCard data={data} today={todayIso} /></Suspense>}
       <section className="bf-today-activity">

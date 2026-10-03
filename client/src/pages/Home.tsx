@@ -184,8 +184,12 @@ export default function Home() {
     window.addEventListener("buget-familie:open-shopping", openShopping);
     window.addEventListener("buget-familie:open-trip", openTrip);
     const openAfford = () => setAffordOpen(true);
+    const openAdvisor = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("advisor"); setView("utilities"); };
+    window.addEventListener("buget-familie:open-advisor", openAdvisor);
+    const openYearPlan = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("year-plan"); setView("utilities"); };
+    window.addEventListener("buget-familie:open-year-plan", openYearPlan);
     window.addEventListener("buget-familie:open-afford", openAfford);
-    return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-shopping", openShopping); window.removeEventListener("buget-familie:open-trip", openTrip); window.removeEventListener("buget-familie:open-afford", openAfford); };
+    return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-shopping", openShopping); window.removeEventListener("buget-familie:open-trip", openTrip); window.removeEventListener("buget-familie:open-afford", openAfford); window.removeEventListener("buget-familie:open-advisor", openAdvisor); window.removeEventListener("buget-familie:open-year-plan", openYearPlan); };
   }, []);
   useEffect(() => {
     const openEvents = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("events"); setView("utilities"); };
@@ -752,6 +756,6 @@ export default function Home() {
     {modal === "debt-payment" && editGoal && "remaining" in editGoal && <Suspense fallback={null}><DebtPaymentForm data={data} debt={editGoal} onSave={applyData} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {affordOpen && <Suspense fallback={null}><AffordSheet data={data} onClose={() => setAffordOpen(false)} onLog={() => { setAffordOpen(false); window.dispatchEvent(new Event("buget-familie:open-expense")); }} /></Suspense>}
     {celebrate && !modal && <Suspense fallback={null}><GoalCelebration goal={celebrate} onClose={() => { markCelebrated(window.localStorage, celebrate.id); setCelebrate(undefined); }} /></Suspense>}
-    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTrip={() => { dismissWhatsNew(); window.dispatchEvent(new Event("buget-familie:open-trip")); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
+    {whatsNewOpen && !onboardingOpen && !setupOpen && !firstWeekTourOpen && !modal && more !== "sync" && <WhatsNewSheet onClose={dismissWhatsNew} onOpenTrip={() => { dismissWhatsNew(); window.dispatchEvent(new Event("buget-familie:open-year-plan")); }} onOpenMore={() => { dismissWhatsNew(); setMore("overview"); go("utilities"); }} />}
   </div>;
 }
