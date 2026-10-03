@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.148
+
+- Nuanțele Sepia și Copil ajung și în Tutorial: cardul de sus și butonul activ („1 Astăzi”) nu mai sunt verde închis; eticheta de sus se citește pe fundalul nou.
+- Haloul din colțul de jos al fundalului „Lumină curată” e cald în Sepia (era albastru și apărea ca o fâșie deasupra barei de jos).
+- Mai mult: rândul cu versiunea, Confidențialitate, Termeni și Suport stă jos, aproape de bară.
+- Două reguli vechi, acoperite complet de cele noi, au ieșit (plafonul de CSS rămâne la 932 KB).
+
 ## 1.1.147
 
 - Tutorial: butoanele de la final („Reia turul”, „Reia configurarea casei”) nu mai stau lipite de marginea cardului.

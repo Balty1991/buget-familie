@@ -169,7 +169,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
           <button type="button" className="bf-settings-row" onClick={() => setTab("guide")}><BookOpen size={20} /><span className="bf-settings-copy"><b>{t("Tutorial")}</b><small>{t("cum notezi, cum citești cifra")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button><button type="button" className="bf-settings-row" onClick={() => setTab("feedback")}><MessageSquareWarning size={20} /><span className="bf-settings-copy"><b>{t("Spune-ne ce nu merge")}</b><small>{t("o problemă sau o idee, direct la noi")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
         </div>
       </section>
-      <footer style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px 14px", margin: "8px 0 0", color: "var(--cf-muted)", fontSize: 12 }}>
+      <footer style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "4px 14px", margin: "40px 0 -84px", color: "var(--cf-muted)", fontSize: 12 }}>
         <span style={FOOT_LINK}>{t("Buget Familie {version}", { version: APP_VERSION })}</span>
         <a href={publicLegalUrl(APP_PRIVACY_PATH)} target="_blank" rel="noreferrer" style={FOOT_LINK}>{t("Confidențialitate")}</a>
         <a href={publicLegalUrl(APP_TERMS_PATH)} target="_blank" rel="noreferrer" style={FOOT_LINK}>{t("Termeni")}</a>
