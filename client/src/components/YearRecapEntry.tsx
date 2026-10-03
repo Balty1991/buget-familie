@@ -28,6 +28,6 @@ export function YearRecapEntry({ data, seasonal = false }: { data: AppData; seas
       <span><b>{t("Anul vostru {year}", { year })}</b><small>{t("{days} zile notate · unde s-au dus banii · cea mai bună lună", { days: recap.loggedDays })}</small></span>
     </button>
     {seasonal && <button type="button" className="bf-year-cta-close" aria-label={t("Ascunde anul vostru")} onClick={hide}><X size={16} /></button>}
-    {open && <Suspense fallback={null}><YearRecapStory recap={recap} familyName={data.settings.familyName || t("Familia noastră")} onClose={() => setOpen(false)} /></Suspense>}
+    {open && <Suspense fallback={null}><YearRecapStory recap={recap} data={data} familyName={data.settings.familyName || t("Familia noastră")} onClose={() => setOpen(false)} /></Suspense>}
   </div>;
 }

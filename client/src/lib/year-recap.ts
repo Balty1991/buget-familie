@@ -32,8 +32,8 @@ export const recapReady = (recap: YearRecap) => recap.loggedDays >= 20 && recap.
 
 const round = (value: number) => Math.round(value * 100) / 100;
 /** „Lidl Discount 0123” și „lidl” sunt același loc. */
-const placeKey = (title: string) => title.trim().toLocaleLowerCase("ro-RO").replace(/\b(discount|srl|s\.?a\.?|romania|ro|magazin|supermarket|hypermarket)\b/g, " ").replace(/\d+/g, " ").replace(/\s+/g, " ").trim();
-const GENERIC = /^(cheltuial[ăa] rapid[ăa]|venit rapid|salariu|chirie|rat[ăa]|transfer)/i;
+export const placeKey = (title: string) => title.trim().toLocaleLowerCase("ro-RO").replace(/\b(discount|srl|s\.?a\.?|romania|ro|magazin|supermarket|hypermarket)\b/g, " ").replace(/\d+/g, " ").replace(/\s+/g, " ").trim();
+export const GENERIC = /^(cheltuial[ăa] rapid[ăa]|venit rapid|salariu|chirie|rat[ăa]|transfer)/i;
 
 export function yearRecap(items: ReadonlyArray<Move>, year: number, today: string): YearRecap {
   const prefix = `${year}-`;
