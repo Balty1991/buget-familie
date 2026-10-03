@@ -23,7 +23,7 @@ html.theme-navy { --bf-alert: #ff9c8c; }
 .bf-app h1,
 .os-shell h1 {
   font-family: var(--bf-font-display);
-  font-weight: 600;
+  font-weight: 640;
   letter-spacing: -0.03em;
 }
 html body .os-shell.bf-app .bf-page.bf-plan-workspace h1,
@@ -385,7 +385,7 @@ html.theme-navy {
   html body .os-shell .bf-page :is(.bf-movements-header, .bf-plan-studio-header, .bf-insights-header, .bf-upcoming-hero, .bf-topline) h1:not(.os-amount) {
     font-family: var(--bf-font-display, Fraunces, Georgia, serif) !important;
     font-size: 24px !important;
-    font-weight: 600 !important;
+    font-weight: 640 !important;
     line-height: 1.15 !important;
     letter-spacing: -.02em !important;
   }
@@ -408,7 +408,7 @@ html.theme-navy {
   }
   /* Descrierea temei („NOAPTE · OLED”): 9 px și 4,3:1 pe opțiunea aleasă din Navy. */
   html body .bf-theme-option em {
-    font-size: 11px !important;
+    font-size: 12px !important;
     color: inherit !important;
   }
   /* Pe bannerul verde al scadențelor, verdele temei nu se vede (1,1:1 pe Alb). */
