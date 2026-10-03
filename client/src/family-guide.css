@@ -4,7 +4,7 @@
 .bf-guide-hero { color: #f9f4e8; border: 0; }
 .bf-guide-hero > svg { color: #efc94d; }
 .bf-guide-hero .bf-kicker { color: #d4e3d9; }
-.bf-guide-hero h2 { margin: .3rem 0; color: #fffdf8; font:640 1.55rem/1.05 Fraunces, Georgia, serif; }
+.bf-guide-hero h2 { margin: .3rem 0; color: #fffdf8; font: 600 1.55rem/1.05 Fraunces, Georgia, serif; }
 .bf-guide-hero p { margin: 0; color: #dceae1; font-size: .84rem; line-height: 1.45; }
 .bf-guide-hero-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .85rem; }
 .bf-guide > section:not(.bf-guide-hero) { position: relative; padding-left: 1.15rem; overflow: hidden; scroll-margin-top: 12px; }
@@ -82,7 +82,7 @@
   color: var(--bf-forest, #123e35);
 }
 .bf-usage-step-visual b {
-  font:640 1.35rem/1 Fraunces, Georgia, serif;
+  font: 600 1.35rem/1 Fraunces, Georgia, serif;
   color: color-mix(in srgb, var(--bf-forest, #123e35) 55%, transparent);
 }
 .bf-usage-how {

@@ -1,6 +1,6 @@
 /* Atelierul Financiar — sursa reală și plicul de consum sunt pași separați, cu statut vizibil pe ecrane mici. */
 .bf-envelope-choice { display: grid; gap: 10px; margin: 3px 0 15px; padding: 14px; border: 1px solid #bfd2c6; border-radius:20px; background: linear-gradient(135deg, #f5faf6, #edf4ef); }
-.bf-envelope-choice h3 { margin: 2px 0 4px; color: #1e4d40; font:640 18px/1.1 "Fraunces", Georgia, serif; }
+.bf-envelope-choice h3 { margin: 2px 0 4px; color: #1e4d40; font: 600 18px/1.1 "Fraunces", Georgia, serif; }
 .bf-envelope-choice p:last-child, .bf-envelope-empty { margin: 0; color: #60776b; font-size:12px; line-height: 1.45; }
 .bf-envelope-choice .bf-field { gap: 5px; }
 .bf-envelope-choice select { background: #fffefa; }

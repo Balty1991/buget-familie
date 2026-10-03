@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.149
+
+- Codul revine exact la 1.1.148: cele 11 schimbări făcute direct pe main pe 03.10, între 20:50 și 21:29 (culori de temă în 31 de fișiere, „Mai mult” în trei grupuri, Analiză, traduceri într-un fișier separat, plafonul de CSS urcat la 933, iconul și sigla), sunt anulate la cererea proprietarului. Rămân în istoric (4d5f22c și cele dinainte), dacă vreuna trebuie recuperată.
+- Versiune nouă (versionCode 150), ca un AAB construit acum să treacă de cele urcate deja.
+
 ## 1.1.148
 
 - Nuanțele Sepia și Copil ajung și în Tutorial: cardul de sus și butonul activ („1 Astăzi”) nu mai sunt verde închis; eticheta de sus se citește pe fundalul nou.

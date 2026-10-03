@@ -15,7 +15,7 @@ type IncomeDraft = { id: string; who: "me" | "partner"; label: string; amount: s
 type NeedDraft = { label: string; category: string; cadence: "monthly" | "weekly"; priority: "fixed" | "flex" | "buffer"; amount: string; on: boolean };
 
 const START_NEEDS: NeedDraft[] = [
-  { label: "Alimente", category: "Alimente", cadence: "weekly", priority: "flex", amount: "", on: true },
+  { label: "Mâncare", category: "Alimente", cadence: "weekly", priority: "flex", amount: "", on: true },
   { label: "Chirie", category: "Casă & facturi", cadence: "monthly", priority: "fixed", amount: "", on: false },
   { label: "Rate bancă", category: "Credite", cadence: "monthly", priority: "fixed", amount: "", on: false },
   { label: "Lumină", category: "Casă & facturi", cadence: "monthly", priority: "fixed", amount: "", on: true },
@@ -32,9 +32,9 @@ const START_NEEDS: NeedDraft[] = [
  * pe care omul le corectează. Pornirea de la zero cerea 10 decizii înainte de primul rezultat.
  */
 const HOUSEHOLD_TEMPLATES: Array<{ id: string; label: string; amounts: Record<string, string> }> = [
-  { id: "single", label: "Singur", amounts: { "Alimente": "350", "Chirie": "1800", "Lumină": "150", "Abonamente": "80", "Taxi / transport": "200", "Neprevăzute": "200" } },
-  { id: "couple", label: "Cuplu", amounts: { "Alimente": "600", "Chirie": "2200", "Lumină": "250", "Gaz": "150", "Apă": "80", "Abonamente": "120", "Taxi / transport": "300", "Neprevăzute": "300" } },
-  { id: "kids", label: "Familie cu copii", amounts: { "Alimente": "900", "Rate bancă": "1400", "Lumină": "350", "Gaz": "200", "Apă": "120", "Abonamente": "150", "Grădiniță": "800", "Taxi / transport": "400", "Neprevăzute": "400" } },
+  { id: "single", label: "Singur", amounts: { "Mâncare": "350", "Chirie": "1800", "Lumină": "150", "Abonamente": "80", "Taxi / transport": "200", "Neprevăzute": "200" } },
+  { id: "couple", label: "Cuplu", amounts: { "Mâncare": "600", "Chirie": "2200", "Lumină": "250", "Gaz": "150", "Apă": "80", "Abonamente": "120", "Taxi / transport": "300", "Neprevăzute": "300" } },
+  { id: "kids", label: "Familie cu copii", amounts: { "Mâncare": "900", "Rate bancă": "1400", "Lumină": "350", "Gaz": "200", "Apă": "120", "Abonamente": "150", "Grădiniță": "800", "Taxi / transport": "400", "Neprevăzute": "400" } },
 ];
 
 /** Ziua următorului salariu: în luna asta, dacă n-a trecut, altfel luna viitoare. */
