@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.147
+
+- Tutorial: butoanele de la final („Reia turul”, „Reia configurarea casei”) nu mai stau lipite de marginea cardului.
+- Nuanțele Sepia și Copil ale temei Alb ajung și la bara de jos: fundalul ei și butonul activ erau verzi-gri, cu culorile scrise direct pentru Alb. Acum urmează nuanța (și culorile telefonului, pe Android 12+). Și fundalul de sub aplicație (#root) are culoarea nuanței.
+
 ## 1.1.146
 
 - Sfatul zilei despre abonamente, corect gramatical: „cele pe care nu le mai folosești sunt bani dați degeaba” (era „unul … e bani dați degeaba”).
