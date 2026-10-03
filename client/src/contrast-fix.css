@@ -1020,7 +1020,7 @@ html body .bf-os-day > span:first-child {
   width: min(420px, 100%);
   display: grid;
   gap: .75rem;
-  padding: 1.25rem;
+  padding: 1.25rem 1.25rem calc(1.25rem + var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)));
   border: 1px solid color-mix(in srgb, var(--cf-ink, #1a2420) 14%, transparent);
   border-radius: 1rem;
   background: var(--cf-surface, #fffdf7);
