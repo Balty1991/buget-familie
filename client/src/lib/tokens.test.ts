@@ -82,7 +82,8 @@ describe("plafonul de !important", () => {
     // 02.10 (4): 950, coșul estimat, fondul de urgență și modul vacanță (asistentul de final de lună refolosește cardul provocării).
     // 02.10 (5): 951, salutul și intrarea animată de pe Astăzi.
     // 03.10: 932, după 556 de declarații umbrite scoase (−19 KB) și cu graficele/tranzițiile noi (+1,5 KB).
-    expect(kb).toBeLessThanOrEqual(932);
+    // 03.10 (2): 933, tăietura Fraunces 640 și pickerul care nu coboară sub 12px.
+    expect(kb).toBeLessThanOrEqual(933);
   });
 
   it("calc() are spații în jurul lui + și -", () => {
