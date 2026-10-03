@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.144
+
+- „10 lei jucării” (scris sau spus) ajunge la **Consumabile copil**, nu la Alimente. Categoria se ghicea doar după magazin (Noriel, Smyk); acum și după lucrul cumpărat: jucării, Lego, păpușă, pluș, cărucior, suzete, hăinuțe, „pentru copii”.
+
 ## 1.1.143
 
 Notarea cu vocea în browser (Chrome pe Android, versiunea web):

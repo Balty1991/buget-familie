@@ -1919,7 +1919,8 @@ const categoryAliases: Array<[RegExp, string]> = [
   [/\b(abonament\w*|subscription|netflix|spotify|hbo|max|disney|youtube premium|icloud|google one|apple music)\b/, "Abonamente"],
   [/\b(film\w*|joc\w*|iesire|am iesit|in oras|concert\w*|timp liber|cinema|teatru|steam|playstation|xbox)\b/, "Timp liber"],
   // Magazinele mari care nu sunt de mâncare: „Decathlon 150” și un cadou mâncau săptămâna de mâncare.
-  [/\b(pepco|smyk|noriel|jumbo|scutec\w*|pampers|huggies|lapte praf|servetele umede|biberon\w*)\b/, "Consumabile copil"],
+  // Lucrurile copilului, spuse cu numele lor, nu doar cu magazinul: „10 lei jucării” nu e mâncare.
+  [/\b(pepco|smyk|noriel|jumbo|scutec\w*|pampers|huggies|lapte praf|servetele umede|biberon\w*|jucari\w*|jucarie|lego|papus\w*|plusu\w*|carucior\w*|suzet\w*|hainut\w*|body bebe|pentru (copil|copii|bebe|bebelus)|la copii)\b/, "Consumabile copil"],
   [/\b(dedeman|jysk|ikea|leroy|brico\w*|hornbach|mobexpert|praktiker)\b/, "Casă & facturi"],
   [/\b(decathlon|intersport|sportisimo|piscina|sala|fitness|carti|carturesti|elefant)\b/, "Timp liber"],
   [/\b(tigar|tutun|vape)\b/, "Altele"],
@@ -1961,7 +1962,7 @@ const FUZZY_WORDS: Array<[string, string]> = [
   ["alimente", "Alimente"], ["mancare", "Alimente"], ["cumparaturi", "Alimente"], ["kaufland", "Alimente"], ["carrefour", "Alimente"],
   ["factura", "Casă & facturi"], ["internet", "Casă & facturi"], ["intretinere", "Casă & facturi"],
   ["abonament", "Abonamente"], ["netflix", "Abonamente"], ["spotify", "Abonamente"],
-  ["scutece", "Consumabile copil"], ["pampers", "Consumabile copil"], ["meditatii", "Educație"], ["rechizite", "Educație"],
+  ["scutece", "Consumabile copil"], ["pampers", "Consumabile copil"], ["jucarii", "Consumabile copil"], ["jucarie", "Consumabile copil"], ["meditatii", "Educație"], ["rechizite", "Educație"],
   ["restaurant", "Alimente"], ["cinema", "Timp liber"], ["ciocolata", "Dulciuri"],
 ];
 
