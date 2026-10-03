@@ -1,4 +1,4 @@
-/**
+/*
  * Mișcări ca listă plată: o zi e un rând subțire de titlu, nu un cartonaș; fiecare mișcare e un
  * rând de ~60 px (8 pe ecran), fără cartonaș în cartonaș. Filtrele stau pe două rânduri, nu trei.
  */
@@ -166,7 +166,7 @@ html body .os-shell .bf-movements-ledger .bf-journal-quickbar > .bf-journal-sear
 html body .os-shell .bf-movements-ledger .bf-month-pulse{display:grid;gap:10px;margin:0 0 12px;padding:14px 16px;border:1px solid var(--cf-line,rgba(0,0,0,0.08));border-radius:20px;background:var(--cf-surface,#fff)}
 .bf-month-pulse-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
 .bf-month-pulse-head small{flex-basis:100%;color:var(--cf-muted);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
-.bf-month-pulse-head b{color:var(--cf-ink);font:600 26px/1.1 Fraunces,Georgia,serif;font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
+.bf-month-pulse-head b{color:var(--cf-ink);font:640 26px/1.1 Fraunces,Georgia,serif;font-variant-numeric:tabular-nums;letter-spacing:-0.03em}
 .bf-month-pulse-head span{color:var(--cf-muted);font-size:14px}
 .bf-month-pulse-head em{flex-basis:100%;color:var(--cf-primary);font-size:13px;font-style:normal;font-weight:600}
 .bf-month-pulse-head em.is-up{color:var(--cf-coral,#b5523b)}

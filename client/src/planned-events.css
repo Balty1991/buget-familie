@@ -3,7 +3,7 @@
 
 .bf-planned-hero { display: flex; align-items: flex-start; gap: 14px; padding: 22px; border: 1px solid var(--cf-line); border-radius:20px; background: linear-gradient(135deg, color-mix(in srgb, var(--cf-primary) 18%, var(--cf-surface)), var(--cf-surface)); color: var(--cf-ink); }
 .bf-planned-hero > svg { flex: 0 0 auto; color: var(--cf-warning); }
-.bf-planned-hero h2 { margin: 2px 0 0; color: var(--cf-ink); font: 600 25px/1.1 "Fraunces", Georgia, serif; letter-spacing: -.03em; }
+.bf-planned-hero h2 { margin: 2px 0 0; color: var(--cf-ink); font:640 25px/1.1 "Fraunces", Georgia, serif; letter-spacing: -.03em; }
 .bf-planned-hero p:last-child { margin: 8px 0 0; color: var(--cf-muted); font-size: 12px; line-height: 1.55; }
 
 .bf-planned-pressure { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }

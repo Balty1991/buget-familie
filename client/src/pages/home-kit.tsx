@@ -21,16 +21,16 @@ export const LIGHT_THEMES: ThemeId[] = ["white"];
 
 // Textele se citesc la afișare (getter), nu la încărcarea modulului: limba se alege după.
 export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: string }> = [
-  { id: "plain", get name() { return t("Lumină curată"); }, get detail() { return t("Halo-uri moi, fără grilă"); } },
+  { id: "plain", get name() { return t("Lumină curată"); }, get detail() { return t("Lumină moale, fără grilă"); } },
   { id: "paper", get name() { return t("Hârtie de registru"); }, get detail() { return t("Fibre calde, ca o coală"); } },
   { id: "grid", get name() { return t("Hartă discretă"); }, get detail() { return t("Grilă largă, aproape invizibilă"); } },
   { id: "aurora", get name() { return t("Auroră profundă"); }, get detail() { return t("Trei pete de lumină"); } },
   { id: "dots", get name() { return t("Ceață fină"); }, get detail() { return t("Puncte moi, adâncime"); } },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
-  { id: "white", get name() { return t("Alb"); }, get detail() { return t("Atelier Platinum — hârtie caldă, pin, citire de zi. Implicit."); }, get mood() { return t("ZI · PLATINUM"); } },
+  { id: "white", get name() { return t("Alb"); }, get detail() { return t("Hârtie caldă, verde de pădure, citire de zi. Implicit."); }, get mood() { return t("ZI · HÂRTIE"); } },
   { id: "dark", get name() { return t("Întunecat"); }, get detail() { return t("Noapte cu accent verde de pădure."); }, get mood() { return t("NOAPTE · VERDE"); } },
-  { id: "navy", get name() { return t("Navy"); }, get detail() { return t("Bleumarin profund, auriu discret. Cabinet modern."); }, get mood() { return t("NOAPTE · AURIU"); } },
+  { id: "navy", get name() { return t("Noapte aurie"); }, get detail() { return t("Bleumarin profund, auriu discret. Cabinet modern."); }, get mood() { return t("NOAPTE · AURIU"); } },
 ];
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };
