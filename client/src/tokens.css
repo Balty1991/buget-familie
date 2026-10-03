@@ -97,6 +97,8 @@ html.theme-white.bf-tint-sepia {
   --lu-line: #d9c9ae;
   --lu-accent: #6c441d;
   --lu-accent-fg: #fffaf2;
+  /* haloul de jos al fundalului: cald */
+  --cf-info: #8c6a3c;
 }
 html.theme-white.bf-tint-kid {
   --cf-bg: #e6f0fa;
@@ -136,9 +138,16 @@ html.theme-white.bf-tint-kid {
   --os-mint: var(--cf-primary);
   --os-mint-fg: var(--cf-on-forest);
   --os-line: var(--cf-line);
-  /* Bara de jos și butonul ei activ urmează nuanța, nu verdele temei Alb. */
+  /* bara de jos, în nuanță */
   --bf-dock-bg: color-mix(in srgb, var(--cf-surface) 65%, var(--cf-bg));
   --bf-dock-accent: var(--cf-primary-strong);
+  --bf-forest: var(--cf-primary-strong);
+}
+/* cardul de sus din Tutorial, în nuanță */
+html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) .os-shell .bf-guide-hero {
+  background: linear-gradient(135deg, var(--cf-primary-strong), color-mix(in srgb, var(--cf-primary-strong) 78%, #fff));
+  /* eticheta de sus citește --cf-primary */
+  --cf-primary: color-mix(in srgb, var(--cf-surface) 80%, var(--cf-primary-strong));
 }
 html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) #root,
 html.theme-white:is(.bf-tint-sepia, .bf-tint-kid) body,

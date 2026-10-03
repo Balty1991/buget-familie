@@ -3961,12 +3961,6 @@ html.theme-white .os-shell .os-dock {
 html.theme-white .os-shell .os-dock button {
   color: #4a5852;
 }
-html.theme-white .os-shell .os-dock button.is-on,
-html.theme-white .os-shell .os-dock button.active {
-  color: #176b54 !important;
-  background: color-mix(in srgb, #176b54 16%, #eef1ef) !important;
-  box-shadow: none !important;
-}
 
 @media (max-width: 430px) {
   .os-shell .os-dock {

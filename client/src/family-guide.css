@@ -1,7 +1,7 @@
 /* Atelierul Financiar: ghidul este o fișă de lucru familială, nu o pagină de ajutor generică. */
 .bf-guide { display: grid; gap: .75rem; }
 .bf-guide-hero, .bf-guide > section:not(.bf-guide-hero), .bf-sync-session { padding: 1rem; border: 1px solid color-mix(in srgb, var(--bf-forest, #123e35) 14%, transparent); border-radius: 1rem; background: color-mix(in srgb, var(--bf-paper, #fffdf8) 93%, #e6f0e9); }
-.bf-guide-hero { color: #f9f4e8; background: linear-gradient(135deg, #123e35, #246551); border: 0; }
+.bf-guide-hero { color: #f9f4e8; border: 0; }
 .bf-guide-hero > svg { color: #efc94d; }
 .bf-guide-hero .bf-kicker { color: #d4e3d9; }
 .bf-guide-hero h2 { margin: .3rem 0; color: #fffdf8; font: 600 1.55rem/1.05 Fraunces, Georgia, serif; }
