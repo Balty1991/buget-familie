@@ -152,7 +152,8 @@
 /* Bara de anulare: stă deasupra navigației, nu peste conținut. */
 .bf-undo-bar {
   position: fixed; left: 50%; transform: translateX(-50%); z-index: 60;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 76px);
+  /* APK: env() e 0, bara vine în --os-inset-bottom */
+  bottom: calc(var(--os-inset-bottom, env(safe-area-inset-bottom, 0px)) + 76px);
   width: min(560px, calc(100vw - 32px));
   display: flex; align-items: center; gap: 10px;
   padding: 10px 10px 10px 16px; border-radius:20px;

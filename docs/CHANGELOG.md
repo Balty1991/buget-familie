@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.150
+
+În aplicația Android (APK/AAB):
+- „Ești sigur?” (ștergere, confirmări): butoanele nu mai intră sub bara de navigare a telefonului; panoul are dedesubt spațiul barei.
+- „Notat · … Anulează” apare deasupra barei de jos a aplicației, nu sub ea. Poziția folosea `env(safe-area-inset-bottom)`, care în WebView-ul Android e 0; acum folosește înălțimea barei trimisă de aplicație, ca restul ecranelor.
+- Au ieșit regulile vechi ale panoului de încărcare, acoperite complet de scheletul nou (plafonul de CSS rămâne la 932 KB).
+
 ## 1.1.149
 
 - Codul revine exact la 1.1.148: cele 11 schimbări făcute direct pe main pe 03.10, între 20:50 și 21:29 (culori de temă în 31 de fișiere, „Mai mult” în trei grupuri, Analiză, traduceri într-un fișier separat, plafonul de CSS urcat la 933, iconul și sigla), sunt anulate la cererea proprietarului. Rămân în istoric (4d5f22c și cele dinainte), dacă vreuna trebuie recuperată.

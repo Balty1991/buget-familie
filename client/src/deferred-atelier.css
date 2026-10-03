@@ -51,7 +51,7 @@
 /* ── sfârșit atelier-review-pass.css ── */
 /* ── fost personal-dashboard.css ── */
 /* Atelierul Financiar — tablou de decizie neutru, contemporan și rapid pentru o persoană sau o gospodărie. */
-.bf-lazy-panel{padding:1.2rem;border:1px dashed rgba(20,60,54,.25);border-radius:20px;color:#63756e;background:repeating-linear-gradient(0deg,#fffdf8 0 30px,#f6f1e6 30px 31px);font-weight:600}.dark .bf-lazy-panel{border-color:rgba(198,232,213,.25);color:#c9d9d0;background:repeating-linear-gradient(0deg,#102d27 0 30px,#0d261f 30px 31px)}
+.bf-lazy-panel{font-weight:600}
 /* ── sfârșit personal-dashboard.css ── */
 /* ── fost atelier-semantic-pass.css ── */
 /* Atelierul Financiar — măsurare funcțională, semantica strictă verde/miere/coral și monogramă B/F vizibilă la dimensiuni mici. */.bf-topline .bf-primary{background:#143c36!important;color:#fff!important;border-color:#143c36!important;box-shadow:var(--bf-shadow-rest) !important}.dark .bf-topline .bf-primary{background:#236a59!important;border-color:#236a59!important}
