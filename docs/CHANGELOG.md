@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.151
+
+Sync familie:
+- Banda „Sincronizarea familiei e oprită… Reconectează” stă sub bara de stare Android; butonul se poate apăsa.
+- Un telefon scos din cameră (revocat) intră din nou cu invitația, la „Am primit o invitație”. Înainte era refuzat și cu invitația.
+- Telefoanele din cameră apar ca „Aplicația pe Android”, „Browser pe Android”, „Browser pe iPhone” sau „Browser pe calculator”, nu toate „Android”. Eticheta se actualizează la următoarea conectare.
+- Linkul de invitație deschis în browserul de pe Android arată sus butonul mare „Deschide în aplicație”, care pornește aplicația cu invitația.
+
 ## 1.1.150
 
 În aplicația Android (APK/AAB):

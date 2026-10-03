@@ -14,7 +14,7 @@ export const en: Record<string, string> = {
   "Rezolvat": "Resolved",
   "Conflict de sumă după sync": "Amount conflict after sync",
   "Acest telefon a fost revocat din cameră. Schimbă parola pe celelalte telefoane dacă e nevoie.": "This phone was revoked from the room. Change the password on the remaining phones if needed.",
-  "Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare, sau cere o invitație nouă.": "This phone was revoked from the room. On a phone still in the family, tap Restore, or ask for a new invitation.",
+  "Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivează, sau intră din nou cu invitația la „Am primit o invitație”.": "This phone was revoked from the room. On a phone still in the family, tap Restore, or join again with the invitation under “I got an invitation”.",
   "Ieși din cameră pe acest telefon. Ca să revii, un alt telefon trebuie să te reactiveze sau să-ți trimită o invitație nouă.": "You will leave the room on this phone. To come back, another phone must restore it or send you a new invitation.",
   "Ai revocat acest telefon. Sesiunea s-a închis.": "You revoked this phone. The session was closed.",
   "Dispozitivul a fost marcat ca revocat. Se propagă la următoarea sincronizare.": "The device was marked revoked. It propagates on the next sync.",
@@ -4453,4 +4453,5 @@ export const en: Record<string, string> = {
   "Fondul de urgență nu se vede până nu ai nevoie de el. Atunci contează.": "You don't notice an emergency fund until you need it. Then it matters.",
   "O zi pe săptămână fără cheltuieli lasă mereu ceva în plic.": "One no-spend day a week always leaves something in the envelope.",
   "Cu lista de cumpărături ieși din magazin doar cu ce ai venit să iei.": "With a shopping list you leave the store with only what you came for.",
+  "Ai aplicația instalată? Intră din ea, nu din browser: altfel familia vede două telefoane.": "Have the app installed? Join from it, not the browser — otherwise the family sees two phones.",
 };

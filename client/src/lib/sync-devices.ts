@@ -22,9 +22,11 @@ export function getOrCreateDeviceId(): string {
 export function defaultDeviceLabel(): string {
   if (typeof navigator === "undefined") return "Telefon";
   const ua = navigator.userAgent || "";
-  if (/Android/i.test(ua)) return "Android";
-  if (/iPhone|iPad/i.test(ua)) return "iPhone";
-  return "Acest telefon";
+  // Aplicația și browserul de pe același telefon apar separat: altfel nu știi pe care îl scoți.
+  const app = typeof window !== "undefined" && Boolean((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.());
+  if (/Android/i.test(ua)) return app ? "Aplicația pe Android" : "Browser pe Android";
+  if (/iPhone|iPad/i.test(ua)) return "Browser pe iPhone";
+  return "Browser pe calculator";
 }
 
 export function touchSyncDevice(data: AppData, label = defaultDeviceLabel()): AppData {

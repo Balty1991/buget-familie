@@ -308,13 +308,15 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         </div>
         <div className={`bf-sync-start${inviteDraft ? " is-offered" : ""}`}>
           <p><b>{t("Am primit o invitație")}</b><br />{t("Lipește mesajul sau linkul primit de la partener.")}</p>
+          {/* Linkul din WhatsApp se deschide în browser: de aici, o atingere duce invitația în aplicație. */}
+          {parseInvite(inviteDraft) && !isNativeApp() && typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent) && <>
+            <a className="bf-primary full bf-open-in-app" href={androidInviteIntent(inviteDraft)}><Smartphone size={17} /> {t("Deschide în aplicație")}</a>
+            <p className="bf-helper">{t("Ai aplicația instalată? Intră din ea, nu din browser: altfel familia vede două telefoane.")}</p>
+          </>}
           <Field label={t("Invitația")}>
             <textarea value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} rows={3} placeholder={t("Lipește invitația aici")} autoComplete="off" spellCheck={false} />
           </Field>
           <button className="bf-primary full" disabled={busy || !online || !parseInvite(inviteDraft)} onClick={() => onJoinInvite(inviteDraft)}><Users size={17} /> {t("Intră în familie")}</button>
-          {parseInvite(inviteDraft) && !isNativeApp() && typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent) && (
-            <a className="bf-secondary full bf-open-in-app" href={androidInviteIntent(inviteDraft)}>{t("Deschide în aplicație")}</a>
-          )}
           {!online && <p className="bf-helper" role="note">{t("Fără internet nu se poate intra în familie. Butonul pornește singur când revine conexiunea.")}</p>}
           {inviteDraft.trim() && !parseInvite(inviteDraft) && <p className="bf-form-error">{t("Codul nu arată ca o invitație. Lipește tot mesajul primit sau tot linkul.")}</p>}
         </div>

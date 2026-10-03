@@ -253,7 +253,7 @@ export function useFamilySync(
       if (isThisDeviceRevoked(merged)) {
         setData(merged);
         syncDisconnect();
-        setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare, sau cere o invitație nouă."));
+        setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivează, sau intră din nou cu invitația la „Am primit o invitație”."));
         return;
       }
       if (!localPending) syncLastPortableRef.current = mergedPortable;
@@ -313,11 +313,13 @@ export function useFamilySync(
         writeSyncBase(roomId, crypto.syncBaseOf(remoteData));
       }
       if (!prepared) {
+        // Cine intră cu invitația are oricum cheia: un telefon revocat se poate întoarce așa.
+        if (options.mode !== "resume" && isThisDeviceRevoked(merged)) merged = restoreSyncDevice(merged, getOrCreateDeviceId());
         if (isThisDeviceRevoked(merged)) {
           setData(merged);
           await clearFamilySession();
           setSyncHasSession(false);
-          setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivare, sau cere o invitație nouă."));
+          setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivează, sau intră din nou cu invitația la „Am primit o invitație”."));
           return false;
         }
         merged = touchSyncDevice(merged);
