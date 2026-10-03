@@ -9,7 +9,7 @@ import { t } from "@/lib/i18n";
 import { dynamicColorSupported, readDynamicColor, saveDynamicColor } from "@/lib/native-feel";
 
 export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, background, onChange, onScheduleChange, onScheduleTimesChange, onContrastChange, onBackgroundChange, onClose }: { theme: ThemeId; schedule: ThemeSchedule; scheduleTimes: ThemeScheduleTimes; highContrast: boolean; background: BackgroundId; onChange: (theme: ThemeId) => void; onScheduleChange: (schedule: ThemeSchedule) => void; onScheduleTimesChange: (times: ThemeScheduleTimes) => void; onContrastChange: (active: boolean) => void; onBackgroundChange: (background: BackgroundId) => void; onClose: () => void }) {
-    const [preview, setPreview] = useState<ThemeId>(theme);
+  const [preview, setPreview] = useState<ThemeId>(theme);
   const [previewBackground, setPreviewBackground] = useState<BackgroundId>(background);
   const [tint, setTint] = useState<ThemeTint>(() => readTint());
   // Culorile telefonului: doar pe Android 12+, unde sistemul le dă din imaginea de fundal.
@@ -125,7 +125,7 @@ export function ThemePicker({ theme, schedule, scheduleTimes, highContrast, back
           <button type="button" className={schedule === "auto" ? "active" : ""} role="switch" aria-checked={schedule === "auto"} onClick={toggleSchedule}>
             <span>
               <b>{t("Comută automat zi/noapte")}</b>
-              <small>{schedule === "auto" ? t("Activ acum: {theme}. Zi {day}–{evening} · seară {evening}–{night} · noapte {night}–{day}.", { theme: t(themeOptions.find((item) => item.id === automaticTheme(currentLocalMinutes(), scheduleTimes))?.name || "tema automată"), day: scheduleTimes.dayStart, evening: scheduleTimes.eveningStart, night: scheduleTimes.nightStart }) : t("Folosește Alb ziua, Noapte aurie seara și Întunecat cu verde noaptea.")}</small>
+              <small>{schedule === "auto" ? t("Activ acum: {theme}. Zi {day}–{evening} · seară {evening}–{night} · noapte {night}–{day}.", { theme: t(themeOptions.find((item) => item.id === automaticTheme(currentLocalMinutes(), scheduleTimes))?.name || "tema automată"), day: scheduleTimes.dayStart, evening: scheduleTimes.eveningStart, night: scheduleTimes.nightStart }) : t("Folosește Alb ziua, Navy seara și Întunecat cu verde noaptea.")}</small>
             </span>
             <i aria-hidden="true" />
           </button>

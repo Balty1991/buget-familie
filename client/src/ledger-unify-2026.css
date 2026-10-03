@@ -171,7 +171,7 @@ html.theme-navy .os-shell .os-dock button.is-on {
 }
 .bf-theme-option em {
   display: block;
-  font: 600 12px/1 "IBM Plex Sans", system-ui, sans-serif;
+  font: 600 9px/1 "IBM Plex Sans", system-ui, sans-serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--lu-muted, #6d7f75);

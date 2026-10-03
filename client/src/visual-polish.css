@@ -1087,38 +1087,3 @@ html[data-simple-mode="1"] .os-shell .os-dock button.is-on::after {
   padding-bottom: calc(14px + var(--os-inset-bottom, 0px));
 }
 
-
-/* Titlurile Fraunces cer tăietura 640, nu 600 sintetizat. Pickerul nu coboară sub 12px. */
-.bf-topline h1,
-.bf-section-heading h2,
-.bf-empty-state h2,
-.bf-danger h2,
-.bf-sync-hero h2,
-.bf-modal h2,
-.bf-advisor-hero h2,
-.bf-page h1,
-.bf-command-palette h2,
-.bf-onboarding-copy h2,
-.bf-goals-header h1,
-.bf-goals-overview strong,
-.bf-goals-overview-stats b,
-.bf-goal-card-top > strong,
-.bf-goals-empty h2,
-.bf-scenario-heading h2,
-.bf-scenario-result strong,
-.bf-habits-header h1,
-.bf-habits-pulse b,
-.bf-habits-guidance h2,
-.bf-calendar-header h1,
-.bf-calendar-toolbar strong,
-.bf-allocation-period-heading h2,
-.bf-allocation-period-heading > span,
-.bf-allocation-preview h3,
-.bf-monthly-wizard-head h2,
-.bf-wizard-step h3 {
-  font-weight: 640 !important;
-}
-.bf-theme-option em,
-.bf-theme-option small {
-  font-size: 12px !important;
-}

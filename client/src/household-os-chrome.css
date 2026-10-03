@@ -1661,9 +1661,9 @@ html[data-simple-mode="1"] .os-dock button {
 .bf-first-run-demo small { display: block; margin-top: 2px; color: var(--cf-muted); font-size: 13px; line-height: 1.4; }
 
 .bf-year-cta{position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;border-radius:20px;background:linear-gradient(135deg,#0b3a30,#1d7a5f);color:#fff;text-align:left}
-.bf-year-cta b{display:block;font:640 18px/1.2 Fraunces,Georgia,serif}
+.bf-year-cta b{display:block;font:600 18px/1.2 Fraunces,Georgia,serif}
 .bf-year-cta small{display:block;color:rgba(255,255,255,0.82);font-size:13px}
-.bf-year-cta > span:first-child{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,0.16);font:640 15px Fraunces,Georgia,serif}
+.bf-year-cta > span:first-child{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,0.16);font:600 15px Fraunces,Georgia,serif}
 .bf-year-cta-wrap{position:relative}
 .bf-year-cta-wrap > .bf-year-cta-close{position:absolute;top:8px;right:8px;display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,0.16);color:#fff}
 

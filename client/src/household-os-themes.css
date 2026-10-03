@@ -156,6 +156,7 @@ html.theme-white .os-tool.is-on {
   box-shadow:var(--bf-shadow-rest);
 }
 
+/* Dock: frosted warm platinum, active = pin — distinct de look-ul stark negru */
 html.theme-white .os-shell .os-dock {
   left: 0;
   right: 0;
@@ -173,7 +174,12 @@ html.theme-white .os-shell .os-dock button {
   letter-spacing: 0.01em;
   border-radius: 999px;
 }
-html.theme-white .os-shell .os-dock button.is-on,html.theme-white .os-shell .os-dock button.active{color:var(--bf-dock-accent,#176b54)!important;background:color-mix(in srgb,var(--bf-dock-accent,#176b54) 16%,var(--bf-dock-bg,#eef1ef))!important;box-shadow:none!important}
+html.theme-white .os-shell .os-dock button.is-on,
+html.theme-white .os-shell .os-dock button.active {
+  color: #ffffff !important;
+  background: #2f6b55 !important;
+  box-shadow:var(--bf-shadow-rest) !important;
+}
 html.theme-white .os-shell .os-dock button svg {
   width: 18px;
   height: 18px;

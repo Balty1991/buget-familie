@@ -7,7 +7,7 @@
 .bf-pocket-hero{padding:22px 18px!important;border:1px solid var(--cf-line)!important;border-left:4px solid var(--cf-primary-strong)!important;border-radius:20px !important;background:var(--cf-surface)!important}
 .bf-pocket-hero.watch{border-left-color:#c58a1f!important}
 .bf-pocket-hero.over{border-left-color:#b4553f!important}
-.bf-pocket-hero h2{margin:6px 0 0!important;color:var(--cf-ink)!important;font:640 clamp(38px,12vw,54px)/1 "Fraunces",Georgia,serif!important;letter-spacing:-.05em!important}
+.bf-pocket-hero h2{margin:6px 0 0!important;color:var(--cf-ink)!important;font:600 clamp(38px,12vw,54px)/1 "Fraunces",Georgia,serif!important;letter-spacing:-.05em!important}
 .bf-pocket-line{margin:8px 0 0!important;color:var(--cf-ink)!important;font:600 13px/1.5 "IBM Plex Sans",sans-serif!important}
 .bf-pocket-bar{height:9px!important;margin:14px 0 0!important;overflow:hidden!important;border-radius:99px!important;background:var(--cf-surface-alt)!important}
 .bf-pocket-bar i{display:block!important;height:100%!important;border-radius:inherit!important;background:var(--cf-primary-strong)!important}
