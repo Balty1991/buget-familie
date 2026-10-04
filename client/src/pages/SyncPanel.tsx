@@ -317,6 +317,8 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <textarea value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} rows={3} placeholder={t("Lipește invitația aici")} autoComplete="off" spellCheck={false} />
           </Field>
           <button className="bf-primary full" disabled={busy || !online || !parseInvite(inviteDraft)} onClick={() => onJoinInvite(inviteDraft)}><Users size={17} /> {t("Intră în familie")}</button>
+          {/* Răspunsul apare lângă buton: mai jos, sub istoric, nu se vedea și părea că nu se întâmplă nimic. */}
+          {notice && !busy && <p className="bf-notice" role="status">{notice}</p>}
           {!online && <p className="bf-helper" role="note">{t("Fără internet nu se poate intra în familie. Butonul pornește singur când revine conexiunea.")}</p>}
           {inviteDraft.trim() && !parseInvite(inviteDraft) && <p className="bf-form-error">{t("Codul nu arată ca o invitație. Lipește tot mesajul primit sau tot linkul.")}</p>}
         </div>
@@ -394,7 +396,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
     )}
 
     {lastSync && <p className="bf-helper">Ultima actualizare: {new Intl.DateTimeFormat(getLocale(), { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(lastSync))}</p>}
-    {notice && <p className="bf-notice" role="status"><Check size={15} /> {notice}</p>}
+    {notice && connected && <p className="bf-notice" role="status"><Check size={15} /> {notice}</p>}
     <section className="bf-sync-journal" aria-labelledby="sync-journal-title">
       <div className="bf-sync-journal-heading">
         <div>
