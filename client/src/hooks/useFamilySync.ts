@@ -305,6 +305,8 @@ export function useFamilySync(
         openBase = readSyncBase(roomId);
         if (remoteData.settings.syncRoomMovedAt) {
           syncStopMovedRoom();
+          // Invitația veche, după „Mută familia”: spunem limpede ce se poate face.
+          if (options.mode === "join") setSyncNotice(t("Invitația aceasta e veche: camera ei a fost închisă când familia s-a mutat. Cere invitația nouă de pe telefonul încă conectat. Dacă niciun telefon nu mai e conectat, apasă „Creează camera” aici: datele de pe acest telefon rămân, iar celălalt telefon intră cu invitația nouă și își unește datele."));
           return false;
         }
         const own = claimOwnMember(merged, remoteData, getOrCreateDeviceId());

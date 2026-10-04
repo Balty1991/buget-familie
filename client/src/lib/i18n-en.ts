@@ -4454,4 +4454,5 @@ export const en: Record<string, string> = {
   "O zi pe săptămână fără cheltuieli lasă mereu ceva în plic.": "One no-spend day a week always leaves something in the envelope.",
   "Cu lista de cumpărături ieși din magazin doar cu ce ai venit să iei.": "With a shopping list you leave the store with only what you came for.",
   "Ai aplicația instalată? Intră din ea, nu din browser: altfel familia vede două telefoane.": "Have the app installed? Join from it, not the browser — otherwise the family sees two phones.",
+  "Invitația aceasta e veche: camera ei a fost închisă când familia s-a mutat. Cere invitația nouă de pe telefonul încă conectat. Dacă niciun telefon nu mai e conectat, apasă „Creează camera” aici: datele de pe acest telefon rămân, iar celălalt telefon intră cu invitația nouă și își unește datele.": "This invitation is old: its room was closed when the family moved. Ask for the new invitation from the phone that is still connected. If no phone is connected anymore, tap “Create room” here: the data on this phone stays, and the other phone joins with the new invitation and merges its data.",
 };

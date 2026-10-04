@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.152
+
+- Sync: răspunsul la „Intră în familie” (eroare sau motiv) apare chiar sub buton. Înainte era jos, sub istoric, și părea că nu se întâmplă nimic.
+- O invitație veche, a unei camere închise la „Mută familia”, spune limpede ce e de făcut: invitația nouă de pe telefonul conectat sau, dacă nu mai e niciunul, „Creează camera” (datele rămân pe telefon).
+
 ## 1.1.151
 
 Sync familie:
