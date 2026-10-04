@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.153
+
+Sync familie — administratorul camerei:
+- Telefonul care creează camera e administratorul. Doar el trimite invitații, scoate și reactivează telefoane și schimbă invitația; ceilalți văd cine e administratorul.
+- Camerele de dinainte primesc ca administrator primul telefon care se conectează după actualizare.
+- Administratorul poate da rolul altui telefon („Fă-l administrator”). Cine intră cu codul de recuperare devine administrator (pentru telefonul pierdut).
+- O cameră nouă pornește cu lista de telefoane goală, fără telefoanele vechi.
+
 ## 1.1.152
 
 - Sync: răspunsul la „Intră în familie” (eroare sau motiv) apare chiar sub buton. Înainte era jos, sub istoric, și părea că nu se întâmplă nimic.

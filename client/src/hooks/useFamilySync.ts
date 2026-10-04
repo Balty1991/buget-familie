@@ -9,7 +9,7 @@ import { Capacitor } from "@capacitor/core";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createEmptyAppData, isoToday, newId, type AppData } from "@/lib/finance-data";
 import { checkFamilyPassword, legacyPasswordClosed } from "@/lib/family-password";
-import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId } from "@/lib/sync-devices";
+import { touchSyncDevice, revokeSyncDevice, restoreSyncDevice, isThisDeviceRevoked, listSyncDevices, getOrCreateDeviceId, claimSyncAdmin, isSyncAdmin } from "@/lib/sync-devices";
 import { readSyncJournal, writeSyncJournal, type SyncJournalEntry } from "@/lib/app-storage";
 import type { EncryptedEnvelope, FamilySecret, SyncBase } from "@/lib/family-crypto";
 import { clearFamilySession, loadFamilySession, saveFamilySession } from "@/lib/family-session";
@@ -94,6 +94,8 @@ export function useFamilySync(
   const [syncJournal, setSyncJournal] = useState<SyncJournalEntry[]>(readSyncJournal);
 
   const syncDataRef = useRef(data);
+  /** Intrarea cu codul de recuperare face telefonul administrator (cel vechi s-a pierdut). */
+  const syncClaimAdminRef = useRef(false);
   syncDataRef.current = data;
   const syncPasswordRef = useRef(syncPassword);
   syncPasswordRef.current = syncPassword;
@@ -179,6 +181,7 @@ export function useFamilySync(
       if (parseInvite(password)) {
         // Camerele cu invitație păstrează codul invitației în spatele codului de recuperare.
         setSyncInviteDraft(password);
+        syncClaimAdminRef.current = true;
         setSyncNotice(t("Am găsit invitația familiei. Apasă „Intră în familie”."));
         return;
       }
@@ -324,7 +327,14 @@ export function useFamilySync(
           setSyncNotice(t("Acest telefon a fost revocat din cameră. Pe un telefon rămas în familie, apasă Reactivează, sau intră din nou cu invitația la „Am primit o invitație”."));
           return false;
         }
+        // O cameră nouă pornește cu lista goală: telefoanele vechi nu au cheia ei.
+        if (options.mode === "create") merged = { ...merged, settings: { ...merged.settings, syncDevices: [] } };
         merged = touchSyncDevice(merged);
+        // Cine creează camera e administratorul; camerele de dinainte îl primesc pe primul conectat.
+        if (options.mode === "create" || !merged.settings.syncAdminDeviceId || (options.mode === "join" && syncClaimAdminRef.current)) {
+          merged = claimSyncAdmin(merged);
+          syncClaimAdminRef.current = false;
+        }
         // Codul de recuperare încuie parola (camere vechi) sau codul invitației (camere noi).
         const recoverable = options.invite || options.password;
         recovery = recoverable ? await issueRecoveryIfNeeded(merged, recoverable, options.mode === "create") : { data: merged };
@@ -620,7 +630,15 @@ export function useFamilySync(
     setInviteDraft: setSyncInviteDraft,
     onCreateRoom: () => void syncCreateRoom(),
     onJoinInvite: (raw: string) => void syncJoinInvite(raw),
-    onMoveToInvite: () => void syncMoveToInvite(),
+    onMoveToInvite: () => { if (isSyncAdmin(data)) void syncMoveToInvite(); },
+    isAdmin: isSyncAdmin(data),
+    adminDeviceId: data.settings.syncAdminDeviceId,
+    onMakeAdmin: async (deviceId: string) => {
+      if (!isSyncAdmin(data)) return;
+      if (!(await askConfirm(t("Celălalt telefon devine administrator: doar el va trimite invitații și va scoate telefoane. Tu nu mai poți face asta până nu îți dă rolul înapoi."), { title: t("Schimbi administratorul?"), confirmLabel: t("Da, schimbă") }))) return;
+      setData((current) => claimSyncAdmin(current, deviceId));
+      setSyncNotice(t("Administratorul s-a schimbat. Se propagă la următoarea sincronizare."));
+    },
     members: data.settings.members,
     selfMemberId: selfMemberIdOf(data),
     needsSelfChoice: needsSelfChoice(data),
@@ -679,6 +697,7 @@ export function useFamilySync(
       writeSyncJournal([]);
     },
     onRevokeDevice: async (deviceId: string) => {
+      if (!isSyncAdmin(data)) return;
       if (deviceId === getOrCreateDeviceId()) {
         const confirmed = await askConfirm(
           t("Ieși din cameră pe acest telefon. Ca să revii, un alt telefon trebuie să te reactiveze sau să-ți trimită o invitație nouă."),
@@ -697,6 +716,7 @@ export function useFamilySync(
       }
     },
     onRestoreDevice: (deviceId: string) => {
+      if (!isSyncAdmin(data)) return;
       const next = restoreSyncDevice(data, deviceId);
       setData(next);
       setSyncNotice(t("Dispozitivul poate intra din nou. Se propagă la următoarea sincronizare."));

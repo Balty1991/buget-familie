@@ -717,6 +717,11 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       // Cine folosește telefonul e o alegere locală; pachetul altui telefon nu o schimbă.
       selfMemberId: local.settings.selfMemberId,
       syncRoomMovedAt: undefined,
+      // Administratorul: câștigă alegerea mai nouă.
+      ...(() => {
+        const pick = (Date.parse(local.settings.syncAdminSetAt || "") || 0) >= (Date.parse(remote.settings.syncAdminSetAt || "") || 0) ? local.settings : remote.settings;
+        return pick.syncAdminDeviceId ? { syncAdminDeviceId: pick.syncAdminDeviceId, syncAdminSetAt: pick.syncAdminSetAt } : {};
+      })(),
       // Fusul familiei: câștigă alegerea făcută mai recent de mână; altfel cel al camerei,
       // ca un telefon nou să preia ziua familiei, nu pe a lui.
       ...(() => {
