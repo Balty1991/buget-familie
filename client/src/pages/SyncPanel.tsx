@@ -106,7 +106,7 @@ function SelfMemberPicker({ members, selfMemberId, needsChoice, onChoose, onAdd 
   );
 }
 
-export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, invite, inviteRoom, inviteDraft, setInviteDraft, onCreateRoom, onJoinInvite, onMoveToInvite, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, isAdmin, adminDeviceId, onMakeAdmin, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, invite, inviteRoom, inviteDraft, setInviteDraft, onCreateRoom, onJoinInvite, onMoveToInvite, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -208,7 +208,12 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
       {connected ? <>
         <p><b>{t("Actualizare live, fără reîmprospătare manuală")}</b><br />{t("Cât aplicația rămâne deschisă pe orice telefon din familie, mișcările apar automat pe toate celelalte în câteva secunde.")}</p>
         {sessionRemembered && <p className="bf-helper">{invite ? t("Telefonul se reconectează singur când redeschizi aplicația.") : t("Telefonul se reconectează singur când redeschizi aplicația. Parola nu e păstrată, doar o cheie făcută din ea.")}</p>}
-        {invite ? (
+        {!isAdmin ? (
+          <div className="bf-sync-invite" role="note">
+            <p className="bf-kicker">{t("INVITĂ UN TELEFON")}</p>
+            <p>{t("Invitațiile le trimite administratorul camerei: {device}. Tot el poate scoate sau reactiva un telefon.", { device: devices.find((device) => device.id === adminDeviceId)?.label || t("telefonul care a creat camera") })}</p>
+          </div>
+        ) : invite ? (
           <div className="bf-sync-invite">
             <p className="bf-kicker">{t("INVITĂ UN TELEFON")}</p>
             <p>{t("Trimite invitația partenerului. Pe telefonul lui: Sync → „Am primit o invitație” → lipește mesajul.")}</p>
@@ -366,25 +371,30 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <h3 id="sync-devices-title">{t("Telefoane în cameră")}</h3>
           </div>
         </div>
-        <p className="bf-helper">{t("Revocarea scoate sesiunea de pe acel telefon. Dacă un telefon e pierdut, revocă-l aici, apoi mutați familia într-o cameră nouă („Mută familia”): invitația veche nu mai deschide nimic.")}</p>
+        {isAdmin && <p className="bf-helper">{t("Revocarea scoate sesiunea de pe acel telefon. Dacă un telefon e pierdut, revocă-l aici, apoi mutați familia într-o cameră nouă („Mută familia”): invitația veche nu mai deschide nimic.")}</p>}
         {devices.length ? (
           <ul className="bf-sync-device-list">
             {devices.map((device) => (
               <li key={device.id} className={device.revokedAt ? "is-revoked" : undefined}>
                 <Smartphone size={16} aria-hidden="true" />
                 <div>
-                  <b>{device.label}{device.id === thisDeviceId ? ` · ${t("acest telefon")}` : ""}{device.revokedAt ? ` · ${t("revocat")}` : ""}</b>
+                  <b>{device.label}{device.id === thisDeviceId ? ` · ${t("acest telefon")}` : ""}{device.id === adminDeviceId ? ` · ${t("administrator")}` : ""}{device.revokedAt ? ` · ${t("revocat")}` : ""}</b>
                   <small>{t("Ultima dată văzut")}: {new Intl.DateTimeFormat(getLocale(), { dateStyle: "short", timeStyle: "short" }).format(new Date(device.lastSeenAt))}</small>
                 </div>
-                {device.revokedAt ? (
+                {!isAdmin ? null : device.revokedAt ? (
                   <button type="button" className="bf-link-button" onClick={() => onRestoreDevice(device.id)}>
                     {t("Reactivează")}
                   </button>
                 ) : device.id === thisDeviceId ? null : (
                   // Pentru telefonul tău există „Închide sesiunea acestui telefon”, mai jos.
-                  <button type="button" className="bf-link-button" onClick={() => onRevokeDevice(device.id)}>
-                    {t("Revocă")}
-                  </button>
+                  <span className="bf-sync-device-actions">
+                    <button type="button" className="bf-link-button" onClick={() => onRevokeDevice(device.id)}>
+                      {t("Revocă")}
+                    </button>
+                    <button type="button" className="bf-link-button" onClick={() => onMakeAdmin(device.id)}>
+                      {t("Fă-l administrator")}
+                    </button>
+                  </span>
                 )}
               </li>
             ))}

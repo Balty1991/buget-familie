@@ -83,6 +83,10 @@ export type SyncPanelProps = {
   onClearJournal: () => void;
   onRevokeDevice: (deviceId: string) => void;
   onRestoreDevice: (deviceId: string) => void;
+  /** Doar administratorul trimite invitații, scoate și reactivează telefoane. */
+  isAdmin: boolean;
+  adminDeviceId?: string;
+  onMakeAdmin: (deviceId: string) => void;
   /** Parolă arătată o dată (ex. din FirstRun familie). */
   passwordRevealOnce?: string;
   clearPasswordReveal?: () => void;

@@ -95,3 +95,14 @@ export function listSyncDevices(data: AppData): SyncDevice[] {
     return b.lastSeenAt.localeCompare(a.lastSeenAt);
   });
 }
+
+/** Fă un telefon administrator al camerei (implicit pe acesta). */
+export function claimSyncAdmin(data: AppData, deviceId = getOrCreateDeviceId()): AppData {
+  return { ...data, settings: { ...data.settings, syncAdminDeviceId: deviceId, syncAdminSetAt: new Date().toISOString() } };
+}
+
+/** Fără administrator ales (camere de dinainte), oricine e administrator până se alege unul. */
+export function isSyncAdmin(data: AppData): boolean {
+  const admin = data.settings.syncAdminDeviceId;
+  return !admin || admin === getOrCreateDeviceId();
+}

@@ -4455,4 +4455,12 @@ export const en: Record<string, string> = {
   "Cu lista de cumpărături ieși din magazin doar cu ce ai venit să iei.": "With a shopping list you leave the store with only what you came for.",
   "Ai aplicația instalată? Intră din ea, nu din browser: altfel familia vede două telefoane.": "Have the app installed? Join from it, not the browser — otherwise the family sees two phones.",
   "Invitația aceasta e veche: camera ei a fost închisă când familia s-a mutat. Cere invitația nouă de pe telefonul încă conectat. Dacă niciun telefon nu mai e conectat, apasă „Creează camera” aici: datele de pe acest telefon rămân, iar celălalt telefon intră cu invitația nouă și își unește datele.": "This invitation is old: its room was closed when the family moved. Ask for the new invitation from the phone that is still connected. If no phone is connected anymore, tap “Create room” here: the data on this phone stays, and the other phone joins with the new invitation and merges its data.",
+  "Invitațiile le trimite administratorul camerei: {device}. Tot el poate scoate sau reactiva un telefon.": "Invitations are sent by the room admin: {device}. Only they can remove or restore a phone.",
+  "telefonul care a creat camera": "the phone that created the room",
+  "administrator": "admin",
+  "Fă-l administrator": "Make admin",
+  "Celălalt telefon devine administrator: doar el va trimite invitații și va scoate telefoane. Tu nu mai poți face asta până nu îți dă rolul înapoi.": "The other phone becomes admin: only it will send invitations and remove phones. You can no longer do this until it gives the role back.",
+  "Schimbi administratorul?": "Change the admin?",
+  "Da, schimbă": "Yes, change",
+  "Administratorul s-a schimbat. Se propagă la următoarea sincronizare.": "The admin changed. It spreads at the next sync.",
 };
