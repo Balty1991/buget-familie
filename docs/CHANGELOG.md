@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.162
+
+- Grupul de backup rămâne deschis după ce intri din Mai mult. Înainte React îl închidea la loc.
+
 ## 1.1.161
 
 - Mai mult → Backup deschide direct copiile de siguranță, nu setările de sus.
