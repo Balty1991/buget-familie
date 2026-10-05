@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.160
+
+- Plicuri, Obligații și Analiză nu mai trec prin „Pregătim…”. Ecranul nou apare direct.
+
 ## 1.1.159
 
 - Schimbarea de ecran nu mai estompează două pagini una peste alta și nu mai arată „Pregătim…” la fiecare intrare. Ecranul vechi rămâne până e gata cel nou, apoi trece dintr-o dată.

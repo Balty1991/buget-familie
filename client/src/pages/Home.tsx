@@ -22,7 +22,7 @@ import { BrandMark } from "@/components/BrandMark";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
 import { isAppLockEnabled } from "@/lib/app-lock";
 import { useToday } from "@/hooks/useToday";
-import { safeImport } from "@/lib/lazy-safe";
+import { safeImport, warmLazy } from "@/lib/lazy-safe";
 import { applySecureScreen } from "@/lib/secure-screen";
 import { observeQuickActions, publishEnvelopes, publishSpendToday, publishWeek, publishWidgetTemplates } from "@/lib/quick-action-bridge";
 import { weekWidgetData } from "@/lib/week-widget";
@@ -94,14 +94,14 @@ const initialMainView = (): MainView => {
   return requested && MAIN_VIEWS.includes(requested) ? requested : "today";
 };
 
-const preloadView = (id: MainView): Promise<unknown> => {
-  if (id === "journal") return import("@/components/MovementsJournal");
-  if (id === "plan") return import("@/components/PlanStudio");
-  if (id === "calendar") return import("@/components/FinancialCalendarView");
-  if (id === "insights") return import("@/pages/InsightsView");
-  if (id === "obligations") return import("@/pages/ObjectivesView");
-  if (id === "goals" || id === "habits") return import("@/pages/HabitsGoals");
-  if (id === "utilities") return import("@/pages/home-secondary");
+const preloadView = (id: MainView): Promise<void> => {
+  if (id === "journal") return warmLazy(MovementsJournal);
+  if (id === "plan") return warmLazy(PlanStudio);
+  if (id === "calendar") return warmLazy(FinancialCalendarView);
+  if (id === "insights") return warmLazy(InsightsView).then(() => import("@/pages/InsightsView")).then((module) => module.preloadInsights());
+  if (id === "obligations") return warmLazy(ObjectivesView);
+  if (id === "goals" || id === "habits") return warmLazy(id === "goals" ? LongTermGoalsView : SpendingHabitsView);
+  if (id === "utilities") return warmLazy(MoreViewScreen);
   return Promise.resolve();
 };
 

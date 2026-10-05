@@ -15,6 +15,19 @@ function OfflinePiece() {
   );
 }
 
+/** React.lazy tot arată scheletul o clipă, chiar dacă fișierul e deja încărcat. Îl încălzim înainte să apară. */
+export function warmLazy(component: object): Promise<void> {
+  const lazy = component as { _init?: (payload: object) => unknown; _payload?: object };
+  if (typeof lazy._init !== "function" || !lazy._payload) return Promise.resolve();
+  try {
+    lazy._init(lazy._payload);
+    return Promise.resolve();
+  } catch (thenable) {
+    if (thenable && typeof (thenable as { then?: unknown }).then === "function") return Promise.resolve(thenable as PromiseLike<unknown>).then(() => undefined);
+    return Promise.reject(thenable);
+  }
+}
+
 export function safeImport<T extends ComponentType<any>>(loader: () => Promise<{ default: T }>): () => Promise<{ default: T }> {
   const fallback = { default: OfflinePiece as unknown as T };
   return () => loader().catch(() => new Promise<{ default: T }>((resolve) => {

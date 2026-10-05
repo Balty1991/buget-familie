@@ -4,6 +4,7 @@ import { Bot, LayoutDashboard, Users } from "lucide-react";
 import { type AppData } from "@/lib/finance-data";
 import { type MainView } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
+import { warmLazy } from "@/lib/lazy-safe";
 import { MonthVsAverage } from "@/components/MonthVsAverage";
 import { SmallSpendsCard } from "@/components/SmallSpendsCard";
 import "../monthly-needs.css";
@@ -11,6 +12,8 @@ import "../monthly-needs.css";
 const ReportsPanel = lazy(() => import("@/components/ReportsPanel").then((module) => ({ default: module.ReportsPanel })));
 const AdvisorPanel = lazy(() => import("@/components/AdvisorPanel").then((module) => ({ default: module.AdvisorPanel })));
 const HouseholdStudio = lazy(() => import("@/components/HouseholdStudio").then((module) => ({ default: module.HouseholdStudio })));
+
+export const preloadInsights = () => Promise.all([warmLazy(ReportsPanel), warmLazy(HouseholdStudio), warmLazy(AdvisorPanel)]).then(() => undefined);
 
 /** Atelierul Financiar 3.0 — Analiza este o destinație de lucru, cu rapoarte și asistent separat încărcate la cerere. */
 export function InsightsView({ data, onChange, onGo }: { data: AppData; onChange: (next: AppData) => void; onGo?: (view: MainView) => void }) {
