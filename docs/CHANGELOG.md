@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.155
+
+- Bonul salvat arată produsele pe rânduri, cu suma în dreapta, nu într-o singură frază.
+- Liniile pot fi sub totalul bonului. Diferența (ecotaxă, rotunjire, produs nenumit) intră singură ca „Rest bon”. Salvarea se oprește doar dacă liniile trec peste total.
+
 ## 1.1.154
 
 - Fără plicuri, cifra mare de pe Astăzi e ce a mai rămas în surse, nu venitul brut. O cheltuială o scade. Cu plicuri, rămâne „Poți folosi azi” sau „Rămas în plicuri”.

@@ -3,7 +3,7 @@ import "../receipt-mobile.css";
 import "../receipt-form-fix.css";
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, resolveReceiptLines, type AppData, type Receipt } from "@/lib/finance-data";
+import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, resolveReceiptLines, closeReceiptGap, type AppData, type Receipt } from "@/lib/finance-data";
 import { Field, Modal, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 import { RoDateInput } from "@/components/RoDateInput";
@@ -51,8 +51,8 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
   const lastSyncedTotal = useRef(draft?.amount ?? "");
   const categories = [...expenseCategories, ...data.settings.customCategories];
   const numericTotal = parseRomanianAmount(amount);
-  const resolvedPreview = resolveReceiptLines(lines, numericTotal);
-  const lineTotal = resolvedPreview.reduce((sum, line) => sum + line.amount, 0);
+  const resolvedPreview = closeReceiptGap(resolveReceiptLines(lines, numericTotal), numericTotal);
+  const lineTotal = resolvedPreview.lines.filter((line) => line.label !== "Rest bon").reduce((sum, line) => sum + line.amount, 0);
 
   useEffect(() => {
     setLines((current) => {
@@ -80,14 +80,14 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
   const save = async () => {
     const numeric = parseRomanianAmount(amount);
     const normalizedLines = resolveReceiptLines(lines, numeric);
-    const splitTotal = normalizedLines.reduce((sum, line) => sum + line.amount, 0);
+    const closed = closeReceiptGap(normalizedLines, numeric);
     if (!vendor.trim() || numeric <= 0 || !sourceId || !memberId) return setError(t("Completează magazinul, totalul, membrul și sursa. Fotografiile nu sunt obligatorii."));
-    if (!normalizedLines.length || Math.abs(numeric - splitTotal) > 0.01) return setError(t("Repartizarea este {split}, dar totalul bonului este {total}. Corectează liniile înainte de salvare.", { split: fmtExact.format(splitTotal), total: fmtExact.format(numeric) }));
+    if (!closed.lines.length || closed.over) return setError(t("Repartizarea este {split}, dar totalul bonului este {total}. Corectează liniile înainte de salvare.", { split: fmtExact.format(normalizedLines.reduce((sum, line) => sum + line.amount, 0)), total: fmtExact.format(numeric) }));
     try {
       setBusy(true);
       setError("");
       const id = newId("receipt");
-      await onSave({ id, vendor: vendor.trim(), amount: numeric, date, category: normalizedLines[0].category, lines: normalizedLines, sourceId, memberId, note: note.trim() || undefined });
+      await onSave({ id, vendor: vendor.trim(), amount: numeric, date, category: closed.lines[0].category, lines: closed.lines, sourceId, memberId, note: note.trim() || undefined });
       clearReceiptDraft();
       onClose();
     } catch (reason) {
@@ -116,7 +116,11 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
               <p className="bf-kicker">{t("PRODUSE ȘI CATEGORII")}</p>
               <h3>{fmtExact.format(lineTotal)} din {amount ? fmtExact.format(numericTotal) : "0,00 RON"}</h3>
             </div>
-            <button type="button" className="bf-secondary" onClick={() => setLines((current) => [...current, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }])}><Plus size={16} /> {t("Produs")}</button>
+            <button type="button" className="bf-secondary" onClick={() => setLines((current) => {
+              const next = [...current];
+              if (next.length === 1 && !next[0].label.trim() && next[0].amount.trim() === amount.trim()) next[0] = { ...next[0], amount: "" };
+              return [...next, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }];
+            })}><Plus size={16} /> {t("Produs")}</button>
           </div>
           {lines.map((line) => (
             <div className="bf-split-line" key={line.id}>
@@ -126,16 +130,17 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
               {lines.length > 1 && <button type="button" aria-label={t("Elimină produsul")} onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button>}
             </div>
           ))}
-          <small>{t("Dacă lași un singur produs gol, totalul se pune automat pe el. Mai multe linii trebuie să însumeze exact totalul bonului.")}</small>
-          {resolvedPreview.length > 0 && (
+          <small>{t("Poți lăsa o diferență: ecotaxa sau un produs nenumit intră singur ca „Rest bon”. Nu salva doar dacă liniile trec peste total.")}</small>
+          {resolvedPreview.remainder > 0.009 && <small>{t("Restul de {amount} intră pe bon ca diferență. Nu trebuie să-l împărți pe produse.", { amount: fmtExact.format(resolvedPreview.remainder) })}</small>}
+          {resolvedPreview.lines.length > 0 && (
             <div className="bf-receipt-envelope-preview" aria-label={t("Plicuri propuse")}>
               <p className="bf-kicker">{t("PLICURI PROPUSE")}</p>
               <ul>
-                {resolvedPreview.map((line) => {
+                {resolvedPreview.lines.map((line) => {
                   const matched = matchingAllocationsForExpense(data, { category: line.category, memberId, sourceId })[0];
                   return (
                     <li key={line.id}>
-                      <b>{line.label || t(line.category)}</b>
+                      <b>{line.label === "Rest bon" ? t("Rest bon") : (line.label || t(line.category))}</b>
                       <span>{t(line.category)} → {matched ? matched.label : t("în afara plicurilor")}</span>
                     </li>
                   );

@@ -378,6 +378,21 @@ export function resolveReceiptLines(
   return normalized;
 }
 
+/** Liniile pot fi sub total: restul (ecotaxă, rotunjire, produs nenumit) intră ca o linie,
+ * ca bonul să se poată salva fără să se potrivească fiecare ban. Peste total rămâne eroare. */
+export function closeReceiptGap(lines: ReceiptLine[], total: number): { lines: ReceiptLine[]; remainder: number; over: boolean } {
+  const sum = Math.round(lines.reduce((totalSoFar, line) => totalSoFar + line.amount, 0) * 100) / 100;
+  const gap = Math.round((total - sum) * 100) / 100;
+  if (gap > 0.009 && lines.length > 0) {
+    return {
+      lines: [...lines, { id: newId("receipt-rest"), category: "Altele", amount: gap, label: "Rest bon" }],
+      remainder: gap,
+      over: false,
+    };
+  }
+  return { lines, remainder: 0, over: gap < -0.009 };
+}
+
 /** P2-7: un Intl.DateTimeFormat nou la fiecare dată costa zeci de ms pe Plicuri; se refolosește pe limbă + opțiuni. */
 const dateFormatters = new Map<string, Intl.DateTimeFormat>();
 const DEFAULT_DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short" };

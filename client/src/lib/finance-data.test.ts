@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, adoptOutsideExpenses, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, commitLedgerEntry, confirmReviewDraft, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary, transactionShareScope } from "./finance-data";
+import { suggestWeeklyAllocationsFromCashflow, allocationBudget, allocationSpent, allocationStatus, allocationWeekStatus, allocationWeeksStatus, adoptOutsideExpenses, answerBudgetQuestion, applySalaryAllocationRules, autoPostDueRecurring, closeReceiptGap, commitLedgerEntry, confirmReviewDraft, createEmptyAppData, debtPaymentHistory, debtSnowball, financialBalance, inPlanPeriod, isoToday, matchingAllocationsForExpense, pickerAllocationsForExpense, newId, normalizeAppData, parseNaturalSpendScenario, parseRomanianAmount, paydayWindow, pendingRecurringInPlan, planEndDate, planForecast, recordDebtPayment, resolveReceiptLines, revertSalaryAllocationApplication, savingSuggestions, sourceBalance, transferBetweenEnvelopes, transferBetweenWeeks, unappliedSalaryIncomes, weeklySummary, transactionShareScope } from "./finance-data";
 import { deriveFamilyRoomId, mergeFamilyData } from "./family-crypto";
 import { journalCsvSnapshot } from "./journal-csv";
 import { calendarBudget, calendarBudgetWeekKey, currentCalendarBudgetWeek } from "./calendar-budget";
@@ -641,6 +641,17 @@ describe("registrul financiar Buget Familie", () => {
       { id: "a", category: "Alimente", amount: 10, label: "lapte" },
       { id: "b", category: "Băuturi", amount: 5.5, label: "apă" },
     ]);
+  });
+  it("pune restul de pe bon într-o linie, fără să ceară totalul la ban", () => {
+    const closed = closeReceiptGap([
+      { id: "a", category: "Alimente", amount: 62.95, label: "Lapte" },
+    ], 64.94);
+    expect(closed.over).toBe(false);
+    expect(closed.remainder).toBeCloseTo(1.99, 2);
+    expect(closed.lines).toHaveLength(2);
+    expect(closed.lines[1]).toMatchObject({ category: "Altele", amount: 1.99, label: "Rest bon" });
+    expect(closed.lines.reduce((sum, line) => sum + line.amount, 0)).toBeCloseTo(64.94, 2);
+    expect(closeReceiptGap([{ id: "a", category: "Alimente", amount: 70 }], 64.94).over).toBe(true);
   });
   it("împarte un venit în patru săptămâni calendaristice egale", () => {
     const plan = calendarBudget(2400, "2026-08-31", "2026-09-27");
