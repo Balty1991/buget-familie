@@ -101,6 +101,9 @@ async function main() {
       const { page, context, errors } = await phone(browser);
       await page.getByRole("button", { name: /^Notează$/ }).first().click();
       await page.locator(".bf-modal input[inputmode=\"decimal\"]").first().fill("42,50");
+      // Un singur plic și bani nerepartizați: aplicația nu alege singură. Testul alege plicul.
+      const fromEnvelope = page.locator(".bf-spend-from button").first();
+      if (await fromEnvelope.count()) await fromEnvelope.click();
       await page.getByRole("button", { name: "Gata" }).last().click();
       await page.locator(".bf-undo-bar").waitFor();
       await waitFor(async () => (await ledger(page)).transactions.some((item) => item.amount === 42.5 && item.kind === "expense"), "42,50 în registru");
