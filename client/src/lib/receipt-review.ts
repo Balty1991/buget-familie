@@ -9,6 +9,7 @@ import {
   resolveReceiptLines,
   type AppData,
   type Receipt,
+  type ReceiptLine,
   type ReviewDraft,
   type Transaction,
 } from "./finance-data";
@@ -99,4 +100,33 @@ export function queueReceiptForReview(data: AppData, receipt: Receipt): AppData 
     deleted: formerIds.size ? tombstones : data.deleted,
   };
   return addReviewDrafts(withoutFormer, buildReceiptReviewDrafts(withoutFormer, stored));
+}
+
+/** Articolele unei cheltuieli deja notate. Nu creează o a doua mișcare. */
+export function attachReceiptDetail(data: AppData, transactionId: string, lines: ReceiptLine[]): AppData {
+  const tx = data.transactions.find((item) => item.id === transactionId);
+  if (!tx || tx.kind !== "expense") return data;
+  const existing = data.receipts.find((receipt) => receipt.id === tx.receiptId || receipt.linkedTransactionId === tx.id || receipt.linkedTransactionIds?.includes(tx.id));
+  if (!lines.length && !existing) return data;
+  const now = new Date().toISOString();
+  const id = existing?.id || `detail-${tx.id}`;
+  const receipt: Receipt = {
+    ...(existing || { vendor: tx.title.replace(/^Bon — /, ""), category: tx.category, date: tx.date }),
+    id,
+    vendor: existing?.vendor || tx.title.replace(/^Bon — /, ""),
+    amount: tx.amount,
+    category: tx.category,
+    date: tx.date,
+    sourceId: tx.sourceId,
+    memberId: tx.memberId,
+    lines,
+    linkedTransactionId: tx.id,
+    linkedTransactionIds: [tx.id],
+    updatedAt: now,
+  };
+  return {
+    ...data,
+    transactions: data.transactions.map((item) => item.id === tx.id ? { ...item, receiptId: id, updatedAt: now } : item),
+    receipts: [receipt, ...data.receipts.filter((item) => item.id !== id)],
+  };
 }

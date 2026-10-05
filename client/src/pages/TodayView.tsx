@@ -691,7 +691,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               {lastMoves.slice(0, 3).map((item) => {
                 const envelope = item.allocationId && item.allocationId !== "outside"
                   ? data.settings.salaryPlan.allocations.find((entry) => entry.id === item.allocationId)?.label
-                  : item.allocationId === "outside"
+                  : item.allocationId === "outside" && data.settings.salaryPlan.allocations.length
                     ? t("în afara plicurilor")
                     : undefined;
                 return (

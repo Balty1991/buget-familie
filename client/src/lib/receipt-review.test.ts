@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { confirmAllReviewDrafts, confirmReviewDraft, createEmptyAppData, normalizeAppData } from "./finance-data";
-import { buildReceiptReviewDrafts, queueReceiptForReview } from "./receipt-review";
+import { attachReceiptDetail, buildReceiptReviewDrafts, queueReceiptForReview } from "./receipt-review";
 
 describe("bon → plicuri + poartă de revizuire", () => {
   it("Lidl lapte + detergent propun Alimente și Casă & facturi cu plicuri", () => {
@@ -137,5 +137,18 @@ describe("bon → plicuri + poartă de revizuire", () => {
     expect(expenses[0]).toMatchObject({ id: "tx-exflor", amount: 64.95, receiptId: "bon-exflor" });
     expect(next.receipts[0].linkedTransactionId).toBe("tx-exflor");
     expect(next.deleted.some((item) => item.id === "receipt-tx-bon-exflor-lapte")).toBe(true);
+  });
+
+  it("articolele se leagă de cheltuiala notată, fără o a doua mișcare", () => {
+    const data = createEmptyAppData();
+    data.transactions = [{ id: "tx", title: "Lidl", amount: 95, kind: "expense", category: "Alimente", source: "Card", sourceId: "source-debit", memberId: "member-me", person: "Eu", date: "2026-10-05" }];
+    const next = attachReceiptDetail(data, "tx", [
+      { id: "a", category: "Alimente", amount: 90, label: "Cumpărături" },
+      { id: "b", category: "Altele", amount: 5, label: "Rest bon" },
+    ]);
+    expect(next.transactions).toHaveLength(1);
+    expect(next.transactions[0]).toMatchObject({ id: "tx", amount: 95, receiptId: "detail-tx" });
+    expect(next.receipts[0].linkedTransactionId).toBe("tx");
+    expect(next.receipts[0].lines).toHaveLength(2);
   });
 });

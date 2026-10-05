@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.157
+
+- În Mișcări, o cheltuială cu bon arată articolele pe loc. Din cheltuială: „Adaugă articole”, fără a doua mișcare. Restul sub total intră singur.
+- „În afara plicurilor” nu mai apare pe rânduri cât nu există niciun plic.
+
 ## 1.1.156
 
 - Bonul confirmat e o singură cheltuială, cu totalul. Produsele rămân detaliu, nu câte o mișcare.

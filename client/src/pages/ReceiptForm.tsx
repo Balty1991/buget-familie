@@ -163,7 +163,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
                   return (
                     <li key={line.id}>
                       <b>{line.label === "Rest bon" ? t("Rest bon") : (line.label || t(line.category))}</b>
-                      <span>{t(line.category)} → {matched ? matched.label : t("în afara plicurilor")}</span>
+                      <span>{t(line.category)}{data.settings.salaryPlan.allocations.length ? ` → ${matched ? matched.label : t("în afara plicurilor")}` : ""}</span>
                     </li>
                   );
                 })}
