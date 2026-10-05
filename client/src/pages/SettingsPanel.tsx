@@ -211,7 +211,7 @@ function SettingsGroup({ id, title, hint, keywords, query, children }: { id: str
   const needle = foldRomanian(query.trim());
   const match = !needle || foldRomanian(`${title} ${hint} ${keywords}`).includes(needle);
   if (!match) return null;
-  return <details className="bf-settings-group" data-group={id} open={needle ? true : undefined}><summary><span><b>{title}</b><small>{hint}</small></span></summary>{children}</details>;
+  return <details id={id} className="bf-settings-group" data-group={id} open={needle ? true : undefined}><summary><span><b>{title}</b><small>{hint}</small></span></summary>{children}</details>;
 }
 
 function AppLockSettings() {

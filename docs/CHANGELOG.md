@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.161
+
+- Mai mult → Backup deschide direct copiile de siguranță, nu setările de sus.
+- Temele se numesc Alb, Întunecat și Bleumarin. „Atelierul de grafice” se numește Grafice.
+
 ## 1.1.160
 
 - Plicuri, Obligații și Analiză nu mai trec prin „Pregătim…”. Ecranul nou apare direct.

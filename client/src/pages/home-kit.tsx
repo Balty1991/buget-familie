@@ -28,9 +28,9 @@ export const backgroundOptions: Array<{ id: BackgroundId; name: string; detail: 
   { id: "dots", get name() { return t("Ceață fină"); }, get detail() { return t("Puncte moi, adâncime"); } },
 ];
 export const themeOptions: Array<{ id: ThemeId; name: string; detail: string; mood: string }> = [
-  { id: "white", get name() { return t("Alb"); }, get detail() { return t("Atelier Platinum — hârtie caldă, pin, citire de zi. Implicit."); }, get mood() { return t("ZI · PLATINUM"); } },
-  { id: "dark", get name() { return t("Întunecat"); }, get detail() { return t("Noapte cu accent verde de pădure."); }, get mood() { return t("NOAPTE · VERDE"); } },
-  { id: "navy", get name() { return t("Navy"); }, get detail() { return t("Bleumarin profund, auriu discret. Cabinet modern."); }, get mood() { return t("NOAPTE · AURIU"); } },
+  { id: "white", get name() { return t("Alb"); }, get detail() { return t("Hârtie caldă, ușor de citit ziua. Implicit."); }, get mood() { return t("Zi"); } },
+  { id: "dark", get name() { return t("Întunecat"); }, get detail() { return t("Noapte cu accent verde de pădure."); }, get mood() { return t("Noapte"); } },
+  { id: "navy", get name() { return t("Bleumarin"); }, get detail() { return t("Bleumarin profund, auriu discret."); }, get mood() { return t("Seară"); } },
 ];
 export const defaultScheduleTimes: ThemeScheduleTimes = { dayStart: "06:00", eveningStart: "17:00", nightStart: "21:00" };
 export const timeToMinutes = (value: string, fallback: number) => { const [hours, minutes] = value.split(":").map(Number); return Number.isFinite(hours) && Number.isFinite(minutes) && hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60 ? hours * 60 + minutes : fallback; };
@@ -139,7 +139,7 @@ export function WhatsNewSheet({ onClose, onOpenTrip, onOpenMore }: { onClose: ()
         </header>
         <p>{t("Mai puțin de scris, mai mult de văzut.")}</p>
         <ul className="bf-whats-new-list">
-          <li>{t("Atelierul de grafice: fluxul banilor, categoriile ca dreptunghiuri, ritmul lunii și harta anului, toate cu valori la atingere.")}</li>
+          <li>{t("Grafice: fluxul banilor, categoriile, ritmul lunii și harta anului, cu valori la atingere.")}</li>
           <li>{t("Asistentul răspunde și cu grafice: „cum au evoluat cheltuielile pe alimente?”")}</li>
           <li>{t("Tranziții line între ecrane, vibrație scurtă la notare și, pe Android 12+, culorile telefonului.")}</li>
           <li>{t("Widget nou: Săptămâna banilor, ultimele 7 zile pe ecranul principal.")}</li>
