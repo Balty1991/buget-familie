@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.156
+
+- Bonul confirmat e o singură cheltuială, cu totalul. Produsele rămân detaliu, nu câte o mișcare.
+- Dacă cheltuiala e deja notată (Exflor 64,95), bonul se leagă de ea. Nu se mai dublează. La salvare poți alege cheltuiala existentă sau una nouă.
+- Bonurile deja sparte pe produse se adună la deschidere: rămâne cheltuiala notată, liniile duplicate ies.
+
 ## 1.1.155
 
 - Bonul salvat arată produsele pe rânduri, cu suma în dreapta, nu într-o singură frază.

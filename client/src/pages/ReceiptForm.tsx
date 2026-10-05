@@ -1,9 +1,9 @@
 /** Formularul de bon. Scos din home-secondary. */
 import "../receipt-mobile.css";
 import "../receipt-form-fix.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, resolveReceiptLines, closeReceiptGap, type AppData, type Receipt } from "@/lib/finance-data";
+import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, receiptAttachCandidates, resolveReceiptLines, closeReceiptGap, type AppData, type Receipt } from "@/lib/finance-data";
 import { Field, Modal, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 import { RoDateInput } from "@/components/RoDateInput";
@@ -53,6 +53,13 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
   const numericTotal = parseRomanianAmount(amount);
   const resolvedPreview = closeReceiptGap(resolveReceiptLines(lines, numericTotal), numericTotal);
   const lineTotal = resolvedPreview.lines.filter((line) => line.label !== "Rest bon").reduce((sum, line) => sum + line.amount, 0);
+  const attachCandidates = useMemo(() => receiptAttachCandidates(data, vendor, numericTotal, date), [data, vendor, numericTotal, date]);
+  const [attachId, setAttachId] = useState("new");
+  useEffect(() => {
+    const name = vendor.trim().toLocaleLowerCase("ro-RO");
+    const strong = attachCandidates.find((item) => name && item.title.toLocaleLowerCase("ro-RO").includes(name) && numericTotal > 0 && Math.abs(item.amount - numericTotal) <= 1);
+    setAttachId(strong?.id || "new");
+  }, [attachCandidates, vendor, numericTotal]);
 
   useEffect(() => {
     setLines((current) => {
@@ -87,7 +94,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
       setBusy(true);
       setError("");
       const id = newId("receipt");
-      await onSave({ id, vendor: vendor.trim(), amount: numeric, date, category: closed.lines[0].category, lines: closed.lines, sourceId, memberId, note: note.trim() || undefined });
+      await onSave({ id, vendor: vendor.trim(), amount: numeric, date, category: closed.lines[0].category, lines: closed.lines, sourceId, memberId, note: note.trim() || undefined, linkedTransactionId: attachId === "new" ? undefined : attachId });
       clearReceiptDraft();
       onClose();
     } catch (reason) {
@@ -110,6 +117,21 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
           <Field label={t("Membru")}><select value={memberId} onChange={(event) => setMemberId(event.target.value)}>{data.settings.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field>
           <Field label={t("Plătit din")}><select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>{data.settings.paymentSources.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}</select></Field>
         </div>
+        {attachCandidates.length > 0 && (
+          <section className="bf-receipt-split" aria-label={t("Unde intră bonul")}>
+            <p className="bf-kicker">{t("UNDE INTRĂ BONUL")}</p>
+            {attachCandidates.map((item) => (
+              <label key={item.id} className="bf-split-line">
+                <input type="radio" name="receipt-attach" checked={attachId === item.id} onChange={() => setAttachId(item.id)} />
+                <span>{t("Detaliu pe {title} · {amount}. Nu se mai scrie o cheltuială.", { title: item.title, amount: fmtExact.format(item.amount) })}</span>
+              </label>
+            ))}
+            <label className="bf-split-line">
+              <input type="radio" name="receipt-attach" checked={attachId === "new"} onChange={() => setAttachId("new")} />
+              <span>{t("Cheltuială nouă, un singur total. Produsele rămân detaliu.")}</span>
+            </label>
+          </section>
+        )}
         <section className="bf-receipt-split">
           <div className="bf-split-heading">
             <div>

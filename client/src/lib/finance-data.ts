@@ -516,6 +516,61 @@ function cleanStamps(value: unknown): Record<string, string> | undefined {
   return entries.length ? Object.fromEntries(entries) : undefined;
 }
 
+const foldReceiptName = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim();
+
+/** Cheltuieli notate de mână, în aceeași zi, la care un bon poate fi doar detaliu. */
+export function receiptAttachCandidates(data: AppData, vendor: string, amount: number, date: string): Transaction[] {
+  const name = foldReceiptName(vendor);
+  return data.transactions.filter((tx) => {
+    if (tx.kind !== "expense" || tx.date !== date) return false;
+    if (tx.receiptId || tx.id.startsWith("receipt-tx-") || tx.title.startsWith("Bon — ")) return false;
+    const title = foldReceiptName(tx.title);
+    const nameHit = Boolean(name) && (title === name || title.includes(name) || name.includes(title));
+    const amountHit = amount > 0 && Math.abs(tx.amount - amount) <= 1;
+    return nameHit || amountHit;
+  }).sort((left, right) => {
+    const score = (tx: Transaction) => (foldReceiptName(tx.title) === name ? 2 : 0) + (amount > 0 && Math.abs(tx.amount - amount) <= 1 ? 1 : 0);
+    return score(right) - score(left);
+  }).slice(0, 5);
+}
+
+/**
+ * Un bon confirmat pe produse nu mai stă ca N mișcări.
+ * Dacă există deja cheltuiala (Exflor 64,95), liniile se leagă de ea și duplicatele ies.
+ * Altfel rămâne o singură mișcare cu totalul.
+ */
+export function collapseSplitReceipts(data: AppData): AppData {
+  let transactions = data.transactions;
+  let receipts = data.receipts;
+  let pendingReview = data.pendingReview;
+  const removed: string[] = [];
+  const now = new Date().toISOString();
+  let changed = false;
+  for (const receipt of data.receipts) {
+    const generated = transactions.filter((tx) => tx.receiptId === receipt.id || tx.id === `receipt-tx-${receipt.id}` || tx.id.startsWith(`receipt-tx-${receipt.id}-`));
+    const manual = receiptAttachCandidates({ ...data, transactions }, receipt.vendor, receipt.amount, receipt.date)[0];
+    if (manual && (generated.length > 0 || receipt.linkedTransactionId !== manual.id)) {
+      changed = true;
+      for (const tx of generated) if (tx.id !== manual.id) removed.push(tx.id);
+      transactions = transactions.filter((tx) => !generated.some((item) => item.id === tx.id)).map((tx) => tx.id === manual.id ? { ...tx, receiptId: receipt.id } : tx);
+      receipts = receipts.map((item) => item.id === receipt.id ? { ...item, linkedTransactionId: manual.id, linkedTransactionIds: [manual.id] } : item);
+      pendingReview = pendingReview.filter((draft) => draft.transaction.receiptId !== receipt.id && !generated.some((item) => item.id === draft.transaction.id));
+      continue;
+    }
+    if (generated.length > 1) {
+      changed = true;
+      const sample = generated[0];
+      const keeper: Transaction = { ...sample, id: `receipt-tx-${receipt.id}`, receiptId: receipt.id, title: `Bon — ${receipt.vendor}`, amount: receipt.amount, category: receipt.category || sample.category, date: receipt.date, updatedAt: now };
+      for (const tx of generated) if (tx.id !== keeper.id) removed.push(tx.id);
+      transactions = [keeper, ...transactions.filter((tx) => !generated.some((item) => item.id === tx.id))];
+      receipts = receipts.map((item) => item.id === receipt.id ? { ...item, linkedTransactionId: keeper.id, linkedTransactionIds: [keeper.id] } : item);
+      pendingReview = pendingReview.filter((draft) => draft.transaction.receiptId !== receipt.id);
+    }
+  }
+  if (!changed) return data;
+  return { ...data, transactions, receipts, pendingReview, deleted: pruneTombstones([...data.deleted, ...removed.map((id) => ({ entity: "transactions" as const, id, deletedAt: now }))]) };
+}
+
 export const normalizeAppData = (input: unknown): AppData => {
   if (!input || typeof input !== "object") return createEmptyAppData();
   const old = input as Partial<AppData> & { settings?: Partial<FamilySettings> & { paymentSources?: Array<Partial<PaymentSource> & { balance?: number }> }; recurring?: Array<Partial<RecurringPayment>> };
@@ -714,7 +769,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     ? Object.fromEntries(Object.entries(oldSettings.archivedNetCurrency as Record<string, unknown>).map(([key, value]) => [key, Math.round(Number(value) * 100) / 100]).filter(([, value]) => Number.isFinite(value as number)))
     : undefined;
   const keptTransactions = archivedThrough ? transactions.filter((item) => !isArchivedTransaction({ archivedThrough, archivedIds }, item)) : transactions;
-  return {
+  const normalized: AppData = {
     version: 9, transactions: keptTransactions, receipts, pendingReview, pendingReviewMeta, allocationConflicts, transactionConflicts,
     debts: realRows<Debt>(old.debts).map((item) => ({ ...item, remaining: Math.max(0, parseRomanianAmount(item.remaining)), monthly: Math.max(0, parseRomanianAmount(item.monthly)), annualRate: (() => { const rate = parseRomanianAmount(item.annualRate ?? 0); return rate > 0 && rate <= 500 ? rate : undefined; })(), kind: item.kind === "credit" || item.kind === "card" || item.kind === "ifn" || item.kind === "persoane" ? item.kind : undefined, endDate: /^\d{4}-\d{2}-\d{2}$/.test(String(item.endDate || "")) ? item.endDate : undefined })),
     savings: realRows<SavingsGoal>(old.savings).map((item) => ({ ...item, current: Math.max(0, parseRomanianAmount(item.current)), target: Math.max(0, parseRomanianAmount(item.target)) })),
@@ -722,6 +777,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     deleted: pruneTombstones(Array.isArray(old.deleted) ? old.deleted.filter((item): item is DeletedRecord => Boolean(item && typeof item.id === "string" && typeof item.deletedAt === "string" && (TOMBSTONE_ENTITIES as readonly string[]).includes(item.entity))) : []),
     settings: { ...(archivedThrough ? { archivedThrough, archivedNet: archivedNet || {}, yearSummaries: yearSummaries || [], ...(archivedIds !== undefined ? { archivedIds } : {}), ...(archivedNetCurrency ? { archivedNetCurrency } : {}) } : {}), familyName: oldSettings.familyName || fallback.settings.familyName, memberName, familyCode: oldSettings.familyCode || createFamilyCode(), members, paymentSources: sources, customCategories: oldSettings.customCategories || [], categoryRevivedAt: cleanStamps(oldSettings.categoryRevivedAt), familyNameSetAt: /^\d{4}-\d{2}-\d{2}T/.test(String(oldSettings.familyNameSetAt || "")) ? String(oldSettings.familyNameSetAt) : undefined, plannedEvents, quickTemplates, archivedQuickTemplates, savedJournalFilters, salaryCycleTemplates, exchangeRates, seenWeeklyPlanTranches, basketProducts, syncDevices, merchantRules, shoppingList: normalizeShoppingList((oldSettings as Partial<FamilySettings>).shoppingList), trip: normalizeTrip((oldSettings as Partial<FamilySettings>).trip), assets: normalizeAssets((oldSettings as Partial<FamilySettings>).assets), syncRecoveryIssuedAt, selfMemberId, familyTimeZone: isValidTimeZone(oldSettings.familyTimeZone) ? oldSettings.familyTimeZone : undefined, familyTimeZoneSetAt: /^\d{4}-\d{2}-\d{2}T/.test(String(oldSettings.familyTimeZoneSetAt || "")) ? String(oldSettings.familyTimeZoneSetAt) : undefined, syncRoomMovedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(oldSettings.syncRoomMovedAt || "")) ? String(oldSettings.syncRoomMovedAt) : undefined, ...(typeof oldSettings.syncAdminDeviceId === "string" && oldSettings.syncAdminDeviceId && /^\d{4}-\d{2}-\d{2}T/.test(String(oldSettings.syncAdminSetAt || "")) ? { syncAdminDeviceId: oldSettings.syncAdminDeviceId, syncAdminSetAt: String(oldSettings.syncAdminSetAt) } : {}), salaryPlan: { periodStart, nextPayday, earliestPayday, paydayFlexDays: Number.isFinite((oldPlan as Partial<SalaryPlan>).paydayFlexDays) ? Math.min(5, Math.max(0, Math.round(Number((oldPlan as Partial<SalaryPlan>).paydayFlexDays)))) : undefined, sourceIds: oldPlan.sourceIds || [], totalLimit: Math.max(0, parseRomanianAmount(oldPlan.totalLimit)), weeklyLimit: Math.max(0, parseRomanianAmount(oldPlan.weeklyLimit)), allocations: Array.isArray(oldPlan.allocations) ? realRows<BudgetAllocation>(oldPlan.allocations).map((item, index) => ({ ...item, id: item.id || `allocation-${index}`, label: item.label || item.category || `Plic ${index + 1}`, amount: Math.round(Math.max(0, parseRomanianAmount(item.amount)) * 100) / 100, weeklyPace: item.weeklyPace === false ? false : item.weeklyPace === true ? true : (nextPayday ? true : undefined), ...(Number(item.weeklyAmount) > 0 ? { weeklyAmount: Math.round(Number(item.weeklyAmount) * 100) / 100 } : {}), alertThreshold: Math.min(95, Math.max(50, Math.round(parseRomanianAmount(item.alertThreshold ?? 80)))), funding: Array.isArray((item as Partial<BudgetAllocation>).funding) ? (item as BudgetAllocation).funding!.map((entry) => ({ sourceId: String(entry?.sourceId || ""), amount: Math.max(0, parseRomanianAmount(entry?.amount)) })).filter((entry) => entry.sourceId && entry.amount > 0).slice(0, 6) : undefined })) : [], transfers: Array.isArray((oldPlan as Partial<SalaryPlan>).transfers) ? (oldPlan as Partial<SalaryPlan>).transfers!.filter((item) => item && typeof item.id === "string" && typeof item.fromAllocationId === "string" && typeof item.toAllocationId === "string" && item.fromAllocationId !== item.toAllocationId).map((item) => ({ id: item.id, fromAllocationId: item.fromAllocationId, toAllocationId: item.toAllocationId, amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], weekTransfers: Array.isArray((oldPlan as Partial<SalaryPlan>).weekTransfers) ? (oldPlan as Partial<SalaryPlan>).weekTransfers!.filter((item) => item && typeof item.id === "string" && typeof item.allocationId === "string" && Number.isFinite(item.fromWeekIndex) && Number.isFinite(item.toWeekIndex) && item.fromWeekIndex !== item.toWeekIndex).map((item) => ({ id: item.id, allocationId: item.allocationId, fromWeekIndex: Math.max(1, Math.round(item.fromWeekIndex)), toWeekIndex: Math.max(1, Math.round(item.toWeekIndex)), amount: Math.max(0, parseRomanianAmount(item.amount)), note: item.note || undefined, createdAt: item.createdAt || new Date().toISOString() })).filter((item) => item.amount > 0) : [], salaryAllocationRules: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationRules) ? realRows<SalaryAllocationRule>((oldPlan as Partial<SalaryPlan>).salaryAllocationRules).map((item, index) => ({ id: item.id || `salary-rule-${index}`, label: String(item.label || "Repartizare venit").trim(), allocationId: String(item.allocationId || ""), mode: item.mode === "percent" ? "percent" as const : "fixed" as const, value: Math.max(0, item.mode === "percent" ? Math.min(100, parseRomanianAmount(item.value)) : parseRomanianAmount(item.value)), active: item.active !== false, updatedAt: item.updatedAt || undefined })).filter((item) => item.label && item.allocationId && item.value > 0).slice(0, 24) : [], salaryAllocationApplications: Array.isArray((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications) ? realRows<SalaryAllocationApplication>((oldPlan as Partial<SalaryPlan>).salaryAllocationApplications).map((item, index) => ({ id: item.id || `salary-application-${index}`, incomeId: String(item.incomeId || ""), incomeTitle: String(item.incomeTitle || "Venit"), incomeAmount: Math.max(0, parseRomanianAmount(item.incomeAmount)), sourceId: item.sourceId || undefined, memberId: item.memberId || undefined, appliedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item.appliedAt || "")) ? String(item.appliedAt) : new Date().toISOString(), allocations: Array.isArray(item.allocations) ? item.allocations.map((entry) => ({ ruleId: String(entry.ruleId || ""), allocationId: String(entry.allocationId || ""), amount: Math.max(0, parseRomanianAmount(entry.amount)), ...(Number.isFinite(Number(entry.previousAmount)) ? { previousAmount: Math.max(0, Number(entry.previousAmount)) } : {}), ...(Number.isFinite(Number(entry.afterAmount)) ? { afterAmount: Math.max(0, Number(entry.afterAmount)) } : {}), ...(entry.created === true ? { created: true } : {}) })).filter((entry) => entry.ruleId && entry.allocationId && (entry.amount > 0 || entry.previousAmount !== undefined)) : [], ...(item.origin === "needs" || item.origin === "rules" ? { origin: item.origin } : {}), ...(typeof item.revertedAt === "string" && item.revertedAt ? { revertedAt: item.revertedAt } : {}), ...(typeof item.updatedAt === "string" && item.updatedAt ? { updatedAt: item.updatedAt } : {}), ...(Array.isArray(item.transfers) ? { transfers: item.transfers.filter((entry) => entry && typeof entry.toMemberId === "string" && Number(entry.amount) > 0).map((entry) => ({ toMemberId: entry.toMemberId, amount: Math.max(0, parseRomanianAmount(entry.amount)), labels: Array.isArray(entry.labels) ? entry.labels.map(String).slice(0, 12) : [], ...(entry.done === true ? { done: true } : {}) })).slice(0, 6) } : {}), ...(item.previousCycle && /^\d{4}-\d{2}-\d{2}$/.test(String(item.previousCycle.openedPeriodStart || "")) ? { previousCycle: { periodStart: String(item.previousCycle.periodStart || ""), nextPayday: String(item.previousCycle.nextPayday || ""), earliestPayday: item.previousCycle.earliestPayday || undefined, paydayFlexDays: Number.isFinite(item.previousCycle.paydayFlexDays) ? item.previousCycle.paydayFlexDays : undefined, transfers: Array.isArray(item.previousCycle.transfers) ? item.previousCycle.transfers.slice(0, 200) : [], weekTransfers: Array.isArray(item.previousCycle.weekTransfers) ? item.previousCycle.weekTransfers.slice(0, 200) : [], openedPeriodStart: item.previousCycle.openedPeriodStart } } : {}) })).filter((item) => item.incomeId && item.allocations.length).slice(0, 80) : [], allocationHistory, cycleMemory: Array.isArray((oldPlan as Partial<SalaryPlan>).cycleMemory) ? (oldPlan as Partial<SalaryPlan>).cycleMemory!.filter((item) => item && /^\d{4}-\d{2}-\d{2}$/.test(item.periodStart) && /^\d{4}-\d{2}-\d{2}$/.test(item.periodEnd)).slice(0, 6).map((item) => ({ periodStart: item.periodStart, periodEnd: item.periodEnd, spent: Math.max(0, Number(item.spent) || 0), leftInEnvelopes: Number(item.leftInEnvelopes) || 0, over: Array.isArray(item.over) ? item.over.filter((name) => typeof name === "string").slice(0, 12) : [] })) : undefined, settleShare: (oldPlan as Partial<SalaryPlan>).settleShare === "income" ? "income" as const : undefined, needs: normalizeNeeds((oldPlan as Partial<SalaryPlan>).needs), incomes: normalizeIncomes((oldPlan as Partial<SalaryPlan>).incomes), joinedMidCycle: (oldPlan as Partial<SalaryPlan>).joinedMidCycle === true, horizonDays: (() => { const days = Math.round(Number((oldPlan as Partial<SalaryPlan>).horizonDays)); return days >= 3 && days <= 180 ? days : undefined; })(), weekCarryOver: (oldPlan as Partial<SalaryPlan>).weekCarryOver === true ? true : undefined, cycleReportDone: /^\d{4}-\d{2}-\d{2}$/.test(String((oldPlan as Partial<SalaryPlan>).cycleReportDone || "")) ? (oldPlan as Partial<SalaryPlan>).cycleReportDone : undefined, updatedAt: oldPlan.updatedAt || undefined, scalarsUpdatedAt: /^\d{4}-\d{2}-\d{2}T/.test(String((oldPlan as Partial<SalaryPlan>).scalarsUpdatedAt || "")) ? (oldPlan as Partial<SalaryPlan>).scalarsUpdatedAt : undefined } },
   };
+  return collapseSplitReceipts(normalized);
 };
 
 /**

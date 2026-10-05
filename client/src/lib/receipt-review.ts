@@ -5,6 +5,7 @@ import {
   addReviewDrafts,
   matchingAllocationsForExpense,
   newId,
+  pruneTombstones,
   resolveReceiptLines,
   type AppData,
   type Receipt,
@@ -21,71 +22,81 @@ export function buildReceiptReviewDrafts(data: AppData, receipt: Receipt): Revie
     receipt.lines?.length ? receipt.lines : [{ id: "whole", category: receipt.category, amount: receipt.amount }],
     receipt.amount,
   );
+  const biggest = [...lines].sort((left, right) => right.amount - left.amount)[0];
+  const category = biggest?.category || receipt.category;
+  const matched = matchingAllocationsForExpense(data, {
+    category,
+    memberId: member.id,
+    sourceId: source.id,
+  })[0];
   const now = new Date().toISOString();
-  return lines.map((line) => {
-    const matched = matchingAllocationsForExpense(data, {
-      category: line.category,
-      memberId: member.id,
-      sourceId: source.id,
-    })[0];
-    const allocationId = line.allocationId || matched?.id || "outside";
-    const title = `Bon — ${receipt.vendor}${line.label ? ` · ${line.label}` : ""}`;
-    const transaction: Transaction = {
-      id: `receipt-tx-${receipt.id}-${line.id}`,
-      receiptId: receipt.id,
-      title,
-      amount: line.amount,
-      kind: "expense",
-      category: line.category,
-      sourceId: source.id,
-      source: source.name,
-      memberId: member.id,
-      person: member.name,
-      date: receipt.date,
-      note: receipt.note,
-      allocationId,
-      createdAt: now,
-    };
-    const envelopeLabel = matched?.label || t("în afara plicurilor");
-    return {
-      id: newId("review"),
-      origin: "bon" as const,
-      reason: t("Bon {vendor} · {category} → {envelope}", {
-        vendor: receipt.vendor,
-        category: t(line.category),
-        envelope: envelopeLabel,
-      }),
-      createdAt: now,
-      transaction,
-    };
-  });
+  const transaction: Transaction = {
+    id: `receipt-tx-${receipt.id}`,
+    receiptId: receipt.id,
+    title: `Bon — ${receipt.vendor}`,
+    amount: receipt.amount,
+    kind: "expense",
+    category,
+    sourceId: source.id,
+    source: source.name,
+    memberId: member.id,
+    person: member.name,
+    date: receipt.date,
+    note: receipt.note,
+    allocationId: matched?.id || "outside",
+    createdAt: now,
+  };
+  return [{
+    id: newId("review"),
+    origin: "bon" as const,
+    reason: t("Bon {vendor}: o singură mișcare de {amount}. {count} produse rămân detaliu, nu intrări separate.", {
+      vendor: receipt.vendor,
+      amount: receipt.amount,
+      count: lines.length,
+    }),
+    createdAt: now,
+    transaction,
+  }];
 }
 
-/** Salvează bonul și pune liniile în coada de revizuire — registrul rămâne neatins până la confirmare. */
+/** Salvează bonul. Dacă e legat de o cheltuială deja notată, nu mai scrie o mișcare. Altfel, o singură propunere cu totalul. */
 export function queueReceiptForReview(data: AppData, receipt: Receipt): AppData {
-  const formerIds = new Set(
-    (data.receipts.find((entry) => entry.id === receipt.id)?.linkedTransactionIds
-      || [receipt.linkedTransactionId, `receipt-tx-${receipt.id}`].filter((value): value is string => Boolean(value))),
-  );
+  const now = new Date().toISOString();
+  const generated = data.transactions.filter((entry) => entry.receiptId === receipt.id || entry.id === `receipt-tx-${receipt.id}` || entry.id.startsWith(`receipt-tx-${receipt.id}-`));
+  const formerIds = new Set(generated.map((entry) => entry.id));
   const lines = resolveReceiptLines(
     receipt.lines?.length ? receipt.lines : [{ id: "whole", category: receipt.category, amount: receipt.amount }],
     receipt.amount,
   );
-  const transactionIds = lines.map((line) => `receipt-tx-${receipt.id}-${line.id}`);
+  const attach = receipt.linkedTransactionId
+    ? data.transactions.find((entry) => entry.id === receipt.linkedTransactionId && entry.kind === "expense" && !formerIds.has(entry.id) && !entry.title.startsWith("Bon — "))
+    : undefined;
+  const dropGenerated = (list: AppData["transactions"]) => list.filter((entry) => !formerIds.has(entry.id));
+  const tombstones = pruneTombstones([...data.deleted, ...[...formerIds].map((id) => ({ entity: "transactions" as const, id, deletedAt: now }))]);
+  const pendingReview = data.pendingReview.filter((draft) => draft.transaction.receiptId !== receipt.id && !formerIds.has(draft.transaction.id));
+  if (attach) {
+    const stored: Receipt = { ...receipt, lines, linkedTransactionId: attach.id, linkedTransactionIds: [attach.id], updatedAt: now };
+    return {
+      ...data,
+      receipts: [stored, ...data.receipts.filter((entry) => entry.id !== receipt.id)],
+      transactions: dropGenerated(data.transactions).map((entry) => entry.id === attach.id ? { ...entry, receiptId: receipt.id, updatedAt: now } : entry),
+      pendingReview,
+      deleted: formerIds.size ? tombstones : data.deleted,
+    };
+  }
   const stored: Receipt = {
     ...receipt,
     lines,
     linkedTransactionId: undefined,
-    linkedTransactionIds: transactionIds,
-    updatedAt: new Date().toISOString(),
+    linkedTransactionIds: [`receipt-tx-${receipt.id}`],
+    updatedAt: now,
   };
   const withoutFormer: AppData = {
     ...data,
     receipts: [stored, ...data.receipts.filter((entry) => entry.id !== receipt.id)],
-    transactions: data.transactions.filter((entry) => !formerIds.has(entry.id) && entry.receiptId !== receipt.id),
-    pendingReview: data.pendingReview.filter(
-      (draft) => draft.transaction.receiptId !== receipt.id && !formerIds.has(draft.transaction.id),
-    ),
+    transactions: dropGenerated(data.transactions),
+    pendingReview,
+    deleted: formerIds.size ? tombstones : data.deleted,
   };
   return addReviewDrafts(withoutFormer, buildReceiptReviewDrafts(withoutFormer, stored));
 }
