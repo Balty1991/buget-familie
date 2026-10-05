@@ -224,7 +224,9 @@ describe("analize de gospodărie", () => {
     expect(trackModeHero({ periodIncome: 0, liquidNow: 1155, spentToday: 45 })).toEqual({ kind: "liquid", value: 1155 });
     expect(trackModeHero({ periodIncome: 0, liquidNow: 0, spentToday: 45 })).toEqual({ kind: "spent", value: 45 });
     expect(trackModeHero({ periodIncome: 0, liquidNow: 0, spentToday: 0 })).toEqual({ kind: "empty", value: 0 });
-    expect(trackModeHero({ periodIncome: 3000, liquidNow: 1200, spentToday: 45 })).toEqual({ kind: "income", value: 3000 });
+    expect(trackModeHero({ periodIncome: 3000, liquidNow: 3000, spentToday: 0 })).toEqual({ kind: "income", value: 3000 });
+    expect(trackModeHero({ periodIncome: 3000, liquidNow: 1200, spentToday: 45 })).toEqual({ kind: "liquid", value: 1200 });
+    expect(trackModeHero({ periodIncome: 280, liquidNow: 0, spentToday: 280 })).toEqual({ kind: "liquid", value: 0 });
   });
 
   it("pune scadențele din următoarele 7 zile în briefingul de azi", () => {

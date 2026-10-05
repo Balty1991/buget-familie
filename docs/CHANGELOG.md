@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.154
+
+- Fără plicuri, cifra mare de pe Astăzi e ce a mai rămas în surse, nu venitul brut. O cheltuială o scade. Cu plicuri, rămâne „Poți folosi azi” sau „Rămas în plicuri”.
+
 ## 1.1.153
 
 Sync familie — administratorul camerei:

@@ -14,6 +14,29 @@ describe("rezumatul de azi", () => {
     expect(summary.todayStrip).toBe(summary.rhythm.days.find((row) => row.isToday)?.left);
   });
 
+  it("fără plicuri, cheltuiala scade cifra mare; cu plicuri rămâne ritmul zilei", () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-10-01", nextPayday: "", sourceIds: ["source-cash"], allocations: [] };
+    data.settings.paymentSources = data.settings.paymentSources.map((source) => source.id === "source-cash" ? { ...source, openingBalance: 0 } : source);
+    data.transactions = [
+      { id: "in", title: "Buget", amount: 280, kind: "income", category: "Venit", sourceId: "source-cash", source: "Cash", memberId: "member-me", person: "Alin", date: "2026-10-05" },
+      { id: "out", title: "Exflor", amount: 96.95, kind: "expense", category: "Alimente", sourceId: "source-cash", source: "Cash", memberId: "member-me", person: "Alin", date: "2026-10-05" },
+    ];
+    const open = buildTodaySummary(data, "2026-10-05");
+    expect(open.heroLabel).toBe("Ai acum");
+    expect(open.heroValue).toBeCloseTo(183.05, 2);
+
+    const withPlan = structuredClone(data);
+    withPlan.settings.salaryPlan = {
+      ...withPlan.settings.salaryPlan,
+      nextPayday: "2026-10-25",
+      allocations: [{ id: "food", label: "Alimente", amount: 200, category: "Alimente", weeklyPace: true }],
+    };
+    const withEnvelopes = buildTodaySummary(withPlan, "2026-10-05");
+    expect(withEnvelopes.heroLabel).toBe("Poți folosi azi");
+    expect(withEnvelopes.heroValue).toBe(withEnvelopes.brief.spendable);
+  });
+
   it("cu ritm săptămânal, cardul și căsuța de azi pleacă din aceeași limită", () => {
     const data = createEmptyAppData();
     data.settings.salaryPlan = {

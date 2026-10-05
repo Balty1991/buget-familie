@@ -1048,11 +1048,15 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
   };
 };
 
-/** Hero pe drumul „doar urmăresc”: fără payday, fără plicuri. */
+/** Hero pe drumul „doar urmăresc”: fără payday, fără plicuri.
+ * Venitul brut rămâne doar cât nu s-a cheltuit din el. După o cheltuială, cifra mare
+ * e ce a mai rămas în surse, ca să nu pară că ieșirea nu s-a scăzut. */
 export function trackModeHero(input: { periodIncome: number; liquidNow: number; spentToday: number }): {
   kind: "income" | "liquid" | "spent" | "empty";
   value: number;
 } {
+  const spentAgainstIncome = input.periodIncome > 0.009 && input.liquidNow < input.periodIncome - 0.009;
+  if (spentAgainstIncome) return { kind: "liquid", value: Math.max(0, input.liquidNow) };
   if (input.periodIncome > 0) return { kind: "income", value: input.periodIncome };
   if (input.liquidNow > 0) return { kind: "liquid", value: input.liquidNow };
   if (input.spentToday > 0) return { kind: "spent", value: input.spentToday };
