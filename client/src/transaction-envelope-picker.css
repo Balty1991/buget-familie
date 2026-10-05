@@ -4,6 +4,41 @@
 .bf-envelope-choice p:last-child, .bf-envelope-empty { margin: 0; color: #60776b; font-size:12px; line-height: 1.45; }
 .bf-envelope-choice .bf-field { gap: 5px; }
 .bf-envelope-choice select { background: #fffefa; }
+
+.bf-spend-from {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.bf-spend-from button {
+  display: grid;
+  gap: 3px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--cf-line, #bfd2c6);
+  border-radius: 14px;
+  background: var(--cf-surface, #fffefa);
+  color: var(--cf-ink, #1e4d40);
+  text-align: left;
+}
+.bf-spend-from button b {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.bf-spend-from button small {
+  color: var(--cf-muted, #60776b);
+  font-size: 12px;
+  line-height: 1.3;
+}
+.bf-spend-from button.is-on {
+  border-color: var(--cf-primary, #1d8064);
+  background: color-mix(in srgb, var(--cf-primary, #1d8064) 12%, var(--cf-surface, #fff));
+}
+.bf-spend-from button:disabled {
+  opacity: 0.55;
+}
+.bf-quick-envelope .bf-spend-from { margin-top: 2px; }
 .bf-envelope-match.outside { border-color: #9aa9a1; border-left-color: #71837a; background: #f0f4f1; }
 .bf-envelope-match.outside p { color: #526960; }
 .bf-envelope-match.outside b { color: #294b40; }

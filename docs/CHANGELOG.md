@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.158
+
+- Dacă există și un plic potrivit și bani nerepartizați, cheltuiala nu mai alege plicul singură. Apar două variante: din plic sau din nerepartizat. A doua se închide când suma nu încape, cu cât lipsește.
+
 ## 1.1.157
 
 - În Mișcări, o cheltuială cu bon arată articolele pe loc. Din cheltuială: „Adaugă articole”, fără a doua mișcare. Restul sub total intră singur.
