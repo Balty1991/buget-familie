@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.159
+
+- Schimbarea de ecran nu mai estompează două pagini una peste alta și nu mai arată „Pregătim…” la fiecare intrare. Ecranul vechi rămâne până e gata cel nou, apoi trece dintr-o dată.
+
 ## 1.1.158
 
 - Dacă există și un plic potrivit și bani nerepartizați, cheltuiala nu mai alege plicul singură. Apar două variante: din plic sau din nerepartizat. A doua se închide când suma nu încape, cu cât lipsește.
