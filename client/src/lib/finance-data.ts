@@ -516,7 +516,7 @@ function cleanStamps(value: unknown): Record<string, string> | undefined {
   return entries.length ? Object.fromEntries(entries) : undefined;
 }
 
-const foldReceiptName = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/\p{M}/gu, "").replace(/\s+/g, " ").trim();
+const foldReceiptName = (value: string) => value.toLocaleLowerCase("ro-RO").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
 
 /** Cheltuieli notate de mână, în aceeași zi, la care un bon poate fi doar detaliu. */
 export function receiptAttachCandidates(data: AppData, vendor: string, amount: number, date: string): Transaction[] {

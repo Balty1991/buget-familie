@@ -4078,30 +4078,6 @@ html.theme-white .os-shell .os-dock button {
 .os-shell .bf-receipt-list > article p {
   color: var(--os-muted, var(--cf-muted)) !important;
 }
-.os-shell .bf-receipt-lines {
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 3px;
-}
-.os-shell .bf-receipt-lines li {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: baseline;
-  font-size: 13px;
-  line-height: 1.35;
-}
-.os-shell .bf-receipt-lines li span {
-  min-width: 0;
-}
-.os-shell .bf-receipt-lines li b {
-  font-weight: 650 !important;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
 html.theme-white .os-shell .bf-more-group {
   border-color: #c5cec8;
   background: rgba(245, 247, 246, .9);

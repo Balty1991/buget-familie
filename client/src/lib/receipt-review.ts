@@ -73,7 +73,7 @@ export function queueReceiptForReview(data: AppData, receipt: Receipt): AppData 
     ? data.transactions.find((entry) => entry.id === receipt.linkedTransactionId && entry.kind === "expense" && !formerIds.has(entry.id) && !entry.title.startsWith("Bon — "))
     : undefined;
   const dropGenerated = (list: AppData["transactions"]) => list.filter((entry) => !formerIds.has(entry.id));
-  const tombstones = pruneTombstones([...data.deleted, ...[...formerIds].map((id) => ({ entity: "transactions" as const, id, deletedAt: now }))]);
+  const tombstones = pruneTombstones([...data.deleted, ...Array.from(formerIds, (id) => ({ entity: "transactions" as const, id, deletedAt: now }))]);
   const pendingReview = data.pendingReview.filter((draft) => draft.transaction.receiptId !== receipt.id && !formerIds.has(draft.transaction.id));
   if (attach) {
     const stored: Receipt = { ...receipt, lines, linkedTransactionId: attach.id, linkedTransactionIds: [attach.id], updatedAt: now };

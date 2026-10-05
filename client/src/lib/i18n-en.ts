@@ -2760,7 +2760,6 @@ export const en: Record<string, string> = {
   "Poți plăti cel mult {amount} pentru această datorie.": "You can pay at most {amount} for this debt.",
   "Confirmi plata de {amount} pentru „{name}”? Soldul datoriei va deveni {remaining}.": "Confirm the {amount} payment for “{name}”? The remaining debt will be {remaining}.",
   "Plătește rata · {name}": "Pay instalment · {name}",
-  "rămân {amount}": "{amount} left",
   "Repartizarea este {split}, dar totalul bonului este {total}. Corectează liniile înainte de salvare.": "The split is {split}, but the receipt total is {total}. Correct the lines before saving.",
   "Poți lăsa o diferență: ecotaxa sau un produs nenumit intră singur ca „Rest bon”. Nu salva doar dacă liniile trec peste total.": "You can leave a difference: a deposit or an unnamed item is added on its own as “Receipt remainder”. Saving is blocked only when the lines go over the total.",
   "Restul de {amount} intră pe bon ca diferență. Nu trebuie să-l împărți pe produse.": "The remaining {amount} is added as a difference. You don't have to split it across products.",
