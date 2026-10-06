@@ -32,7 +32,7 @@ import { selfMemberIdOf } from "@/lib/member-identity";
 
 const originCopy = (origin: ReviewOrigin) => {
   if (origin === "import") return t("Extras de cont");
-  if (origin === "bon") return t("Bon fotografiat");
+  if (origin === "bon") return t("Bon notat");
   if (origin === "asistent") return t("Ghid AI");
   return t("Notificare bancară");
 };

@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { Debt } from "./finance-data";
-import { amortize, orderDebts, payoffPlan, recommendedStrategy } from "./debt-plan";
+import { amortize, buildDebtSchedule, orderDebts, payoffPlan, recommendedStrategy } from "./debt-plan";
 
 const debt = (id: string, remaining: number, monthly: number, annualRate?: number): Debt => ({ id, name: id, remaining, monthly, due: "", tone: "coral", annualRate });
 
@@ -27,6 +27,25 @@ describe("scadențar cu dobândă", () => {
 
   it("o rată care nu acoperă dobânda nu se termină niciodată", () => {
     expect(amortize(10000, 36, 250).months).toBeNull();
+  });
+
+  it("300 din 700 rămâne parțial; două plăți în aceeași lună se adună", () => {
+    const partial = buildDebtSchedule({ monthly: 700, remaining: 10000, payments: [{ amount: 300, date: "2026-10-06" }] });
+    expect(partial.rows[0]).toMatchObject({ status: "partial", paidAmount: 300, planned: 700, remainingAmount: 400 });
+    const both = buildDebtSchedule({ monthly: 700, remaining: 9300, payments: [{ amount: 300, date: "2026-10-01" }, { amount: 400, date: "2026-10-20" }] });
+    expect(both.rows[0]).toMatchObject({ status: "paid", paidAmount: 700 });
+    expect(both.rows.filter((row) => row.date.startsWith("2026-10"))).toHaveLength(1);
+  });
+
+  it("ultima rată, mai mică, nu se numește parțială dacă datoria s-a închis", () => {
+    const closed = buildDebtSchedule({ monthly: 700, remaining: 0, payments: [{ amount: 180, date: "2026-10-02", debtRemainingAfter: 0 }] });
+    expect(closed.rows[0]).toMatchObject({ status: "paid", planned: 180, paidAmount: 180 });
+  });
+
+  it("arată doar primele 120 de rate viitoare", () => {
+    const schedule = buildDebtSchedule({ monthly: 100, remaining: 50000, payments: [] });
+    expect(schedule.futureCapped).toBe(true);
+    expect(schedule.rows).toHaveLength(120);
   });
 });
 

@@ -323,7 +323,7 @@ function MerchantRulesSection({ data, onChange }: { data: AppData; onChange: (va
     <section id="bf-merchant-rules" className="bf-merchant-rules">
       <p className="bf-kicker">{t("REGULI COMERCIANT")}</p>
       <h2>{t("Dacă titlul conține…")}</h2>
-      <p>{t("Propune categorie sau plic la import, OCR și asistent. Nu salvează nimic fără confirmarea ta.")}</p>
+      <p>{t("Propune categorie sau plic la import și la asistent. Nu salvează nimic fără confirmarea ta.")}</p>
       <div className="bf-merchant-rule-form">
         <Field label={t("Text în titlu")}><input value={match} onChange={(event) => setMatch(event.target.value)} placeholder={t("ex. Glovo, ENEL, Starbucks")} /></Field>
         <Field label={t("Categorie propusă")}><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></Field>

@@ -61,8 +61,8 @@ export const USAGE_LESSONS: UsageLesson[] = [
     how: "Bon sau extras CSV (BCR, BT, ING, Revolut) ajung aici. Confirmi, abia apoi se scrie.",
     nav: "De verificat",
     paragraphs: [
-      "Bon fotografiat sau extras CSV (BCR, BT, ING, Revolut) ajung aici ca propuneri. Confirmi denumirea, categoria și plicul — abia atunci se scrie mișcarea.",
-      "Pozele rămân pe telefon. Partenerul vede un rezumat, nu fotografia, și nu poate confirma în locul tău.",
+      "Bonul scris sau extrasul CSV (BCR, BT, ING, Revolut) ajung aici ca propuneri. Confirmi denumirea, categoria și plicul — abia atunci se scrie mișcarea.",
+      "Partenerul vede un rezumat, nu poate confirma în locul tău.",
     ],
     action: { label: "Deschide De verificat", go: "review" },
   },

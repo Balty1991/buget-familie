@@ -6,9 +6,9 @@ import "../objective-edit.css";
 import "../mobile-obligations-pass.css";
 import { useState } from "react";
 import { BellRing, Bot, CalendarClock, CalendarDays, Check, ChevronRight, Gift, Pencil, PiggyBank, Plus, Trash2 } from "lucide-react";
-import { addIsoDays, allocationStatus, debtPaymentHistory, isoDate, isoToday, newId, pendingRecurringInPlan, type AppData, type Debt, type RecurringPayment, type SavingsGoal, type Transaction } from "@/lib/finance-data";
+import { addIsoDays, allocationStatus, debtPaymentHistory, isoDate, isoToday, newId, pendingRecurringInPlan, type AppData, type Debt, type RecurringPayment, type SavingsGoal } from "@/lib/finance-data";
 import { dateText, money } from "@/pages/home-kit";
-import { amortize, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type PayoffStrategy } from "@/lib/debt-plan";
+import { amortize, buildDebtSchedule, monthAfter, orderDebts, payoffPlan, recommendedStrategy, type DebtScheduleRow, type PayoffStrategy } from "@/lib/debt-plan";
 import { getLocale, monthsLabel, t } from "@/lib/i18n";
 import { PaidCheck } from "@/components/PaidCheck";
 import { detectSubscriptions, monthTitle, recurringFromDetection, recurringPriceChanges, savingsSuggestion } from "@/lib/household-insights";
@@ -24,37 +24,25 @@ import { activeNeeds, reserveOf } from "@/lib/monthly-needs";
 
 export function DebtPaymentHistory({ data, debt }: { data: AppData; debt: Debt }) { const history = debtPaymentHistory(data, debt.id); if (!history.length) return <p className="bf-debt-history empty">{t("Nu există încă plăți confirmate pentru această datorie.")}</p>; return <div className="bf-debt-history"><p>{t("PLĂȚI ÎNREGISTRATE")}</p>{history.slice(0, 4).map((payment) => <div key={payment.id}><span><b>{payment.title.includes("achitată integral") ? t("Achitată integral") : t("Plată parțială")}</b><small>{dateText(payment.date, true)} · {payment.source}</small></span><span><strong>{money(payment.amount)}</strong><small>{t("rămân {amount}", { amount: money(payment.debtRemainingAfter ?? debt.remaining) })}</small></span></div>)}</div>; }
 
-type ScheduleRow = { index: number; date: string; amount: number; interest?: number; paid?: Transaction };
-/**
- * Ratele plătite deja, apoi ratele rămase cu dobânda pe sold (testare, M4). Fără dobândă
- * scrisă, calculul rămâne sold ÷ rată, ca înainte.
- */
-function debtScheduleRows(data: AppData, debt: Debt): { rows: ScheduleRow[]; plan: ReturnType<typeof amortize> } {
-  const monthly = Math.max(0, debt.monthly);
-  const plan = amortize(debt.remaining, debt.annualRate, monthly);
-  if (!monthly) return { rows: [], plan };
-  const history = debtPaymentHistory(data, debt.id).slice().sort((a, b) => a.date.localeCompare(b.date));
-  const paidRows: ScheduleRow[] = history.map((item, offset) => ({ index: offset + 1, date: item.date, amount: item.amount, paid: item }));
-  const first = debt.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(debt.dueDate) ? new Date(debt.dueDate + "T12:00:00") : new Date();
-  const lastPaidMonth = history.length ? history[history.length - 1].date.slice(0, 7) : "";
-  let cursor = new Date(first.getFullYear(), first.getMonth(), 1, 12);
-  while (lastPaidMonth && isoDate(cursor).slice(0, 7) <= lastPaidMonth) cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12);
-  const futureRows: ScheduleRow[] = plan.rows.slice(0, 120).map((row, offset) => {
-    const month = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1, 12);
-    const day = Math.min(first.getDate(), new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate());
-    return { index: paidRows.length + row.index, date: isoDate(new Date(month.getFullYear(), month.getMonth(), day, 12)), amount: row.payment, interest: row.interest };
-  });
-  return { rows: [...paidRows, ...futureRows], plan };
+function debtScheduleRows(data: AppData, debt: Debt) {
+  return buildDebtSchedule({ monthly: debt.monthly, remaining: debt.remaining, annualRate: debt.annualRate, dueDate: debt.dueDate, payments: debtPaymentHistory(data, debt.id) });
+}
+function scheduleDetail(row: DebtScheduleRow) {
+  if (row.status === "partial") return t("{paid} / {planned} plătiți · mai lipsesc {rest}", { paid: money(row.paidAmount), planned: money(row.planned), rest: money(row.remainingAmount) });
+  if (row.status === "overpaid") return t("plătit {paid}, peste rata de {planned}", { paid: money(row.paidAmount), planned: money(row.planned) });
+  if (row.status === "paid" && row.paidOn) return t(" · plătită la ") + dateText(row.paidOn, true);
+  if (row.interest) return t(" · din care dobândă {amount}", { amount: money(row.interest) });
+  return t(" · neplătită");
 }
 function DebtSchedule({ data, debt, onPay }: { data: AppData; debt: Debt; onPay: () => void }) {
-  const { rows, plan } = debtScheduleRows(data, debt);
+  const { rows, plan, futureCapped } = debtScheduleRows(data, debt);
   const [expanded, setExpanded] = useState(false);
   if (!debt.monthly) return null;
   if (plan.months === null) return <div className="bf-debt-schedule"><p className="bf-form-error" role="alert">{t("Rata de {monthly} nu acoperă nici dobânda lunară: datoria crește. Mărește rata sau vorbește cu creditorul.", { monthly: money(debt.monthly) })}</p></div>;
   if (!rows.length) return null;
   const visible = expanded ? rows : rows.slice(0, 6);
-  const paidCount = rows.filter((row) => row.paid).length;
-  return <div className="bf-debt-schedule"><div className="bf-debt-schedule-head"><div><p>{t("SCADENȚAR COMPLET")}</p><b>{t("{paid} din {total} rate bifate", { paid: paidCount, total: rows.length })}</b>{plan.totalInterest > 0 && <small>{t("Dobândă de plătit până la final: {amount}", { amount: money(plan.totalInterest) })}</small>}</div><span>{t("{amount} rămas", { amount: money(debt.remaining) })}</span></div><div className="bf-debt-schedule-list">{visible.map((row) => <div className={"bf-debt-schedule-row " + (row.paid ? "paid" : "")} key={`${row.index}-${row.date}`}><button type="button" className="bf-schedule-check" aria-label={row.paid ? "Rata " + row.index + t(" achitată") : t("Confirmă rata ") + row.index} onClick={row.paid ? undefined : onPay}>{row.paid ? <Check size={15} /> : <span />}</button><span><b>Rata {String(row.index).padStart(2, "0")}</b><small>{dateText(row.date, true)}{row.paid ? t(" · plătită la ") + dateText(row.paid.date, true) : row.interest ? t(" · din care dobândă {amount}", { amount: money(row.interest) }) : t(" · neplătită")}</small></span><strong>{money(row.paid?.amount || row.amount)}</strong></div>)}</div>{rows.length > 6 && <button type="button" className="bf-schedule-more" onClick={() => setExpanded((value) => !value)}>{expanded ? t("Arată mai puține") : t("Arată toate cele ") + rows.length + " rate"}</button>}</div>;
+  const paidCount = rows.filter((row) => row.status === "paid" || row.status === "overpaid").length;
+  return <div className="bf-debt-schedule"><div className="bf-debt-schedule-head"><div><p>{futureCapped ? t("PRIMELE 120 DE RATE") : t("SCADENȚAR COMPLET")}</p><b>{t("{paid} din {total} rate bifate", { paid: paidCount, total: rows.length })}</b>{plan.totalInterest > 0 && <small>{t("Dobândă de plătit până la final: {amount}", { amount: money(plan.totalInterest) })}</small>}</div><span>{t("{amount} rămas", { amount: money(debt.remaining) })}</span></div>{futureCapped ? <small>{t("După aceste 120 de rate mai sunt luni. Lista se oprește aici ca să rămână ușoară.")}</small> : null}<div className="bf-debt-schedule-list">{visible.map((row) => <div className={"bf-debt-schedule-row " + (row.status === "paid" || row.status === "overpaid" ? "paid" : row.status === "partial" ? "partial" : "")} key={`${row.index}-${row.date}`}><button type="button" className="bf-schedule-check" aria-label={row.status === "paid" || row.status === "overpaid" ? "Rata " + row.index + t(" achitată") : t("Confirmă rata ") + row.index} onClick={row.status === "paid" || row.status === "overpaid" ? undefined : onPay}>{row.status === "paid" || row.status === "overpaid" ? <Check size={15} /> : <span />}</button><span><b>Rata {String(row.index).padStart(2, "0")}</b><small>{dateText(row.date, true)}{scheduleDetail(row)}</small></span><strong>{money(row.status === "unpaid" ? row.planned : row.paidAmount)}</strong></div>)}</div>{rows.length > 6 && <button type="button" className="bf-schedule-more" onClick={() => setExpanded((value) => !value)}>{expanded ? t("Arată mai puține") : t("Arată toate cele ") + rows.length + " rate"}</button>}</div>;
 }
 const monthYear = (date: Date) => new Intl.DateTimeFormat(getLocale(), { month: "long", year: "numeric" }).format(date);
 

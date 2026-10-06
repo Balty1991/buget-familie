@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.169
+
+- Textele nu mai promit poză la bon. Bonul se scrie de mână.
+- O rată plătită pe jumătate nu se mai bifează. Scrie cât s-a plătit și cât lipsește.
+- Un credit lung nu se mai numește scadențar complet: sunt primele 120 de rate.
+
 ## 1.1.168
 
 - Blocul de articole e mai scurt: fără titlu mare, rânduri mai joase, butonul de adăugare mai mic.

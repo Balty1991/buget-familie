@@ -41,6 +41,65 @@ export function amortize(balance: number, annualRate: number | undefined, monthl
   return { months: left > 0.004 ? null : rows.length, totalInterest, rows };
 }
 
+export type DebtScheduleStatus = "unpaid" | "partial" | "paid" | "overpaid";
+export type DebtScheduleRow = {
+  index: number;
+  date: string;
+  planned: number;
+  paidAmount: number;
+  remainingAmount: number;
+  status: DebtScheduleStatus;
+  interest?: number;
+  paidOn?: string;
+};
+
+const isoDay = (date: Date) => {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
+/** Plățile aceleiași luni stau pe o rată. 300 din 700 rămâne parțial, nu bifat. */
+export function buildDebtSchedule(input: {
+  monthly: number;
+  remaining: number;
+  annualRate?: number;
+  dueDate?: string;
+  payments: Array<{ amount: number; date: string; debtRemainingAfter?: number }>;
+  futureLimit?: number;
+}): { rows: DebtScheduleRow[]; plan: Amortization; futureCapped: boolean } {
+  const monthly = Math.max(0, input.monthly);
+  const plan = amortize(input.remaining, input.annualRate, monthly);
+  const payments = input.payments.filter((item) => item.amount > 0).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const byMonth = new Map<string, typeof payments>();
+  for (const payment of payments) {
+    const key = payment.date.slice(0, 7);
+    const list = byMonth.get(key) || [];
+    list.push(payment);
+    byMonth.set(key, list);
+  }
+  const rows: DebtScheduleRow[] = [];
+  for (const [key, list] of byMonth) {
+    const paidAmount = cents(list.reduce((sum, item) => sum + item.amount, 0));
+    const closed = list.some((item) => item.debtRemainingAfter === 0);
+    const planned = closed && paidAmount + 0.009 < monthly ? paidAmount : monthly;
+    const remainingAmount = cents(Math.max(0, planned - paidAmount));
+    const status: DebtScheduleStatus = remainingAmount <= 0.009 ? (paidAmount > planned + 0.009 ? "overpaid" : "paid") : "partial";
+    rows.push({ index: rows.length + 1, date: `${key}-01`, planned, paidAmount, remainingAmount, status, paidOn: list[list.length - 1]?.date });
+  }
+  const lastPaidMonth = payments.length ? payments[payments.length - 1].date.slice(0, 7) : "";
+  const first = input.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(input.dueDate) ? new Date(`${input.dueDate}T12:00:00`) : new Date();
+  let cursor = new Date(first.getFullYear(), first.getMonth(), 1, 12);
+  while (lastPaidMonth && isoDay(cursor).slice(0, 7) <= lastPaidMonth) cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12);
+  const limit = input.futureLimit ?? 120;
+  for (const [offset, row] of plan.rows.slice(0, limit).entries()) {
+    const month = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1, 12);
+    const day = Math.min(first.getDate(), new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate());
+    rows.push({ index: rows.length + 1, date: isoDay(new Date(month.getFullYear(), month.getMonth(), day, 12)), planned: row.payment, paidAmount: 0, remainingAmount: row.payment, status: "unpaid", interest: row.interest });
+  }
+  return { rows, plan, futureCapped: plan.rows.length > limit };
+}
+
 export type PayoffPlan = {
   strategy: PayoffStrategy;
   /** Ordinea în care primesc banii în plus. */

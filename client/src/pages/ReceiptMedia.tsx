@@ -47,6 +47,7 @@ export function ReceiptThumbnail({ receipt }: { receipt: Receipt }) {
     }).catch(() => { if (active) setUrl(undefined); });
     return () => { active = false; releaseReceiptObjectUrl(cacheKey); setUrl(undefined); };
   }, [visible, receipt.imageData, receipt.imageKeys?.[0]]);
+  if (!hasPhoto) return null;
   return (
     <>
       <span ref={ref} className="bf-receipt-thumb">
