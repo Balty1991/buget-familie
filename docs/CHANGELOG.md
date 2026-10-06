@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.164
+
+- Când planul e depășit, cifra mare are minus în față. Nu mai pare că ai banii aceia.
+- Sub Gata, la cheltuială: „Cheltuială detaliată: scrie articolele de pe bon”. De acolo se scriu articolele, nu din Mișcări după.
+
 ## 1.1.163
 
 - Sub cifra mare scrie ce este: rămas de cheltuit azi, rămas în plicuri sau rămas în surse.

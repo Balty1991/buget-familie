@@ -326,6 +326,7 @@ export const en: Record<string, string> = {
   "Adaugă la scadențe": "Add to due dates",
   "Adaugă magazinul și totalul. Fotografiile sunt opționale; fiecare categorie creează o cheltuială legată de același bon.": "Add the shop and the total. Photos are optional; each category creates an expense linked to the same receipt.",
   "Adaugă notiță, altă dată sau corectează": "Add a note, change the date or correct it",
+  "Cheltuială detaliată: scrie articolele de pe bon": "Detailed expense: write the items on the receipt",
   "Adaugă o dată la datorii sau o scadență recurentă pentru a le vedea aici.": "Add a date to a debt or a recurring due date to see them here.",
   "Adaugă prima mișcare": "Add your first movement",
   "Adaugă regula": "Add rule",

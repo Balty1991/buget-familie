@@ -417,7 +417,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
         ) : (
           <>
             <h1 className="os-amount">
-              <span>{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span>{overPlan ? "−" : ""}{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
             <p className="os-hero-label">{heroLabel}</p>

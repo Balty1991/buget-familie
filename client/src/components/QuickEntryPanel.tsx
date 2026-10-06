@@ -346,7 +346,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
       {error && <p className="bf-form-error" role="alert">{error}</p>}
       </div>
       <div className="bf-quick-entry-footer">
-      <button className="bf-primary full" onClick={save}><Check size={17} /> {t("Gata")}</button><button className="bf-quick-entry-more" onClick={() => onMore(draftFromForm())}><Plus size={16} /> {t("Adaugă notiță, altă dată sau corectează")}</button>
+      <button className="bf-primary full" onClick={save}><Check size={17} /> {t("Gata")}</button><button className="bf-quick-entry-more" onClick={() => onMore(draftFromForm())}><Plus size={16} /> {kind === "expense" ? t("Cheltuială detaliată: scrie articolele de pe bon") : t("Adaugă notiță, altă dată sau corectează")}</button>
       </div>
     </section>
   </div>;
