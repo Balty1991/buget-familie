@@ -63,15 +63,16 @@ export function buildReceiptReviewDrafts(data: AppData, receipt: Receipt): Revie
 /** Salvează bonul. Dacă e legat de o cheltuială deja notată, nu mai scrie o mișcare. Altfel, o singură propunere cu totalul. */
 export function queueReceiptForReview(data: AppData, receipt: Receipt): AppData {
   const now = new Date().toISOString();
-  const generated = data.transactions.filter((entry) => entry.receiptId === receipt.id || entry.id === `receipt-tx-${receipt.id}` || entry.id.startsWith(`receipt-tx-${receipt.id}-`));
+  // Doar mișcările făcute de bon. Cheltuiala notată de om, cu bonul atașat, rămâne (altfel o ștergeam la editare).
+  const generated = data.transactions.filter((entry) => entry.id === `receipt-tx-${receipt.id}` || entry.id.startsWith(`receipt-tx-${receipt.id}-`));
   const formerIds = new Set(generated.map((entry) => entry.id));
   const lines = resolveReceiptLines(
     receipt.lines?.length ? receipt.lines : [{ id: "whole", category: receipt.category, amount: receipt.amount }],
     receipt.amount,
   );
-  const attach = receipt.linkedTransactionId
-    ? data.transactions.find((entry) => entry.id === receipt.linkedTransactionId && entry.kind === "expense" && !formerIds.has(entry.id) && !entry.title.startsWith("Bon — "))
-    : undefined;
+  const attachable = (entry: Transaction) => entry.kind === "expense" && !formerIds.has(entry.id);
+  const attach = (receipt.linkedTransactionId ? data.transactions.find((entry) => entry.id === receipt.linkedTransactionId && attachable(entry)) : undefined)
+    || data.transactions.find((entry) => entry.receiptId === receipt.id && attachable(entry));
   const dropGenerated = (list: AppData["transactions"]) => list.filter((entry) => !formerIds.has(entry.id));
   const tombstones = pruneTombstones([...data.deleted, ...Array.from(formerIds, (id) => ({ entity: "transactions" as const, id, deletedAt: now }))]);
   const pendingReview = data.pendingReview.filter((draft) => draft.transaction.receiptId !== receipt.id && !formerIds.has(draft.transaction.id));

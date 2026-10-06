@@ -1,6 +1,6 @@
 {
   "name": "buget-familie",
-  "version": "1.1.173",
+  "version": "1.1.174",
   "type": "module",
   "license": "UNLICENSED",
   "private": true,
@@ -82,7 +82,10 @@
       "wouter@3.7.1": "patches/wouter@3.7.1.patch"
     },
     "overrides": {
-      "tailwindcss>nanoid": "3.3.7"
+      "tailwindcss>nanoid": "3.3.7",
+      "proxy-addr": "^2.0.8",
+      "dompurify": "^3.4.16",
+      "@grpc/grpc-js@<1.13.6": "^1.14.5"
     }
   }
 }

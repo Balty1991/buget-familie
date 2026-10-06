@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.174
+
+Audit:
+- Bonuri: editarea unui bon legat de o cheltuială notată de mână ștergea cheltuiala (și, prin sincronizare, și de pe telefonul partenerului). Acum bonul rămâne detaliu, cheltuiala rămâne.
+- Bonuri: ștergerea unui astfel de bon scotea și cheltuiala. Acum pleacă doar bonul și mișcările făcute de el.
+- Navigare: fără rețea, dacă o bucată a ecranului nu se încarcă, meniul schimbă totuși ecranul (arată „offline”), nu rămâne blocat.
+- Pachete: proxy-addr, dompurify și @grpc/grpc-js urcate peste versiunile cu probleme de securitate (`pnpm audit`: 0).
+
 ## 1.1.173
 
 - După trei zile cu cheltuieli, Azi rămâne cifra și Notează. Restul stă sub „Mai mult din ziua asta”.

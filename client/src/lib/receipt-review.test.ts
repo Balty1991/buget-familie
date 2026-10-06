@@ -152,3 +152,29 @@ describe("bon → plicuri + poartă de revizuire", () => {
     expect(next.receipts[0].lines).toHaveLength(2);
   });
 });
+
+describe("bonul legat de o cheltuială notată", () => {
+  const base = () => {
+    const data = createEmptyAppData();
+    data.transactions = [{ id: "tx-user", title: "Kaufland", kind: "expense", category: "Alimente", amount: 100, date: "2026-10-05", sourceId: "source-debit", source: "Card", memberId: "member-me", person: "Eu", createdAt: "2026-10-05T10:00:00.000Z" }];
+    return data;
+  };
+  const receipt = (id: string) => ({ id, vendor: "Kaufland", amount: 100, category: "Alimente", date: "2026-10-05", sourceId: "source-debit", memberId: "member-me", linkedTransactionId: "tx-user", lines: [{ id: "a", category: "Alimente", amount: 100, label: "Pâine" }] });
+
+  it("editarea bonului atașat nu șterge cheltuiala notată de om", () => {
+    const attached = queueReceiptForReview(base(), receipt("bon-k"));
+    expect(attached.transactions.map((item) => item.id)).toEqual(["tx-user"]);
+    const edited = queueReceiptForReview(attached, { ...receipt("bon-k"), note: "corectat" });
+    expect(edited.transactions.map((item) => item.id)).toEqual(["tx-user"]);
+    expect(edited.deleted.some((item) => item.id === "tx-user")).toBe(false);
+    expect(edited.pendingReview).toHaveLength(0);
+  });
+
+  it("detaliul pus pe cheltuială, salvat apoi ca bon, nu șterge cheltuiala", () => {
+    const detailed = attachReceiptDetail(base(), "tx-user", [{ id: "a", category: "Alimente", amount: 100, label: "Pâine" }]);
+    const stored = detailed.receipts[0];
+    const saved = queueReceiptForReview(detailed, stored);
+    expect(saved.transactions.map((item) => item.id)).toEqual(["tx-user"]);
+    expect(saved.deleted.some((item) => item.id === "tx-user")).toBe(false);
+  });
+});
