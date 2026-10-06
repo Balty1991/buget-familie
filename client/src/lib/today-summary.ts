@@ -65,13 +65,13 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
     : heroOver
     ? t("Peste limita planului")
     : brief.hasPayday
-      ? t("Poți folosi azi")
+      ? t("Rămas de cheltuit azi")
       : data.settings.salaryPlan.allocations.length
         ? t("Rămas în plicuri")
         : trackHero.kind === "income"
-          ? t("Venit înregistrat în ciclu")
+          ? t("Venit notat, fără plicuri")
           : trackHero.kind === "liquid"
-            ? t("Ai acum")
+            ? t("Rămas în surse")
             : trackHero.kind === "spent"
               ? t("Cheltuit astăzi")
               : t("Plicuri neconfigurate");

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.163
+
+- Sub cifra mare scrie ce este: rămas de cheltuit azi, rămas în plicuri sau rămas în surse.
+- Notează, la cheltuială: sumă, magazin, Gata. Cine, sursa și categoria stau după un buton. Alegerea din plic sau din nerepartizat rămâne când există amândouă.
+
 ## 1.1.162
 
 - Grupul de backup rămâne deschis după ce intri din Mai mult. Înainte React îl închidea la loc.

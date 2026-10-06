@@ -361,7 +361,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       )}
       <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
         <div className="os-hero-top">
-          {overPlan || fresh ? <span className="os-chip"><i /> {overPlan ? t("Plan de revizuit") : t("Cifra zilei")}</span> : <p className="os-hero-label">{heroLabel}</p>}
+          {overPlan ? <span className="os-chip"><i /> {t("Plan de revizuit")}</span> : null}
           {/* D13: data pe un singur rând („dum., 27 sept.”), nu pe trei. */}
           <time className="os-date-line" dateTime={todayIso}>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}</time>
         </div>
@@ -416,11 +416,11 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           </div>
         ) : (
           <>
-            {overPlan && <p className="os-kicker-lg">{heroLabel}</p>}
             <h1 className="os-amount">
               <span>{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
+            <p className="os-hero-label">{heroLabel}</p>
             <p className="os-hint">{heroHint}</p>
             <div className="bf-os-actions">
               <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>

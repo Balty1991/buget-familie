@@ -9,7 +9,7 @@ describe("rezumatul de azi", () => {
     data.settings.paymentSources = data.settings.paymentSources.map((source) => source.id === "source-cash" ? { ...source, openingBalance: 1200 } : source);
     const summary = buildTodaySummary(data, "2026-09-23");
     expect(summary.heroTracksWeek).toBe(false);
-    expect(summary.heroLabel).toBe("Ai acum");
+    expect(summary.heroLabel).toBe("Rămas în surse");
     expect(summary.heroValue).toBe(1200);
     expect(summary.todayStrip).toBe(summary.rhythm.days.find((row) => row.isToday)?.left);
   });
@@ -23,7 +23,7 @@ describe("rezumatul de azi", () => {
       { id: "out", title: "Exflor", amount: 96.95, kind: "expense", category: "Alimente", sourceId: "source-cash", source: "Cash", memberId: "member-me", person: "Alin", date: "2026-10-05" },
     ];
     const open = buildTodaySummary(data, "2026-10-05");
-    expect(open.heroLabel).toBe("Ai acum");
+    expect(open.heroLabel).toBe("Rămas în surse");
     expect(open.heroValue).toBeCloseTo(183.05, 2);
 
     const withPlan = structuredClone(data);
@@ -33,7 +33,7 @@ describe("rezumatul de azi", () => {
       allocations: [{ id: "food", label: "Alimente", amount: 200, category: "Alimente", weeklyPace: true }],
     };
     const withEnvelopes = buildTodaySummary(withPlan, "2026-10-05");
-    expect(withEnvelopes.heroLabel).toBe("Poți folosi azi");
+    expect(withEnvelopes.heroLabel).toBe("Rămas de cheltuit azi");
     expect(withEnvelopes.heroValue).toBe(withEnvelopes.brief.spendable);
   });
 
@@ -50,7 +50,7 @@ describe("rezumatul de azi", () => {
     const summary = buildTodaySummary(data, "2026-09-07");
     const today = summary.rhythm.days.find((row) => row.isToday);
     expect(summary.heroTracksWeek).toBe(true);
-    expect(summary.heroLabel).toBe("Poți folosi azi");
+    expect(summary.heroLabel).toBe("Rămas de cheltuit azi");
     expect(summary.heroValue).toBe(summary.brief.spendable);
     expect(today && dayStripFigure(today, summary.brief.spendable, summary.heroTracksWeek)).toBe(summary.todayStrip);
     expect(summary.todayStrip).toBe(summary.brief.spendable);
