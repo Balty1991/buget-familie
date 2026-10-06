@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.177
+
+- Astăzi: butonul „Unde sunt banii · Mută” sub cifra mare, și în modul simplu. Arată soldul fiecărei surse (și al cui e) și pe ce categorii s-a cheltuit luna asta.
+- De acolo, „Mută bani sau dă cuiva” deschide direct mutarea între surse. Un membru fără sursă (de exemplu soția) apare ca „Cash {nume} (nou)”: la salvare i se face sursa și banii trec la ea, fără să fie cheltuială.
+- Mutarea arată la fiecare sursă soldul și al cui e; pornește din sursa cu cei mai mulți bani.
+
 ## 1.1.176
 
 Bonurile se scriu doar de mână; citirea bonului din poză e scoasă de tot:
