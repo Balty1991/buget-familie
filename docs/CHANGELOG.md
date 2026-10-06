@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.170
+
+- Capacitor Android 8.5.2. Închide gaura prin care un conținut din afară putea fi încărcat ca aplicația.
+
 ## 1.1.169
 
 - Textele nu mai promit poză la bon. Bonul se scrie de mână.
