@@ -191,7 +191,8 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
       const learnRule = kind === "expense" && title.trim().length >= 3 && allocationId !== "outside" && allocationId !== initial?.allocationId ? { match: title.trim(), category, allocationId } : undefined;
       let detailLinesOut: ReceiptLine[] | undefined;
       if (initial && kind === "expense" && !isForeign && detailOpen) {
-        const normalized = resolveReceiptLines(detailLines, stored);
+        // Fără nicio sumă scrisă nu facem bon: altfel apărea în Bonuri un bon gol cu tot totalul.
+        const normalized = detailLines.some((line) => parseRomanianAmount(line.amount) > 0) ? resolveReceiptLines(detailLines, stored) : [];
         const closed = closeReceiptGap(normalized, stored);
         if (closed.over) return setError(t("Repartizarea este {split}, dar totalul este {total}. Corectează liniile.", { split: fmtExact.format(normalized.reduce((sum, line) => sum + line.amount, 0)), total: fmtExact.format(stored) }));
         detailLinesOut = normalized.length ? closed.lines : linkedReceipt?.lines?.length ? [] : undefined;

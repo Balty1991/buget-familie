@@ -343,16 +343,19 @@ function buildAlerts(data: AppData): PlannedAlert[] {
   // Cifra de mâncare, gratuită, și cu aplicația închisă: WorkManager o ține după ce a fost programată.
   const food = (data.settings.salaryPlan.allocations || []).find((item) => `${item.category || ""} ${item.label}`.toLocaleLowerCase("ro-RO").includes("aliment"));
   if (food) {
-    const week = weekDayCap(data, food, today);
-    const until = envelopeUntilPayday(data, food, today);
+    // După 8:30 notificarea pleacă mâine dimineață: suma se socotește pentru ziua aceea, nu pentru azi.
+    const morning = atLocalHour(0, 8, 30);
+    const tomorrow = morning.getTime() <= Date.now() + 60_000;
+    const day = tomorrow ? addIsoDaysLocal(today, 1) : today;
+    const week = weekDayCap(data, food, day);
+    const until = envelopeUntilPayday(data, food, day);
     const left = week?.todayLeft ?? until?.perDay;
     if (left !== undefined) {
-      const morning = atLocalHour(0, 8, 30);
-      const at = morning.getTime() > Date.now() + 60_000 ? morning : atLocalHour(1, 8, 30);
+      const at = tomorrow ? atLocalHour(1, 8, 30) : morning;
       alerts.push({
         id: id++,
         title: t("Azi la mâncare"),
-        body: t("Azi mai ai {amount} la mâncare.", { amount: money(left) }),
+        body: left > 0.009 ? t("Azi mai ai {amount} la mâncare.", { amount: money(left) }) : t("Plicul de mâncare e gol pentru azi. Ce cumperi se ia din altă parte."),
         at,
         tag: `food-day-${at.toISOString().slice(0, 10)}`,
       });
