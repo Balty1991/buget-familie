@@ -10,7 +10,10 @@ import { formatDate, transferBetweenEnvelopes, type AppData } from "@/lib/financ
 import { checkInRebalance, familyWeekExtras, formatWeeklyCheckInShare, weeklyCheckIn, weeklyDigestHeadline } from "@/lib/household-insights";
 import { downloadWeeklyDigestPdf } from "@/lib/weekly-digest-pdf";
 import { t } from "@/lib/i18n";
-import { lei } from "@/lib/money-format";
+import { BILLING_LIVE } from "@/lib/entitlements";
+import { hasActiveFamilie } from "@/lib/billing-store";
+import { gateWeeklyShare } from "@/lib/launch-offer";
+import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 
 const money = { format: lei };
 
@@ -18,6 +21,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
   const collaborative = data.settings.members.length > 1;
   const [scope, setScope] = useState("family");
   const [shareState, setShareState] = useState<"idle" | "copied" | "shared">("idle");
+  const [shareBlocked, setShareBlocked] = useState(false);
   // După transfer plicul nu mai e în deficit, deci propunerea dispare. Fără această confirmare,
   // cardul s-ar evapora la apăsare și utilizatorul n-ar ști dacă s-a întâmplat ceva.
   const [movedNote, setMovedNote] = useState("");
@@ -32,7 +36,17 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
     const extras = familyWeekExtras(data);
     return [formatWeeklyCheckInShare(check, rebalance), ...(extras.length ? ["", ...extras] : [])].join("\n");
   };
+  const allowShare = () => {
+    const gate = gateWeeklyShare({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie() });
+    if (gate === "blocked") {
+      setShareBlocked(true);
+      return false;
+    }
+    setShareBlocked(false);
+    return true;
+  };
   const share = async () => {
+    if (!allowShare()) return;
     const text = shareText();
     try {
       if (typeof navigator.share === "function") {
@@ -144,10 +158,11 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
         <p className="bf-weekly-empty">{t("Nu există încă mișcări în această săptămână pentru perspectiva aleasă.")}</p>
       )}
       <div className="bf-week-checkin-actions">
+        {shareBlocked && <FamilieUpgrade reason="share" />}
         <button type="button" className="bf-week-share" onClick={() => void share()}>
           <Share2 size={16} /> {shareState === "copied" ? t("Copiat în clipboard") : shareState === "shared" ? t("Trimis") : t("Trimite bilanțul")}
         </button>
-        <a className="bf-week-plan bf-week-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(shareText())}`} target="_blank" rel="noopener noreferrer">{t("Trimite pe WhatsApp")}</a>
+        <a className="bf-week-plan bf-week-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(shareText())}`} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!allowShare()) event.preventDefault(); }}>{t("Trimite pe WhatsApp")}</a>
         <button type="button" className="bf-week-plan" onClick={() => void downloadWeeklyDigestPdf(data).catch(() => undefined)}>
           <FileDown size={16} /> {t("PDF digest")}
         </button>

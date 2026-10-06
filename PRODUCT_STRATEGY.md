@@ -31,15 +31,9 @@ Concurenții mari au validat cererea pentru tracking, bugete, categorii, sincron
 
 În textele introductive, termenul „plic” apare împreună cu explicația **„o sumă pusă deoparte pentru un scop”**. „Ritm prudent” devine **„reper zilnic, nu bani în plus”**. „Sursă” devine **„cont, card sau cash de unde pleacă banii”**. Jargonul poate rămâne în detaliile avansate, dar nu în prima acțiune.
 
-## Primul flux: 3 minute până la primul rezultat
+## Primul flux: un număr, apoi restul
 
-La prima deschidere, utilizatorul alege una dintre trei intenții:
-
-1. **Vreau doar să văd pe ce se duc banii.** Se deschide direct înregistrarea unei cheltuieli.
-2. **Vreau să-mi organizez luna.** Se creează primul venit și două plicuri sugerate, care pot fi modificate.
-3. **Vreau un buget pentru familie.** Se adaugă persoana, sursele de bani și primul plan comun.
-
-Indiferent de alegere, aplicația trebuie să permită „Mai târziu” fără penalizare. Utilizatorul trebuie să vadă un prim rezultat în mai puțin de trei minute: o mișcare înregistrată, o sumă rămasă sau o obligație viitoare.
+La prima deschidere, fără să aleagă un mod: salariul, data salariului, plicul de mâncare. Butonul arată cât poate cheltui azi. Analiza, temele, asistentul și bonurile rămân ascunse până la trei zile cu cheltuieli notate; nu se șterg. „Mai târziu” nu penalizează. Celelalte moduri de pornire stau sub „Alte moduri de a începe”.
 
 ## Principii de accesibilitate și încredere
 
@@ -58,9 +52,11 @@ Recomand **freemium fără reclame în ecranele financiare**. Un abonament pentr
 
 > **Sursă de adevăr:** `client/src/lib/entitlements.ts` (`PLANS`, `TRIAL_DAYS`): Casa = plicuri fără limită, 2 persoane, 1 telefon; probă Familia = 30 de zile. Strategia urmează codul, nu invers.
 
-Funcțiile de bază rămân gratuite. Nu blocăm niciodată accesul la datele deja introduse pentru că utilizatorul a anulat abonamentul.
+Funcțiile de bază rămân gratuite: primul ciclu de salariu, widgetul „cât pot azi”, registrul. La anulare, datele rămân pe telefon.
 
-Play Billing se lipește **după** listare și closed testing. În repository, `BILLING_LIVE = false`: totul e deblocat, ca familia care testează să nu rămână blocată. Nu simulăm plăți reale pe GitHub Pages. Implementarea reală cere aplicație Android, produse în Play Console și verificarea entitlements pe o arhitectură securizată [6].
+Plata se cere în două locuri, după ce omul a văzut valoarea: al doilea bilanț pe WhatsApp și invitația către al doilea telefon. Primul bilanț e gratuit. Proba de 30 de zile pornește la acea apăsare, nu la instalare. Pe ecran, prețul mare e **149 lei/an**; 19,99 lei/lună stă dedesubt.
+
+Play Billing se lipește **după** listare și closed testing, nu în același build cu publicarea. În repository, `BILLING_LIVE = false`: totul e deblocat, ca cele 15 cupluri de test să treacă un ciclu de salariu. Nu simulăm plăți reale pe GitHub Pages.
 
 ## Roadmap recomandat
 

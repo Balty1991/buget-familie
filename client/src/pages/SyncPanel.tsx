@@ -11,7 +11,9 @@ import { isNativeApp } from "@/lib/app-storage";
 import { formatDate } from "@/lib/finance-data";
 import { Field, type SyncPanelProps } from "@/pages/home-kit";
 import { getLocale, t } from "@/lib/i18n";
-import { canUseFamilySync } from "@/lib/entitlements";
+import { canUseFamilySync, BILLING_LIVE } from "@/lib/entitlements";
+import { hasActiveFamilie } from "@/lib/billing-store";
+import { gateSecondPhone } from "@/lib/launch-offer";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 import { showNotice } from "@/lib/confirm-dialog";
 
@@ -117,6 +119,16 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
   const [recoveryShown, setRecoveryShown] = useState(recoveryRevealOnce || "");
   const [showSessionPassword, setShowSessionPassword] = useState(false);
   const [copiedSecret, setCopiedSecret] = useState("");
+  const [phoneBlocked, setPhoneBlocked] = useState(false);
+  const openSecondPhone = (run: () => void) => {
+    const gate = gateSecondPhone({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie() });
+    if (gate === "blocked") {
+      setPhoneBlocked(true);
+      return;
+    }
+    setPhoneBlocked(false);
+    run();
+  };
   useEffect(() => {
     if (!passwordRevealOnce) return;
     setPassword(passwordRevealOnce);
@@ -181,7 +193,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
   };
 
   return <div className="bf-sync">
-    {!canUseFamilySync() ? <FamilieUpgrade reason="sync" /> : null}
+    {!canUseFamilySync() || phoneBlocked ? <FamilieUpgrade reason="sync" /> : null}
     <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{connected ? t("FAMILIE CONECTATĂ") : t("SINCRONIZARE")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Datele se criptează pe telefon. Serverul vede doar un pachet pe care nu-l poate citi. Bonurile se scriu de mână, fără poză.")}</p></div>
     <aside className="bf-sync-local-only" role="note">
       <p className="bf-kicker">{t("CE SE SINCRONIZEAZĂ")}</p>
@@ -218,10 +230,10 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <p className="bf-kicker">{t("INVITĂ UN TELEFON")}</p>
             <p>{t("Trimite invitația partenerului. Pe telefonul lui: Sync → „Am primit o invitație” → lipește mesajul.")}</p>
             <div className="bf-sync-invite-actions">
-              <button type="button" className="bf-primary" onClick={() => void shareInvite(invite).then((shared) => { if (!shared) void copySecret(inviteMessage(parseInvite(invite)!)); })}><Send size={16} /> {t("Trimite invitația")}</button>
-              <button type="button" className="bf-secondary" onClick={() => void copySecret(inviteMessage(parseInvite(invite)!))}><Copy size={16} /> {copiedSecret === inviteMessage(parseInvite(invite)!) ? t("Copiat în clipboard") : t("Copiază invitația")}</button>
+              <button type="button" className="bf-primary" onClick={() => openSecondPhone(() => void shareInvite(invite).then((shared) => { if (!shared) void copySecret(inviteMessage(parseInvite(invite)!)); }))}><Send size={16} /> {t("Trimite invitația")}</button>
+              <button type="button" className="bf-secondary" onClick={() => openSecondPhone(() => void copySecret(inviteMessage(parseInvite(invite)!)))}><Copy size={16} /> {copiedSecret === inviteMessage(parseInvite(invite)!) ? t("Copiat în clipboard") : t("Copiază invitația")}</button>
             </div>
-            <button type="button" className="bf-link-button" aria-expanded={qrOpen} onClick={() => setQrOpen((value) => !value)}>{qrOpen ? t("Ascunde codul QR") : t("Arată codul QR")}</button>
+            <button type="button" className="bf-link-button" aria-expanded={qrOpen} onClick={() => openSecondPhone(() => setQrOpen((value) => !value))}>{qrOpen ? t("Ascunde codul QR") : t("Arată codul QR")}</button>
             {qrOpen && <InviteQr link={inviteLink(parseInvite(invite)!)} />}
             <p className="bf-helper">{t("Cine are invitația intră în familie. Trimite-o doar oamenilor din casă.")}</p>
             {/* Invitația nu expiră singură; dacă a ajuns unde nu trebuia, o schimbi aici. */}
@@ -241,7 +253,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
             <p>{t("Pe web nu păstrăm codul invitației după repornire: e chiar cheia familiei. Trimite invitația de pe un telefon cu aplicația Android sau lipește codul mai jos.")}</p>
             <div className="bf-sync-invite-actions">
               <input className="bf-sync-invite-paste" aria-label={t("Codul invitației")} value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} placeholder="bf1.…" />
-              <button type="button" className="bf-secondary" disabled={!parseInvite(inviteDraft)} onClick={() => void shareInvite(inviteDraft).then((shared) => { if (!shared) void copySecret(inviteMessage(parseInvite(inviteDraft)!)); })}><Send size={16} /> {t("Trimite invitația")}</button>
+              <button type="button" className="bf-secondary" disabled={!parseInvite(inviteDraft)} onClick={() => openSecondPhone(() => void shareInvite(inviteDraft).then((shared) => { if (!shared) void copySecret(inviteMessage(parseInvite(inviteDraft)!)); }))}><Send size={16} /> {t("Trimite invitația")}</button>
             </div>
             {moveConfirm ? (
               <div className="bf-sync-invite-actions">
@@ -309,7 +321,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
         </div>
         <div className="bf-sync-start">
           <p><b>{t("Primul telefon din familie")}</b><br />{t("Creează camera familiei, apoi trimite invitația celorlalte telefoane. Nu ai nevoie de cont sau de parolă.")}</p>
-          <button className="bf-primary full" disabled={busy || !online} onClick={onCreateRoom}><Users size={17} /> {t("Creează camera")}</button>
+          <button className="bf-primary full" disabled={busy || !online} onClick={() => openSecondPhone(onCreateRoom)}><Users size={17} /> {t("Creează camera")}</button>
         </div>
         <div className={`bf-sync-start${inviteDraft ? " is-offered" : ""}`}>
           <p><b>{t("Am primit o invitație")}</b><br />{t("Lipește mesajul sau linkul primit de la partener.")}</p>
@@ -321,7 +333,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
           <Field label={t("Invitația")}>
             <textarea value={inviteDraft} onChange={(event) => setInviteDraft(event.target.value)} rows={3} placeholder={t("Lipește invitația aici")} autoComplete="off" spellCheck={false} />
           </Field>
-          <button className="bf-primary full" disabled={busy || !online || !parseInvite(inviteDraft)} onClick={() => onJoinInvite(inviteDraft)}><Users size={17} /> {t("Intră în familie")}</button>
+          <button className="bf-primary full" disabled={busy || !online || !parseInvite(inviteDraft)} onClick={() => openSecondPhone(() => onJoinInvite(inviteDraft))}><Users size={17} /> {t("Intră în familie")}</button>
           {/* Răspunsul apare lângă buton: mai jos, sub istoric, nu se vedea și părea că nu se întâmplă nimic. */}
           {notice && !busy && <p className="bf-notice" role="status">{notice}</p>}
           {!online && <p className="bf-helper" role="note">{t("Fără internet nu se poate intra în familie. Butonul pornește singur când revine conexiunea.")}</p>}

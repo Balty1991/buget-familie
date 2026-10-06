@@ -18,7 +18,7 @@ import {
 } from "@/lib/finance-data";
 import { calendarBudget } from "@/lib/calendar-budget";
 import { daysLabel, getLocale, t } from "./i18n";
-import { monthTitle, weekTooFast } from "./household-insights";
+import { envelopeUntilPayday, monthTitle, weekDayCap, weekTooFast } from "./household-insights";
 import { lei } from "@/lib/money-format";
 import { isAppLockEnabled } from "@/lib/app-lock";
 import { loggingStreak } from "@/lib/logging-habits";
@@ -338,6 +338,25 @@ function buildAlerts(data: AppData): PlannedAlert[] {
   const alerts: PlannedAlert[] = [];
   const today = isoToday();
   let id = 4100;
+
+  // Cifra de mâncare, gratuită, și cu aplicația închisă: WorkManager o ține după ce a fost programată.
+  const food = (data.settings.salaryPlan.allocations || []).find((item) => `${item.category || ""} ${item.label}`.toLocaleLowerCase("ro-RO").includes("aliment"));
+  if (food) {
+    const week = weekDayCap(data, food, today);
+    const until = envelopeUntilPayday(data, food, today);
+    const left = week?.todayLeft ?? until?.perDay;
+    if (left !== undefined) {
+      const morning = atLocalHour(0, 8, 30);
+      const at = morning.getTime() > Date.now() + 60_000 ? morning : atLocalHour(1, 8, 30);
+      alerts.push({
+        id: id++,
+        title: t("Azi la mâncare"),
+        body: t("Azi mai ai {amount} la mâncare.", { amount: money(left) }),
+        at,
+        tag: `food-day-${at.toISOString().slice(0, 10)}`,
+      });
+    }
+  }
 
   // Scadențe în următoarele 3 zile
   const pending = pendingRecurringInPlan(data)
@@ -827,7 +846,7 @@ function scheduleWorkManager(alerts: PlannedAlert[]): boolean {
     // Și din JS, pentru versiunile native mai vechi: întâi pleacă tot, apoi lista de acum.
     bridge.cancelAll?.();
     const payload = JSON.stringify(
-      alerts.slice(0, 6).map((alert) => ({
+      alerts.slice(0, 7).map((alert) => ({
         id: alert.id,
         title: alert.title,
         body: alert.body,

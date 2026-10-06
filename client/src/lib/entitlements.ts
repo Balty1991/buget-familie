@@ -9,11 +9,12 @@ import { t } from "./i18n";
  * `PLAY_PRODUCT_IDS` așteaptă Play Console (docs/BILLING_PLAY_PREP.md).
  */
 import { hasActiveFamilie } from "@/lib/billing-store";
+import { familieTrialActive } from "@/lib/launch-offer";
 
 export const BILLING_LIVE = false;
 
 export type PlanId = "casa" | "familie";
-export type UpgradeReason = "member" | "sync" | "ai" | "envelope";
+export type UpgradeReason = "member" | "sync" | "ai" | "envelope" | "share";
 
 export const PLANS: Record<PlanId, {
   id: PlanId;
@@ -71,9 +72,14 @@ export const PLAY_BASE_PLANS: Record<BillingSku, string> = {
 
 /**
  * Când Billing e live, Familia vine din abonamentul verificat pe server (al acestui telefon sau
- * al camerei familiei). Până atunci gospodăria de test rămâne Familia.
+ * al camerei familiei) sau din proba de 30 de zile pornită la al doilea bilanț / al doilea telefon.
+ * Până atunci gospodăria de test rămâne Familia. Proba nu pornește la instalare.
  */
-export const currentPlan = (): PlanId => (!BILLING_LIVE || hasActiveFamilie() ? "familie" : "casa");
+export const currentPlan = (): PlanId => {
+  if (!BILLING_LIVE) return "familie";
+  if (hasActiveFamilie() || familieTrialActive()) return "familie";
+  return "casa";
+};
 
 export const isFamilie = () => currentPlan() === "familie";
 

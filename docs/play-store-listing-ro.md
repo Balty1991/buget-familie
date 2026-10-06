@@ -2,7 +2,7 @@
 
 Text gata de lipit în Play Console. **Fără prețuri IAP** cât `BILLING_LIVE = false`. Plățile (Play Billing) se activează separat, după closed testing stabil.
 
-**Versiune listing (sept 2026):** `versionName` **1.1.96** / `versionCode` **98**.
+**Versiune listing:** `versionName` **1.1.172** / `versionCode` **173**. Billing încă oprit.
 
 Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety detaliat: [`PLAY_CONSOLE_DATA_SAFETY.md`](./PLAY_CONSOLE_DATA_SAFETY.md).
 
@@ -12,8 +12,8 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 |---|---|
 | Nume (max 30) | Buget Familie – cheltuieli (26 caractere; „buget” și „cheltuieli” sunt cele mai căutate cuvinte din categorie) |
 | Pachet | `ro.balty1991.bugetfamilie` |
-| versionName | `1.1.96` |
-| versionCode | `98` |
+| versionName | `1.1.172` |
+| versionCode | `173` |
 | Categorie | Finance |
 | Etichete | Buget, Familie, Cheltuieli, Economii, Plicuri, Cuplu, Salariu |
 | Contact | contact.vanzo@gmail.com |
@@ -23,25 +23,23 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 
 ## Descriere scurtă (≤80 caractere)
 
-```
-Buget de familie pe plicuri: cheltuieli, economii, facturi. Fără parola băncii.
-```
-
-(79 de caractere). Varianta B, pentru test A/B în Console:
-
-```
-Salariul vine, aplicația îl împarte pe plicuri. Buget pentru cuplu și familie.
-```
-
-(78 de caractere)
-
-Varianta C (octombrie 2026, după cercetarea din `cercetare-concurenta-2026-10.md`), pentru experimentul 50/50:
+Varianta de listare, ca să nu se confunde cu alte aplicații numite „buget de familie”:
 
 ```
 Cât poți cheltui azi, până la salariu. Buget de familie fără parola băncii.
 ```
 
 (76 de caractere)
+
+Variante vechi, doar dacă experimentul 50/50 le cere:
+
+```
+Buget de familie pe plicuri: cheltuieli, economii, facturi. Fără parola băncii.
+```
+
+```
+Salariul vine, aplicația îl împarte pe plicuri. Buget pentru cuplu și familie.
+```
 
 ## Descriere completă
 

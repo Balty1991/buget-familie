@@ -14,6 +14,10 @@ import { SettleUpCard } from "@/components/SettleUpCard";
 
 const MonthShareSheet = lazy(() => import("@/components/MonthShareSheet").then((module) => ({ default: module.MonthShareSheet })));
 import { lei } from "@/lib/money-format";
+import { BILLING_LIVE } from "@/lib/entitlements";
+import { hasActiveFamilie } from "@/lib/billing-store";
+import { gateWeeklyShare } from "@/lib/launch-offer";
+import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 
 const money = lei;
 
@@ -24,8 +28,19 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   const [month, setMonth] = useState(() => (Number(isoToday().slice(8, 10)) <= 7 ? lastMonth : thisMonth));
   const report = useMemo(() => monthlyFamilyReport(data, month), [data, month]);
   const [shareState, setShareState] = useState<"idle" | "shared" | "copied">("idle");
+  const [shareBlocked, setShareBlocked] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
+  const allowShare = () => {
+    const gate = gateWeeklyShare({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie() });
+    if (gate === "blocked") {
+      setShareBlocked(true);
+      return false;
+    }
+    setShareBlocked(false);
+    return true;
+  };
   const shareReport = async () => {
+    if (!allowShare()) return;
     const text = formatMonthlyReportShare(report);
     try {
       if (typeof navigator.share === "function") {
@@ -106,7 +121,8 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
           </div>
         )}
         <div className="bf-household-actions">
-          <button type="button" className="bf-primary bf-month-share-open" disabled={report.empty} onClick={() => setCardOpen(true)}>
+          {shareBlocked && <FamilieUpgrade reason="share" />}
+          <button type="button" className="bf-primary bf-month-share-open" disabled={report.empty} onClick={() => { if (allowShare()) setCardOpen(true); }}>
             <ImageIcon size={16} /> {t("Imaginea lunii")}
           </button>
           <button type="button" className="bf-secondary" disabled={report.empty} onClick={() => void shareReport()}>

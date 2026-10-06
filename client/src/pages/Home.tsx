@@ -49,6 +49,8 @@ import { useThemeChrome } from "@/hooks/useThemeChrome";
 import { useFamilySync } from "@/hooks/useFamilySync";
 import { usePersistAppData, readInitialAppData } from "@/hooks/usePersistAppData";
 import { useSimpleMode } from "@/hooks/useSimpleMode";
+import { clearQuietStart, distinctExpenseDays, isQuietStart } from "@/lib/quiet-start";
+import { setSimpleMode } from "@/lib/ui-prefs";
 import { FAMILIE_OPEN_EVENT } from "@/lib/entitlements";
 import { selfMemberOf } from "@/lib/member-identity";
 import { isNativeApp } from "@/lib/app-storage";
@@ -149,6 +151,12 @@ export default function Home() {
     }
   });
   const { simpleMode } = useSimpleMode();
+  useEffect(() => {
+    if (!storageReady || !isQuietStart()) return;
+    if (distinctExpenseDays(data.transactions) < 3) return;
+    clearQuietStart();
+    setSimpleMode(false);
+  }, [storageReady, data.transactions]);
   // „Telefonul lui X”: un singur ecran, doar pentru persoana aceea (copil, bunic).
   const memberMode = useMemberMode();
   const memberModeActive = Boolean(memberMode && data.settings.members.some((item) => item.id === memberMode));

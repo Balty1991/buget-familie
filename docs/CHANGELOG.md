@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.172
+
+- Prima deschidere cere trei lucruri: salariul, data lui, plicul de mâncare. Apoi un număr: cât poți cheltui azi. Analiza, temele și asistentul revin după trei zile cu cheltuieli.
+- Notificarea de dimineață „Azi mai ai X la mâncare” se programează și cu aplicația închisă.
+- Când plata e pornită: primul bilanț pe WhatsApp rămâne gratuit. Al doilea bilanț și invitația către al doilea telefon pornesc proba de 30 de zile. Prețul de pe ecran e 149 lei/an. Registrul nu se blochează. În acest build plata e încă oprită.
+
 ## 1.1.171
 
 - Meniul schimbă ecranul din prima. Fără așteptare și fără alunecarea care pâlpâia.

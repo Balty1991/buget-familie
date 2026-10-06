@@ -4,7 +4,7 @@
 
 ## Stare Play (sept 2026)
 
-Versiune **1.1.171** / `versionCode` **172**. Billing **off** (`BILLING_LIVE=false`). Text de lipit: [`docs/play-store-listing-ro.md`](docs/play-store-listing-ro.md). Capturi: [`docs/play-store-assets/SCREENSHOTS.md`](docs/play-store-assets/SCREENSHOTS.md).
+Versiune **1.1.172** / `versionCode` **173**. Billing **off** (`BILLING_LIVE=false`). Text de lipit: [`docs/play-store-listing-ro.md`](docs/play-store-listing-ro.md). Capturi: [`docs/play-store-assets/SCREENSHOTS.md`](docs/play-store-assets/SCREENSHOTS.md).
 
 ## Funcții implementate
 
@@ -17,7 +17,7 @@ Versiune **1.1.171** / `versionCode` **172**. Billing **off** (`BILLING_LIVE=fal
 | Profil, membri și surse | Poate fi folosită de o singură persoană de la prima deschidere sau cu membri configurabili, carduri nominale, cash, bonuri de masă, transferuri și categorii precum Taxi. |
 | Plan până la venit | Ecranul Plan pornește de la un singur ciclu salarial: suma disponibilă și începutul/sfârșitul sunt alese manual; un venit deja înregistrat poate doar precompleta suma și începutul. Fișa dominantă arată suma ciclului, rigla tranșelor, valoarea alocată, banii nealocați și pasul de decizie. Calculatorul împarte exact cele 28, 31 sau mai multe zile în tranșe de cel mult șapte zile, păstrând restul în ultima tranșă parțială. |
 | Plicuri de categorie | O categorie precum Alimente, Transport/Taxi, Abonamente, Rate produse sau Consumabile copil are bugetul întregului ciclu, sursa reală, membrul opțional și un detaliu. De exemplu, Alimente 2.400 RON pe patru săptămâni pot fi create ca 1.200 RON cash Eu și 1.200 RON card Soție: fiecare plic are 300 RON în fiecare tranșă. O plată compatibilă selectează automat plicul și consumă exact tranșa activă; se poate alege expres un alt plic sau plata în afara plicurilor. |
-| Puls, alerte și realocări | Fiecare plic are un prag de atenție configurabil de la 50% la 95%; depășirea este semnalată, nu blocată. Planul și formularul de mișcare arată suma rămasă atât în plicul ciclului, cât și în tranșa activă. Începutul unei tranșe poate genera o singură alertă locală pentru fiecare interval. Alertele nu trimit bani, nu cer acces bancar și nu rulează când aplicația este închisă. |
+| Puls, alerte și realocări | Fiecare plic are un prag de atenție configurabil de la 50% la 95%; depășirea este semnalată, nu blocată. Planul și formularul de mișcare arată suma rămasă atât în plicul ciclului, cât și în tranșa activă. Începutul unei tranșe poate genera o singură alertă locală pentru fiecare interval. Alertele nu trimit bani și nu cer acces bancar. Cifra de mâncare și scadențele programate sună și cu aplicația închisă, după ce telefonul le-a primit o dată. |
 | Analiză, alerte și PDF | Comparație cu luna precedentă, evoluție lunară în anul curent, grafic interactiv de distribuție pe categorii, poziție financiară și plicuri la prag de atenție ori depășite. Bilanțul și planul calendaristic pot fi descărcate ca PDF local în browser; planul include suma, intervalul, ritmul și tranșele. |
 | Gospodărie | Recapitulare de lună cu ritual de închidere local, vârstă a banilor, împărțire pe membri, vânător de abonamente din istoric și calendar de scadențe (inclusiv rate). |
 | Încredere | Politică de confidențialitate, termeni și instrucțiuni de ștergere, publice pe GitHub Pages și în Setări. |

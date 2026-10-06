@@ -23,8 +23,8 @@ const COPY: Record<UpgradeReason, { kicker: string; title: string; body: string 
   },
   sync: {
     kicker: "AL DOILEA TELEFON",
-    title: "Același registru, pe ambele telefoane.",
-    body: "Sync-ul criptat e Familia. Backup-ul pe Descărcări rămâne gratuit.",
+    title: "Un buget, două telefoane.",
+    body: "Primul telefon rămâne gratuit. Ca să scrie și celălalt, e Familia: 149 lei pe an. Luna e varianta scumpă. Backup-ul pe telefon rămâne gratuit.",
   },
   ai: {
     kicker: "COTA GHIDULUI",
@@ -35,6 +35,11 @@ const COPY: Record<UpgradeReason, { kicker: string; title: string; body: string 
     kicker: "PLICURI",
     title: "Casa are zece plicuri.",
     body: "Le poți folosi pe cele pe care le ai. Altele noi vin cu Familia.",
+  },
+  share: {
+    kicker: "BILANȚUL SĂPTĂMÂNII",
+    title: "Partenerul a primit bilanțul.",
+    body: "Primul e gratuit. Ca să-l primească în fiecare săptămână: 149 lei pe an. Luna e varianta scumpă. Registrul rămâne pe telefon oricum.",
   },
 };
 
@@ -47,7 +52,7 @@ export function FamilieUpgrade({ reason }: { reason: UpgradeReason }) {
       <h3 id={`bf-familie-${reason}`}>{t(copy.title)}</h3>
       <p>{t(copy.body)}</p>
       <p className="bf-familie-upgrade-price">
-        {t("{days} zile de probă", { days: String(TRIAL_DAYS) })}
+        {t("Proba de {days} zile pornește aici, nu la instalare", { days: String(TRIAL_DAYS) })}
         {" · "}
         {formatPlanPriceRon("familie", "year")}
         {gift > 0 ? ` — ${t("{n} luni cadou față de lună", { n: String(gift) })}` : ""}

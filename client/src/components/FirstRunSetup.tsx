@@ -18,6 +18,7 @@ import { hideNativeSplash } from "@/lib/native-splash";
 import { RoDateInput } from "@/components/RoDateInput";
 import { NeedsQuickStart } from "@/components/NeedsQuickStart";
 import { setSimpleMode } from "@/lib/ui-prefs";
+import { markQuietStart } from "@/lib/quiet-start";
 import { lei } from "@/lib/money-format";
 
 const money = lei;
@@ -114,6 +115,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
   const [payday, setPayday] = useState(data.settings.salaryPlan.nextPayday || "");
   const [selected, setSelected] = useState<string[]>(["Alimente", "Casă & facturi"]);
   const [monthlyIncome, setMonthlyIncome] = useState("");
+  const [foodAmount, setFoodAmount] = useState("");
   const incomeNow = Math.max(0, parseRomanianAmount(monthlyIncome || "0"));
 
   const moneySources = data.settings.paymentSources.filter((source) => source.kind !== "transfer");
@@ -227,6 +229,52 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
     else onGoPlan();
   };
 
+  /** Trei câmpuri: salariul, data lui, plicul de mâncare. Restul rămâne ascuns câteva zile. */
+  const finishUntilPayday = () => {
+    const income = incomeNow;
+    const typedFood = Math.max(0, parseRomanianAmount(foodAmount || "0"));
+    const food = typedFood || (income > 0 ? Math.max(10, Math.round(income * 0.25 / 10) * 10) : 0);
+    const now = new Date().toISOString();
+    const yourName = memberName.trim() || "Eu";
+    const paydayReady = /^\d{4}-\d{2}-\d{2}$/.test(payday);
+    const paymentSources = data.settings.paymentSources.map((source, index) => {
+      if (index !== 0 || income <= 0 || source.openingBalance > 0) return source;
+      return { ...source, openingBalance: income, memberId: "member-me", updatedAt: now };
+    });
+    const funded = paymentSources.find((source) => source.kind !== "transfer") || paymentSources[0];
+    const exists = data.settings.salaryPlan.allocations.some((item) => (item.category || item.label) === "Alimente");
+    const allocations = food > 0 && !exists
+      ? [...data.settings.salaryPlan.allocations, {
+          id: newId("alloc"),
+          label: "Alimente",
+          amount: food,
+          category: "Alimente",
+          weeklyPace: paydayReady,
+          memberId: "member-me",
+          sourceId: funded?.id,
+        }]
+      : data.settings.salaryPlan.allocations;
+    onChange({
+      ...data,
+      settings: {
+        ...data.settings,
+        memberName: yourName,
+        members: [{ id: "member-me", name: yourName, color: "#256B5B" }],
+        paymentSources,
+        salaryPlan: {
+          ...data.settings.salaryPlan,
+          periodStart: isoToday(),
+          nextPayday: paydayReady ? payday : data.settings.salaryPlan.nextPayday,
+          allocations,
+          updatedAt: now,
+        },
+      },
+    });
+    markQuietStart();
+    setSimpleMode(true);
+    complete();
+  };
+
   const cashNow = moneySources.reduce((sum, source) => sum + Math.max(0, parseRomanianAmount(balances[source.id] || "0")), 0);
   const partnerNow = PARTNER_KINDS.reduce((sum, item) => sum + Math.max(0, parseRomanianAmount(partnerBalances[item.kind] || "0")), 0);
   const totalNow = cashNow + (partnerName.trim() ? partnerNow : 0);
@@ -266,61 +314,62 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
 
         {!intent && (
           <div className="bf-setup-copy">
-            <p className="bf-kicker">{t("PRIMUL PAS")}</p>
-            <h2 id="bf-setup-title">{t("Ce vrei să faci")} <em>{t("acum?")}</em></h2>
-            <p>{t("Îți spunem cât poți cheltui azi și împărțim salariul pe plicuri. Alegi un început; restul se schimbă oricând.")}</p>
-            {/* Trei promisiuni scurte, înaintea alegerii: de ce pot avea încredere cu banii familiei. */}
+            <p className="bf-kicker">{t("PÂNĂ LA SALARIU")}</p>
+            <h2 id="bf-setup-title">{t("Cât poți cheltui")} <em>{t("azi?")}</em></h2>
+            <p>{t("Trei lucruri. Apoi vezi un număr: cât îți rămâne azi, până la salariu.")}</p>
             <ul className="bf-first-run-trust" aria-label={t("Ce promitem")}>
               <li><Lock size={16} aria-hidden="true" />{t("Fără parola băncii")}</li>
               <li><BadgeCheck size={16} aria-hidden="true" />{t("Fără reclame")}</li>
               <li><Smartphone size={16} aria-hidden="true" />{t("Datele stau pe telefon")}</li>
             </ul>
-            {/* Întâi vezi cum arată plină, apoi pornești de la zero: fără să scrii ceva ca să înțelegi. */}
+            <label className="bf-field"><span>{t("Salariul")}</span><input inputMode="decimal" value={monthlyIncome} onChange={(event) => setMonthlyIncome(event.target.value)} placeholder={t("ex. 4.500")} /></label>
+            <label className="bf-field"><span>{t("Data salariului")}</span><RoDateInput lang="ro" value={payday} onChange={(event) => setPayday(event.target.value)} /></label>
+            <label className="bf-field"><span>{t("Plicul de mâncare, până la salariu")}</span><input inputMode="decimal" value={foodAmount} onChange={(event) => setFoodAmount(event.target.value)} placeholder={incomeNow > 0 ? String(Math.max(10, Math.round(incomeNow * 0.25 / 10) * 10)) : t("ex. 1.200")} /></label>
+            <div className="bf-onboarding-actions">
+              <button className="bf-primary" onClick={finishUntilPayday}><Check size={17} /> {t("Vezi cât poți cheltui azi")}</button>
+            </div>
             <button type="button" className="bf-first-run-demo" onClick={() => { onChange(buildDemoData(isoToday())); setDemoMode(true); complete(); }}>
               <Sparkles size={18} aria-hidden="true" />
               <span><b>{t("Vezi întâi cu o familie exemplu")}</b><small>{t("Date inventate, ca să vezi cum arată. Pornești de la zero oricând.")}</small></span>
             </button>
-            <div className="bf-first-run-intents" role="group" aria-label={t("Intenții de start")}>
-              <button type="button" onClick={() => setIntent("salary")}>
-                <WalletCards size={20} />
-                <b>{t("Vreau ca aplicația să-mi împartă salariul.")} <span className="bf-first-run-recommended">{t("recomandat")}</span></b>
-                <small>{t("Scrii o dată veniturile și ce plătiți; la fiecare salariu primești împărțirea pe plicuri.")}</small>
-              </button>
-              <button type="button" onClick={() => setIntent("simple")}>
-                <Eye size={20} />
-                <b>{t("Vreau doar să notez și să văd cât mai am.")}</b>
-                <small>{t("Ecran simplu, text mare. Fără plicuri; le poți porni oricând din Setări.")}</small>
-              </button>
-              {/* Produs #6: partenerul invitat nu mai trece prin 6 opțiuni ca să ajungă la Sync. */}
-              <button type="button" onClick={() => { complete(); if (onOpenSync) onOpenSync(); }}>
-                <Users size={20} />
-                <b>{t("Mă alătur familiei.")}</b>
-                <small>{t("Am primit o invitație de la partener: deschide Sync și scrie codul.")}</small>
-              </button>
-            </div>
             <details className="bf-first-run-more">
               <summary>{t("Alte moduri de a începe")}</summary>
               <div className="bf-first-run-intents" role="group" aria-label={t("Alte moduri de a începe")}>
-              <button type="button" onClick={() => setIntent("track")}>
-                <ReceiptText size={20} />
-                <b>{t("Vreau doar să văd pe ce se duc banii.")}</b>
-                <small>{t("Notezi cheltuielile, iar Analiza îți arată unde se duc.")}</small>
-              </button>
-              <button type="button" onClick={() => setIntent("money")}>
-                <Wallet size={20} />
-                <b>{t("Vreau să pun banii de azi.")}</b>
-                <small>{t("Card, cash, bonuri — tu și partenerul. Plicurile, după, dacă e nevoie.")}</small>
-              </button>
-              <button type="button" onClick={() => setIntent("organize")}>
-                <WalletCards size={20} />
-                <b>{t("Vreau să-mi organizez luna.")}</b>
-                <small>{t("Primul venit și două plicuri sugerate, pe care le poți modifica.")}</small>
-              </button>
-              <button type="button" onClick={() => setIntent("family")}>
-                <Users size={20} />
-                <b>{t("Vreau un buget pentru familie.")}</b>
-                <small>{t("Persoane, surse, plan comun — apoi inviți partenerul în Sync.")}</small>
-              </button>
+                <button type="button" onClick={() => setIntent("salary")}>
+                  <WalletCards size={20} />
+                  <b>{t("Vreau ca aplicația să-mi împartă salariul.")}</b>
+                  <small>{t("Scrii o dată veniturile și ce plătiți; la fiecare salariu primești împărțirea pe plicuri.")}</small>
+                </button>
+                <button type="button" onClick={() => setIntent("simple")}>
+                  <Eye size={20} />
+                  <b>{t("Vreau doar să notez și să văd cât mai am.")}</b>
+                  <small>{t("Ecran simplu, text mare. Fără plicuri; le poți porni oricând din Setări.")}</small>
+                </button>
+                <button type="button" onClick={() => { complete(); if (onOpenSync) onOpenSync(); }}>
+                  <Users size={20} />
+                  <b>{t("Mă alătur familiei.")}</b>
+                  <small>{t("Am primit o invitație de la partener: deschide Sync și scrie codul.")}</small>
+                </button>
+                <button type="button" onClick={() => setIntent("track")}>
+                  <ReceiptText size={20} />
+                  <b>{t("Vreau doar să văd pe ce se duc banii.")}</b>
+                  <small>{t("Notezi cheltuielile, iar Analiza îți arată unde se duc.")}</small>
+                </button>
+                <button type="button" onClick={() => setIntent("money")}>
+                  <Wallet size={20} />
+                  <b>{t("Vreau să pun banii de azi.")}</b>
+                  <small>{t("Card, cash, bonuri — tu și partenerul. Plicurile, după, dacă e nevoie.")}</small>
+                </button>
+                <button type="button" onClick={() => setIntent("organize")}>
+                  <WalletCards size={20} />
+                  <b>{t("Vreau să-mi organizez luna.")}</b>
+                  <small>{t("Primul venit și două plicuri sugerate, pe care le poți modifica.")}</small>
+                </button>
+                <button type="button" onClick={() => setIntent("family")}>
+                  <Users size={20} />
+                  <b>{t("Vreau un buget pentru familie.")}</b>
+                  <small>{t("Persoane, surse, plan comun — apoi inviți partenerul în Sync.")}</small>
+                </button>
               </div>
             </details>
           </div>

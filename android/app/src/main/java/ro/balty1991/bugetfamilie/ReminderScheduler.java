@@ -12,7 +12,7 @@ import org.json.JSONObject;
 /**
  * Programează reamintiri OneTime prin WorkManager. Unique work pe tag — reprogramarea
  * înlocuiește vechiul job, ca să nu spamăm la fiecare deschidere a aplicației.
- * Maximum 6 reamintiri pe apel (tranșă / salariu / plicuri).
+ * Maximum 7 reamintiri pe apel: cifra de mâncare, plus tranșă / salariu / plicuri.
  */
 public final class ReminderScheduler {
   private ReminderScheduler() {}
@@ -25,7 +25,7 @@ public final class ReminderScheduler {
     WorkManager.getInstance(context).cancelAllWorkByTag("bf-reminder");
     try {
       final JSONArray items = new JSONArray(payload);
-      final int limit = Math.min(items.length(), 6);
+      final int limit = Math.min(items.length(), 7);
       for (int i = 0; i < limit; i += 1) {
         final JSONObject item = items.getJSONObject(i);
         final String title = item.optString("title", "").trim();

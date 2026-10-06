@@ -8,8 +8,8 @@ export function PremiumStudio() {
   return (
     <section className="bf-premium-catalog" id="bf-familie-plan">
       <p className="bf-kicker">{t("UN SINGUR PLAN PENTRU CASĂ")}</p>
-      <h2>{t("Casa e gratuită. Familia se cere când intră al doilea om sau al doilea telefon.")}</h2>
-      <p>{t("Nu blocăm registrul. Notezi cheltuieli oricum. Plătești când gospodăria are nevoie de două telefoane, de mai mulți oameni sau de ghidul încăpător.")}</p>
+      <h2>{formatPlanPriceRon("familie", "year")}</h2>
+      <p>{t("Primul bilanț pe WhatsApp e gratuit. Următoarele, și al doilea telefon, sunt Familia: {year}. Luna, {month}, e varianta scumpă. Proba de {days} de zile pornește când trimiți al doilea bilanț sau inviți celălalt telefon, nu la instalare.", { year: formatPlanPriceRon("familie", "year"), month: formatPlanPriceRon("familie", "month"), days: String(TRIAL_DAYS) })}</p>
       {/* Limitele Casei nu se aplică încă: fără fraza asta, „Până la 10 plicuri” părea o regulă încălcată. */}
       {!BILLING_LIVE && <p className="bf-premium-now" role="note"><b>{t("Acum:")}</b> {t("totul e deblocat gratuit, fără limită de plicuri sau membri. Limitele de mai jos pornesc abia când abonamentul apare în Google Play.")}</p>}
       <div className="bf-premium-plans">
