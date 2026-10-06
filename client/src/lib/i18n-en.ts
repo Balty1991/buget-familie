@@ -2788,7 +2788,7 @@ export const en: Record<string, string> = {
   "Cât a costat, lei": "What it cost, lei",
   "ex. cartofi": "e.g. potatoes",
   "Șterge articolul": "Delete the item",
-  "Scrie doar ce ții minte. Ce nu știi rămâne diferență neînregistrată, pe aceeași cheltuială.": "Write only what you remember. What you don't know stays an unrecorded difference, on the same expense.",
+  "Ce nu știi rămâne diferență neînregistrată.": "What you don't know stays an unrecorded difference.",
   "Poți lăsa o diferență. Ce nu știi nu e un produs: intră ca diferență neînregistrată. Nu salva doar dacă liniile trec peste total.": "You can leave a difference. What you don't know is not a product: it becomes an unrecorded difference. Saving is blocked only when the lines go over the total.",
   "Pas cu pas.": "Step by step.",
   "02 · AZI": "02 · TODAY",

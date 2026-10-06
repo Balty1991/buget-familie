@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.168
+
+- Blocul de articole e mai scurt: fără titlu mare, rânduri mai joase, butonul de adăugare mai mic.
+
 ## 1.1.167
 
 - Categoria articolului stă pe rândul de dedesubt, pe toată lățimea. Nu se mai taie la „Alim...”.
