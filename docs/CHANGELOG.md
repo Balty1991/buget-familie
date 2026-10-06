@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.175
+
+Audit, a doua trecere:
+- Bonuri, la pornire și la fiecare sincronizare: „strângerea” bonurilor vechi putea șterge un bon confirmat, sau cheltuiala cu bonul atașat, când în aceeași zi era altă cheltuială cu suma apropiată (±1 leu). Acum atinge doar bonurile vechi sparte pe produse, și doar când și numele, și suma se potrivesc.
+- Cheltuială detaliată deschisă fără nicio sumă scrisă nu mai face un bon gol în Bonuri.
+- Notificarea de dimineață „Azi la mâncare”, programată pentru a doua zi, arată suma zilei aceleia, nu a zilei de azi. Cu plicul gol nu mai scrie o sumă cu minus.
+
 ## 1.1.174
 
 Audit:

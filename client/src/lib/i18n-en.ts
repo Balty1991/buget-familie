@@ -4567,4 +4567,5 @@ export const en: Record<string, string> = {
   "Celălalt telefon a notat. Familia e {year} pe an, pentru toată casa. Luna, {month}, costă mai mult. Proba de {days} zile pornește la următorul bilanț, nu la instalare.": "The other phone has logged. Familia is {year} a year, for the whole household. Monthly, {month}, costs more. The {days}-day trial starts at the next summary, not at install.",
   "Un singur abonament pe an ține ambele telefoane. Registrul rămâne pe telefon dacă anulezi.": "One subscription a year keeps both phones. The register stays on the phone if you cancel.",
   "Pune aplicația și pe telefonul celălalt. Abonamentul se cere abia după ce notează acolo.": "Put the app on the other phone too. The subscription is asked only after they log there.",
+  "Plicul de mâncare e gol pentru azi. Ce cumperi se ia din altă parte.": "The food envelope is empty for today. Anything you buy comes from somewhere else.",
 };

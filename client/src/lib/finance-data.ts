@@ -552,9 +552,14 @@ export function collapseSplitReceipts(data: AppData): AppData {
   const now = new Date().toISOString();
   let changed = false;
   for (const receipt of data.receipts) {
-    const generated = transactions.filter((tx) => tx.receiptId === receipt.id || tx.id === `receipt-tx-${receipt.id}` || tx.id.startsWith(`receipt-tx-${receipt.id}-`));
-    const manual = receiptAttachCandidates({ ...data, transactions }, receipt.vendor, receipt.amount, receipt.date)[0];
-    if (manual && (generated.length > 0 || receipt.linkedTransactionId !== manual.id)) {
+    // Rulează la fiecare pornire și sincronizare: atinge doar bonurile vechi, sparte pe produse.
+    // Un bon cu o singură mișcare sau atașat de o cheltuială notată rămâne cum e (altfel se ștergeau cheltuieli reale).
+    const generated = transactions.filter((tx) => tx.id === `receipt-tx-${receipt.id}` || tx.id.startsWith(`receipt-tx-${receipt.id}-`));
+    if (generated.length < 2 || transactions.some((tx) => tx.receiptId === receipt.id && !generated.includes(tx))) continue;
+    const vendorName = foldReceiptName(receipt.vendor);
+    const manual = receiptAttachCandidates({ ...data, transactions }, receipt.vendor, receipt.amount, receipt.date)
+      .find((tx) => { const title = foldReceiptName(tx.title); return Boolean(vendorName) && (title.includes(vendorName) || vendorName.includes(title)) && Math.abs(tx.amount - receipt.amount) <= 1; });
+    if (manual) {
       changed = true;
       for (const tx of generated) if (tx.id !== manual.id) removed.push(tx.id);
       transactions = transactions.filter((tx) => !generated.some((item) => item.id === tx.id)).map((tx) => tx.id === manual.id ? { ...tx, receiptId: receipt.id } : tx);
@@ -562,7 +567,7 @@ export function collapseSplitReceipts(data: AppData): AppData {
       pendingReview = pendingReview.filter((draft) => draft.transaction.receiptId !== receipt.id && !generated.some((item) => item.id === draft.transaction.id));
       continue;
     }
-    if (generated.length > 1) {
+    {
       changed = true;
       const sample = generated[0];
       const keeper: Transaction = { ...sample, id: `receipt-tx-${receipt.id}`, receiptId: receipt.id, title: `Bon — ${receipt.vendor}`, amount: receipt.amount, category: receipt.category || sample.category, date: receipt.date, updatedAt: now };
