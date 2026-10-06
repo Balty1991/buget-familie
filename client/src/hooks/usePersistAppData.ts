@@ -111,7 +111,7 @@ export function usePersistAppData(
       const lsWrite = writeLocalStorageSnapshot(serialized, savedAt, hash);
       if (lsWrite.quotaExceeded || !lsWrite.wroteFull) {
         setStorageNotice(
-          t("Spațiul local este aproape plin. Fotografiile bonurilor rămân în stocarea dedicată; exportă un backup dacă problema continuă."),
+          t("Spațiul local este aproape plin. Exportă un backup dacă problema continuă."),
         );
       }
       void writeAppData(data, savedAt, hash).then(() => { sharedRef.current = data; channelRef.current?.postMessage(savedAt); }).catch(() =>

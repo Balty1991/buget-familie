@@ -1,6 +1,6 @@
 /**
  * Rubrica Bonuri: articole, grupe de marfă, alimente vs nealimentare,
- * top produse și cheltuieli pe săptămână / lună. Manual sau din poză — aceleași linii.
+ * top produse și cheltuieli pe săptămână / lună. Bonurile se scriu de mână.
  */
 import "../receipts-studio.css";
 import { useMemo, useState } from "react";
@@ -70,7 +70,7 @@ export function ReceiptsStudio({ data, onAddReceipt }: Props) {
         </div>
         <ReceiptText size={18} />
       </header>
-      <p className="bf-helper">{t("Bonurile din poză și cele puse de mână intră la fel: articole, grupe de marfă, alimente și nealimentare.")}</p>
+      <p className="bf-helper">{t("Bonurile scrise de mână intră aici pe articole, grupe de marfă, alimente și nealimentare.")}</p>
 
       <div className="bf-period-chips" role="tablist" aria-label={t("Perioadă")}>
         {PERIODS.map((item) => (
@@ -83,7 +83,7 @@ export function ReceiptsStudio({ data, onAddReceipt }: Props) {
       <p className="bf-receipts-verdict">
         {split.total > 0
           ? t("Pe {period} ai cheltuit {total} pe bonuri: {food} alimente, {nonFood} nealimentare.", { period: t(periodLabel), total: money(split.total), food: money(split.food), nonFood: money(split.nonFood) })
-          : t("Nu sunt articole pe perioada asta. Adaugă un bon — din poză sau de mână.")}
+          : t("Nu sunt articole pe perioada asta. Scrie un bon de mână.")}
       </p>
 
       <div className="bf-receipts-actions">

@@ -32,7 +32,7 @@ Link de pus peste tot: **https://balty1991.github.io/buget-familie/despre.html**
 > - bugetul merge pe ciclul salariului, nu pe luna calendaristică; două salarii în zile diferite sunt suportate;
 > - metoda plicurilor, cu propunere automată de repartizare când notezi salariul (întâi rate și facturi, apoi restul);
 > - sincronizare între doi parteneri, criptată pe telefon (serverul nu vede sumele), fără conturi;
-> - import de extras CSV/Excel de la BT, ING, Raiffeisen; bonuri citite pe telefon;
+> - import de extras CSV/Excel de la BT, ING, Raiffeisen; bonuri scrise de mână;
 > - fără reclame, fără parola băncii.
 >
 > Caut în special păreri de la cine a încercat YNAB sau Goodbudget și a renunțat: ce v-a lipsit?

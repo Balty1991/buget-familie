@@ -4,7 +4,7 @@
 
 ## Stare Play (sept 2026)
 
-Versiune **1.1.175** / `versionCode` **174**. Billing **off** (`BILLING_LIVE=false`). Text de lipit: [`docs/play-store-listing-ro.md`](docs/play-store-listing-ro.md). Capturi: [`docs/play-store-assets/SCREENSHOTS.md`](docs/play-store-assets/SCREENSHOTS.md).
+Versiune **1.1.176** / `versionCode` **174**. Billing **off** (`BILLING_LIVE=false`). Text de lipit: [`docs/play-store-listing-ro.md`](docs/play-store-listing-ro.md). Capturi: [`docs/play-store-assets/SCREENSHOTS.md`](docs/play-store-assets/SCREENSHOTS.md).
 
 ## Funcții implementate
 
@@ -24,7 +24,7 @@ Versiune **1.1.175** / `versionCode` **174**. Billing **off** (`BILLING_LIVE=fal
 | Scadențe recurente | Chirie, abonamente, facturi, rate și contribuții pot rămâne pe confirmare manuală sau pot fi adăugate automat o singură dată la prima deschidere din ziua scadenței; ziua 31 se adaptează la ultima zi din lunile scurte. |
 | Datorii și economii | Adăugare, editare, ștergere protejată, proprietar opțional (familie sau membru) și calcule de progres. O rată poate fi confirmată dintr-o sursă reală: creează cheltuiala în Jurnal, reduce automat soldul aceleiași datorii și păstrează istoricul „plată parțială” sau „achitată integral”. |
 | Evenimente viitoare | Sărbătorile și aniversările pot fi notate cu data lor calendaristică și cu un cost estimat: Crăciun, Revelion, Paște, 8 Martie, 1 Iunie, începutul școlii și Vinerea Neagră au sugestii cu dată reală, iar Paștele ortodox este calculat pentru fiecare an. Aplicația arată cât trebuie pus deoparte pe săptămână și pe lună pentru fiecare eveniment și pentru toate la un loc. Sumele puse deoparte sunt note de planificare într-un jurnal local — nu pleacă din surse și nu intră în registru. Evenimentele anuale nu se rostogolesc singure peste banii strânși: ediția trecută rămâne la vedere până este închisă explicit. Apar și în calendarul lunar și în lista „Ce urmează” din Obligații. Asistentul le cunoaște: „pune-mi Crăciun 1200 pe 25 decembrie” sau „notează-mi Crăciun, cam 1200” creează evenimentul după confirmare, iar rezumatul trimis modelului online poartă ce urmează, cât e strâns și cât mai trebuie pus deoparte lunar. |
-| Bonuri mobile | Maximum două fotografii comprimate local, păstrate în **IndexedDB** pe telefon, nu în `localStorage` și nu în pachetul sincronizat. Bonurile salvate în versiunile vechi sunt mutate defensiv la prima deschidere; dacă spațiul local nu este disponibil, fotografiile existente nu sunt șterse. OCR-ul local poate propune produse, prețuri și categorii editabile; liniile trebuie să egaleze totalul înainte de salvare. |
+| Bonuri | Se scriu de mână: magazin, total, articole. Aplicația nu face și nu citește fotografii; pozele rămase din versiunile vechi se șterg de pe telefon la pornire. |
 | Asistent de decizie | Răspunde la aceeași întrebare scrisă în mai multe feluri: „cât mai pot cheltui azi”, „cât îmi rămâne dacă plătesc chiria de 1500”, „de ce mi-a scăzut plicul de alimente”, „cât pe lună ca să am 3000 până în decembrie”. Poate propune împărțirea unei sume în plicuri, calculată din plicurile existente sau din cheltuielile ultimelor 90 de zile, cu scadențele scoase deoparte; poate mări, micșora sau șterge un plic, arătând rezultatul înainte de confirmare. O întrebare nu creează niciodată o înregistrare. Analiză locală explicabilă pentru cheltuieli, datorii, obiective, limite și alocări; include ritm zilnic, proiecție până la venit, întrebări rapide și calcule directe, de exemplu buget săptămânal împărțit pe zi. Se încarcă numai când este deschis. |
 | Simulator conversațional | Interpretează local formulări precum „Dacă plătesc 120 lei pe taxi mâine”, previzualizează suma, categoria și momentul, apoi estimează marja până la venit fără să creeze sau modifice vreo mișcare. |
 | Economisire explicabilă | Evidențiază ritmul, categoria dominantă, rezervele pentru scadențe și marja pentru obiective, exclusiv din registrul și planul curent. |
@@ -55,7 +55,7 @@ Aplicația păstrează un singur registru drept sursă de adevăr. Soldul afișa
 
 ## Performanță mobilă
 
-Componentele de Plan, Analiză, scadențe, OCR, asistent și captura rapidă sunt încărcate la cerere. Generatorul PDF este încărcat numai după apăsarea exportului, nu la prima deschidere a aplicației. Runtime-ul React rămâne într-un fișier cacheabil; iconițele fiecărui ecran rămân în modulul acelui ecran, ca Astăzi să nu descarce iconițele Planului. După ce ecranul principal e gata, Planul și Mișcările sunt pregătite discret în fundal; instrumentele și temele se încarcă abia la deschidere. Kit-ul de componente nefolosit nu mai intră în CSS-ul inițial.
+Componentele de Plan, Analiză, scadențe, asistent și captura rapidă sunt încărcate la cerere. Generatorul PDF este încărcat numai după apăsarea exportului, nu la prima deschidere a aplicației. Runtime-ul React rămâne într-un fișier cacheabil; iconițele fiecărui ecran rămân în modulul acelui ecran, ca Astăzi să nu descarce iconițele Planului. După ce ecranul principal e gata, Planul și Mișcările sunt pregătite discret în fundal; instrumentele și temele se încarcă abia la deschidere. Kit-ul de componente nefolosit nu mai intră în CSS-ul inițial.
 
 
 ## Teme memorate
@@ -108,7 +108,6 @@ Checklist pe telefon: `PLAY_CHECKLIST.md`.
 | Copie între telefoane | Da, prin export/import sau prin sesiunea de sincronizare Firebase în timp real. |
 | Sincronizare automată în timp real | Da, prin actualizări live Firestore cât aplicația rămâne deschisă pe cel puțin un telefon din sesiune; nu există serviciu de fundal cu aplicația închisă. |
 | Modificări simultane ale aceluiași plan | Fiecare telefon reunește automat, prin ID și marcaj de actualizare, orice pachet primit de la celelalte. Pentru două editări simultane ale acelorași plicuri sau realocări, verifică Planul pe ambele telefoane. |
-| Fotografii ale bonurilor | Maximum două pe bon, comprimate local și păstrate în IndexedDB pe telefon; migrarea din versiunile vechi păstrează poza veche până la confirmarea salvării locale. Fotografiile și cheile lor nu intră în pachetul sincronizat. |
 | Asistent LLM extern | Nu; GitHub Models a fost retras. Asistentul actual este local și explicabil. |
 | Plata unei rate | Confirmare manuală în aplicație; actualizează registrul și soldul datoriei, păstrând suma, sursa, data și statutul parțial/integral în istoric; nu trimite bani și nu poate accesa banca. |
 | Export PDF | Generat și descărcat local la cerere pentru bilanț sau planul calendaristic; datele nu sunt trimise unui serviciu extern. |

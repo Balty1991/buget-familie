@@ -14,4 +14,4 @@ Datele din registru sunt civile (`YYYY-MM-DD`). „Azi” e ziua telefonului. Di
 
 ## Ce nu se sincronizează
 
-Pozele de bon, regulile de magazin învățate, șabloanele rapide și cursul valutar rămân pe telefon. Ecranul de Sync spune asta explicit.
+Regulile de magazin învățate, șabloanele rapide și cursul valutar rămân pe telefon. Ecranul de Sync spune asta explicit.

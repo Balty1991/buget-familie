@@ -138,7 +138,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
             </div>
             <Inbox size={19} aria-hidden="true" />
           </div>
-          <p className="bf-review-intro">{t("Rezumat sincronizat, fără poze. Confirmarea se face pe telefonul care a creat propunerea. Poți anunța partenerul pe canalul vostru (mesaj, apel).")}</p>
+          <p className="bf-review-intro">{t("Rezumat sincronizat. Confirmarea se face pe telefonul care a creat propunerea. Poți anunța partenerul pe canalul vostru (mesaj, apel).")}</p>
           <ul className="bf-review-partner-list">
             {partnerQueue.slice(0, 12).map((item) => (
               <li key={item.id}>

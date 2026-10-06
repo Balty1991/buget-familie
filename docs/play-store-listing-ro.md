@@ -74,7 +74,7 @@ Casă
 • Imaginea lunii: toată luna într-o poză colorată — ce a rămas și unde s-au dus banii. Implicit doar procente, fără sume.
 • Fiecare categorie are culoarea ei: vezi dintr-o privire unde merg banii.
 • Ghidul răspunde la „cât mai am la mâncare?” din datele de pe telefon.
-• Bonuri citite pe telefon. Pozele nu pleacă. Un extras (CSV sau Excel) intră doar după ce confirmi; salariul din extras e recunoscut.
+• Bonuri scrise de mână, pe articole. Un extras (CSV sau Excel) intră doar după ce confirmi; salariul din extras e recunoscut.
 
 Din afara aplicației
 • Widget rapid: Cheltuială, Bon și până la 3 obiceiuri — fără sume pe ecranul de start.
@@ -114,7 +114,7 @@ Abonamentul se cere abia după ce al doilea telefon notează. Până atunci, bil
 4. Fără login bancar — date pe telefon; sync familie opțional, AES-GCM
 5. Un număr clar pe Astăzi + avertizare când săptămâna merge repede
 6. El și ea: până la 6 membri, cine plătește ce, transferuri propuse
-7. Bon → De verificat → registru (poze doar pe telefon; OCR local); import extras CSV/Excel
+7. Bon scris de mână → De verificat → registru; import extras CSV/Excel
 8. Widgeturi (rapid fără sume, opțional cu cifra zilei), dală, PIN local, backup
 
 > **Nu** lipi prețuri IAP (19,99 / 149 etc.) în store cât `BILLING_LIVE=false`. Vezi `BILLING_PLAY_PREP.md`.
@@ -130,7 +130,7 @@ Răspunsuri complete, mapate pe categorii Play: [`PLAY_CONSOLE_DATA_SAFETY.md`](
 - Analytics: niciun SDK de analytics sau reclame.
 - Backup sistem Android: nu (`allowBackup=false`).
 - Ștergere: in-app Resetare + pagina publică de ștergere.
-- AI: opțional, întrebarea + ultimele mesaje + rezumatul bugetului către Google Gemini (Groq ca rezervă); niciodată jurnalul de mișcări sau pozele.
+- AI: opțional, întrebarea + ultimele mesaje + rezumatul bugetului către Google Gemini (Groq ca rezervă); niciodată jurnalul de mișcări.
 - Bonuri: IndexedDB local, nu sync.
 - Bilanțul trimis pe WhatsApp: pleacă doar când omul apasă, prin aplicația lui de mesaje; dezvoltatorul nu primește nimic.
 
