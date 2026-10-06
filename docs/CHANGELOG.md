@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.178
+
+- Notificarea „Azi la mâncare” poartă data locală a zilei, nu cea UTC. Pe fusurile la est de UTC (testul de deploy rulează pe Pacific/Auckland), 8:30 cădea în ziua de ieri și deploy-ul site-ului pica din 1.1.175.
+
 ## 1.1.177
 
 - Astăzi: butonul „Unde sunt banii · Mută” sub cifra mare, și în modul simplu. Arată soldul fiecărei surse (și al cui e) și pe ce categorii s-a cheltuit luna asta.
