@@ -161,7 +161,7 @@ export function ProductCatalogPanel({ data, onSaveReceipt, onOpenReceiptForm }: 
       date,
       sourceId,
       memberId,
-      note: t("Bon creat din catalog, fără fotografie."),
+      note: t("Bon creat din catalog."),
       lines: lines.map((line) => ({ id: line.id, category: line.category, amount: line.amount, label: line.name })),
       updatedAt: new Date().toISOString(),
     };

@@ -54,9 +54,9 @@ function vitePluginBuildId(): Plugin {
       /*
        * P2-11: lista pe care service worker-ul o pune în cache la instalare, ca ecranele leneșe
        * (Plicuri, Mișcări, Notează) să meargă offline și fără să fi fost deschise. Fără bucățile
-       * mari care cer oricum rețea sau sunt rare: Firebase, OCR, PDF.
+       * mari care cer oricum rețea sau sunt rare: Firebase, PDF.
        */
-      const heavy = /(family-sync|receipt-ocr|tesseract|jspdf|html2canvas|pdf)/i;
+      const heavy = /(family-sync|jspdf|html2canvas|pdf)/i;
       const files = Object.values(bundle)
         .filter((item) => /^assets\/.+\.(js|css)$/.test(item.fileName) && !heavy.test(item.fileName))
         .filter((item) => (item.type === "chunk" ? item.code.length : String(item.source).length) < 400_000)
@@ -100,23 +100,17 @@ function vitePluginCsp(): Plugin {
         // Doar pentru web: în Android, Capacitor injectează la rulare un script inline (puntea nativă)
         // care ar fi blocat. Acolo pagina vine oricum din pachetul aplicației, nu de pe internet.
         if (process.env.GITHUB_PAGES !== "true") return html;
-        // jsDelivr servește orice pachet npm: permitem doar căile exacte, cu versiune, ale cititorului de bonuri.
-        const pkg = (name: string) => JSON.parse(readFileSync(path.resolve(import.meta.dirname, "node_modules", name, "package.json"), "utf8")) as { version: string; dependencies?: Record<string, string> };
-        const tesseract = pkg("tesseract.js");
-        const coreVersion = String(tesseract.dependencies?.["tesseract.js-core"] || "").replace(/^[^0-9]*/, "");
-        const ocrScripts = `https://cdn.jsdelivr.net/npm/tesseract.js@v${tesseract.version}/ https://cdn.jsdelivr.net/npm/tesseract.js-core@v${coreVersion}/`;
-        const ocrData = "https://cdn.jsdelivr.net/npm/@tesseract.js-data/";
         const hashes = Array.from(html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g))
           .map((match) => `'sha256-${createHash("sha256").update(match[1]).digest("base64")}'`);
         const policy = [
           "default-src 'self'",
-          `script-src 'self' 'wasm-unsafe-eval' ${hashes.join(" ")} https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ ${ocrScripts}`,
+          `script-src 'self' 'wasm-unsafe-eval' ${hashes.join(" ")} https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/`,
           "style-src 'self' 'unsafe-inline'",
-          // Pozele bonurilor sunt locale; din afară vin doar imaginile reCAPTCHA.
+          // Din afară vin doar imaginile reCAPTCHA.
           "img-src 'self' data: blob: https://www.gstatic.com https://www.google.com",
           "font-src 'self' data:",
-          // Doar serviciile folosite: Firestore, Auth, App Check, funcțiile din europe-central2, reCAPTCHA, OCR și Open Food Facts.
-          `connect-src 'self' data: blob: https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://europe-central2-buget-familie-a6a0d.cloudfunctions.net https://www.google.com ${ocrScripts} ${ocrData} https://search.openfoodfacts.org https://world.openfoodfacts.org https://world.openproductsfacts.org`,
+          // Doar serviciile folosite: Firestore, Auth, App Check, funcțiile din europe-central2, reCAPTCHA și Open Food Facts.
+          `connect-src 'self' data: blob: https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://europe-central2-buget-familie-a6a0d.cloudfunctions.net https://www.google.com https://search.openfoodfacts.org https://world.openfoodfacts.org https://world.openproductsfacts.org`,
           "frame-src https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com",
           "worker-src 'self' blob:",
           "manifest-src 'self'",
@@ -160,7 +154,6 @@ export default defineConfig(({ command }) => {
           manualChunks(id) {
             if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/") || id.includes("node_modules/scheduler") || id.includes("node_modules/wouter")) return "react-runtime";
             if (id.includes("node_modules/firebase") || id.includes("node_modules/@firebase")) return "family-sync";
-            if (id.includes("node_modules/tesseract.js")) return "receipt-ocr";
             // Nu grupa lucide-react: un chunk comun forța toate iconițele Plan/Analiză pe first paint.
             // Nu grupa jspdf/html2canvas: helperul de preload ajunge în chunk-ul mare și se încarcă la prima deschidere.
           },

@@ -42,16 +42,10 @@ Date financiare (sume, categorii, plicuri, datorii, scadențe) sunt introduse de
 Fără vânzare de date. Backup-ul sistem Android este dezactivat (allowBackup=false).
 ```
 
-### 2. Fotografii și videoclipuri (bonuri): NU se colectează
+### 2. Fotografii și videoclipuri: NU se colectează
 
-În Play, „colectat” înseamnă că datele pleacă de pe dispozitiv. Pozele bonurilor nu pleacă:
-stau în IndexedDB, OCR-ul rulează local, nu intră în sync și nu merg la ghidul AI.
-Bifează **Nu** la Fotografii și videoclipuri.
-
-```
-Fotografiile bonurilor rămân pe telefon (IndexedDB). Nu se sincronizează și nu se trimit la ghid.
-OCR-ul rulează local. Ghidul nu primește bonuri (din 1.1.113 nu mai are atașare de fișiere).
-```
+Aplicația nu face și nu citește fotografii (din 1.1.176 bonurile se scriu doar de mână;
+pozele rămase din versiunile vechi se șterg de pe telefon). Bifează **Nu** la Fotografii și videoclipuri.
 
 ### 3. Identificatori de dispozitiv / aplicație (identitate anonimă)
 
@@ -92,14 +86,14 @@ AES-GCM, iar dezvoltatorul nu poate citi sumele în clar.
 Ce pleacă, exact: întrebarea, ultimele 8 mesaje, `compactGuideContext` (plicuri cu sumă și rest,
 surse cu sold, categorii, scadențe, recurente, datorii, obiective, evenimente, venituri așteptate
 cu ziua lor, numele membrilor, totalurile lunii, data salariului).
-Nu pleacă jurnalul de mișcări, pozele, cheia sau parola camerei.
+Nu pleacă jurnalul de mișcări, cheia sau parola camerei.
 
-Alți destinatari, fără date personale: jsDelivr (CDN) servește programul OCR și datele de limbă la prima citire a unui bon (vede doar IP-ul); Open Food Facts / Open Products Facts primesc doar cuvântul căutat în catalogul de produse.
+Alți destinatari, fără date personale: Open Food Facts / Open Products Facts primesc doar cuvântul căutat în catalogul de produse.
 
 ```
 Ghidul răspunde întâi de pe telefon. Dacă nu înțelege, întrebarea, ultimele mesaje și un rezumat
 al bugetului (plicuri, surse, scadențe, numele membrilor) merg prin serverul nostru la Google Gemini
-sau, ca rezervă, la Groq. Nu pleacă jurnalul de mișcări și nici fotografiile. Conversația nu e păstrată pe server.
+sau, ca rezervă, la Groq. Nu pleacă jurnalul de mișcări. Conversația nu e păstrată pe server.
 ```
 
 ### 4b. Adresa IP și protecție la abuz
@@ -112,7 +106,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 
 - Locație precisă / aproximativă  
 - Contacte  
-- Fotografii și videoclipuri (rămân pe telefon)  
+- Fotografii și videoclipuri (aplicația nu le folosește)  
 - Microfon / înregistrări audio  
 - Conturi de autentificare (Google/Facebook etc.) pentru core use  
 - Date de sănătate  
@@ -170,7 +164,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 ## G. Checklist rapid înainte de Submit
 
 - [ ] Informații financiare = Da, pe dispozitiv, scop Funcționalitate  
-- [ ] Fotografii = **Nu** (rămân pe telefon)  
+- [ ] Fotografii = **Nu** (aplicația nu le folosește)  
 - [ ] Sync = opțional, criptat, dezvoltator fără plaintext  
 - [ ] AI online = opțional: conținut utilizator + informații financiare + nume; efemer; Gemini + Groq furnizori  
 - [ ] Identificatori = Da (ID anonim Firebase), funcționalitate + securitate, nu partajare  

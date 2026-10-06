@@ -88,7 +88,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
     const numeric = parseRomanianAmount(amount);
     const normalizedLines = resolveReceiptLines(lines, numeric);
     const closed = closeReceiptGap(normalizedLines, numeric);
-    if (!vendor.trim() || numeric <= 0 || !sourceId || !memberId) return setError(t("Completează magazinul, totalul, membrul și sursa. Fotografiile nu sunt obligatorii."));
+    if (!vendor.trim() || numeric <= 0 || !sourceId || !memberId) return setError(t("Completează magazinul, totalul, membrul și sursa."));
     if (!closed.lines.length || closed.over) return setError(t("Repartizarea este {split}, dar totalul bonului este {total}. Corectează liniile înainte de salvare.", { split: fmtExact.format(normalizedLines.reduce((sum, line) => sum + line.amount, 0)), total: fmtExact.format(numeric) }));
     try {
       setBusy(true);

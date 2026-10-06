@@ -38,7 +38,7 @@ De ce e altfel
 • Astăzi: un număr de decizie — cât poți folosi fără să strici următoarea perioadă.
 • Scor de sănătate, ritm zilnic, recapitulare de lună.
 • El și ea: cine a mișcat banii, fără conturi separate.
-• Bonuri cu OCR local. Pozele nu pleacă de pe telefon.
+• Bonuri scrise de mână, pe articole.
 • De verificat: bonuri și CSV bancă (BCR, BT, ING, Revolut) confirmate înainte de registru.
 • PDF de bilanț și CSV, generate în aplicație.
 • Teme: Alb Atelier, Noapte, Aurora, Navy, Cyber — contrast verificat pe controale.
@@ -53,7 +53,7 @@ Aplicația nu plătește facturi, nu investește și nu înlocuiește un consult
 2. Fără login bancar — date pe telefon; sync familie opțional, AES-GCM
 3. Un număr clar pe Astăzi: ce poți cheltui azi, fără să strici perioada
 4. El și ea: până la 6 membri, cine a scos din ce plic
-5. Bon → De verificat → registru (poze doar pe telefon; OCR local)
+5. Bon scris de mână → De verificat → registru
 6. Import CSV bănci RO + dedupe (fără OAuth bancar)
 7. Conflict onest pe plicuri și mișcări (nu LWW tăcut pe bani)
 8. Widget / dală rapidă + PIN local + backup export/import
@@ -78,7 +78,7 @@ Note captură: fără date reale ale utilizatorului; folosește demouri inventat
 ## Privacy blurb (Data safety / scurt pentru listing)
 
 ```
-Datele financiare stau pe telefon. Sincronizarea între telefoanele familiei este opțională și criptată (AES-GCM) cu o parolă pe care doar voi o cunoașteți — dezvoltatorul nu poate citi sumele. Fotografiile bonurilor nu se sincronizează. Fără publicitate, fără vânzare de date, fără login bancar. Backupul sistem Android este dezactivat (allowBackup=false). Poți șterge totul din aplicație sau de pe pagina publică de ștergere.
+Datele financiare stau pe telefon. Sincronizarea între telefoanele familiei este opțională și criptată (AES-GCM) cu o parolă pe care doar voi o cunoașteți — dezvoltatorul nu poate citi sumele. Fără publicitate, fără vânzare de date, fără login bancar. Backupul sistem Android este dezactivat (allowBackup=false). Poți șterge totul din aplicație sau de pe pagina publică de ștergere.
 ```
 
 

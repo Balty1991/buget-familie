@@ -27,14 +27,14 @@
     <ul>
       <li>mișcări (sume, categorii, date, membru, sursă de plată, note);</li>
       <li>plicuri, datorii, economii, scadențe, venituri așteptate, numele membrilor familiei;</li>
-      <li>fotografiile bonurilor și textul citit din ele (OCR-ul rulează pe telefon);</li>
+      <li>bonurile scrise de mână (magazin, total, articole);</li>
       <li>preferințe: temă, alerte, codul de blocare (păstrat doar ca hash PBKDF2).</li>
     </ul>
-    <p>Fotografiile bonurilor nu pleacă niciodată de pe telefon: nici la sincronizare, nici la ghidul AI, nici la noi.</p>
+    <p>Aplicația nu face și nu citește fotografii de bonuri. Bonurile se scriu de mână.</p>
 
     <h2>2. Sincronizarea de familie (opțională)</h2>
     <p>Dacă o pornești, registrul este comprimat și criptat AES-GCM pe telefon, apoi salvat în Google Firebase Firestore, într-o cameră cu ID aleator. Cheia camerei stă doar pe telefoanele familiei și ajunge la partener prin invitație (link sau cod QR); camerele vechi, create cu parolă de familie, au ca ID hash-ul SHA-256 al parolei. Cheia și parola nu ajung pe server în clar. Singura excepție e codul de recuperare, dacă îl folosești: cheia camerei (sau parola) este salvată pe server criptată cu acest cod, pe care serverul nu îl are, ca să poți reveni în familie de pe un telefon nou. Serverul nu poate citi sume, nume sau note.</p>
-    <p>Nu se sincronizează: fotografiile bonurilor, șabloanele rapide, filtrele, tema, codul de blocare și jurnalul de sincronizare al telefonului.</p>
+    <p>Nu se sincronizează: șabloanele rapide, filtrele, tema, codul de blocare și jurnalul de sincronizare al telefonului.</p>
 
     <h2>3. Identitate anonimă și protecție la abuz</h2>
     <p>Pentru sincronizare, ghidul online și formularul de feedback, telefonul primește de la Google Firebase Authentication un identificator anonim aleator (fără nume, e-mail, telefon sau cont). Pe web, Firebase App Check folosește Google reCAPTCHA Enterprise ca să verifice că cererea vine din aplicație; reCAPTCHA poate prelucra date tehnice despre browser și dispozitiv, conform <a href="https://policies.google.com/privacy">politicii Google</a>. Pe server numărăm cererile la ghid și la feedback pe identificatorul anonim și pe adresa IP, ca să punem limite. Contoarele țin o oră sau o zi și nu conțin conținutul cererii.</p>
@@ -45,7 +45,7 @@
       <li>întrebarea ta și ultimele 8 mesaje din conversație;</li>
       <li>un rezumat al bugetului: plicurile (nume, sumă, cât a rămas), sursele de plată cu soldul lor, categoriile, scadențele, datoriile, obiectivele de economii, evenimentele planificate, veniturile așteptate cu ziua lor, numele membrilor familiei, totalurile lunii și data salariului.</li>
     </ul>
-    <p>Nu pleacă jurnalul de mișcări, fotografiile, cheia sau parola camerei. Nu păstrăm conversațiile pe server. Google și Groq prelucrează cererea ca furnizori de servicii, conform termenilor lor pentru API. Nu scrie în ghid date pe care nu vrei să le trimiți (de exemplu numere de card).</p>
+    <p>Nu pleacă jurnalul de mișcări, cheia sau parola camerei. Nu păstrăm conversațiile pe server. Google și Groq prelucrează cererea ca furnizori de servicii, conform termenilor lor pentru API. Nu scrie în ghid date pe care nu vrei să le trimiți (de exemplu numere de card).</p>
 
     <h2>5. Feedback (opțional)</h2>
     <p>Formularul „Spune-ne ce nu merge” trimite textul scris de tine, contactul doar dacă îl completezi și, dacă lași bifa, detalii tehnice (versiunea aplicației, ecranul, tipul telefonului, limba, tema, mărimea ecranului), împreună cu identificatorul anonim. Nimic din registru. Mesajele le citește doar dezvoltatorul.</p>
@@ -60,7 +60,7 @@
       <li><b>RECEIVE_BOOT_COMPLETED</b>: reprogramarea reamintirilor după repornirea telefonului.</li>
       <li><b>Stocare</b> (doar Android 9 și mai vechi): scrierea copiei de siguranță în Descărcări.</li>
     </ul>
-    <p>Nu cerem locație, contacte, microfon, cameră sau acces la conturi Google. Bonurile se aleg prin selectorul de sistem. Widgetul de pe ecranul principal arată cât poți cheltui azi: oricine vede ecranul telefonului vede și suma. Dacă nu vrei asta, nu adăuga widgetul.</p>
+    <p>Nu cerem locație, contacte, microfon, cameră sau acces la conturi Google. Extrasele de cont (CSV sau Excel) se aleg prin selectorul de sistem. Widgetul de pe ecranul principal arată cât poți cheltui azi: oricine vede ecranul telefonului vede și suma. Dacă nu vrei asta, nu adăuga widgetul.</p>
 
     <h2>8. Copii de siguranță</h2>
     <p>Backup-ul Google și transferul automat la un telefon nou sunt dezactivate (<code>allowBackup=false</code> și reguli de extragere care exclud tot), ca registrul să nu părăsească telefonul pe această cale. Poți exporta oricând un fișier JSON din Setări. Dacă pornești copia automată săptămânală, fișierul se scrie în Descărcări, necriptat: îl pot citi alte aplicații cu acces la fișiere și rămâne acolo și după dezinstalare, până îl ștergi. Aplicația păstrează doar ultimele 4 copii automate și le șterge singură pe cele mai vechi.</p>

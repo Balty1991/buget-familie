@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.176
+
+Bonurile se scriu doar de mână; citirea bonului din poză e scoasă de tot:
+- Codul de citire (OCR, tesseract.js) și pachetul lui au ieșit din aplicație; site-ul nu mai permite descărcarea lui de pe jsDelivr.
+- Pozele rămase din versiunile vechi se șterg de pe telefon la pornire (baza IndexedDB a pozelor și câmpurile din bonuri). Bonurile rămân, cu magazinul, totalul și articolele.
+- Lista de bonuri nu mai arată miniaturi sau „Bon în două fotografii”; ștergerea bonului nu mai vorbește despre fotografii.
+- Textele din aplicație (Bonuri, Sync, De verificat, catalog, formularul de bon), politica de confidențialitate, pagina „Despre”, pagina de ștergere a datelor, fișa Play și ghidul „Siguranța datelor” nu mai pomenesc poze sau OCR.
+
 ## 1.1.175
 
 Audit, a doua trecere:

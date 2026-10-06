@@ -13,7 +13,7 @@ import { allocationStatus, autoPostDueRecurring, createEmptyAppData, TOMBSTONE_M
 import { addContribution, eventTraits } from "@/lib/planned-events";
 import { applyDeclaredBalance } from "@/lib/balance-check";
 import { levelStartedWeek, totalForWeeklyPace } from "@/lib/started-week";
-import { migrateLegacyReceiptImages, removeReceiptImages } from "@/lib/receipt-storage";
+import { clearReceiptImageStorage } from "@/lib/receipt-storage";
 import { queueReceiptForReview, attachReceiptDetail } from "@/lib/receipt-review";
 import { markCelebrated, pendingCelebration } from "@/lib/goal-celebration";
 import { safeSetItem } from "@/lib/safe-storage";
@@ -213,7 +213,7 @@ export default function Home() {
   useEffect(() => { if (modal !== "quick") setQuickKind(undefined); }, [modal]);
   const [editTx, setEditTx] = useState<Transaction>();
   const [editGoal, setEditGoal] = useState<Debt | SavingsGoal>();
-  const [receiptStorageNotice, setReceiptStorageNotice] = useState("");
+  const receiptStorageNotice = "";
   const legacyReceiptMigrationStarted = useRef(false);
   const setupOffered = useRef(setupOpen);
   // Obiectiv atins: o felicitare pe obiectiv, pe telefonul acesta.
@@ -241,7 +241,8 @@ export default function Home() {
     const id = window.setTimeout(run, 1200);
     return () => window.clearTimeout(id);
   }, [data, storageReady]);
-  useEffect(() => { if (legacyReceiptMigrationStarted.current || !data.receipts.some((receipt) => (receipt.imageData || receipt.imageData2) && !receipt.imageKeys?.length)) return; legacyReceiptMigrationStarted.current = true; void migrateLegacyReceiptImages(data.receipts).then((migrated) => { if (!migrated.size) return; setData((current) => ({ ...current, receipts: current.receipts.map((receipt) => { const imageKeys = migrated.get(receipt.id); return imageKeys ? { ...receipt, imageKeys, imageData: undefined, imageData2: undefined } : receipt; }) })); setReceiptStorageNotice((migrated.size === 1 ? t("Un bon a fost mutat în stocarea locală a telefonului.") : t("{count} bonuri au fost mutate în stocarea locală a telefonului.", { count: migrated.size }))); }).catch((reason) => setReceiptStorageNotice(reason instanceof Error ? reason.message : t("Nu am putut muta fotografiile vechi ale bonurilor; acestea nu au fost șterse."))); }, [data.receipts]);
+  // Bonurile se scriu doar de mână. Pozele rămase din versiunile vechi se șterg o dată de pe telefon.
+  useEffect(() => { if (legacyReceiptMigrationStarted.current || !storageReady) return; legacyReceiptMigrationStarted.current = true; void clearReceiptImageStorage().catch(() => undefined); if (data.receipts.some((receipt) => receipt.imageData || receipt.imageData2 || receipt.imageKeys?.length)) setData((current) => ({ ...current, receipts: current.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...receipt }) => receipt) })); }, [data.receipts, storageReady]);
   useEffect(() => { if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); const openTutorial = () => { setMore("guide"); go("utilities"); }; window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); window.addEventListener("buget-familie:open-usage-tutorial", openTutorial); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) safeSetItem(window.localStorage, "buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted && !setupOffered.current) { setupOffered.current = true; safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true"); setSetupOpen(true); } return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); window.removeEventListener("buget-familie:open-usage-tutorial", openTutorial); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
   useEffect(() => {
     if (!storageReady || onboardingOpen || setupOpen) return;
@@ -666,10 +667,7 @@ export default function Home() {
   const saveSaving = (item: Debt | SavingsGoal) => update((current) => { const stamped = { ...item, updatedAt: new Date().toISOString() } as SavingsGoal; return { ...current, savings: current.savings.some((entry) => entry.id === item.id) ? current.savings.map((entry) => entry.id === item.id ? stamped : entry) : [...current.savings, stamped] }; });
   const saveReceipt = (item: Receipt) => update((current) => queueReceiptForReview(current, item));
   const deleteReceipt = (id: string) => {
-    const receipt = data.receipts.find((item) => item.id === id);
-    void removeReceiptImages(receipt?.imageKeys).catch(() => setReceiptStorageNotice(t("Bonul a fost șters din registru, dar telefonul nu a confirmat încă ștergerea fotografiei locale.")));
-    // Fotografiile sunt deja șterse de pe telefon, deci anularea readuce bonul fără poze; o spunem pe față.
-    deleteWithUndo(receipt?.imageKeys?.length ? t("Bonul a fost șters. Anularea îl readuce fără fotografii.") : t("Bonul a fost șters."), (current) => {
+    deleteWithUndo(t("Bonul a fost șters."), (current) => {
       const currentReceipt = current.receipts.find((item) => item.id === id);
       // Pleacă doar mișcările făcute de bon. Cheltuiala notată de mână, cu bonul atașat ca detaliu, rămâne fără bon.
       const madeByReceipt = (txId: string) => txId === `receipt-tx-${id}` || txId.startsWith(`receipt-tx-${id}-`);
@@ -679,7 +677,7 @@ export default function Home() {
       const removedTransactions = current.transactions.filter((item) => linked.includes(item.id));
       return {
         next: { ...current, receipts: current.receipts.filter((item) => item.id !== id), transactions: current.transactions.filter((item) => !linked.includes(item.id)).map((item) => item.receiptId === id ? { ...item, receiptId: undefined, updatedAt: now } : item), pendingReview: current.pendingReview.filter((draft) => draft.transaction.receiptId !== id && !linked.includes(draft.transaction.id)), deleted: [...current.deleted, { entity: "receipts" as const, id, deletedAt: now }, ...linked.map((transactionId) => ({ entity: "transactions" as const, id: transactionId, deletedAt: now }))].slice(-TOMBSTONE_MAX) },
-        removed: { receipts: currentReceipt ? [{ ...currentReceipt, imageKeys: undefined }] : [], transactions: removedTransactions },
+        removed: { receipts: currentReceipt ? [currentReceipt] : [], transactions: removedTransactions },
       };
     });
   };

@@ -22,7 +22,6 @@ import {
   type Debt,
   type SavingsGoal,
 } from "./finance-data";
-import { interpretReceiptText, parseReceiptItems } from "./receipt-utils";
 import { checkInRebalance } from "./household-insights";
 
 const planWithFlex = () => {
@@ -127,27 +126,6 @@ describe("plăți recurente", () => {
   });
 });
 
-describe("citirea bonului", () => {
-  it("păstrează două produse identice cumpărate împreună", () => {
-    const items = parseReceiptItems(["PAINE 3,00", "PAINE 3,00", "LAPTE 7,00", "TOTAL 13,00"]);
-    expect(items.map((item) => `${item.label} ${item.amount}`)).toEqual(["PAINE 3", "PAINE 3", "LAPTE 7"]);
-  });
-
-  it("elimină o linie citită de două ori din poze suprapuse", () => {
-    const items = parseReceiptItems(["PAINE 3,00", "LAPTE 7,00", "LAPTE 7,00", "TOTAL 10,00"]);
-    expect(items.map((item) => item.label)).toEqual(["PAINE", "LAPTE"]);
-  });
-
-  it("ignoră o dată imposibilă în loc să o salveze", () => {
-    expect(interpretReceiptText(["MAGAZIN TEST", "BON 45/45/2026", "PAINE 3,00", "TOTAL 3,00"]).date).toBeUndefined();
-    expect(interpretReceiptText(["MAGAZIN TEST", "31/02/2026", "PAINE 3,00", "TOTAL 3,00"]).date).toBeUndefined();
-  });
-
-  it("citește o dată românească validă, zi înaintea lunii", () => {
-    expect(interpretReceiptText(["MAGAZIN TEST", "07.09.2026 14:22", "PAINE 3,00", "TOTAL 3,00"]).date).toBe("2026-09-07");
-  });
-});
-
 describe("fereastra de flexibilitate a salariului", () => {
   it("arată în ultima tranșă cheltuiala din zilele de flexibilitate", () => {
     const data = planWithFlex();
@@ -188,13 +166,6 @@ describe("aceeași cifră pe plic", () => {
     const shown = envelopeDecisionStatus(data, rent, "2026-09-10");
     expect(shown.scope).toBe("cycle");
     expect(shown.remaining).toBe(0);
-  });
-});
-
-describe("recunoașterea magazinului", () => {
-  it("alege lanțul cunoscut, nu primul rând din antetul legal", () => {
-    const result = interpretReceiptText(["SC EXPERT MAGAZIN COMPANY", "LIDL DISCOUNT S.R.L.", "STR. GARII NR. 4", "PAINE 3,00", "TOTAL 3,00"]);
-    expect(result.vendor).toBe("Lidl");
   });
 });
 

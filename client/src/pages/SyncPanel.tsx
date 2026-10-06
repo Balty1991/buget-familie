@@ -194,18 +194,17 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
 
   return <div className="bf-sync">
     {!canUseFamilySync() || phoneBlocked ? <FamilieUpgrade reason="sync" /> : null}
-    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{connected ? t("FAMILIE CONECTATĂ") : t("SINCRONIZARE")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Datele se criptează pe telefon. Serverul vede doar un pachet pe care nu-l poate citi. Bonurile se scriu de mână, fără poză.")}</p></div>
+    <div className="bf-sync-hero"><Users size={25} /><p className="bf-kicker">{connected ? t("FAMILIE CONECTATĂ") : t("SINCRONIZARE")}</p><h2>{connected ? t("Sesiunea familiei este activă.") : t("Sincronizare criptată, în timp real, între telefoane.")}</h2><p>{t("Datele se criptează pe telefon. Serverul vede doar un pachet pe care nu-l poate citi.")}</p></div>
     <aside className="bf-sync-local-only" role="note">
       <p className="bf-kicker">{t("CE SE SINCRONIZEAZĂ")}</p>
       <ul>
         <li>{t("Mișcări, plicuri, scadențe, datorii, economii")}</li>
         <li>{t("Membri, surse și planul până la salariu")}</li>
-        <li>{t("Rezumatul cozii De verificat (titlu, sumă, dată — fără poze)")}</li>
+        <li>{t("Rezumatul cozii De verificat (titlu, sumă, dată)")}</li>
       </ul>
       <p className="bf-kicker">{t("CE NU SE SINCRONIZEAZĂ")}</p>
       <p>{t("Rămân doar pe acest telefon — partenerul nu le vede automat:")}</p>
       <ul>
-        <li>{t("Fotografiile bonurilor")}</li>
         <li>{t("Confirmarea din De verificat (doar pe telefonul care a creat propunerea)")}</li>
         <li>{t("Regulile de comerciant")}</li>
         <li>{t("Șabloanele rapide")}</li>

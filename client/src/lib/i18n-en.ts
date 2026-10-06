@@ -4568,4 +4568,13 @@ export const en: Record<string, string> = {
   "Un singur abonament pe an ține ambele telefoane. Registrul rămâne pe telefon dacă anulezi.": "One subscription a year keeps both phones. The register stays on the phone if you cancel.",
   "Pune aplicația și pe telefonul celălalt. Abonamentul se cere abia după ce notează acolo.": "Put the app on the other phone too. The subscription is asked only after they log there.",
   "Plicul de mâncare e gol pentru azi. Ce cumperi se ia din altă parte.": "The food envelope is empty for today. Anything you buy comes from somewhere else.",
+  "Bonurile scrise de mână intră aici pe articole, grupe de marfă, alimente și nealimentare.": "Hand-written receipts land here by item, product group, food and non-food.",
+  "Nu sunt articole pe perioada asta. Scrie un bon de mână.": "No items in this period. Write a receipt by hand.",
+  "Bon creat din catalog.": "Receipt created from the catalog.",
+  "Spațiul local este aproape plin. Exportă un backup dacă problema continuă.": "Local storage is almost full. Export a backup if the problem continues.",
+  "Completează magazinul, totalul, membrul și sursa.": "Fill in the store, total, member and source.",
+  "Datele se criptează pe telefon. Serverul vede doar un pachet pe care nu-l poate citi.": "Data is encrypted on the phone. The server only sees a package it cannot read.",
+  "Rezumatul cozii De verificat (titlu, sumă, dată)": "Summary of the To review queue (title, amount, date)",
+  "Scrie un bon de mână sau caută un produs în catalog.": "Write a receipt by hand or search for a product in the catalog.",
+  "Rezumat sincronizat. Confirmarea se face pe telefonul care a creat propunerea. Poți anunța partenerul pe canalul vostru (mesaj, apel).": "Synced summary. Confirmation happens on the phone that created the proposal. You can let your partner know through your usual channel (message, call).",
 };
