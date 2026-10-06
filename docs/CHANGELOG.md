@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.166
+
+- Articolele stau pe un rând: ce ai cumpărat, lei, categorie. Lista nu mai crește în jos la fiecare produs.
+
 ## 1.1.165
 
 - Articolul de pe bon are trei câmpuri cu nume: ce ai cumpărat, cât a costat, categorie.

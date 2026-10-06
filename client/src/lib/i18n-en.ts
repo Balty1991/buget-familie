@@ -2784,6 +2784,7 @@ export const en: Record<string, string> = {
   "Diferență neînregistrată": "Unrecorded difference",
   "Ce ții minte de pe bon": "What you remember from the receipt",
   "Ce ai cumpărat": "What you bought",
+  "Lei": "Lei",
   "Cât a costat, lei": "What it cost, lei",
   "ex. cartofi": "e.g. potatoes",
   "Șterge articolul": "Delete the item",

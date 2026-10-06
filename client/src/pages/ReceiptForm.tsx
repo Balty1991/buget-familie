@@ -144,12 +144,13 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
               return [...next, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }];
             })}><Plus size={16} /> {t("Produs")}</button>
           </div>
+          <div className="bf-item-head" aria-hidden="true"><span>{t("Ce ai cumpărat")}</span><span>{t("Lei")}</span><span>{t("Categorie")}</span></div>
           {lines.map((line) => (
-            <div className="bf-split-line" key={line.id}>
-              <Field label={t("Ce ai cumpărat")}><input aria-label={t("Ce ai cumpărat")} value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder={t("ex. cartofi")} /></Field>
-              <Field label={t("Cât a costat, lei")}><input aria-label={t("Cât a costat, lei")} value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="0,00" /></Field>
-              <Field label={t("Categorie")}><select aria-label={t("Categorie")} value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></Field>
-              {lines.length > 1 && <button type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /> {t("Șterge articolul")}</button>}
+            <div className="bf-item-row" key={line.id}>
+              <input aria-label={t("Ce ai cumpărat")} value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder={t("ex. cartofi")} />
+              <input aria-label={t("Cât a costat, lei")} value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="0" />
+              <select aria-label={t("Categorie")} value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select>
+              {lines.length > 1 ? <button type="button" aria-label={t("Șterge articolul")} onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button> : <span />}
             </div>
           ))}
           <small>{t("Poți lăsa o diferență. Ce nu știi nu e un produs: intră ca diferență neînregistrată. Nu salva doar dacă liniile trec peste total.")}</small>
