@@ -4537,7 +4537,6 @@ export const en: Record<string, string> = {
   "Un buget, două telefoane.": "One budget, two phones.",
   "Primul telefon rămâne gratuit. Ca să scrie și celălalt, e Familia: 149 lei pe an. Luna e varianta scumpă. Backup-ul pe telefon rămâne gratuit.": "The first phone stays free. For the other one to write too, that's Family: 149 lei a year. Monthly is the expensive option. The backup on the phone stays free.",
   "Proba de {days} zile pornește aici, nu la instalare": "The {days}-day trial starts here, not at install",
-  "BILANȚUL SĂPTĂMÂNII": "THE WEEKLY SUMMARY",
   "Partenerul a primit bilanțul.": "Your partner got the summary.",
   "Primul e gratuit. Ca să-l primească în fiecare săptămână: 149 lei pe an. Luna e varianta scumpă. Registrul rămâne pe telefon oricum.": "The first one is free. For them to get it every week: 149 lei a year. Monthly is the expensive option. The register stays on the phone either way.",
   "PÂNĂ LA SALARIU": "UNTIL PAYDAY",
