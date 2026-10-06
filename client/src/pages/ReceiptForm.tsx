@@ -144,7 +144,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
               return [...next, { id: newId("receipt-line"), category: "Alimente", amount: "", label: "" }];
             })}><Plus size={16} /> {t("Produs")}</button>
           </div>
-          <div className="bf-item-head" aria-hidden="true"><span>{t("Ce ai cumpărat")}</span><span>{t("Lei")}</span><span>{t("Categorie")}</span></div>
+          <div className="bf-item-head" aria-hidden="true"><span>{t("Ce ai cumpărat")}</span><span>{t("Lei")}</span></div>
           {lines.map((line) => (
             <div className="bf-item-row" key={line.id}>
               <input aria-label={t("Ce ai cumpărat")} value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder={t("ex. cartofi")} />

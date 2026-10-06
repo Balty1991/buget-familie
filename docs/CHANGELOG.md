@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.167
+
+- Categoria articolului stă pe rândul de dedesubt, pe toată lățimea. Nu se mai taie la „Alim...”.
+
 ## 1.1.166
 
 - Articolele stau pe un rând: ce ai cumpărat, lei, categorie. Lista nu mai crește în jos la fiecare produs.
