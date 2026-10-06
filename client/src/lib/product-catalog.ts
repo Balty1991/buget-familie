@@ -280,7 +280,7 @@ export function searchProductCatalog(query: string, receipts: Receipt[] = [], li
   if (needle.length >= 2) {
     for (const receipt of receipts) {
       for (const line of receipt.lines || []) {
-        if (!line.label) continue;
+        if (!line.label || line.label === "Rest bon" || line.label === "Diferență neînregistrată") continue;
         if (foldRomanian(line.label).includes(needle)) push({ name: line.label, category: line.category || classifyProductLabel(line.label), source: "bon" });
       }
     }

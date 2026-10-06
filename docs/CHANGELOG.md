@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.165
+
+- Articolul de pe bon are trei câmpuri cu nume: ce ai cumpărat, cât a costat, categorie.
+- Ce nu știi nu se mai numește „Rest bon”. Se numește diferență neînregistrată.
+
 ## 1.1.164
 
 - Când planul e depășit, cifra mare are minus în față. Nu mai pare că ai banii aceia.

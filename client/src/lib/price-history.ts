@@ -56,7 +56,7 @@ function observationsFrom(receipts: Receipt[]) {
   for (const receipt of receipts) {
     const vendor = (receipt.vendor || "Magazin necunoscut").trim() || "Magazin necunoscut";
     for (const line of receipt.lines || []) {
-      if (!line.label || line.amount <= 0) continue;
+      if (!line.label || line.amount <= 0 || line.label === "Rest bon" || line.label === "Diferență neînregistrată") continue;
       const key = normalizeProductKey(line.label);
       if (!key) continue;
       const list = groups.get(key) || [];

@@ -378,14 +378,17 @@ export function resolveReceiptLines(
   return normalized;
 }
 
-/** Liniile pot fi sub total: restul (ecotaxă, rotunjire, produs nenumit) intră ca o linie,
- * ca bonul să se poată salva fără să se potrivească fiecare ban. Peste total rămâne eroare. */
+/** Eticheta internă a diferenței. Pe ecran se vede „Diferență neînregistrată”, nu numele ăsta. */
+export const RECEIPT_GAP_LABEL = "Rest bon";
+export const isReceiptGapLabel = (label?: string) => label === RECEIPT_GAP_LABEL || label === "Diferență neînregistrată";
+
+/** Liniile pot fi sub total: restul intră ca o linie, fără să fie un produs. Peste total rămâne eroare. */
 export function closeReceiptGap(lines: ReceiptLine[], total: number): { lines: ReceiptLine[]; remainder: number; over: boolean } {
   const sum = Math.round(lines.reduce((totalSoFar, line) => totalSoFar + line.amount, 0) * 100) / 100;
   const gap = Math.round((total - sum) * 100) / 100;
   if (gap > 0.009 && lines.length > 0) {
     return {
-      lines: [...lines, { id: newId("receipt-rest"), category: "Altele", amount: gap, label: "Rest bon" }],
+      lines: [...lines, { id: newId("receipt-rest"), category: "Altele", amount: gap, label: RECEIPT_GAP_LABEL }],
       remainder: gap,
       over: false,
     };

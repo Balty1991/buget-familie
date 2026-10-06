@@ -3,7 +3,7 @@ import "../receipt-mobile.css";
 import "../receipt-form-fix.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
-import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, receiptAttachCandidates, resolveReceiptLines, closeReceiptGap, type AppData, type Receipt } from "@/lib/finance-data";
+import { expenseCategories, isoToday, matchingAllocationsForExpense, newId, parseRomanianAmount, receiptAttachCandidates, resolveReceiptLines, closeReceiptGap, isReceiptGapLabel, type AppData, type Receipt } from "@/lib/finance-data";
 import { Field, Modal, fmtExact } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
 import { RoDateInput } from "@/components/RoDateInput";
@@ -52,7 +52,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
   const categories = [...expenseCategories, ...data.settings.customCategories];
   const numericTotal = parseRomanianAmount(amount);
   const resolvedPreview = closeReceiptGap(resolveReceiptLines(lines, numericTotal), numericTotal);
-  const lineTotal = resolvedPreview.lines.filter((line) => line.label !== "Rest bon").reduce((sum, line) => sum + line.amount, 0);
+  const lineTotal = resolvedPreview.lines.filter((line) => !isReceiptGapLabel(line.label)).reduce((sum, line) => sum + line.amount, 0);
   const attachCandidates = useMemo(() => receiptAttachCandidates(data, vendor, numericTotal, date), [data, vendor, numericTotal, date]);
   const [attachId, setAttachId] = useState("new");
   useEffect(() => {
@@ -146,13 +146,13 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
           </div>
           {lines.map((line) => (
             <div className="bf-split-line" key={line.id}>
-              <select aria-label={t("Categorie bon")} value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select>
-              <input aria-label={t("Preț produs")} value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="lei" />
-              <input aria-label={t("Produs")} value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder="ex. fructe" />
-              {lines.length > 1 && <button type="button" aria-label={t("Elimină produsul")} onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /></button>}
+              <Field label={t("Ce ai cumpărat")}><input aria-label={t("Ce ai cumpărat")} value={line.label} onChange={(event) => updateLine(line.id, { label: event.target.value })} placeholder={t("ex. cartofi")} /></Field>
+              <Field label={t("Cât a costat, lei")}><input aria-label={t("Cât a costat, lei")} value={line.amount} onChange={(event) => updateLine(line.id, { amount: event.target.value })} inputMode="decimal" placeholder="0,00" /></Field>
+              <Field label={t("Categorie")}><select aria-label={t("Categorie")} value={line.category} onChange={(event) => updateLine(line.id, { category: event.target.value })}>{categories.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></Field>
+              {lines.length > 1 && <button type="button" onClick={() => setLines((current) => current.filter((entry) => entry.id !== line.id))}><Trash2 size={16} /> {t("Șterge articolul")}</button>}
             </div>
           ))}
-          <small>{t("Poți lăsa o diferență: ecotaxa sau un produs nenumit intră singur ca „Rest bon”. Nu salva doar dacă liniile trec peste total.")}</small>
+          <small>{t("Poți lăsa o diferență. Ce nu știi nu e un produs: intră ca diferență neînregistrată. Nu salva doar dacă liniile trec peste total.")}</small>
           {resolvedPreview.remainder > 0.009 && <small>{t("Restul de {amount} intră pe bon ca diferență. Nu trebuie să-l împărți pe produse.", { amount: fmtExact.format(resolvedPreview.remainder) })}</small>}
           {resolvedPreview.lines.length > 0 && (
             <div className="bf-receipt-envelope-preview" aria-label={t("Plicuri propuse")}>
@@ -162,7 +162,7 @@ export function ReceiptForm({ data, onSave, onClose }: { data: AppData; onSave: 
                   const matched = matchingAllocationsForExpense(data, { category: line.category, memberId, sourceId })[0];
                   return (
                     <li key={line.id}>
-                      <b>{line.label === "Rest bon" ? t("Rest bon") : (line.label || t(line.category))}</b>
+                      <b>{isReceiptGapLabel(line.label) ? t("Diferență neînregistrată") : (line.label || t(line.category))}</b>
                       <span>{t(line.category)}{data.settings.salaryPlan.allocations.length ? ` → ${matched ? matched.label : t("în afara plicurilor")}` : ""}</span>
                     </li>
                   );
