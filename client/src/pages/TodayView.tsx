@@ -220,6 +220,21 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const [rhythmTip, setRhythmTip] = useState<string | null>(null);
   const [weekOpen, setWeekOpen] = useState(false);
   const [moneyOpen, setMoneyOpen] = useState(false);
+  const [whereOpen, setWhereOpen] = useState(false);
+  /** „Unde sunt banii”: soldul fiecărei surse (și al cui e) și pe ce s-a cheltuit luna asta. */
+  const where = useMemo(() => {
+    if (!whereOpen) return undefined;
+    const sources = data.settings.paymentSources.map((source) => ({ id: source.id, name: source.name, owner: data.settings.members.find((member) => member.id === source.memberId)?.name, balance: sourceBalance(data, source.id) }))
+      .filter((row) => Math.abs(row.balance) > 0.009).sort((a, b) => b.balance - a.balance);
+    const month = isoToday().slice(0, 7);
+    const byCategory = new Map<string, number>();
+    for (const item of data.transactions) {
+      if (item.kind !== "expense" || item.transferId || isBalanceAdjustment(item) || !item.date.startsWith(month)) continue;
+      byCategory.set(item.category, (byCategory.get(item.category) || 0) + item.amount);
+    }
+    const categories = Array.from(byCategory.entries()).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    return { sources, categories };
+  }, [whereOpen, data]);
   const [dayMore, setDayMore] = useState(false);
   const [priceLater, setPriceLater] = useState(false);
   const [moved, setMoved] = useState<{ id: string; amount: number; from: string; to: string } | null>(null);
@@ -483,6 +498,26 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
             {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
             {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
+            <div className="bf-hero-chips">
+              <button type="button" className="bf-hero-chip" aria-expanded={whereOpen} onClick={() => setWhereOpen((open) => !open)}>{t("Unde sunt banii · Mută")}</button>
+            </div>
+            {where && (
+              <div className="bf-money-where" style={{ display: "grid", gap: 8, marginTop: 10 }} role="region" aria-label={t("Unde sunt banii")}>
+                <p className="bf-kicker">{t("PE SURSE")}</p>
+                <ul className="bf-money-where-list" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
+                  {where.sources.map((row) => <li key={row.id} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>{row.name}{row.owner && !row.name.includes(row.owner) ? ` · ${row.owner}` : ""}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{money(row.balance)}</b></li>)}
+                  {!where.sources.length && <li><span>{t("Nicio sursă cu bani acum.")}</span></li>}
+                </ul>
+                {where.categories.length > 0 && <>
+                  <p className="bf-kicker">{t("CHELTUIT LUNA ASTA, PE CATEGORII")}</p>
+                  <ul className="bf-money-where-list" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
+                    {where.categories.map(([name, amount]) => <li key={name} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>{t(name)}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{money(amount)}</b></li>)}
+                  </ul>
+                </>}
+                <button type="button" className="bf-primary full" onClick={() => window.dispatchEvent(new Event("buget-familie:open-transfer"))}>{t("Mută bani sau dă cuiva")}</button>
+                <p className="bf-helper">{t("De exemplu, dai bani soției: alegi din ce sursă și „Cash” al ei. Nu e o cheltuială, doar se mută banii.")}</p>
+              </div>
+            )}
             {(!simpleMode || pockets.length > 1) && (
               <div className="bf-hero-chips">
                 {!simpleMode && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-afford"))}>{t("Îmi permit…?")}</button>}

@@ -12,7 +12,7 @@ import "../capture-amount-first.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, ArchiveRestore, Baby, BookmarkPlus, Bus, Check, CreditCard, Ellipsis, Mic, MicOff, HeartPulse, House, Plane, Plus, ShoppingCart, Ticket, Trash2, X } from "lucide-react";
 import { CategoryGlyph } from "@/components/CategoryGlyph";
-import { amountError, BASE_CURRENCY, isBalanceAdjustment, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, spendTargetFromText, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind } from "@/lib/finance-data";
+import { amountError, BASE_CURRENCY, isBalanceAdjustment, allocationStatus, allocationWeeksStatus, allocationWeekStatus, exchangeRateFor, expenseCategories, formatDate, isoToday, isWeeklyPaced, matchingAllocationsForExpense, pickerAllocationsForExpense, planAllocationMath, newId, parseRomanianAmount, sourceBalance, sourceCurrency, spendTargetFromText, toBaseAmount, type AppData, type QuickTransactionTemplate, type Transaction, type TransactionKind, type PaymentSource } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { getLocale, t } from "@/lib/i18n";
 import { selfMemberIdOf } from "@/lib/member-identity";
@@ -47,9 +47,9 @@ const CAPTURE_CATEGORIES: Array<[string, typeof ShoppingCart]> = [
   ["Altele", Ellipsis],
 ];
 
-type Props = { data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; /** Scurtătura „Spune” de pe iconiță: microfonul pornește singur. */ autoVoice?: boolean; };
+type Props = { /** „Mută bani” de pe Astăzi deschide direct mutarea între surse. */ initialMoving?: boolean; onAddSource?: (source: PaymentSource) => void; data: AppData; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string } }) => void; onClose: () => void; onMore: (draft: Transaction) => void; onSaveTemplate: (item: QuickTransactionTemplate) => void; onDeleteTemplate: (id: string) => void; onArchiveTemplate: (id: string) => void; onRestoreTemplate: (id: string) => void; onDeleteArchivedTemplate: (id: string) => void; initialTemplateId?: string; /** „Notează salariul” deschide direct pe Venit. */ initialKind?: TransactionKind; /** Scurtătura „Spune” de pe iconiță: microfonul pornește singur. */ autoVoice?: boolean; };
 
-export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind, autoVoice }: Props) {
+export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate, onDeleteTemplate, onArchiveTemplate, onRestoreTemplate, onDeleteArchivedTemplate, initialTemplateId, initialKind, autoVoice, initialMoving, onAddSource }: Props) {
   const amountRef = useRef<HTMLInputElement>(null);
   /**
    * Pe telefon foaia se deschide întreagă, fără tastatură: omul vede tot formularul, iar
@@ -91,7 +91,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
   const [error, setError] = useState("");
   const [moreOpen, setMoreOpen] = useState(false);
   const shortStore = kind === "expense" && !moreOpen;
-  const [moving, setMoving] = useState(false);
+  const [moving, setMoving] = useState(Boolean(initialMoving));
   const captureIdRef = useRef(newId("tx"));
   const activeTemplate = data.settings.quickTemplates.find((item) => item.id === templateId);
   const matched = kind === "expense" ? matchingAllocationsForExpense(data, { category, memberId, sourceId }) : [];
@@ -316,7 +316,7 @@ export function QuickEntryPanel({ data, onSave, onClose, onMore, onSaveTemplate,
     return <div className="bf-modal-backdrop" role="presentation" onPointerDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section ref={dialogRef} tabIndex={-1} className="bf-modal bf-quick-entry-panel" role="dialog" aria-modal="true" aria-label={t("Mută bani între surse")} onPointerDown={(event) => event.stopPropagation()}>
         <header><div><p className="bf-kicker">{t("NOTEAZĂ")}</p><h2>{t("Mută bani între surse")}</h2></div><button className="bf-icon-button" aria-label={t("Închide")} onClick={onClose}><X size={19} /></button></header>
-        <div className="bf-quick-entry-scroll"><SourceTransferForm data={data} onBack={() => setMoving(false)} onSave={(pair) => { onSave(pair); onClose(); }} /></div>
+        <div className="bf-quick-entry-scroll"><SourceTransferForm data={data} onAddSource={onAddSource} onBack={() => (initialMoving ? onClose() : setMoving(false))} onSave={(pair) => { onSave(pair); onClose(); }} /></div>
       </section>
     </div>;
   }
