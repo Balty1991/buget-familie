@@ -281,7 +281,8 @@ export default function Home() {
     const paint = () => { if (seq === goSeq.current) setView(next); };
     const stylesReady = next === "today" || deferredStylesReady();
     if (stylesReady && warmedViews.has(next)) { paint(); return; }
-    void Promise.all([preloadView(next), stylesReady ? Promise.resolve() : ensureDeferredStyles()]).then(paint);
+    // Fără rețea, o bucată poate să nu se încarce: ecranul se schimbă oricum (arată „offline”), nu rămâne blocat.
+    void Promise.all([preloadView(next), stylesReady ? Promise.resolve() : ensureDeferredStyles()]).then(paint, paint);
   };
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -670,11 +671,14 @@ export default function Home() {
     // Fotografiile sunt deja șterse de pe telefon, deci anularea readuce bonul fără poze; o spunem pe față.
     deleteWithUndo(receipt?.imageKeys?.length ? t("Bonul a fost șters. Anularea îl readuce fără fotografii.") : t("Bonul a fost șters."), (current) => {
       const currentReceipt = current.receipts.find((item) => item.id === id);
-      const linked = currentReceipt?.linkedTransactionIds || [currentReceipt?.linkedTransactionId, `receipt-tx-${id}`].filter((value): value is string => Boolean(value));
+      // Pleacă doar mișcările făcute de bon. Cheltuiala notată de mână, cu bonul atașat ca detaliu, rămâne fără bon.
+      const madeByReceipt = (txId: string) => txId === `receipt-tx-${id}` || txId.startsWith(`receipt-tx-${id}-`);
+      const linked = [...(currentReceipt?.linkedTransactionIds || []), currentReceipt?.linkedTransactionId, `receipt-tx-${id}`, ...current.transactions.map((item) => item.id)]
+        .filter((value): value is string => Boolean(value) && madeByReceipt(value as string));
       const now = new Date().toISOString();
-      const removedTransactions = current.transactions.filter((item) => linked.includes(item.id) || item.receiptId === id);
+      const removedTransactions = current.transactions.filter((item) => linked.includes(item.id));
       return {
-        next: { ...current, receipts: current.receipts.filter((item) => item.id !== id), transactions: current.transactions.filter((item) => !linked.includes(item.id) && item.receiptId !== id), pendingReview: current.pendingReview.filter((draft) => draft.transaction.receiptId !== id && !linked.includes(draft.transaction.id)), deleted: [...current.deleted, { entity: "receipts" as const, id, deletedAt: now }, ...linked.map((transactionId) => ({ entity: "transactions" as const, id: transactionId, deletedAt: now }))].slice(-TOMBSTONE_MAX) },
+        next: { ...current, receipts: current.receipts.filter((item) => item.id !== id), transactions: current.transactions.filter((item) => !linked.includes(item.id)).map((item) => item.receiptId === id ? { ...item, receiptId: undefined, updatedAt: now } : item), pendingReview: current.pendingReview.filter((draft) => draft.transaction.receiptId !== id && !linked.includes(draft.transaction.id)), deleted: [...current.deleted, { entity: "receipts" as const, id, deletedAt: now }, ...linked.map((transactionId) => ({ entity: "transactions" as const, id: transactionId, deletedAt: now }))].slice(-TOMBSTONE_MAX) },
         removed: { receipts: currentReceipt ? [{ ...currentReceipt, imageKeys: undefined }] : [], transactions: removedTransactions },
       };
     });
