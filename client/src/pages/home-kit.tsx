@@ -95,6 +95,8 @@ export type SyncPanelProps = {
   recoveryIssued?: boolean;
   onRecoverPassword: (code: string) => void;
   onIssueRecovery: () => void;
+  /** Alt telefon a scris deja o mișcare. Până atunci invitația nu pornește abonamentul. */
+  otherPhoneLogged?: boolean;
 };
 
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {

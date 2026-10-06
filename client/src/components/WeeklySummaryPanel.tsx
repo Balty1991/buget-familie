@@ -10,9 +10,13 @@ import { formatDate, transferBetweenEnvelopes, type AppData } from "@/lib/financ
 import { checkInRebalance, familyWeekExtras, formatWeeklyCheckInShare, weeklyCheckIn, weeklyDigestHeadline } from "@/lib/household-insights";
 import { downloadWeeklyDigestPdf } from "@/lib/weekly-digest-pdf";
 import { t } from "@/lib/i18n";
+import { lei } from "@/lib/money-format";
 import { BILLING_LIVE } from "@/lib/entitlements";
 import { hasActiveFamilie } from "@/lib/billing-store";
 import { gateWeeklyShare } from "@/lib/launch-offer";
+import { noteOfferSend } from "@/lib/house-offer";
+import { otherPhoneHasLogged } from "@/lib/habit-hold";
+import { getOrCreateDeviceId } from "@/lib/sync-devices";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 
 const money = { format: lei };
@@ -37,7 +41,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
     return [formatWeeklyCheckInShare(check, rebalance), ...(extras.length ? ["", ...extras] : [])].join("\n");
   };
   const allowShare = () => {
-    const gate = gateWeeklyShare({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie() });
+    const gate = gateWeeklyShare({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie(), otherPhoneLogged: otherPhoneHasLogged(data, getOrCreateDeviceId()) });
     if (gate === "blocked") {
       setShareBlocked(true);
       return false;
@@ -52,6 +56,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
       if (typeof navigator.share === "function") {
         await navigator.share({ title: t("Bilanț {family}", { family: check.familyName }), text });
         setShareState("shared");
+        noteOfferSend();
         return;
       }
     } catch (error) {
@@ -60,6 +65,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
     try {
       await navigator.clipboard.writeText(text);
       setShareState("copied");
+      noteOfferSend();
     } catch {
       setShareState("idle");
     }
@@ -162,7 +168,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
         <button type="button" className="bf-week-share" onClick={() => void share()}>
           <Share2 size={16} /> {shareState === "copied" ? t("Copiat în clipboard") : shareState === "shared" ? t("Trimis") : t("Trimite bilanțul")}
         </button>
-        <a className="bf-week-plan bf-week-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(shareText())}`} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!allowShare()) event.preventDefault(); }}>{t("Trimite pe WhatsApp")}</a>
+        <a className="bf-week-plan bf-week-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(shareText())}`} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!allowShare()) event.preventDefault(); else noteOfferSend(); }}>{t("Trimite pe WhatsApp")}</a>
         <button type="button" className="bf-week-plan" onClick={() => void downloadWeeklyDigestPdf(data).catch(() => undefined)}>
           <FileDown size={16} /> {t("PDF digest")}
         </button>

@@ -173,7 +173,7 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
     income: [t("Venitul"), t("Seara dinainte și dimineața zilei de salariu.")],
     goals: [t("Obiective"), t("Când se apropie termenul unui obiectiv.")],
     summaries: [t("Bilanțuri"), t("Duminică seara săptămâna, pe 1 ale lunii luna trecută.")],
-    checkin: [t("Amintirea de seară"), t("Dacă azi nu e nimic notat; îți apără și seria de zile.")],
+    checkin: [t("Amintirea de seară"), t("Dacă tu n-ai notat azi, chiar dacă partenerul a notat.")],
   };
 
   const ping = () => {
@@ -187,7 +187,7 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
       <p>{t("Rămân pe dispozitiv; nu se trimit pe server. Nu te anunț când tu însuți adaugi o cheltuială — o vezi deja pe ecran.")}</p>
       <div className="bf-alert-kinds" role="group" aria-label={t("Ce vrei să primești")}>
         {NOTIFY_KINDS.map((kind) => <label key={kind} className="bf-alert-kind"><span><b>{kindText[kind][0]}</b><small>{kindText[kind][1]}</small></span><input type="checkbox" checked={!notifyPrefs.off.includes(kind)} onChange={(event) => updatePrefs({ ...notifyPrefs, off: event.target.checked ? notifyPrefs.off.filter((item) => item !== kind) : [...notifyPrefs.off, kind] })} /></label>)}
-        <label className="bf-alert-kind"><span><b>{t("Ora amintirii de seară")}</b><small>{t("Doar dacă ziua a rămas fără nimic notat.")}</small></span><select value={notifyPrefs.eveningHour} disabled={notifyPrefs.off.includes("checkin")} onChange={(event) => updatePrefs({ ...notifyPrefs, eveningHour: Number(event.target.value) })}>{[18, 19, 20, 21, 22].map((hour) => <option key={hour} value={hour}>{`${hour}:00`}</option>)}</select></label>
+        <label className="bf-alert-kind"><span><b>{t("Ora amintirii de seară")}</b><small>{t("Doar dacă tu n-ai notat azi.")}</small></span><select value={notifyPrefs.eveningHour} disabled={notifyPrefs.off.includes("checkin")} onChange={(event) => updatePrefs({ ...notifyPrefs, eveningHour: Number(event.target.value) })}>{[18, 19, 20, 21, 22].map((hour) => <option key={hour} value={hour}>{`${hour}:00`}</option>)}</select></label>
       </div>
       <p className="bf-helper">{t("Cheltuielile adăugate de alt membru te anunță când telefoanele sunt sincronizate.")}</p>
       {active ? (

@@ -312,6 +312,15 @@ export default function Home() {
     return () => window.removeEventListener("buget-familie:open-catalog", openCatalog);
   }, []);
   useEffect(() => {
+    const openSync = () => {
+      setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") });
+      setMore("sync");
+      go("utilities");
+    };
+    window.addEventListener("buget-familie:open-sync", openSync);
+    return () => window.removeEventListener("buget-familie:open-sync", openSync);
+  }, []);
+  useEffect(() => {
     const openFamilie = () => {
       setMore("settings");
       go("utilities");

@@ -31,13 +31,13 @@ describe("oferta de lansare", () => {
 
   it("primul bilanț e gratuit, al doilea pornește proba, după expirare se oprește", () => {
     const start = Date.parse("2026-10-06T10:00:00Z");
-    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false }, start)).toBe("allow");
+    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false, otherPhoneLogged: true }, start)).toBe("allow");
     expect(familieTrialActive(start)).toBe(false);
-    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false }, start + 1000)).toBe("allow");
+    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false, otherPhoneLogged: true }, start + 1000)).toBe("allow");
     expect(familieTrialActive(start + 1000)).toBe(true);
     const after = start + 31 * 24 * 60 * 60 * 1000;
     expect(familieTrialActive(after)).toBe(false);
-    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false }, after)).toBe("blocked");
+    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false, otherPhoneLogged: true }, after)).toBe("blocked");
   });
 
   it("abonamentul plătit nu cere probă", () => {
@@ -46,19 +46,21 @@ describe("oferta de lansare", () => {
     expect(gateSecondPhone({ billingLive: true, hasPaidFamilie: true })).toBe("allow");
   });
 
-  it("invitația către al doilea telefon pornește proba la apăsare", () => {
+  it("invitația către al doilea telefon pornește proba doar după ce a notat acolo", () => {
     const start = Date.parse("2026-10-06T10:00:00Z");
     expect(gateSecondPhone({ billingLive: true, hasPaidFamilie: false }, start)).toBe("allow");
+    expect(familieTrialActive(start + 1000)).toBe(false);
+    expect(gateSecondPhone({ billingLive: true, hasPaidFamilie: false, otherPhoneLogged: true }, start)).toBe("allow");
     expect(familieTrialActive(start + 1000)).toBe(true);
     const after = start + 31 * 24 * 60 * 60 * 1000;
-    expect(gateSecondPhone({ billingLive: true, hasPaidFamilie: false }, after)).toBe("blocked");
+    expect(gateSecondPhone({ billingLive: true, hasPaidFamilie: false, otherPhoneLogged: true }, after)).toBe("blocked");
   });
 
   it("după proba pornită de invitație, bilanțul nu mai trece gratis", () => {
     const start = Date.parse("2026-10-06T10:00:00Z");
-    gateSecondPhone({ billingLive: true, hasPaidFamilie: false }, start);
+    gateSecondPhone({ billingLive: true, hasPaidFamilie: false, otherPhoneLogged: true }, start);
     const after = start + 31 * 24 * 60 * 60 * 1000;
-    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false }, after)).toBe("blocked");
+    expect(gateWeeklyShare({ billingLive: true, hasPaidFamilie: false, otherPhoneLogged: true }, after)).toBe("blocked");
     expect(readWeeklyShares()).toBe(0);
   });
 });

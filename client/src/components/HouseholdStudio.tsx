@@ -17,6 +17,9 @@ import { lei } from "@/lib/money-format";
 import { BILLING_LIVE } from "@/lib/entitlements";
 import { hasActiveFamilie } from "@/lib/billing-store";
 import { gateWeeklyShare } from "@/lib/launch-offer";
+import { noteOfferSend } from "@/lib/house-offer";
+import { otherPhoneHasLogged } from "@/lib/habit-hold";
+import { getOrCreateDeviceId } from "@/lib/sync-devices";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
 
 const money = lei;
@@ -31,7 +34,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   const [shareBlocked, setShareBlocked] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const allowShare = () => {
-    const gate = gateWeeklyShare({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie() });
+    const gate = gateWeeklyShare({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie(), otherPhoneLogged: otherPhoneHasLogged(data, getOrCreateDeviceId()) });
     if (gate === "blocked") {
       setShareBlocked(true);
       return false;
@@ -46,6 +49,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
       if (typeof navigator.share === "function") {
         await navigator.share({ title: t("{family} · raportul lunii {month}", { family: report.familyName, month: report.title }), text });
         setShareState("shared");
+        noteOfferSend();
         return;
       }
     } catch (error) {
@@ -54,6 +58,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
     try {
       await navigator.clipboard.writeText(text);
       setShareState("copied");
+      noteOfferSend();
     } catch {
       setShareState("idle");
     }

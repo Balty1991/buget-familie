@@ -2,7 +2,7 @@
 
 Text gata de lipit în Play Console. **Fără prețuri IAP** cât `BILLING_LIVE = false`. Plățile (Play Billing) se activează separat, după closed testing stabil.
 
-**Versiune listing:** `versionName` **1.1.172** / `versionCode` **173**. Billing încă oprit.
+**Versiune listing:** `versionName` **1.1.173** / `versionCode` **174**. Billing încă oprit.
 
 Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety detaliat: [`PLAY_CONSOLE_DATA_SAFETY.md`](./PLAY_CONSOLE_DATA_SAFETY.md).
 
@@ -12,8 +12,8 @@ Sursă de poziționare: [`PLAY_LISTING.md`](./PLAY_LISTING.md). Data safety deta
 |---|---|
 | Nume (max 30) | Buget Familie – cheltuieli (26 caractere; „buget” și „cheltuieli” sunt cele mai căutate cuvinte din categorie) |
 | Pachet | `ro.balty1991.bugetfamilie` |
-| versionName | `1.1.172` |
-| versionCode | `173` |
+| versionName | `1.1.173` |
+| versionCode | `174` |
 | Categorie | Finance |
 | Etichete | Buget, Familie, Cheltuieli, Economii, Plicuri, Cuplu, Salariu |
 | Contact | contact.vanzo@gmail.com |
@@ -84,6 +84,15 @@ Din afara aplicației
 Datele stau pe telefon. Fără reclame. Gratuită: fără plată în magazin în versiunea asta.
 
 Nu plătește facturi, nu dă credite și nu ține loc de consultant.
+```
+
+## Ce e nou în 1.1.173 (≤500 caractere, pentru „Note de lansare”)
+
+```
+După trei zile cu cheltuieli, Azi rămâne un număr și Notează. Restul e la „Mai mult”.
+Dacă partenerul n-a notat, cifra spune că e incompletă: nu te baza pe ea la magazin.
+Amintirea de seară ajunge la cine a uitat, nu la cine a notat deja.
+Abonamentul se cere abia după ce al doilea telefon notează. Până atunci, bilanțul și invitația sunt gratuite. În versiunea asta nu se ia niciun ban.
 ```
 
 ## Ce e nou în 1.1.96 (≤500 caractere, pentru „Note de lansare”)

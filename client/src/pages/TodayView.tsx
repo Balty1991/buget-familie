@@ -38,7 +38,13 @@ import { weekdayShortLabels } from "@/lib/civil-weekday";
 import { useSimpleMode } from "@/hooks/useSimpleMode";
 import { usePlanCycle } from "@/hooks/usePlanCycle";
 import { useTodaySummary } from "@/hooks/useTodaySummary";
+import { HouseOfferCard } from "@/components/HouseOfferCard";
 import { EnvelopeConflictBanner, MovementConflictBanner } from "@/components/EnvelopeConflictBanner";
+import { distinctExpenseDays } from "@/lib/quiet-start";
+import { HABIT_DAYS, otherPhoneHasLogged, partnersQuietToday } from "@/lib/habit-hold";
+import { formatPlanPriceRon, openFamilieCatalog } from "@/lib/entitlements";
+import { getOrCreateDeviceId } from "@/lib/sync-devices";
+import "../house-offer.css";
 
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
 const WeeklySummaryPanel = lazy(() => import("@/components/WeeklySummaryPanel").then((module) => ({ default: module.WeeklySummaryPanel })));
@@ -318,6 +324,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   };
 
   const todayIso = isoToday();
+  const held = distinctExpenseDays(data.transactions) >= HABIT_DAYS;
+  const quietPartners = held ? partnersQuietToday(data, todayIso) : [];
+  const otherPhoneLogged = held && otherPhoneHasLogged(data, getOrCreateDeviceId());
   // În prima săptămână a lunii: imaginea lunii trecute, o singură dată (se poate ascunde).
   const shoppingTodo = useMemo(() => visibleShopping(data.settings.shoppingList || []).todo.length, [data.settings.shoppingList]);
   const recapMonth = currentMonthKey(addIsoDays(`${todayIso.slice(0, 7)}-01`, -1));
@@ -348,7 +357,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
 
   return (
-    <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "") + (intro ? " is-entering" : "")}>
+    <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "") + (intro ? " is-entering" : "") + (held ? " is-held" : "") + (held && dayMore ? " is-open" : "")}>
       <header className="bf-greet"><b>{greeting.hello}</b><span>{greeting.line}</span></header>
       {/* Modul simplu nu mai are bandă permanentă de avertizare: se oprește din „Mai mult” → Setări. */}
       <EnvelopeConflictBanner data={data} onChange={onChange} />
@@ -420,8 +429,8 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               <span>{overPlan ? "−" : ""}{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
-            <p className="os-hero-label">{heroLabel}</p>
-            <p className="os-hint">{heroHint}</p>
+            <p className="os-hero-label">{quietPartners.length === 1 ? t("Incompletă, fără {name}", { name: quietPartners[0] }) : quietPartners.length > 1 ? t("Incompletă, fără {names}", { names: quietPartners.join(", ") }) : heroLabel}</p>
+            <p className="os-hint" role={quietPartners.length ? "status" : undefined}>{quietPartners.length ? t("Nu te baza pe ea la magazin, până notează.") : heroHint}</p>
             <div className="bf-os-actions">
               <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
             </div>
@@ -547,10 +556,22 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 ))}
               </ul>
             )}
-            {!signals[0] && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
+            {!signals[0] && !held && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
           </>
         )}
       </section>
+      {otherPhoneLogged && (
+        <p className="bf-partner-quiet">
+          {t("Al doilea telefon a notat. Familia e {year} pe an, pentru toată casa.", { year: formatPlanPriceRon("familie", "year") })}
+          {" "}
+          <button type="button" className="bf-link-button" onClick={openFamilieCatalog}>{t("Vezi planul Familia")}</button>
+        </p>
+      )}
+      {held && (
+        <button type="button" className="bf-held-toggle" aria-expanded={dayMore} onClick={() => setDayMore((value) => !value)}>
+          {dayMore ? t("Mai puțin din ziua asta") : t("Mai mult din ziua asta")}
+        </button>
+      )}
       {/* Cifra zilei întâi: avertizările vin imediat sub ea, nu o împing sub pliu. */}
       {!simpleMode && showTrancheNotice && activeTranche && !topNotice && (
         <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
@@ -641,6 +662,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button type="button" className="bf-month-card-cta-close" aria-label={t("Ascunde imaginea lunii")} onClick={hideRecap}><X size={16} /></button>
         </aside>
       )}
+      <HouseOfferCard data={data} />
       <YearRecapEntry data={data} seasonal />
       {shoppingTodo > 0 && <button type="button" className="bf-shop-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-shopping"))}><ListChecks size={17} aria-hidden="true" /><span>{t("Lista de cumpărături")}</span><b>{t("{count} de luat", { count: shoppingTodo })}</b></button>}
       {recapOpen && recapReport && <Suspense fallback={null}><MonthShareSheet report={recapReport} onClose={() => { setRecapOpen(false); hideRecap(); }} /></Suspense>}

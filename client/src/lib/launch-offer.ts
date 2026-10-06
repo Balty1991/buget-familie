@@ -48,10 +48,13 @@ export type OfferGate = "allow" | "blocked";
 
 /**
  * `hasPaidFamilie` e abonamentul verificat, nu proba.
+ * `otherPhoneLogged` e adevărat abia după o mișcare scrisă pe alt telefon.
+ * Până atunci nu se numără și nu pornește proba: invitația rămâne gratuită.
  * Cât billing-ul e oprit, totul trece și nu se numără.
  */
-export function gateWeeklyShare(opts: { billingLive: boolean; hasPaidFamilie: boolean }, now = Date.now()): OfferGate {
+export function gateWeeklyShare(opts: { billingLive: boolean; hasPaidFamilie: boolean; otherPhoneLogged?: boolean }, now = Date.now()): OfferGate {
   if (!opts.billingLive || opts.hasPaidFamilie || familieTrialActive(now)) return "allow";
+  if (!opts.otherPhoneLogged) return "allow";
   // Proba consumată (bilanț sau invitație) nu se ocolește cu un bilanț „gratuit” rămas.
   if (trialStartedAt() !== null) return "blocked";
   if (readWeeklyShares() < 1) {
@@ -63,9 +66,10 @@ export function gateWeeklyShare(opts: { billingLive: boolean; hasPaidFamilie: bo
   return "allow";
 }
 
-/** Invitarea celuilalt telefon pornește proba la prima apăsare, nu la instalare. */
-export function gateSecondPhone(opts: { billingLive: boolean; hasPaidFamilie: boolean }, now = Date.now()): OfferGate {
+/** Invitarea rămâne liberă până notează celălalt telefon. Apoi, după probă, se oprește. */
+export function gateSecondPhone(opts: { billingLive: boolean; hasPaidFamilie: boolean; otherPhoneLogged?: boolean }, now = Date.now()): OfferGate {
   if (!opts.billingLive || opts.hasPaidFamilie || familieTrialActive(now)) return "allow";
+  if (!opts.otherPhoneLogged) return "allow";
   if (trialStartedAt() === null) {
     beginFamilieTrial(now);
     return "allow";

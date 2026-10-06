@@ -108,7 +108,7 @@ function SelfMemberPicker({ members, selfMemberId, needsChoice, onChoose, onAdd 
   );
 }
 
-export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, isAdmin, adminDeviceId, onMakeAdmin, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, invite, inviteRoom, inviteDraft, setInviteDraft, onCreateRoom, onJoinInvite, onMoveToInvite, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf }: SyncPanelProps) {
+export function SyncPanel({ connected, busy, online, password, setPassword, notice, lastSync, journal, devices, thisDeviceId, onConnect, onDisconnect, onClearJournal, onRevokeDevice, onRestoreDevice, isAdmin, adminDeviceId, onMakeAdmin, passwordRevealOnce, clearPasswordReveal, recoveryRevealOnce, clearRecoveryReveal, recoveryIssued, onRecoverPassword, onIssueRecovery, sessionRemembered, invite, inviteRoom, inviteDraft, setInviteDraft, onCreateRoom, onJoinInvite, onMoveToInvite, members, selfMemberId, needsSelfChoice, onChooseSelf, onAddSelf, otherPhoneLogged = false }: SyncPanelProps) {
   const [showGenerated, setShowGenerated] = useState(Boolean(passwordRevealOnce));
   const [generatedOnce, setGeneratedOnce] = useState(passwordRevealOnce || "");
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -121,7 +121,7 @@ export function SyncPanel({ connected, busy, online, password, setPassword, noti
   const [copiedSecret, setCopiedSecret] = useState("");
   const [phoneBlocked, setPhoneBlocked] = useState(false);
   const openSecondPhone = (run: () => void) => {
-    const gate = gateSecondPhone({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie() });
+    const gate = gateSecondPhone({ billingLive: BILLING_LIVE, hasPaidFamilie: hasActiveFamilie(), otherPhoneLogged });
     if (gate === "blocked") {
       setPhoneBlocked(true);
       return;

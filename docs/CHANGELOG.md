@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.173
+
+- După trei zile cu cheltuieli, Azi rămâne cifra și Notează. Restul stă sub „Mai mult din ziua asta”.
+- Cifra zilei spune „incompletă” când partenerul n-a notat azi. Nu te baza pe ea la magazin.
+- Amintirea de seară merge la cine n-a notat, chiar dacă celălalt telefon a notat deja. Cine a notat nu mai e întrebat.
+- Prețul de 149 lei/an apare abia după ce al doilea telefon notează o mișcare. Până atunci, bilanțul și invitația rămân gratuite. Plata în Play e încă oprită.
+
 ## 1.1.172
 
 - Prima deschidere cere trei lucruri: salariul, data lui, plicul de mâncare. Apoi un număr: cât poți cheltui azi. Analiza, temele și asistentul revin după trei zile cu cheltuieli.

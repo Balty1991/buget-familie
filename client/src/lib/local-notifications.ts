@@ -22,6 +22,7 @@ import { envelopeUntilPayday, monthTitle, weekDayCap, weekTooFast } from "./hous
 import { lei } from "@/lib/money-format";
 import { isAppLockEnabled } from "@/lib/app-lock";
 import { loggingStreak } from "@/lib/logging-habits";
+import { partnersLoggedToday, selfLoggedToday } from "@/lib/habit-hold";
 import { notifyKindOf, readNotifyPrefs } from "@/lib/notify-prefs";
 
 /** Cu PIN pe aplicație, notificarea spune doar ce s-a întâmplat, fără sume sau nume. */
@@ -565,28 +566,34 @@ function buildAlerts(data: AppData): PlannedAlert[] {
     });
   }
 
-  // Check-in de seară, doar dacă azi nu e nimic notat, la ora aleasă. Cu o serie de 3+ zile, o apără.
+  // Check-in de seară pe telefonul celui care n-a notat. Dacă partenerul a notat, tot îi amintim:
+  // altfel cifra zilei rămâne mincinoasă și nimeni nu e întrebat.
   const prefs = readNotifyPrefs();
-  const loggedToday = (data.transactions || []).some((item) => item.date === today && !item.adjustment && !item.transferId);
-  if (!loggedToday) {
+  if (!selfLoggedToday(data, today)) {
+    const others = partnersLoggedToday(data, today);
     const streak = loggingStreak(data.transactions || [], today);
     const when = atLocalHour(0, prefs.eveningHour, 0);
+    const title = others.length
+      ? t("Tu n-ai notat azi")
+      : streak >= 3
+        ? t("Nu pierde seria de {days} zile", { days: streak })
+        : t("Check-in de seară");
+    const body = others.length === 1
+      ? t("{name} a notat. Cifra zilei e incompletă până notezi și tu.", { name: others[0] })
+      : others.length > 1
+        ? t("{names} au notat. Cifra zilei e incompletă până notezi și tu.", { names: others.join(", ") })
+        : streak >= 3
+          ? t("Notează ce s-a cheltuit azi. Dacă n-a fost nimic, e o zi fără cheltuieli — și asta contează.")
+          : t("Nicio cheltuială înregistrată azi. Un minut de ordine e de ajuns.");
     if (when.getTime() > Date.now() - 60_000) {
-      alerts.push({
-        id: id++,
-        title: streak >= 3 ? t("Nu pierde seria de {days} zile", { days: streak }) : t("Check-in de seară"),
-        body: streak >= 3 ? t("Notează ce s-a cheltuit azi. Dacă n-a fost nimic, e o zi fără cheltuieli — și asta contează.") : t("Nicio cheltuială înregistrată azi. Un minut de ordine e de ajuns."),
-        at: when,
-        tag: `checkin-${today}`,
-      });
+      alerts.push({ id: id++, title, body, at: when, tag: `checkin-${today}` });
     } else {
-      const tomorrow = atLocalHour(1, prefs.eveningHour, 0);
       alerts.push({
         id: id++,
         title: t("Check-in de seară"),
         body: t("Dacă ziua trece fără nicio mișcare, îți amintesc seara — fără grabă."),
-        at: tomorrow,
-        tag: `checkin-next`,
+        at: atLocalHour(1, prefs.eveningHour, 0),
+        tag: "checkin-next",
       });
     }
   }

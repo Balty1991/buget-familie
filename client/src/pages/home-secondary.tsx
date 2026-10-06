@@ -2,6 +2,8 @@
  * Doar „Mai mult”. Setări, Sync și bonurile se încarcă când deschizi rândul.
  */
 import { isDemoMode } from "@/lib/demo-data";
+import { otherPhoneHasLogged } from "@/lib/habit-hold";
+import { getOrCreateDeviceId } from "@/lib/sync-devices";
 import "../mobile-settings-pass.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
@@ -206,7 +208,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
     if (tab === "guide") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim ghidul…")}</div>}><FamilyGuide onGo={onGo} onOpenReview={() => setTab("review")} onOpenSync={() => setTab("sync")} /></Suspense>;
     // Familia exemplu nu pleacă în camera de sincronizare a nimănui.
     if (isDemoMode()) return <div className="bf-empty-state"><h2>{t("Sincronizarea pornește cu datele tale")}</h2><p>{t("Acum vezi familia exemplu. Apasă „Încep cu datele mele” sus, apoi poți invita partenerul.")}</p></div>;
-    return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim sincronizarea…")}</div>}><SyncPanel {...sync} /></Suspense>;
+    return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim sincronizarea…")}</div>}><SyncPanel {...sync} otherPhoneLogged={otherPhoneHasLogged(data, getOrCreateDeviceId())} /></Suspense>;
   };
   return <div className="bf-page bf-utilities-workspace"><header className="bf-topline compact"><div><h1>{t("Mai mult")}</h1></div></header>{tab !== "overview" && <div className="bf-more-back-row"><button type="button" className="bf-more-back" onClick={() => (backTo ? backTo.go() : setTab("overview"))}><ChevronLeft size={18} aria-hidden="true" /> {backTo ? backTo.label : t("Înapoi la instrumente")}</button></div>}{content()}{storyOpen && story && <Suspense fallback={null}><YearRecapStory recap={story} data={data} familyName={data.settings.familyName || t("Familia noastră")} onClose={() => setStoryOpen(false)} /></Suspense>}</div>;
 }
