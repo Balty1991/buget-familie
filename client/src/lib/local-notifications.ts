@@ -357,7 +357,8 @@ function buildAlerts(data: AppData): PlannedAlert[] {
         title: t("Azi la mâncare"),
         body: left > 0.009 ? t("Azi mai ai {amount} la mâncare.", { amount: money(left) }) : t("Plicul de mâncare e gol pentru azi. Ce cumperi se ia din altă parte."),
         at,
-        tag: `food-day-${at.toISOString().slice(0, 10)}`,
+        // Ziua locală, nu cea UTC: la est de Greenwich, 8:30 cade încă în ziua de ieri după UTC.
+        tag: `food-day-${day}`,
       });
     }
   }
