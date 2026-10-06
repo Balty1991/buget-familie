@@ -15,7 +15,7 @@ export function useCountUp(target: number, duration = 480, initial?: number): nu
     if (start === target) return;
     let reduced = false;
     try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { reduced = true; }
-    if (reduced || typeof window.requestAnimationFrame !== "function") { setShown(target); return; }
+    if (reduced || duration <= 0 || typeof window.requestAnimationFrame !== "function") { setShown(target); return; }
     const began = performance.now();
     let frame = 0;
     const tick = (now: number) => {

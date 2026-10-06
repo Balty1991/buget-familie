@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.171
+
+- Meniul schimbă ecranul din prima. Fără așteptare și fără alunecarea care pâlpâia.
+
 ## 1.1.170
 
 - Capacitor Android 8.5.2. Închide gaura prin care un conținut din afară putea fi încărcat ca aplicația.

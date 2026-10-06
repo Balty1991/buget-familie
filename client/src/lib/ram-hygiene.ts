@@ -28,6 +28,10 @@ export function deferredStylesDelayMs(platform: string): number {
   return platform === "android" || platform === "ios" ? 10000 : 5000;
 }
 
+export function deferredStylesReady(): boolean {
+  return deferredDone;
+}
+
 export function ensureDeferredStyles(): Promise<void> {
   if (deferredDone) return Promise.resolve();
   if (deferredStarted && deferredPromise) return deferredPromise;

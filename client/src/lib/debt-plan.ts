@@ -79,24 +79,24 @@ export function buildDebtSchedule(input: {
     byMonth.set(key, list);
   }
   const rows: DebtScheduleRow[] = [];
-  for (const [key, list] of byMonth) {
+  byMonth.forEach((list, key) => {
     const paidAmount = cents(list.reduce((sum, item) => sum + item.amount, 0));
     const closed = list.some((item) => item.debtRemainingAfter === 0);
     const planned = closed && paidAmount + 0.009 < monthly ? paidAmount : monthly;
     const remainingAmount = cents(Math.max(0, planned - paidAmount));
     const status: DebtScheduleStatus = remainingAmount <= 0.009 ? (paidAmount > planned + 0.009 ? "overpaid" : "paid") : "partial";
     rows.push({ index: rows.length + 1, date: `${key}-01`, planned, paidAmount, remainingAmount, status, paidOn: list[list.length - 1]?.date });
-  }
+  });
   const lastPaidMonth = payments.length ? payments[payments.length - 1].date.slice(0, 7) : "";
   const first = input.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(input.dueDate) ? new Date(`${input.dueDate}T12:00:00`) : new Date();
   let cursor = new Date(first.getFullYear(), first.getMonth(), 1, 12);
   while (lastPaidMonth && isoDay(cursor).slice(0, 7) <= lastPaidMonth) cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12);
   const limit = input.futureLimit ?? 120;
-  for (const [offset, row] of plan.rows.slice(0, limit).entries()) {
+  plan.rows.slice(0, limit).forEach((row, offset) => {
     const month = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1, 12);
     const day = Math.min(first.getDate(), new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate());
     rows.push({ index: rows.length + 1, date: isoDay(new Date(month.getFullYear(), month.getMonth(), day, 12)), planned: row.payment, paidAmount: 0, remainingAmount: row.payment, status: "unpaid", interest: row.interest });
-  }
+  });
   return { rows, plan, futureCapped: plan.rows.length > limit };
 }
 

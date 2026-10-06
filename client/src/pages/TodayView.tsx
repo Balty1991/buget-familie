@@ -202,7 +202,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     // closedTick: după „Închide luna”, cardul dispare fără reîncărcare.
   }, [data.transactions, closedTick]);
   const greeting = useMemo(() => dayGreeting(data, isoToday(), new Date().getHours()), [data]);
-  const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0, intro ? 1100 : 480, intro ? 0 : undefined);
+  const heroShown = useCountUp(Number.isFinite(heroValue) ? heroValue : 0, intro ? 700 : 0, intro ? 0 : undefined);
   const signals = useMemo(() => tickMemo([data], `signals:${isoToday()}`, () => advisorSignals(data)), [data]);
   // „Poți folosi azi” e deja cifra mare de sus; dacă un plic se golește înainte de salariu, aceea e recomandarea.
   const nextStep = signals[0] && signals[0].id !== "daily-pace" ? signals[0] : signals.find((item) => item.id.startsWith("runout-"));
