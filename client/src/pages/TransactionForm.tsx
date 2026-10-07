@@ -14,10 +14,16 @@ import { hasInvalidRoDate, RoDateInput } from "@/components/RoDateInput";
 import { envelopeChargePhrase, envelopeOptionRemain, weekOptionLabel } from "@/lib/envelope-charge";
 import { SpendFromChoice } from "@/components/SpendFromChoice";
 
-export function TransactionForm({ data, initial, onSave, onClose }: { data: AppData; initial?: Transaction; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string }; detailLines?: ReceiptLine[] }) => void; onClose: () => void }) {
+export function TransactionForm({ data, initial, onSave, onClose }: { data: AppData; initial?: Transaction; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string }; detailLines?: ReceiptLine[]; removeIds?: string[] }) => void; onClose: () => void }) {
   const [kind, setKind] = useState<TransactionKind>(initial?.kind || "expense");
   const [title, setTitle] = useState(initial?.title || "");
-  const [amount, setAmount] = useState(initial ? amountInput(initial.amount) : "");
+  /**
+   * Cealaltă parte a aceluiași bon, plătit din două surse. Mișcările vechi (fără splitId) se recunosc
+   * după nota „Bon de …” identică, aceeași zi și același titlu.
+   */
+  const splitPartner = initial ? data.transactions.find((item) => item.id !== initial.id && item.kind === "expense" && initial.kind === "expense"
+    && (initial.splitId ? item.splitId === initial.splitId : Boolean(initial.note && /Bon de /.test(initial.note) && item.note === initial.note && item.date === initial.date && item.title === initial.title))) : undefined;
+  const [amount, setAmount] = useState(initial ? amountInput(Math.round((initial.amount + (splitPartner?.amount || 0)) * 100) / 100) : "");
   const [date, setDate] = useState(initial?.date || isoToday());
   const [memberId, setMemberId] = useState(initial?.memberId || data.settings.members.find((member) => member.name === initial?.person)?.id || data.settings.members[0]?.id || "");
   const [shareScope, setShareScope] = useState<ShareScope>(transactionShareScope(initial));
@@ -37,9 +43,9 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
   const [originalAmountInput, setOriginalAmountInput] = useState(initial?.originalAmount ? String(initial.originalAmount) : "");
   const [splitOpen, setSplitOpen] = useState(false);
   /** Plată din două surse (de exemplu voucher SGR + cash): două cheltuieli legate, câte una pe sursă. */
-  const [secondOpen, setSecondOpen] = useState(false);
-  const [secondSourceId, setSecondSourceId] = useState("");
-  const [secondAmount, setSecondAmount] = useState("");
+  const [secondOpen, setSecondOpen] = useState(Boolean(splitPartner));
+  const [secondSourceId, setSecondSourceId] = useState(splitPartner?.sourceId || "");
+  const [secondAmount, setSecondAmount] = useState(splitPartner ? amountInput(splitPartner.amount) : "");
   /** Ce scrie omul în câmpul primei surse, ca „28,” să nu-și piardă virgula cât calculăm cealaltă sumă. */
   const [firstDraft, setFirstDraft] = useState<string | null>(null);
   const linkedReceipt = initial ? data.receipts.find((receipt) => receipt.id === initial.receiptId || receipt.linkedTransactionId === initial.id || receipt.linkedTransactionIds?.includes(initial.id)) : undefined;
@@ -70,7 +76,8 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
   /** La corectură, soldul arătat e cel de dinaintea acestei mișcări: altfel sursa părea golită de chiar suma corectată. */
   const balanceBeforeThis = (id: string) => {
     const own = initial && data.transactions.some((item) => item.id === initial.id) && initial.sourceId === id ? (initial.kind === "expense" ? initial.amount : -initial.amount) : 0;
-    return sourceBalance(data, id) + own;
+    const partner = splitPartner && splitPartner.sourceId === id ? splitPartner.amount : 0;
+    return sourceBalance(data, id) + own + partner;
   };
   const sourceOwner = (source: AppData["settings"]["paymentSources"][number]) => data.settings.members.find((member) => member.id === source.memberId)?.name || t("Comun");
   const allocationMember = matchedEnvelope ? data.settings.members.find((member) => member.id === matchedEnvelope.memberId)?.name || t("Familie / comun") : "";
@@ -215,14 +222,18 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
         if (!(second > 0) || second >= stored) return setError(t("Suma din a doua sursă trebuie să fie mai mică decât totalul de {total}.", { total: fmtExact.format(stored) }));
         const first = Math.round((stored - second) * 100) / 100;
         const together = t("Bon de {total}: {first} din {a} și {second} din {b}.", { total: fmtExact.format(stored), first: fmtExact.format(first), a: source.name, second: fmtExact.format(second), b: other.name });
-        const noteBoth = note.trim() ? `${note.trim()} · ${together}` : together;
-        const main: Transaction = { ...edited, amount: first, note: noteBoth };
-        const extra: Transaction = { ...edited, id: newId("tx"), amount: second, sourceId: other.id, source: other.name, note: noteBoth, debtId: undefined, recurringId: undefined, receiptId: undefined, createdAt: new Date().toISOString() };
-        onSave([main, extra], { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined, ...(learnRule ? { learnRule } : {}) });
+        // Nota veche „Bon de …” se înlocuiește, nu se adaugă încă o dată la fiecare corectură.
+        const ownNote = note.trim().replace(/(?:\s*·\s*)?Bon de [^:]+:.*$/, "").trim();
+        const noteBoth = ownNote ? `${ownNote} · ${together}` : together;
+        const splitId = initial?.splitId || splitPartner?.splitId || newId("split");
+        const main: Transaction = { ...edited, amount: first, note: noteBoth, splitId };
+        const extra: Transaction = { ...(splitPartner || {}), ...edited, id: splitPartner?.id || newId("tx"), amount: second, sourceId: other.id, source: other.name, note: noteBoth, splitId, debtId: undefined, recurringId: undefined, receiptId: undefined, createdAt: splitPartner?.createdAt || new Date().toISOString() };
+        onSave([main, extra], { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined, ...(learnRule ? { learnRule } : {}), ...(detailLinesOut ? { detailLines: detailLinesOut } : {}) });
         onClose();
         return;
       }
-      onSave(pair && !pair.originalCurrency && !edited.originalCurrency ? [edited, { ...pair, amount: edited.amount, date: edited.date, updatedAt: edited.updatedAt }] : edited, { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined, ...(learnRule ? { learnRule } : {}), ...(detailLinesOut ? { detailLines: detailLinesOut } : {}) });
+      if (splitPartner) edited.splitId = undefined;
+      onSave(pair && !pair.originalCurrency && !edited.originalCurrency ? [edited, { ...pair, amount: edited.amount, date: edited.date, updatedAt: edited.updatedAt }] : edited, { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined, ...(learnRule ? { learnRule } : {}), ...(detailLinesOut ? { detailLines: detailLinesOut } : {}), ...(splitPartner ? { removeIds: [splitPartner.id] } : {}) });
       onClose();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("Nu am putut salva mișcarea."));
