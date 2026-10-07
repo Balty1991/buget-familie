@@ -5,7 +5,7 @@
  */
 import "../review-center.css";
 import { useMemo, useRef, useState } from "react";
-import { Check, FileUp, Inbox, Pencil, ShieldCheck, Trash2, X } from "lucide-react";
+import { Check, CheckCircle2, FileUp, Inbox, Pencil, ShieldCheck, Trash2 } from "lucide-react";
 import {
   addReviewDrafts,
   confirmAllReviewDrafts,
@@ -240,7 +240,7 @@ export function ReviewCenterPanel({ data, onChange }: { data: AppData; onChange:
           </div>
         ) : (
           <div className="bf-empty-state slim">
-            <X size={23} />
+            <CheckCircle2 size={23} />
             <h2>{t("Coada este goală")}</h2>
             <p>{t("Aici ajung mișcările propuse din extrase de cont, bonuri sau ghid. Nimic nu intră în registru fără confirmarea ta.")}</p>
           </div>

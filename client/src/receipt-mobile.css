@@ -21,16 +21,3 @@
 .dark .bf-item-row input { color: #f3f8f4; background: rgba(6, 24, 19, .68); border-color: rgba(232, 245, 236, .18); }
 .dark .bf-split-heading h3 { color: #f3f8f4; }
 
-.bf-receipt-photo-sheet { z-index: 80; display: grid; place-items: center; padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)); }
-.bf-receipt-photo-card { width: min(100%, 520px); display: grid; gap: 12px; padding: 14px 14px 16px; border-radius: 20px; background: var(--cf-surface, #fffefa); color: var(--cf-ink, #172d28); border: 1px solid var(--cf-line, #e1ded5); }
-.bf-receipt-photo-card header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.bf-receipt-photo-card h2 { margin: .15rem 0 0; font-size: 1.15rem; line-height: 1.2; }
-.bf-receipt-photo-card > p { margin: 0; color: var(--cf-muted, #64716c); font-size: .78rem; line-height: 1.4; }
-.bf-receipt-photo-frame { min-height: 220px; display: grid; place-items: center; overflow: hidden; border-radius:12px; background: color-mix(in srgb, var(--cf-ink, #10251f) 8%, var(--cf-surface, #fffefa)); color: var(--cf-muted, #64716c); font-size: .84rem; }
-.bf-receipt-photo-frame img { width: 100%; max-height: min(68vh, 560px); object-fit: contain; display: block; }
-.bf-receipt-photo-switch { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.bf-receipt-photo-switch button { min-height: 40px; padding: 0 12px; border: 1px solid var(--cf-line, #e1ded5); border-radius: 12px; color: var(--cf-ink, #172d28); background: var(--cf-surface, #fffefa); font: inherit; font-size: .78rem; font-weight:600; }
-.bf-receipt-photo-switch button.active { color: var(--cf-primary-ink, #1e513f); border-color: color-mix(in srgb, var(--cf-primary, #1e513f) 40%, var(--cf-line)); background: color-mix(in srgb, var(--cf-primary, #1e513f) 12%, var(--cf-surface)); }
-.bf-receipt-photo-switch button:disabled { opacity: .4; }
-.dark .bf-receipt-photo-card { background: var(--cf-surface, #16352c); border-color: rgba(232, 245, 236, .14); }
-.dark .bf-receipt-photo-card > p, .dark .bf-receipt-photo-frame { color: #c8d7ce; }

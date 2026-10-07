@@ -396,18 +396,18 @@ export const acceptRecurringPrice = (data: AppData, recurringId: string, asOf = 
   return { ...data, recurring: data.recurring.map((item) => item.id === recurringId ? { ...item, amount: change.to, updatedAt: now } : item) };
 };
 
-export type PocketKind = "cash" | "card" | "meal" | "transfer";
+export type PocketKind = "cash" | "card" | "meal" | "voucher" | "transfer";
 export type PocketSlice = { kind: PocketKind; amount: number };
 
 /** Unde stau banii lichizi, pe felul sursei. Un singur fel nu merită un rând: cifra mare spune deja totalul. */
 export const pocketSlices = (data: AppData): PocketSlice[] => {
-  const totals: Record<PocketKind, number> = { cash: 0, card: 0, meal: 0, transfer: 0 };
+  const totals: Record<PocketKind, number> = { cash: 0, card: 0, meal: 0, voucher: 0, transfer: 0 };
   for (const source of data.settings.paymentSources) {
     const balance = sourceBalance(data, source.id);
     if (balance < 1 || !(source.kind in totals)) continue;
     totals[source.kind] += balance;
   }
-  return (["cash", "card", "meal", "transfer"] as const)
+  return (["cash", "card", "meal", "voucher", "transfer"] as const)
     .filter((kind) => totals[kind] >= 1)
     .map((kind) => ({ kind, amount: Math.round(totals[kind] * 100) / 100 }));
 };

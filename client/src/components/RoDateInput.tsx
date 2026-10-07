@@ -1,4 +1,5 @@
-import { useState, type ChangeEvent, type FocusEvent, type InputHTMLAttributes } from "react";
+import { useRef, useState, type ChangeEvent, type FocusEvent, type InputHTMLAttributes } from "react";
+import { CalendarDays } from "lucide-react";
 import { t } from "@/lib/i18n";
 
 function isoToRo(iso: string) {
@@ -44,14 +45,23 @@ export function RoDateInput({ value = "", min, onChange, onBlur, placeholder, ..
   const [draft, setDraft] = useState<string | null>(null);
   /** Data scrisă nu se poate citi: o lăsăm pe ecran și spunem de ce, în loc s-o ștergem tăcut. */
   const [invalid, setInvalid] = useState(false);
+  /** Calendarul telefonului: un câmp de dată ascuns, deschis din butonul de lângă text. */
+  const pickerRef = useRef<HTMLInputElement>(null);
+  const openPicker = () => {
+    const picker = pickerRef.current;
+    if (!picker) return;
+    try { (picker as HTMLInputElement & { showPicker?: () => void }).showPicker?.(); } catch { picker.click(); }
+  };
   const shown = draft ?? isoToRo(String(value || ""));
   const emit = (event: ChangeEvent<HTMLInputElement> | FocusEvent<HTMLInputElement>, iso: string) => {
     onChange?.({ ...event, target: { ...event.target, value: iso }, currentTarget: { ...event.currentTarget, value: iso } } as ChangeEvent<HTMLInputElement>);
   };
   return (
     <>
+    <span style={{ position: "relative", display: "block" }}>
     <input
       {...rest}
+      style={{ ...(rest.style || {}), paddingRight: 52 }}
       type="text"
       inputMode="numeric"
       autoComplete="off"
@@ -83,6 +93,20 @@ export function RoDateInput({ value = "", min, onChange, onBlur, placeholder, ..
         onBlur?.(event);
       }}
     />
+    <button type="button" onClick={openPicker} aria-label={t("Alege data din calendar")} disabled={rest.disabled} style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", width: 44, height: 44, display: "grid", placeItems: "center", border: 0, borderRadius: 12, background: "transparent", color: "var(--cf-primary-strong, #1f5240)" }}>
+      <CalendarDays size={20} aria-hidden="true" />
+    </button>
+    <input
+      ref={pickerRef}
+      type="date"
+      tabIndex={-1}
+      aria-hidden="true"
+      value={/^\d{4}-\d{2}-\d{2}$/.test(String(value)) ? String(value) : ""}
+      min={min}
+      onChange={(event) => { const iso = event.target.value; if (!iso || iso === value) return; setDraft(null); setInvalid(false); emit(event, iso); }}
+      style={{ position: "absolute", right: 0, bottom: 0, width: 1, height: 1, opacity: 0, pointerEvents: "none", border: 0, padding: 0 }}
+    />
+    </span>
     {invalid && <small className="bf-form-error" role="alert">{min && roToIso(draft ?? "") ? t("Data trebuie să fie după {date}.", { date: isoToRo(String(min)) }) : t("Data nu e bună. Scrie-o ca zz.ll.aaaa, de exemplu 10.10.2026.")}</small>}
     </>
   );
