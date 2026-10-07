@@ -997,7 +997,7 @@ const receiptSchema = {
   properties: {
     isReceipt: { type: "BOOLEAN" },
     store: { type: "STRING" },
-    date: { type: "STRING", nullable: true },
+    date: { type: "STRING" },
     total: { type: "NUMBER" },
     items: {
       type: "ARRAY",
@@ -1041,7 +1041,7 @@ isReceipt: false dacă poza nu e un bon de cumpărături (atunci restul poate fi
 
 store: numele magazinului, așa cum îl știe omul: marca (Lidl, Kaufland, Profi, Mega Image, Penny, Carrefour, Auchan, Dedeman, Farmacia Tei) dacă apare sau se deduce sigur din bon. Dacă bonul arată doar firma (de ex. „S.C. SALES CONSULTING S.R.L.”, „POPESCU ION I.I.”), scrie numele firmei scurt și lizibil, fără S.C., S.R.L., I.I., P.F.A. (de ex. „Sales Consulting”). Nu inventa o marcă.
 
-date: data bonului în formatul AAAA-LL-ZZ. Pe bonurile românești data e ZZ/LL/AAAA, ZZ.LL.AAAA sau ZZ-LL-AAAA. null dacă nu se citește sigur.
+date: data bonului în formatul AAAA-LL-ZZ. Pe bonurile românești data e ZZ/LL/AAAA, ZZ.LL.AAAA sau ZZ-LL-AAAA. Șir gol dacă nu se citește sigur.
 
 items: fiecare produs cumpărat, în ordinea de pe bon, fără să sari vreunul.
 - rawName: denumirea exact cum e tipărită.
@@ -1098,56 +1098,85 @@ function cleanScannedReceipt(raw: unknown, categories: string[]): ScannedReceipt
   };
 }
 
+const RECEIPT_JSON_SHAPE = `Răspunde doar cu JSON, fără alt text, în forma: {"isReceipt": true, "store": "", "date": "AAAA-LL-ZZ" sau null, "items": [{"rawName": "", "name": "", "quantity": 1, "amount": 0, "discount": 0, "category": ""}], "total": 0, "payments": [{"method": "cash|card|meal|voucher|other", "amount": 0}], "confidence": "high|medium|low"}.`;
+
+/** JSON-ul modelului, chiar dacă vine între ```json … ``` sau cu text în jur. */
+function parseModelJson(raw: string): unknown {
+  const text = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  try {
+    return JSON.parse(text);
+  } catch {
+    const first = text.indexOf("{");
+    const last = text.lastIndexOf("}");
+    if (first >= 0 && last > first) return JSON.parse(text.slice(first, last + 1));
+    throw new Error("bad json");
+  }
+}
+
 async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; data: string }, categories: string[], deadline: number): Promise<ScannedReceipt> {
   let lastStatus = 0;
   let lastDetail = "";
+  const trail: string[] = [];
   for (const model of RECEIPT_MODELS) {
-    const payload = {
-      system_instruction: { parts: [{ text: receiptInstruction(categories) }] },
-      contents: [{ role: "user", parts: [{ inline_data: { mime_type: image.mimeType, data: image.data } }, { text: "Citește bonul din poză." }] }],
-      generationConfig: {
-        temperature: 0,
-        responseMimeType: "application/json",
-        responseSchema: receiptSchema,
-        // Puțină gândire ajută la verificarea sumei articolelor față de total, fără să întârzie mult.
-        ...(model === "gemini-2.5-flash" ? { thinkingConfig: { thinkingBudget: 1024 } } : {}),
-      },
-    };
-    for (let attempt = 0; attempt < 2; attempt++) {
-      let apiResponse: Response;
-      try {
-        apiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-          { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 40_000) },
-        );
-      } catch (error) {
-        if (!isTimeout(error)) throw error;
-        lastStatus = 504;
-        lastDetail = `timeout ${model}`;
-        break;
-      }
-      lastStatus = apiResponse.status;
-      if (apiResponse.ok) {
-        const body = (await apiResponse.json()) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string; thought?: boolean }> } }> };
-        const raw = body.candidates?.[0]?.content?.parts?.filter((part) => !part.thought).map((part) => part.text || "").join("") || "{}";
+    // Întâi cu schemă; dacă modelul o respinge (400) sau întoarce ceva ce nu se citește, fără schemă, cu forma în text.
+    for (const structured of [true, false]) {
+      const payload = {
+        system_instruction: { parts: [{ text: receiptInstruction(categories) }] },
+        contents: [{ role: "user", parts: [{ inline_data: { mime_type: image.mimeType, data: image.data } }, { text: structured ? "Citește bonul din poză." : `Citește bonul din poză. ${RECEIPT_JSON_SHAPE}` }] }],
+        generationConfig: {
+          temperature: 0,
+          maxOutputTokens: 8192,
+          responseMimeType: "application/json",
+          ...(structured ? { responseSchema: receiptSchema } : {}),
+          // Fără gândire: citirea e mai rapidă și nu consumă din tokenii răspunsului.
+          ...(model.startsWith("gemini-2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+        },
+      };
+      let retry = false;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        let apiResponse: Response;
         try {
-          return cleanScannedReceipt(JSON.parse(raw), categories);
-        } catch {
-          lastDetail = `bad json ${model}`;
+          apiResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+            { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 35_000) },
+          );
+        } catch (error) {
+          if (!isTimeout(error)) throw error;
+          lastStatus = 504;
+          lastDetail = `timeout ${model}`;
+          trail.push(`${model}/${structured ? "s" : "p"}:timeout`);
           break;
         }
+        lastStatus = apiResponse.status;
+        if (apiResponse.ok) {
+          const body = (await apiResponse.json()) as { candidates?: Array<{ finishReason?: string; content?: { parts?: Array<{ text?: string; thought?: boolean }> } }>; promptFeedback?: { blockReason?: string } };
+          const candidate = body.candidates?.[0];
+          const raw = candidate?.content?.parts?.filter((part) => !part.thought).map((part) => part.text || "").join("") || "";
+          try {
+            return cleanScannedReceipt(parseModelJson(raw), categories);
+          } catch {
+            lastDetail = `bad json ${model} ${candidate?.finishReason || body.promptFeedback?.blockReason || ""} ${raw.slice(0, 80)}`;
+            trail.push(`${model}/${structured ? "s" : "p"}:json-${candidate?.finishReason || body.promptFeedback?.blockReason || "?"}`);
+            retry = true;
+            break;
+          }
+        }
+        lastDetail = await apiResponse.text();
+        trail.push(`${model}/${structured ? "s" : "p"}:${apiResponse.status}`);
+        if (isInvalidKey(lastDetail)) throw new GuideCallError("INVALID_API_KEY", apiResponse.status);
+        if ((apiResponse.status === 429 || apiResponse.status === 503) && attempt === 0) {
+          await sleep(600);
+          continue;
+        }
+        // 400 cu schemă: aceeași cerere fără schemă, pe același model.
+        retry = apiResponse.status === 400;
+        break;
       }
-      lastDetail = await apiResponse.text();
-      if (isInvalidKey(lastDetail)) throw new GuideCallError("INVALID_API_KEY", apiResponse.status);
-      if ((apiResponse.status === 429 || apiResponse.status === 503) && attempt === 0) {
-        await sleep(600);
-        continue;
-      }
-      break;
+      console.warn("receipt model failed", model, structured ? "schema" : "plain", lastStatus, lastDetail.slice(0, 300));
+      if (!retry) break;
     }
-    console.warn("receipt model failed, next", model, lastStatus, lastDetail.slice(0, 160));
   }
-  throw new GuideCallError(lastDetail.slice(0, 300) || "RECEIPT_UPSTREAM_ERROR", lastStatus);
+  throw new GuideCallError(`${trail.join(" ")} | ${lastDetail.replace(/key=[^&\s"]+/g, "key=…").slice(0, 200)}`, lastStatus);
 }
 
 export const readReceipt = onRequest(
@@ -1215,7 +1244,9 @@ export const readReceipt = onRequest(
         const err = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
         console.error("readReceipt failure", err.status, err.message.slice(0, 200));
         const busy = err.status === 429 || err.status === 503;
-        response.status(busy ? 429 : 502).json({ error: busy ? "Scanarea e ocupată acum. Mai încearcă peste un minut." : "Nu am putut citi bonul acum. Mai încearcă o dată.", code: busy ? "busy" : "upstream" });
+        // Motivul scurt (modele încercate și coduri) ajunge pe ecran ca omul să-l poată trimite; fără cheie și fără conținutul bonului.
+        const reason = err.message.split(" | ")[0].slice(0, 120);
+        response.status(busy ? 429 : 502).json({ error: busy ? "Scanarea e ocupată acum. Mai încearcă peste un minut." : "Nu am putut citi bonul acum. Mai încearcă o dată.", code: busy ? "busy" : "upstream", reason });
       }
     });
   },
