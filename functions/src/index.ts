@@ -1141,7 +1141,7 @@ function parseModelJson(raw: string): unknown {
   }
 }
 
-async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; data: string }, categories: string[], deadline: number): Promise<ScannedReceipt & { model: string }> {
+async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; data: string }, categories: string[], deadline: number): Promise<ScannedReceipt & { model: string; trail: string }> {
   let lastStatus = 0;
   let lastDetail = "";
   const trail: string[] = [];
@@ -1156,23 +1156,25 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
           maxOutputTokens: 8192,
           responseMimeType: "application/json",
           ...(structured ? { responseSchema: receiptSchema } : {}),
-          // Fără gândire pe 2.5: citirea e mai rapidă. Modelele noi își aleg singure.
-          ...(structured && model.startsWith("gemini-2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+          // Gândire minimă: un bon se citește, nu se rezolvă. Fără asta, Gemini 3 trecea de 30 s pe bon.
+          ...(model.startsWith("gemini-2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : /^gemini-[3-9]/.test(model) ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
         },
       };
       let retry = false;
+      const startedAt = Date.now();
+      const took = () => `${((Date.now() - startedAt) / 1000).toFixed(1)}s`;
       for (let attempt = 0; attempt < 2; attempt++) {
         let apiResponse: Response;
         try {
           apiResponse = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-            { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 35_000) },
+            { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 25_000) },
           );
         } catch (error) {
           if (!isTimeout(error)) throw error;
           lastStatus = 504;
           lastDetail = `timeout ${model}`;
-          trail.push(`${model}/${structured ? "s" : "p"}:timeout`);
+          trail.push(`${model}/${structured ? "s" : "p"}:timeout@${took()}`);
           break;
         }
         lastStatus = apiResponse.status;
@@ -1182,17 +1184,18 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
           const raw = candidate?.content?.parts?.filter((part) => !part.thought).map((part) => part.text || "").join("") || "";
           try {
             const receipt = cleanScannedReceipt(parseModelJson(raw), categories);
-            console.info("receipt read", model, structured ? "schema" : "plain", receipt.items.length);
-            return { ...receipt, model };
+            trail.push(`${model}/${structured ? "s" : "p"}:ok@${took()}`);
+            console.info("receipt read", trail.join(" "), receipt.items.length);
+            return { ...receipt, model, trail: trail.join(" ") };
           } catch {
             lastDetail = `bad json ${model} ${candidate?.finishReason || body.promptFeedback?.blockReason || ""} ${raw.slice(0, 80)}`;
-            trail.push(`${model}/${structured ? "s" : "p"}:json-${candidate?.finishReason || body.promptFeedback?.blockReason || "?"}`);
+            trail.push(`${model}/${structured ? "s" : "p"}:json-${candidate?.finishReason || body.promptFeedback?.blockReason || "?"}@${took()}`);
             retry = true;
             break;
           }
         }
         lastDetail = await apiResponse.text();
-        trail.push(`${model}/${structured ? "s" : "p"}:${apiResponse.status}`);
+        trail.push(`${model}/${structured ? "s" : "p"}:${apiResponse.status}@${took()}`);
         if (isInvalidKey(lastDetail)) throw new GuideCallError("INVALID_API_KEY", apiResponse.status);
         if ((apiResponse.status === 429 || apiResponse.status === 503) && attempt === 0) {
           await sleep(600);
