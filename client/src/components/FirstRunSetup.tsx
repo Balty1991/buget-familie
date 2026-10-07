@@ -317,6 +317,7 @@ export function FirstRunSetup({ data, onChange, onClose, onGoPlan, onAdd, onOpen
             <p className="bf-kicker">{t("PÂNĂ LA SALARIU")}</p>
             <h2 id="bf-setup-title">{t("Cât poți cheltui")} <em>{t("azi?")}</em></h2>
             <p>{t("Trei lucruri. Apoi vezi un număr: cât îți rămâne azi, până la salariu.")}</p>
+            <p className="bf-helper" role="note">{t("Nu e o aplicație de plăți: nu mută bani și nu cere card, cont sau parola băncii. E caietul vostru de buget: notați voi, pe telefon.")}</p>
             <ul className="bf-first-run-trust" aria-label={t("Ce promitem")}>
               <li><Lock size={16} aria-hidden="true" />{t("Fără parola băncii")}</li>
               <li><BadgeCheck size={16} aria-hidden="true" />{t("Fără reclame")}</li>

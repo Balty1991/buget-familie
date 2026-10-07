@@ -4613,4 +4613,10 @@ export const en: Record<string, string> = {
   "ex. 28,50": "e.g. 28.50",
   "Din a doua sursă (lei)": "From the second source (lei)",
   "Scrie una din sume; cealaltă se completează din total ({total}).": "Type one of the amounts; the other is filled in from the total ({total}).",
+  "INSTRUMENTE AVANSATE": "ADVANCED TOOLS",
+  "· grafice, tendințe, plan pe un an, investiții": "· charts, trends, one-year plan, investments",
+  "Notat în Buget Familie, caietul de buget al casei. Nu e aplicație de plăți și nu cere date bancare.": "Logged in Buget Familie, the household budget notebook. It is not a payment app and asks for no bank details.",
+  "Nu e o aplicație de plăți: nu mută bani și nu cere card, cont sau parola băncii. E caietul vostru de buget: notați voi, pe telefon.": "Not a payment app: it moves no money and asks for no card, account or bank password. It is your budget notebook: you log everything yourselves, on the phone.",
+  "Nu e o aplicație de plăți și nici de monitorizare.": "Not a payment app, and not a tracking app either.",
+  "Nu mută bani, nu se leagă de bancă și nu urmărește pe nimeni. E caietul de buget al familiei: vedeți doar ce notați voi.": "It moves no money, does not connect to your bank and tracks no one. It is the family budget notebook: you only see what you log.",
 };

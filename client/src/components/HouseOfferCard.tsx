@@ -3,6 +3,7 @@
  * Primul pleacă gratis. Prețul apare după, nu la instalare.
  * Din browser nu se încasează nimic — plata e Google Play, pe telefon.
  */
+import { withShareSignature } from "@/lib/share-signature";
 import { useEffect, useState } from "react";
 import { Share2, Smartphone } from "lucide-react";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
@@ -68,7 +69,7 @@ export function HouseOfferCard({ data }: { data: AppData }) {
   const canSend = check.transactionCount > 0;
   const send = async () => {
     if (!canSend || !allow()) return;
-    const text = shareText();
+    const text = withShareSignature(shareText());
     try {
       if (typeof navigator.share === "function") {
         await navigator.share({ title: t("Bilanț {family}", { family: check.familyName }), text });

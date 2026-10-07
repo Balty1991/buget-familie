@@ -17,8 +17,8 @@ android {
         applicationId "ro.balty1991.bugetfamilie"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 181
-        versionName "1.1.180"
+        versionCode 182
+        versionName "1.1.181"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

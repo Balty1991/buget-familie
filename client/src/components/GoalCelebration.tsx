@@ -2,6 +2,7 @@
  * Obiectiv atins: confetti, cifra strânsă și un buton de trimis familiei. Fără mișcare dacă
  * telefonul cere „reduce motion”; se închide la atingere în afară sau cu Escape.
  */
+import { withShareSignature } from "@/lib/share-signature";
 import "../goal-celebration.css";
 import { PartyPopper, Share2 } from "lucide-react";
 import type { SavingsGoal } from "@/lib/finance-data";
@@ -13,7 +14,7 @@ const COLORS = ["#1d7a5f", "#f2b33d", "#e0664f", "#2f6fd6", "#7b3f86"];
 
 export function GoalCelebration({ goal, onClose }: { goal: SavingsGoal; onClose: () => void }) {
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
-  const text = t("Am strâns {amount} pentru „{goal}”! 🎉", { amount: lei(goal.target), goal: goal.name });
+  const text = withShareSignature(t("Am strâns {amount} pentru „{goal}”! 🎉", { amount: lei(goal.target), goal: goal.name }));
   const share = async () => {
     try { if (navigator.share) await navigator.share({ text }); else await navigator.clipboard?.writeText(text); } catch { /* omul a renunțat */ }
     onClose();
