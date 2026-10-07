@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.180
+
+- Plată din două surse: două câmpuri de sumă, „Din {prima sursă}” și „Din a doua sursă”. Scrii oricare, cealaltă se completează din total.
+- La corectarea unei cheltuieli, soldul arătat lângă sursă e cel de dinaintea ei (Voucher SGR arăta 0,74 lei, adică deja fără suma corectată).
+- În lista surselor nu se mai repetă numele: „Cash Alin · 160,05 RON”, nu „Cash Alin · Alin · 160,05 RON”.
+
 ## 1.1.179
 
 Trecere prin toată aplicația, ca utilizator:
