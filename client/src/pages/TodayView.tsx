@@ -2,6 +2,7 @@
  * Ecranul Astăzi: cifra zilei, ritmul săptămânii, alertele și activitatea recentă.
  * Mutat din Home.tsx, care ajunsese la peste 1.000 de linii; comportamentul e același.
  */
+import { mergeSplitPayments } from "@/lib/split-payment";
 import { visibleShopping } from "@/lib/shopping-list";
 import { YearRecapEntry } from "@/components/YearRecapEntry";
 import { noSpendDays } from "@/lib/logging-habits";
@@ -313,7 +314,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const lastMoves = useMemo(() => {
     const today = isoToday();
     const cycleIds = data.settings.members.length < 2 ? [] : householdActivityInCycle(data, today).recent.map((item) => item.id);
-    return recentActivityMoves(data.transactions, cycleIds, today, data.settings.members.length);
+    return recentActivityMoves(mergeSplitPayments(data.transactions), cycleIds, today, data.settings.members.length);
   }, [data]);
   const periodIncome = data.transactions.filter((item) => item.kind === "income" && !isBalanceAdjustment(item) && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);
   const periodExpense = data.transactions.filter((item) => item.kind === "expense" && !isBalanceAdjustment(item) && inPlanPeriod(item.date, math.plan)).reduce((sum, item) => sum + item.amount, 0);

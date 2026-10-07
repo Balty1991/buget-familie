@@ -1,6 +1,7 @@
 /**
  * Formularul de mișcare. Scos din home-secondary. Salvarea rămâne aceeași.
  */
+import { isSplitPartner } from "@/lib/split-payment";
 import "../receipt-mobile.css";
 import "../currency.css";
 import "../transaction-envelope-picker.css";
@@ -21,8 +22,7 @@ export function TransactionForm({ data, initial, onSave, onClose }: { data: AppD
    * Cealaltă parte a aceluiași bon, plătit din două surse. Mișcările vechi (fără splitId) se recunosc
    * după nota „Bon de …” identică, aceeași zi și același titlu.
    */
-  const splitPartner = initial ? data.transactions.find((item) => item.id !== initial.id && item.kind === "expense" && initial.kind === "expense"
-    && (initial.splitId ? item.splitId === initial.splitId : Boolean(initial.note && /Bon de /.test(initial.note) && item.note === initial.note && item.date === initial.date && item.title === initial.title))) : undefined;
+  const splitPartner = initial ? data.transactions.find((item) => isSplitPartner(initial, item)) : undefined;
   const [amount, setAmount] = useState(initial ? amountInput(Math.round((initial.amount + (splitPartner?.amount || 0)) * 100) / 100) : "");
   const [date, setDate] = useState(initial?.date || isoToday());
   const [memberId, setMemberId] = useState(initial?.memberId || data.settings.members.find((member) => member.name === initial?.person)?.id || data.settings.members[0]?.id || "");
