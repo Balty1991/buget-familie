@@ -4619,4 +4619,6 @@ export const en: Record<string, string> = {
   "Nu e o aplicație de plăți: nu mută bani și nu cere card, cont sau parola băncii. E caietul vostru de buget: notați voi, pe telefon.": "Not a payment app: it moves no money and asks for no card, account or bank password. It is your budget notebook: you log everything yourselves, on the phone.",
   "Nu e o aplicație de plăți și nici de monitorizare.": "Not a payment app, and not a tracking app either.",
   "Nu mută bani, nu se leagă de bancă și nu urmărește pe nimeni. E caietul de buget al familiei: vedeți doar ce notați voi.": "It moves no money, does not connect to your bank and tracks no one. It is the family budget notebook: you only see what you log.",
+  "Instrumente avansate": "Advanced tools",
+  "grafice, tendințe, plan pe un an, investiții, prețuri": "charts, trends, one-year plan, investments, prices",
 };

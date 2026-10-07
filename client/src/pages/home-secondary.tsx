@@ -126,7 +126,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
       </section>}
       {/* Ecranele pentru cine vrea mai mult stau strânse: un om obișnuit vede doar ce folosește zilnic. */}
       <details className="bf-more-group bf-more-advanced">
-        <summary className="bf-kicker bf-more-section-label" id="more-plan-title" style={{ cursor: "pointer", listStyle: "none" }}>{t("INSTRUMENTE AVANSATE")} <small style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>{t("· grafice, tendințe, plan pe un an, investiții")}</small></summary>
+        <summary className="bf-settings-row" id="more-plan-title" style={{ cursor: "pointer", listStyle: "none" }}><ChartSpline size={20} /><span className="bf-settings-copy"><b>{t("Instrumente avansate")}</b><small>{t("grafice, tendințe, plan pe un an, investiții, prețuri")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></summary>
         <div className="bf-more-grid bf-settings-group">
           {story && <button type="button" className="bf-settings-row" onClick={() => setStoryOpen(true)}><Sparkles size={20} /><span className="bf-settings-copy"><b>{t("Povestea anului {year}", { year: story.year })}</b><small>{t("anul familiei în cifre, ecran cu ecran")}</small></span><ChevronRight className="bf-settings-chevron" size={17} /></button>}
           <button type="button" className="bf-settings-row" onClick={() => setTab("charts")}><ChartSpline size={20} /><span className="bf-settings-copy"><b>{t("Grafice")}</b><small>{t("fluxul banilor, categorii, harta anului")}</small></span><ChevronRight className="bf-settings-chevron" size={17} /></button>
