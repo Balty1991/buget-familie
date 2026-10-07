@@ -135,6 +135,33 @@ describe("scanToPrefill", () => {
   });
 });
 
+describe("bonul Sinsay", () => {
+  /** Haine cu reduceri mari, plătite cash (51 date, 0,03 rest). */
+  const sinsay: ScannedReceipt = {
+    store: "Sinsay",
+    date: "2026-08-31",
+    total: 50.97,
+    confidence: "high",
+    payments: [{ method: "cash", amount: 50.97 }],
+    items: [
+      { name: "Ciorapi", quantity: 1, amount: 8.57, discount: 3.42, category: "Haine" },
+      { name: "Teniși", quantity: 1, amount: 32.84, discount: 13.15, category: "Haine" },
+      { name: "Jucărie", quantity: 1, amount: 8.56, discount: 3.43, category: "Consumabile copil" },
+      { name: "Pungă", quantity: 1, amount: 1, category: "Sacoșe" },
+    ],
+  };
+  it("pune hainele la Haine, cu reducerile lor", () => {
+    const prefill = scanToPrefill(sinsay, family(), "m1", "2026-10-07");
+    expect(prefill.title).toBe("Cumpărături Sinsay");
+    expect(prefill.category).toBe("Haine");
+    expect(prefill.discount).toBe(20);
+    expect(prefill.date).toBe("2026-08-31");
+    expect(prefill.lines.map((line) => line.category)).toEqual(["Haine", "Haine", "Consumabile copil", "Sacoșe"]);
+    expect(prefill.lines[1].label).toBe("Teniși (reducere −13,15)");
+    expect(prefill.warning).toBeUndefined();
+  });
+});
+
 describe("receiptCategories", () => {
   it("trimite categoriile de cumpărături, fără credite, plus cele ale familiei", () => {
     const data = family();

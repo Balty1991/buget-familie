@@ -14,6 +14,10 @@ describe("articolele de pe bon își iau categoria lor", () => {
     ["Garantie PET SGR", "SGR"],
     ["Aqua Carpatica Kids plata PET 0.25L SGR", "Apă"],
     ["Paine 500g", "Alimente"],
+    ["0810B-99X-39H Ciorapi", "Haine"],
+    ["841JJ-99X-25 Tenisi Fe", "Haine"],
+    ["809EZ-MLC-ONE Jucarie", "Consumabile copil"],
+    ["H6111-XXX-ONE Punga de", "Sacoșe"],
   ])("%s → %s", (label, category) => {
     expect(guessCategoryFromText(label)).toBe(category);
   });

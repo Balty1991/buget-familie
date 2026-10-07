@@ -4609,6 +4609,7 @@ export const en: Record<string, string> = {
   "Alege data din calendar": "Pick the date from the calendar",
   "SGR și sacoșe": "Deposit (SGR) & bags",
   "SGR": "Bottle deposit (SGR)",
+  "Haine": "Clothes",
   "Sacoșe": "Shopping bags",
   "Din {name} (lei)": "From {name} (lei)",
   "prima sursă": "first source",
