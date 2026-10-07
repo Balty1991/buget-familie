@@ -4608,4 +4608,9 @@ export const en: Record<string, string> = {
   "ex. Salariu, Voucher SGR": "e.g. Salary, SGR voucher",
   "Alege data din calendar": "Pick the date from the calendar",
   "SGR și sacoșe": "Deposit (SGR) & bags",
+  "Din {name} (lei)": "From {name} (lei)",
+  "prima sursă": "first source",
+  "ex. 28,50": "e.g. 28.50",
+  "Din a doua sursă (lei)": "From the second source (lei)",
+  "Scrie una din sume; cealaltă se completează din total ({total}).": "Type one of the amounts; the other is filled in from the total ({total}).",
 };
