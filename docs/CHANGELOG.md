@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.184
+
+- Bon plătit din două surse: cele două cheltuieli sunt legate (`splitId`). Corectarea oricăreia deschide tot bonul: suma totală (ex. 39,76), „Plătit din două surse” deschis, cu ambele sume (28,50 voucher, 11,26 cash). Salvarea le actualizează pe amândouă, fără a treia mișcare; nota „Bon de …” se înlocuiește, nu se adaugă din nou.
+- Perechile făcute în 1.1.180–1.1.183 (fără legătură) se recunosc după nota „Bon de …” identică, aceeași zi și același titlu.
+- „O singură sursă” la corectare scoate a doua parte (cu ștergere sincronizată), iar totalul trece pe prima sursă.
+- Articolele bonului împărțit stau pe prima parte, cu totalul întreg al bonului.
+- Soldul arătat lângă surse, la corectare, include ambele părți ale bonului.
+
 ## 1.1.183
 
 - Astăzi → Ultimele mișcări: „acum” / „acum N min” apar doar la mișcările de azi. O cheltuială de ieri corectată acum (de exemplu împărțită pe două surse) arată data ei, nu „acum”, ca să nu pară mutată pe azi.

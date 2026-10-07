@@ -430,7 +430,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => { const applySettings = (event: Event) => { const patch = (event as CustomEvent<Partial<AppData["settings"]>>).detail; if (!patch) return; applyData((current) => ({ ...current, settings: { ...current.settings, ...patch } })); }; window.addEventListener("buget-familie:local-settings", applySettings); return () => window.removeEventListener("buget-familie:local-settings", applySettings); }, []);
-  const saveTx = (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string }; detailLines?: ReceiptLine[] }) => {
+  const saveTx = (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string }; detailLines?: ReceiptLine[]; removeIds?: string[] }) => {
     let failed: Error | undefined;
     const saved = Array.isArray(item) ? item : [item];
     /** Doar mișcările noi primesc „Anulează”; o corectură se refac din formular. */
@@ -440,7 +440,12 @@ export default function Home() {
         const list = Array.isArray(item) ? item : [item];
         const next = list.reduce((ledger, entry) => commitLedgerEntry(ledger, entry, meta?.fromWeekIndex), current);
         const learned = meta?.learnRule ? learnMerchantRule(next, meta.learnRule) : next;
-        return meta?.detailLines && list.length === 1 ? attachReceiptDetail(learned, list[0].id, meta.detailLines) : learned;
+        // O singură sursă din nou: a doua parte a bonului pleacă, cu piatră de mormânt pentru sincronizare.
+        const removeIds = meta?.removeIds || [];
+        const trimmed = removeIds.length ? { ...learned, transactions: learned.transactions.filter((entry) => !removeIds.includes(entry.id)), deleted: [...learned.deleted, ...removeIds.map((id) => ({ entity: "transactions" as const, id, deletedAt: new Date().toISOString() }))].slice(-TOMBSTONE_MAX) } : learned;
+        // Bonul plătit din două surse are articolele pe prima parte, cu totalul întreg.
+        const sameReceipt = list.length === 1 || (list.length > 1 && Boolean(list[0].splitId) && list.every((entry) => entry.splitId === list[0].splitId));
+        return meta?.detailLines && sameReceipt ? attachReceiptDetail(trimmed, list[0].id, meta.detailLines, Math.round(list.reduce((sum, entry) => sum + entry.amount, 0) * 100) / 100) : trimmed;
       } catch (reason) {
         failed = reason instanceof Error ? reason : new Error(t("Nu am putut salva mișcarea."));
         return current;

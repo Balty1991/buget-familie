@@ -61,6 +61,8 @@ export type Transaction = {
   shareScope?: ShareScope;
   /** Telefonul care a scris mișcarea. Lipsește la rândurile vechi. Nu se schimbă la editare. */
   deviceId?: string;
+  /** Același bon plătit din două surse: cele două cheltuieli au același splitId și se corectează împreună. */
+  splitId?: string;
 };
 
 export type Debt = { id: string; name: string; remaining: number; monthly: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; updatedAt?: string; /** Dobânda anuală, în procente (DAE sau dobânda din contract). */ annualRate?: number; /** Credit bancar, card de credit, IFN sau bani de la persoane. */ kind?: "credit" | "card" | "ifn" | "persoane"; /** Data ultimei rate din contract, dacă e știută. */ endDate?: string };

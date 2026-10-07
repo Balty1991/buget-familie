@@ -104,7 +104,7 @@ export function queueReceiptForReview(data: AppData, receipt: Receipt): AppData 
 }
 
 /** Articolele unei cheltuieli deja notate. Nu creează o a doua mișcare. */
-export function attachReceiptDetail(data: AppData, transactionId: string, lines: ReceiptLine[]): AppData {
+export function attachReceiptDetail(data: AppData, transactionId: string, lines: ReceiptLine[], total?: number): AppData {
   const tx = data.transactions.find((item) => item.id === transactionId);
   if (!tx || tx.kind !== "expense") return data;
   const existing = data.receipts.find((receipt) => receipt.id === tx.receiptId || receipt.linkedTransactionId === tx.id || receipt.linkedTransactionIds?.includes(tx.id));
@@ -115,7 +115,7 @@ export function attachReceiptDetail(data: AppData, transactionId: string, lines:
     ...(existing || { vendor: tx.title.replace(/^Bon — /, ""), category: tx.category, date: tx.date }),
     id,
     vendor: existing?.vendor || tx.title.replace(/^Bon — /, ""),
-    amount: tx.amount,
+    amount: total ?? tx.amount,
     category: tx.category,
     date: tx.date,
     sourceId: tx.sourceId,
