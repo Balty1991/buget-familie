@@ -6,6 +6,7 @@ Creștere și încredere:
 - Tot ce se trimite pe WhatsApp (bilanțul săptămânii, raportul lunii, imaginea lunii, obiectivul atins) se termină cu un rând: „Notat în Buget Familie, caietul de buget al casei. Nu e aplicație de plăți și nu cere date bancare.” și linkul paginii de prezentare.
 - „Nu e o aplicație de plăți și nici de monitorizare”: la prima pornire, în Confidențialitate, pe pagina „Despre” (cu o întrebare nouă „E o țeapă?”) și în descrierea pentru Play.
 - Mai mult: ecranele de zi cu zi la vedere; graficele, tendințele, planul pe 12 luni, investițiile, averea, prețurile, regulile și „Ce am învățat” stau sub „Instrumente avansate”, care se deschide la atingere. „Raportul lunii” urcă la Ecrane.
+- Plată din două surse: în câmpul primei surse se poate scrie virgula („28,50”); înainte, „28,” se rescria imediat ca „28”.
 - `docs/kit-lansare.md`: pornirea plăților, producția pe Play, mesaje pentru testeri, răspunsul la „țeapă”, idei TikTok și postări pentru grupuri.
 
 ## 1.1.180
