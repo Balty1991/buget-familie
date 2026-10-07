@@ -691,47 +691,6 @@ html:not(.dark) .bf-os-decide {
 }
 .bf-today-below-gauge { margin: 8px 0 16px; }
 
-.bf-pocket-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: 8px;
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.bf-pocket {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  min-width: 0;
-  padding: 8px 4px;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--cf-line, var(--os-line)) 75%, transparent);
-  background: color-mix(in srgb, var(--cf-surface, var(--os-surface)) 86%, transparent);
-  color: var(--cf-ink, var(--os-ink));
-}
-.bf-pocket b { font-size: 13px; font-variant-numeric: tabular-nums; }
-.bf-pocket small {
-  max-width: 100%;
-  overflow: hidden;
-  color: var(--cf-muted, var(--os-muted));
-  font-size: 10px;
-  letter-spacing: 0.03em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.bf-pocket svg {
-  width: 28px;
-  height: 28px;
-  padding: 5px;
-  box-sizing: border-box;
-  border-radius: 10px;
-  background: color-mix(in srgb, currentColor 16%, transparent);
-}
-.bf-pocket.cash svg { color: var(--cf-warning, #b4741f); }
-.bf-pocket.card svg { color: var(--cf-primary); }
-.bf-pocket.meal svg { color: var(--cf-primary-strong, var(--cf-primary)); }
-.bf-pocket.transfer svg { color: var(--cf-muted, var(--os-muted)); }
 .bf-glance-goal {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) 16px;

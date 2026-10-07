@@ -44,6 +44,8 @@ const COPY: Record<UpgradeReason, { kicker: string; title: string; body: string 
 };
 
 export function FamilieUpgrade({ reason }: { reason: UpgradeReason }) {
+  // Cât plata e oprită, nu arătăm prețuri și abonamente: totul e deschis, iar oferta ar părea o cerere de bani.
+  if (!BILLING_LIVE) return null;
   const copy = COPY[reason];
   const gift = familieYearGiftMonths();
   return (

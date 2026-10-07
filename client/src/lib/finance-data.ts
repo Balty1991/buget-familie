@@ -14,7 +14,8 @@ import { getLocale, t } from "./i18n";
 export type TransactionKind = "income" | "expense";
 /** Personal = doar al membrului; shared = bugetul comun al familiei. Implicit shared pentru compatibilitate. */
 export type ShareScope = "personal" | "shared";
-export type PaymentKind = "card" | "cash" | "meal" | "transfer";
+/** `voucher`: voucher SGR, card cadou — bani buni de cheltuit, dar doar într-un loc anume. */
+export type PaymentKind = "card" | "cash" | "meal" | "voucher" | "transfer";
 
 export type Transaction = {
   id: string;
@@ -226,13 +227,13 @@ export type SyncDevice = {
 };
 export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
-export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Educație", "Timp liber", "Credite", "Rate produse", "Altele"];
+export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Educație", "Timp liber", "Credite", "Rate produse", "SGR și sacoșe", "Altele"];
 /**
  * Culorile categoriilor: nuanțe separate (înainte Alimente, Casă și Sănătate erau trei verzi
  * aproape identici). Verificate pe fundal deschis și închis, inclusiv pentru daltonism; „Altele”
  * rămâne gri, ca rest.
  */
-export const categoryColors: Record<string, string> = { Alimente: "#2E8B57", "Casă & facturi": "#3B6FB6", Transport: "#D0782F", "Timp liber": "#8A5CC2", Sănătate: "#C8506E", Abonamente: "#A8862A", "Consumabile copil": "#1E9AA8", Educație: "#5561C9", "Rate produse": "#A0522D", Credite: "#6B8E23", Altele: "#7A8580" };
+export const categoryColors: Record<string, string> = { "SGR și sacoșe": "#7A8B5C", Alimente: "#2E8B57", "Casă & facturi": "#3B6FB6", Transport: "#D0782F", "Timp liber": "#8A5CC2", Sănătate: "#C8506E", Abonamente: "#A8862A", "Consumabile copil": "#1E9AA8", Educație: "#5561C9", "Rate produse": "#A0522D", Credite: "#6B8E23", Altele: "#7A8580" };
 
 /**
  * Data calendaristică a telefonului, nu cea UTC. `toISOString()` ar întoarce ziua
@@ -591,7 +592,7 @@ export const normalizeAppData = (input: unknown): AppData => {
   const sources = realRows<PaymentSource>(oldSettings.paymentSources).length ? realRows<PaymentSource & { balance?: number }>(oldSettings.paymentSources).map((source, index) => ({
     id: source.id || `source-${index}`,
     name: textOr(source.name, `Sursă ${index + 1}`),
-    kind: (source.kind || "card") as PaymentKind,
+    kind: (["card", "cash", "meal", "voucher", "transfer"].includes(String(source.kind)) ? source.kind : "card") as PaymentKind,
     memberId: source.memberId,
     openingBalance: Math.max(0, parseRomanianAmount(source.openingBalance ?? (source as Partial<PaymentSource> & { balance?: number }).balance ?? 0)),
     currency: typeof source.currency === "string" && source.currency.trim() && source.currency.toUpperCase() !== BASE_CURRENCY ? source.currency.trim().toUpperCase().slice(0, 3) : undefined,
@@ -1993,6 +1994,11 @@ const categoryAliases: Array<[RegExp, string]> = [
   // Apa de la robinet e o factură, nu o sticlă de apă: „apă canal 95” nu e Băuturi.
   [/\b(apa canal|apa si canal|apa rece|apa calda|apa nova|apavital|aquatim|intretinere\w*|internet\w*|curent\w*|gaz\w*|factur\w*)\b/, "Casă & facturi"],
   [/\b(apa|suc\w*|cafea|cafele|ceai|bere|starbucks|5 to go)\b/, "Băuturi"],
+  // Băuturile tari nu sunt mâncare, chiar dacă vin de la magazin: „vodca 34,88” nu intră la Alimente.
+  [/\b(vodc\w*|vodk\w*|vin rosu|vin alb|vinuri|whisk\w*|coniac\w*|brandy|palinc\w*|tuic\w*|rachiu|lichior\w*|gin|rom|sampani\w*|spumant\w*|prosecco|alcool\w*|tarie|tarii|cidru)\b/, "Băuturi"],
+  // Garanția de ambalaj (SGR) și sacoșele: bani mărunți la fiecare bon, ținuți separat de mâncare.
+  [/\b(garantie sgr|sgr|garantie sticla|garantie ambalaj|sacos\w*|punga|pungi)\b/, "SGR și sacoșe"],
+  [/\b(kinder|ciocolat\w*|napolitan\w*|biscuit\w*|bomboan\w*|inghetat\w*|croissant\w*)\b/, "Dulciuri"],
   [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
   [/\b(factura|internet|curent|gaz|chirie|detergent|casa|enel|electrica|engie|digi|rcs|orange|vodafone|telekom|apa nova|salubr)\b/, "Casă & facturi"],
   [/\b(medic\w*|farmac\w*|doctor\w*|dentist\w*|stomatolog\w*|analize|laborator\w*|spital\w*|clinic\w*|ochelari|pastile|vitamine|sanatate|catena|help ?net|dona|sensiblu|regina maria|medlife|sanador|synevo|bioclinica)\b/, "Sănătate"],

@@ -24,7 +24,7 @@ import { categoryTone } from "@/lib/category-color";
 import { TodayLedger } from "@/components/TodayLedger";
 import { TodayBrief } from "@/components/TodayBrief";
 import { allocationHistorySnapshot } from "@/lib/allocation-history";
-import { acceptRecurringPrice, monthTitle, readClosedMonths, ageOfMoney, ageOfMoneyLine, calendarPace, calendarPaceLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, pocketSlices, recurringPriceChanges, repeatedOverLine, savingsSuggestion, weekTooFast, weekVersusLast, weekVersusLastLine, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief, currentMonthKey, monthlyFamilyReport } from "@/lib/household-insights";
+import { acceptRecurringPrice, monthTitle, readClosedMonths, ageOfMoney, ageOfMoneyLine, calendarPace, calendarPaceLine, checkInRebalance, envelopeRunOut, extendRunOutMove, mealRunway, mealRunwayLine, nextTrueExpense, recurringPriceChanges, repeatedOverLine, savingsSuggestion, weekTooFast, weekVersusLast, weekVersusLastLine, householdActivityInCycle, weeklyCheckIn, weeklyEnvelopeDailyRhythm, dayStripFigure, stripLei, todayBrief, currentMonthKey, monthlyFamilyReport } from "@/lib/household-insights";
 import { hasNoMoneyYet, planCycle } from "@/lib/plan-cycle";
 import {
   dateText,
@@ -114,7 +114,7 @@ export function openHouseholdGuide() {
 
 function SourceGlyph({ kind }: { kind: keyof typeof sourceKindName }) {
   if (kind === "cash") return <Wallet size={16} />;
-  if (kind === "meal") return <Ticket size={16} />;
+  if (kind === "meal" || kind === "voucher") return <Ticket size={16} />;
   if (kind === "transfer") return <ArrowUpRight size={16} />;
   return <CreditCard size={16} />;
 }
@@ -249,7 +249,6 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     const suggestion = savingsSuggestion(data, goal);
     return suggestion && suggestion.monthly >= 1 ? { name: goal.name, left: suggestion.left, monthly: suggestion.monthly, current: Math.max(0, goal.current), target: goal.target } : undefined;
   }), [data]);
-  const pockets = useMemo(() => pocketSlices(data), [data]);
   const trueExpense = useMemo(() => nextTrueExpense(data), [data]);
   const rise = useMemo(() => (priceLater ? undefined : recurringPriceChanges(data)[0]), [data, priceLater]);
   const weekShare = useMemo(() => tickMemo([data], `week-share:${isoToday()}`, () => {
@@ -444,8 +443,29 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               <span>{overPlan ? "−" : ""}{heroShown.toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               <small>RON</small>
             </h1>
-            <p className="os-hero-label">{quietPartners.length === 1 ? t("Incompletă, fără {name}", { name: quietPartners[0] }) : quietPartners.length > 1 ? t("Incompletă, fără {names}", { names: quietPartners.join(", ") }) : heroLabel}</p>
-            <p className="os-hint" role={quietPartners.length ? "status" : undefined}>{quietPartners.length ? t("Nu te baza pe ea la magazin, până notează.") : heroHint}</p>
+            {/* Eticheta spune mereu ce e cifra; lipsa partenerului e o notă dedesubt, nu în locul ei. */}
+            <p className="os-hero-label">{heroLabel}</p>
+            <p className="os-hint" role={quietPartners.length ? "status" : undefined}>{quietPartners.length === 1 ? t("{name} n-a notat încă azi: cifra poate fi mai mică.", { name: quietPartners[0] }) : quietPartners.length > 1 ? t("{names} n-au notat încă azi: cifra poate fi mai mică.", { names: quietPartners.join(", ") }) : heroHint}</p>
+            <div className="bf-hero-chips">
+              <button type="button" className="bf-hero-chip" aria-expanded={whereOpen} onClick={() => setWhereOpen((open) => !open)}>{t("Unde sunt banii · Mută")}</button>
+            </div>
+            {where && (
+              <div className="bf-money-where" style={{ display: "grid", gap: 8, marginTop: 10 }} role="region" aria-label={t("Unde sunt banii")}>
+                <p className="bf-kicker">{t("PE SURSE")}</p>
+                <ul className="bf-money-where-list" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
+                  {where.sources.map((row) => <li key={row.id} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>{row.name}{row.owner && !row.name.includes(row.owner) ? ` · ${row.owner}` : ""}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{money(row.balance)}</b></li>)}
+                  {!where.sources.length && <li><span>{t("Nicio sursă cu bani acum.")}</span></li>}
+                </ul>
+                {where.categories.length > 0 && <>
+                  <p className="bf-kicker">{t("CHELTUIT LUNA ASTA, PE CATEGORII")}</p>
+                  <ul className="bf-money-where-list" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
+                    {where.categories.map(([name, amount]) => <li key={name} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>{t(name)}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{money(amount)}</b></li>)}
+                  </ul>
+                </>}
+                <button type="button" className="bf-primary full" onClick={() => window.dispatchEvent(new Event("buget-familie:open-transfer"))}>{t("Mută bani sau dă cuiva")}</button>
+                <p className="bf-helper">{t("De exemplu, dai bani soției: alegi din ce sursă și „Cash” al ei. Nu e o cheltuială, doar se mută banii.")}</p>
+              </div>
+            )}
             <div className="bf-os-actions">
               <button type="button" className="bf-today-add bf-os-decide" onPointerDown={() => void import("@/components/QuickEntryPanel")} onClick={onAdd}><Plus size={18} /> {t("Notează")}</button>
             </div>
@@ -498,31 +518,11 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             {planHelp && <button type="button" className="bf-link-button bf-hero-plan-link" onClick={() => onGo("plan")}>{t("Pune bani în plic")} <ChevronRight size={14} aria-hidden="true" /></button>}
             {!simpleMode && pace && pace.allocationId !== runOutAlert?.allocationId && <p className="os-hint">{calendarPaceLine(pace)}</p>}
             {!simpleMode && againLine && <p className="os-hint">{againLine}</p>}
-            <div className="bf-hero-chips">
-              <button type="button" className="bf-hero-chip" aria-expanded={whereOpen} onClick={() => setWhereOpen((open) => !open)}>{t("Unde sunt banii · Mută")}</button>
-            </div>
-            {where && (
-              <div className="bf-money-where" style={{ display: "grid", gap: 8, marginTop: 10 }} role="region" aria-label={t("Unde sunt banii")}>
-                <p className="bf-kicker">{t("PE SURSE")}</p>
-                <ul className="bf-money-where-list" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
-                  {where.sources.map((row) => <li key={row.id} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>{row.name}{row.owner && !row.name.includes(row.owner) ? ` · ${row.owner}` : ""}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{money(row.balance)}</b></li>)}
-                  {!where.sources.length && <li><span>{t("Nicio sursă cu bani acum.")}</span></li>}
-                </ul>
-                {where.categories.length > 0 && <>
-                  <p className="bf-kicker">{t("CHELTUIT LUNA ASTA, PE CATEGORII")}</p>
-                  <ul className="bf-money-where-list" style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 4 }}>
-                    {where.categories.map(([name, amount]) => <li key={name} style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>{t(name)}</span><b style={{ fontVariantNumeric: "tabular-nums" }}>{money(amount)}</b></li>)}
-                  </ul>
-                </>}
-                <button type="button" className="bf-primary full" onClick={() => window.dispatchEvent(new Event("buget-familie:open-transfer"))}>{t("Mută bani sau dă cuiva")}</button>
-                <p className="bf-helper">{t("De exemplu, dai bani soției: alegi din ce sursă și „Cash” al ei. Nu e o cheltuială, doar se mută banii.")}</p>
-              </div>
-            )}
-            {(!simpleMode || pockets.length > 1) && (
+            {!simpleMode && (
               <div className="bf-hero-chips">
                 {!simpleMode && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-afford"))}>{t("Îmi permit…?")}</button>}
                 {!simpleMode && weekRow && <button type="button" className="bf-hero-chip" aria-expanded={weekOpen} onClick={() => setWeekOpen((open) => !open)}>{t("Față de săptămâna trecută")}</button>}
-                {((!simpleMode && (focusGoal || trueExpense || weekShare)) || pockets.length > 1) && <button type="button" className="bf-hero-chip" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>{t("Obiectiv și unde stau banii")}</button>}
+                {!simpleMode && (focusGoal || trueExpense || weekShare) && <button type="button" className="bf-hero-chip" aria-expanded={moneyOpen} onClick={() => setMoneyOpen((open) => !open)}>{t("Obiectiv și evenimente")}</button>}
               </div>
             )}
             {weekOpen && !simpleMode && weekRow && (
@@ -580,17 +580,6 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               </button>
             )}
             {moneyOpen && !simpleMode && weekShare && <p className="os-hint">{weekShare}</p>}
-            {moneyOpen && pockets.length > 1 && (
-              <ul className="bf-pocket-row" aria-label={t("Unde stau banii")}>
-                {pockets.map((pocket) => (
-                  <li key={pocket.kind} className={`bf-pocket ${pocket.kind}`}>
-                    <SourceGlyph kind={pocket.kind} />
-                    <b>{money(pocket.amount)}</b>
-                    <small>{sourceKindName[pocket.kind]}</small>
-                  </li>
-                ))}
-              </ul>
-            )}
             {!signals[0] && !held && <p className="os-next-line">{t("Următoarea acțiune: înregistrează o mișcare.")}</p>}
           </>
         )}

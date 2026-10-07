@@ -91,13 +91,17 @@ export function HouseOfferCard({ data }: { data: AppData }) {
       setSends(noteOfferSend());
     }
   };
+  // Până pornește plata nu vorbim de abonament, preț sau Google Play: pare că se cere bani pentru ceva ce nu se poate cumpăra.
+  const pricing = BILLING_LIVE && !hasActiveFamilie();
+  // Al doilea telefon e deja în cameră (sau a notat): nu-l mai invităm.
+  const familyConnected = earned || (data.settings.syncDevices || []).filter((device) => !device.revokedAt).length >= 2;
   const range = `${formatDate(check.start, { day: "2-digit", month: "short" })} – ${formatDate(check.end, { day: "2-digit", month: "short" })}`;
   const sign = check.cashflow < 0 ? "−" : "+";
 
   return (
-    <section className="bf-house-offer" aria-label={t("Oferta pentru casă")}>
-      <p className="bf-kicker">{t("CUM PLĂTEȘTE CASA")}</p>
-      <h2>{t("Trimite săptămâna")}</h2>
+    <section className="bf-house-offer" aria-label={t("Bilanțul săptămânii")}>
+      <p className="bf-kicker">{t("SĂPTĂMÂNA ASTA")}</p>
+      <h2>{t("Bilanțul săptămânii")}</h2>
       <p className="bf-house-offer-range">{range}</p>
       <p className="bf-house-offer-line">{headline.title}</p>
       {canSend ? (
@@ -110,16 +114,7 @@ export function HouseOfferCard({ data }: { data: AppData }) {
         <p className="bf-house-offer-line">{t("Săptămâna asta nu are încă mișcări.")}</p>
       )}
       {blocked && <FamilieUpgrade reason={blocked === "sync" ? "sync" : "share"} />}
-      <p className="bf-house-offer-ask">{ask}</p>
-      <div className="bf-house-offer-phone">
-        <p className="bf-kicker">{t("AL DOILEA TELEFON")}</p>
-        <p>{earned
-          ? t("Un singur abonament pe an ține ambele telefoane. Registrul rămâne pe telefon dacă anulezi.")
-          : t("Pune aplicația și pe telefonul celălalt. Abonamentul se cere abia după ce notează acolo.")}</p>
-        <button type="button" className="bf-house-offer-go" onClick={openSecondPhone}>
-          <Smartphone size={16} aria-hidden="true" /> {t("Pune-l pe telefonul celălalt")}
-        </button>
-      </div>
+      {pricing && <p className="bf-house-offer-ask">{ask}</p>}
       {draft && (
         <label className="bf-house-offer-draft">
           {t("Nu s-a putut copia. Selectează textul și trimite-l din WhatsApp.")}
@@ -131,9 +126,10 @@ export function HouseOfferCard({ data }: { data: AppData }) {
           <Share2 size={16} aria-hidden="true" />
           {shareState === "copied" ? t("Copiat") : shareState === "shared" ? t("Trimis") : t("Trimite pe WhatsApp")}
         </button>
-        <button type="button" className="bf-house-offer-plan" onClick={openFamilieCatalog}>{t("Vezi planul Familia")}</button>
+        {!familyConnected && <button type="button" className="bf-house-offer-plan" onClick={openSecondPhone}><Smartphone size={16} aria-hidden="true" /> {t("Invită partenerul")}</button>}
+        {pricing && <button type="button" className="bf-house-offer-plan" onClick={openFamilieCatalog}>{t("Vezi planul Familia")}</button>}
       </div>
-      <p className="bf-house-offer-note">{t("Plata se face în Google Play, pe telefon. Aici nu se ia niciun ban.")}</p>
+      {pricing && <p className="bf-house-offer-note">{t("Plata se face în Google Play, pe telefon. Aici nu se ia niciun ban.")}</p>}
     </section>
   );
 }

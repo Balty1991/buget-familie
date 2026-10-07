@@ -44,7 +44,7 @@ export const automaticTheme = (minutes: number, times: ThemeScheduleTimes): Them
  */
 export const fmt = { format: lei };
 export const fmtExact = { format: (value: number) => moneyFormat(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
-export const sourceKindName: Record<"card" | "cash" | "meal" | "transfer", string> = { get card() { return t("Card"); }, get cash() { return t("Cash"); }, get meal() { return t("Bonuri de masă"); }, get transfer() { return t("Transfer"); } };
+export const sourceKindName: Record<"card" | "cash" | "meal" | "voucher" | "transfer", string> = { get card() { return t("Card"); }, get cash() { return t("Cash"); }, get meal() { return t("Bonuri de masă"); }, get voucher() { return t("Voucher (SGR, cadou)"); }, get transfer() { return t("Transfer"); } };
 export const money = (value: number) => fmt.format(Number.isFinite(value) ? value : 0);
 export const dateText = (value: string, full = false) => formatDate(value, full ? { day: "2-digit", month: "long", year: "numeric" } : { day: "2-digit", month: "short" });
 

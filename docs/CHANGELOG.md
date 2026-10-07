@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.179
+
+Trecere prin toată aplicația, ca utilizator:
+- Astăzi: cardul „Cum plătește casa” devine „Bilanțul săptămânii”: rezumat + „Trimite pe WhatsApp”. Fără texte despre abonament, preț sau Google Play cât plata e oprită; „Invită partenerul” doar dacă al doilea telefon nu e încă în cameră. Toate ofertele „Familia” tac cât plata e oprită.
+- Astăzi: „Unde sunt banii · Mută” stă deasupra lui „Notează”, deci se vede și când restul zilei e strâns (de aceea nu se găsea mutarea). Eticheta cifrei spune mereu ce e cifra; partenerul care n-a notat apare ca notă dedesubt, fără „ea”. Chip-ul vechi „Obiectiv și unde stau banii” devine „Obiectiv și evenimente”.
+- Plicuri: lângă „Nerepartizați”, „Mută bani sau dă cuiva”. Notează: „Mută bani: cash, între carduri sau partenerului”.
+- Mișcări: un bon pe articole nu mai înghesuie produsele în rând (sumele erau tăiate); scrie „Bon pe articole · N produse”.
+- Sincronizare: fără golul mare din cardul de sus. De verificat: coada goală are bifă, nu X. Setări: „Confidențialitate” (fără „abonamentul Familia”) cât plata e oprită.
+- Surse: tip nou „Voucher (SGR, cadou)”; la sursă nouă se poate alege „Familie / comun”.
+- Cheltuială: „+ Plătit din două surse (ex. voucher și cash)”: o parte dintr-o sursă, restul din alta; se salvează două cheltuieli legate, cu nota bonului.
+- Data: buton de calendar lângă câmp (se poate și scrie).
+- Venit: exemplul de denumire e „Salariu, Voucher SGR”, nu „Cumpărături Lidl”. „Cheltuială” / „Venit” selectat are text alb, nu verde pe verde.
+- Articolele de pe bon își ghicesc categoria după nume: vodca → Băuturi, Kinder → Dulciuri, garanția SGR și sacoșa → categoria nouă „SGR și sacoșe”.
+- Curățenie CSS: regulile pozei de bon și ale rândului vechi de surse, rămase fără folos.
+
 ## 1.1.178
 
 - Notificarea „Azi la mâncare” poartă data locală a zilei, nu cea UTC. Pe fusurile la est de UTC (testul de deploy rulează pe Pacific/Auckland), 8:30 cădea în ziua de ieri și deploy-ul site-ului pica din 1.1.175.

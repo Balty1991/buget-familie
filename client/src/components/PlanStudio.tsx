@@ -464,6 +464,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
         {availableSources > 0 && <>
           <i className="bf-plan-header-bar" role="progressbar" aria-label={t("Procentul banilor repartizați în plicuri")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(allocatedRatio * 100)}><em style={{ width: `${Math.round(allocatedRatio * 100)}%` }} /></i>
           <small className="bf-plan-header-eq">{t("{available} disponibili = {placed} în plicuri + {free} liberi · {percent}% așezat", { available: money(availableSources), placed: money(Math.max(0, availableSources - Math.max(0, unrepartized))), free: money(Math.max(0, unrepartized)), percent: Math.round(allocatedRatio * 100) })}</small>
+          <button type="button" className="bf-link-button" onClick={() => window.dispatchEvent(new Event("buget-familie:open-transfer"))}>{t("Mută bani sau dă cuiva")}</button>
         </>}
       </div>
     </header>

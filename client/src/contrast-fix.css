@@ -1096,3 +1096,5 @@ body .bf-weekly-tranche-notice > div > span {
 @media (max-width: 760px) {
   html body .os-shell .bf-today-add.bf-os-decide,html body .os-shell .bf-os-actions { display: none; }
 }
+/* Butonul selectat (Cheltuială / Venit): fundal verde închis, text alb (culoarea textului rămânea verde pe verde). */
+html:is(.theme-white, .theme-navy) body :is(.bf-modal, .bf-quick-entry-panel) .bf-segment button.active { background-color: var(--cf-primary-strong, #1f5240) !important; color: var(--cf-on-primary, #fff) !important; }
