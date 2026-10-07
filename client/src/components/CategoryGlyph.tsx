@@ -1,4 +1,4 @@
-import { Baby, GraduationCap, Bus, Candy, CreditCard, Droplets, Ellipsis, HeartPulse, House, Landmark, ShoppingCart, Ticket, Wine, type LucideIcon } from "lucide-react";
+import { Baby, GraduationCap, Bus, Candy, CreditCard, Droplets, Ellipsis, HeartPulse, House, Landmark, Recycle, Shirt, ShoppingBag, ShoppingCart, Ticket, Wine, type LucideIcon } from "lucide-react";
 
 const glyphs: Record<string, LucideIcon> = {
   "Alimente": ShoppingCart,
@@ -14,6 +14,9 @@ const glyphs: Record<string, LucideIcon> = {
   "Rate produse": Landmark,
   "Credite": Landmark,
   "Educație": GraduationCap,
+  "Haine": Shirt,
+  "SGR": Recycle,
+  "Sacoșe": ShoppingBag,
   "Altele": Ellipsis,
 };
 

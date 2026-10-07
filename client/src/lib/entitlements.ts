@@ -89,6 +89,8 @@ export const canUseFamilySync = () => isFamilie();
 /** „Cine cui dă” are sens pentru orice cuplu, și pe un singur telefon. */
 export const canUseSettleUp = () => true;
 export const canUseCycleClose = () => isFamilie();
+/** Scanarea bonului costă pe fiecare poză: e în Familia (și în proba de 30 de zile). */
+export const canScanReceipt = () => isFamilie();
 export const aiDailyLimit = () => planLimits(currentPlan()).aiOnlinePerDay;
 
 export function openFamilieCatalog() {

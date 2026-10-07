@@ -2,7 +2,7 @@
  * Atelierul Financiar — tablou mobil pentru o persoană sau o gospodărie, cu decizia următoare în prim-plan.
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
-import { splitGroupIds } from "@/lib/split-payment";
+import { splitGroupIds, storedMove } from "@/lib/split-payment";
 import { readAutoBackup, writeAutoBackup } from "@/lib/auto-backup";
 import { saveLiveBackup } from "@/lib/app-storage";
 import { applyDynamicColor, haptic, readDynamicColor } from "@/lib/native-feel";
@@ -23,6 +23,7 @@ import { safeSetItem } from "@/lib/safe-storage";
 import { closeTopDialog } from "@/hooks/use-focus-trap";
 import { BrandMark } from "@/components/BrandMark";
 import type { FinancialUpdate, GuidedRevert, NaturalDraft } from "@/components/AICompanion";
+import type { ScanPrefill } from "@/lib/receipt-scan";
 import { isAppLockEnabled } from "@/lib/app-lock";
 import { useToday } from "@/hooks/useToday";
 import { safeImport, warmLazy } from "@/lib/lazy-safe";
@@ -218,6 +219,7 @@ export default function Home() {
   }, []);
   useEffect(() => { if (modal !== "quick") { setQuickKind(undefined); setQuickMoving(false); } }, [modal]);
   const [editTx, setEditTx] = useState<Transaction>();
+  const [scanPrefill, setScanPrefill] = useState<ScanPrefill>();
   const [editGoal, setEditGoal] = useState<Debt | SavingsGoal>();
   const receiptStorageNotice = "";
   const legacyReceiptMigrationStarted = useRef(false);
@@ -247,7 +249,7 @@ export default function Home() {
     const id = window.setTimeout(run, 1200);
     return () => window.clearTimeout(id);
   }, [data, storageReady]);
-  // Bonurile se scriu doar de mână. Pozele rămase din versiunile vechi se șterg o dată de pe telefon.
+  // Pozele bonurilor nu se păstrează. Cele rămase din versiunile vechi se șterg o dată de pe telefon.
   useEffect(() => { if (legacyReceiptMigrationStarted.current || !storageReady) return; legacyReceiptMigrationStarted.current = true; void clearReceiptImageStorage().catch(() => undefined); if (data.receipts.some((receipt) => receipt.imageData || receipt.imageData2 || receipt.imageKeys?.length)) setData((current) => ({ ...current, receipts: current.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...receipt }) => receipt) })); }, [data.receipts, storageReady]);
   useEffect(() => { if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); const openTutorial = () => { setMore("guide"); go("utilities"); }; window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); window.addEventListener("buget-familie:open-usage-tutorial", openTutorial); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) safeSetItem(window.localStorage, "buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted && !setupOffered.current) { setupOffered.current = true; safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true"); setSetupOpen(true); } return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); window.removeEventListener("buget-familie:open-usage-tutorial", openTutorial); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
   useEffect(() => {
@@ -692,7 +694,7 @@ export default function Home() {
       };
     });
   };
-  const openTx = (item?: Transaction) => { setEditTx(item); setModal(item ? "transaction" : "quick"); };
+  const openTx = (item?: Transaction) => { setEditTx(item ? storedMove(data.transactions, item) : item); setModal(item ? "transaction" : "quick"); };
   // Widgetul și dala din Setări rapide deschid direct ecranul cerut, fără pași intermediari.
   useEffect(() => observeQuickActions((action) => {
     if (action === "receipt") { setModal("receipt"); return; }
@@ -830,8 +832,8 @@ export default function Home() {
     })}</nav>}
     {!simpleMode && !memberModeActive && guideOn && <Suspense fallback={null}><AICompanion initiallyOpen data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>}
     {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={activeTheme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={null}><FirstRunSetup data={data} onChange={applyData} onClose={() => { setSetupOpen(false); setDemo(isDemoMode()); }} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={() => { setMore("sync"); go("utilities"); }} /></Suspense>}
-    {modal === "quick" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialMoving={quickMoving} onAddSource={(source) => update((current) => ({ ...current, settings: { ...current.settings, paymentSources: [...current.settings.paymentSources, source] } }))} autoVoice={quickVoice} initialKind={quickKind} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); setQuickKind(undefined); setQuickVoice(false); }} onMore={(draft) => { setEditTx(draft); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
-    {modal === "transaction" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); }} /></Suspense>}
+    {modal === "quick" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialMoving={quickMoving} onAddSource={(source) => update((current) => ({ ...current, settings: { ...current.settings, paymentSources: [...current.settings.paymentSources, source] } }))} autoVoice={quickVoice} initialKind={quickKind} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); setQuickKind(undefined); setQuickVoice(false); }} onMore={(draft, scan) => { setEditTx(draft); setScanPrefill(scan); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
+    {modal === "transaction" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} scan={scanPrefill} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); setScanPrefill(undefined); }} /></Suspense>}
     {modal === "receipt" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim bonul…")}</div></div>}><ReceiptForm data={data} onSave={saveReceipt} onClose={() => setModal(null)} /></Suspense>}
     {modal === "debt" && <Suspense fallback={null}><GoalForm data={data} type="debt" item={editGoal} onSave={saveDebt} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}
     {modal === "saving" && <Suspense fallback={null}><GoalForm data={data} type="saving" item={editGoal} onSave={saveSaving} onClose={() => { setModal(null); setEditGoal(undefined); }} /></Suspense>}

@@ -213,7 +213,7 @@ const ITEMS: Array<[string, string, string?]> = [
   ["Motorină", "Transport", "motorina"],
   ["Parcare", "Transport"],
   ["Bilet transport", "Transport", "bilet metro stb"],
-  ["Garanție SGR", "Alimente", "garantie pet sgr"],
+  ["Garanție SGR", "SGR", "garantie pet sgr"],
 ];
 
 const RULES: Array<[RegExp, string]> = [

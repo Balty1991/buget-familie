@@ -133,7 +133,7 @@ jobs:
         continue-on-error: true
         run: |
           set -uo pipefail
-          for group in aiGuideQuota aiGuideQuotaUnverified playVerifyQuota playRtdnQuota appFeedbackQuota; do
+          for group in aiGuideQuota aiGuideQuotaUnverified playVerifyQuota playRtdnQuota appFeedbackQuota readReceiptQuota; do
             gcloud firestore fields ttls update expireAt --collection-group="$group" --enable-ttl --async --project "$FIREBASE_PROJECT_ID" --quiet \
               || echo "::warning::TTL pentru $group nu s-a putut porni (rolul Cloud Datastore Index Admin pe contul de serviciu, sau Firebase Console → Firestore → TTL)."
           done
@@ -186,3 +186,13 @@ jobs:
             [ "$try" = "1" ] && sleep 20
           done
           exit 1
+
+      - name: Check readReceipt endpoint
+        run: |
+          set -euo pipefail
+          # Fără identitatea telefonului, funcția trebuie să refuze (401) înainte să cheme modelul.
+          status=$(curl -sS -m 30 -o /tmp/receipt-health.json -w '%{http_code}' \
+            -X POST "https://${FUNCTIONS_REGION}-${FIREBASE_PROJECT_ID}.cloudfunctions.net/readReceipt" \
+            -H 'content-type: application/json' --data '{}' || echo 000)
+          echo "readReceipt HTTP $status"; cat /tmp/receipt-health.json || true
+          [ "$status" = "401" ]

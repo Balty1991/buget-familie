@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.186
+
+- **Scanează bonul**: în Notează (și în Adaugă mișcare), o poză la bon (sau din galerie) scoate toate produsele, fiecare cu suma și categoria lui (alcool → Băuturi, ciocolată și napolitane → Dulciuri, apă îmbuteliată → Apă, garanția SGR → SGR, sacoșa → Sacoșe, mezeluri → Alimente). Reducerile apar pe rândul produsului („… × 6 (reducere −1,74)”), cu suma plătită, iar totalul reducerilor apare deasupra. Se completează singure totalul, data, magazinul și, la plata din două surse (voucher Returo + numerar), ambele surse cu sumele lor. Nimic nu se salvează până nu apeși Salvează.
+- Citirea o face Google Gemini, prin funcția noastră `readReceipt`. La prima folosire aplicația cere acordul. Poza se micșorează pe telefon, pleacă o dată și nu se păstrează nicăieri. Limită: 25 de bonuri pe zi pe telefon.
+- Categorie nouă **Haine** (haine, încălțăminte, ciorapi, teniși; magazine ca Sinsay, H&M, Zara), cu iconiță. Dacă o familie își făcuse deja o categorie proprie „Haine”, nu mai apare de două ori. SGR și Sacoșe au și ele iconițe.
+- Reparat: corectarea unui bon plătit din două surse, deschis din Mișcări sau de pe Astăzi, arăta totalul greșit (39,76 + 11,26 = 51,02), pentru că formularul pornea de la rândul unit și aduna încă o dată partea a doua. Acum pornește de la mișcarea salvată: 39,76, cu 28,50 + 11,26. Un câmp de afișare care ajunsese în date la o astfel de corectură se curăță singur.
+- Microfonul („Spune ce ai cumpărat”) apare din nou la Cheltuială în Notează. Dispăruse în 1.1.163, la scurtarea ecranului, și rămăsese doar la Venit, cu text de cheltuială. La Venit scrie acum „Spune ce a intrat”, iar ce spui acolo rămâne venit.
+- SGR și Sacoșe sunt acum două categorii separate. Ce era deja notat la „SGR și sacoșe” se mută singur: sacoșele la Sacoșe, restul la SGR.
+- „SGR” scris pe eticheta unei sticle („Apă plată PET 2L SGR”) nu mai trimite produsul la SGR; doar rândul de garanție merge acolo.
+- Avertisment când suma articolelor nu bate cu totalul sau când poza a fost greu de citită.
+- Scanarea face parte din Familia (inclusă în proba de 30 de zile); până la pornirea plăților e deschisă tuturor. Nu apare în modul „doar offline”.
+- Politica de confidențialitate, pagina Despre și ghidul AI spun acum cum funcționează scanarea; a dispărut o mențiune rămasă despre descărcarea programului vechi de citire de pe jsDelivr.
+
 ## 1.1.185
 
 - Bon plătit din două surse = un singur rând: în Mișcări și pe Astăzi apare o dată, cu totalul (ex. Exflor −39,76) și ambele surse („Voucher SGR + Cash Alin”). În spate rămân două mișcări, câte una pe sursă, ca soldurile să fie corecte. Funcționează și pentru perechile făcute înainte.

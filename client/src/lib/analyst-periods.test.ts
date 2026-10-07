@@ -58,6 +58,6 @@ describe("răspunsuri pe perioade", () => {
   });
 
   it("cât a dat Ana pe haine anul ăsta", () => {
-    expect(analyze("cat a dat Ana pe haine anul asta?", house(), ASOF)?.headline).toMatch(/^400 RON pe haine, Ana/);
+    expect(analyze("cat a dat Ana pe haine anul asta?", house(), ASOF)?.headline).toMatch(/^400 RON pe haine, Ana/i);
   });
 });
