@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.185
+
+- Bon plătit din două surse = un singur rând: în Mișcări și pe Astăzi apare o dată, cu totalul (ex. Exflor −39,76) și ambele surse („Voucher SGR + Cash Alin”). În spate rămân două mișcări, câte una pe sursă, ca soldurile să fie corecte. Funcționează și pentru perechile făcute înainte.
+- Ștergerea unui astfel de bon scoate ambele părți (cu „Anulează”).
+- Numărul de mișcări de azi numără bonul o dată.
+
 ## 1.1.184
 
 - Bon plătit din două surse: cele două cheltuieli sunt legate (`splitId`). Corectarea oricăreia deschide tot bonul: suma totală (ex. 39,76), „Plătit din două surse” deschis, cu ambele sume (28,50 voucher, 11,26 cash). Salvarea le actualizează pe amândouă, fără a treia mișcare; nota „Bon de …” se înlocuiește, nu se adaugă din nou.
