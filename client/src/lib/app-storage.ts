@@ -320,6 +320,7 @@ export type BackupIntent = "save" | "share";
 
 type NativeBackupPlugin = {
   saveBackupToDownloads: (options: { name: string; data: string }) => Promise<{ path: string }>;
+  writeLiveBackup?: (options: { name: string; data: string }) => Promise<{ path: string }>;
 };
 
 let nativeBackupPlugin: NativeBackupPlugin | null | undefined;
@@ -409,6 +410,16 @@ async function saveNatively(text: string, name: string, intent: BackupIntent): P
  * Copia automată, pe Android: scrie direct în Descărcări, fără nicio fereastră. Dacă nu se
  * poate, aruncă — nu deschide foaia de partajare peste ce face omul în aplicație.
  */
+/** Copia la fiecare modificare: același fișier, rescris, în Documente/Buget Familie. */
+export const LIVE_BACKUP_NAME = "buget-familie-automat.json";
+export async function saveLiveBackup(data: AppData): Promise<string> {
+  if (!isNativeApp()) throw new Error(t("Doar pe telefon, în aplicație."));
+  const plugin = await getNativeBackupPlugin();
+  if (!plugin?.writeLiveBackup) throw new Error(t("Actualizează aplicația ca să folosești salvarea automată."));
+  const result = await plugin.writeLiveBackup({ name: LIVE_BACKUP_NAME, data: JSON.stringify(makeBackup(data), null, 2) });
+  return result.path;
+}
+
 export async function saveBackupSilently(data: AppData, name = backupFileName()): Promise<string> {
   if (!isNativeApp()) throw new Error(t("Doar pe telefon, în aplicație."));
   return saveToPublicDownloads(JSON.stringify(makeBackup(data), null, 2), name);

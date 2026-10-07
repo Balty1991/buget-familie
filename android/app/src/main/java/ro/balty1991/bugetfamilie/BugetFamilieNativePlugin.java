@@ -153,6 +153,62 @@ public class BugetFamilieNativePlugin extends Plugin {
     }
   }
 
+  /**
+   * Copia „la fiecare modificare”: un singur fișier în Documente/Buget Familie, rescris de fiecare dată
+   * (nu câte un fișier nou). Pe Android 10+ prin MediaStore: aplicația își găsește propriul fișier și îl
+   * suprascrie; după o reinstalare fișierul vechi nu mai e al ei, așa că se face unul nou, alături.
+   */
+  @PluginMethod
+  public void writeLiveBackup(PluginCall call) {
+    final String name = call.getString("name");
+    final String data = call.getString("data");
+    if (name == null || data == null || !name.endsWith(".json") || name.contains("/") || name.contains("\\")) {
+      call.reject("name/data invalid");
+      return;
+    }
+    try {
+      final byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+      final String folder = Environment.DIRECTORY_DOCUMENTS + "/" + LIVE_FOLDER;
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        final ContentResolver resolver = getContext().getContentResolver();
+        final Uri collection = MediaStore.Files.getContentUri("external");
+        Uri target = null;
+        final String[] projection = { MediaStore.MediaColumns._ID };
+        final String selection = MediaStore.MediaColumns.RELATIVE_PATH + "=? AND " + MediaStore.MediaColumns.DISPLAY_NAME + "=?";
+        try (Cursor cursor = resolver.query(collection, projection, selection, new String[] { folder + "/", name }, null)) {
+          if (cursor != null && cursor.moveToFirst()) target = ContentUris.withAppendedId(collection, cursor.getLong(0));
+        }
+        if (target == null) {
+          final ContentValues values = new ContentValues();
+          values.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+          values.put(MediaStore.MediaColumns.MIME_TYPE, "application/json");
+          values.put(MediaStore.MediaColumns.RELATIVE_PATH, folder);
+          target = resolver.insert(collection, values);
+          if (target == null) throw new IllegalStateException("MediaStore insert a eșuat");
+        }
+        try (OutputStream out = resolver.openOutputStream(target, "wt")) {
+          if (out == null) throw new IllegalStateException("openOutputStream a eșuat");
+          out.write(bytes);
+          out.flush();
+        }
+      } else {
+        final File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), LIVE_FOLDER);
+        if (!dir.exists() && !dir.mkdirs()) throw new IllegalStateException("Nu am putut crea folderul Documente/" + LIVE_FOLDER);
+        try (FileOutputStream out = new FileOutputStream(new File(dir, name), false)) {
+          out.write(bytes);
+          out.flush();
+        }
+      }
+      final JSObject result = new JSObject();
+      result.put("path", "Documents/" + LIVE_FOLDER + "/" + name);
+      call.resolve(result);
+    } catch (Exception error) {
+      call.reject(error.getMessage() != null ? error.getMessage() : "salvare eșuată", error);
+    }
+  }
+
+  private static final String LIVE_FOLDER = "Buget Familie";
+
   /** Copiile automate au nume cu data; rămân doar ultimele KEEP_AUTO, ca să nu se adune în Descărcări. */
   private static final String AUTO_PREFIX = "buget-familie-copie-";
   private static final int KEEP_AUTO = 4;

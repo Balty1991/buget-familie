@@ -2,6 +2,8 @@
  * Atelierul Financiar — tablou mobil pentru o persoană sau o gospodărie, cu decizia următoare în prim-plan.
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
+import { readAutoBackup, writeAutoBackup } from "@/lib/auto-backup";
+import { saveLiveBackup } from "@/lib/app-storage";
 import { applyDynamicColor, haptic, readDynamicColor } from "@/lib/native-feel";
 import { askConfirm } from "@/lib/confirm-dialog";
 import { isDemoMode, setDemoMode } from "@/lib/demo-data";
@@ -747,6 +749,16 @@ export default function Home() {
   }, [data, memberModeActive, today]);
   // Copia săptămânală, pe telefon: o dată la 7 zile, după ce omul a spus „da”.
   useEffect(() => { void import("@/components/AutoBackupCard").then(({ runAutoBackupIfDue }) => runAutoBackupIfDue(data)).catch(() => undefined); }, [data]);
+  /** Salvarea automată la fiecare modificare: la 3 secunde după ultima schimbare, un singur fișier rescris. */
+  useEffect(() => {
+    if (!storageReady || !isNativeApp() || !data.transactions.length || !readAutoBackup().live) return;
+    const id = window.setTimeout(() => {
+      void saveLiveBackup(data)
+        .then((path) => writeAutoBackup({ liveAt: new Date().toISOString(), livePath: path, liveError: undefined }))
+        .catch((error) => writeAutoBackup({ liveError: error instanceof Error ? error.message : t("Salvarea automată a eșuat.") }));
+    }, 3000);
+    return () => window.clearTimeout(id);
+  }, [data, storageReady]);
   useEffect(() => {
     const expense = data.settings.quickTemplates.filter((item) => item.kind !== "income").slice(0, 3);
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));

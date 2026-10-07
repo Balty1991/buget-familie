@@ -4621,4 +4621,11 @@ export const en: Record<string, string> = {
   "Nu mută bani, nu se leagă de bancă și nu urmărește pe nimeni. E caietul de buget al familiei: vedeți doar ce notați voi.": "It moves no money, does not connect to your bank and tracks no one. It is the family budget notebook: you only see what you log.",
   "Instrumente avansate": "Advanced tools",
   "grafice, tendințe, plan pe un an, investiții, prețuri": "charts, trends, one-year plan, investments, prices",
+  "Actualizează aplicația ca să folosești salvarea automată.": "Update the app to use automatic saving.",
+  "Salvarea automată a eșuat.": "Automatic saving failed.",
+  "Salvare automată la fiecare modificare": "Automatic save after every change",
+  "Fișierul {file} din Documente/Buget Familie se rescrie singur la câteva secunde după fiecare schimbare. Îl imporți oricând din Backup.": "The file {file} in Documents/Buget Familie is rewritten a few seconds after every change. Import it any time from Backup.",
+  "Doar în aplicația de pe telefon: browserul nu poate scrie singur fișiere.": "Only in the phone app: the browser cannot write files on its own.",
+  "Ultima salvare: {time}.": "Last save: {time}.",
+  "N-a mers ultima salvare: {reason}": "The last save failed: {reason}",
 };

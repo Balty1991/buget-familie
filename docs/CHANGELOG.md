@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.182
+
+- Backup: comutator nou „Salvare automată la fiecare modificare” (Setări → Copii de siguranță). În aplicația Android, fișierul `buget-familie-automat.json` din **Documente/Buget Familie** se rescrie singur la 3 secunde după fiecare schimbare (un singur fișier, nu câte unul nou). Arată ora ultimei salvări și motivul, dacă n-a mers. Se importă ca orice backup.
+- Nativ: metoda `writeLiveBackup` (MediaStore, Documente/Buget Familie; suprascrie fișierul propriu, cu „wt”).
+- Copia săptămânală din Descărcări rămâne, separată.
+
 ## 1.1.181
 
 Creștere și încredere:
