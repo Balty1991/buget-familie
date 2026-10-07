@@ -10,12 +10,13 @@ import { safeSetItem } from "./safe-storage";
 export const AUTO_BACKUP_KEY = "buget-familie:auto-backup-v1";
 export const AUTO_BACKUP_DAYS = 7;
 
-export type AutoBackupPrefs = { enabled: boolean; asked: boolean; lastAt?: string; lastPath?: string; lastError?: string };
+/** `live`: copia rescrisă după fiecare modificare, în Documente/Buget Familie (doar în aplicația Android). */
+export type AutoBackupPrefs = { enabled: boolean; asked: boolean; lastAt?: string; lastPath?: string; lastError?: string; live?: boolean; liveAt?: string; livePath?: string; liveError?: string };
 
 export const readAutoBackup = (): AutoBackupPrefs => {
   try {
     const parsed = JSON.parse(window.localStorage.getItem(AUTO_BACKUP_KEY) || "{}") as Partial<AutoBackupPrefs>;
-    return { enabled: parsed.enabled === true, asked: parsed.asked === true, lastAt: typeof parsed.lastAt === "string" ? parsed.lastAt : undefined, lastPath: typeof parsed.lastPath === "string" ? parsed.lastPath : undefined, lastError: typeof parsed.lastError === "string" ? parsed.lastError : undefined };
+    return { enabled: parsed.enabled === true, asked: parsed.asked === true, lastAt: typeof parsed.lastAt === "string" ? parsed.lastAt : undefined, lastPath: typeof parsed.lastPath === "string" ? parsed.lastPath : undefined, lastError: typeof parsed.lastError === "string" ? parsed.lastError : undefined, live: parsed.live === true, liveAt: typeof parsed.liveAt === "string" ? parsed.liveAt : undefined, livePath: typeof parsed.livePath === "string" ? parsed.livePath : undefined, liveError: typeof parsed.liveError === "string" ? parsed.liveError : undefined };
   } catch {
     return { enabled: false, asked: false };
   }
