@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "functions/**"
+      - "e2e/receipts/**"
+      - "e2e/receipt-smoke.mjs"
       - "firebase.json"
       - ".firebaserc"
       - ".github/workflows/deploy-firebase-functions.yml"
@@ -196,3 +198,6 @@ jobs:
             -H 'content-type: application/json' --data '{}' || echo 000)
           echo "readReceipt HTTP $status"; cat /tmp/receipt-health.json || true
           [ "$status" = "401" ]
+
+      - name: Scanează bonurile de test (e2e/receipts)
+        run: node e2e/receipt-smoke.mjs
