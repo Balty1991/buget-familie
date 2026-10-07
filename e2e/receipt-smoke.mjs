@@ -50,7 +50,7 @@ for (const file of readdirSync(dir).filter((name) => name.endsWith(".jpg")).sort
   }
   const { receipt } = body;
   const sum = Math.round(receipt.items.reduce((total, item) => total + item.amount, 0) * 100) / 100;
-  console.log(`magazin: ${receipt.store} · data: ${receipt.date} · total: ${receipt.total} · articole: ${sum} · încredere: ${receipt.confidence}`);
+  console.log(`model: ${receipt.model || "?"} · magazin: ${receipt.store} · data: ${receipt.date} · total: ${receipt.total} · articole: ${sum} · încredere: ${receipt.confidence}`);
   console.log(`plăți: ${receipt.payments.map((payment) => `${payment.method} ${payment.amount}`).join(", ")}`);
   for (const item of receipt.items) console.log(`  ${item.amount.toFixed(2).padStart(7)}  ${item.discount ? `(−${item.discount}) ` : ""}${item.name} [${item.category}] ← ${item.rawName}`);
   const problems = [];

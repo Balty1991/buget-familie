@@ -975,7 +975,35 @@ export const appFeedback = onRequest(
  * Contoarele țin doar câte cereri a făcut telefonul azi, fără conținut.
  * ──────────────────────────────────────────────────────────────────────────── */
 
-const RECEIPT_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
+/** Preferințele; lista reală vine de la Google (modelele vechi dispar și răspund 404). */
+const RECEIPT_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"];
+let receiptModelCache: { at: number; models: string[] } | null = null;
+
+/**
+ * Modelele Flash care chiar există pentru cheia asta, cele mai noi întâi. Lista se ține
+ * o oră pe instanță; dacă Google nu răspunde, rămân preferințele de mai sus.
+ */
+async function receiptModels(apiKey: string): Promise<string[]> {
+  if (receiptModelCache && Date.now() - receiptModelCache.at < 3_600_000) return receiptModelCache.models;
+  try {
+    const listed = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${encodeURIComponent(apiKey)}`, { signal: AbortSignal.timeout(5_000) });
+    if (!listed.ok) throw new Error(`list ${listed.status}`);
+    const body = (await listed.json()) as { models?: Array<{ name?: string; supportedGenerationMethods?: string[] }> };
+    const names = (body.models || [])
+      .filter((model) => model.supportedGenerationMethods?.includes("generateContent"))
+      .map((model) => String(model.name || "").replace(/^models\//, ""))
+      .filter((name) => /^gemini-.*flash/.test(name) && !/(image|tts|audio|live|embed|thinking|exp|preview-\d{2}-\d{2})/.test(name));
+    const version = (name: string) => Number(/gemini-(\d+(?:\.\d+)?)/.exec(name)?.[1] || 0);
+    const rank = (name: string) => (name === "gemini-flash-latest" ? 1000 : 0) + version(name) * 10 - (name.includes("lite") ? 5 : 0) - (name.includes("preview") ? 1 : 0);
+    const found = Array.from(new Set(names)).sort((a, b) => rank(b) - rank(a));
+    const models = Array.from(new Set([...found.filter((name) => !name.includes("lite")).slice(0, 2), ...found.filter((name) => name.includes("lite")).slice(0, 1)]));
+    receiptModelCache = { at: Date.now(), models: models.length ? models : RECEIPT_MODELS };
+  } catch (error) {
+    console.warn("receipt model list", error instanceof Error ? error.message : "unknown");
+    receiptModelCache = { at: Date.now(), models: RECEIPT_MODELS };
+  }
+  return receiptModelCache.models;
+}
 const RECEIPT_DAILY_CAP = Number(process.env.RECEIPT_DAILY_CAP || 1500);
 const RECEIPT_PER_PHONE_DAY = Number(process.env.RECEIPT_PER_PHONE_DAY || 25);
 const RECEIPT_IMAGE_MAX = 5_500_000;
@@ -1113,11 +1141,11 @@ function parseModelJson(raw: string): unknown {
   }
 }
 
-async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; data: string }, categories: string[], deadline: number): Promise<ScannedReceipt> {
+async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; data: string }, categories: string[], deadline: number): Promise<ScannedReceipt & { model: string }> {
   let lastStatus = 0;
   let lastDetail = "";
   const trail: string[] = [];
-  for (const model of RECEIPT_MODELS) {
+  for (const model of await receiptModels(apiKey)) {
     // Întâi cu schemă; dacă modelul o respinge (400) sau întoarce ceva ce nu se citește, fără schemă, cu forma în text.
     for (const structured of [true, false]) {
       const payload = {
@@ -1128,8 +1156,8 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
           maxOutputTokens: 8192,
           responseMimeType: "application/json",
           ...(structured ? { responseSchema: receiptSchema } : {}),
-          // Fără gândire: citirea e mai rapidă și nu consumă din tokenii răspunsului.
-          ...(model.startsWith("gemini-2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+          // Fără gândire pe 2.5: citirea e mai rapidă. Modelele noi își aleg singure.
+          ...(structured && model.startsWith("gemini-2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         },
       };
       let retry = false;
@@ -1153,7 +1181,9 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
           const candidate = body.candidates?.[0];
           const raw = candidate?.content?.parts?.filter((part) => !part.thought).map((part) => part.text || "").join("") || "";
           try {
-            return cleanScannedReceipt(parseModelJson(raw), categories);
+            const receipt = cleanScannedReceipt(parseModelJson(raw), categories);
+            console.info("receipt read", model, structured ? "schema" : "plain", receipt.items.length);
+            return { ...receipt, model };
           } catch {
             lastDetail = `bad json ${model} ${candidate?.finishReason || body.promptFeedback?.blockReason || ""} ${raw.slice(0, 80)}`;
             trail.push(`${model}/${structured ? "s" : "p"}:json-${candidate?.finishReason || body.promptFeedback?.blockReason || "?"}`);
@@ -1245,7 +1275,7 @@ export const readReceipt = onRequest(
         console.error("readReceipt failure", err.status, err.message.slice(0, 200));
         const busy = err.status === 429 || err.status === 503;
         // Motivul scurt (modele încercate și coduri) ajunge pe ecran ca omul să-l poată trimite; fără cheie și fără conținutul bonului.
-        const reason = err.message.split(" | ")[0].slice(0, 120);
+        const reason = err.message.slice(0, 160);
         response.status(busy ? 429 : 502).json({ error: busy ? "Scanarea e ocupată acum. Mai încearcă peste un minut." : "Nu am putut citi bonul acum. Mai încearcă o dată.", code: busy ? "busy" : "upstream", reason });
       }
     });
