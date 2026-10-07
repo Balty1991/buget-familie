@@ -976,7 +976,7 @@ export const appFeedback = onRequest(
  * ──────────────────────────────────────────────────────────────────────────── */
 
 /** Preferințele; lista reală vine de la Google (modelele vechi dispar și răspund 404). */
-const RECEIPT_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"];
+const RECEIPT_MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest", "gemini-2.5-flash"];
 let receiptModelCache: { at: number; models: string[] } | null = null;
 
 /**
@@ -996,7 +996,9 @@ async function receiptModels(apiKey: string): Promise<string[]> {
     const version = (name: string) => Number(/gemini-(\d+(?:\.\d+)?)/.exec(name)?.[1] || 0);
     const rank = (name: string) => (name === "gemini-flash-latest" ? 1000 : 0) + version(name) * 10 - (name.includes("lite") ? 5 : 0) - (name.includes("preview") ? 1 : 0);
     const found = Array.from(new Set(names)).sort((a, b) => rank(b) - rank(a));
-    const models = Array.from(new Set([...found.filter((name) => !name.includes("lite")).slice(0, 2), ...found.filter((name) => name.includes("lite")).slice(0, 1)]));
+    // Lite întâi: pe bonurile de test citește la fel de corect, în 2–4 s, și are cotă mai largă.
+    // Flash-urile mari rămân rezervă (aveau 429/503 și 16–30 s).
+    const models = Array.from(new Set([...found.filter((name) => name.includes("lite")).slice(0, 1), ...found.filter((name) => !name.includes("lite")).slice(0, 2)]));
     receiptModelCache = { at: Date.now(), models: models.length ? models : RECEIPT_MODELS };
   } catch (error) {
     console.warn("receipt model list", error instanceof Error ? error.message : "unknown");
@@ -1105,7 +1107,7 @@ function cleanScannedReceipt(raw: unknown, categories: string[]): ScannedReceipt
     const category = typeof item.category === "string" && categories.includes(item.category) ? item.category : fallback;
     const quantity = roundLei(item.quantity);
     const discount = roundLei(item.discount);
-    return [{ name, rawName: clip(item.rawName, 80) || name, quantity: quantity > 0 ? quantity : 1, amount, discount: discount > 0 && discount < 100_000 ? discount : 0, category }];
+    return [{ name, rawName: clip(typeof item.rawName === "string" ? item.rawName.replace(/\s+/g, " ") : "", 80) || name, quantity: quantity > 0 ? quantity : 1, amount, discount: discount > 0 && discount < 100_000 ? discount : 0, category }];
   });
   const payments = (Array.isArray(body.payments) ? body.payments : []).slice(0, 4).flatMap((entry) => {
     const payment = (entry && typeof entry === "object" ? entry : {}) as Record<string, unknown>;
@@ -1168,7 +1170,7 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
         try {
           apiResponse = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-            { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 25_000) },
+            { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 20_000) },
           );
         } catch (error) {
           if (!isTimeout(error)) throw error;
@@ -1197,10 +1199,7 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
         lastDetail = await apiResponse.text();
         trail.push(`${model}/${structured ? "s" : "p"}:${apiResponse.status}@${took()}`);
         if (isInvalidKey(lastDetail)) throw new GuideCallError("INVALID_API_KEY", apiResponse.status);
-        if ((apiResponse.status === 429 || apiResponse.status === 503) && attempt === 0) {
-          await sleep(600);
-          continue;
-        }
+        // 429/503: modelul e plin sau ocupat; trecem imediat la următorul, fără așteptare.
         // 400 cu schemă: aceeași cerere fără schemă, pe același model.
         retry = apiResponse.status === 400;
         break;
