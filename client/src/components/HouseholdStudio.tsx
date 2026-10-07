@@ -2,6 +2,7 @@
  * Gospodărie: recapitulare lunară, vârstă a banilor, el și ea, vânător de abonamente.
  * Confirmarea unei detecții creează o scadență în registrul deja sincronizat.
  */
+import { withShareSignature } from "@/lib/share-signature";
 import { YearRecapEntry } from "@/components/YearRecapEntry";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, CalendarCheck, Download, Image as ImageIcon, PiggyBank, Repeat, Share2, Shield, Users } from "lucide-react";
@@ -44,7 +45,7 @@ export function HouseholdStudio({ data, onChange }: { data: AppData; onChange: (
   };
   const shareReport = async () => {
     if (!allowShare()) return;
-    const text = formatMonthlyReportShare(report);
+    const text = withShareSignature(formatMonthlyReportShare(report));
     try {
       if (typeof navigator.share === "function") {
         await navigator.share({ title: t("{family} · raportul lunii {month}", { family: report.familyName, month: report.title }), text });

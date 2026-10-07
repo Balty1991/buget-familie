@@ -46,6 +46,8 @@ Salariul vine, aplicația îl împarte pe plicuri. Buget pentru cuplu și famili
 ```
 Buget Familie e aplicația de buget pentru familie și cuplu — și de buget personal — gratuită, în limba română: îți spune câți bani poți cheltui azi, din plic, până la salariu. Ții evidența cheltuielilor, a facturilor, a ratelor și a economiilor, împreună cu partenerul, fără parola băncii și fără reclame.
 
+🔒 Nu e o aplicație de plăți și nici de monitorizare: nu mută bani, nu se leagă de bancă, nu cere card sau parole și nu urmărește pe nimeni. E caietul vostru de buget: vedeți doar ce notați voi.
+
 De ce e diferită
 • Bugetul merge pe ciclul salariului vostru, nu pe luna calendaristică. Două salarii în zile diferite? Merge.
 • Metoda plicurilor: fiecare leu are un loc — chirie, mâncare, transport, economii.

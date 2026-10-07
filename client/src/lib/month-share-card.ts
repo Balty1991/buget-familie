@@ -3,6 +3,7 @@
  * Implicit fără sume (doar procente), ca un părinte să o poată pune pe o poveste fără
  * să-și arate salariul. Se desenează pe telefon, într-un canvas; nimic nu pleacă singur.
  */
+import { withShareSignature } from "./share-signature";
 import { categoryColor } from "@/lib/category-color";
 import type { MonthlyFamilyReport } from "@/lib/household-insights";
 import { t } from "@/lib/i18n";
@@ -212,7 +213,8 @@ const toBase64 = async (blob: Blob) => {
  * Trimite imaginea: pe Android prin lista de aplicații (WhatsApp, Instagram), pe web prin
  * Web Share cu fișier, altfel o descarcă. Întoarce ce s-a întâmplat.
  */
-export async function shareMonthCard(blob: Blob, name: string, text: string, dialogTitle = t("Trimite imaginea lunii")): Promise<"shared" | "saved" | "cancelled"> {
+export async function shareMonthCard(blob: Blob, name: string, rawText: string, dialogTitle = t("Trimite imaginea lunii")): Promise<"shared" | "saved" | "cancelled"> {
+  const text = withShareSignature(rawText);
   if (isNativeApp()) {
     const [{ Filesystem, Directory }, { Share }] = await Promise.all([import("@capacitor/filesystem"), import("@capacitor/share")]);
     const written = await Filesystem.writeFile({ path: name, data: await toBase64(blob), directory: Directory.Cache, recursive: true });

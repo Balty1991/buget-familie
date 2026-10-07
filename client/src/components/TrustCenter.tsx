@@ -11,6 +11,7 @@ export function TrustCenter() {
       <p className="bf-kicker">{t("ÎNCREDERE ȘI CONFIDENȚIALITATE")}</p>
       <h2>{t("Ce face aplicația cu datele tale")}</h2>
       <p>{t("Buget Familie este un registru local. Nu avem conturi de utilizator, nu cerem login bancar și nu vindem date.")}</p>
+      <p><b>{t("Nu e o aplicație de plăți și nici de monitorizare.")}</b> {t("Nu mută bani, nu se leagă de bancă și nu urmărește pe nimeni. E caietul de buget al familiei: vedeți doar ce notați voi.")}</p>
       <ul>
         <li><b>{t("Pe telefon:")}</b> {t("mișcări, plicuri, datorii, economii, teme și alerte.")}</li>
         <li><b>{t("Opțional, criptat:")}</b> {t("un pachet AES-GCM într-o cameră Firebase cu ID și cheie aleatoare, create pe telefon. Serverul nu vede lei, nume sau chei în clar.")}</li>

@@ -2,6 +2,7 @@
  * Bilanțul săptămânii: planificat vs realizat pe plic, cine a mișcat banii, text de trimis familiei.
  * Calculat numai din registrul local; nu scrie în AppData.
  */
+import { withShareSignature } from "@/lib/share-signature";
 import "../assistant-checkin.css";
 import "../weekly-checkin.css";
 import { useState } from "react";
@@ -51,7 +52,7 @@ export function WeeklySummaryPanel({ data, onChange, onOpenJournal, onOpenPlan }
   };
   const share = async () => {
     if (!allowShare()) return;
-    const text = shareText();
+    const text = withShareSignature(shareText());
     try {
       if (typeof navigator.share === "function") {
         await navigator.share({ title: t("Bilanț {family}", { family: check.familyName }), text });
