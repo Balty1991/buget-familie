@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.183
+
+- Astăzi → Ultimele mișcări: „acum” / „acum N min” apar doar la mișcările de azi. O cheltuială de ieri corectată acum (de exemplu împărțită pe două surse) arată data ei, nu „acum”, ca să nu pară mutată pe azi.
+
 ## 1.1.182
 
 - Backup: comutator nou „Salvare automată la fiecare modificare” (Setări → Copii de siguranță). În aplicația Android, fișierul `buget-familie-automat.json` din **Documente/Buget Familie** se rescrie singur la 3 secunde după fiecare schimbare (un singur fișier, nu câte unul nou). Arată ora ultimei salvări și motivul, dacă n-a mers. Se importă ca orice backup.

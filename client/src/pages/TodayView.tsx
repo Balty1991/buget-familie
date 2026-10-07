@@ -748,7 +748,10 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                     <small>{(() => {
                       const stamp = item.updatedAt || item.createdAt;
                       const ms = stamp ? Date.now() - Date.parse(stamp) : NaN;
-                      const when = Number.isFinite(ms) && ms >= 0 && ms < 60_000
+                      // „acum” doar pentru mișcările de azi: o corectură a bonului de ieri arată tot ziua bonului.
+                      const when = item.date !== isoToday()
+                        ? dateText(item.date)
+                        : Number.isFinite(ms) && ms >= 0 && ms < 60_000
                         ? t("acum")
                         : Number.isFinite(ms) && ms < 3_600_000
                           ? t("acum {n} min", { n: String(Math.max(1, Math.round(ms / 60_000))) })
