@@ -152,8 +152,12 @@ export async function requestReceiptScan(image: { data: string; mimeType: string
   } catch {
     throw new Error(t("Nu am putut trimite poza. Verifică internetul și mai încearcă o dată."));
   }
-  const payload = await response.json().catch(() => ({})) as { receipt?: ScannedReceipt; error?: string };
-  if (!response.ok || !payload.receipt) throw new Error(payload.error || t("Nu am putut citi bonul acum. Mai încearcă o dată."));
+  const payload = await response.json().catch(() => ({})) as { receipt?: ScannedReceipt; error?: string; reason?: string };
+  if (!response.ok || !payload.receipt) {
+    // Codul tehnic, scurt, ca omul să-l poată trimite când citirea nu merge.
+    const code = payload.reason ? ` (${payload.reason})` : !response.ok ? ` (HTTP ${response.status})` : "";
+    throw new Error(`${payload.error || t("Nu am putut citi bonul acum. Mai încearcă o dată.")}${code}`);
+  }
   return payload.receipt;
 }
 

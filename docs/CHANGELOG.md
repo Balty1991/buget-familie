@@ -9,6 +9,7 @@
 - Microfonul („Spune ce ai cumpărat”) apare din nou la Cheltuială în Notează. Dispăruse în 1.1.163, la scurtarea ecranului, și rămăsese doar la Venit, cu text de cheltuială. La Venit scrie acum „Spune ce a intrat”, iar ce spui acolo rămâne venit.
 - SGR și Sacoșe sunt acum două categorii separate. Ce era deja notat la „SGR și sacoșe” se mută singur: sacoșele la Sacoșe, restul la SGR.
 - „SGR” scris pe eticheta unei sticle („Apă plată PET 2L SGR”) nu mai trimite produsul la SGR; doar rândul de garanție merge acolo.
+- Citirea e mai robustă: dacă Gemini respinge cererea cu schemă sau răspunde cu ceva greu de citit, reîncearcă fără schemă, apoi cu alt model. Când tot nu merge, mesajul arată un cod scurt (modelele încercate și răspunsul lor), ca problema să poată fi trimisă.
 - Avertisment când suma articolelor nu bate cu totalul sau când poza a fost greu de citită.
 - Scanarea face parte din Familia (inclusă în proba de 30 de zile); până la pornirea plăților e deschisă tuturor. Nu apare în modul „doar offline”.
 - Politica de confidențialitate, pagina Despre și ghidul AI spun acum cum funcționează scanarea; a dispărut o mențiune rămasă despre descărcarea programului vechi de citire de pe jsDelivr.
