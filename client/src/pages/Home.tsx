@@ -2,7 +2,7 @@
  * Atelierul Financiar — tablou mobil pentru o persoană sau o gospodărie, cu decizia următoare în prim-plan.
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
-import { splitGroupIds } from "@/lib/split-payment";
+import { splitGroupIds, storedMove } from "@/lib/split-payment";
 import { readAutoBackup, writeAutoBackup } from "@/lib/auto-backup";
 import { saveLiveBackup } from "@/lib/app-storage";
 import { applyDynamicColor, haptic, readDynamicColor } from "@/lib/native-feel";
@@ -694,7 +694,7 @@ export default function Home() {
       };
     });
   };
-  const openTx = (item?: Transaction) => { setEditTx(item); setModal(item ? "transaction" : "quick"); };
+  const openTx = (item?: Transaction) => { setEditTx(item ? storedMove(data.transactions, item) : item); setModal(item ? "transaction" : "quick"); };
   // Widgetul și dala din Setări rapide deschid direct ecranul cerut, fără pași intermediari.
   useEffect(() => observeQuickActions((action) => {
     if (action === "receipt") { setModal("receipt"); return; }

@@ -605,7 +605,8 @@ export const normalizeAppData = (input: unknown): AppData => {
   const sourceByName = new Map(sources.map((source) => [source.name.toLowerCase(), source]));
   const memberByName = new Map(members.map((member) => [member.name.toLowerCase(), member]));
   const normalizeTransaction = (entry: unknown, index: number, prefix: string): Transaction => {
-    const item = (entry || {}) as Transaction;
+    // „splitParts” e doar pentru afișarea bonului unit; ajunsese în date dintr-o corectură (1.1.185).
+    const { splitParts: _parts, ...item } = (entry || {}) as Transaction & { splitParts?: unknown };
     const rawSource = (item.source || "").toLowerCase();
     const source = sources.find((value) => value.id === item.sourceId) || sourceByName.get(rawSource) || (rawSource.includes("bon") ? sources.find((value) => value.kind === "meal") : undefined) || sources[0];
     const member = members.find((value) => value.id === item.memberId) || memberByName.get((item.person || "").toLowerCase());

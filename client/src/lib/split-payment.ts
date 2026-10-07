@@ -18,6 +18,15 @@ export const splitGroupIds = (list: Transaction[], id: string): string[] => {
 export type MergedMove = Transaction & { splitParts?: Array<{ id: string; source: string; amount: number }> };
 
 /** Lista de pe ecran: părțile aceluiași bon devin un rând cu totalul și sursele lui. */
+/**
+ * Rândul din Mișcări sau de pe Astăzi poate fi bonul unit (suma ambelor părți, „A + B”).
+ * Corectura pornește mereu de la mișcarea salvată, altfel formularul aduna încă o dată
+ * partea a doua (39,76 + 11,26 = 51,02).
+ */
+export function storedMove(list: Transaction[], item: Transaction): Transaction {
+  return list.find((entry) => entry.id === item.id) || item;
+}
+
 export function mergeSplitPayments(list: Transaction[]): MergedMove[] {
   const used = new Set<string>();
   const out: MergedMove[] = [];

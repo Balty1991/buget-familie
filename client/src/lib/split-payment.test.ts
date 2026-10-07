@@ -20,3 +20,16 @@ describe("bonul plătit din două surse e un singur rând", () => {
     expect(merged[0].amount).toBe(39.76);
   });
 });
+
+describe("storedMove", () => {
+  it("corectura bonului unit pornește de la partea salvată, nu de la totalul afișat", async () => {
+    const { storedMove, mergeSplitPayments } = await import("./split-payment");
+    const base = { id: "a", title: "Exflor", amount: 28.5, kind: "expense", category: "Alimente", source: "Voucher SGR", sourceId: "v", date: "2026-10-06", createdAt: "2026-10-06T10:00:00Z", splitId: "s1", receiptId: "r1" } as Transaction;
+    const cash = { ...base, id: "b", amount: 11.26, source: "Cash Alin", sourceId: "c", receiptId: undefined } as Transaction;
+    const [row] = mergeSplitPayments([base, cash]);
+    expect(row.amount).toBe(39.76);
+    const opened = storedMove([base, cash], row);
+    expect(opened.amount).toBe(28.5);
+    expect("splitParts" in opened).toBe(false);
+  });
+});
