@@ -24,7 +24,7 @@ describe("catalogul de produse", () => {
     expect(classifyProductLabel("CIORAPI DAMA")).toBe("Timp liber");
     expect(classifyProductLabel("HANORAC")).toBe("Timp liber");
     expect(classifyProductLabel("LIPICI UNIVERSAL")).toBe("Casă & facturi");
-    expect(classifyProductLabel("GARANTIE PET SGR")).toBe("Alimente");
+    expect(classifyProductLabel("GARANTIE PET SGR")).toBe("SGR");
     expect(classifyProductLabel("Pâine albă")).toBe("Alimente");
   });
 

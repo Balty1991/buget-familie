@@ -13,7 +13,7 @@ export type ScannedReceipt = {
   store: string;
   date: string | null;
   total: number;
-  items: Array<{ name: string; rawName?: string; quantity: number; amount: number; category: string }>;
+  items: Array<{ name: string; rawName?: string; quantity: number; amount: number; discount?: number; category: string }>;
   payments: Array<{ method: "cash" | "card" | "meal" | "voucher" | "other"; amount: number }>;
   confidence: "high" | "medium" | "low";
 };
@@ -28,6 +28,8 @@ export type ScanPrefill = {
   sourceId?: string;
   /** A doua sursă, când bonul e plătit din două (ex. voucher SGR + numerar). */
   second?: { sourceId: string; amount: number };
+  /** Reducerile de pe bon, adunate (ce s-a scăzut din prețul de raft). */
+  discount: number;
   /** Ce trebuie verificat cu ochii: suma articolelor nu bate cu totalul sau poza a fost greu de citit. */
   warning?: string;
   count: number;
@@ -57,7 +59,8 @@ export function scanToPrefill(receipt: ScannedReceipt, data: AppData, memberId?:
   const lines = receipt.items
     .filter((item) => item.amount > 0)
     .map((item) => ({
-      label: item.quantity && Math.abs(item.quantity - 1) > 0.0001 ? `${item.name} × ${item.quantity.toLocaleString("ro-RO", { maximumFractionDigits: 3 })}` : item.name,
+      // Reducerea rămâne vizibilă pe rând: suma e cea plătită, eticheta spune cât s-a scăzut.
+      label: `${item.quantity && Math.abs(item.quantity - 1) > 0.0001 ? `${item.name} × ${item.quantity.toLocaleString("ro-RO", { maximumFractionDigits: 3 })}` : item.name}${(item.discount || 0) > 0.004 ? ` ${t("(reducere −{amount})", { amount: (item.discount || 0).toLocaleString("ro-RO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}` : ""}`,
       amount: round(item.amount),
       category: known.has(item.category) ? item.category : fallback,
     }));
@@ -96,6 +99,7 @@ export function scanToPrefill(receipt: ScannedReceipt, data: AppData, memberId?:
     sourceId: first?.id,
     second: secondSource && secondAmount > 0 && secondAmount < total ? { sourceId: secondSource.id, amount: secondAmount } : undefined,
     warning,
+    discount: round(receipt.items.reduce((sum, item) => sum + (item.discount && item.discount > 0 && item.amount > 0 ? item.discount : 0), 0)),
     count: lines.length,
   };
 }

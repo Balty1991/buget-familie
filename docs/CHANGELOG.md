@@ -2,8 +2,10 @@
 
 ## 1.1.186
 
-- **Scanează bonul**: în Notează (și în Adaugă mișcare), o poză la bon (sau din galerie) scoate toate produsele, fiecare cu suma și categoria lui (alcool → Băuturi, ciocolată și napolitane → Dulciuri, garanție SGR și sacoșă → SGR și sacoșe, mezeluri → Alimente). Se completează singure totalul, data, magazinul și, la plata din două surse (voucher Returo + numerar), ambele surse cu sumele lor. Nimic nu se salvează până nu apeși Salvează.
+- **Scanează bonul**: în Notează (și în Adaugă mișcare), o poză la bon (sau din galerie) scoate toate produsele, fiecare cu suma și categoria lui (alcool → Băuturi, ciocolată și napolitane → Dulciuri, apă îmbuteliată → Apă, garanția SGR → SGR, sacoșa → Sacoșe, mezeluri → Alimente). Reducerile apar pe rândul produsului („… × 6 (reducere −1,74)”), cu suma plătită, iar totalul reducerilor apare deasupra. Se completează singure totalul, data, magazinul și, la plata din două surse (voucher Returo + numerar), ambele surse cu sumele lor. Nimic nu se salvează până nu apeși Salvează.
 - Citirea o face Google Gemini, prin funcția noastră `readReceipt`. La prima folosire aplicația cere acordul. Poza se micșorează pe telefon, pleacă o dată și nu se păstrează nicăieri. Limită: 25 de bonuri pe zi pe telefon.
+- SGR și Sacoșe sunt acum două categorii separate. Ce era deja notat la „SGR și sacoșe” se mută singur: sacoșele la Sacoșe, restul la SGR.
+- „SGR” scris pe eticheta unei sticle („Apă plată PET 2L SGR”) nu mai trimite produsul la SGR; doar rândul de garanție merge acolo.
 - Avertisment când suma articolelor nu bate cu totalul sau când poza a fost greu de citită.
 - Scanarea face parte din Familia (inclusă în proba de 30 de zile); până la pornirea plăților e deschisă tuturor. Nu apare în modul „doar offline”.
 - Politica de confidențialitate, pagina Despre și ghidul AI spun acum cum funcționează scanarea; a dispărut o mențiune rămasă despre descărcarea programului vechi de citire de pe jsDelivr.

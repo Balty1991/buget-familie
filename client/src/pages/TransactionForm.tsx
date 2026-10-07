@@ -80,7 +80,7 @@ export function TransactionForm({ data, initial, scan, onSave, onClose }: { data
     }
     setScanNote(prefill.warning
       ? { text: prefill.warning, warning: true }
-      : { text: t("Am citit {count} produse, {total} în total. Verifică și apasă Salvează.", { count: prefill.count, total: fmtExact.format(prefill.amount) }), warning: false });
+      : { text: `${t("Am citit {count} produse, {total} în total.", { count: prefill.count, total: fmtExact.format(prefill.amount) })}${prefill.discount > 0 ? ` ${t("Reduceri: −{amount}.", { amount: fmtExact.format(prefill.discount) })}` : ""} ${t("Verifică și apasă Salvează.")}`, warning: false });
   };
   const scanApplied = useRef(false);
   useEffect(() => {

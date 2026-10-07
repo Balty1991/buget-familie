@@ -4608,6 +4608,8 @@ export const en: Record<string, string> = {
   "ex. Salariu, Voucher SGR": "e.g. Salary, SGR voucher",
   "Alege data din calendar": "Pick the date from the calendar",
   "SGR și sacoșe": "Deposit (SGR) & bags",
+  "SGR": "Bottle deposit (SGR)",
+  "Sacoșe": "Shopping bags",
   "Din {name} (lei)": "From {name} (lei)",
   "prima sursă": "first source",
   "ex. 28,50": "e.g. 28.50",
@@ -4645,5 +4647,8 @@ export const en: Record<string, string> = {
   "Poza nu s-a putut deschide.": "The photo couldn't be opened.",
   "Poza nu s-a putut pregăti.": "The photo couldn't be prepared.",
   "Nu am putut trimite poza. Verifică internetul și mai încearcă o dată.": "We couldn't send the photo. Check your internet connection and try again.",
-  "Am citit {count} produse, {total} în total. Verifică și apasă Salvează.": "Read {count} products, {total} in total. Check them and tap Save.",
+  "(reducere −{amount})": "(discount −{amount})",
+  "Am citit {count} produse, {total} în total.": "Read {count} products, {total} in total.",
+  "Reduceri: −{amount}.": "Discounts: −{amount}.",
+  "Verifică și apasă Salvează.": "Check them and tap Save.",
 };

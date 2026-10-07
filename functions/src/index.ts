@@ -987,7 +987,7 @@ type ScannedReceipt = {
   store: string;
   date: string | null;
   total: number;
-  items: Array<{ name: string; rawName: string; quantity: number; amount: number; category: string }>;
+  items: Array<{ name: string; rawName: string; quantity: number; amount: number; discount: number; category: string }>;
   payments: Array<{ method: PaymentMethod; amount: number }>;
   confidence: "high" | "medium" | "low";
 };
@@ -1008,10 +1008,11 @@ const receiptSchema = {
           name: { type: "STRING" },
           quantity: { type: "NUMBER" },
           amount: { type: "NUMBER" },
+          discount: { type: "NUMBER" },
           category: { type: "STRING" },
         },
         required: ["rawName", "name", "amount", "category"],
-        propertyOrdering: ["rawName", "name", "quantity", "amount", "category"],
+        propertyOrdering: ["rawName", "name", "quantity", "amount", "discount", "category"],
       },
     },
     payments: {
@@ -1046,12 +1047,12 @@ items: fiecare produs cumpărat, în ordinea de pe bon, fără să sari vreunul.
 - rawName: denumirea exact cum e tipărită.
 - name: denumirea curată, ușor de citit, cu diacritice, prima literă mare, restul mici: desfaci prescurtările evidente („NAP.” → „Napolitane”, „CIOC” → „ciocolată”, „CRENVURSTI” → „Crenvurști”), păstrezi marca și gramajul („Napolitane Milka Choco 30 g”). Nu inventa ce nu se vede.
 - quantity: cantitatea (bucăți sau kilograme, de ex. 2 sau 0,456). 1 dacă lipsește.
-- amount: valoarea liniei în lei (după „=”, cantitate × preț), cu zecimalele exacte, fără rotunjire. Când denumirea e pe un rând și „1 BUC X 8.19= 8.19” pe rândul următor, sunt același articol.
-- Reducerile („REDUCERE”, „DISCOUNT”, „-1.50”, „Lidl Plus”) se scad din articolul la care se referă; nu sunt articole separate.
-- Garanția de ambalaj („GARANTIE SGR”, „GARANTIE STICLA”, „AMBALAJ SGR”) este articol separat. Sacoșa sau punga este articol.
+- amount: cât s-a plătit pe articol, în lei, cu zecimalele exacte, fără rotunjire: valoarea liniei (după „=”, cantitate × preț) minus reducerea lui. Când denumirea e pe un rând și „1 BUC X 8.19= 8.19” pe rândul următor, sunt același articol.
+- discount: reducerea articolului, ca număr pozitiv („REDUCERE 8.33%  -1.74” sub un articol de 20,88 → discount 1.74 și amount 19.14). 0 când nu are. Reducerile („REDUCERE”, „DISCOUNT”, „Lidl Plus”, „-3.42”) țin de articolul de deasupra lor și nu sunt articole separate.
+- Garanția de ambalaj („GARANTIE SGR”, „GARANTIE PET SGR”, „GARANTIE STICLA”) este articol separat. Sacoșa sau punga este articol separat. „SGR” scris la capătul denumirii unui produs („APĂ PLATĂ PET 2L SGR”) arată doar că sticla are garanție: produsul rămâne apă, garanția e rândul ei.
 - Nu sunt articole: SUBTOTAL, TOTAL, TVA, REST, NUMERAR, CARD, TICHETE, VOUCHER RETURO (asta e plată), puncte de fidelitate, cod fiscal, adresă.
 - category: exact una dintre categoriile familiei: ${categories.map((item) => `„${item}”`).join(", ")}. Alege după ce este produsul, nu după magazin:
-  alcool, bere, vin, sucuri, cafea → „Băuturi” (dacă există); apă plată sau minerală → „Apă” (dacă există); ciocolată, napolitane, biscuiți, bomboane, chipsuri, sticks-uri, snacksuri, înghețată → „Dulciuri” (dacă există); garanție SGR, sacoșă, pungă → „SGR și sacoșe” (dacă există); scutece, mâncare pentru bebeluși → „Consumabile copil” (dacă există); detergent, hârtie igienică, produse de curățenie → „Casă & facturi” (dacă există); medicamente → „Sănătate” (dacă există); carne, mezeluri, lactate, pâine, ulei, legume, fructe și restul mâncării → „Alimente”. Dacă nimic nu se potrivește, „Altele”.
+  alcool, bere, vin, sucuri, cafea → „Băuturi” (dacă există); apă plată sau minerală → „Apă” (dacă există); ciocolată, napolitane, biscuiți, bomboane, chipsuri, sticks-uri, snacksuri, înghețată → „Dulciuri” (dacă există); garanție SGR → „SGR” (dacă există); sacoșă, pungă → „Sacoșe” (dacă există); haine, încălțăminte, ciorapi → categoria familiei pentru haine dacă există, altfel „Altele”; jucării → „Consumabile copil” (dacă există); scutece, mâncare pentru bebeluși → „Consumabile copil” (dacă există); detergent, hârtie igienică, produse de curățenie → „Casă & facturi” (dacă există); medicamente → „Sănătate” (dacă există); carne, mezeluri, lactate, pâine, ulei, legume, fructe și restul mâncării → „Alimente”. Dacă familia are o categorie proprie care se potrivește mai bine (de ex. „Haine”, „Animale”), folosește-o. Dacă nimic nu se potrivește, „Altele”.
 
 total: „TOTAL” sau „TOTAL LEI” de pe bon. Suma articolelor trebuie să dea totalul; dacă nu dă, recitește rândurile înainte să răspunzi.
 
@@ -1075,7 +1076,8 @@ function cleanScannedReceipt(raw: unknown, categories: string[]): ScannedReceipt
     if (!name || !(amount > 0) || amount > 100_000) return [];
     const category = typeof item.category === "string" && categories.includes(item.category) ? item.category : fallback;
     const quantity = roundLei(item.quantity);
-    return [{ name, rawName: clip(item.rawName, 80) || name, quantity: quantity > 0 ? quantity : 1, amount, category }];
+    const discount = roundLei(item.discount);
+    return [{ name, rawName: clip(item.rawName, 80) || name, quantity: quantity > 0 ? quantity : 1, amount, discount: discount > 0 && discount < 100_000 ? discount : 0, category }];
   });
   const payments = (Array.isArray(body.payments) ? body.payments : []).slice(0, 4).flatMap((entry) => {
     const payment = (entry && typeof entry === "object" ? entry : {}) as Record<string, unknown>;

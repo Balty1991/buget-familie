@@ -229,13 +229,15 @@ export type SyncDevice = {
 };
 export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
-export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Educație", "Timp liber", "Credite", "Rate produse", "SGR și sacoșe", "Altele"];
+/** „SGR și sacoșe” (1.1.184–1.1.186) s-a despărțit în două: sacoșa merge la Sacoșe, restul la SGR. */
+export const splitLegacySgrCategory = (category: string, text = "") => category === "SGR și sacoșe" ? (/sacos|sacoș|pung/i.test(text) ? "Sacoșe" : "SGR") : category;
+export const expenseCategories = ["Alimente", "Consumabile copil", "Abonamente", "Băuturi", "Apă", "Dulciuri", "Transport", "Casă & facturi", "Sănătate", "Educație", "Timp liber", "Credite", "Rate produse", "SGR", "Sacoșe", "Altele"];
 /**
  * Culorile categoriilor: nuanțe separate (înainte Alimente, Casă și Sănătate erau trei verzi
  * aproape identici). Verificate pe fundal deschis și închis, inclusiv pentru daltonism; „Altele”
  * rămâne gri, ca rest.
  */
-export const categoryColors: Record<string, string> = { "SGR și sacoșe": "#7A8B5C", Alimente: "#2E8B57", "Casă & facturi": "#3B6FB6", Transport: "#D0782F", "Timp liber": "#8A5CC2", Sănătate: "#C8506E", Abonamente: "#A8862A", "Consumabile copil": "#1E9AA8", Educație: "#5561C9", "Rate produse": "#A0522D", Credite: "#6B8E23", Altele: "#7A8580" };
+export const categoryColors: Record<string, string> = { SGR: "#7A8B5C", "Sacoșe": "#9C7B4F", Alimente: "#2E8B57", "Casă & facturi": "#3B6FB6", Transport: "#D0782F", "Timp liber": "#8A5CC2", Sănătate: "#C8506E", Abonamente: "#A8862A", "Consumabile copil": "#1E9AA8", Educație: "#5561C9", "Rate produse": "#A0522D", Credite: "#6B8E23", Altele: "#7A8580" };
 
 /**
  * Data calendaristică a telefonului, nu cea UTC. `toISOString()` ar întoarce ziua
@@ -614,7 +616,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     // Un rând fără marcaj de timp îl primește din ziua lui, nu din clipa normalizării:
     // altfel un rând vechi venit de pe celălalt telefon s-ar naște „acum”, ar învinge
     // urma ștergerii și ar reapărea în registru după ce a fost șters.
-    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: String(item.category || "Altele"), amount: money2(Math.min(MAX_AMOUNT, Math.max(0, parseRomanianAmount(item.amount)))), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope, deviceId: typeof item.deviceId === "string" && /^[\w:-]{4,80}$/.test(item.deviceId) ? item.deviceId : undefined };
+    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: splitLegacySgrCategory(String(item.category || "Altele"), `${item.title || ""} ${item.note || ""}`), amount: money2(Math.min(MAX_AMOUNT, Math.max(0, parseRomanianAmount(item.amount)))), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope, deviceId: typeof item.deviceId === "string" && /^[\w:-]{4,80}$/.test(item.deviceId) ? item.deviceId : undefined };
   };
   const transactions = realRows<Partial<Transaction>>(old.transactions).map((entry, index) => normalizeTransaction(entry, index, "legacy-tx"));
   const transactionIds = new Set(transactions.map((item) => item.id));
@@ -632,7 +634,7 @@ export const normalizeAppData = (input: unknown): AppData => {
         };
       }).filter((item) => item.transaction.amount > 0 && !transactionIds.has(item.transaction.id)).slice(0, 300)
     : [];
-  const receipts = realRows<Receipt>(old.receipts).map((entry, index) => { const { ocrText: _ocr, ...item } = entry as Receipt; const linked = transactions.find((transaction) => transaction.id === item.linkedTransactionId || transaction.receiptId === item.id || transaction.id === `receipt-tx-${item.id}`); const lines = Array.isArray(item.lines) ? item.lines.map((line, lineIndex) => ({ id: line.id || `receipt-line-${index}-${lineIndex}`, category: line.category || "Altele", amount: Math.max(0, parseRomanianAmount(line.amount)), label: line.label || undefined })).filter((line) => line.amount > 0) : undefined; const imageKeys = Array.isArray(item.imageKeys) ? item.imageKeys.filter((key): key is string => typeof key === "string" && key.length > 0).slice(0, 2) : undefined; return { ...item, id: item.id || `legacy-receipt-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), lines, imageKeys, linkedTransactionId: linked?.id || item.linkedTransactionId, linkedTransactionIds: item.linkedTransactionIds?.length ? item.linkedTransactionIds : linked?.id ? [linked.id] : undefined }; });
+  const receipts = realRows<Receipt>(old.receipts).map((entry, index) => { const { ocrText: _ocr, ...item } = entry as Receipt; const linked = transactions.find((transaction) => transaction.id === item.linkedTransactionId || transaction.receiptId === item.id || transaction.id === `receipt-tx-${item.id}`); const lines = Array.isArray(item.lines) ? item.lines.map((line, lineIndex) => ({ id: line.id || `receipt-line-${index}-${lineIndex}`, category: splitLegacySgrCategory(line.category || "Altele", line.label || ""), amount: Math.max(0, parseRomanianAmount(line.amount)), label: line.label || undefined })).filter((line) => line.amount > 0) : undefined; const imageKeys = Array.isArray(item.imageKeys) ? item.imageKeys.filter((key): key is string => typeof key === "string" && key.length > 0).slice(0, 2) : undefined; return { ...item, id: item.id || `legacy-receipt-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), lines, imageKeys, linkedTransactionId: linked?.id || item.linkedTransactionId, linkedTransactionIds: item.linkedTransactionIds?.length ? item.linkedTransactionIds : linked?.id ? [linked.id] : undefined }; });
   const oldPlan = oldSettings.salaryPlan || fallback.settings.salaryPlan;
   const periodStart = safeDate(oldPlan.periodStart);
   const nextPayday = /^\d{4}-\d{2}-\d{2}$/.test(oldPlan.nextPayday || "") ? oldPlan.nextPayday : "";
@@ -1995,11 +1997,15 @@ const categoryAliases: Array<[RegExp, string]> = [
   [/\b(mancare\w*|restaurant\w*|lunch|pranz|cina|aliment\w*|cumparaturi\w*|supermarket|lidl|kaufland|carrefour|profi|auchan|penny|mega image|selgros|glovo|tazz|bolt food|patiserie|paine\w*|covrig\w*|piat[ai]|la piata|legume|fructe|carne|macelari\w*|brutari\w*|oua|pizza|shaorma|burger\w*|mcdonald\w*|kfc|comanda\w*)\b/, "Alimente"],
   // Apa de la robinet e o factură, nu o sticlă de apă: „apă canal 95” nu e Băuturi.
   [/\b(apa canal|apa si canal|apa rece|apa calda|apa nova|apavital|aquatim|intretinere\w*|internet\w*|curent\w*|gaz\w*|factur\w*)\b/, "Casă & facturi"],
+  // Apa îmbuteliată are categoria ei.
+  [/\b(apa minerala|apa plata|apa carbogazoasa|apa necarbogazoasa|aqua|carpatica|borsec|dorna|perla harghitei|izvorul\w*|bucovina|zizin|bilbor)\b/, "Apă"],
   [/\b(apa|suc\w*|cafea|cafele|ceai|bere|starbucks|5 to go)\b/, "Băuturi"],
   // Băuturile tari nu sunt mâncare, chiar dacă vin de la magazin: „vodca 34,88” nu intră la Alimente.
   [/\b(vodc\w*|vodk\w*|vin rosu|vin alb|vinuri|whisk\w*|coniac\w*|brandy|palinc\w*|tuic\w*|rachiu|lichior\w*|gin|rom|sampani\w*|spumant\w*|prosecco|alcool\w*|tarie|tarii|cidru)\b/, "Băuturi"],
-  // Garanția de ambalaj (SGR) și sacoșele: bani mărunți la fiecare bon, ținuți separat de mâncare.
-  [/\b(garantie sgr|sgr|garantie sticla|garantie ambalaj|sacos\w*|punga|pungi)\b/, "SGR și sacoșe"],
+  // Sacoșele și garanția de ambalaj (SGR): bani mărunți la fiecare bon, ținuți separat de mâncare și separat între ele.
+  [/\b(sacos\w*|punga|pungi)\b/, "Sacoșe"],
+  // „…PET 2L SGR” arată doar că sticla intră în sistem; garanția e rândul cu „garanție” sau un „SGR” singur.
+  [/\b(garantie\w*|ambalaj sgr)\b|^\s*sgr\s*$/, "SGR"],
   [/\b(kinder|ciocolat\w*|napolitan\w*|biscuit\w*|bomboan\w*|inghetat\w*|croissant\w*)\b/, "Dulciuri"],
   [/\b(dulce|ciocolata|prajitura|snack)\b/, "Dulciuri"],
   [/\b(factura|internet|curent|gaz|chirie|detergent|casa|enel|electrica|engie|digi|rcs|orange|vodafone|telekom|apa nova|salubr)\b/, "Casă & facturi"],
@@ -2037,7 +2043,8 @@ export const guessCategoryFromText = (raw: string, categories: string[] = expens
   // „Apă canal” conține numele categoriei „Apă”, dar e o factură: tiparele precise vin primele.
   const precise = categoryAliases.find(([pattern]) => pattern.test(folded))?.[1];
   if (precise && (categories.includes(precise) || expenseCategories.includes(precise)) && /\bapa\b/.test(folded)) return precise;
-  return categories.find((item) => folded.includes(foldRomanian(item))) || precise || fuzzyCategory(folded);
+  // „SGR” apare pe orice sticlă din sistem („Apă plată PET 2L SGR”): doar regula „garanție” o face categorie.
+  return categories.find((item) => item !== "SGR" && folded.includes(foldRomanian(item))) || precise || fuzzyCategory(folded);
 };
 
 /**
