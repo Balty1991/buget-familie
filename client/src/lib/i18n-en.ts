@@ -4652,4 +4652,6 @@ export const en: Record<string, string> = {
   "Am citit {count} produse, {total} în total.": "Read {count} products, {total} in total.",
   "Reduceri: −{amount}.": "Discounts: −{amount}.",
   "Verifică și apasă Salvează.": "Check them and tap Save.",
+  "Spune ce a intrat": "Say what came in",
+  "ex. „salariul, 4.700 de lei”": "e.g. “salary, 4,700 lei”",
 };
