@@ -21,6 +21,7 @@ const LABELS = {
   functions: "Funcțiile de pe server (compilare)",
   layout: "Ecranele pe telefon (texte tăiate, suprapuse, contrast, font 130%)",
   flows: "Fluxurile de bază (notare, plic, rată, ciclu)",
+  split: "Bonul plătit din două surse (salvare, corectură, reparare, Șterse recent)",
   server: "Serverul real: bonuri, ghid, consultant",
   audit: "Pachete cu probleme de securitate",
 };

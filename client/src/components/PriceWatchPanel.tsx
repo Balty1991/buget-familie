@@ -6,7 +6,8 @@
 import "../price-watch.css";
 import { useMemo, useState } from "react";
 import { ArrowDownRight, ArrowUpRight, Minus, ShoppingBasket, ShoppingCart, Store } from "lucide-react";
-import { type AppData } from "@/lib/finance-data";
+import { isoToday, type AppData } from "@/lib/finance-data";
+import { sgrBalance } from "@/lib/sgr-balance";
 import { basketCandidates, productPriceHistories, referenceBasket } from "@/lib/price-history";
 import { fmtExact, dateText } from "@/pages/home-kit";
 import { t } from "@/lib/i18n";
@@ -36,18 +37,20 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
     onChange({ ...data, settings: { ...data.settings, basketProducts: next } });
   };
 
+  const sgr = <SgrCard data={data} />;
   if (!histories.length) {
     return (
-      <div className="bf-empty-state slim">
+      <>{sgr}<div className="bf-empty-state slim">
         <ShoppingBasket size={23} />
         <h2>{t("Încă nu există istoric de prețuri")}</h2>
         <p>{t("Notează produsele pe bonuri. După ce același produs apare pe două bonuri, aici vei vedea cum i-a evoluat prețul și în ce magazin a fost mai ieftin.")}</p>
-      </div>
+      </div></>
     );
   }
 
   return (
     <div className="bf-price-workspace">
+      {sgr}
       <section className="bf-price-basket" aria-labelledby="basket-title">
         <div className="bf-section-heading">
           <div>
@@ -159,5 +162,23 @@ export function PriceWatchPanel({ data, onChange }: { data: AppData; onChange: (
         <p className="bf-price-privacy">{t("Prețurile se potrivesc după denumirea citită de pe bon. Un gramaj diferit sau o promoție pot explica o diferență, așa că tratează comparația ca pe un indiciu, nu ca pe o concluzie.")}</p>
       </section>
     </div>
+  );
+}
+
+/** Garanția SGR: plătită pe bonuri față de recuperată la reciclare, luna asta și anul acesta. */
+function SgrCard({ data }: { data: AppData }) {
+  const today = isoToday();
+  const month = useMemo(() => sgrBalance(data, `${today.slice(0, 7)}-01`), [data.transactions, data.receipts, today]);
+  const year = useMemo(() => sgrBalance(data, `${today.slice(0, 4)}-01-01`), [data.transactions, data.receipts, today]);
+  if (!year.paid && !year.recovered) return null;
+  const line = (value: { paid: number; recovered: number; net: number }) => value.net > 0.004
+    ? t("ai plătit {paid} garanție, ai recuperat {recovered}: te-au costat {net}", { paid: fmtExact.format(value.paid), recovered: fmtExact.format(value.recovered), net: fmtExact.format(value.net) })
+    : t("ai plătit {paid} garanție, ai recuperat {recovered}: ești pe plus cu {net}", { paid: fmtExact.format(value.paid), recovered: fmtExact.format(value.recovered), net: fmtExact.format(-value.net) });
+  return (
+    <section className="bf-price-basket" aria-labelledby="sgr-title">
+      <div className="bf-section-heading"><div><p className="bf-kicker">{t("GARANȚIA SGR")}</p><h2 id="sgr-title">{t("Ambalaje plătite și returnate")}</h2></div></div>
+      <p className="bf-price-intro"><b>{t("Luna asta")}:</b> {line(month)}.<br /><b>{t("Anul acesta")}:</b> {line(year)}.</p>
+      <p className="bf-price-intro">{t("Voucherele de la automat le notezi ca venit (ex. „Voucher SGR”), pe sursa de tip voucher.")}</p>
+    </section>
   );
 }

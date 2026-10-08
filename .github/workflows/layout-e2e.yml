@@ -11,6 +11,7 @@ on:
       - "client/src/**"
       - "e2e/layout.e2e.mjs"
       - "e2e/flows.e2e.mjs"
+      - "e2e/split-receipt.e2e.mjs"
       - "package.json"
       - "pnpm-lock.yaml"
       - ".github/workflows/layout-e2e.yml"
@@ -19,6 +20,7 @@ on:
       - "client/src/**"
       - "e2e/layout.e2e.mjs"
       - "e2e/flows.e2e.mjs"
+      - "e2e/split-receipt.e2e.mjs"
   workflow_dispatch:
 
 permissions:
@@ -55,3 +57,7 @@ jobs:
       - name: Verifică fluxurile de bază
         timeout-minutes: 10
         run: pnpm test:flows
+      - name: Verifică bonul plătit din două surse
+        # Scanare → salvare → repornire → corectură → pierderea unei părți → „Repară” → „Șterse recent”.
+        timeout-minutes: 6
+        run: pnpm test:split

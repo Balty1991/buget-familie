@@ -46,3 +46,43 @@ export function mergeSplitPayments(list: Transaction[]): MergedMove[] {
   }
   return out;
 }
+
+/** Nota scrisă de versiunile vechi: „Bon de 20,36 RON: 12,00 RON din Voucher SGR și 8,36 RON din Card.” */
+const LEGACY_NOTE = /Bon de ([\d.,\s]+?)\s*(?:RON|lei)?:\s*([\d.,\s]+?)\s*(?:RON|lei)? din (.+?) și ([\d.,\s]+?)\s*(?:RON|lei)? din (.+?)\.?\s*$/;
+const num = (text: string) => Number(text.replace(/\s/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".")) || 0;
+const round = (value: number) => Math.round(value * 100) / 100;
+
+export type BrokenSplit = {
+  /** Partea care a rămas în registru. */
+  kept: Transaction;
+  total: number;
+  /** Cât lipsește și, dacă se știe, din ce sursă. */
+  missing: number;
+  missingSource?: string;
+};
+
+/**
+ * Bonurile plătite din două surse din care a rămas doar o parte: suma părților nu mai dă totalul bonului.
+ * Așa se vede pe loc, nu la sfârșit de lună, când nu mai bat soldurile.
+ */
+export function brokenSplits(list: Transaction[]): BrokenSplit[] {
+  const seen = new Set<string>();
+  const out: BrokenSplit[] = [];
+  for (const item of list) {
+    if (item.kind !== "expense" || seen.has(item.id)) continue;
+    const legacy = item.note ? LEGACY_NOTE.exec(item.note) : null;
+    const total = item.splitTotal || (legacy ? num(legacy[1]) : 0);
+    if (!(total > 0)) continue;
+    const group = [item, ...list.filter((entry) => isSplitPartner(item, entry))];
+    group.forEach((entry) => seen.add(entry.id));
+    const sum = round(group.reduce((acc, entry) => acc + entry.amount, 0));
+    if (Math.abs(sum - total) <= 0.01) continue;
+    let missingSource: string | undefined;
+    if (legacy) {
+      const names = [legacy[3].trim(), legacy[5].trim()];
+      missingSource = names.find((name) => !group.some((entry) => entry.source === name));
+    }
+    out.push({ kept: item, total, missing: round(total - sum), missingSource });
+  }
+  return out;
+}

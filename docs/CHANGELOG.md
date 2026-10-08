@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.195
+
+Siguranța registrului, după un raport real: la două bonuri plătite cu voucher SGR + card/cash, partea de voucher dispăruse, cu tot cu articolele bonului. Suma rămasă era doar cea de pe card, iar voucherul apărea iar plin.
+
+- **„Șterse recent” în Mișcări.** Tot ce iese din registru (mișcări și bonuri cu articolele lor) se păstrează pe telefon 60 de zile, oricine l-ar fi scos: omul, o corectură, sincronizarea sau o greșeală. Din listă pui înapoi cu o atingere. Operațiile în masă (închiderea anului) nu umplu lista.
+- **Avertisment „Bon incomplet”.** Fiecare parte a unui bon plătit din două surse ține acum totalul bonului. Dacă suma părților nu mai dă totalul, Mișcări arată pe loc „Bon de 20,36, în registru 8,36. Lipsesc 12,00 din Voucher SGR”. Butonul „Repară” aduce partea lipsă din „Șterse recent”, cu bonul și articolele ei. Dacă nu o găsește acolo, o reface din total, pe sursa știută. Merge și pentru bonurile vechi, din nota lor.
+- **Corectura bonului pe două surse.** Articolele apar oricare parte ai deschide, iar bonul rămâne legat de prima parte după salvare. Înainte, deschisă din partea fără bon, corectura nu arăta articolele și le dezlega. „O singură sursă” cere acum confirmare și spune exact ce parte iese din registru. Ștergerea unui bon pe două surse scoate și bonul legat de oricare parte.
+- **Fără notă scrisă de aplicație.** „Bon de 20,36: 12,00 din Voucher SGR și 8,36 din Card” nu mai apare în notița omului. Legătura dintre părți o ține aplicația separat.
+- **Cheltuiala cu categoria „Venit”.** Notată din greșeală ca venit și trecută apoi la Cheltuială, mișcarea își păstra categoria „Venit”. Acum primește categoria după nume (Taxi → Transport). Mișcările deja salvate așa se repară singure la pornire.
+- **Bilanțul SGR** în Prețuri: cât ai plătit garanție pe bonuri și cât ai recuperat la reciclare (voucherele notate ca venit), luna asta și anul acesta.
+- **Reducerea de pe rândul bonului** nu se mai pierde la repornire (se păstra doar până la închiderea aplicației).
+- **Test nou cu aplicația reală, la fiecare schimbare** (și în revizia de luni și joi): bon scanat pe voucher + card, salvare, repornire, corectură, pierderea unei părți, „Repară”, „Șterse recent”.
+
 ## 1.1.194
 
 - **Bon lung de hârtie, din mai multe poze.** După fiecare poză cu camera alegi „Citește bonul” sau „Mai fă o poză” cu partea următoare, până la 6. Pozele se citesc împreună, ca un singur bon, la fel ca la capturile din galerie.
