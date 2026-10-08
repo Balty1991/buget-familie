@@ -31,7 +31,8 @@ const { idToken } = await signUp.json();
 if (!idToken) throw new Error(`Fără identitate anonimă (HTTP ${signUp.status})`);
 
 let failures = 0;
-const providers = (process.env.RECEIPT_PROVIDERS || "gemini").split(",").map((name) => name.trim()).filter(Boolean);
+// „auto” = drumul din aplicație: Gemini întâi, Claude Sonnet dacă Gemini nu răspunde (credit doar atunci).
+const providers = (process.env.RECEIPT_PROVIDERS || "auto").split(",").map((name) => name.trim()).filter(Boolean);
 /** Doar furnizorul principal oprește publicarea; ceilalți se compară, fără să o blocheze. */
 const primary = process.env.RECEIPT_PRIMARY || providers[0];
 const summary = [];
@@ -44,7 +45,7 @@ for (const file of readdirSync(dir).filter((name) => name.endsWith(".jpg")).sort
     const response = await fetch(`https://${region}-${project}.cloudfunctions.net/readReceipt`, {
       method: "POST",
       headers: { "content-type": "application/json", origin, authorization: `Bearer ${idToken}` },
-      body: JSON.stringify({ image, mimeType: "image/jpeg", categories, provider }),
+      body: JSON.stringify({ image, mimeType: "image/jpeg", categories, ...(provider === "auto" ? {} : { provider }) }),
     });
     const body = await response.json().catch(() => ({}));
     const seconds = ((Date.now() - started) / 1000).toFixed(1);
@@ -75,7 +76,9 @@ for (const file of readdirSync(dir).filter((name) => name.endsWith(".jpg")).sort
       if (!item) problems.push(`lipsește ${pattern}`);
       else if (item.category !== category) problems.push(`${item.name} la ${item.category}, nu la ${category}`);
     }
-    if (Number(seconds) > 30) problems.push(`prea lent: ${seconds} s`);
+    // Pe drumul din aplicație: 30 s de Gemini plus rezerva Claude; un furnizor anume trebuie să fie rapid.
+    if (Number(seconds) > (provider === "auto" ? 50 : 30)) problems.push(`prea lent: ${seconds} s`);
+    if (provider === "auto" && receipt.model && !String(receipt.model).startsWith("gemini")) console.log(`⚠ a citit rezerva (${receipt.model}): Gemini n-a răspuns la timp`);
     if (problems.length) {
       if (fatal) failures++;
       console.log(`✗ ${problems.join("; ")}`);
