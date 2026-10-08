@@ -7,9 +7,11 @@ import { getAppCheck } from "firebase-admin/app-check";
 import { getAuth } from "firebase-admin/auth";
 import cors from "cors";
 import { OAuth2Client } from "google-auth-library";
+import Anthropic from "@anthropic-ai/sdk";
 
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const groqApiKey = defineSecret("GROQ_API_KEY");
+const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
 function originAllowed(origin: string | undefined) {
   if (!origin) return true;
   let host = "";
@@ -1211,8 +1213,92 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
   throw new GuideCallError(`${trail.join(" ")} | ${lastDetail.replace(/key=[^&\s"]+/g, "key=…").slice(0, 200)}`, lastStatus);
 }
 
+/**
+ * Claude Haiku: a doua cale de citire, cu aceeași instrucțiune și aceeași formă. JSON-ul e
+ * garantat de structured outputs; rezultatul trece prin aceeași curățare ca la Gemini.
+ */
+const CLAUDE_RECEIPT_MODEL = process.env.CLAUDE_RECEIPT_MODEL || "claude-haiku-5-5";
+const claudeReceiptSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["isReceipt", "store", "date", "items", "total", "payments", "confidence"],
+  properties: {
+    isReceipt: { type: "boolean" },
+    store: { type: "string" },
+    date: { type: "string", description: "AAAA-LL-ZZ sau șir gol" },
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["rawName", "name", "quantity", "amount", "discount", "category"],
+        properties: {
+          rawName: { type: "string" },
+          name: { type: "string" },
+          quantity: { type: "number" },
+          amount: { type: "number" },
+          discount: { type: "number" },
+          category: { type: "string" },
+        },
+      },
+    },
+    total: { type: "number" },
+    payments: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["method", "amount"],
+        properties: {
+          method: { type: "string", enum: [...PAYMENT_METHODS] },
+          amount: { type: "number" },
+        },
+      },
+    },
+    confidence: { type: "string", enum: ["high", "medium", "low"] },
+  },
+};
+
+async function readReceiptWithClaude(apiKey: string, image: { mimeType: string; data: string }, categories: string[], model = CLAUDE_RECEIPT_MODEL): Promise<ScannedReceipt & { model: string; trail: string }> {
+  const startedAt = Date.now();
+  const client = new Anthropic({ apiKey, timeout: 40_000, maxRetries: 1 });
+  try {
+    const response = await client.messages.create({
+      model,
+      max_tokens: 8000,
+      // Un bon se citește, nu se rezolvă: fără gândire pe Haiku; pe Sonnet 5.5 (unde „disabled” nu se acceptă), efort mic.
+      ...(model.includes("haiku") ? { thinking: { type: "disabled" as const } } : {}),
+      system: receiptInstruction(categories),
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: image.mimeType as "image/jpeg" | "image/png" | "image/webp", data: image.data } },
+          { type: "text", text: "Citește bonul din poză." },
+        ],
+      }],
+      output_config: { format: { type: "json_schema", schema: claudeReceiptSchema }, ...(model.includes("haiku") ? {} : { effort: "low" as const }) },
+    });
+    const took = `${((Date.now() - startedAt) / 1000).toFixed(1)}s`;
+    if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") {
+      throw new GuideCallError(`${model}:${response.stop_reason}@${took}`, 502);
+    }
+    const raw = response.content.map((block) => (block.type === "text" ? block.text : "")).join("");
+    const receipt = cleanScannedReceipt(parseModelJson(raw), categories);
+    const trail = `${model}:ok@${took}`;
+    console.info("receipt read", trail, receipt.items.length);
+    return { ...receipt, model, trail };
+  } catch (error) {
+    if (error instanceof GuideCallError) throw error;
+    const took = `${((Date.now() - startedAt) / 1000).toFixed(1)}s`;
+    if (error instanceof Anthropic.APIError) {
+      throw new GuideCallError(`${model}:${error.status ?? "?"}@${took} | ${error.message.slice(0, 160)}`, error.status ?? 502);
+    }
+    throw new GuideCallError(`${model}:${error instanceof Error ? error.name : "error"}@${took}`, 502);
+  }
+}
+
 export const readReceipt = onRequest(
-  { region: "europe-central2", invoker: "public", secrets: [geminiApiKey], timeoutSeconds: 90, memory: "512MiB", maxInstances: 8 },
+  { region: "europe-central2", invoker: "public", secrets: [geminiApiKey, anthropicApiKey], timeoutSeconds: 90, memory: "512MiB", maxInstances: 8 },
   (request, response) => {
     allowCors(request, response, async () => {
       if (request.method === "OPTIONS") {
@@ -1261,12 +1347,49 @@ export const readReceipt = onRequest(
         return;
       }
       const geminiKey = sanitizeKey(geminiApiKey.value() || "");
-      if (!geminiKey) {
+      const claudeKey = sanitizeKey(anthropicApiKey.value() || "");
+      // Furnizorul: implicit Gemini, cu Claude ca rezervă. „provider” alege unul anume (testul cu bonuri le compară).
+      // „claude-sonnet” e doar pentru comparația din test (de ~20 de ori mai scump decât Haiku).
+      if (body.provider === "claude-sonnet") {
+        const claudeOnly = sanitizeKey(anthropicApiKey.value() || "");
+        if (!claudeOnly) {
+          response.status(503).json({ error: "Scanarea nu este configurată.", code: "receipt_key" });
+          return;
+        }
+        try {
+          response.json({ receipt: await readReceiptWithClaude(claudeOnly, { mimeType, data }, categories, "claude-sonnet-5-5") });
+        } catch (error) {
+          const err = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
+          response.status(502).json({ error: "Nu am putut citi bonul acum.", code: "upstream", reason: err.message.slice(0, 160) });
+        }
+        return;
+      }
+      const wanted = body.provider === "claude" || body.provider === "gemini" ? body.provider : process.env.RECEIPT_PROVIDER === "claude" ? "claude-first" : "gemini-first";
+      const order: Array<"gemini" | "claude"> = wanted === "claude" ? ["claude"] : wanted === "gemini" ? ["gemini"] : wanted === "claude-first" ? ["claude", "gemini"] : ["gemini", "claude"];
+      const usable = order.filter((name) => (name === "gemini" ? geminiKey : claudeKey));
+      if (!usable.length) {
         response.status(503).json({ error: "Scanarea nu este configurată.", code: "receipt_key" });
         return;
       }
+      const image = { mimeType, data };
+      const readWith = async () => {
+        const failures: string[] = [];
+        let lastError: GuideCallError | undefined;
+        for (const name of usable) {
+          try {
+            return name === "gemini"
+              ? await readReceiptWithGemini(geminiKey, image, categories, Date.now() + (usable.length > 1 ? 45_000 : 80_000))
+              : await readReceiptWithClaude(claudeKey, image, categories);
+          } catch (error) {
+            lastError = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
+            failures.push(lastError.message.slice(0, 160));
+            console.warn("receipt provider failed", name, lastError.status, lastError.message.slice(0, 200));
+          }
+        }
+        throw new GuideCallError(failures.join(" || "), lastError?.status ?? 502);
+      };
       try {
-        const receipt = await readReceiptWithGemini(geminiKey, { mimeType, data }, categories, Date.now() + 80_000);
+        const receipt = await readWith();
         if (!receipt.isReceipt) {
           response.status(422).json({ error: "Nu am găsit un bon în poză. Încearcă o poză mai de aproape, cu tot bonul în cadru.", code: "not_receipt" });
           return;

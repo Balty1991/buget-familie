@@ -101,6 +101,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set -euo pipefail
           sync_secret() {
@@ -128,6 +129,7 @@ jobs:
           }
           sync_secret GEMINI_API_KEY "$GEMINI_API_KEY"
           sync_secret GROQ_API_KEY "$GROQ_API_KEY"
+          sync_secret ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY"
 
       # Contoarele de limită (aiGuide, Play) au câmpul expireAt; Firestore le șterge singur după el.
       # Dacă contul de serviciu nu are drept pe câmpuri, pasul avertizează și nu oprește publicarea.
@@ -150,7 +152,7 @@ jobs:
         continue-on-error: true
         run: |
           set -uo pipefail
-          for name in GEMINI_API_KEY GROQ_API_KEY; do
+          for name in GEMINI_API_KEY GROQ_API_KEY ANTHROPIC_API_KEY; do
             latest=$(gcloud secrets versions describe latest --secret "$name" --project "$FIREBASE_PROJECT_ID" --format='value(name.basename())') || continue
             for version in $(gcloud secrets versions list "$name" --project "$FIREBASE_PROJECT_ID" --filter='state!=DESTROYED' --format='value(name.basename())'); do
               [ "$version" = "$latest" ] && continue

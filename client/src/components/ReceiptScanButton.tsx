@@ -22,7 +22,7 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   const pick = async (which: "camera" | "gallery") => {
     if (busy) return;
     if (!receiptScanConsented()) {
-      const ok = await askConfirm(t("Ca să citească bonul, poza pleacă la Google Gemini, care scoate din ea produsele și sumele. Poza nu se păstrează: nici pe telefon, nici pe serverul nostru. Restul bugetului rămâne pe telefon."), { title: t("Scanarea bonului"), confirmLabel: t("Am înțeles, scanez") });
+      const ok = await askConfirm(t("Ca să citească bonul, poza pleacă la un serviciu AI (Google Gemini sau Anthropic Claude), care scoate din ea produsele și sumele. Poza nu se păstrează: nici pe telefon, nici pe serverul nostru. Restul bugetului rămâne pe telefon."), { title: t("Scanarea bonului"), confirmLabel: t("Am înțeles, scanez") });
       if (!ok) return;
       rememberReceiptScanConsent();
     }

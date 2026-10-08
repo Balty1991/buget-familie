@@ -4631,7 +4631,7 @@ export const en: Record<string, string> = {
   "Doar în aplicația de pe telefon: browserul nu poate scrie singur fișiere.": "Only in the phone app: the browser cannot write files on its own.",
   "Ultima salvare: {time}.": "Last save: {time}.",
   "N-a mers ultima salvare: {reason}": "The last save failed: {reason}",
-  "Ca să citească bonul, poza pleacă la Google Gemini, care scoate din ea produsele și sumele. Poza nu se păstrează: nici pe telefon, nici pe serverul nostru. Restul bugetului rămâne pe telefon.": "To read the receipt, the photo is sent to Google Gemini, which extracts the products and amounts. The photo is not kept: not on the phone, not on our server. The rest of your budget stays on the phone.",
+  "Ca să citească bonul, poza pleacă la un serviciu AI (Google Gemini sau Anthropic Claude), care scoate din ea produsele și sumele. Poza nu se păstrează: nici pe telefon, nici pe serverul nostru. Restul bugetului rămâne pe telefon.": "To read the receipt, the photo is sent to an AI service (Google Gemini or Anthropic Claude), which extracts the products and amounts. The photo is not kept: not on the phone, not on our server. The rest of your budget stays on the phone.",
   "Scanarea bonului": "Receipt scanning",
   "Am înțeles, scanez": "Got it, scan",
   "Nu am putut citi bonul acum. Mai încearcă o dată.": "We couldn't read the receipt right now. Please try again.",
