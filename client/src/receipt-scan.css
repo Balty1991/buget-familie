@@ -14,3 +14,10 @@ html body .bf-scan-receipt .bf-scan-receipt-gallery{display:grid;place-items:cen
 @media (prefers-reduced-motion:reduce){.bf-spin{animation:none}}
 .bf-scan-note{margin:0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--cf-primary,#218a71) 8%,transparent);color:var(--cf-ink,#11261f);font-size:14px;line-height:1.4}
 .bf-scan-note.is-warning{background:color-mix(in srgb,var(--cf-warning,#b17814) 14%,transparent)}
+/* Verificarea pe loc: rândurile față de totalul bonului (verde când bat, roșu cu diferența când nu). */
+.bf-scan-check{margin:8px 0 0;padding:10px 12px;border-radius:12px;font-size:14px;line-height:1.4}
+.bf-scan-check p{margin:0}
+.bf-scan-check.is-ok{background:color-mix(in srgb,var(--cf-primary,#218a71) 10%,transparent);color:var(--cf-primary-strong,#1b5e4b);font-weight:600}
+.bf-scan-check.is-off{display:grid;gap:6px;background:color-mix(in srgb,var(--cf-danger,#c0392b) 12%,transparent);color:var(--cf-ink,#11261f)}
+.bf-scan-check.is-off p{color:var(--cf-danger,#a52a1f);font-weight:600}
+.bf-scan-check.is-off .bf-link-button{justify-self:start}

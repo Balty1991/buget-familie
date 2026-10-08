@@ -8,6 +8,7 @@ import {
   allocationStatus,
   expenseBelongsTo,
   formatDate,
+  isoDate,
   isoToday,
   isWeeklyPaced,
   pendingDebtsInPlan,
@@ -24,6 +25,7 @@ import { isAppLockEnabled } from "@/lib/app-lock";
 import { loggingStreak } from "@/lib/logging-habits";
 import { partnersLoggedToday, selfLoggedToday } from "@/lib/habit-hold";
 import { notifyKindOf, readNotifyPrefs } from "@/lib/notify-prefs";
+import { readAutoBackup } from "@/lib/auto-backup";
 
 /** Cu PIN pe aplicație, notificarea spune doar ce s-a întâmplat, fără sume sau nume. */
 const lockSafeBody = (body: string) => isAppLockEnabled() ? t("Deschide aplicația ca să vezi detaliile.") : body;
@@ -600,6 +602,28 @@ function buildAlerts(data: AppData): PlannedAlert[] {
         tag: "checkin-next",
       });
     }
+  }
+
+  // Copia de siguranță mai veche de 30 de zile (sau niciuna, după o lună de notat): duminică seara, o dată pe săptămână
+  // până se face una. Un telefon pierdut fără copie înseamnă registrul pierdut.
+  const backup = readAutoBackup();
+  const copies = [backup.lastAt, backup.live && !backup.liveError ? backup.liveAt : undefined].map((value) => (value ? Date.parse(value) : NaN)).filter(Number.isFinite);
+  const lastCopy = copies.length ? Math.max(...copies) : NaN;
+  const firstDay = (data.transactions || []).reduce((min, item) => (item.date < min ? item.date : min), today);
+  const loggingFor = (Date.parse(`${today}T12:00:00`) - Date.parse(`${firstDay}T12:00:00`)) / 86_400_000;
+  const copyAge = Number.isFinite(lastCopy) ? (Date.now() - lastCopy) / 86_400_000 : Infinity;
+  if (copyAge > 30 && loggingFor >= 30) {
+    const sunday = atLocalHour((7 - new Date().getDay()) % 7, 18, 30);
+    const at = sunday.getTime() > Date.now() ? sunday : atLocalHour(7, 18, 30);
+    alerts.push({
+      id: id++,
+      title: t("Fă o copie de siguranță"),
+      body: Number.isFinite(lastCopy)
+        ? t("Ultima copie e de acum {days} zile. Dacă pierzi telefonul, registrul se pierde cu el: Mai mult → Setări → Copii de siguranță.", { days: Math.floor(copyAge) })
+        : t("N-ai încă nicio copie a registrului. Dacă pierzi telefonul, se pierde și el: Mai mult → Setări → Copii de siguranță."),
+      at,
+      tag: `backup-old-${isoDate(at)}`,
+    });
   }
 
   // Ce a oprit omul din Setări nu se programează deloc.

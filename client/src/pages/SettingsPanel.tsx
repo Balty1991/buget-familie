@@ -175,6 +175,7 @@ function LocalAlertsSettings({ data }: { data: AppData }) {
     goals: [t("Obiective"), t("Când se apropie termenul unui obiectiv.")],
     summaries: [t("Bilanțuri"), t("Duminică seara săptămâna, pe 1 ale lunii luna trecută.")],
     checkin: [t("Amintirea de seară"), t("Dacă tu n-ai notat azi, chiar dacă partenerul a notat.")],
+    backup: [t("Copia de siguranță"), t("Dacă n-ai mai salvat o copie de peste 30 de zile.")],
   };
 
   const ping = () => {
