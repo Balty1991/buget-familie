@@ -27,7 +27,8 @@ export type ScanPrefill = {
   amount: number;
   date?: string;
   category: string;
-  lines: Array<{ label: string; amount: number; category: string }>;
+  /** „discount”: cât s-a scăzut pe rând; suma e deja cea plătită. */
+  lines: Array<{ label: string; amount: number; category: string; discount?: number }>;
   /** Prima sursă (cea cu suma mai mare), dacă familia are una de felul plății. */
   sourceId?: string;
   /** A doua sursă, când bonul e plătit din două (ex. voucher SGR + numerar). */
@@ -63,10 +64,12 @@ export function scanToPrefill(receipt: ScannedReceipt, data: AppData, memberId?:
   const lines = receipt.items
     .filter((item) => item.amount > 0)
     .map((item) => ({
-      // Reducerea rămâne vizibilă pe rând: suma e cea plătită, eticheta spune cât s-a scăzut.
-      label: `${item.quantity && Math.abs(item.quantity - 1) > 0.0001 ? `${item.name} × ${item.quantity.toLocaleString("ro-RO", { maximumFractionDigits: 3 })}` : item.name}${(item.discount || 0) > 0.004 ? ` ${t("(reducere −{amount})", { amount: (item.discount || 0).toLocaleString("ro-RO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}` : ""}`,
+      // Cantitatea rămâne în nume („× 2”, „× 0,456 kg”), ca istoricul de prețuri să compare pe bucată sau pe kg.
+      // Reducerea stă separat: suma e cea plătită, iar numele rămâne curat pentru sugestii.
+      label: item.quantity && Math.abs(item.quantity - 1) > 0.0001 ? `${item.name} × ${item.quantity.toLocaleString("ro-RO", { maximumFractionDigits: 3 })}${Number.isInteger(item.quantity) ? "" : " kg"}` : item.name,
       amount: round(item.amount),
       category: known.has(item.category) ? item.category : fallback,
+      ...((item.discount || 0) > 0.004 ? { discount: round(item.discount || 0) } : {}),
     }));
   const itemsSum = round(lines.reduce((sum, line) => sum + line.amount, 0));
   const total = receipt.total > 0 ? round(receipt.total) : itemsSum;

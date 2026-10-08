@@ -69,7 +69,7 @@ export type Debt = { id: string; name: string; remaining: number; monthly: numbe
 export type SavingsGoal = { id: string; name: string; current: number; target: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; /** „Scrisoare pentru viitor”: se arată abia când obiectivul e atins. */ message?: string; updatedAt?: string };
 export type RecurringFrequency = "monthly" | "quarterly" | "yearly";
 export type RecurringPayment = { id: string; name: string; amount: number; category: string; sourceId: string; memberId: string; dueDay: number; active: boolean; /** Lipsă = lunar. Trimestrial/anual: RCA, impozit, abonamente anuale. */ frequency?: RecurringFrequency; /** Luna (1–12) a unei scadențe, pentru trimestrial și anual. */ month?: number; /** Suma e o estimare (curent, gaz): valoarea reală se scrie la plată și nu se adaugă automat. */ variable?: boolean; /** Creează local plata la prima deschidere din ziua scadenței sau după aceasta. */ autoPost?: boolean; note?: string; updatedAt?: string };
-export type ReceiptLine = { id: string; category: string; amount: number; label?: string; allocationId?: string };
+export type ReceiptLine = { id: string; category: string; amount: number; label?: string; allocationId?: string; /** Reducerea de pe bon, deja scăzută din sumă. */ discount?: number };
 /** Regulă locală: dacă titlul conține textul, propune categorie/plic — niciodată fără confirmare. */
 export type MerchantRule = { id: string; match: string; category?: string; allocationId?: string; updatedAt?: string };
 
@@ -362,15 +362,16 @@ export const amountError = (raw: string) => {
 
 /** Un bon se salvează și fără poze: dacă nu există linii cu sumă, totalul devine un singur produs. */
 export function resolveReceiptLines(
-  lines: Array<{ id?: string; category?: string; amount?: string | number; label?: string }>,
+  lines: Array<{ id?: string; category?: string; amount?: string | number; label?: string; discount?: number }>,
   total: number,
 ): ReceiptLine[] {
-  const normalized = lines
+  const normalized: ReceiptLine[] = lines
     .map((line, index) => ({
       id: line.id || `receipt-line-${index}`,
       category: line.category || "Alimente",
       amount: parseRomanianAmount(line.amount ?? 0),
       label: String(line.label || "").trim() || undefined,
+      ...(line.discount && line.discount > 0 ? { discount: line.discount } : {}),
     }))
     .filter((line) => line.amount > 0);
   if (!normalized.length && total > 0) {

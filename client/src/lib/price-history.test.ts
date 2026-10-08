@@ -160,3 +160,4 @@ describe("articolele cântărite scrise de mână", () => {
     expect(productPriceHistories(data)[0].observations.map((item) => item.amount)).toEqual([12, 13]);
   });
 });
+
