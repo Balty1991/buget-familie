@@ -285,4 +285,6 @@ html body .os-shell.bf-app .ai-chat-panel:has(.ai-date-bar) .ai-chat-suggestions
 .ai-src-led{display:block;width:9px;height:9px;border-radius:50%}
 .ai-src-led.is-local{background:#22c55e;box-shadow:0 0 6px #22c55e}
 .ai-src-led.is-gemini{background:#a855f7;box-shadow:0 0 6px #a855f7}
-.ai-src-led.is-groq{background:#000;box-shadow:0 0 0 1.5px #fff}
+.ai-src-led.is-groq{background:#000;box-shadow:0 0 0 1.5px #fff,0 0 0 2.5px #888}
+.ai-src-mark{min-width:38px}
+.ai-src-name{display:block;margin-top:-2px;color:var(--cf-muted,#5d7168);font:600 9px/1.1 "IBM Plex Sans",sans-serif;white-space:nowrap}

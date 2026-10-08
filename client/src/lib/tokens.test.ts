@@ -84,7 +84,8 @@ describe("plafonul de !important", () => {
     // 02.10 (5): 951, salutul și intrarea animată de pe Astăzi.
     // 03.10: 932, după 556 de declarații umbrite scoase (−19 KB) și cu graficele/tranzițiile noi (+1,5 KB).
     // 06.10: 936, cardul „cum plătește casa” (bilanțul și al doilea telefon). Regulile lui sunt folosite.
-    expect(kb).toBeLessThanOrEqual(936);
+    // 08.10: 940, consultantul financiar din Analiză și ledurile cu numele celui care răspunde.
+    expect(kb).toBeLessThanOrEqual(940);
   });
 
   it("calc() are spații în jurul lui + și -", () => {
