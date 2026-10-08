@@ -371,6 +371,20 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     && !data.settings.salaryPlan.allocations.length
     && !data.settings.paymentSources.some((item) => item.openingBalance > 0);
 
+  /* Sub butonul strâns rămânea un gol mare: cadranul sănătății banilor îl umple și duce la detalii. */
+  const healthPulse = (
+    <div className="bf-health-pulse">
+      <div className="bf-health-pulse-gauge">
+        <Suspense fallback={null}>
+          <HealthScoreBadge data={data} />
+        </Suspense>
+      </div>
+      <div className="bf-health-pulse-copy">
+        <b>{t("Sănătatea banilor, de la 0 la 100")}</b>
+        <small>{t("Arată dacă banii ajung liniștit până la următorul venit: marja rămasă, plicurile în limită, scadențele din 7 zile și ritmul de cheltuire.")} {showHealthGauge ? t("Peste 72 e calm, sub 45 e tensionat. Atinge cadranul pentru detalii.") : t("Scorul apare după ce notezi câteva zile. Atinge cadranul ca să vezi ce lipsește.")}</small>
+      </div>
+    </div>
+  );
   return (
     <div className={"bf-page bf-today-workspace" + (simpleMode ? " is-simple" : "") + (intro ? " is-entering" : "") + (held ? " is-held" : "") + (held && dayMore ? " is-open" : "")}>
       <header className="bf-greet"><b>{greeting.hello}</b><span>{greeting.line}</span></header>
@@ -597,6 +611,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           {dayMore ? t("Mai puțin din ziua asta") : t("Mai mult din ziua asta")}
         </button>
       )}
+      {held && !dayMore && healthPulse}
       {/* Cifra zilei întâi: avertizările vin imediat sub ea, nu o împing sub pliu. */}
       {!simpleMode && showTrancheNotice && activeTranche && !topNotice && (
         <aside className="bf-weekly-tranche-notice" role="status" aria-live="polite">
@@ -796,6 +811,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           <button type="button" className="bf-today-more-toggle" aria-expanded={dayMore} onClick={() => setDayMore((value) => !value)}>
             {dayMore ? t("Mai puțin din ziua asta") : t("Mai mult din ziua asta")}
           </button>
+          {!held && !dayMore && healthPulse}
           {dayMore && (
             <>
               {data.pendingReview.length === 0 && nextStep && <NextStepCard signal={nextStep} onOpen={() => openSignal(nextStep.action)} />}

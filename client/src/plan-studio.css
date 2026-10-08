@@ -417,3 +417,6 @@ html body .bf-cycle-setup .bf-irregular-income { margin-top: 12px; }
 .bf-plan-sheet-host .bf-plan-builder > p { display: none; }
 /* Confirmarea plicului se deschide deasupra foii „Plic nou” (D16). */
 html body .bf-allocation-preview { z-index: 1300; }
+/* Linkul „Mută bani” pe rândul lui: în grilă lua prima coloană și strivea „NEREPARTIZAȚI” sub sumă. */
+.bf-plan-studio-header .bf-plan-header-stat > .bf-link-button { grid-column: 1 / -1; justify-self: start; }
+.bf-plan-studio-header .bf-plan-header-stat > small:not(.bf-plan-header-eq) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

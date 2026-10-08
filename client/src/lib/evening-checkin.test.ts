@@ -43,4 +43,15 @@ describe("amintirea de seară", () => {
     data.transactions = [tx({ memberId: "member-me", person: "Andrei" })];
     expect(buildLocalAlerts(data).some((item) => item.tag.startsWith("checkin"))).toBe(false);
   });
+
+  it("rămâne în listă și în zilele cu multe alerte (cele mai apropiate întâi)", async () => {
+    const { buildLocalAlerts } = await import("./local-notifications");
+    const data = createEmptyAppData();
+    data.settings.selfMemberId = data.settings.members[0]?.id;
+    data.recurring = Array.from({ length: 15 }, (_, index) => ({ id: `r${index}`, name: `Factura ${index}`, amount: 50 + index, category: "Casă & facturi", sourceId: "", memberId: "", dueDay: 7 + (index % 7), active: true }));
+    const alerts = buildLocalAlerts(data);
+    expect(alerts.length).toBeLessThanOrEqual(12);
+    expect(alerts.some((item) => item.tag === "checkin-2026-10-06")).toBe(true);
+    expect(alerts.map((item) => item.at)).toEqual([...alerts.map((item) => item.at)].sort());
+  });
 });

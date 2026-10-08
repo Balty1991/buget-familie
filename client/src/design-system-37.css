@@ -139,11 +139,10 @@ button.danger,
   display: grid;
   min-width: 0;
 }
+/* Numele mișcării se rupe pe rânduri în loc să se taie: „Farmacie Catena” se vede întreg. */
 .bf-movement-copy b,
 .bf-movement-copy small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .bf-movement-copy small {
   font-size:14px;

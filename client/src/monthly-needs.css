@@ -116,9 +116,6 @@
 .bf-envelope-weeks > .bf-week-transfer, .bf-envelope-weeks > .bf-week-started { margin: 0 12px 12px; }
 .bf-envelope-carry { font-size: 13px; }
 .bf-notice-more { justify-self: start; min-height: 40px; margin: -4px 0 4px; padding: 0 4px; border: 0; background: none; color: var(--cf-link); font-size: 13px; font-weight: 700; text-decoration: underline; cursor: pointer; }
-.bf-auto-backup-toggle { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 0; font-size: 13px; line-height: 1.45; color: var(--cf-ink); }
-.bf-auto-backup-toggle input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--cf-primary); }
-.bf-auto-backup-toggle span { display: grid; gap: 2px; }
 .bf-envelope-history { grid-column: 1 / -1; border: 1px solid var(--cf-line); border-radius: 12px; background: var(--cf-surface); }
 .bf-envelope-history > summary { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; color: var(--cf-link); font-size: 14px; font-weight: 700; cursor: pointer; list-style: none; }
 .bf-envelope-history > summary::-webkit-details-marker { display: none; }
@@ -263,3 +260,19 @@ html body .bf-member-mode .bf-jar-emoji button.active{border:2px solid var(--cf-
 html body .bf-member-mode .bf-jar-start{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;border:2px dashed color-mix(in srgb,var(--cf-honey,#c9973f) 60%,transparent);border-radius:20px;background:transparent;color:var(--cf-ink);font-size:17px;font-weight:700}
 .bf-jar-start span{font-size:26px}
 @media (prefers-reduced-motion:reduce){.bf-jar-glass i{transition:none}}
+
+/* Salvarea automată din Setări: rând cu stare și buton Pornește / Oprește. */
+.bf-auto-backup { display: grid; gap: 0; margin-top: 16px; }
+.bf-auto-backup-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; padding: 12px 0; border-top: 1px solid var(--cf-line); }
+.bf-auto-backup-copy { display: grid; gap: 3px; flex: 1 1 220px; min-width: 0; }
+.bf-auto-backup-copy b { font-size: 15px; color: var(--cf-ink); }
+.bf-auto-backup-copy small { font-size: 13px; line-height: 1.45; color: var(--cf-muted); overflow-wrap: anywhere; }
+.bf-auto-backup-status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--cf-muted); }
+.bf-auto-backup-status i { width: 8px; height: 8px; border-radius: 50%; background: var(--cf-muted); flex: none; }
+.bf-auto-backup-row.is-on .bf-auto-backup-status { color: var(--cf-primary-strong, var(--cf-primary)); }
+.bf-auto-backup-row.is-on .bf-auto-backup-status i { background: #22c55e; }
+.bf-auto-backup-row > button { flex: none; min-height: 40px; padding: 0 18px; border-radius: 12px; font-weight: 650; }
+.bf-backup-saved { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: var(--cf-ink); overflow-wrap: anywhere; }
+/* Ora amintirii de seară: selectul global lua toată lățimea și strivea eticheta. */
+.bf-settings .bf-alert-kind > span { flex: 1 1 auto; min-width: 0; }
+.bf-settings .bf-alert-kinds .bf-alert-kind > select { flex: 0 0 auto; width: auto; min-width: 96px; max-width: 45%; }

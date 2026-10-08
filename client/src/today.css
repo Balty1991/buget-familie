@@ -46,8 +46,9 @@
 /* Ciclul dintr-o privire: zile până la salariu, intrat, ieșit. */
 .bf-cycle-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin: 16px 0 4px; }
 .bf-cycle-strip > div { display: grid; gap: 2px; min-width: 0; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--cf-primary) 7%, var(--cf-surface)); }
-.bf-cycle-strip dt { color: var(--cf-muted); font-size: 12px; font-weight: 500; white-space: nowrap; }
-.bf-cycle-strip dd { margin: 0; color: var(--cf-ink); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bf-cycle-strip dt { color: var(--cf-muted); font-size: 12px; font-weight: 500; }
+/* Suma se rupe pe două rânduri („+5.200” / „lei”) în loc să se taie cu „…” la fontul mare al telefonului. */
+.bf-cycle-strip dd { margin: 0; color: var(--cf-ink); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .bf-cycle-strip dd.income { color: var(--cf-primary-strong, var(--cf-primary)); }
 
 /* Plicurile tale: un rând care derulează, fiecare plic cu inelul lui în culoarea categoriei. */
@@ -97,3 +98,17 @@ html body .bf-trip-today{width:100%;grid-template-columns:auto minmax(0,1fr);col
 .bf-today-workspace.is-entering>:nth-child(n+4){animation-delay:.24s}
 @keyframes bf-rise{from{opacity:0;transform:translateY(16px)}}
 @media (prefers-reduced-motion:reduce){.bf-today-workspace.is-entering>*{animation:none}}
+
+/* Cadranul de sub „Mai mult din ziua asta”: umple golul de sub cifra zilei. Cu ziua strânsă,
+   pagina încape pe tot ecranul fără scroll: cardul ia exact înălțimea rămasă, cadranul crește cu ea. */
+.bf-today-workspace .bf-health-pulse { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin: 10px 0 0; padding: 10px 16px; border-radius: 20px; border: 1px solid var(--cf-line); background: var(--cf-surface); text-align: center; }
+.bf-today-workspace .bf-health-pulse-gauge { width: clamp(90px, 46vw, 230px); }
+.bf-today-workspace .bf-health-pulse-copy { display: grid; gap: 4px; min-width: 0; max-width: 34ch; }
+.bf-today-workspace .bf-health-pulse-copy b { font-size: 16px; color: var(--cf-ink); }
+.bf-today-workspace .bf-health-pulse-copy small { font-size: 13px; line-height: 1.45; color: var(--cf-muted); }
+.bf-today-workspace.is-held:not(.is-open) { display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box; }
+.bf-today-workspace.is-held:not(.is-open) > .bf-health-pulse { flex: 1 1 0; min-height: 170px; container-type: size; }
+/* Cadranul se potrivește în cât loc rămâne: nici nu împinge pagina sub ecran, nici nu lasă gol. */
+.bf-today-workspace.is-held:not(.is-open) > .bf-health-pulse .bf-health-pulse-gauge { width: max(90px, min(230px, 56cqw, (100cqh - 128px) * 1.09)); }
+/* Bara de jos e deja ocolită de padding-ul lui main; fără al doilea padding, pagina strânsă încape fără scroll. */
+.os-shell .bf-page.bf-today-workspace.is-held:not(.is-open) { padding-bottom: 8px !important; }

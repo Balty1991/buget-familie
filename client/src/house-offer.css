@@ -40,16 +40,16 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 .bf-house-offer-figures dd {
   margin: 0;
-  overflow: hidden;
   color: var(--cf-ink, #173f36);
   font-size: 15px;
   font-variant-numeric: tabular-nums;
   font-weight: 650;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Suma întreagă, pe două rânduri dacă trebuie: „710,80 …” ascundea exact cifra căutată. */
+  overflow-wrap: anywhere;
 }
 .bf-house-offer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .bf-house-offer-actions a,
@@ -125,7 +125,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.bf-today-workspace.is-held:not(.is-open) > :not(.bf-greet):not(.bf-envelope-conflicts):not(.bf-income-split-done):not(.os-hero):not(.bf-partner-quiet):not(.bf-held-toggle) {
+.bf-today-workspace.is-held:not(.is-open) > :not(.bf-greet):not(.bf-health-pulse):not(.bf-envelope-conflicts):not(.bf-income-split-done):not(.os-hero):not(.bf-partner-quiet):not(.bf-held-toggle) {
   display: none !important;
 }
 .bf-today-workspace.is-held:not(.is-open) .bf-os-actions ~ * {
