@@ -31,7 +31,7 @@ const { idToken } = await signUp.json();
 if (!idToken) throw new Error(`Fără identitate anonimă (HTTP ${signUp.status})`);
 
 let failures = 0;
-const providers = (process.env.RECEIPT_PROVIDERS || "gemini,claude").split(",").map((name) => name.trim()).filter(Boolean);
+const providers = (process.env.RECEIPT_PROVIDERS || "gemini,claude,claude-sonnet").split(",").map((name) => name.trim()).filter(Boolean);
 /** Doar furnizorul principal oprește publicarea; ceilalți se compară, fără să o blocheze. */
 const primary = process.env.RECEIPT_PRIMARY || providers[0];
 const summary = [];
