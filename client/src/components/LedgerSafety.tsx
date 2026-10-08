@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, History, RotateCcw } from "lucide-react";
-import { formatDate, newId, type AppData, type Transaction } from "@/lib/finance-data";
+import { formatDate, newId, parseRomanianAmount, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
+import { applyDeclaredBalance } from "@/lib/balance-check";
 import { brokenSplits, isSplitPartner } from "@/lib/split-payment";
 import { forgetRemoved, readRemovedBin, repairSplit, restoreRemoved } from "@/lib/removed-bin";
 import { askConfirm } from "@/lib/confirm-dialog";
@@ -17,6 +18,10 @@ const money = (value: number) => fmtExact.format(value);
 export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChange: (next: AppData) => void; onEdit: (item: Transaction) => void }) {
   const [binVersion, setBinVersion] = useState(0);
   const [binOpen, setBinOpen] = useState(false);
+  const [matchOpen, setMatchOpen] = useState(false);
+  const pockets = data.settings.paymentSources.filter((source) => source.kind !== "transfer");
+  const [matchSource, setMatchSource] = useState(pockets[0]?.id || "");
+  const [matchAmount, setMatchAmount] = useState("");
   useEffect(() => {
     const refresh = () => setBinVersion((value) => value + 1);
     window.addEventListener("buget-familie:removed-bin", refresh);
@@ -59,6 +64,14 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
         </li>)}
       </ul>
     </section>}
+    <button type="button" className="bf-link-button" onClick={() => setMatchOpen(true)}>{t("Banii din mână nu bat cu aplicația? Potrivește soldul")}</button>
+    {matchOpen && <Modal title={t("Potrivește soldul")} onClose={() => setMatchOpen(false)}>
+      <p className="bf-helper">{t("Scrie câți bani ai de fapt. Diferența intră în Mișcări ca „Corecție de sold”, cu ziua de azi: soldul devine cel real, iar diferența nu apare ca cheltuială pe o categorie și nu strică analiza.")}</p>
+      <label className="bf-field"><span>{t("Sursa")}</span><select value={matchSource} onChange={(event) => setMatchSource(event.target.value)}>{pockets.map((source) => <option key={source.id} value={source.id}>{source.name} · {t("în aplicație")} {money(sourceBalance(data, source.id))}</option>)}</select></label>
+      <label className="bf-field"><span>{t("Cât ai de fapt (lei)")}</span><input inputMode="decimal" value={matchAmount} onChange={(event) => setMatchAmount(event.target.value)} placeholder="0,00" /></label>
+      {matchAmount.trim() !== "" && <p className="bf-helper">{(() => { const diff = Math.round((parseRomanianAmount(matchAmount) - sourceBalance(data, matchSource)) * 100) / 100; return Math.abs(diff) < 0.005 ? t("Se potrivește deja.") : diff < 0 ? t("Lipsesc {amount} față de aplicație: intră ca ieșire.", { amount: money(-diff) }) : t("Ai cu {amount} mai mult decât arată aplicația: intră ca intrare.", { amount: money(diff) }); })()}</p>}
+      <button type="button" className="bf-primary full" disabled={matchAmount.trim() === ""} onClick={() => { onChange(applyDeclaredBalance(data, matchSource, parseRomanianAmount(matchAmount))); setMatchOpen(false); setMatchAmount(""); }}>{t("Potrivește")}</button>
+    </Modal>}
     {bin.length > 0 && <button type="button" className="bf-link-button" onClick={() => setBinOpen(true)}><History size={15} aria-hidden="true" /> {t("Șterse recent ({count})", { count: bin.length })}</button>}
     {binOpen && <Modal title={t("Șterse recent")} onClose={() => setBinOpen(false)}>
       <p className="bf-helper">{t("Tot ce a ieșit din registru în ultimele 60 de zile, pe telefonul acesta: șters de tine, la o corectură sau la sincronizare. Pune înapoi ce nu trebuia să plece.")}</p>
