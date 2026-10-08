@@ -4720,7 +4720,7 @@ export const en: Record<string, string> = {
   "Pune înapoi": "Put back",
   "Pui înapoi „{label}” în registru?": "Put \"{label}\" back in the ledger?",
   "Golește lista": "Clear the list",
-  "Banii din mână nu bat cu aplicația? Potrivește soldul": "Cash on hand doesn't match the app? Match the balance",
+  "Potrivește soldul cu banii reali": "Match the balance to the real money",
   "Potrivește soldul": "Match the balance",
   "Scrie câți bani ai de fapt. Diferența intră în Mișcări ca „Corecție de sold”, cu ziua de azi: soldul devine cel real, iar diferența nu apare ca cheltuială pe o categorie și nu strică analiza.": "Write how much you really have. The difference goes into Movements as a \"Balance correction\" dated today: the balance becomes the real one, and the difference doesn't show up as spending in a category or skew the analysis.",
   "Sursa": "Source",

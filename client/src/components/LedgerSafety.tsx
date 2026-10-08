@@ -11,7 +11,7 @@ import { fmtExact, Modal } from "@/pages/home-kit";
 
 const money = (value: number) => fmtExact.format(value);
 /** Linkurile lungi se rup pe rânduri: pe 360 px, cu fontul mare, ieșeau din ecran. */
-const WRAP = { whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere" } as const;
+const WRAP = { whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere", maxWidth: "100%", minWidth: 0, justifySelf: "start" } as const;
 
 /**
  * Siguranța registrului, în Mișcări:
@@ -82,7 +82,7 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
         </li>)}
       </ul>
     </section>}
-    <button type="button" className="bf-link-button" style={WRAP} onClick={() => setMatchOpen(true)}>{t("Banii din mână nu bat cu aplicația? Potrivește soldul")}</button>
+    <button type="button" className="bf-link-button" style={WRAP} onClick={() => setMatchOpen(true)}>{t("Potrivește soldul cu banii reali")}</button>
     {matchOpen && <Modal title={t("Potrivește soldul")} onClose={() => setMatchOpen(false)}>
       <p className="bf-helper">{t("Scrie câți bani ai de fapt. Diferența intră în Mișcări ca „Corecție de sold”, cu ziua de azi: soldul devine cel real, iar diferența nu apare ca cheltuială pe o categorie și nu strică analiza.")}</p>
       <label className="bf-field"><span>{t("Sursa")}</span><select value={matchSource} onChange={(event) => setMatchSource(event.target.value)}>{pockets.map((source) => <option key={source.id} value={source.id}>{source.name} · {t("în aplicație")} {money(sourceBalance(data, source.id))}</option>)}</select></label>
