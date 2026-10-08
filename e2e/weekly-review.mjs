@@ -94,6 +94,8 @@ const report = [
   analysis,
   "",
   "---",
+  // Mențiunea trimite mail: GitHub nu anunță pe mail un Issue deschis de robotul Actions altfel.
+  ...(process.env.REVIEW_NOTIFY ? [`cc @${process.env.REVIEW_NOTIFY}`, ""] : []),
   `_Revizie automată${run ? ` · [logurile complete](${run})` : ""}${usage ? ` · ${usage}` : ""}_`,
 ].join("\n");
 
