@@ -1,12 +1,15 @@
 name: Revizia aplicației
 
-# Luni și joi dimineața (ora României): toate verificările aplicației, apoi Claude Haiku 5.5 citește
+# Luni și joi la 7:47 (ora României, vara și iarna): toate verificările aplicației, apoi Claude Haiku 5.5 citește
 # rezultatele și scrie raportul ca Issue cu eticheta „revizie” (GitHub îl trimite și pe mail).
 # Cost: cam 1–2 cenți pe revizie. Se poate porni și de mână, din Actions → „Revizia aplicației”.
 
 on:
+  # GitHub programează în UTC: 4:47 UTC e 7:47 vara, 5:47 UTC e 7:47 iarna. Rulează amândouă,
+  # iar pasul „ora” lasă să continue doar cea care e 7:47 în fusul României de azi.
   schedule:
     - cron: "47 4 * * 1,4"
+    - cron: "47 5 * * 1,4"
   workflow_dispatch:
 
 permissions:
@@ -18,7 +21,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  ora:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        # După fusul României de azi (+03 vara, +02 iarna), nu după ora de acum: GitHub pornește
+        # programările uneori cu întârziere, iar o rulare de 4:47 venită la 5:05 nu trebuie pierdută.
+        run: |
+          offset=$(TZ=Europe/Bucharest date +%z)
+          wanted="47 5 * * 1,4"; [ "$offset" = "+0300" ] && wanted="47 4 * * 1,4"
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "${{ github.event.schedule }}" = "$wanted" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; else echo "run=false" >> "$GITHUB_OUTPUT"; fi
+          echo "Fusul României: $offset · programarea: ${{ github.event.schedule }} · aleasă: $wanted"
+
   review:
+    needs: ora
+    if: needs.ora.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
