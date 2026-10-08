@@ -1,5 +1,5 @@
 /**
- * Scanarea bonului: poza pleacă o singură dată la funcția `readReceipt` (Gemini), care
+ * Scanarea bonului: poza pleacă o singură dată la funcția `readReceipt` (Gemini, cu Claude ca rezervă), care
  * întoarce articolele pe categorii. Nimic nu se salvează singur: rezultatul umple
  * formularul „Adaugă mișcare”, iar omul verifică și apasă Salvează.
  */

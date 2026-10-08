@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.187
+
+- Scanarea bonului citește întâi cu **Gemini Flash Lite**, care a fost cel mai rapid și corect pe toate cele 4 bonuri de test (3–6 s). Dacă Gemini e plin sau dă eroare, citește **Claude Sonnet 5.5**, tot 4/4 corecte, puțin mai lent. Claude Haiku a fost scos, pentru că a mutat prețurile pe bonul mototolit.
+- Modelele Gemini se aleg din lista Google, iar modelele pline sunt sărite imediat. Dacă tot nu merge, mesajul arată un cod scurt cu motivul.
+- După fiecare publicare a funcțiilor rulează automat un test cu patru bonuri reale (total, articole, categorii, timp sub 30 s).
+- Acordul de la prima scanare și politica de confidențialitate pomenesc și Anthropic Claude, ca rezervă.
+
 ## 1.1.186
 
 - **Scanează bonul**: în Notează (și în Adaugă mișcare), o poză la bon (sau din galerie) scoate toate produsele, fiecare cu suma și categoria lui (alcool → Băuturi, ciocolată și napolitane → Dulciuri, apă îmbuteliată → Apă, garanția SGR → SGR, sacoșa → Sacoșe, mezeluri → Alimente). Reducerile apar pe rândul produsului („… × 6 (reducere −1,74)”), cu suma plătită, iar totalul reducerilor apare deasupra. Se completează singure totalul, data, magazinul și, la plata din două surse (voucher Returo + numerar), ambele surse cu sumele lor. Nimic nu se salvează până nu apeși Salvează.
