@@ -96,12 +96,11 @@ html body .os-shell .bf-movements-ledger .bf-movement-open {
 }
 html body .os-shell .bf-movements-ledger .bf-movement-open .bf-tx-icon { width: 36px; height: 36px; }
 html body .os-shell .bf-movements-ledger .bf-movement-copy b { font-size: 15px; }
+/* Categoria și persoana se rup pe rânduri: cu fontul mare al telefonului „Casă & facturi · Eu” se tăia. */
 html body .os-shell .bf-movements-ledger .bf-movement-copy small {
   display: block;
-  overflow: hidden;
   font-size: 12px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 html body .os-shell .bf-movements-ledger .bf-movement-open > strong {
   font-family: Fraunces, Georgia, serif;

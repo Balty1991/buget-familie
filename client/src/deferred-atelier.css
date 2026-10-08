@@ -156,7 +156,7 @@
 .bf-movement-day article { display: grid; align-items: center; gap: 11px; padding: 10px 0; }
 .bf-movement-day article > div:nth-child(2) { display: grid; gap: 3px; min-width: 0; }
 .bf-movement-day article b { font-size: 14px; overflow-wrap: anywhere; }
-.bf-movement-day article small, .bf-movement-day article em { overflow: hidden; font-size:12px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.bf-movement-day article small, .bf-movement-day article em { font-size:12px; font-style: normal; overflow-wrap: anywhere; }
 .bf-movement-day article strong { font-size:14px; font-variant-numeric: tabular-nums; }
 .bf-movement-day article strong.income { color: var(--bf-major-green); }
 .bf-movement-day article strong.expense { color: var(--bf-major-coral); }
