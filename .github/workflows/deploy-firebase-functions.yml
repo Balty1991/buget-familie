@@ -137,7 +137,7 @@ jobs:
         continue-on-error: true
         run: |
           set -uo pipefail
-          for group in aiGuideQuota aiGuideQuotaUnverified playVerifyQuota playRtdnQuota appFeedbackQuota readReceiptQuota; do
+          for group in aiGuideQuota aiGuideQuotaUnverified aiConsultQuota playVerifyQuota playRtdnQuota appFeedbackQuota readReceiptQuota; do
             gcloud firestore fields ttls update expireAt --collection-group="$group" --enable-ttl --async --project "$FIREBASE_PROJECT_ID" --quiet \
               || echo "::warning::TTL pentru $group nu s-a putut porni (rolul Cloud Datastore Index Admin pe contul de serviciu, sau Firebase Console → Firestore → TTL)."
           done

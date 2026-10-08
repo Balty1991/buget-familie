@@ -86,9 +86,29 @@ for (const file of readdirSync(dir).filter((name) => name.endsWith(".jpg")).sort
     }
   }
 }
+/** Ghidul și consultantul: aceeași funcție aiGuide; ledul din aplicație arată cine a răspuns. */
+const guideUrl = `https://${region}-${project}.cloudfunctions.net/aiGuide`;
+const guideChecks = [
+  ["ghid", { messages: [{ role: "user", text: "Cum stau cu banii luna asta?" }], context: { today: "2026-10-08", language: "ro" } }, (body) => typeof body.reply === "string" && body.reply.length > 0],
+  ["consultant", { mode: "consult", context: { language: "ro", today: "2026-10-08", month: { dayOfMonth: 8, daysInMonth: 31, income: 5200, expense: 1900 }, previousMonths: [{ month: "2026-09", income: 5200, expense: 4900 }, { month: "2026-08", income: 5200, expense: 5300 }], categories: [{ name: "Alimente", thisMonth: 900, monthlyAverage: 2100 }, { name: "Timp liber", thisMonth: 400, monthlyAverage: 600 }], envelopes: [], nextPayday: "2026-11-05", fixedMonthly: 1400, debts: [{ kind: "card", remaining: 3000, monthly: 300 }], goals: [], emergencyFund: { monthlySpending: 5000, saved: 2000, months: 0.4, target: 15000 }, upcomingEvents: [] } }, (body) => Boolean(body.report?.headline && body.report?.summary)],
+];
+for (const [name, payload, valid] of guideChecks) {
+  const started = Date.now();
+  const response = await fetch(guideUrl, { method: "POST", headers: { "content-type": "application/json", origin, authorization: `Bearer ${idToken}` }, body: JSON.stringify(payload) });
+  const body = await response.json().catch(() => ({}));
+  const seconds = ((Date.now() - started) / 1000).toFixed(1);
+  console.log(`\n=== ${name} · HTTP ${response.status} · ${seconds} s · răspuns de la ${body.source || "?"}`);
+  console.log(JSON.stringify(body.report || body.reply || body).slice(0, 1200));
+  if (!response.ok || !valid(body)) {
+    failures++;
+    summary.push(`${name}: ✗ HTTP ${response.status}`);
+  } else {
+    summary.push(`${name}: ✓ ${seconds} s · ${body.source}${body.source === "gemini" ? "" : " (Gemini n-a răspuns)"}`);
+  }
+}
 console.log(`\n--- Rezumat ---\n${summary.join("\n")}`);
 if (failures) {
-  console.error(`\n${failures} bonuri nu au ieșit cum trebuie.`);
+  console.error(`\n${failures} verificări nu au ieșit cum trebuie.`);
   process.exit(1);
 }
-console.log("\nToate bonurile au ieșit corect.");
+console.log("\nBonurile, ghidul și consultantul au răspuns corect.");

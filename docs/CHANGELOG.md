@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.188
+
+- **Consultantul financiar** (Analiză → Asistent, abonamentul Familia): la „Cere raportul lunii” primești o evaluare sinceră a lunii față de lunile trecute (Pe drumul bun / Atenție / Risc), cel mult trei pași concreți cu suma pe lună, ce urmează să fie urmărit și un lucru făcut bine. Cifrele le calculează telefonul; la AI pleacă doar un rezumat (totaluri pe luni și categorii, plicuri, datorii, obiective, fondul de urgență), fără mișcări, magazine, notițe sau nume. Pașii cu sume mai mari decât venitul lunar sunt aruncați. Raportul rămâne pe telefon, se poate actualiza (6 pe zi), iar spre final de lună cardul spune că raportul lunii e gata de cerut.
+- Ghidul online răspunde din nou cu **Gemini**: lista lui de modele era scrisă de mână, iar modelele vechi răspundeau 404, așa că ghidul cădea mereu pe Groq. Acum folosește aceeași alegere automată ca la bon (Flash Lite întâi), cu gândire scurtă.
+- Ledul de sub robot are acum și numele celui care a răspuns: **Telefon** (verde), **Gemini** (mov), **Groq** (negru). Același led apare pe raportul consultantului.
+- Ghidul de pe telefon rămâne primul și singurul care merge fără internet; Gemini și Groq intră doar când el nu înțelege.
+- Testul de după publicare verifică și ghidul și consultantul.
+
 ## 1.1.187
 
 - Scanarea bonului citește întâi cu **Gemini Flash Lite**, care a fost cel mai rapid și corect pe toate cele 4 bonuri de test (3–6 s). Dacă Gemini e plin sau dă eroare, citește **Claude Sonnet 5.5**, tot 4/4 corecte, puțin mai lent. Claude Haiku a fost scos, pentru că a mutat prețurile pe bonul mototolit.
