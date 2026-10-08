@@ -10,6 +10,8 @@ import { t } from "@/lib/i18n";
 import { fmtExact, Modal } from "@/pages/home-kit";
 
 const money = (value: number) => fmtExact.format(value);
+/** Linkurile lungi se rup pe rânduri: pe 360 px, cu fontul mare, ieșeau din ecran. */
+const WRAP = { whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere" } as const;
 
 /**
  * Siguranța registrului, în Mișcări:
@@ -56,7 +58,7 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
           <p>{t("{device}, văzut ultima dată {when}, are o versiune veche. Versiunile vechi pot șterge din greșeală o parte din bonurile plătite din două surse, iar ștergerea ajunge prin sincronizare și aici. Actualizează Buget Familie din Magazin Play pe acel telefon.", { device: outdated[0].label, when: new Date(outdated[0].lastSeenAt).toLocaleString("ro-RO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}</p>
         </div>
       </div>
-      <button type="button" className="bf-link-button" onClick={() => hideDevice(`${outdated[0].id}:${outdated[0].lastSeenAt}`)}>{t("Nu mai folosesc acel telefon")}</button>
+      <button type="button" className="bf-link-button" style={WRAP} onClick={() => hideDevice(`${outdated[0].id}:${outdated[0].lastSeenAt}`)}>{t("Nu mai folosesc acel telefon")}</button>
     </section>}
     {broken.length > 0 && <section className="bf-envelope-conflicts bf-movement-conflicts" aria-live="polite">
       <div className="bf-envelope-conflicts-heading">
@@ -80,7 +82,7 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
         </li>)}
       </ul>
     </section>}
-    <button type="button" className="bf-link-button" onClick={() => setMatchOpen(true)}>{t("Banii din mână nu bat cu aplicația? Potrivește soldul")}</button>
+    <button type="button" className="bf-link-button" style={WRAP} onClick={() => setMatchOpen(true)}>{t("Banii din mână nu bat cu aplicația? Potrivește soldul")}</button>
     {matchOpen && <Modal title={t("Potrivește soldul")} onClose={() => setMatchOpen(false)}>
       <p className="bf-helper">{t("Scrie câți bani ai de fapt. Diferența intră în Mișcări ca „Corecție de sold”, cu ziua de azi: soldul devine cel real, iar diferența nu apare ca cheltuială pe o categorie și nu strică analiza.")}</p>
       <label className="bf-field"><span>{t("Sursa")}</span><select value={matchSource} onChange={(event) => setMatchSource(event.target.value)}>{pockets.map((source) => <option key={source.id} value={source.id}>{source.name} · {t("în aplicație")} {money(sourceBalance(data, source.id))}</option>)}</select></label>
@@ -88,7 +90,7 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
       {matchAmount.trim() !== "" && <p className="bf-helper">{(() => { const diff = Math.round((parseRomanianAmount(matchAmount) - sourceBalance(data, matchSource)) * 100) / 100; return Math.abs(diff) < 0.005 ? t("Se potrivește deja.") : diff < 0 ? t("Lipsesc {amount} față de aplicație: intră ca ieșire.", { amount: money(-diff) }) : t("Ai cu {amount} mai mult decât arată aplicația: intră ca intrare.", { amount: money(diff) }); })()}</p>}
       <button type="button" className="bf-primary full" disabled={matchAmount.trim() === ""} onClick={() => { onChange(applyDeclaredBalance(data, matchSource, parseRomanianAmount(matchAmount))); setMatchOpen(false); setMatchAmount(""); }}>{t("Potrivește")}</button>
     </Modal>}
-    {bin.length > 0 && <button type="button" className="bf-link-button" onClick={() => setBinOpen(true)}><History size={15} aria-hidden="true" /> {t("Șterse recent ({count})", { count: bin.length })}</button>}
+    {bin.length > 0 && <button type="button" className="bf-link-button" style={WRAP} onClick={() => setBinOpen(true)}><History size={15} aria-hidden="true" /> {t("Șterse recent ({count})", { count: bin.length })}</button>}
     {binOpen && <Modal title={t("Șterse recent")} onClose={() => setBinOpen(false)}>
       <p className="bf-helper">{t("Tot ce a ieșit din registru în ultimele 60 de zile, pe telefonul acesta: șters de tine, la o corectură sau la sincronizare. Pune înapoi ce nu trebuia să plece.")}</p>
       <ul className="bf-envelope-conflicts-list">
@@ -106,7 +108,7 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
           </li>;
         })}
       </ul>
-      <button type="button" className="bf-link-button" onClick={() => { forgetRemoved(bin.map((entry) => entry.key)); setBinOpen(false); }}>{t("Golește lista")}</button>
+      <button type="button" className="bf-link-button" style={WRAP} onClick={() => { forgetRemoved(bin.map((entry) => entry.key)); setBinOpen(false); }}>{t("Golește lista")}</button>
     </Modal>}
   </>;
 }
