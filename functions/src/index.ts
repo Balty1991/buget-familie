@@ -1297,8 +1297,54 @@ async function readReceiptWithClaude(apiKey: string, image: { mimeType: string; 
   }
 }
 
+/**
+ * Groq (modele deschise, ex. Llama 4) — doar pentru comparația din test. Modelul cu imagini
+ * se alege din lista Groq, după nume; răspunsul e JSON în forma cerută în text.
+ */
+async function readReceiptWithGroq(apiKey: string, image: { mimeType: string; data: string }, categories: string[]): Promise<ScannedReceipt & { model: string; trail: string }> {
+  const trail: string[] = [];
+  const listed = await fetch("https://api.groq.com/openai/v1/models", { headers: { authorization: `Bearer ${apiKey}` }, signal: AbortSignal.timeout(5_000) });
+  if (!listed.ok) throw new GuideCallError(`groq-list:${listed.status}`, listed.status);
+  const names = (((await listed.json()) as { data?: Array<{ id?: string; active?: boolean }> }).data || [])
+    .filter((model) => model.active !== false)
+    .map((model) => String(model.id || ""))
+    .filter((id) => /(llama-4|scout|maverick|vision|-vl|vl-|gemma-3|pixtral)/i.test(id));
+  if (!names.length) throw new GuideCallError("groq: niciun model cu imagini", 404);
+  for (const model of names.slice(0, 3)) {
+    const startedAt = Date.now();
+    const took = () => `${((Date.now() - startedAt) / 1000).toFixed(1)}s`;
+    try {
+      const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model,
+          temperature: 0,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: `${receiptInstruction(categories)}\n\n${RECEIPT_JSON_SHAPE}` },
+            { role: "user", content: [{ type: "image_url", image_url: { url: `data:${image.mimeType};base64,${image.data}` } }, { type: "text", text: "Citește bonul din poză." }] },
+          ],
+        }),
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!apiResponse.ok) {
+        trail.push(`${model}:${apiResponse.status}@${took()}`);
+        continue;
+      }
+      const body = (await apiResponse.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      const receipt = cleanScannedReceipt(parseModelJson(body.choices?.[0]?.message?.content || ""), categories);
+      trail.push(`${model}:ok@${took()}`);
+      return { ...receipt, model, trail: trail.join(" ") };
+    } catch (error) {
+      trail.push(`${model}:${error instanceof Error ? error.name : "error"}@${took()}`);
+    }
+  }
+  throw new GuideCallError(trail.join(" ") || "groq", 502);
+}
+
 export const readReceipt = onRequest(
-  { region: "europe-central2", invoker: "public", secrets: [geminiApiKey, anthropicApiKey], timeoutSeconds: 90, memory: "512MiB", maxInstances: 8 },
+  { region: "europe-central2", invoker: "public", secrets: [geminiApiKey, anthropicApiKey, groqApiKey], timeoutSeconds: 90, memory: "512MiB", maxInstances: 8 },
   (request, response) => {
     allowCors(request, response, async () => {
       if (request.method === "OPTIONS") {
@@ -1349,6 +1395,21 @@ export const readReceipt = onRequest(
       const geminiKey = sanitizeKey(geminiApiKey.value() || "");
       const claudeKey = sanitizeKey(anthropicApiKey.value() || "");
       // Furnizorul: implicit Gemini, cu Claude ca rezervă. „provider” alege unul anume (testul cu bonuri le compară).
+      // „groq” e doar pentru comparația din test.
+      if (body.provider === "groq") {
+        const groqOnly = sanitizeKey(groqApiKey.value() || "");
+        if (!groqOnly) {
+          response.status(503).json({ error: "Scanarea nu este configurată.", code: "receipt_key" });
+          return;
+        }
+        try {
+          response.json({ receipt: await readReceiptWithGroq(groqOnly, { mimeType, data }, categories) });
+        } catch (error) {
+          const err = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
+          response.status(502).json({ error: "Nu am putut citi bonul acum.", code: "upstream", reason: err.message.slice(0, 160) });
+        }
+        return;
+      }
       // „claude-sonnet” e doar pentru comparația din test (de ~20 de ori mai scump decât Haiku).
       if (body.provider === "claude-sonnet") {
         const claudeOnly = sanitizeKey(anthropicApiKey.value() || "");
