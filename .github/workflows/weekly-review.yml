@@ -67,6 +67,7 @@ jobs:
       - name: Raportul (Claude Haiku 5.5)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REVIEW_NOTIFY: ${{ github.repository_owner }}
         run: node e2e/weekly-review.mjs
 
       - name: Deschide Issue cu raportul
