@@ -493,10 +493,14 @@ export default function Home() {
       const removed = current.transactions.find((item) => item.id === change.id);
       if (!removed) return current;
       const now = new Date().toISOString();
+      // Bonul plătit din două surse pleacă întreg, cu bonul lui, ca în Mișcări: niciodată doar o parte.
+      const group = splitGroupIds(current.transactions, change.id);
+      const receiptIds = current.receipts.filter((receipt) => group.includes(receipt.linkedTransactionId || "")).map((receipt) => receipt.id);
       return {
         ...current,
-        transactions: current.transactions.filter((item) => item.id !== change.id),
-        deleted: [...current.deleted, { entity: "transactions" as const, id: change.id, deletedAt: now }].slice(-TOMBSTONE_MAX),
+        transactions: current.transactions.filter((item) => !group.includes(item.id)),
+        receipts: current.receipts.filter((receipt) => !receiptIds.includes(receipt.id)),
+        deleted: [...current.deleted, ...group.map((id) => ({ entity: "transactions" as const, id, deletedAt: now })), ...receiptIds.map((id) => ({ entity: "receipts" as const, id, deletedAt: now }))].slice(-TOMBSTONE_MAX),
       };
     }
     if (change.kind === "amend-transaction") {

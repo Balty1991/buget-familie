@@ -34,8 +34,8 @@ export function AutoBackupToggle() {
       <p className="bf-kicker">{t("SALVARE AUTOMATĂ")}</p>
       <Row
         title={t("La fiecare modificare")}
-        detail={native ? t("Fișierul {file} din Documente/Buget Familie se rescrie singur la câteva secunde după fiecare schimbare. Îl imporți oricând din Backup.", { file: LIVE_BACKUP_NAME }) : t("Doar în aplicația de pe telefon: browserul nu poate scrie singur fișiere.")}
-        status={live ? (prefs.liveError ? t("Pornită, dar ultima salvare n-a mers: {reason}", { reason: prefs.liveError }) : prefs.liveAt ? `${t("Pornită · ultima salvare {time} · în Fișiere: Documente → Buget Familie → {file}", { time: when(prefs.liveAt), file: liveFile })}${liveFile !== LIVE_BACKUP_NAME ? ` ${t("(după o reinstalare, fișierul vechi fără număr nu mai poate fi rescris: cel actual e acesta)")}` : ""}` : t("Pornită · prima salvare în câteva secunde")) : t("Oprită")}
+        detail={native ? t("Un singur fișier în Documente/Buget Familie, rescris la câteva secunde după fiecare schimbare. Numele lui arată data și ora ultimei salvări (buget-familie-automat-AAAA-LL-ZZ-OOMM.json). Îl imporți oricând din Backup.") : t("Doar în aplicația de pe telefon: browserul nu poate scrie singur fișiere.")}
+        status={live ? (prefs.liveError ? t("Pornită, dar ultima salvare n-a mers: {reason}", { reason: prefs.liveError }) : prefs.liveAt ? `${t("Pornită · ultima salvare {time} · în Fișiere: Documente → Buget Familie → {file}", { time: when(prefs.liveAt), file: liveFile })}` : t("Pornită · prima salvare în câteva secunde")) : t("Oprită")}
         on={live}
         disabled={!native}
         onToggle={() => writeAutoBackup({ live: !live, asked: true, liveError: undefined })}

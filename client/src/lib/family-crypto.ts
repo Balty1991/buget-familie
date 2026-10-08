@@ -21,6 +21,7 @@ import {
   type PaymentSource,
   type SalaryAllocationApplication,
   type SyncDevice,
+  type Receipt,
   type Transaction,
   type TransactionConflict,
 } from "@/lib/finance-data";
@@ -555,6 +556,25 @@ function withConcurrentDebtPayments(debts: AppData["debts"], local: AppData, rem
   });
 }
 
+/**
+ * O versiune veche a aplicației (dinainte de 1.1.175) „strângea” la pornire bonurile și ștergea partea
+ * de pe voucher a bonului plătit din două surse, ca pe un duplicat; ștergerea ajungea prin sincronizare
+ * pe toate telefoanele (8 octombrie: 28,50 și 12 lei din Voucher SGR, cu articolele lor). Aplicația de azi
+ * șterge mereu bonul întreg, deci o ștergere care lasă cealaltă parte vie, sau bonul cu articole fără
+ * mișcarea lui, e o greșeală: păstrăm rândul local și ridicăm piatra lui de mormânt.
+ */
+export function keepHalfDeletedReceipts(localTx: Transaction[], merged: Transaction[], receipts: Receipt[], deleted: DeletedRecord[]): { transactions: Transaction[]; deleted: DeletedRecord[] } {
+  const present = new Set(merged.map((item) => item.id));
+  const tombstoned = new Set(deleted.filter((item) => item.entity === "transactions").map((item) => item.id));
+  const keep = localTx.filter((item) => item.kind === "expense" && !present.has(item.id) && tombstoned.has(item.id) && (
+    (item.splitId && merged.some((other) => other.splitId === item.splitId && other.kind === "expense"))
+    || (item.receiptId && receipts.some((receipt) => receipt.id === item.receiptId && receipt.linkedTransactionId === item.id))
+  ));
+  if (!keep.length) return { transactions: merged, deleted };
+  const ids = new Set(keep.map((item) => item.id));
+  return { transactions: [...keep, ...merged], deleted: deleted.filter((item) => !(item.entity === "transactions" && ids.has(item.id))) };
+}
+
 export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: SyncBase): AppData {
   const local = normalizeAppData(localRaw); const remote = normalizeAppData(remoteRaw);
   // O singură trecere (înainte era O(n²): 350 ms la 1.500 de ștergeri).
@@ -650,6 +670,8 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
     remote.transactionConflicts || [],
     base,
   );
+  const mergedReceipts = mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted);
+  const guarded = keepHalfDeletedReceipts(local.transactions, transactions, mergedReceipts, deleted);
   const localDraftIds = new Set(local.pendingReview.map((item) => item.id));
   const pendingReviewMeta = mergePendingReviewMeta(
     buildPendingReviewMeta(local),
@@ -667,13 +689,13 @@ export function mergeFamilyData(localRaw: AppData, remoteRaw: AppData, base?: Sy
       const localCut = local.settings.archivedThrough || "";
       const remoteCut = remote.settings.archivedThrough || "";
       const winner = remoteCut > localCut ? remote.settings : localCut ? local.settings : undefined;
-      return winner ? transactions.filter((item) => !isArchivedTransaction(winner, item)) : transactions;
+      return winner ? guarded.transactions.filter((item) => !isArchivedTransaction(winner, item)) : guarded.transactions;
     })(),
     debts: withConcurrentDebtPayments(mergeCollection("debts", local.debts, remote.debts, deleted), local, remote, new Set(deleted.filter((item) => item.entity === "transactions").map((item) => item.id))),
     savings: mergeCollection("savings", local.savings, remote.savings, deleted),
-    receipts: mergeCollection("receipts", local.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...item }) => item), remote.receipts, deleted),
+    receipts: mergedReceipts,
     recurring: mergeCollection("recurring", local.recurring, remote.recurring, deleted),
-    deleted,
+    deleted: guarded.deleted,
     settings: {
       ...remote.settings,
       ...local.settings,

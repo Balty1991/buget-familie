@@ -14,8 +14,8 @@ describe("copia de siguranță săptămânală", () => {
     expect(autoBackupWorthAsking({ enabled: false, asked: false }, 12)).toBe(true);
     expect(autoBackupWorthAsking({ enabled: false, asked: true }, 12)).toBe(false);
   });
-  it("fișierul are data în nume", () => {
-    expect(autoBackupName(new Date(2026, 9, 10, 12))).toBe("buget-familie-copie-2026-10-10.json");
+  it("fișierul are data și ora în nume", () => {
+    expect(autoBackupName(new Date(2026, 9, 10, 12, 5))).toBe("buget-familie-copie-2026-10-10-1205.json");
   });
 });
 

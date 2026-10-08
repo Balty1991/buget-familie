@@ -43,5 +43,5 @@ export const autoBackupDue = (prefs: AutoBackupPrefs, now = Date.now()) => {
 /** Merită întrebat: familia are deja câteva mișcări de pierdut și n-a răspuns încă. */
 export const autoBackupWorthAsking = (prefs: AutoBackupPrefs, movements: number) => !prefs.asked && movements >= 10;
 
-/** Numele fișierului automat, cu data: se păstrează câteva săptămâni în urmă. */
-export const autoBackupName = (date = new Date()) => `buget-familie-copie-${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}.json`;
+/** Numele copiei săptămânale, cu data și ora: în Descărcări se vede pe loc care e cea mai nouă. */
+export const autoBackupName = (date = new Date()) => `buget-familie-copie-${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}-${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}.json`;

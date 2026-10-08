@@ -24,6 +24,9 @@ public final class ReminderScheduler {
   private static final String KEY_PAYLOAD = "payload";
   private static final String KEY_IDS = "ids";
   private static final int LIMIT = 12;
+  /** Orele la care trebuia să sune ceva, ca aplicația să poată spune omului dacă una s-a pierdut. */
+  static final String KEY_HISTORY = "history";
+  static final String KEY_LAST_FIRED = "lastFired";
 
   public static void scheduleJson(Context context, String payload) {
     if (payload == null || payload.trim().isEmpty()) return;
@@ -45,6 +48,9 @@ public final class ReminderScheduler {
     final AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     if (alarms == null) return;
     final JSONArray ids = new JSONArray();
+    final SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+    JSONArray history;
+    try { history = new JSONArray(prefs.getString(KEY_HISTORY, "[]")); } catch (Exception error) { history = new JSONArray(); }
     try {
       final JSONArray items = new JSONArray(payload);
       final int limit = Math.min(items.length(), LIMIT);
@@ -71,11 +77,43 @@ public final class ReminderScheduler {
         // fără permisiunea de alarme exacte (pe Android 14 ar fi deschis o setare la fiecare programare).
         alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending);
         ids.put(notifyId);
+        history = rememberPlanned(history, at);
       }
     } catch (Exception ignored) {
       // Payload invalid — nu blocăm aplicația.
     }
-    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY_IDS, ids.toString()).apply();
+    prefs.edit().putString(KEY_IDS, ids.toString()).putString(KEY_HISTORY, history.toString()).apply();
+  }
+
+  /** Ține ultimele trei zile de ore programate, fără dubluri (aceeași alarmă se reprogramează des). */
+  private static JSONArray rememberPlanned(JSONArray history, long at) {
+    final long cutoff = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(3);
+    final JSONArray next = new JSONArray();
+    boolean known = false;
+    for (int i = 0; i < history.length(); i += 1) {
+      final long value = history.optLong(i, 0L);
+      if (value < cutoff) continue;
+      if (value == at) known = true;
+      next.put(value);
+    }
+    if (!known && next.length() < 60) next.put(at);
+    return next;
+  }
+
+  /** Câte reamintiri trebuiau să sune între ultima sosită și acum (cu 20 de minute de toleranță). */
+  static JSONArray missedSince(Context context) {
+    final SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+    final long lastFired = prefs.getLong(KEY_LAST_FIRED, 0L);
+    final long limit = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(20);
+    final JSONArray missed = new JSONArray();
+    try {
+      final JSONArray history = new JSONArray(prefs.getString(KEY_HISTORY, "[]"));
+      for (int i = 0; i < history.length(); i += 1) {
+        final long value = history.optLong(i, 0L);
+        if (value > 0L && value < limit && value > lastFired + TimeUnit.MINUTES.toMillis(1)) missed.put(value);
+      }
+    } catch (Exception ignored) { }
+    return missed;
   }
 
   private static void cancelAlarms(Context context) {

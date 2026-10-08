@@ -679,6 +679,9 @@ async function scheduleWeb(alerts: PlannedAlert[]) {
     if (delta < -5 * 60_000 || delta > 14 * 60 * 60_000) continue;
     try {
       window.setTimeout(() => {
+        // Chrome îngheață cronometrele filelor din fundal: „Check-in de seară” sosea la 1:07 noaptea.
+        // Mai târziu de jumătate de oră față de ora ei, reamintirea nu mai are rost.
+        if (Date.now() - alert.at.getTime() > 30 * 60_000) return;
         void showNow(alert.title, alert.body, alert.tag);
       }, Math.max(0, delta));
     } catch {
@@ -978,4 +981,30 @@ export function disableLocalAlerts(): void {
   void loadNativeNotifications()
     .then((plugin) => plugin.cancel({ notifications: [{ id: 4090 }] }))
     .catch(() => undefined);
+}
+
+export type ReminderHealth = { ignoringBatteryOptimizations: boolean; manufacturer: string; lastFiredAt: number; missed: number[] };
+type HealthPlugin = { reminderHealth: () => Promise<ReminderHealth>; openBatterySettings: () => Promise<{ opened: string }> };
+
+/** Pe telefon: dacă reamintirile ajung la timp sau telefonul oprește aplicația în fundal. */
+export async function reminderHealth(): Promise<ReminderHealth | undefined> {
+  try {
+    const { Capacitor, registerPlugin } = await import("@capacitor/core");
+    if (!Capacitor.isNativePlatform()) return undefined;
+    const result = await registerPlugin<HealthPlugin>("BugetFamilieNative").reminderHealth();
+    return { ...result, missed: Array.isArray(result.missed) ? result.missed.map(Number).filter((value) => value > 0) : [] };
+  } catch {
+    return undefined;
+  }
+}
+
+/** Deschide setarea „Pornire automată / Baterie” a producătorului, ca reamintirile să sune la oră. */
+export async function openBatterySettings(): Promise<boolean> {
+  try {
+    const { registerPlugin } = await import("@capacitor/core");
+    await registerPlugin<HealthPlugin>("BugetFamilieNative").openBatterySettings();
+    return true;
+  } catch {
+    return false;
+  }
 }

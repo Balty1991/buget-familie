@@ -228,6 +228,8 @@ export type SyncDevice = {
   label: string;
   lastSeenAt: string;
   revokedAt?: string;
+  /** Versiunea aplicației la ultima sincronizare (din 1.1.195). Lipsa ei înseamnă o versiune mai veche. */
+  appVersion?: string;
 };
 export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
@@ -706,6 +708,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     label: String(item?.label || `Telefon ${index + 1}`).slice(0, 48),
     lastSeenAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item?.lastSeenAt || "")) ? String(item.lastSeenAt) : new Date().toISOString(),
     revokedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item?.revokedAt || "")) ? String(item.revokedAt) : undefined,
+    ...(typeof item?.appVersion === "string" && /^\d+\.\d+\.\d+$/.test(item.appVersion) ? { appVersion: item.appVersion } : {}),
   })).filter((item) => item.id).slice(0, 20) : [];
   const selfMemberId = typeof oldSettings.selfMemberId === "string" && members.some((member) => member.id === oldSettings.selfMemberId) ? oldSettings.selfMemberId : undefined;
   const syncRecoveryIssuedAt = /^\d{4}-\d{2}-\d{2}T/.test(String(oldSettings.syncRecoveryIssuedAt || "")) ? String(oldSettings.syncRecoveryIssuedAt) : undefined;

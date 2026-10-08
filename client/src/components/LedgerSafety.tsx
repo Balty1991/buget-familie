@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, History, RotateCcw } from "lucide-react";
 import { formatDate, newId, parseRomanianAmount, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
 import { applyDeclaredBalance } from "@/lib/balance-check";
+import { outdatedSyncDevices } from "@/lib/sync-devices";
 import { brokenSplits, isSplitPartner } from "@/lib/split-payment";
 import { forgetRemoved, readRemovedBin, repairSplit, restoreRemoved } from "@/lib/removed-bin";
 import { askConfirm } from "@/lib/confirm-dialog";
@@ -41,7 +42,22 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
     onChange(restoreRemoved(data, [key]));
   };
 
+  const [hidden, setHidden] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem("buget-familie:outdated-hidden") || "[]") as string[]; } catch { return []; } });
+  // Un telefon vechi la care omul nu mai are acces (dat, resetat) se poate ascunde; revine dacă se sincronizează din nou.
+  const outdated = outdatedSyncDevices(data).filter((item) => !hidden.includes(`${item.id}:${item.lastSeenAt}`));
+  const hideDevice = (key: string) => { const next = [...hidden, key].slice(-20); setHidden(next); try { localStorage.setItem("buget-familie:outdated-hidden", JSON.stringify(next)); } catch { /* fără stocare */ } };
   return <>
+    {outdated.length > 0 && <section className="bf-envelope-conflicts bf-movement-conflicts" aria-live="polite">
+      <div className="bf-envelope-conflicts-heading">
+        <AlertTriangle size={18} aria-hidden="true" />
+        <div>
+          <p className="bf-kicker">{t("TELEFON CU APLICAȚIE VECHE")}</p>
+          <h2>{t("Actualizează aplicația pe celălalt telefon")}</h2>
+          <p>{t("{device}, văzut ultima dată {when}, are o versiune veche. Versiunile vechi pot șterge din greșeală o parte din bonurile plătite din două surse, iar ștergerea ajunge prin sincronizare și aici. Actualizează Buget Familie din Magazin Play pe acel telefon.", { device: outdated[0].label, when: new Date(outdated[0].lastSeenAt).toLocaleString("ro-RO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}</p>
+        </div>
+      </div>
+      <button type="button" className="bf-link-button" onClick={() => hideDevice(`${outdated[0].id}:${outdated[0].lastSeenAt}`)}>{t("Nu mai folosesc acel telefon")}</button>
+    </section>}
     {broken.length > 0 && <section className="bf-envelope-conflicts bf-movement-conflicts" aria-live="polite">
       <div className="bf-envelope-conflicts-heading">
         <AlertTriangle size={18} aria-hidden="true" />
