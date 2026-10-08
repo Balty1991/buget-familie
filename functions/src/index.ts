@@ -1214,10 +1214,11 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
 }
 
 /**
- * Claude Haiku: a doua cale de citire, cu aceeași instrucțiune și aceeași formă. JSON-ul e
+ * Claude (implicit Sonnet 5.5): a doua cale de citire, cu aceeași instrucțiune și aceeași formă. JSON-ul e
  * garantat de structured outputs; rezultatul trece prin aceeași curățare ca la Gemini.
  */
-const CLAUDE_RECEIPT_MODEL = process.env.CLAUDE_RECEIPT_MODEL || "claude-haiku-5-5";
+// Rezerva: Sonnet. În comparația pe bonurile reale a citit corect 4/4 (Haiku 3/4, a greșit bonul mototolit).
+const CLAUDE_RECEIPT_MODEL = process.env.CLAUDE_RECEIPT_MODEL || "claude-sonnet-5-5";
 const claudeReceiptSchema = {
   type: "object",
   additionalProperties: false,
@@ -1410,7 +1411,7 @@ export const readReceipt = onRequest(
         }
         return;
       }
-      // „claude-sonnet” e doar pentru comparația din test (de ~20 de ori mai scump decât Haiku).
+      // „claude-sonnet” cere direct Sonnet, fără Gemini (pentru comparații).
       if (body.provider === "claude-sonnet") {
         const claudeOnly = sanitizeKey(anthropicApiKey.value() || "");
         if (!claudeOnly) {

@@ -10,7 +10,7 @@ import { compressReceiptPhoto, receiptCategories, receiptScanConsented, remember
 
 /**
  * „Scanează bonul”: poza → articolele pe categorii, în formular. Poza pleacă la
- * Google Gemini doar ca să fie citită; nu o păstrăm nici pe telefon, nici pe server.
+ * Google Gemini (sau Anthropic Claude, ca rezervă) doar ca să fie citită; nu o păstrăm nici pe telefon, nici pe server.
  */
 export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData; memberId?: string; onResult: (prefill: ScanPrefill) => void }) {
   const cameraRef = useRef<HTMLInputElement>(null);
