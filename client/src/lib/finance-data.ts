@@ -63,6 +63,8 @@ export type Transaction = {
   deviceId?: string;
   /** Același bon plătit din două surse: cele două cheltuieli au același splitId și se corectează împreună. */
   splitId?: string;
+  /** Totalul bonului plătit din două surse, pe fiecare parte: dacă o parte lipsește, se vede din diferență. */
+  splitTotal?: number;
 };
 
 export type Debt = { id: string; name: string; remaining: number; monthly: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; updatedAt?: string; /** Dobânda anuală, în procente (DAE sau dobânda din contract). */ annualRate?: number; /** Credit bancar, card de credit, IFN sau bani de la persoane. */ kind?: "credit" | "card" | "ifn" | "persoane"; /** Data ultimei rate din contract, dacă e știută. */ endDate?: string };
@@ -226,6 +228,8 @@ export type SyncDevice = {
   label: string;
   lastSeenAt: string;
   revokedAt?: string;
+  /** Versiunea aplicației la ultima sincronizare (din 1.1.195). Lipsa ei înseamnă o versiune mai veche. */
+  appVersion?: string;
 };
 export type AppData = { version: 9; transactions: Transaction[]; debts: Debt[]; savings: SavingsGoal[]; receipts: Receipt[]; recurring: RecurringPayment[]; deleted: DeletedRecord[]; pendingReview: ReviewDraft[]; pendingReviewMeta: PendingReviewMeta[]; allocationConflicts: AllocationAmountConflict[]; transactionConflicts: TransactionConflict[]; settings: FamilySettings };
 
@@ -618,7 +622,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     // Un rând fără marcaj de timp îl primește din ziua lui, nu din clipa normalizării:
     // altfel un rând vechi venit de pe celălalt telefon s-ar naște „acum”, ar învinge
     // urma ștergerii și ar reapărea în registru după ce a fost șters.
-    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: splitLegacySgrCategory(String(item.category || "Altele"), `${item.title || ""} ${item.note || ""}`), amount: money2(Math.min(MAX_AMOUNT, Math.max(0, parseRomanianAmount(item.amount)))), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope, deviceId: typeof item.deviceId === "string" && /^[\w:-]{4,80}$/.test(item.deviceId) ? item.deviceId : undefined };
+    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: item.kind !== "income" && item.category === "Venit" ? guessCategoryFromText(String(item.title || "")) || "Altele" : splitLegacySgrCategory(String(item.category || "Altele"), `${item.title || ""} ${item.note || ""}`), amount: money2(Math.min(MAX_AMOUNT, Math.max(0, parseRomanianAmount(item.amount)))), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope, deviceId: typeof item.deviceId === "string" && /^[\w:-]{4,80}$/.test(item.deviceId) ? item.deviceId : undefined };
   };
   const transactions = realRows<Partial<Transaction>>(old.transactions).map((entry, index) => normalizeTransaction(entry, index, "legacy-tx"));
   const transactionIds = new Set(transactions.map((item) => item.id));
@@ -636,7 +640,7 @@ export const normalizeAppData = (input: unknown): AppData => {
         };
       }).filter((item) => item.transaction.amount > 0 && !transactionIds.has(item.transaction.id)).slice(0, 300)
     : [];
-  const receipts = realRows<Receipt>(old.receipts).map((entry, index) => { const { ocrText: _ocr, ...item } = entry as Receipt; const linked = transactions.find((transaction) => transaction.id === item.linkedTransactionId || transaction.receiptId === item.id || transaction.id === `receipt-tx-${item.id}`); const lines = Array.isArray(item.lines) ? item.lines.map((line, lineIndex) => ({ id: line.id || `receipt-line-${index}-${lineIndex}`, category: splitLegacySgrCategory(line.category || "Altele", line.label || ""), amount: Math.max(0, parseRomanianAmount(line.amount)), label: line.label || undefined })).filter((line) => line.amount > 0) : undefined; const imageKeys = Array.isArray(item.imageKeys) ? item.imageKeys.filter((key): key is string => typeof key === "string" && key.length > 0).slice(0, 2) : undefined; return { ...item, id: item.id || `legacy-receipt-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), lines, imageKeys, linkedTransactionId: linked?.id || item.linkedTransactionId, linkedTransactionIds: item.linkedTransactionIds?.length ? item.linkedTransactionIds : linked?.id ? [linked.id] : undefined }; });
+  const receipts = realRows<Receipt>(old.receipts).map((entry, index) => { const { ocrText: _ocr, ...item } = entry as Receipt; const linked = transactions.find((transaction) => transaction.id === item.linkedTransactionId || transaction.receiptId === item.id || transaction.id === `receipt-tx-${item.id}`); const lines = Array.isArray(item.lines) ? item.lines.map((line, lineIndex) => ({ id: line.id || `receipt-line-${index}-${lineIndex}`, category: splitLegacySgrCategory(line.category || "Altele", line.label || ""), amount: Math.max(0, parseRomanianAmount(line.amount)), label: line.label || undefined, ...(typeof line.discount === "number" && line.discount > 0 ? { discount: line.discount } : {}) })).filter((line) => line.amount > 0) : undefined; const imageKeys = Array.isArray(item.imageKeys) ? item.imageKeys.filter((key): key is string => typeof key === "string" && key.length > 0).slice(0, 2) : undefined; return { ...item, id: item.id || `legacy-receipt-${index}`, amount: Math.max(0, parseRomanianAmount(item.amount)), date: safeDate(item.date), lines, imageKeys, linkedTransactionId: linked?.id || item.linkedTransactionId, linkedTransactionIds: item.linkedTransactionIds?.length ? item.linkedTransactionIds : linked?.id ? [linked.id] : undefined }; });
   const oldPlan = oldSettings.salaryPlan || fallback.settings.salaryPlan;
   const periodStart = safeDate(oldPlan.periodStart);
   const nextPayday = /^\d{4}-\d{2}-\d{2}$/.test(oldPlan.nextPayday || "") ? oldPlan.nextPayday : "";
@@ -704,6 +708,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     label: String(item?.label || `Telefon ${index + 1}`).slice(0, 48),
     lastSeenAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item?.lastSeenAt || "")) ? String(item.lastSeenAt) : new Date().toISOString(),
     revokedAt: /^\d{4}-\d{2}-\d{2}T/.test(String(item?.revokedAt || "")) ? String(item.revokedAt) : undefined,
+    ...(typeof item?.appVersion === "string" && /^\d+\.\d+\.\d+$/.test(item.appVersion) ? { appVersion: item.appVersion } : {}),
   })).filter((item) => item.id).slice(0, 20) : [];
   const selfMemberId = typeof oldSettings.selfMemberId === "string" && members.some((member) => member.id === oldSettings.selfMemberId) ? oldSettings.selfMemberId : undefined;
   const syncRecoveryIssuedAt = /^\d{4}-\d{2}-\d{2}T/.test(String(oldSettings.syncRecoveryIssuedAt || "")) ? String(oldSettings.syncRecoveryIssuedAt) : undefined;

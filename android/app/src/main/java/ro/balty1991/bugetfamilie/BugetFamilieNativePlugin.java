@@ -3,6 +3,10 @@ package ro.balty1991.bugetfamilie;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -158,6 +162,60 @@ public class BugetFamilieNativePlugin extends Plugin {
    * (nu câte un fișier nou). Pe Android 10+ prin MediaStore: aplicația își găsește propriul fișier și îl
    * suprascrie; după o reinstalare fișierul vechi nu mai e al ei, așa că se face unul nou, alături.
    */
+  /**
+   * Starea reamintirilor: dacă telefonul lasă aplicația să ruleze în fundal (optimizarea bateriei),
+   * producătorul (Huawei, Honor, Xiaomi și alții opresc aplicațiile mai agresiv) și orele la care
+   * trebuia să sune ceva și n-a sunat.
+   */
+  @PluginMethod
+  public void reminderHealth(PluginCall call) {
+    final Context context = getContext();
+    final JSObject result = new JSObject();
+    boolean ignoring = true;
+    try {
+      final PowerManager power = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+      if (power != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) ignoring = power.isIgnoringBatteryOptimizations(context.getPackageName());
+    } catch (Exception ignored) { }
+    result.put("ignoringBatteryOptimizations", ignoring);
+    result.put("manufacturer", Build.MANUFACTURER == null ? "" : Build.MANUFACTURER);
+    result.put("lastFiredAt", context.getSharedPreferences(ReminderScheduler.PREFS, Context.MODE_PRIVATE).getLong(ReminderScheduler.KEY_LAST_FIRED, 0L));
+    result.put("missed", ReminderScheduler.missedSince(context));
+    call.resolve(result);
+  }
+
+  /** Deschide setarea care lasă aplicația să sune la timp: întâi pornirea automată (Huawei/Honor/Xiaomi), apoi bateria. */
+  @PluginMethod
+  public void openBatterySettings(PluginCall call) {
+    final Context context = getContext();
+    final String maker = Build.MANUFACTURER == null ? "" : Build.MANUFACTURER.toLowerCase();
+    final java.util.List<Intent> tries = new java.util.ArrayList<>();
+    if (maker.contains("huawei") || maker.contains("honor")) {
+      tries.add(new Intent().setClassName("com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
+      tries.add(new Intent().setClassName("com.hihonor.systemmanager", "com.hihonor.systemmanager.startupmgr.ui.StartupNormalAppListActivity"));
+      tries.add(new Intent().setClassName("com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"));
+    } else if (maker.contains("xiaomi") || maker.contains("redmi") || maker.contains("poco")) {
+      tries.add(new Intent().setClassName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+    } else if (maker.contains("oppo") || maker.contains("realme") || maker.contains("oneplus")) {
+      tries.add(new Intent().setClassName("com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"));
+    } else if (maker.contains("vivo")) {
+      tries.add(new Intent().setClassName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"));
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) tries.add(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+    tries.add(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + context.getPackageName())));
+    for (Intent intent : tries) {
+      try {
+        // Fără resolveActivity: pe Android 11+ ecranele altor aplicații nu sunt „vizibile”, dar se pot deschide.
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+        final JSObject result = new JSObject();
+        result.put("opened", intent.getComponent() != null ? "maker" : intent.getAction());
+        call.resolve(result);
+        return;
+      } catch (Exception ignored) { }
+    }
+    call.reject("Nicio setare disponibilă");
+  }
+
   @PluginMethod
   public void writeLiveBackup(PluginCall call) {
     final String name = call.getString("name");
@@ -166,6 +224,11 @@ public class BugetFamilieNativePlugin extends Plugin {
       call.reject("name/data invalid");
       return;
     }
+    // „base” leagă numele cu data și ora de același fișier: buget-familie-automat-2026-10-09-0101.json.
+    final String requestedBase = call.getString("base");
+    final String base = requestedBase != null && !requestedBase.isEmpty() && name.startsWith(requestedBase) && !requestedBase.contains("/") && !requestedBase.contains("%")
+      ? requestedBase
+      : name.substring(0, name.length() - ".json".length());
     try {
       final byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
       final String folder = Environment.DIRECTORY_DOCUMENTS + "/" + LIVE_FOLDER;
@@ -178,7 +241,6 @@ public class BugetFamilieNativePlugin extends Plugin {
         // „buget-familie-automat (1).json” lângă el. Căutăm și variantele numerotate ale aplicației (doar ale ei
         // apar în interogare) și îl rescriem pe cel mai nou, altfel la fiecare salvare apărea un fișier nou.
         final String[] projection = { MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DISPLAY_NAME };
-        final String base = name.substring(0, name.length() - ".json".length());
         final String selection = MediaStore.MediaColumns.RELATIVE_PATH + "=? AND " + MediaStore.MediaColumns.DISPLAY_NAME + " LIKE ?";
         try (Cursor cursor = resolver.query(collection, projection, selection, new String[] { folder + "/", base + "%.json" }, MediaStore.MediaColumns.DATE_MODIFIED + " DESC")) {
           if (cursor != null && cursor.moveToFirst()) {
@@ -203,13 +265,30 @@ public class BugetFamilieNativePlugin extends Plugin {
           out.write(bytes);
           out.flush();
         }
+        // Numele arată ora ultimei salvări. Dacă Android nu acceptă redenumirea, fișierul rămâne cu numele vechi.
+        if (!name.equals(writtenName)) {
+          try {
+            final ContentValues rename = new ContentValues();
+            rename.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+            if (resolver.update(target, rename, null, null) > 0) {
+              try (Cursor named = resolver.query(target, new String[] { MediaStore.MediaColumns.DISPLAY_NAME }, null, null, null)) {
+                if (named != null && named.moveToFirst() && named.getString(0) != null) writtenName = named.getString(0);
+              }
+            }
+          } catch (Exception ignored) {
+            // Redenumirea e doar pentru ochi: conținutul e deja scris.
+          }
+        }
       } else {
         final File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), LIVE_FOLDER);
         if (!dir.exists() && !dir.mkdirs()) throw new IllegalStateException("Nu am putut crea folderul Documente/" + LIVE_FOLDER);
+        // Android 9 și mai vechi: un singur fișier, redenumit la ora ultimei salvări.
+        final File[] olds = dir.listFiles((folderFile, fileName) -> fileName.startsWith(base) && fileName.endsWith(".json") && !fileName.equals(name));
         try (FileOutputStream out = new FileOutputStream(new File(dir, name), false)) {
           out.write(bytes);
           out.flush();
         }
+        if (olds != null) for (File old : olds) { if (!old.delete()) old.deleteOnExit(); }
       }
       final JSObject result = new JSObject();
       result.put("path", "Documents/" + LIVE_FOLDER + "/" + writtenName);

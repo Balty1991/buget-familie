@@ -3,6 +3,7 @@
  * First paint: doar Astăzi. Restul ecranelor, sync-ul și formularele se încarcă la cerere.
  */
 import { splitGroupIds, storedMove } from "@/lib/split-payment";
+import { recordRemovals } from "@/lib/removed-bin";
 import { readAutoBackup, writeAutoBackup } from "@/lib/auto-backup";
 import { saveLiveBackup } from "@/lib/app-storage";
 import { applyDynamicColor, haptic, readDynamicColor } from "@/lib/native-feel";
@@ -274,6 +275,16 @@ export default function Home() {
   useEffect(() => { if (firstWeekTourOpen && capturedEnough) dismissFirstWeekTour(); }, [firstWeekTourOpen, capturedEnough]);
 
   const update = (fn: (current: AppData) => AppData) => applyData((current) => fn(current));
+  /**
+   * „Șterse recent”: orice mișcare sau bon care dispare din registru, pe orice drum (ștergere, corectură,
+   * sincronizare, o greșeală), se păstrează pe telefon 60 de zile și se poate pune înapoi din Mișcări.
+   */
+  const lastLedger = useRef<AppData | null>(null);
+  useEffect(() => {
+    if (!storageReady) return;
+    if (lastLedger.current) recordRemovals(lastLedger.current, data);
+    lastLedger.current = data;
+  }, [data, storageReady]);
   useEffect(() => {
     if (!storageReady) return;
     applyData((current) => adoptOutsideExpenses(current));
@@ -482,10 +493,14 @@ export default function Home() {
       const removed = current.transactions.find((item) => item.id === change.id);
       if (!removed) return current;
       const now = new Date().toISOString();
+      // Bonul plătit din două surse pleacă întreg, cu bonul lui, ca în Mișcări: niciodată doar o parte.
+      const group = splitGroupIds(current.transactions, change.id);
+      const receiptIds = current.receipts.filter((receipt) => group.includes(receipt.linkedTransactionId || "")).map((receipt) => receipt.id);
       return {
         ...current,
-        transactions: current.transactions.filter((item) => item.id !== change.id),
-        deleted: [...current.deleted, { entity: "transactions" as const, id: change.id, deletedAt: now }].slice(-TOMBSTONE_MAX),
+        transactions: current.transactions.filter((item) => !group.includes(item.id)),
+        receipts: current.receipts.filter((receipt) => !receiptIds.includes(receipt.id)),
+        deleted: [...current.deleted, ...group.map((id) => ({ entity: "transactions" as const, id, deletedAt: now })), ...receiptIds.map((id) => ({ entity: "receipts" as const, id, deletedAt: now }))].slice(-TOMBSTONE_MAX),
       };
     }
     if (change.kind === "amend-transaction") {
@@ -798,8 +813,8 @@ export default function Home() {
   const onSyncScreen = view === "utilities" && more === "sync";
   const current = () => { if (view === "journal") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim mișcările…")}</div>}><MovementsJournal data={data} onChange={applyData} onAdd={() => openTx()} onEdit={openTx} onOpenReview={() => { setMore("review"); go("utilities"); }} onDelete={(id) => deleteWithUndo(t("Mișcarea a fost ștearsă."), (currentData) => ({
       // Bonul plătit din două surse se șterge întreg: ambele părți.
-      next: { ...currentData, transactions: currentData.transactions.filter((item) => !splitGroupIds(currentData.transactions, id).includes(item.id)), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId !== id), deleted: [...currentData.deleted, ...splitGroupIds(currentData.transactions, id).map((removedId) => ({ entity: "transactions" as const, id: removedId, deletedAt: new Date().toISOString() }))].slice(-TOMBSTONE_MAX) },
-      removed: { transactions: currentData.transactions.filter((item) => splitGroupIds(currentData.transactions, id).includes(item.id)), receipts: currentData.receipts.filter((receipt) => receipt.linkedTransactionId === id) },
+      next: { ...currentData, transactions: currentData.transactions.filter((item) => !splitGroupIds(currentData.transactions, id).includes(item.id)), receipts: currentData.receipts.filter((receipt) => !splitGroupIds(currentData.transactions, id).includes(receipt.linkedTransactionId || "")), deleted: [...currentData.deleted, ...splitGroupIds(currentData.transactions, id).map((removedId) => ({ entity: "transactions" as const, id: removedId, deletedAt: new Date().toISOString() }))].slice(-TOMBSTONE_MAX) },
+      removed: { transactions: currentData.transactions.filter((item) => splitGroupIds(currentData.transactions, id).includes(item.id)), receipts: currentData.receipts.filter((receipt) => splitGroupIds(currentData.transactions, id).includes(receipt.linkedTransactionId || "")) },
     }))} /></Suspense>; if (view === "plan")
  return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim planul…")}</div>}><PlanStudio data={data} onChange={applyData} simpleMode={simpleMode} /></Suspense>; if (view === "habits") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim obiceiurile…")}</div>}><SpendingHabitsView data={data} /></Suspense>; if (view === "calendar") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim calendarul…")}</div>}><FinancialCalendarView data={data} onOpenEvents={() => { setMore("events"); go("utilities"); }} /></Suspense>; if (view === "goals") return <Suspense fallback={<div className="bf-lazy-panel">{t("Pregătim obiectivele…")}</div>}><LongTermGoalsView data={data} onOpen={() => { setEditGoal(undefined); setModal("saving"); }} onEdit={(item) => { setEditGoal(item); setModal("saving"); }} onDelete={(id) => deleteWithUndo(t("Obiectivul a fost șters."), (currentData) => ({
       next: { ...currentData, savings: currentData.savings.filter((item) => item.id !== id), deleted: [...currentData.deleted, { entity: "savings" as const, id, deletedAt: new Date().toISOString() }].slice(-TOMBSTONE_MAX) },

@@ -174,3 +174,17 @@ describe("receiptCategories", () => {
     expect(list).not.toContain("Credite");
   });
 });
+
+describe("sursa „Voucher SGR” salvată ca tip card", () => {
+  it("plata cu voucher merge pe ea, iar cea cu cardul pe cardul adevărat", async () => {
+    const { createEmptyAppData } = await import("./finance-data");
+    const data = createEmptyAppData();
+    data.settings.paymentSources = [
+      { id: "card", name: "Card Raiffeisen", kind: "card", openingBalance: 0 },
+      { id: "v", name: "Voucher SGR", kind: "card", openingBalance: 0 },
+    ];
+    const prefill = scanToPrefill({ store: "Exflor", date: null, total: 20.36, items: [{ name: "Kinder", quantity: 1, amount: 20.36, category: "Dulciuri" }], payments: [{ method: "voucher", amount: 12 }, { method: "card", amount: 8.36 }], confidence: "high" }, data, undefined, "2026-10-08");
+    expect(prefill.sourceId).toBe("v");
+    expect(prefill.second).toEqual({ sourceId: "card", amount: 8.36 });
+  });
+});

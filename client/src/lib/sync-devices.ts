@@ -7,6 +7,7 @@
  */
 import { newId, type AppData, type SyncDevice } from "@/lib/finance-data";
 import { safeSetItem } from "@/lib/safe-storage";
+import { APP_VERSION } from "@/lib/app-version";
 
 const DEVICE_KEY = "buget-familie:device-id";
 
@@ -40,7 +41,7 @@ export function touchSyncDevice(data: AppData, label = defaultDeviceLabel()): Ap
   if (existing?.revokedAt) {
     devices[index] = { ...existing, label: label.slice(0, 48) };
   } else {
-    const next: SyncDevice = { id, label: label.slice(0, 48), lastSeenAt: now, revokedAt: undefined };
+    const next: SyncDevice = { id, label: label.slice(0, 48), lastSeenAt: now, revokedAt: undefined, appVersion: APP_VERSION };
     if (index >= 0) devices[index] = { ...existing, ...next };
     else devices.unshift(next);
   }
@@ -105,4 +106,24 @@ export function claimSyncAdmin(data: AppData, deviceId = getOrCreateDeviceId()):
 export function isSyncAdmin(data: AppData): boolean {
   const admin = data.settings.syncAdminDeviceId;
   return !admin || admin === getOrCreateDeviceId();
+}
+
+/** „1.1.195” → 1001195, ca versiunile să se compare ca numere. */
+const versionRank = (value?: string) => {
+  const [major, minor, patch] = String(value || "").split(".").map(Number);
+  return Number.isFinite(major) && Number.isFinite(minor) && Number.isFinite(patch) ? major * 1_000_000 + minor * 1_000 + patch : 0;
+};
+
+/** Prima versiune care scrie `appVersion` și nu mai strică bonurile din două surse. */
+export const SAFE_SYNC_VERSION = "1.1.195";
+
+/**
+ * Celelalte telefoane ale familiei, văzute în ultimele 30 de zile, cu o versiune veche a aplicației.
+ * Versiunile dinainte de 1.1.175 ștergeau la pornire o parte din bonurile plătite din două surse,
+ * iar ștergerea ajungea prin sincronizare pe toate telefoanele.
+ */
+export function outdatedSyncDevices(data: AppData, now = Date.now(), selfId = getOrCreateDeviceId()): SyncDevice[] {
+  return (data.settings.syncDevices || []).filter((item) => item.id !== selfId && !item.revokedAt
+    && now - (Date.parse(item.lastSeenAt) || 0) < 30 * 86_400_000
+    && versionRank(item.appVersion) < versionRank(SAFE_SYNC_VERSION));
 }

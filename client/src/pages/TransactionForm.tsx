@@ -19,6 +19,9 @@ import type { ScanPrefill } from "@/lib/receipt-scan";
 import { findKnownProduct, knownProducts } from "@/lib/price-history";
 import { lineTotal, splitQuantity, withQuantity, type QuantityUnit } from "@/lib/item-quantity";
 
+/** Nota pusă automat de versiunile vechi pe bonul din două surse. */
+const AUTO_SPLIT_NOTE = /(?:\s*·\s*)?Bon de [^:]+:.*$/;
+
 export function TransactionForm({ data, initial, scan, onSave, onClose }: { data: AppData; initial?: Transaction; /** Bonul scanat din „Notează”: umple formularul la deschidere. */ scan?: ScanPrefill; onSave: (item: Transaction | Transaction[], meta?: { fromWeekIndex?: number; learnRule?: { match: string; category: string; allocationId?: string }; detailLines?: ReceiptLine[]; removeIds?: string[] }) => void; onClose: () => void }) {
   const [kind, setKind] = useState<TransactionKind>(initial?.kind || "expense");
   const [title, setTitle] = useState(initial?.title || "");
@@ -32,7 +35,9 @@ export function TransactionForm({ data, initial, scan, onSave, onClose }: { data
   const [memberId, setMemberId] = useState(initial?.memberId || data.settings.members.find((member) => member.name === initial?.person)?.id || data.settings.members[0]?.id || "");
   const [shareScope, setShareScope] = useState<ShareScope>(transactionShareScope(initial));
   const [sourceId, setSourceId] = useState(initial?.sourceId || data.settings.paymentSources.find((source) => source.name === initial?.source)?.id || data.settings.paymentSources[0]?.id || "");
-  const [category, setCategory] = useState(initial?.category || "Alimente");
+  // O cheltuială nu poate avea categoria „Venit” (rămânea așa după Venit → Cheltuială): ghicim după nume.
+  const expenseCategoryFor = (current: string, text: string) => current && current !== "Venit" ? current : guessCategoryFromText(text, [...expenseCategories, ...data.settings.customCategories], data.settings.merchantRules) || "Altele";
+  const [category, setCategory] = useState(() => initial?.kind === "income" ? (initial.category || "Venit") : expenseCategoryFor(initial?.category || "Alimente", initial?.title || ""));
   const [allocationId, setAllocationId] = useState(initial?.allocationId || "outside");
   const [fromWeekIndex, setFromWeekIndex] = useState<number | undefined>();
   const [allocationChoiceTouched, setAllocationChoiceTouched] = useState(() => {
@@ -40,7 +45,8 @@ export function TransactionForm({ data, initial, scan, onSave, onClose }: { data
     if (initial.allocationId && initial.allocationId !== "outside") return true;
     return Boolean(initial.outsideChosen);
   });
-  const [note, setNote] = useState(initial?.note || "");
+  // Nota „Bon de …: … din … și … din …” o scriau versiunile vechi singure; omul vede doar ce a scris el.
+  const [note, setNote] = useState(() => (initial?.note || "").replace(AUTO_SPLIT_NOTE, "").trim());
   const [error, setError] = useState("");
   const captureIdRef = useRef(initial?.id || newId("tx"));
   const heldOutside = useRef(false);
@@ -52,7 +58,9 @@ export function TransactionForm({ data, initial, scan, onSave, onClose }: { data
   const [secondAmount, setSecondAmount] = useState(splitPartner ? amountInput(splitPartner.amount) : "");
   /** Ce scrie omul în câmpul primei surse, ca „28,” să nu-și piardă virgula cât calculăm cealaltă sumă. */
   const [firstDraft, setFirstDraft] = useState<string | null>(null);
-  const linkedReceipt = initial ? data.receipts.find((receipt) => receipt.id === initial.receiptId || receipt.linkedTransactionId === initial.id || receipt.linkedTransactionIds?.includes(initial.id)) : undefined;
+  // Bonul cu articole poate sta pe oricare parte a plății din două surse: îl căutăm pe amândouă,
+  // altfel, deschisă din partea fără bon, corectura nu arăta articolele și le dezlega la salvare.
+  const linkedReceipt = initial ? [initial, ...(splitPartner ? [splitPartner] : [])].map((part) => data.receipts.find((receipt) => (part.receiptId && receipt.id === part.receiptId) || receipt.linkedTransactionId === part.id || receipt.linkedTransactionIds?.includes(part.id))).find(Boolean) : undefined;
   // Denumirile din bonurile de până acum: sugerate la scriere, ca același produs să aibă mereu același nume.
   const products = useMemo(() => knownProducts(data), [data.receipts]);
   const [detailOpen, setDetailOpen] = useState(() => Boolean(linkedReceipt?.lines?.some((line) => !isReceiptGapLabel(line.label))));
@@ -265,18 +273,25 @@ export function TransactionForm({ data, initial, scan, onSave, onClose }: { data
         if (!other) return setError(t("Alege a doua sursă, diferită de prima."));
         if (!(second > 0) || second >= stored) return setError(t("Suma din a doua sursă trebuie să fie mai mică decât totalul de {total}.", { total: fmtExact.format(stored) }));
         const first = Math.round((stored - second) * 100) / 100;
-        const together = t("Bon de {total}: {first} din {a} și {second} din {b}.", { total: fmtExact.format(stored), first: fmtExact.format(first), a: source.name, second: fmtExact.format(second), b: other.name });
-        // Nota veche „Bon de …” se înlocuiește, nu se adaugă încă o dată la fiecare corectură.
-        const ownNote = note.trim().replace(/(?:\s*·\s*)?Bon de [^:]+:.*$/, "").trim();
-        const noteBoth = ownNote ? `${ownNote} · ${together}` : together;
+        // Nota rămâne a omului. Legătura dintre părți o țin splitId și totalul bonului (splitTotal):
+        // dacă o parte dispare, suma rămasă nu mai dă totalul și Mișcări arată bonul ca incomplet.
+        const ownNote = note.trim().replace(AUTO_SPLIT_NOTE, "").trim() || undefined;
         const splitId = initial?.splitId || splitPartner?.splitId || newId("split");
-        const main: Transaction = { ...edited, amount: first, note: noteBoth, splitId };
-        const extra: Transaction = { ...(splitPartner || {}), ...edited, id: splitPartner?.id || newId("tx"), amount: second, sourceId: other.id, source: other.name, note: noteBoth, splitId, debtId: undefined, recurringId: undefined, receiptId: undefined, createdAt: splitPartner?.createdAt || new Date().toISOString() };
+        // Bonul cu articole stă pe prima parte, oricare ar fi fost înainte.
+        const main: Transaction = { ...edited, amount: first, note: ownNote, splitId, splitTotal: stored, receiptId: linkedReceipt?.id || edited.receiptId };
+        const extra: Transaction = { ...(splitPartner || {}), ...edited, id: splitPartner?.id || newId("tx"), amount: second, sourceId: other.id, source: other.name, note: ownNote, splitId, splitTotal: stored, debtId: undefined, recurringId: undefined, receiptId: undefined, createdAt: splitPartner?.createdAt || new Date().toISOString() };
         onSave([main, extra], { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined, ...(learnRule ? { learnRule } : {}), ...(detailLinesOut ? { detailLines: detailLinesOut } : {}) });
         onClose();
         return;
       }
-      if (splitPartner) edited.splitId = undefined;
+      if (splitPartner) {
+        // „O singură sursă” scoate cealaltă parte din registru: omul o vede numită înainte.
+        if (!await askConfirm(t("Bonul rămâne doar pe {source}, cu {amount}. Partea de {partAmount} din {partSource} se scoate din registru (o găsești în „Șterse recent”).", { source: source.name, amount: fmtExact.format(stored), partAmount: fmtExact.format(splitPartner.amount), partSource: splitPartner.source }), { title: t("O singură sursă?"), confirmLabel: t("Da, o singură sursă") })) return;
+        edited.splitId = undefined;
+        edited.splitTotal = undefined;
+        edited.note = note.trim().replace(AUTO_SPLIT_NOTE, "").trim() || undefined;
+        if (!edited.receiptId && linkedReceipt) edited.receiptId = linkedReceipt.id;
+      }
       onSave(pair && !pair.originalCurrency && !edited.originalCurrency ? [edited, { ...pair, amount: edited.amount, date: edited.date, updatedAt: edited.updatedAt }] : edited, { fromWeekIndex: kind === "expense" && pacedEnvelope ? fromWeekIndex : undefined, ...(learnRule ? { learnRule } : {}), ...(detailLinesOut ? { detailLines: detailLinesOut } : {}), ...(splitPartner ? { removeIds: [splitPartner.id] } : {}) });
       onClose();
     } catch (reason) {
@@ -284,7 +299,7 @@ export function TransactionForm({ data, initial, scan, onSave, onClose }: { data
     }
   };
   const isStored = Boolean(initial && data.transactions.some((item) => item.id === initial.id));
-  return <Modal title={isStored ? t("Corectează mișcarea") : t("Adaugă mișcare")} onClose={onClose}><div className="bf-segment"><button className={kind === "expense" ? "active expense" : ""} onClick={() => setKind("expense")}>{t("Cheltuială")}</button><button className={kind === "income" ? "active income" : ""} onClick={() => setKind("income")}>{t("Venit")}</button></div>{kind === "expense" && !isStored && !isForeign && <ReceiptScanButton data={data} memberId={memberId} onResult={applyScan} />}{scanNote && <p className={`bf-scan-note${scanNote.warning ? " is-warning" : ""}`} role="status">{scanNote.text}</p>}{scanTotal != null && detailOpen && (() => {
+  return <Modal title={isStored ? t("Corectează mișcarea") : t("Adaugă mișcare")} onClose={onClose}><div className="bf-segment"><button className={kind === "expense" ? "active expense" : ""} onClick={() => { setKind("expense"); setCategory((current) => expenseCategoryFor(current, title)); }}>{t("Cheltuială")}</button><button className={kind === "income" ? "active income" : ""} onClick={() => setKind("income")}>{t("Venit")}</button></div>{kind === "expense" && !isStored && !isForeign && <ReceiptScanButton data={data} memberId={memberId} onResult={applyScan} />}{scanNote && <p className={`bf-scan-note${scanNote.warning ? " is-warning" : ""}`} role="status">{scanNote.text}</p>}{scanTotal != null && detailOpen && (() => {
         const sum = Math.round(detailLines.reduce((total, line) => total + Math.max(0, lineTotal(line.amount, line.qty)), 0) * 100) / 100;
         const diff = Math.round((scanTotal - sum) * 100) / 100;
         if (Math.abs(diff) <= 0.05) return <p className="bf-scan-check is-ok" role="status">{t("✓ Rândurile bat cu totalul bonului ({total}).", { total: fmtExact.format(scanTotal) })}</p>;

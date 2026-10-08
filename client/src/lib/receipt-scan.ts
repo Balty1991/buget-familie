@@ -81,7 +81,9 @@ export function scanToPrefill(receipt: ScannedReceipt, data: AppData, memberId?:
   const sourceFor = (method: ScannedReceipt["payments"][number]["method"], skip?: string) => {
     const kind = PAYMENT_KIND[method];
     if (!kind) return undefined;
-    const fitting = sources.filter((source) => source.kind === kind && source.id !== skip);
+    // Mulți își fac sursa „Voucher SGR” ca tip card: după nume e tot voucher.
+    const isVoucherByName = (source: (typeof sources)[number]) => /voucher|\bsgr\b|tichet/i.test(source.name);
+    const fitting = sources.filter((source) => source.id !== skip && (kind === "voucher" ? source.kind === "voucher" || isVoucherByName(source) : source.kind === kind && !(kind === "card" && isVoucherByName(source))));
     return fitting.find((source) => source.memberId === memberId) || fitting.find((source) => !source.memberId) || fitting[0];
   };
   const payments = [...receipt.payments].filter((payment) => payment.amount > 0).sort((a, b) => b.amount - a.amount);

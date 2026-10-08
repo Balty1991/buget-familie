@@ -320,7 +320,7 @@ export type BackupIntent = "save" | "share";
 
 type NativeBackupPlugin = {
   saveBackupToDownloads: (options: { name: string; data: string }) => Promise<{ path: string }>;
-  writeLiveBackup?: (options: { name: string; data: string }) => Promise<{ path: string }>;
+  writeLiveBackup?: (options: { name: string; base?: string; data: string }) => Promise<{ path: string }>;
 };
 
 let nativeBackupPlugin: { api: NativeBackupPlugin } | null | undefined;
@@ -415,13 +415,19 @@ async function saveNatively(text: string, name: string, intent: BackupIntent): P
  * Copia automată, pe Android: scrie direct în Descărcări, fără nicio fereastră. Dacă nu se
  * poate, aruncă — nu deschide foaia de partajare peste ce face omul în aplicație.
  */
-/** Copia la fiecare modificare: același fișier, rescris, în Documente/Buget Familie. */
+/**
+ * Copia la fiecare modificare: același fișier, rescris, în Documente/Buget Familie. Numele poartă data
+ * și ora ultimei salvări (buget-familie-automat-2026-10-09-0101.json): Android îl redenumește la fiecare
+ * scriere, ca omul să vadă din numele lui cât de nou e.
+ */
 export const LIVE_BACKUP_NAME = "buget-familie-automat.json";
+export const LIVE_BACKUP_BASE = "buget-familie-automat";
+export const liveBackupName = (stamp = new Date()) => `${LIVE_BACKUP_BASE}-${stamp.getFullYear()}-${String(stamp.getMonth() + 1).padStart(2, "0")}-${String(stamp.getDate()).padStart(2, "0")}-${String(stamp.getHours()).padStart(2, "0")}${String(stamp.getMinutes()).padStart(2, "0")}.json`;
 export async function saveLiveBackup(data: AppData): Promise<string> {
   if (!isNativeApp()) throw new Error(t("Doar pe telefon, în aplicație."));
   const plugin = (await getNativeBackupPlugin())?.api;
   if (!plugin?.writeLiveBackup) throw new Error(t("Actualizează aplicația ca să folosești salvarea automată."));
-  const result = await plugin.writeLiveBackup({ name: LIVE_BACKUP_NAME, data: JSON.stringify(makeBackup(data), null, 2) });
+  const result = await plugin.writeLiveBackup({ name: liveBackupName(), base: LIVE_BACKUP_BASE, data: JSON.stringify(makeBackup(data), null, 2) });
   return result.path;
 }
 
