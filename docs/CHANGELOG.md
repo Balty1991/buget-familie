@@ -4,6 +4,7 @@
 
 - **Bonul scanat se verifică pe loc.** Sub rânduri apare „✓ Rândurile bat cu totalul bonului”. Dacă nu bat, apare cu roșu cât lipsește sau cât e în plus față de total („Lipsesc 4,99 lei… Poate un produs n-a fost citit”). Diferența se recalculează la fiecare corectură. Când lipsesc bani, „Adaugă un rând cu diferența” pune un rând „Diferență față de bon” la Altele.
 - **Server, scanarea bonului mai rapidă când Gemini e aglomerat.** Gemini are cel mult 30 de secunde (15 pe model), apoi citește rezerva Claude Sonnet. Înainte, trei modele Gemini blocate țineau omul peste un minut. Testul de după publicare și revizia verifică acum drumul din aplicație (Gemini, apoi rezerva), nu doar Gemini, și spun când a citit rezerva.
+- **Revizia are explorare liberă.** Pe lângă verificările fixe, la fiecare revizie Haiku alege singur o zonă din cod pe care n-a mai cercetat-o. Ține minte zonele din rapoartele trecute și preferă fișierele schimbate recent sau uitate. Citește zona ca un revizor și scrie în raport problemele găsite (fișier:linie, exemplu concret, gravitate, reparație), idei și un test nou propus. Doar citește, nu schimbă nimic. Costul crește la ~1 ban pe revizie.
 - **Reamintire pentru copia de siguranță.** Dacă ultima copie e mai veche de 30 de zile (sau nu există niciuna, după o lună de notat), vine o notificare duminică la 18:30, o dată pe săptămână, până faci una. Contează și salvarea automată. Se poate opri din Setări → Reamintiri → „Copia de siguranță”.
 
 ## 1.1.189
