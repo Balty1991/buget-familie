@@ -13,11 +13,12 @@ type NativeFeel = {
 };
 export type HapticKind = "tick" | "confirm" | "reject";
 
-let plugin: Promise<NativeFeel | undefined> | undefined;
-const native = () => {
-  if (!isNativeApp()) return Promise.resolve(undefined);
-  plugin ||= import("@capacitor/core").then(({ registerPlugin }) => registerPlugin<NativeFeel>("BugetFamilieNative")).catch(() => undefined);
-  return plugin;
+// Pluginul (un Proxy care răspunde și la „then”) stă într-o cutie: întors direct dintr-o promisiune, se agăța.
+let plugin: Promise<{ api: NativeFeel } | undefined> | undefined;
+const native = async () => {
+  if (!isNativeApp()) return undefined;
+  plugin ||= import("@capacitor/core").then(({ registerPlugin }) => ({ api: registerPlugin<NativeFeel>("BugetFamilieNative") })).catch(() => undefined);
+  return (await plugin)?.api;
 };
 
 const reduced = () => { try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return true; } };

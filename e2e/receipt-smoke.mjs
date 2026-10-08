@@ -3,7 +3,7 @@
  * face omul) și verifică totalul, suma articolelor și câteva categorii știute.
  * Rulează după publicarea funcțiilor; tipărește tot ce a citit modelul.
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const root = new URL("..", import.meta.url).pathname;
@@ -20,7 +20,11 @@ const expectations = {
   "crumpled-44.58.jpg": [[/milka/i, "Dulciuri"], [/salam|crenv/i, "Alimente"], [/garan/i, "SGR"], [/sacos|sacoș/i, "Sacoșe"]],
   "familia-57.30.jpg": [[/perla|harghit/i, "Apă"], [/garan/i, "SGR"], [/p[aâ]ine/i, "Alimente"], [/sacos|sacoș/i, "Sacoșe"]],
   "sinsay-50.97.jpg": [[/ciorap/i, "Haine"], [/teni/i, "Haine"], [/pung/i, "Sacoșe"]],
+  // Bon digital Profi în 4 capturi care se suprapun: doi crenvurști distincți (4,54 și 4,55), fără dubluri la îmbinări.
+  "profi-82.71": [[/stalin|vdk|vodc|vodk/i, "Băuturi"], [/garan/i, "SGR"], [/m&m|ciocol/i, "Dulciuri"]],
 };
+/** Câte rânduri distincte trebuie să aibă același nume (capturile se suprapun, dar rândurile repetate rămân). */
+const repeated = { "profi-82.71": [[/crenv/i, 2]] };
 
 const signUp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`, {
   method: "POST",
@@ -37,15 +41,18 @@ const providers = (process.env.RECEIPT_PROVIDERS || "auto").split(",").map((name
 const primary = process.env.RECEIPT_PRIMARY || providers[0];
 const summary = [];
 const dir = join(root, "e2e/receipts");
-for (const file of readdirSync(dir).filter((name) => name.endsWith(".jpg")).sort()) {
-  const expectedTotal = Number(/-(\d+\.\d+)\.jpg$/.exec(file)?.[1]);
-  const image = readFileSync(join(dir, file)).toString("base64");
+// Un fișier .jpg = o poză; un folder „magazin-TOTAL” = capturile aceluiași bon, în ordinea numelor.
+const cases = readdirSync(dir).filter((name) => name.endsWith(".jpg") || (/-\d+\.\d+$/.test(name) && statSync(join(dir, name)).isDirectory())).sort();
+for (const file of cases) {
+  const expectedTotal = Number(/-(\d+\.\d+)(?:\.jpg)?$/.exec(file)?.[1]);
+  const shots = file.endsWith(".jpg") ? [join(dir, file)] : readdirSync(join(dir, file)).filter((name) => name.endsWith(".jpg")).sort().map((name) => join(dir, file, name));
+  const images = shots.map((path) => ({ data: readFileSync(path).toString("base64"), mimeType: "image/jpeg" }));
   for (const provider of providers) {
     const started = Date.now();
     const response = await fetch(`https://${region}-${project}.cloudfunctions.net/readReceipt`, {
       method: "POST",
       headers: { "content-type": "application/json", origin, authorization: `Bearer ${idToken}` },
-      body: JSON.stringify({ image, mimeType: "image/jpeg", categories, ...(provider === "auto" ? {} : { provider }) }),
+      body: JSON.stringify({ ...(images.length === 1 ? { image: images[0].data, mimeType: "image/jpeg" } : { images }), categories, ...(provider === "auto" ? {} : { provider }) }),
     });
     const body = await response.json().catch(() => ({}));
     const seconds = ((Date.now() - started) / 1000).toFixed(1);
@@ -76,8 +83,12 @@ for (const file of readdirSync(dir).filter((name) => name.endsWith(".jpg")).sort
       if (!item) problems.push(`lipsește ${pattern}`);
       else if (item.category !== category) problems.push(`${item.name} la ${item.category}, nu la ${category}`);
     }
+    for (const [pattern, count] of repeated[file] || []) {
+      const found = receipt.items.filter((entry) => pattern.test(`${entry.name} ${entry.rawName}`)).length;
+      if (found !== count) problems.push(`${pattern}: ${found} rânduri, așteptat ${count}`);
+    }
     // Pe drumul din aplicație: 30 s de Gemini plus rezerva Claude; un furnizor anume trebuie să fie rapid.
-    if (Number(seconds) > (provider === "auto" ? 50 : 30)) problems.push(`prea lent: ${seconds} s`);
+    if (Number(seconds) > (provider === "auto" ? 50 : 30) + 10 * (images.length - 1)) problems.push(`prea lent: ${seconds} s`);
     if (provider === "auto" && receipt.model && !String(receipt.model).startsWith("gemini")) console.log(`⚠ a citit rezerva (${receipt.model}): Gemini n-a răspuns la timp`);
     if (problems.length) {
       if (fatal) failures++;

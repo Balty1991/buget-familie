@@ -1,5 +1,5 @@
 /**
- * Scanarea bonului: poza pleacă o singură dată la funcția `readReceipt` (Gemini, cu Claude ca rezervă), care
+ * Scanarea bonului: poza (sau capturile unui bon digital lung) pleacă o singură dată la funcția `readReceipt` (Gemini, cu Claude ca rezervă), care
  * întoarce articolele pe categorii. Nimic nu se salvează singur: rezultatul umple
  * formularul „Adaugă mișcare”, iar omul verifică și apasă Salvează.
  */
@@ -142,7 +142,11 @@ export async function compressReceiptPhoto(file: File, maxSide = 2000): Promise<
   }
 }
 
-export async function requestReceiptScan(image: { data: string; mimeType: string }, categories: string[]): Promise<ScannedReceipt> {
+/** Câte capturi primește un singur bon digital (lung, cu ecranul derulat). */
+export const RECEIPT_SHOTS_MAX = 6;
+
+/** O poză sau capturile aceluiași bon, în ordinea în care le-a ales omul. */
+export async function requestReceiptScan(images: Array<{ data: string; mimeType: string }>, categories: string[]): Promise<ScannedReceipt> {
   // Firebase se încarcă abia la prima scanare, nu odată cu formularul.
   const { appCheckHeader, authHeader } = await import("./realtime-sync");
   // Verificarea aplicației poate rămâne agățată fără rețea bună; după 8 s cererea pleacă oricum.
@@ -153,7 +157,7 @@ export async function requestReceiptScan(image: { data: string; mimeType: string
   if (identity) headers.Authorization = identity;
   let response: Response;
   try {
-    response = await fetch(ENDPOINT, { method: "POST", headers, body: JSON.stringify({ image: image.data, mimeType: image.mimeType, categories }), signal: AbortSignal.timeout(95_000) });
+    response = await fetch(ENDPOINT, { method: "POST", headers, body: JSON.stringify(images.length === 1 ? { image: images[0].data, mimeType: images[0].mimeType, categories } : { images, categories }), signal: AbortSignal.timeout(images.length > 1 ? 120_000 : 95_000) });
   } catch {
     throw new Error(t("Nu am putut trimite poza. Verifică internetul și mai încearcă o dată."));
   }

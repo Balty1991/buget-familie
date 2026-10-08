@@ -6,7 +6,7 @@ import { t } from "@/lib/i18n";
 import { askConfirm } from "@/lib/confirm-dialog";
 import { canScanReceipt } from "@/lib/entitlements";
 import { isOfflineOnly } from "@/lib/ui-prefs";
-import { compressReceiptPhoto, receiptCategories, receiptScanConsented, rememberReceiptScanConsent, requestReceiptScan, scanToPrefill, type ScanPrefill } from "@/lib/receipt-scan";
+import { compressReceiptPhoto, RECEIPT_SHOTS_MAX, receiptCategories, receiptScanConsented, rememberReceiptScanConsent, requestReceiptScan, scanToPrefill, type ScanPrefill } from "@/lib/receipt-scan";
 
 /**
  * „Scanează bonul”: poza → articolele pe categorii, în formular. Poza pleacă la
@@ -18,6 +18,7 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [seconds, setSeconds] = useState(0);
+  const [shots, setShots] = useState(1);
   // Cronometrul citirii: omul vede că se lucrează și, când durează, de ce.
   useEffect(() => {
     if (!busy) { setSeconds(0); return; }
@@ -27,7 +28,7 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   }, [busy]);
   if (!canScanReceipt() || isOfflineOnly()) return null;
   const busyText = seconds < 12
-    ? t("Citesc bonul… {seconds} s", { seconds })
+    ? (shots > 1 ? t("Citesc bonul din {count} capturi… {seconds} s", { count: shots, seconds }) : t("Citesc bonul… {seconds} s", { seconds }))
     : seconds < 30
       ? t("Durează mai mult ca de obicei, serverul e aglomerat… {seconds} s", { seconds })
       : t("Serverul principal nu răspunde, citește rezerva (Claude)… {seconds} s", { seconds });
@@ -43,13 +44,22 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
     (which === "camera" ? cameraRef : galleryRef).current?.click();
   };
 
-  const read = async (file: File | undefined) => {
-    if (!file) return;
+  // Din galerie se pot alege mai multe capturi ale aceluiași bon digital: se citesc împreună, ca un singur bon.
+  const read = async (list: FileList | null | undefined) => {
+    const files = Array.from(list || []).filter((file) => !file.type || file.type.startsWith("image/"));
+    if (!files.length) return;
+    if (files.length > RECEIPT_SHOTS_MAX) {
+      setError(t("Alege cel mult {count} capturi pentru un bon.", { count: RECEIPT_SHOTS_MAX }));
+      if (galleryRef.current) galleryRef.current.value = "";
+      return;
+    }
+    setShots(files.length);
     setBusy(true);
     setError("");
     try {
-      const image = await compressReceiptPhoto(file);
-      const receipt = await requestReceiptScan(image, receiptCategories(data));
+      const images = [];
+      for (const file of files) images.push(await compressReceiptPhoto(file, files.length > 1 ? 1800 : 2000));
+      const receipt = await requestReceiptScan(images, receiptCategories(data));
       onResult(scanToPrefill(receipt, data, memberId));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("Nu am putut citi bonul acum. Mai încearcă o dată."));
@@ -63,10 +73,11 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   return <section className="bf-scan-receipt" aria-busy={busy}>
     {busy ? <p className="bf-scan-receipt-busy" role="status"><Loader2 size={18} className="bf-spin" aria-hidden="true" /> {busyText}</p> : <div className="bf-scan-receipt-actions">
       <button type="button" className="bf-scan-receipt-main" onClick={() => void pick("camera")}><Camera size={18} aria-hidden="true" /><span><b>{t("Scanează bonul")}</b><small>{t("Toate produsele, pe categorii")}</small></span></button>
-      <button type="button" className="bf-scan-receipt-gallery" aria-label={t("Alege poza bonului din galerie")} onClick={() => void pick("gallery")}><ImagePlus size={18} aria-hidden="true" /></button>
+      <button type="button" className="bf-scan-receipt-gallery" aria-label={t("Alege din galerie poza bonului sau mai multe capturi ale lui")} title={t("Din galerie: o poză sau mai multe capturi ale aceluiași bon")} onClick={() => void pick("gallery")}><ImagePlus size={18} aria-hidden="true" /></button>
     </div>}
+    {!busy && <small>{t("Bon digital lung? Apasă galeria și alege toate capturile lui.")}</small>}
     {error && <p className="bf-form-error" role="alert">{error}</p>}
-    <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => void read(event.target.files?.[0])} />
-    <input ref={galleryRef} type="file" accept="image/*" hidden onChange={(event) => void read(event.target.files?.[0])} />
+    <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => void read(event.target.files)} />
+    <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(event) => void read(event.target.files)} />
   </section>;
 }

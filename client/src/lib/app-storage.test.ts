@@ -15,8 +15,12 @@ vi.mock("@capacitor/filesystem", () => ({
   Encoding: { UTF8: "utf8" },
 }));
 vi.mock("@capacitor/share", () => ({ Share: { share: native.share } }));
+// Ca pluginul adevărat: un Proxy care răspunde la orice nume, inclusiv „then”, cu o metodă nativă.
+// O metodă pe care Android n-o are nu răspunde; un `await` pe pluginul gol s-ar agăța aici ca pe telefon.
 vi.mock("@capacitor/core", () => ({
-  registerPlugin: () => ({ saveBackupToDownloads: native.saveBackupToDownloads }),
+  registerPlugin: () => new Proxy({}, {
+    get: (_, prop) => prop === "saveBackupToDownloads" ? native.saveBackupToDownloads : () => new Promise(() => undefined),
+  }),
 }));
 
 const data = () => {

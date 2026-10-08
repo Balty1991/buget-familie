@@ -18,7 +18,7 @@
 /* Atelierul Financiar 2.0 — stare explicită pentru depășirea planului. */
 /* ── sfârșit risk-state.css ── */
 /* ── fost atelier-stationery.css ── */
-/* Atelierul Financiar — sistem de registru, repere și foi de lucru pentru mobil. */.bf-progress { position: relative; overflow: hidden; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--cf-line, #c9d2cc) 75%, transparent); }.bf-progress span { position: relative; z-index: 1; border-radius: inherit; }.bf-progress::after { content: none; display: none; }.bf-recurring-hero { position: relative; overflow: hidden; }.bf-recurring-hero::after { content: none; display: none; }.dark .bf-progress { background: color-mix(in srgb, var(--cf-line, #355747) 80%, transparent); }
+.bf-progress { position: relative; overflow: hidden; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--cf-line, #c9d2cc) 75%, transparent); }.bf-progress span { position: relative; z-index: 1; border-radius: inherit; }.bf-progress::after { content: none; display: none; }.bf-recurring-hero { position: relative; overflow: hidden; }.bf-recurring-hero::after { content: none; display: none; }.dark .bf-progress { background: color-mix(in srgb, var(--cf-line, #355747) 80%, transparent); }
 @media (prefers-reduced-motion: no-preference) { @keyframes bf-paper-in { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } } }
 /* ── sfârșit atelier-stationery.css ── */
 /* ── fost workbench-final.css ── */
