@@ -325,16 +325,21 @@ type NativeBackupPlugin = {
 
 let nativeBackupPlugin: NativeBackupPlugin | null | undefined;
 
-async function getNativeBackupPlugin(): Promise<NativeBackupPlugin | null> {
-  if (nativeBackupPlugin !== undefined) return nativeBackupPlugin;
-  try {
-    const { registerPlugin } = await import("@capacitor/core");
-    nativeBackupPlugin = registerPlugin<NativeBackupPlugin>("BugetFamilieNative");
-    return nativeBackupPlugin;
-  } catch {
-    nativeBackupPlugin = null;
-    return null;
+/**
+ * Pluginul Capacitor e un Proxy care răspunde la orice nume, și la „then”: întors direct dintr-o funcție
+ * async, `await` îl lua drept promisiune și chema metoda nativă „then”, care nu răspunde niciodată.
+ * Așa rămânea „Se salvează…” pe ecran și salvarea automată nu scria nimic. Îl întoarcem într-o cutie.
+ */
+async function getNativeBackupPlugin(): Promise<{ api: NativeBackupPlugin } | null> {
+  if (nativeBackupPlugin === undefined) {
+    try {
+      const { registerPlugin } = await import("@capacitor/core");
+      nativeBackupPlugin = registerPlugin<NativeBackupPlugin>("BugetFamilieNative");
+    } catch {
+      nativeBackupPlugin = null;
+    }
   }
+  return nativeBackupPlugin ? { api: nativeBackupPlugin } : null;
 }
 
 /**
@@ -343,7 +348,7 @@ async function getNativeBackupPlugin(): Promise<NativeBackupPlugin | null> {
  * nu o arată (scoped storage / indexare JSON), iar mesajul de succes mințea.
  */
 async function saveToPublicDownloads(text: string, name: string): Promise<string> {
-  const plugin = await getNativeBackupPlugin();
+  const plugin = (await getNativeBackupPlugin())?.api;
   if (!plugin?.saveBackupToDownloads) {
     throw new Error("Pluginul nativ de salvare nu este disponibil.");
   }
@@ -414,7 +419,7 @@ async function saveNatively(text: string, name: string, intent: BackupIntent): P
 export const LIVE_BACKUP_NAME = "buget-familie-automat.json";
 export async function saveLiveBackup(data: AppData): Promise<string> {
   if (!isNativeApp()) throw new Error(t("Doar pe telefon, în aplicație."));
-  const plugin = await getNativeBackupPlugin();
+  const plugin = (await getNativeBackupPlugin())?.api;
   if (!plugin?.writeLiveBackup) throw new Error(t("Actualizează aplicația ca să folosești salvarea automată."));
   const result = await plugin.writeLiveBackup({ name: LIVE_BACKUP_NAME, data: JSON.stringify(makeBackup(data), null, 2) });
   return result.path;

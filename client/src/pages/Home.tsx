@@ -757,16 +757,25 @@ export default function Home() {
   }, [data, memberModeActive, today]);
   // Copia săptămânală, pe telefon: o dată la 7 zile, după ce omul a spus „da”.
   useEffect(() => { void import("@/components/AutoBackupCard").then(({ runAutoBackupIfDue }) => runAutoBackupIfDue(data)).catch(() => undefined); }, [data]);
-  /** Salvarea automată la fiecare modificare: la 3 secunde după ultima schimbare, un singur fișier rescris. */
+  /**
+   * Salvarea automată la fiecare modificare: la 3 secunde după ultima schimbare, un singur fișier rescris.
+   * Pornește și imediat ce omul apasă „Pornește”: altfel fișierul nu exista până la prima mișcare nouă.
+   */
+  const [liveBackupOn, setLiveBackupOn] = useState(() => readAutoBackup().live === true);
   useEffect(() => {
-    if (!storageReady || !isNativeApp() || !data.transactions.length || !readAutoBackup().live) return;
+    const onChange = () => setLiveBackupOn(readAutoBackup().live === true);
+    window.addEventListener("buget-familie:auto-backup", onChange);
+    return () => window.removeEventListener("buget-familie:auto-backup", onChange);
+  }, []);
+  useEffect(() => {
+    if (!storageReady || !isNativeApp() || !data.transactions.length || !liveBackupOn) return;
     const id = window.setTimeout(() => {
       void saveLiveBackup(data)
         .then((path) => writeAutoBackup({ liveAt: new Date().toISOString(), livePath: path, liveError: undefined }))
         .catch((error) => writeAutoBackup({ liveError: error instanceof Error ? error.message : t("Salvarea automată a eșuat.") }));
     }, 3000);
     return () => window.clearTimeout(id);
-  }, [data, storageReady]);
+  }, [data, storageReady, liveBackupOn]);
   useEffect(() => {
     const expense = data.settings.quickTemplates.filter((item) => item.kind !== "income").slice(0, 3);
     publishWidgetTemplates(expense.map((item) => ({ id: item.id, label: item.label })));

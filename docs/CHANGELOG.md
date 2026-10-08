@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.192
+
+- **Bon din mai multe capturi.** Un bon digital lung (de ex. din aplicația Profi) se poate scana din galerie alegând toate capturile lui, până la 6. Se citesc împreună, ca un singur bon. Rândurile prinse în două capturi se numără o singură dată, iar produsele repetate pe bon (doi crenvurști, la 4,54 și 4,55) rămân amândouă. Sub butonul de scanare scrie cum se face. Pe bonurile digitale, suma deja redusă nu se mai reduce încă o dată. Testul de după publicare citește și un bon Profi din 4 capturi (82,71 lei).
+- **„Salvează pe telefon” și salvarea automată merg din nou.** Butonul rămânea la „Se salvează…” și fișierul automat nu se scria. Cauza: pluginul nativ era așteptat ca o promisiune, iar așteptarea nu se termina niciodată. Același lucru oprea și culorile telefonului. Testul de backup imită acum pluginul real, ca greșeala să nu mai treacă neobservată.
+- **Salvarea automată pornește imediat.** Înainte, fișierul apărea abia la prima mișcare nouă după „Pornește”. Acum se scrie în câteva secunde după ce o pornești. Starea arată și unde e: „în Fișiere: Documente → Buget Familie” (`buget-familie-automat.json`).
+- **Ghidul nu mai intră sub bara telefonului.** Cu tastatura deschisă, panoul de chat urca până sub ceas și baterie. Acum se oprește sub bara de sus.
+
 ## 1.1.191
 
 Ideile din revizia automată (#67):

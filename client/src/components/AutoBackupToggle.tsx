@@ -33,7 +33,7 @@ export function AutoBackupToggle() {
       <Row
         title={t("La fiecare modificare")}
         detail={native ? t("Fișierul {file} din Documente/Buget Familie se rescrie singur la câteva secunde după fiecare schimbare. Îl imporți oricând din Backup.", { file: LIVE_BACKUP_NAME }) : t("Doar în aplicația de pe telefon: browserul nu poate scrie singur fișiere.")}
-        status={live ? (prefs.liveError ? t("Pornită, dar ultima salvare n-a mers: {reason}", { reason: prefs.liveError }) : prefs.liveAt ? t("Pornită · ultima salvare {time}", { time: when(prefs.liveAt) }) : t("Pornită · se salvează la prima modificare")) : t("Oprită")}
+        status={live ? (prefs.liveError ? t("Pornită, dar ultima salvare n-a mers: {reason}", { reason: prefs.liveError }) : prefs.liveAt ? t("Pornită · ultima salvare {time} · în Fișiere: Documente → Buget Familie", { time: when(prefs.liveAt) }) : t("Pornită · prima salvare în câteva secunde")) : t("Oprită")}
         on={live}
         disabled={!native}
         onToggle={() => writeAutoBackup({ live: !live, asked: true, liveError: undefined })}
