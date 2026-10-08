@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.190
+
+- **Bonul scanat se verifică pe loc.** Sub rânduri apare „✓ Rândurile bat cu totalul bonului”. Dacă nu bat, apare cu roșu cât lipsește sau cât e în plus față de total („Lipsesc 4,99 lei… Poate un produs n-a fost citit”). Diferența se recalculează la fiecare corectură. Când lipsesc bani, „Adaugă un rând cu diferența” pune un rând „Diferență față de bon” la Altele.
+- **Reamintire pentru copia de siguranță.** Dacă ultima copie e mai veche de 30 de zile (sau nu există niciuna, după o lună de notat), vine o notificare duminică la 18:30, o dată pe săptămână, până faci una. Contează și salvarea automată. Se poate opri din Setări → Reamintiri → „Copia de siguranță”.
+
 ## 1.1.189
 
 - **Amintirea de seară vine la ora aleasă.** Era pusă ultima în lista de reamintiri, iar telefonul primea doar primele 7, așa că în zilele cu multe alerte cădea. Acum lista e în ordinea orei (cele mai apropiate întâi), până la 12. Reamintirile se programează cu alarma sistemului („allow while idle”), care sună și cu telefonul în repaus. WorkManager le întârzia ore întregi pe unele telefoane. După repornirea telefonului sau o actualizare, alarmele se pun din nou singure.

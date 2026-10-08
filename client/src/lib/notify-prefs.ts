@@ -4,7 +4,7 @@
  */
 import { safeSetItem } from "@/lib/safe-storage";
 
-export const NOTIFY_KINDS = ["bills", "envelopes", "income", "goals", "summaries", "checkin"] as const;
+export const NOTIFY_KINDS = ["bills", "envelopes", "income", "goals", "summaries", "checkin", "backup"] as const;
 export type NotifyKind = (typeof NOTIFY_KINDS)[number];
 export type NotifyPrefs = { off: NotifyKind[]; eveningHour: number };
 
@@ -18,6 +18,7 @@ export function notifyKindOf(tag: string): NotifyKind {
   if (/^goal-/.test(tag)) return "goals";
   if (/^(weekly-summary|month-card|month-end)-/.test(tag)) return "summaries";
   if (/^checkin-/.test(tag)) return "checkin";
+  if (/^backup-/.test(tag)) return "backup";
   return "envelopes";
 }
 
