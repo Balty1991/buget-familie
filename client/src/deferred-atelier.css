@@ -31,7 +31,7 @@
 .dark .bf-empty-inline b { color: #f4df8c; }
 /* ── sfârșit workbench-final.css ── */
 /* ── fost dark-mobile-repair.css ── */
-/* Atelierul Financiar: dark mode trebuie să păstreze aceeași ierarhie de registru, fără carduri albe și texte estompate. */
+/* Dark mode: aceeași ierarhie de registru. */
 .dark .bf-more-grid button { color: #f2f8f3; border-color: #3d6253; background: linear-gradient(145deg, #1c4035, #16352c); box-shadow: inset 0 3px 0 #c99a2e; }
 
 
@@ -61,7 +61,7 @@
 .dark .bf-app{background:radial-gradient(circle at 82% -12%,#1d4b3d 0,transparent 30%),linear-gradient(165deg,#10251f 0%,#0b1b16 100%);color:#edf7ef}.dark .bf-appbar{border-bottom-color:rgba(212,234,220,.14);background:rgba(10,27,22,.93);box-shadow:var(--bf-shadow-rest)}.dark .bf-appbar nav button{color:#bdd0c3}.dark .bf-appbar nav button.active{color:#fbf6e6;background:#1e4c3d;box-shadow:inset 0 0 0 1px rgba(147,194,165,.14)}.dark .bf-topline h1,.dark .bf-section-heading h2{color:#f8f3e8}.dark .bf-topline h1 em{color:#87bca2}.dark .bf-topline>div>p:not(.bf-kicker),.dark .bf-kicker{color:#abc3b5}.dark .bf-empty-inline{color:#dceadd}@media(max-width:760px){.dark .bf-appbar{background:rgba(10,27,22,.97)}.dark .bf-page{padding-bottom:112px}.dark .bf-topline .bf-primary{box-shadow:var(--bf-shadow-raise) !important}}
 /* ── sfârșit dark-night-premium.css ── */
 /* ── fost mobile-decision-fix.css ── */
-/* Atelierul Financiar — informația financiară are prioritate, iar obligațiile rămân o filă verde de registru, nu un card străin. */
+/* Obligațiile: filă verde de registru. */
 /* ── sfârșit mobile-decision-fix.css ── */
 /* ── fost professional-type-navigation.css ── */
 /* Buget Familie — registru financiar sobru: Plex pentru cifre și controale, serif rezervat orientării; navigație tactilă compactă. */
