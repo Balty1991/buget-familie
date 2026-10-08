@@ -64,6 +64,14 @@ jobs:
           git log --since="5 days ago" --pretty=format:"%h %ad %s" --date=short > review/changes.txt || true
           head -60 docs/CHANGELOG.md > review/changelog.txt || true
 
+      # Pentru explorarea liberă: ce zone a cercetat în rapoartele trecute și ce fișiere s-au schimbat recent.
+      - name: Memoria reviziilor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue list --label revizie --state all --limit 12 --json body > review/previous.json || echo "[]" > review/previous.json
+          git log --since="14 days ago" --name-only --pretty=format: | grep -E '\.(tsx?|mjs|java)$' | sort | uniq -c | sort -rn | head -40 > review/hot-files.txt || true
+
       - name: Raportul (Claude Haiku 5.5)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

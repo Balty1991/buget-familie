@@ -1306,7 +1306,7 @@ async function readReceiptWithGemini(apiKey: string, image: { mimeType: string; 
         try {
           apiResponse = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
-            { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 20_000) },
+            { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), signal: timeLeft(deadline, 15_000) },
           );
         } catch (error) {
           if (!isTimeout(error)) throw error;
@@ -1574,7 +1574,9 @@ export const readReceipt = onRequest(
         for (const name of usable) {
           try {
             return name === "gemini"
-              ? await readReceiptWithGemini(geminiKey, image, categories, Date.now() + (usable.length > 1 ? 45_000 : 80_000))
+              // Gemini are cel mult 30 s (15 s pe model): un Gemini agățat trecea de 60 s, iar omul aștepta
+              // un minut până la Claude. Lite răspunde de obicei în 3–5 s.
+              ? await readReceiptWithGemini(geminiKey, image, categories, Date.now() + (usable.length > 1 ? 30_000 : 80_000))
               : await readReceiptWithClaude(claudeKey, image, categories);
           } catch (error) {
             lastError = error instanceof GuideCallError ? error : new GuideCallError("unknown", 500);
