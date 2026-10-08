@@ -5,7 +5,7 @@
 .bf-split-heading > button { min-height: 40px; flex: none; padding: .45rem .6rem; font-size: .76rem; }
 .bf-split-line { display: flex; align-items: center; gap: .45rem; }
 .bf-item-head, .bf-item-row { display: grid; grid-template-columns: minmax(0,1fr) 4.2rem 2rem; gap: .15rem .3rem; align-items: center; }
-.bf-item-row select { grid-column: 1 / 3; }
+.bf-item-row select { grid-column: 1; }
 .bf-item-head { color: var(--bf-muted, #64716c); font-size: .72rem; }
 .bf-split-line select, .bf-split-line input:not([type="radio"]), .bf-item-row select, .bf-item-row input { min-width: 0; width: 100%; min-height: 34px; padding: .15rem .45rem; color: var(--bf-ink, #123e35); background: #fffdf8; border: 1px solid color-mix(in srgb, var(--bf-forest, #123e35) 22%, transparent); border-radius: .45rem; font: inherit; }
 .bf-split-line input[type="radio"] { width: 1.15rem; height: 1.15rem; flex: none; }
@@ -20,4 +20,4 @@
 .dark .bf-item-row select,
 .dark .bf-item-row input { color: #f3f8f4; background: rgba(6, 24, 19, .68); border-color: rgba(232, 245, 236, .18); }
 .dark .bf-split-heading h3 { color: #f3f8f4; }
-
+.bf-item-qty{grid-column:2/-1;display:flex;gap:.2rem}.bf-item-qty button{min-width:2.6rem;border:1px solid var(--cf-line);border-radius:8px;background:none;color:inherit}.bf-item-total{grid-column:1/-1;color:var(--cf-muted)}

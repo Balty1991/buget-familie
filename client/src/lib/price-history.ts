@@ -51,16 +51,42 @@ export function normalizeProductKey(label: string): string | undefined {
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
+/** Bonul scanat se salvează ca „Cumpărături Profi”: în istoric contează doar magazinul. */
+export function receiptVendorName(vendor: string | undefined): string {
+  const name = (vendor || "").trim().replace(/^(?:cump[aă]r[aă]turi|shopping)\s+/i, "").trim();
+  return name || "Magazin necunoscut";
+}
+
+/**
+ * Rândul unui bon scanat poartă cantitatea și reducerea în etichetă: „Crenvurști pui × 2 (reducere −2,45)”.
+ * Pentru comparație contează produsul și prețul pe bucată: scoatem adaosurile și împărțim la cantitate.
+ */
+export function receiptLineUnit(label: string, amount: number): { label: string; amount: number } {
+  let clean = label.replace(/\s*\((?:reducere|discount)\s*[−-][^)]*\)\s*$/i, "").trim();
+  const quantity = /\s[×x]\s*(\d+(?:[.,]\d+)?)(\s*kg)?\s*$/i.exec(clean);
+  let unit = amount;
+  if (quantity) {
+    const count = Number(quantity[1].replace(",", "."));
+    clean = clean.slice(0, quantity.index).trim();
+    // Bucăți întregi → preț pe bucată; „× 0,456 kg” scris de mână → preț pe kg.
+    // Un „× 0,456” fără unitate (de pe bon scanat) păstrează prețul plătit pe rând.
+    if (quantity[2] && count > 0) unit = amount / count;
+    else if (Number.isInteger(count) && count > 1) unit = amount / count;
+  }
+  return { label: clean || label.trim(), amount: round2(unit) };
+}
+
 function observationsFrom(receipts: Receipt[]) {
   const groups = new Map<string, PriceObservation[]>();
   for (const receipt of receipts) {
-    const vendor = (receipt.vendor || "Magazin necunoscut").trim() || "Magazin necunoscut";
+    const vendor = receiptVendorName(receipt.vendor);
     for (const line of receipt.lines || []) {
-      if (!line.label || line.amount <= 0 || line.label === "Rest bon" || line.label === "Diferență neînregistrată") continue;
-      const key = normalizeProductKey(line.label);
+      if (!line.label || line.amount <= 0 || line.label === "Rest bon" || line.label === "Diferență neînregistrată" || line.label === "Diferență față de bon") continue;
+      const unit = receiptLineUnit(line.label, line.amount);
+      const key = normalizeProductKey(unit.label);
       if (!key) continue;
       const list = groups.get(key) || [];
-      list.push({ receiptId: receipt.id, vendor, date: receipt.date, amount: round2(line.amount), category: line.category, label: line.label.trim() });
+      list.push({ receiptId: receipt.id, vendor, date: receipt.date, amount: unit.amount, category: line.category, label: unit.label });
       groups.set(key, list);
     }
   }
@@ -178,3 +204,40 @@ export function referenceBasket(data: AppData, keys: string[], options: { window
 /** Produsele cele mai potrivite pentru coșul etalon: cele cumpărate cel mai des. */
 export const basketCandidates = (data: AppData, limit = 20) =>
   productPriceHistories(data, { minObservations: 2 }).slice(0, limit);
+
+export type KnownProduct = { label: string; category: string; amount: number; count: number };
+
+/**
+ * Denumirile din bonurile salvate (scanate sau scrise), pentru sugestii când omul scrie un articol:
+ * așa același produs are mereu același nume și intră în istoricul de prețuri. Cele mai cumpărate primele.
+ */
+export function knownProducts(data: AppData, limit = 300): KnownProduct[] {
+  const byKey = new Map<string, KnownProduct & { date: string }>();
+  for (const receipt of data.receipts) {
+    for (const line of receipt.lines || []) {
+      if (!line.label || line.amount <= 0 || line.label === "Rest bon" || line.label === "Diferență neînregistrată" || line.label === "Diferență față de bon") continue;
+      const unit = receiptLineUnit(line.label, line.amount);
+      const key = normalizeProductKey(unit.label);
+      if (!key) continue;
+      const known = byKey.get(key);
+      const newer = !known || receipt.date >= known.date;
+      byKey.set(key, {
+        label: newer ? unit.label : known!.label,
+        category: newer ? line.category : known!.category,
+        amount: newer ? unit.amount : known!.amount,
+        date: newer ? receipt.date : known!.date,
+        count: (known?.count || 0) + 1,
+      });
+    }
+  }
+  return Array.from(byKey.values())
+    .sort((left, right) => right.count - left.count || right.date.localeCompare(left.date))
+    .slice(0, limit)
+    .map(({ label, category, amount, count }) => ({ label, category, amount, count }));
+}
+
+/** Produsul știut cu exact această denumire (fără diferențe de litere mari sau diacritice). */
+export function findKnownProduct(products: KnownProduct[], label: string): KnownProduct | undefined {
+  const key = normalizeProductKey(label);
+  return key ? products.find((item) => normalizeProductKey(item.label) === key) : undefined;
+}

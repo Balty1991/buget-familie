@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.193
+
+- **„Notează” are și „Ce ai cumpărat (opțional)”** lângă magazin. Mișcarea se numește „Lidl · pâine”, iar articolul intră ca rând de bon, deci și în istoricul de prețuri, fără să deschizi cheltuiala detaliată. Categoria se ia după articol. Cu tastatura deschisă nu mai rămâne un gol sub butoane (rezerva barei de jos a telefonului).
+- **Sugestii de articole din bonurile tale.** Când scrii un articol, în „Notează” sau în cheltuiala detaliată, apar denumirile din bonurile salvate, scanate sau scrise, cele mai cumpărate primele. Alegi una și vin categoria și ultimul preț. Așa același produs are mereu același nume, iar istoricul de prețuri îl recunoaște.
+- **Cantitate pe articol: bucăți sau kg.** Lângă categoria fiecărui articol scrii câte bucăți sau câte kilograme (butonul „buc/kg” schimbă unitatea), iar suma se face singură: „2 buc × 4,55 = 9,10”. Pe bon rămâne un rând „Crenvurști × 2”, iar „Unde a fost mai ieftin” compară prețul pe bucată sau pe kilogram.
+- **Bonurile scanate intră corect în „Unde a fost mai ieftin” și în coșul etalon.** Magazinul apare ca „Profi”, nu „Cumpărături Profi”, așa că bonurile scanate și cele notate de mână se adună la același magazin. Prețul se compară pe bucată: „× 2” se împarte la 2, iar „(reducere −2,45)” nu mai face din același produs unul nou. La produsele cântărite rămâne prețul plătit.
+
 ## 1.1.192
 
 - **Bon din mai multe capturi.** Un bon digital lung (de ex. din aplicația Profi) se poate scana din galerie alegând toate capturile lui, până la 6. Se citesc împreună, ca un singur bon. Rândurile prinse în două capturi se numără o singură dată, iar produsele repetate pe bon (doi crenvurști, la 4,54 și 4,55) rămân amândouă. Sub butonul de scanare scrie cum se face. Pe bonurile digitale, suma deja redusă nu se mai reduce încă o dată. Testul de după publicare citește și un bon Profi din 4 capturi (82,71 lei).

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type AppData, type Receipt } from "./finance-data";
-import { basketCandidates, normalizeProductKey, productPriceHistories, referenceBasket } from "./price-history";
+import { basketCandidates, findKnownProduct, knownProducts, normalizeProductKey, productPriceHistories, referenceBasket } from "./price-history";
 
 const receipt = (id: string, vendor: string, date: string, lines: Array<[string, number, string?]>): Receipt => ({
   id,
@@ -113,5 +113,50 @@ describe("coșul etalon", () => {
   it("nu raportează nimic pentru un coș gol", () => {
     const basket = referenceBasket(data, [], { asOf: "2026-09-10" });
     expect(basket).toMatchObject({ lines: [], currentTotal: 0, baselineTotal: 0, change: 0, changePercent: 0, pending: [] });
+  });
+});
+
+describe("bonurile scanate în istoric", () => {
+  it("compară prețul pe bucată, fără reducerea din etichetă, și arată doar magazinul", () => {
+    const data = withReceipts([
+      receipt("a", "Cumpărături Profi", "2026-10-01", [["Crenvurști pui 100 g", 6.99]]),
+      receipt("b", "Cumpărături Profi", "2026-10-08", [["Crenvurști pui 100 g × 2 (reducere −4,89)", 9.09]]),
+    ]);
+    const [history] = productPriceHistories(data);
+    expect(history.observations.map((item) => item.amount)).toEqual([6.99, 4.55]);
+    expect(history.label).toBe("Crenvurști pui 100 g");
+    expect(history.byVendor.map((item) => item.vendor)).toEqual(["Profi"]);
+  });
+
+  it("la cântărite (0,456 kg) păstrează prețul plătit pe rând", () => {
+    const data = withReceipts([
+      receipt("a", "Lidl", "2026-10-01", [["Roșii × 0,456", 4.1]]),
+      receipt("b", "Lidl", "2026-10-08", [["Roșii", 4.5]]),
+    ]);
+    expect(productPriceHistories(data)[0].observations.map((item) => item.amount)).toEqual([4.1, 4.5]);
+  });
+});
+
+describe("sugestiile de articole", () => {
+  it("aduce denumirile din bonuri, cele mai cumpărate primele, cu ultima categorie și ultimul preț pe bucată", () => {
+    const data = withReceipts([
+      receipt("a", "Profi", "2026-10-01", [["Crenvurști pui 100 g", 6.99], ["Pâine albă", 3.2]]),
+      receipt("b", "Profi", "2026-10-08", [["Crenvurști pui 100 g × 2 (reducere −4,89)", 9.09], ["Rest bon", 1]]),
+    ]);
+    const products = knownProducts(data);
+    expect(products.map((item) => item.label)).toEqual(["Crenvurști pui 100 g", "Pâine albă"]);
+    expect(products[0]).toMatchObject({ amount: 4.55, count: 2 });
+    expect(findKnownProduct(products, "crenvursti PUI 100g")?.label).toBe("Crenvurști pui 100 g");
+    expect(findKnownProduct(products, "lapte")).toBeUndefined();
+  });
+});
+
+describe("articolele cântărite scrise de mână", () => {
+  it("„× 0,456 kg” se compară pe kilogram", () => {
+    const data = withReceipts([
+      receipt("a", "Lidl", "2026-10-01", [["Roșii × 0,5 kg", 6]]),
+      receipt("b", "Lidl", "2026-10-08", [["Roșii × 1 kg", 13]]),
+    ]);
+    expect(productPriceHistories(data)[0].observations.map((item) => item.amount)).toEqual([12, 13]);
   });
 });

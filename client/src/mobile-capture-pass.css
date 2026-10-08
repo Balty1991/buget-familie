@@ -173,3 +173,5 @@
 .bf-source-transfer-row > svg { margin-bottom: 14px; color: var(--cf-muted); }
 .bf-source-transfer-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
 
+/* Tastatura acoperă bara de jos: fără gol. */
+html body .bf-quick-entry-panel:has(:is(input,textarea):focus){padding-bottom:10px!important}

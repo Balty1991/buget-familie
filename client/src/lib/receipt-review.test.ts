@@ -151,6 +151,14 @@ describe("bon → plicuri + poartă de revizuire", () => {
     expect(next.receipts[0].linkedTransactionId).toBe("tx");
     expect(next.receipts[0].lines).toHaveLength(2);
   });
+
+  it("articolul scris în Notează („Lidl · pâine”) păstrează magazinul ca vânzător", () => {
+    const data = createEmptyAppData();
+    data.transactions = [{ id: "tx", title: "Lidl · pâine", amount: 6.79, kind: "expense", category: "Alimente", source: "Card", sourceId: "source-debit", memberId: "member-me", person: "Eu", date: "2026-10-08" }];
+    const next = attachReceiptDetail(data, "tx", [{ id: "a", category: "Alimente", amount: 6.79, label: "pâine" }], undefined, "Lidl");
+    expect(next.receipts[0]).toMatchObject({ vendor: "Lidl", amount: 6.79 });
+    expect(next.receipts[0].lines?.[0].label).toBe("pâine");
+  });
 });
 
 describe("bonul legat de o cheltuială notată", () => {
