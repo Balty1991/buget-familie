@@ -143,7 +143,45 @@ function inspect() {
     const needed = size >= 24 || (size >= 18.66 && bold) ? 3 : 4.5;
     if (ratio < needed) problems.push(`contrast ${ratio.toFixed(2)}:1 la „${text.slice(0, 30)}” (${size}px)`);
   }
+  // Text tăiat cu „…”: suma sau numele trebuie să se vadă întregi (se rup pe rânduri, nu se ascund).
+  for (const el of document.querySelectorAll("body *")) {
+    const style = getComputedStyle(el);
+    if (style.textOverflow !== "ellipsis" && !(style.overflowX === "hidden" && style.whiteSpace === "nowrap")) continue;
+    if (!el.textContent.trim() || !el.checkVisibility() || el.closest("[aria-hidden='true']")) continue;
+    if (el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1) problems.push(`„${el.textContent.trim().slice(0, 30)}” e tăiat cu „…”`);
+  }
   return [...new Set(problems)].slice(0, 8);
+}
+
+/* global window, MutationObserver -- zoomText() rulează în pagină */
+/**
+ * Fontul mare al telefonului: Android pune textZoom până la 130% (MainActivity), adică mărește
+ * fiecare font-size. Aici mărim font-size din toate regulile CSS (px și rem) și rădăcina, o singură dată.
+ */
+function zoomText(scale) {
+  const scaled = new WeakSet();
+  const apply = () => {
+    for (const sheet of document.styleSheets) {
+      let rules;
+      try { rules = sheet.cssRules; } catch { continue; }
+      const walk = (list) => {
+        for (const rule of list) {
+          if (rule.cssRules) walk(rule.cssRules);
+          if (!rule.style || !rule.style.fontSize || scaled.has(rule)) continue;
+          const match = /^([\d.]+)(px|rem)$/.exec(rule.style.fontSize.trim());
+          if (match) rule.style.setProperty("font-size", `${(Number(match[1]) * scale).toFixed(2)}${match[2]}`, rule.style.getPropertyPriority("font-size"));
+          scaled.add(rule);
+        }
+      };
+      walk(rules);
+    }
+  };
+  if (window.__bfZoom) return;
+  window.__bfZoom = true;
+  apply();
+  document.documentElement.style.fontSize = `${parseFloat(getComputedStyle(document.documentElement).fontSize) * scale}px`;
+  // Foile încărcate mai târziu (ecranele leneșe) primesc aceeași mărire.
+  new MutationObserver(apply).observe(document.head, { childList: true, subtree: true });
 }
 
 async function main() {
@@ -151,7 +189,9 @@ async function main() {
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const found = [];
   try {
-    for (const theme of THEMES) for (const width of WIDTHS) for (const [name, open] of Object.entries(SCREENS)) {
+    // Pe lângă teme × lățimi: o trecere cu fontul telefonului la 130%, pe cel mai îngust ecran.
+    const RUNS = [...THEMES.flatMap((theme) => WIDTHS.map((width) => ({ theme, width, zoom: 1 }))), ...(THEMES.includes("white") ? [{ theme: "white", width: 360, zoom: 1.3 }] : [])];
+    for (const { theme, width, zoom } of RUNS) for (const [name, open] of Object.entries(SCREENS)) {
       if (ONLY && !ONLY.test(name)) continue;
       const context = await browser.newContext({ viewport: { width, height: 800 }, locale: "ro-RO" });
       await context.addInitScript((theme) => {
@@ -169,10 +209,12 @@ async function main() {
       await seed(page);
       await page.reload();
       await page.waitForTimeout(2000);
+      if (zoom !== 1) await page.evaluate(zoomText, zoom);
       if (open) await open(page);
+      if (zoom !== 1) await page.evaluate(zoomText, zoom);
       await page.waitForTimeout(600);
       const problems = [...await page.evaluate(inspect), ...errors.map((message) => `eroare: ${message}`)];
-      if (problems.length) found.push(`${name} · ${theme} · ${width}px\n    ${problems.join("\n    ")}`);
+      if (problems.length) found.push(`${name} · ${theme} · ${width}px${zoom !== 1 ? ` · font ${zoom * 100}%` : ""}\n    ${problems.join("\n    ")}`);
       await context.close();
     }
   } finally {

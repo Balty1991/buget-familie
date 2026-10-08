@@ -37,6 +37,16 @@
 
         </activity>
 
+        <!-- Reamintirile programate (alarme) și repunerea lor după repornirea telefonului. -->
+        <receiver
+            android:name=".ReminderReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Widget de pe ecranul principal: adaugă o cheltuială fără a deschide aplicația. -->
         <receiver
             android:name=".QuickAddWidgetProvider"

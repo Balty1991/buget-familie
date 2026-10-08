@@ -27,7 +27,7 @@ permissions:
 jobs:
   layout:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 32
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -41,9 +41,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Chromium
-        run: pnpm exec playwright-core install --with-deps chromium
+        # apt (oglinda Azure) rămâne uneori agățat 20 de minute: 5 minute pe încercare, de cel mult 3 ori.
+        run: |
+          for attempt in 1 2 3; do
+            timeout 300 pnpm exec playwright-core install --with-deps chromium && exit 0
+            echo "Instalarea Chromium n-a mers (încercarea $attempt), reîncerc."
+          done
+          exit 1
       - name: Verifică interfața
-        timeout-minutes: 15
+        # Teme × lățimi plus trecerea cu fontul telefonului la 130%.
+        timeout-minutes: 20
         run: pnpm test:layout
       - name: Verifică fluxurile de bază
         timeout-minutes: 10

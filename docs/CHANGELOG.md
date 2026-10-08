@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.189
+
+- **Amintirea de seară vine la ora aleasă.** Era pusă ultima în lista de reamintiri, iar telefonul primea doar primele 7, așa că în zilele cu multe alerte cădea. Acum lista e în ordinea orei (cele mai apropiate întâi), până la 12. Reamintirile se programează cu alarma sistemului („allow while idle”), care sună și cu telefonul în repaus. WorkManager le întârzia ore întregi pe unele telefoane. După repornirea telefonului sau o actualizare, alarmele se pun din nou singure.
+- **Fontul mare al telefonului nu mai strică ecranele.** Am verificat toate meniurile la 360 și 412 px, cu fontul la 130%:
+  - „NEREPARTIZAȚI” nu mai intră sub sumă în Plicuri;
+  - în Setări, ora amintirii de seară nu mai e strivită, iar butoanele de backup sunt pe rânduri;
+  - sumele din „Bilanțul săptămânii” și de pe Astăzi, rândurile din Mișcări, „Ultimele mișcări” și categoriile din Gospodărie nu se mai taie cu „…”; se rup pe două rânduri.
+  - Testul automat de interfață verifică de acum și textele tăiate și are o trecere cu fontul la 130%.
+- **Notează:** la Cheltuială nu mai apare câmpul „Ce venit?”, care era al venitului.
+- **Backup:**
+  - „Salvează pe telefon” arată acum sub butoane unde și la ce oră s-a salvat (sau de ce nu), plus „Se salvează…” cât lucrează.
+  - Salvarea automată are butoane „Pornește / Oprește” și starea scrisă clar („Pornită · ultima salvare 08:23”), în loc de o bifă.
+- **Revizia aplicației, luni și joi dimineața** (`.github/workflows/weekly-review.yml`). Rulează toate verificările: tipuri, stil, teste unitare, funcțiile, ecranele pe telefon cu font 130%, fluxurile de bază, serverul real (bonuri, ghid, consultant) și pachetele cu probleme de securitate. Apoi Claude Haiku 5.5 citește rezultatele și deschide un Issue „Revizia din …” cu eticheta `revizie`, pe care GitHub îl trimite și pe mail. Raportul are tabelul verificărilor, problemele cu cauza și reparația, ce merită urmărit și idei de îmbunătățire. Costă cam 1–2 cenți pe revizie.
+- **Astăzi:** golul de sub „Mai mult din ziua asta” e umplut de cadranul „Sănătatea banilor, de la 0 la 100”, cu explicația a ce măsoară (marja până la venit, plicurile în limită, scadențele din 7 zile, ritmul de cheltuire). Pe telefoanele obișnuite pagina încape întreagă, fără scroll, iar cadranul se potrivește înălțimii ecranului.
+
 ## 1.1.188
 
 - **Consultantul financiar** (Analiză → Asistent, abonamentul Familia): la „Cere raportul lunii” primești o evaluare sinceră a lunii față de lunile trecute (Pe drumul bun / Atenție / Risc), cel mult trei pași concreți cu suma pe lună, ce urmează să fie urmărit și un lucru făcut bine. Cifrele le calculează telefonul; la AI pleacă doar un rezumat (totaluri pe luni și categorii, plicuri, datorii, obiective, fondul de urgență), fără mișcări, magazine, notițe sau nume. Pașii cu sume mai mari decât venitul lunar sunt aruncați. Raportul rămâne pe telefon, se poate actualiza (6 pe zi), iar spre final de lună cardul spune că raportul lunii e gata de cerut.

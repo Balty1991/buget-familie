@@ -60,7 +60,13 @@ jobs:
           path: ~/.cache/firebase/emulators
           key: firebase-emulators-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Chromium
-        run: pnpm exec playwright-core install --with-deps chromium
+        # apt (oglinda Azure) rămâne uneori agățat 20 de minute: 5 minute pe încercare, de cel mult 3 ori.
+        run: |
+          for attempt in 1 2 3; do
+            timeout 300 pnpm exec playwright-core install --with-deps chromium && exit 0
+            echo "Instalarea Chromium n-a mers (încercarea $attempt), reîncerc."
+          done
+          exit 1
       - name: Test sync cap-coadă
         timeout-minutes: 12
         run: pnpm test:sync

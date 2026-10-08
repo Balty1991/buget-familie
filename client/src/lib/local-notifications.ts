@@ -603,7 +603,9 @@ function buildAlerts(data: AppData): PlannedAlert[] {
   }
 
   // Ce a oprit omul din Setări nu se programează deloc.
-  return alerts.filter((alert) => !prefs.off.includes(notifyKindOf(alert.tag))).slice(0, 10);
+  // Cele mai apropiate întâi: check-inul de seară era pus ultimul și cădea la tăierea listei,
+  // așa că amintirea de la 20:00 nu mai venea în zilele cu multe alerte.
+  return alerts.filter((alert) => !prefs.off.includes(notifyKindOf(alert.tag))).sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, 12);
 }
 
 /** Expus pentru teste: aceleași alerte ca programarea locală. */
@@ -857,7 +859,7 @@ function scheduleWorkManager(alerts: PlannedAlert[]): boolean {
     // Și din JS, pentru versiunile native mai vechi: întâi pleacă tot, apoi lista de acum.
     bridge.cancelAll?.();
     const payload = JSON.stringify(
-      alerts.slice(0, 7).map((alert) => ({
+      alerts.slice(0, 12).map((alert) => ({
         id: alert.id,
         title: alert.title,
         body: alert.body,

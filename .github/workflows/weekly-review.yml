@@ -1,0 +1,85 @@
+name: Revizia aplicației
+
+# Luni și joi dimineața (ora României): toate verificările aplicației, apoi Claude Haiku 5.5 citește
+# rezultatele și scrie raportul ca Issue cu eticheta „revizie” (GitHub îl trimite și pe mail).
+# Cost: cam 1–2 cenți pe revizie. Se poate porni și de mână, din Actions → „Revizia aplicației”.
+
+on:
+  schedule:
+    - cron: "47 4 * * 1,4"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: weekly-review
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 50
+      - name: Setup pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
+      - name: Setup Node
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Fiecare verificare își scrie codul de ieșire, logul și durata; niciuna nu oprește revizia.
+      - name: Rulează verificările
+        timeout-minutes: 60
+        run: |
+          # O verificare picată nu oprește pasul: o notăm și trecem la următoarea.
+          set +e
+          mkdir -p review
+          check() {
+            local name="$1"; shift
+            local start=$(date +%s)
+            bash -c "$*" > "review/$name.log" 2>&1
+            echo $? > "review/$name.status"
+            echo $(( $(date +%s) - start )) > "review/$name.seconds"
+            echo "$name: cod $(cat review/$name.status), $(cat review/$name.seconds) s"
+          }
+          check typecheck "pnpm check"
+          check lint "pnpm lint"
+          check unit "pnpm test"
+          check functions "cd functions && npm ci --no-audit --no-fund && npx tsc --noEmit -p ."
+          check audit "pnpm audit --prod --audit-level high"
+          # apt (oglinda Azure) rămâne uneori agățat: 5 minute pe încercare, de cel mult 3 ori.
+          for attempt in 1 2 3; do timeout 300 pnpm exec playwright-core install --with-deps chromium && break; done
+          check layout "timeout 1500 pnpm test:layout"
+          check flows "timeout 600 pnpm test:flows"
+          check server "timeout 300 node e2e/receipt-smoke.mjs"
+          git log --since="5 days ago" --pretty=format:"%h %ad %s" --date=short > review/changes.txt || true
+          head -60 docs/CHANGELOG.md > review/changelog.txt || true
+
+      - name: Raportul (Claude Haiku 5.5)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node e2e/weekly-review.mjs
+
+      - name: Deschide Issue cu raportul
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create revizie --color 1B4F42 --description "Revizia automată a aplicației" --force
+          gh issue create --title "$(cat review/title.txt)" --body-file review/report.md --label revizie
+
+      - name: Păstrează logurile
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: revizie-loguri
+          path: review/
+          retention-days: 14

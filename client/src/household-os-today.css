@@ -865,4 +865,3 @@ html body .os-shell .bf-today-workspace:not(.is-simple) > .bf-today-side > .bf-t
 .bf-week-days i{display:flex;align-items:flex-end;gap:2px;width:16px;height:28px}
 .bf-week-days em{flex:1 1 0;border-radius:3px 3px 0 0;background:var(--cf-primary)}
 .bf-week-days em+em{background:color-mix(in srgb,var(--cf-muted) 55%,var(--cf-line))}
-
