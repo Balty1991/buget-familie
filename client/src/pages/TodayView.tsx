@@ -14,6 +14,7 @@ import { dayGreeting } from "@/lib/day-greeting";
 const INTRO_KEY = "buget-familie:today-intro";
 import { applyDeclaredBalance, balanceCheckDue, markBalanceChecked, readLastBalanceCheck } from "@/lib/balance-check";
 import "../monthly-needs.css";
+import { readAutoBackup } from "@/lib/auto-backup";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BookOpen, BellRing, FileBarChart, ListChecks, Image as ImageIcon, CalendarClock, CreditCard, Gift, Inbox, Info, PiggyBank, PlayCircle, Plus, ReceiptText, Ticket, Wallet, X, ArrowDownRight, ArrowUpRight, ChevronRight } from "lucide-react";
 import { addIsoDays, planEndDate, calculateHealthScore, dropEnvelopeTransfer, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, parseRomanianAmount, pendingRecurringInPlan, planForecast, planWeeklyCycle, sourceBalance, transferBetweenEnvelopes, type AppData, type Transaction } from "@/lib/finance-data";
@@ -181,7 +182,7 @@ export function recentActivityMoves<T extends ActivityRow>(transactions: T[], cy
     .slice(0, 5);
 }
 
-export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings: _onOpenSettings, onOpenRecurring, coach }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void; coach?: ReactNode }) {
+export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, onOpenSettings, onOpenRecurring, coach }: { data: AppData; onAdd: () => void; onEdit: (item: Transaction) => void; onGo: (view: MainView) => void; onChange: (next: AppData) => void; onOpenReview: () => void; onOpenSettings: () => void; onOpenRecurring: () => void; coach?: ReactNode }) {
   // „Astăzi pictat”: prima dată când ecranul cu cifra zilei e pe ecran. Splash-ul e LCP-ul real,
   // deci Lighthouse arată mai bine decât e; scripts/lighthouse.mjs raportează și acest semn.
   useEffect(() => {
@@ -376,7 +377,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
     <div className="bf-health-pulse">
       <div className="bf-health-pulse-gauge">
         <Suspense fallback={null}>
-          <HealthScoreBadge data={data} />
+          <HealthScoreBadge data={data} onGo={onGo} />
         </Suspense>
       </div>
       <div className="bf-health-pulse-copy">
@@ -815,6 +816,18 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
           {dayMore && (
             <>
               {data.pendingReview.length === 0 && nextStep && <NextStepCard signal={nextStep} onOpen={() => openSignal(nextStep.action)} />}
+              {(() => {
+                // Copia de siguranță la vedere: pierderea telefonului fără copie e cel mai mare risc pentru registru.
+                const backup = readAutoBackup();
+                const stamps = [backup.lastAt, backup.live && !backup.liveError ? backup.liveAt : undefined].map((value) => (value ? Date.parse(value) : NaN)).filter(Number.isFinite);
+                const days = stamps.length ? Math.floor((Date.now() - Math.max(...stamps)) / 86_400_000) : null;
+                return (
+                  <p className={`bf-today-backup-line${days === null || days > 30 ? " is-old" : ""}`}>
+                    <span>{days === null ? t("Nicio copie de siguranță încă.") : days === 0 ? t("Ultima copie de siguranță: azi.") : t("Ultima copie de siguranță: acum {days}.", { days: daysLabel(days) })}</span>
+                    <button type="button" className="bf-link-button" onClick={onOpenSettings}>{days === null || days > 7 ? t("Fă o copie") : t("Copii de siguranță")}</button>
+                  </p>
+                );
+              })()}
               <div className="bf-today-explainers">
                 <button type="button" className="os-explainer secondary" onClick={() => setSafeSheetOpen(true)}>
                   <Info size={16} aria-hidden="true" /> {t("Cum se citește?")}
@@ -856,7 +869,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               {showHealthGauge && (
               <div className="os-gauge bf-today-below-gauge">
                 <Suspense fallback={null}>
-                  <HealthScoreBadge data={data} />
+                  <HealthScoreBadge data={data} onGo={onGo} />
                 </Suspense>
               </div>
               )}

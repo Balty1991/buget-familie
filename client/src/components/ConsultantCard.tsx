@@ -8,7 +8,7 @@ import { isOfflineOnly } from "@/lib/ui-prefs";
 import { getLocale, t } from "@/lib/i18n";
 import { lei } from "@/lib/money-format";
 import { FamilieUpgrade } from "@/components/FamilieUpgrade";
-import { consultConsented, consultReady, rememberConsultConsent, requestConsult, savedConsult, type ConsultSource, type SavedConsult } from "@/lib/consultant";
+import { consultConsented, consultReady, consultTeaser, rememberConsultConsent, requestConsult, savedConsult, type ConsultSource, type SavedConsult } from "@/lib/consultant";
 
 const SOURCE_NAME: Record<ConsultSource, string> = { gemini: "Gemini", groq: "Groq" };
 const STATUS_LABEL = { bine: "Pe drumul bun", atentie: "Atenție", risc: "Risc" } as const;
@@ -59,7 +59,12 @@ export function ConsultantCard({ data }: { data: AppData }) {
       <div><p className="bf-kicker">{t("CONSULTANTUL FINANCIAR")}</p><h2>{report && saved ? report.headline : t("Cum stăm luna asta?")}</h2></div>
       {saved && report ? <SourceLed source={saved.source} /> : null}
     </header>
-    {!familie ? <FamilieUpgrade reason="ai" /> : report && saved ? <>
+    {!familie ? <>
+      {/* Ce primește abonatul: prima frază, calculată pe telefon; restul, estompat. */}
+      <p className="bf-consultant-summary">{consultTeaser(data)}</p>
+      <div className="bf-consultant-teaser" aria-hidden="true"><i /><i /><i /></div>
+      <FamilieUpgrade reason="ai" />
+    </> : report && saved ? <>
       <p className={`bf-consultant-status is-${report.status}`}>{t(STATUS_LABEL[report.status])}{current ? "" : ` · ${t("raportul lunii trecute")}`}</p>
       <p className="bf-consultant-summary">{report.summary}</p>
       {report.actions.length ? <ol className="bf-consultant-actions">{report.actions.map((action) => <li key={action.title}><div><b>{action.title}</b><p>{action.detail}</p></div>{action.amount > 0 ? <em>{lei(action.amount)}{t("/lună")}</em> : null}</li>)}</ol> : null}

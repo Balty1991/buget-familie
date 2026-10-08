@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createEmptyAppData, type Transaction } from "./finance-data";
-import { consultContext, consultReady, groundReport } from "./consultant";
+import { consultContext, consultReady, consultTeaser, groundReport } from "./consultant";
 
 const tx = (id: string, date: string, amount: number, kind: "income" | "expense", category = "Alimente", extra: Partial<Transaction> = {}): Transaction => ({ id, title: `Kaufland Ana ${id}`, amount, kind, category, source: "Card", person: "Ana", date, note: "nota secretă", ...extra });
 
@@ -33,5 +33,11 @@ describe("consultantul financiar", () => {
 
   it("cere câteva zile de mișcări înainte de raport", () => {
     expect(consultReady(data, "2026-10-08")).toBe(false);
+  });
+
+  it("dă o primă frază calculată pe telefon pentru cine nu are Familia", () => {
+    const teaser = consultTeaser(data, "2026-10-08");
+    expect(teaser).toMatch(/luna se încheie/);
+    expect(teaser).toMatch(/media lunilor trecute/);
   });
 });

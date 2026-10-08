@@ -1,18 +1,27 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { healthScoreStory, type AppData, type HealthScoreStory } from "@/lib/finance-data";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { CalmGauge } from "@/components/CalmGauge";
 import { EnvelopeMark } from "@/components/EnvelopeMark";
 import { t } from "@/lib/i18n";
 import { ChartTip } from "@/components/ChartFrame";
+import type { MainView } from "@/pages/home-kit";
+
+/** Unde se repară fiecare factor: plicurile și marja în Plicuri, scadențele în Obligații, ritmul în Mișcări. */
+const FIX_VIEW: Record<string, { view: MainView; label: string }> = {
+  margin: { view: "plan", label: "Vezi plicurile și banii liberi" },
+  envelopes: { view: "plan", label: "Vezi plicurile" },
+  dues: { view: "obligations", label: "Vezi scadențele" },
+  pace: { view: "journal", label: "Vezi mișcările" },
+};
 
 /**
  * Badge compact pentru ecranul Astăzi + sheet cu factorii explicabili și povestea pe cicluri.
  * Folosește doar date locale; nu modifică registrul.
  */
-export function HealthScoreBadge({ data }: { data: AppData }) {
+export function HealthScoreBadge({ data, onGo }: { data: AppData; onGo?: (view: MainView) => void }) {
   const story = healthScoreStory(data);
   const health = story.current;
   const [open, setOpen] = useState(false);
@@ -30,12 +39,12 @@ export function HealthScoreBadge({ data }: { data: AppData }) {
         <CalmGauge value={health.score} />
       </button>
 
-      {open && <HealthScoreSheet story={story} onClose={() => setOpen(false)} />}
+      {open && <HealthScoreSheet story={story} onClose={() => setOpen(false)} onGo={onGo ? (view) => { setOpen(false); onGo(view); } : undefined} />}
     </>
   );
 }
 
-function HealthScoreSheet({ story, onClose }: { story: HealthScoreStory; onClose: () => void }) {
+function HealthScoreSheet({ story, onClose, onGo }: { story: HealthScoreStory; onClose: () => void; onGo?: (view: MainView) => void }) {
   const health = story.current;
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const toneLabel = health.tone === "unknown" ? t("Încă nu se poate calcula") : health.tone === "good" ? t("Calm") : health.tone === "watch" ? t("Atenție") : t("Risc");
@@ -62,6 +71,15 @@ function HealthScoreSheet({ story, onClose }: { story: HealthScoreStory; onClose
             <X size={19} />
           </button>
         </header>
+
+        {/* Ce trage scorul cel mai mult în jos, cu drumul direct la locul unde se repară. */}
+        {(() => {
+          if (!onGo || health.score === null) return null;
+          const weakest = health.factors.filter((factor) => factor.known && factor.value < 0.75 && FIX_VIEW[factor.id]).sort((a, b) => (1 - b.value) * b.weight - (1 - a.value) * a.weight)[0];
+          if (!weakest) return null;
+          const fix = FIX_VIEW[weakest.id];
+          return <div className="bf-health-cause"><p><b>{t("Ce trage scorul în jos: {label}", { label: weakest.label })}</b><small>{weakest.detail}</small></p><button type="button" className="bf-primary" onClick={() => onGo(fix.view)}>{t(fix.label)} <ChevronRight size={15} aria-hidden="true" /></button></div>;
+        })()}
 
         <p className="bf-health-sheet-intro">
           {health.score === null

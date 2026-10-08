@@ -1,5 +1,5 @@
 import "../receipt-scan.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, ImagePlus, Loader2 } from "lucide-react";
 import type { AppData } from "@/lib/finance-data";
 import { t } from "@/lib/i18n";
@@ -17,7 +17,20 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   const galleryRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [seconds, setSeconds] = useState(0);
+  // Cronometrul citirii: omul vede că se lucrează și, când durează, de ce.
+  useEffect(() => {
+    if (!busy) { setSeconds(0); return; }
+    const started = Date.now();
+    const timer = window.setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => window.clearInterval(timer);
+  }, [busy]);
   if (!canScanReceipt() || isOfflineOnly()) return null;
+  const busyText = seconds < 12
+    ? t("Citesc bonul… {seconds} s", { seconds })
+    : seconds < 30
+      ? t("Durează mai mult ca de obicei, serverul e aglomerat… {seconds} s", { seconds })
+      : t("Serverul principal nu răspunde, citește rezerva (Claude)… {seconds} s", { seconds });
 
   const pick = async (which: "camera" | "gallery") => {
     if (busy) return;
@@ -48,7 +61,7 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   };
 
   return <section className="bf-scan-receipt" aria-busy={busy}>
-    {busy ? <p className="bf-scan-receipt-busy" role="status"><Loader2 size={18} className="bf-spin" aria-hidden="true" /> {t("Citesc bonul… durează câteva secunde.")}</p> : <div className="bf-scan-receipt-actions">
+    {busy ? <p className="bf-scan-receipt-busy" role="status"><Loader2 size={18} className="bf-spin" aria-hidden="true" /> {busyText}</p> : <div className="bf-scan-receipt-actions">
       <button type="button" className="bf-scan-receipt-main" onClick={() => void pick("camera")}><Camera size={18} aria-hidden="true" /><span><b>{t("Scanează bonul")}</b><small>{t("Toate produsele, pe categorii")}</small></span></button>
       <button type="button" className="bf-scan-receipt-gallery" aria-label={t("Alege poza bonului din galerie")} onClick={() => void pick("gallery")}><ImagePlus size={18} aria-hidden="true" /></button>
     </div>}
