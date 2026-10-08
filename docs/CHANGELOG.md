@@ -12,6 +12,7 @@
 - **Backup:**
   - „Salvează pe telefon” arată acum sub butoane unde și la ce oră s-a salvat (sau de ce nu), plus „Se salvează…” cât lucrează.
   - Salvarea automată are butoane „Pornește / Oprește” și starea scrisă clar („Pornită · ultima salvare 08:23”), în loc de o bifă.
+- **Revizia aplicației, luni și joi dimineața** (`.github/workflows/weekly-review.yml`). Rulează toate verificările: tipuri, stil, teste unitare, funcțiile, ecranele pe telefon cu font 130%, fluxurile de bază, serverul real (bonuri, ghid, consultant) și pachetele cu probleme de securitate. Apoi Claude Haiku 5.5 citește rezultatele și deschide un Issue „Revizia din …” cu eticheta `revizie`, pe care GitHub îl trimite și pe mail. Raportul are tabelul verificărilor, problemele cu cauza și reparația, ce merită urmărit și idei de îmbunătățire. Costă cam 1–2 cenți pe revizie.
 - **Astăzi:** golul de sub „Mai mult din ziua asta” e umplut de cadranul „Sănătatea banilor, de la 0 la 100”, cu explicația a ce măsoară (marja până la venit, plicurile în limită, scadențele din 7 zile, ritmul de cheltuire). Pe telefoanele obișnuite pagina încape întreagă, fără scroll, iar cadranul se potrivește înălțimii ecranului.
 
 ## 1.1.188
