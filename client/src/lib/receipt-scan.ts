@@ -16,9 +16,13 @@ export type ScannedReceipt = {
   items: Array<{ name: string; rawName?: string; quantity: number; amount: number; discount?: number; category: string }>;
   payments: Array<{ method: "cash" | "card" | "meal" | "voucher" | "other"; amount: number }>;
   confidence: "high" | "medium" | "low";
+  /** Modelul care a citit bonul (Gemini sau, ca rezervă, Claude). */
+  model?: string;
 };
 
 export type ScanPrefill = {
+  /** Cine a citit: „gemini” de obicei, „claude” când Gemini era aglomerat. */
+  readBy?: "gemini" | "claude";
   title: string;
   amount: number;
   date?: string;
@@ -99,6 +103,7 @@ export function scanToPrefill(receipt: ScannedReceipt, data: AppData, memberId?:
     sourceId: first?.id,
     second: secondSource && secondAmount > 0 && secondAmount < total ? { sourceId: secondSource.id, amount: secondAmount } : undefined,
     warning,
+    ...(receipt.model ? { readBy: receipt.model.startsWith("claude") ? "claude" as const : "gemini" as const } : {}),
     discount: round(receipt.items.reduce((sum, item) => sum + (item.discount && item.discount > 0 && item.amount > 0 ? item.discount : 0), 0)),
     count: lines.length,
   };

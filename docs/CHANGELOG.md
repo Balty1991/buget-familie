@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.191
+
+Ideile din revizia automată (#67):
+
+- **Cadranul „Sănătatea banilor” duce la cauză.** În foaia scorului apare ce trage scorul cel mai mult în jos (marja, plicurile, scadențele sau ritmul), cu un buton care duce direct acolo: Plicuri, Obligații sau Mișcări.
+- **Scanarea arată ce face.** Cât citește apare un cronometru („Citesc bonul… 6 s”). Dacă durează, spune că serverul e aglomerat, iar după 30 de secunde, că citește rezerva (Claude). După citire scrie dacă bonul l-a citit rezerva.
+- **Când totalul bonului nu bate,** pe lângă diferență apare un sfat de fotografiere (întins, drept de sus, lumină bună) și butonul „Scanează din nou”.
+- **Pe Astăzi, în „Mai mult din ziua asta”:** „Ultima copie de siguranță: acum 9 zile”, cu „Fă o copie”. Linia e evidențiată când copia e mai veche de 30 de zile sau nu există.
+- **Consultantul pentru cine nu are Familia:** apare prima frază a raportului, calculată pe telefon, fără AI („În ritmul de acum, luna se încheie cu 12% peste media lunilor trecute. Alimente crește cel mai repede.”). Restul raportului e estompat, cu oferta Familia.
+
 ## 1.1.190
 
 - **Bonul scanat se verifică pe loc.** Sub rânduri apare „✓ Rândurile bat cu totalul bonului”. Dacă nu bat, apare cu roșu cât lipsește sau cât e în plus față de total („Lipsesc 4,99 lei… Poate un produs n-a fost citit”). Diferența se recalculează la fiecare corectură. Când lipsesc bani, „Adaugă un rând cu diferența” pune un rând „Diferență față de bon” la Altele.

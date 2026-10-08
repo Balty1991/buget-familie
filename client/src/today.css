@@ -99,16 +99,5 @@ html body .bf-trip-today{width:100%;grid-template-columns:auto minmax(0,1fr);col
 @keyframes bf-rise{from{opacity:0;transform:translateY(16px)}}
 @media (prefers-reduced-motion:reduce){.bf-today-workspace.is-entering>*{animation:none}}
 
-/* Cadranul de sub „Mai mult din ziua asta”: umple golul de sub cifra zilei. Cu ziua strânsă,
-   pagina încape pe tot ecranul fără scroll: cardul ia exact înălțimea rămasă, cadranul crește cu ea. */
-.bf-today-workspace .bf-health-pulse { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin: 10px 0 0; padding: 10px 16px; border-radius: 20px; border: 1px solid var(--cf-line); background: var(--cf-surface); text-align: center; }
-.bf-today-workspace .bf-health-pulse-gauge { width: clamp(90px, 46vw, 230px); }
-.bf-today-workspace .bf-health-pulse-copy { display: grid; gap: 4px; min-width: 0; max-width: 34ch; }
-.bf-today-workspace .bf-health-pulse-copy b { font-size: 16px; color: var(--cf-ink); }
-.bf-today-workspace .bf-health-pulse-copy small { font-size: 13px; line-height: 1.45; color: var(--cf-muted); }
-.bf-today-workspace.is-held:not(.is-open) { display: flex; flex-direction: column; min-height: 100%; box-sizing: border-box; }
-.bf-today-workspace.is-held:not(.is-open) > .bf-health-pulse { flex: 1 1 0; min-height: 170px; container-type: size; }
-/* Cadranul se potrivește în cât loc rămâne: nici nu împinge pagina sub ecran, nici nu lasă gol. */
-.bf-today-workspace.is-held:not(.is-open) > .bf-health-pulse .bf-health-pulse-gauge { width: max(90px, min(230px, 56cqw, (100cqh - 128px) * 1.09)); }
-/* Bara de jos e deja ocolită de padding-ul lui main; fără al doilea padding, pagina strânsă încape fără scroll. */
-.os-shell .bf-page.bf-today-workspace.is-held:not(.is-open) { padding-bottom: 8px !important; }
+/* Cadranul de pe Astăzi, cauza scorului, ultima copie. */
+.bf-today-workspace .bf-health-pulse{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin:10px 0 0;padding:10px 16px;border-radius:20px;border:1px solid var(--cf-line);background:var(--cf-surface);text-align:center}.bf-today-workspace .bf-health-pulse-gauge{width:clamp(90px,46vw,230px)}.bf-today-workspace .bf-health-pulse-copy{display:grid;gap:4px;min-width:0;max-width:34ch}.bf-today-workspace .bf-health-pulse-copy b{font-size:16px;color:var(--cf-ink)}.bf-today-workspace .bf-health-pulse-copy small{font-size:13px;line-height:1.45;color:var(--cf-muted)}.bf-today-workspace.is-held:not(.is-open){display:flex;flex-direction:column;min-height:100%;box-sizing:border-box}.bf-today-workspace.is-held:not(.is-open) > .bf-health-pulse{flex:1 1 0;min-height:170px;container-type:size}.bf-today-workspace.is-held:not(.is-open) > .bf-health-pulse .bf-health-pulse-gauge{width:max(90px,min(230px,56cqw,(100cqh - 128px) * 1.09))}.os-shell .bf-page.bf-today-workspace.is-held:not(.is-open){padding-bottom:8px !important}.bf-health-cause{display:grid;gap:10px;margin:0 0 14px;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--cf-warning,#b17814) 12%,transparent)}.bf-health-cause p{display:grid;gap:4px;margin:0}.bf-health-cause b{color:var(--cf-ink);font-size:15px}.bf-health-cause small{color:var(--cf-muted);font-size:13px;line-height:1.45}.bf-health-cause button{display:inline-flex;align-items:center;justify-content:center;gap:6px;justify-self:start}.bf-today-backup-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;margin:10px 0;padding:10px 14px;border-radius:14px;border:1px solid var(--cf-line);background:var(--cf-surface);font-size:14px;color:var(--cf-ink)}.bf-today-backup-line.is-old{border-color:color-mix(in srgb,var(--cf-warning,#b17814) 45%,var(--cf-line))}

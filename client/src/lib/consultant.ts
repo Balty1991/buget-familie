@@ -133,3 +133,22 @@ export function consultConsented(): boolean {
 export function rememberConsultConsent() {
   try { localStorage.setItem(CONSENT_KEY, "1"); } catch { /* fără stocare: întrebăm din nou data viitoare */ }
 }
+
+/**
+ * Previzualizarea pentru cine nu are Familia: o primă frază calculată pe telefon, din cifrele lunii,
+ * fără nicio cerere la AI. Restul raportului rămâne estompat până la abonament.
+ */
+export function consultTeaser(data: AppData, today = isoToday()): string {
+  const context = consultContext(data, today);
+  const past = context.previousMonths.filter((month) => month.expense > 0);
+  const average = past.length ? past.reduce((sum, month) => sum + month.expense, 0) / past.length : 0;
+  const { dayOfMonth, daysInMonth, expense } = context.month;
+  const projected = dayOfMonth > 0 ? (expense / dayOfMonth) * daysInMonth : expense;
+  const top = context.categories.find((item) => item.thisMonth > 0 && item.monthlyAverage > 0 && item.thisMonth > item.monthlyAverage * (dayOfMonth / daysInMonth) * 1.2);
+  if (average > 0 && expense > 0) {
+    const percent = Math.round(((projected - average) / average) * 100);
+    const pace = percent > 5 ? t("cu {percent}% peste media lunilor trecute", { percent }) : percent < -5 ? t("cu {percent}% sub media lunilor trecute", { percent: -percent }) : t("cam cât media lunilor trecute");
+    return `${t("În ritmul de acum, luna se încheie {pace}.", { pace })}${top ? ` ${t("{category} crește cel mai repede.", { category: t(top.name) })}` : ""}`;
+  }
+  return expense > 0 ? t("Luna asta ai notat {amount} cheltuieli. Consultantul le compară cu lunile tale și îți dă pașii.", { amount: String(Math.round(expense)) }) : t("Notează câteva zile și consultantul îți spune cum stă luna și ce să faci.");
+}
