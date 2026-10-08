@@ -115,3 +115,24 @@ describe("coșul etalon", () => {
     expect(basket).toMatchObject({ lines: [], currentTotal: 0, baselineTotal: 0, change: 0, changePercent: 0, pending: [] });
   });
 });
+
+describe("bonurile scanate în istoric", () => {
+  it("compară prețul pe bucată, fără reducerea din etichetă, și arată doar magazinul", () => {
+    const data = withReceipts([
+      receipt("a", "Cumpărături Profi", "2026-10-01", [["Crenvurști pui 100 g", 6.99]]),
+      receipt("b", "Cumpărături Profi", "2026-10-08", [["Crenvurști pui 100 g × 2 (reducere −4,89)", 9.09]]),
+    ]);
+    const [history] = productPriceHistories(data);
+    expect(history.observations.map((item) => item.amount)).toEqual([6.99, 4.55]);
+    expect(history.label).toBe("Crenvurști pui 100 g");
+    expect(history.byVendor.map((item) => item.vendor)).toEqual(["Profi"]);
+  });
+
+  it("la cântărite (0,456 kg) păstrează prețul plătit pe rând", () => {
+    const data = withReceipts([
+      receipt("a", "Lidl", "2026-10-01", [["Roșii × 0,456", 4.1]]),
+      receipt("b", "Lidl", "2026-10-08", [["Roșii", 4.5]]),
+    ]);
+    expect(productPriceHistories(data)[0].observations.map((item) => item.amount)).toEqual([4.1, 4.5]);
+  });
+});

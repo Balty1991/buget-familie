@@ -51,16 +51,40 @@ export function normalizeProductKey(label: string): string | undefined {
 
 const round2 = (value: number) => Math.round(value * 100) / 100;
 
+/** Bonul scanat se salvează ca „Cumpărături Profi”: în istoric contează doar magazinul. */
+export function receiptVendorName(vendor: string | undefined): string {
+  const name = (vendor || "").trim().replace(/^(?:cump[aă]r[aă]turi|shopping)\s+/i, "").trim();
+  return name || "Magazin necunoscut";
+}
+
+/**
+ * Rândul unui bon scanat poartă cantitatea și reducerea în etichetă: „Crenvurști pui × 2 (reducere −2,45)”.
+ * Pentru comparație contează produsul și prețul pe bucată: scoatem adaosurile și împărțim la cantitate.
+ */
+export function receiptLineUnit(label: string, amount: number): { label: string; amount: number } {
+  let clean = label.replace(/\s*\((?:reducere|discount)\s*[−-][^)]*\)\s*$/i, "").trim();
+  const quantity = /\s[×x]\s*(\d+(?:[.,]\d+)?)\s*$/i.exec(clean);
+  let unit = amount;
+  if (quantity) {
+    const count = Number(quantity[1].replace(",", "."));
+    clean = clean.slice(0, quantity.index).trim();
+    // Doar bucăți întregi: la kilograme, prețul pe rând rămâne cel plătit.
+    if (Number.isInteger(count) && count > 1) unit = amount / count;
+  }
+  return { label: clean || label.trim(), amount: round2(unit) };
+}
+
 function observationsFrom(receipts: Receipt[]) {
   const groups = new Map<string, PriceObservation[]>();
   for (const receipt of receipts) {
-    const vendor = (receipt.vendor || "Magazin necunoscut").trim() || "Magazin necunoscut";
+    const vendor = receiptVendorName(receipt.vendor);
     for (const line of receipt.lines || []) {
-      if (!line.label || line.amount <= 0 || line.label === "Rest bon" || line.label === "Diferență neînregistrată") continue;
-      const key = normalizeProductKey(line.label);
+      if (!line.label || line.amount <= 0 || line.label === "Rest bon" || line.label === "Diferență neînregistrată" || line.label === "Diferență față de bon") continue;
+      const unit = receiptLineUnit(line.label, line.amount);
+      const key = normalizeProductKey(unit.label);
       if (!key) continue;
       const list = groups.get(key) || [];
-      list.push({ receiptId: receipt.id, vendor, date: receipt.date, amount: round2(line.amount), category: line.category, label: line.label.trim() });
+      list.push({ receiptId: receipt.id, vendor, date: receipt.date, amount: unit.amount, category: line.category, label: unit.label });
       groups.set(key, list);
     }
   }

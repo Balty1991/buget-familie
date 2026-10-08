@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.193
+
+- **Bonurile scanate intră corect în „Unde a fost mai ieftin” și în coșul etalon.** Magazinul apare ca „Profi”, nu „Cumpărături Profi”, așa că bonurile scanate și cele notate de mână se adună la același magazin. Prețul se compară pe bucată: „× 2” se împarte la 2, iar „(reducere −2,45)” nu mai face din același produs unul nou. La produsele cântărite rămâne prețul plătit.
+
 ## 1.1.192
 
 - **Bon din mai multe capturi.** Un bon digital lung (de ex. din aplicația Profi) se poate scana din galerie alegând toate capturile lui, până la 6. Se citesc împreună, ca un singur bon. Rândurile prinse în două capturi se numără o singură dată, iar produsele repetate pe bon (doi crenvurști, la 4,54 și 4,55) rămân amândouă. Sub butonul de scanare scrie cum se face. Pe bonurile digitale, suma deja redusă nu se mai reduce încă o dată. Testul de după publicare citește și un bon Profi din 4 capturi (82,71 lei).
