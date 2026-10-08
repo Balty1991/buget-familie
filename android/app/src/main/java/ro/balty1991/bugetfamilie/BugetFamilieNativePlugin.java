@@ -169,14 +169,22 @@ public class BugetFamilieNativePlugin extends Plugin {
     try {
       final byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
       final String folder = Environment.DIRECTORY_DOCUMENTS + "/" + LIVE_FOLDER;
+      String writtenName = name;
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         final ContentResolver resolver = getContext().getContentResolver();
         final Uri collection = MediaStore.Files.getContentUri("external");
         Uri target = null;
-        final String[] projection = { MediaStore.MediaColumns._ID };
-        final String selection = MediaStore.MediaColumns.RELATIVE_PATH + "=? AND " + MediaStore.MediaColumns.DISPLAY_NAME + "=?";
-        try (Cursor cursor = resolver.query(collection, projection, selection, new String[] { folder + "/", name }, null)) {
-          if (cursor != null && cursor.moveToFirst()) target = ContentUris.withAppendedId(collection, cursor.getLong(0));
+        // După o reinstalare, fișierul vechi nu mai e al aplicației și nu se poate rescrie: Android pune
+        // „buget-familie-automat (1).json” lângă el. Căutăm și variantele numerotate ale aplicației (doar ale ei
+        // apar în interogare) și îl rescriem pe cel mai nou, altfel la fiecare salvare apărea un fișier nou.
+        final String[] projection = { MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DISPLAY_NAME };
+        final String base = name.substring(0, name.length() - ".json".length());
+        final String selection = MediaStore.MediaColumns.RELATIVE_PATH + "=? AND " + MediaStore.MediaColumns.DISPLAY_NAME + " LIKE ?";
+        try (Cursor cursor = resolver.query(collection, projection, selection, new String[] { folder + "/", base + "%.json" }, MediaStore.MediaColumns.DATE_MODIFIED + " DESC")) {
+          if (cursor != null && cursor.moveToFirst()) {
+            target = ContentUris.withAppendedId(collection, cursor.getLong(0));
+            if (cursor.getString(1) != null) writtenName = cursor.getString(1);
+          }
         }
         if (target == null) {
           final ContentValues values = new ContentValues();
@@ -185,6 +193,10 @@ public class BugetFamilieNativePlugin extends Plugin {
           values.put(MediaStore.MediaColumns.RELATIVE_PATH, folder);
           target = resolver.insert(collection, values);
           if (target == null) throw new IllegalStateException("MediaStore insert a eșuat");
+          // Numele dat de Android (poate fi „… (1).json” dacă există deja unul care nu e al aplicației).
+          try (Cursor named = resolver.query(target, new String[] { MediaStore.MediaColumns.DISPLAY_NAME }, null, null, null)) {
+            if (named != null && named.moveToFirst() && named.getString(0) != null) writtenName = named.getString(0);
+          }
         }
         try (OutputStream out = resolver.openOutputStream(target, "wt")) {
           if (out == null) throw new IllegalStateException("openOutputStream a eșuat");
@@ -200,7 +212,7 @@ public class BugetFamilieNativePlugin extends Plugin {
         }
       }
       final JSObject result = new JSObject();
-      result.put("path", "Documents/" + LIVE_FOLDER + "/" + name);
+      result.put("path", "Documents/" + LIVE_FOLDER + "/" + writtenName);
       call.resolve(result);
     } catch (Exception error) {
       call.reject(error.getMessage() != null ? error.getMessage() : "salvare eșuată", error);

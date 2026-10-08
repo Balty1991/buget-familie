@@ -83,7 +83,7 @@ describe("scanToPrefill", () => {
     expect(prefill.lines.reduce((sum, line) => sum + line.amount, 0)).toBeCloseTo(57.3, 2);
     expect(prefill.warning).toBeUndefined();
     expect(prefill.discount).toBe(3.48);
-    expect(prefill.lines[6].label).toBe("Apă minerală carbogazoasă Perla Harghitei 2 L × 6 (reducere −1,74)");
+    expect(prefill.lines[6]).toMatchObject({ label: "Apă minerală carbogazoasă Perla Harghitei 2 L × 6", discount: 1.74 });
     expect(prefill.lines[6].amount).toBe(19.14);
     expect(prefill.category).toBe("Apă");
     expect(prefill.lines.filter((line) => line.category === "SGR").reduce((sum, line) => sum + line.amount, 0)).toBe(6.5);
@@ -157,7 +157,7 @@ describe("bonul Sinsay", () => {
     expect(prefill.discount).toBe(20);
     expect(prefill.date).toBe("2026-08-31");
     expect(prefill.lines.map((line) => line.category)).toEqual(["Haine", "Haine", "Consumabile copil", "Sacoșe"]);
-    expect(prefill.lines[1].label).toBe("Teniși (reducere −13,15)");
+    expect(prefill.lines[1]).toMatchObject({ label: "Teniși", discount: 13.15 });
     expect(prefill.warning).toBeUndefined();
   });
 });

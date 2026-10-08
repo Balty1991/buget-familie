@@ -323,7 +323,7 @@ type NativeBackupPlugin = {
   writeLiveBackup?: (options: { name: string; data: string }) => Promise<{ path: string }>;
 };
 
-let nativeBackupPlugin: NativeBackupPlugin | null | undefined;
+let nativeBackupPlugin: { api: NativeBackupPlugin } | null | undefined;
 
 /**
  * Pluginul Capacitor e un Proxy care răspunde la orice nume, și la „then”: întors direct dintr-o funcție
@@ -334,12 +334,12 @@ async function getNativeBackupPlugin(): Promise<{ api: NativeBackupPlugin } | nu
   if (nativeBackupPlugin === undefined) {
     try {
       const { registerPlugin } = await import("@capacitor/core");
-      nativeBackupPlugin = registerPlugin<NativeBackupPlugin>("BugetFamilieNative");
+      nativeBackupPlugin = { api: registerPlugin<NativeBackupPlugin>("BugetFamilieNative") };
     } catch {
       nativeBackupPlugin = null;
     }
   }
-  return nativeBackupPlugin ? { api: nativeBackupPlugin } : null;
+  return nativeBackupPlugin;
 }
 
 /**

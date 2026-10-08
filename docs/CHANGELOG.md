@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.194
+
+- **Bon lung de hârtie, din mai multe poze.** După fiecare poză cu camera alegi „Citește bonul” sau „Mai fă o poză” cu partea următoare, până la 6. Pozele se citesc împreună, ca un singur bon, la fel ca la capturile din galerie.
+- **Salvarea automată după o reinstalare.** Pe Android 11 și mai nou, aplicația reinstalată nu mai poate rescrie fișierul vechi, așa că Android face „buget-familie-automat (1).json”. Înainte, la fiecare salvare apărea încă un fișier nou: (2), (3)… Acum se rescrie mereu același fișier, iar în Setări scrie exact numele lui.
+- **Reducerea stă separat de numele articolului.** Pe bonurile scanate, „(reducere −2,45)” nu mai intră în nume. Apare ca rând mic sub articol și se păstrează pe bon. Numele rămân curate pentru sugestii și pentru istoricul de prețuri. Produsele cântărite scanate primesc „× 0,456 kg”, ca istoricul să compare pe kilogram.
+- **Test de pază pentru pluginurile Android.** Un test oprește greșeala care a blocat „Salvează pe telefon” în 1.1.191, oriunde ar mai apărea.
+
 ## 1.1.193
 
 - **„Notează” are și „Ce ai cumpărat (opțional)”** lângă magazin. Mișcarea se numește „Lidl · pâine”, iar articolul intră ca rând de bon, deci și în istoricul de prețuri, fără să deschizi cheltuiala detaliată. Categoria se ia după articol. Cu tastatura deschisă nu mai rămâne un gol sub butoane (rezerva barei de jos a telefonului).

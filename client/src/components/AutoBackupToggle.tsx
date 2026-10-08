@@ -27,13 +27,15 @@ export function AutoBackupToggle() {
   const prefs = useAutoBackupPrefs();
   const native = isNativeApp();
   const live = Boolean(prefs.live);
+  // Numele scris de Android: după o reinstalare poate fi „buget-familie-automat (1).json”.
+  const liveFile = prefs.livePath?.split("/").pop() || LIVE_BACKUP_NAME;
   return (
     <div className="bf-auto-backup">
       <p className="bf-kicker">{t("SALVARE AUTOMATĂ")}</p>
       <Row
         title={t("La fiecare modificare")}
         detail={native ? t("Fișierul {file} din Documente/Buget Familie se rescrie singur la câteva secunde după fiecare schimbare. Îl imporți oricând din Backup.", { file: LIVE_BACKUP_NAME }) : t("Doar în aplicația de pe telefon: browserul nu poate scrie singur fișiere.")}
-        status={live ? (prefs.liveError ? t("Pornită, dar ultima salvare n-a mers: {reason}", { reason: prefs.liveError }) : prefs.liveAt ? t("Pornită · ultima salvare {time} · în Fișiere: Documente → Buget Familie", { time: when(prefs.liveAt) }) : t("Pornită · prima salvare în câteva secunde")) : t("Oprită")}
+        status={live ? (prefs.liveError ? t("Pornită, dar ultima salvare n-a mers: {reason}", { reason: prefs.liveError }) : prefs.liveAt ? `${t("Pornită · ultima salvare {time} · în Fișiere: Documente → Buget Familie → {file}", { time: when(prefs.liveAt), file: liveFile })}${liveFile !== LIVE_BACKUP_NAME ? ` ${t("(după o reinstalare, fișierul vechi fără număr nu mai poate fi rescris: cel actual e acesta)")}` : ""}` : t("Pornită · prima salvare în câteva secunde")) : t("Oprită")}
         on={live}
         disabled={!native}
         onToggle={() => writeAutoBackup({ live: !live, asked: true, liveError: undefined })}

@@ -19,6 +19,8 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   const [error, setError] = useState("");
   const [seconds, setSeconds] = useState(0);
   const [shots, setShots] = useState(1);
+  /** Pozele făcute cu camera până acum: un bon de hârtie lung se fotografiază pe bucăți, apoi se citesc împreună. */
+  const [pending, setPending] = useState<File[]>([]);
   // Cronometrul citirii: omul vede că se lucrează și, când durează, de ce.
   useEffect(() => {
     if (!busy) { setSeconds(0); return; }
@@ -45,8 +47,9 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
   };
 
   // Din galerie se pot alege mai multe capturi ale aceluiași bon digital: se citesc împreună, ca un singur bon.
-  const read = async (list: FileList | null | undefined) => {
+  const read = async (list: FileList | File[] | null | undefined) => {
     const files = Array.from(list || []).filter((file) => !file.type || file.type.startsWith("image/"));
+    setPending([]);
     if (!files.length) return;
     if (files.length > RECEIPT_SHOTS_MAX) {
       setError(t("Alege cel mult {count} capturi pentru un bon.", { count: RECEIPT_SHOTS_MAX }));
@@ -70,14 +73,28 @@ export function ReceiptScanButton({ data, memberId, onResult }: { data: AppData;
     }
   };
 
+  // După fiecare poză cu camera omul alege: citește acum sau mai fă una cu partea următoare a bonului.
+  const addShot = (list: FileList | null | undefined) => {
+    const file = Array.from(list || []).find((item) => !item.type || item.type.startsWith("image/"));
+    if (cameraRef.current) cameraRef.current.value = "";
+    if (file) setPending((current) => [...current, file].slice(0, RECEIPT_SHOTS_MAX));
+  };
+
   return <section className="bf-scan-receipt" aria-busy={busy}>
-    {busy ? <p className="bf-scan-receipt-busy" role="status"><Loader2 size={18} className="bf-spin" aria-hidden="true" /> {busyText}</p> : <div className="bf-scan-receipt-actions">
+    {!busy && pending.length > 0 ? <div className="bf-scan-note" role="status">
+      <p>{pending.length === 1 ? t("Poza e gata. Bonul e lung? Fă și o poză cu partea următoare, apoi citește-le împreună.") : t("{count} poze ale aceluiași bon. Se citesc împreună, ca un singur bon.", { count: pending.length })}</p>
+      <div className="bf-scan-check-actions">
+        <button type="button" className="bf-primary" onClick={() => void read(pending)}>{pending.length === 1 ? t("Citește bonul") : t("Citește bonul ({count} poze)", { count: pending.length })}</button>
+        {pending.length < RECEIPT_SHOTS_MAX && <button type="button" className="bf-secondary" onClick={() => cameraRef.current?.click()}><Camera size={16} aria-hidden="true" /> {t("Mai fă o poză")}</button>}
+        <button type="button" className="bf-link-button" onClick={() => setPending([])}>{t("Renunță")}</button>
+      </div>
+    </div> : busy ? <p className="bf-scan-receipt-busy" role="status"><Loader2 size={18} className="bf-spin" aria-hidden="true" /> {busyText}</p> : <div className="bf-scan-receipt-actions">
       <button type="button" className="bf-scan-receipt-main" onClick={() => void pick("camera")}><Camera size={18} aria-hidden="true" /><span><b>{t("Scanează bonul")}</b><small>{t("Toate produsele, pe categorii")}</small></span></button>
       <button type="button" className="bf-scan-receipt-gallery" aria-label={t("Alege din galerie poza bonului sau mai multe capturi ale lui")} title={t("Din galerie: o poză sau mai multe capturi ale aceluiași bon")} onClick={() => void pick("gallery")}><ImagePlus size={18} aria-hidden="true" /></button>
     </div>}
-    {!busy && <small>{t("Bon digital lung? Apasă galeria și alege toate capturile lui.")}</small>}
+    {!busy && !pending.length && <small>{t("Bon lung? Pe hârtie: mai multe poze, una după alta. Digital: alege din galerie toate capturile.")}</small>}
     {error && <p className="bf-form-error" role="alert">{error}</p>}
-    <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => void read(event.target.files)} />
+    <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={(event) => addShot(event.target.files)} />
     <input ref={galleryRef} type="file" accept="image/*" multiple hidden onChange={(event) => void read(event.target.files)} />
   </section>;
 }

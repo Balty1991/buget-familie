@@ -58,7 +58,7 @@ export function receiptVendorName(vendor: string | undefined): string {
 }
 
 /**
- * Rândul unui bon scanat poartă cantitatea și reducerea în etichetă: „Crenvurști pui × 2 (reducere −2,45)”.
+ * Rândul unui bon poartă cantitatea în etichetă („Crenvurști pui × 2”); bonurile scanate mai vechi și reducerea: „(reducere −2,45)”.
  * Pentru comparație contează produsul și prețul pe bucată: scoatem adaosurile și împărțim la cantitate.
  */
 export function receiptLineUnit(label: string, amount: number): { label: string; amount: number } {
