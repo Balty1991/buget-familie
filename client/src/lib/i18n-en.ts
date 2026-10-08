@@ -4737,6 +4737,7 @@ export const en: Record<string, string> = {
   "Deschide setarea": "Open the setting",
   "TELEFON CU APLICAȚIE VECHE": "PHONE WITH AN OLD APP",
   "Nu mai folosesc acel telefon": "I no longer use that phone",
+  "Registrul de dinainte e păstrat în {path}.": "The previous ledger is kept in {path}.",
   "Actualizează aplicația pe celălalt telefon": "Update the app on the other phone",
   "{device}, văzut ultima dată {when}, are o versiune veche. Versiunile vechi pot șterge din greșeală o parte din bonurile plătite din două surse, iar ștergerea ajunge prin sincronizare și aici. Actualizează Buget Familie din Magazin Play pe acel telefon.": "{device}, last seen {when}, runs an old version. Old versions can mistakenly delete part of receipts paid from two sources, and the deletion reaches this phone through sync. Update Buget Familie from the Play Store on that phone.",
   "Bonul rămâne doar pe {source}, cu {amount}. Partea de {partAmount} din {partSource} se scoate din registru (o găsești în „Șterse recent”).": "The receipt stays only on {source}, with {amount}. The {partAmount} part from {partSource} leaves the ledger (you'll find it in \"Recently removed\").",

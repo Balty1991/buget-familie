@@ -566,8 +566,9 @@ function withConcurrentDebtPayments(debts: AppData["debts"], local: AppData, rem
 export function keepHalfDeletedReceipts(localTx: Transaction[], merged: Transaction[], receipts: Receipt[], deleted: DeletedRecord[]): { transactions: Transaction[]; deleted: DeletedRecord[] } {
   const present = new Set(merged.map((item) => item.id));
   const tombstoned = new Set(deleted.filter((item) => item.entity === "transactions").map((item) => item.id));
-  const keep = localTx.filter((item) => item.kind === "expense" && !present.has(item.id) && tombstoned.has(item.id) && (
+  const keep = localTx.filter((item) => (item.kind === "expense" || Boolean(item.transferId)) && !present.has(item.id) && tombstoned.has(item.id) && (
     (item.splitId && merged.some((other) => other.splitId === item.splitId && other.kind === "expense"))
+    || (item.transferId && merged.some((other) => other.transferId === item.transferId && other.id !== item.id))
     || (item.receiptId && receipts.some((receipt) => receipt.id === item.receiptId && receipt.linkedTransactionId === item.id))
   ));
   if (!keep.length) return { transactions: merged, deleted };

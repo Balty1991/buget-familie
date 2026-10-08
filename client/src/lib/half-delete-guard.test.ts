@@ -58,3 +58,19 @@ describe("telefonul cu o versiune veche", () => {
     expect(outdatedSyncDevices(data, Date.parse("2026-10-09T00:00:00Z"), "me").map((item) => item.id)).toEqual(["old"]);
   });
 });
+
+describe("transferul între surse", () => {
+  it("se șterge cu ambele jumătăți", async () => {
+    const { splitGroupIds } = await import("./split-payment");
+    const out: Transaction = { id: "t-out", title: "Mutat în Card", amount: 14, kind: "expense", category: "Transfer", source: "Cash", person: "Alin", date: "2026-10-09", transferId: "tr" };
+    const into: Transaction = { ...out, id: "t-in", kind: "income", title: "Mutat din Cash", source: "Card" };
+    expect(splitGroupIds([out, into], "t-out").sort()).toEqual(["t-in", "t-out"]);
+  });
+
+  it("o jumătate ștearsă de pe alt telefon rămâne", () => {
+    const out: Transaction = { id: "t-out", title: "Mutat în Card", amount: 14, kind: "expense", category: "Transfer", source: "Cash", person: "Alin", date: "2026-10-09", transferId: "tr", updatedAt: "2026-10-08T21:56:13.771Z" };
+    const into: Transaction = { ...out, id: "t-in", kind: "income", title: "Mutat din Cash", source: "Card" };
+    const merged = mergeFamilyData({ ...createEmptyAppData(), transactions: [out, into] }, { ...createEmptyAppData(), transactions: [out], deleted: [{ entity: "transactions", id: "t-in", deletedAt: "2026-10-08T22:00:00.000Z" }] });
+    expect(merged.transactions.map((item) => item.id).sort()).toEqual(["t-in", "t-out"]);
+  });
+});

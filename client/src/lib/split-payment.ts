@@ -9,10 +9,15 @@ export const isSplitPartner = (a: Transaction, b: Transaction) =>
   a.id !== b.id && a.kind === "expense" && b.kind === "expense"
   && (a.splitId ? b.splitId === a.splitId : Boolean(!b.splitId && a.note && /Bon de /.test(a.note) && b.note === a.note && b.date === a.date && b.title === a.title));
 
-/** Id-ul mișcării și ale celorlalte părți ale aceluiași bon. */
+/**
+ * Id-ul mișcării și ale celorlalte părți ale ei: bonul plătit din două surse și cele două jumătăți ale
+ * unui transfer între surse (ieșirea și intrarea). Se șterg mereu împreună, altfel soldurile nu mai bat.
+ */
 export const splitGroupIds = (list: Transaction[], id: string): string[] => {
   const item = list.find((entry) => entry.id === id);
-  return item ? [id, ...list.filter((entry) => isSplitPartner(item, entry)).map((entry) => entry.id)] : [id];
+  if (!item) return [id];
+  const partners = list.filter((entry) => isSplitPartner(item, entry) || (item.transferId && entry.id !== item.id && entry.transferId === item.transferId));
+  return [id, ...partners.map((entry) => entry.id)];
 };
 
 export type MergedMove = Transaction & { splitParts?: Array<{ id: string; source: string; amount: number }> };

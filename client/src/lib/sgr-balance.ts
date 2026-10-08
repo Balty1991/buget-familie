@@ -11,7 +11,7 @@ const RECYCLING = /\b(sgr|retur\w*|recicl\w*|garantie|ambalaj\w*)\b/;
 const round = (value: number) => Math.round(value * 100) / 100;
 
 export function sgrBalance(data: AppData, from: string, to = "9999-12-31"): SgrBalance {
-  const vouchers = new Set(data.settings.paymentSources.filter((source) => source.kind === "voucher").map((source) => source.id));
+  const vouchers = new Set(data.settings.paymentSources.filter((source) => source.kind === "voucher" || /voucher|\bsgr\b/i.test(source.name)).map((source) => source.id));
   let paid = 0;
   let recovered = 0;
   for (const item of data.transactions) {

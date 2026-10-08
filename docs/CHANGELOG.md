@@ -8,6 +8,9 @@ Siguranța registrului, după un raport real: la două bonuri plătite cu vouche
 
 - **Sincronizarea nu mai acceptă ștergerea unei jumătăți de bon.** O ștergere venită de pe alt telefon care lasă vie cealaltă parte a plății din două surse, sau bonul cu articole fără mișcarea lui, e refuzată: rândul rămâne. Aplicația de azi șterge oricum bonul întreg.
 - **Telefonul cu aplicație veche e semnalat în Mișcări.** Fiecare telefon scrie acum, la sincronizare, versiunea aplicației. Un telefon al familiei văzut în ultimele 30 de zile fără versiunea nouă apare cu „Actualizează aplicația pe celălalt telefon”. Se poate ascunde cu „Nu mai folosesc acel telefon”.
+- **Transferul între surse se șterge întreg.** Ștergerea din Mișcări a unui „Mutat din Cash în Card” scotea doar o jumătate, așa că un sold creștea sau scădea fără motiv. Acum pleacă ambele jumătăți. La sincronizare, o jumătate ștearsă de pe alt telefon e refuzată, ca la bonuri.
+- **Sursa „Voucher SGR” salvată ca tip card** e recunoscută după nume: scanarea pune plata cu voucherul pe ea, iar bilanțul SGR o socotește.
+- **Restaurarea unui backup** (fără familie conectată) salvează întâi în Descărcări registrul de dinainte, ca un backup vechi ales din greșeală să nu piardă nimic.
 - **Ghidul șterge bonul întreg.** Ștergerea cerută prin Ghid scoate acum tot bonul plătit din două surse, împreună cu bonul lui, ca în Mișcări.
 
 - **„Șterse recent” în Mișcări.** Tot ce iese din registru (mișcări și bonuri cu articolele lor) se păstrează pe telefon 60 de zile, oricine l-ar fi scos: omul, o corectură, sincronizarea sau o greșeală. Din listă pui înapoi cu o atingere. Operațiile în masă (închiderea anului) nu umplu lista.

@@ -382,7 +382,20 @@ export function SettingsPanel({ data, onChange, onReset }: { data: AppData; onCh
     const backup = backupPreview.data;
     setBackupPreview(null);
     const restored = t("Backup restaurat: {moves} mișcări, {envelopes} plicuri, {members} membri.", { moves: String(backup.transactions.length), envelopes: String(backup.settings.salaryPlan.allocations.length), members: String(backup.settings.members.length) });
-    if (!getActiveFamilyRoom()) { onChange(backup); void showNotice(restored); return; }
+    if (!getActiveFamilyRoom()) {
+      // Înainte să înlocuim tot registrul, o copie a celui de acum: un backup vechi ales din greșeală nu mai pierde nimic.
+      let before = "";
+      if (isNativeApp() && data.transactions.length) {
+        try {
+          const { saveBackupSilently } = await import("@/lib/app-storage");
+          const stamp = new Date();
+          before = await saveBackupSilently(data, `buget-familie-inainte-de-restaurare-${stamp.getFullYear()}-${String(stamp.getMonth() + 1).padStart(2, "0")}-${String(stamp.getDate()).padStart(2, "0")}-${String(stamp.getHours()).padStart(2, "0")}${String(stamp.getMinutes()).padStart(2, "0")}.json`);
+        } catch { /* fără copie: omul a confirmat deja înlocuirea */ }
+      }
+      onChange(backup);
+      void showNotice(before ? `${restored} ${t("Registrul de dinainte e păstrat în {path}.", { path: before })}` : restored);
+      return;
+    }
     /**
      * Conectat la familie: un backup vechi ar întoarce sumele și ar șterge pe toate telefoanele
      * plicurile făcute de atunci. Îl unim doar: aduce înapoi ce lipsește, nu schimbă nimic din ce există.
