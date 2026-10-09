@@ -11,7 +11,7 @@ import { askConfirm } from "@/lib/confirm-dialog";
 import { isDemoMode, setDemoMode } from "@/lib/demo-data";
 import { loggingStreak } from "@/lib/logging-habits";
 import { askReviewAfterMilestone, loggedDays, REVIEW_AFTER_LOGGED_DAYS } from "@/lib/review-prompt";
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BarChart3, Bell, CloudOff, Users, RotateCcw, Inbox, LayoutGrid, MessagesSquare, MoreHorizontal, Plus, ReceiptText, Search, ShieldCheck, Wallet, X } from "lucide-react";
 import { allocationStatus, autoPostDueRecurring, createEmptyAppData, TOMBSTONE_MAX, rollIncomeHorizon, deviceTimeZone, setFamilyTimeZone, getFamilyTimeZone, adoptOutsideExpenses, commitLedgerEntry, learnMerchantRule, confirmRecurringPayment, addIsoDays, formatDate, inPlanPeriod, isoDate, isoToday, newId, transferBetweenEnvelopes, type AppData, type Debt, type Receipt, type ReceiptLine, type SavingsGoal, type Transaction } from "@/lib/finance-data";
 import { addContribution, eventTraits } from "@/lib/planned-events";
@@ -101,6 +101,17 @@ const initialMainView = (): MainView => {
   return requested && MAIN_VIEWS.includes(requested) ? requested : "today";
 };
 
+/** Ecranul nou intră ușor (opacitate și 4 px, doar pe placa video), nu apare brusc. Fără animație la „Reduce mișcarea”. */
+let screenEntered = false;
+const enterScreen = (main: HTMLElement | null) => {
+  const first = !screenEntered; screenEntered = true;
+  const page = main?.firstElementChild as HTMLElement | null;
+  if (first || !page || typeof page.animate !== "function" || page.classList.contains("is-entering")) return;
+  try { if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch { return; }
+  page.animate([{ opacity: 0.35, transform: "translateY(4px)" }, { opacity: 1, transform: "none" }], { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" });
+};
+let secondaryModule: typeof import("@/pages/home-secondary") | undefined;
+const loadSecondary = () => preloadView("utilities").then(() => import("@/pages/home-secondary")).then((module) => (secondaryModule = module));
 const warmedViews = new Set<MainView>(["today"]);
 const preloadView = (id: MainView): Promise<void> => {
   const task = id === "journal" ? warmLazy(MovementsJournal)
@@ -177,7 +188,17 @@ export default function Home() {
   }, [simpleMode]);
   useLanguage();
   const [view, setView] = useState<MainView>(initialMainView);
-  const [more, setMore] = useState<MoreView>("overview");
+  const [more, setMoreNow] = useState<MoreView>("overview");
+  const goSeq = useRef(0);
+  const moreSeq = useRef(0);
+  const moreReady = useRef<Promise<void>>(Promise.resolve());
+  /** O filă din Mai mult se schimbă abia când panoul ei e încărcat: rămâne ecranul vechi, nu clipește scheletul. */
+  const setMore = useCallback((tab: MoreView) => {
+    const seq = ++moreSeq.current;
+    if (secondaryModule?.isMoreTabWarm(tab)) { moreReady.current = Promise.resolve(); setMoreNow(tab); return; }
+    moreReady.current = loadSecondary().then((module) => module.preloadMoreTab(tab)).catch(() => undefined).then(() => { if (seq === moreSeq.current) setMoreNow(tab); });
+  }, []);
+  const showTools = useCallback(() => { const seq = ++goSeq.current; void moreReady.current.then(() => { if (seq === goSeq.current) setView("utilities"); }); }, []);
   /** Ecranul de unde s-a deschis un instrument, ca „Înapoi” să ducă tot acolo (testare, #6). */
   const [moreReturn, setMoreReturn] = useState<{ view: MainView; label: string } | null>(null);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
@@ -198,23 +219,23 @@ export default function Home() {
     const openExpense = () => { setQuickTemplateId(undefined); setQuickKind(undefined); setEditTx(undefined); setModal("quick"); };
     const openTransfer = () => { setQuickTemplateId(undefined); setQuickKind(undefined); setQuickMoving(true); setModal("quick"); };
     window.addEventListener("buget-familie:open-transfer", openTransfer);
-    const openShopping = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("shopping"); setView("utilities"); };
+    const openShopping = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("shopping"); showTools(); };
     window.addEventListener("buget-familie:open-expense", openExpense);
-    const openTrip = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("trip"); setView("utilities"); };
+    const openTrip = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("trip"); showTools(); };
     window.addEventListener("buget-familie:open-shopping", openShopping);
     window.addEventListener("buget-familie:open-trip", openTrip);
     const openAfford = () => setAffordOpen(true);
-    const openAdvisor = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("advisor"); setView("utilities"); };
+    const openAdvisor = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("advisor"); showTools(); };
     window.addEventListener("buget-familie:open-advisor", openAdvisor);
-    const openYearPlan = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("year-plan"); setView("utilities"); };
+    const openYearPlan = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("year-plan"); showTools(); };
     window.addEventListener("buget-familie:open-year-plan", openYearPlan);
-    const openCharts = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("charts"); setView("utilities"); };
+    const openCharts = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("charts"); showTools(); };
     window.addEventListener("buget-familie:open-charts", openCharts);
     window.addEventListener("buget-familie:open-afford", openAfford);
     return () => { window.removeEventListener("buget-familie:open-expense", openExpense); window.removeEventListener("buget-familie:open-charts", openCharts); window.removeEventListener("buget-familie:open-shopping", openShopping); window.removeEventListener("buget-familie:open-trip", openTrip); window.removeEventListener("buget-familie:open-afford", openAfford); window.removeEventListener("buget-familie:open-transfer", openTransfer); window.removeEventListener("buget-familie:open-advisor", openAdvisor); window.removeEventListener("buget-familie:open-year-plan", openYearPlan); };
   }, []);
   useEffect(() => {
-    const openEvents = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("events"); setView("utilities"); };
+    const openEvents = () => { setMoreReturn({ view: "today", label: t("Înapoi la Astăzi") }); setMore("events"); showTools(); };
     window.addEventListener("buget-familie:open-events", openEvents);
     return () => window.removeEventListener("buget-familie:open-events", openEvents);
   }, []);
@@ -252,7 +273,13 @@ export default function Home() {
   }, [data, storageReady]);
   // Pozele bonurilor nu se păstrează. Cele rămase din versiunile vechi se șterg o dată de pe telefon.
   useEffect(() => { if (legacyReceiptMigrationStarted.current || !storageReady) return; legacyReceiptMigrationStarted.current = true; void clearReceiptImageStorage().catch(() => undefined); if (data.receipts.some((receipt) => receipt.imageData || receipt.imageData2 || receipt.imageKeys?.length)) setData((current) => ({ ...current, receipts: current.receipts.map(({ imageData: _one, imageData2: _two, imageKeys: _keys, ...receipt }) => receipt) })); }, [data.receipts, storageReady]);
-  useEffect(() => { if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [view, more]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); const openTutorial = () => { setMore("guide"); go("utilities"); }; window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); window.addEventListener("buget-familie:open-usage-tutorial", openTutorial); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) safeSetItem(window.localStorage, "buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted && !setupOffered.current) { setupOffered.current = true; safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true"); setSetupOpen(true); } return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); window.removeEventListener("buget-familie:open-usage-tutorial", openTutorial); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
+  // Pe telefon derulează <main>, nu fereastra: ecranul nou se deschidea la poziția celui vechi. Sus, înainte de desen.
+  // Întors în lista Mai mult, omul o regăsește unde a lăsat-o.
+  const scrollMemo = useRef<Partial<Record<string, number>>>({});
+  const scrollKey = view === "utilities" ? `utilities:${more}` : view;
+  const scrollKeyNow = useRef(scrollKey);
+  useLayoutEffect(() => { scrollKeyNow.current = scrollKey; const main = document.getElementById("main-content"); const top = scrollKey === "utilities:overview" ? scrollMemo.current[scrollKey] || 0 : 0; if (main && main.scrollTop !== top) main.scrollTop = top; enterScreen(main); if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [scrollKey]);
+  useEffect(() => { const main = document.getElementById("main-content"); if (!main) return; const remember = () => { if (scrollKeyNow.current === scrollKey) scrollMemo.current[scrollKey] = main.scrollTop; }; main.addEventListener("scroll", remember, { passive: true }); return () => main.removeEventListener("scroll", remember); }, [scrollKey]); useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setQuickActionsOpen((open) => !open); } if (event.key === "Escape") setQuickActionsOpen(false); }; window.addEventListener("keydown", onKeyDown); return () => window.removeEventListener("keydown", onKeyDown); }, []); useEffect(() => { const replay = () => setOnboardingOpen(true); const replaySetup = () => setSetupOpen(true); const openTutorial = () => { setMore("guide"); go("utilities"); }; window.addEventListener("buget-familie:replay-onboarding", replay); window.addEventListener("buget-familie:replay-setup", replaySetup); window.addEventListener("buget-familie:open-usage-tutorial", openTutorial); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0) || Boolean(data.settings.salaryPlan.nextPayday); if (hasStarted && !window.localStorage.getItem("buget-familie:setup-complete")) safeSetItem(window.localStorage, "buget-familie:setup-complete", "true"); if (storageReady && !window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted && !setupOffered.current) { setupOffered.current = true; safeSetItem(window.localStorage, "buget-familie:onboarding-complete", "true"); setSetupOpen(true); } return () => { window.removeEventListener("buget-familie:replay-onboarding", replay); window.removeEventListener("buget-familie:replay-setup", replaySetup); window.removeEventListener("buget-familie:open-usage-tutorial", openTutorial); }; }, [storageReady, data.transactions.length, data.settings.salaryPlan.allocations.length, data.debts.length, data.savings.length, data.settings.paymentSources, data.settings.salaryPlan.nextPayday]);
   useEffect(() => {
     if (!storageReady || onboardingOpen || setupOpen) return;
     const started = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0;
@@ -292,7 +319,6 @@ export default function Home() {
   }, [storageReady, data.settings.salaryPlan.allocations, data.transactions.length]);
 
   const { undo, setUndo, runUndo, deleteWithUndo, offerUndo } = useUndo(data, applyData);
-  const goSeq = useRef(0);
   const go = (next: MainView) => {
     const seq = ++goSeq.current;
     if (next !== "utilities") setMoreReturn(null);
@@ -300,9 +326,10 @@ export default function Home() {
     haptic("tick");
     const paint = () => { if (seq === goSeq.current) setView(next); };
     const stylesReady = next === "today" || deferredStylesReady();
-    if (stylesReady && warmedViews.has(next)) { paint(); return; }
+    const tabReady = next === "utilities" ? moreReady.current : undefined;
+    if (stylesReady && warmedViews.has(next) && !tabReady) { paint(); return; }
     // Fără rețea, o bucată poate să nu se încarce: ecranul se schimbă oricum (arată „offline”), nu rămâne blocat.
-    void Promise.all([preloadView(next), stylesReady ? Promise.resolve() : ensureDeferredStyles()]).then(paint, paint);
+    void Promise.all([preloadView(next), stylesReady ? Promise.resolve() : ensureDeferredStyles(), tabReady]).then(paint, paint);
   };
   useEffect(() => {
     const id = window.setTimeout(() => {
@@ -314,7 +341,16 @@ export default function Home() {
       void preloadView("insights");
       void preloadView("goals");
     }, 700);
-    return () => window.clearTimeout(id);
+    // Apoi, pe rând, în timpii morți: toate filele din Mai mult, ca prima deschidere să fie la fel de lină ca a doua.
+    let stopped = false;
+    const idle = (fn: () => void) => { const win = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }; if (typeof win.requestIdleCallback === "function") win.requestIdleCallback(fn, { timeout: 3000 }); else window.setTimeout(fn, 200); };
+    const later = window.setTimeout(() => void loadSecondary().then((module) => {
+      const forms = [QuickEntryPanel, TransactionForm, ReceiptForm, GoalForm, DebtPaymentForm, QuickActionsPalette, ThemePicker].map((form) => () => warmLazy(form));
+      const queue: (() => Promise<unknown>)[] = [...forms, ...module.MORE_TABS.map((tab) => () => module.preloadMoreTab(tab)), () => preloadView("habits"), () => preloadView("calendar")];
+      const next = () => { if (stopped) return; const task = queue.shift(); if (!task) return; void task().catch(() => undefined).finally(() => idle(next)); };
+      idle(next);
+    }).catch(() => undefined), 2500);
+    return () => { stopped = true; window.clearTimeout(id); window.clearTimeout(later); };
   }, []);
   useEffect(() => {
     if (view !== "today" || modal) void ensureDeferredStyles();

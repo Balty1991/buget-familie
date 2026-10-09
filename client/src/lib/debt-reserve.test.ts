@@ -116,6 +116,6 @@ describe("Astăzi: plicul săptămânii gol, bani nerepartizați în Plan", () =
     expect(summary.heroTracksWeek).toBe(true);
     expect(summary.heroValue).toBe(0);
     expect(summary.planHelp).toBe(true);
-    expect(summary.heroHint).toMatch(/^Plicul săptămânii s-a terminat până .+ În Plan mai ai .+ nerepartizați/);
+    expect(summary.heroHint).toMatch(/^Plicul săptămânii s-a terminat până .+ În Plicuri mai ai .+ nerepartizați/);
   });
 });

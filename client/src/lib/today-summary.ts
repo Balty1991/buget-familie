@@ -107,7 +107,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : weekEmpty
       ? planHelp
-        ? t("Plicul săptămânii s-a terminat până {until}. În Plan mai ai {free} nerepartizați: poți pune o parte în plic.", { until: untilName, free: exact(freeInPlan) })
+        ? t("Plicul săptămânii s-a terminat până {until}. În Plicuri mai ai {free} nerepartizați: poți pune o parte în plic.", { until: untilName, free: exact(freeInPlan) })
         : t("Plicul săptămânii s-a terminat până {until}. Banii săptămânii următoare vin atunci.", { until: untilName })
     : heroTracksWeek
       ? todayUsedUp

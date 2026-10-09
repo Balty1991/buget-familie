@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.196
+
+Fluiditate și claritate, după un video cu ecranul care „clipea”.
+
+- **Fără clipire la prima deschidere a unui ecran.** Raportul lunii, Vacanță, Lista de cumpărături, Prețuri, Setări și celelalte ecrane din Mai mult arătau o clipă (cam 0,3 secunde) un schelet gri „Pregătim…”, apoi ecranul adevărat. Acum ecranul vechi rămâne pe loc până e gata cel nou, iar după pornire aplicația le pregătește pe toate în timpii morți, inclusiv formularele (Notează, bon, obiectiv). Prima deschidere e la fel de lină ca a doua.
+- **Ecranul nou se deschide de sus.** Pe telefon pagina derulează în interior, iar ecranul deschis din Mai mult pornea la poziția celui vechi (Vacanța se deschidea la jumătatea formularului). Întors în lista Mai mult, o regăsești unde ai lăsat-o.
+- **Trecere lină între ecrane.** Ecranul nou intră ușor (0,18 s, fără sacadare). Cu „Reduce mișcarea” din telefon, se schimbă direct.
+- **Mai mult, regrupat pe înțeles:** Banii familiei · De rezolvat (doar când e ceva de confirmat) · Cumpărături și bonuri · Planuri (Vacanță și instrumentele avansate) · Setări · Ajutor. „Bonuri” și „Vacanță” nu mai stau sub „De rezolvat”.
+- **Mișcări: „Ceva nu se potrivește?”** „Potrivește soldul cu banii reali” și „Șterse recent” stau acum într-o casetă la capătul listei, nu deasupra titlului. Avertismentele (bon incomplet, telefon cu aplicație veche) rămân sus.
+- **„Plicuri”, nu „Plan”.** Textele de pe Astăzi și din Ghid spun acum „În Plicuri mai ai…”, ca bara de jos.
+- **Pornește rapid** (Plicuri): fără banda goală din capul casetei.
+
 ## 1.1.195
 
 Siguranța registrului, după un raport real: la două bonuri plătite cu voucher SGR + card/cash, partea de voucher dispăruse, cu tot cu articolele bonului. Suma rămasă era doar cea de pe card, iar voucherul apărea iar plin.
