@@ -491,6 +491,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           {outsideDebts.length > 0 && <small className="bf-plan-header-eq">{t("Ratele pe numele {names} ({amount}) nu se scad din banii tăi: pe sursele lor nu e notat niciun venit. Le vezi și le confirmi în Obligații; dacă una se plătește din banii tăi, alege sursa ta la confirmare.", { names: Array.from(new Set(outsideDebts.map((debt) => data.settings.members.find((member) => member.id === debt.memberId)?.name || ""))).filter(Boolean).join(", "), amount: money(outsideDebts.reduce((sum, debt) => sum + debt.amount, 0)) })}</small>}
           <button type="button" className="bf-link-button" onClick={() => window.dispatchEvent(new Event("buget-familie:open-transfer"))}>{t("Mută bani sau dă cuiva")}</button>
         </>}
+        {data.settings.salaryPlan.allocations.length > 0 && <button type="button" className="bf-link-button" onClick={() => window.dispatchEvent(new Event("buget-familie:open-payday"))}>{t("A intrat salariul: pornește luna")}</button>}
       </div>
     </header>
 

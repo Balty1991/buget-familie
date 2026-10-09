@@ -93,20 +93,6 @@
   background: transparent;
 }
 .bf-house-offer-note { font-size: 12px; }
-.bf-house-offer-phone {
-  display: grid;
-  gap: 8px;
-  margin-top: 4px;
-  padding-top: 12px;
-  border-top: 1px solid var(--cf-line, #d9d3c7);
-}
-.bf-house-offer-phone p:not(.bf-kicker) {
-  margin: 0;
-  color: var(--cf-ink, #173f36);
-  font-size: 14px;
-  line-height: 1.45;
-}
-.bf-house-offer-phone .bf-house-offer-go { justify-self: start; }
 .bf-partner-quiet {
   margin: 0 0 12px;
   color: var(--cf-ink, #173f36);
