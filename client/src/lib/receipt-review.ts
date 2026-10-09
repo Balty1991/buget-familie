@@ -3,6 +3,7 @@
  */
 import {
   addReviewDrafts,
+  isWeeklyPaced,
   matchingAllocationsForExpense,
   newId,
   pruneTombstones,
@@ -14,6 +15,8 @@ import {
   type Transaction,
 } from "./finance-data";
 import { t } from "./i18n";
+import { isMonthLong, monthLongPart } from "./month-long";
+import { suggestTag } from "./tags";
 
 export function buildReceiptReviewDrafts(data: AppData, receipt: Receipt): ReviewDraft[] {
   const member = data.settings.members.find((entry) => entry.id === receipt.memberId) || data.settings.members[0];
@@ -24,17 +27,36 @@ export function buildReceiptReviewDrafts(data: AppData, receipt: Receipt): Revie
     receipt.amount,
   );
   const biggest = [...lines].sort((left, right) => right.amount - left.amount)[0];
-  const category = biggest?.category || receipt.category;
-  const matched = matchingAllocationsForExpense(data, {
+  let category = biggest?.category || receipt.category;
+  let matched = matchingAllocationsForExpense(data, {
     category,
     memberId: member.id,
     sourceId: source.id,
   })[0];
+  /**
+   * Detergentul de 70 de lei e cel mai scump articol, dar bonul e de la cumpărăturile săptămânii.
+   * Fără plic pentru categoria lui, bonul merge în plicul mâncării de pe el (Mega Image, 9 oct).
+   */
+  const food = lines.filter((line) => !isMonthLong(line)).sort((left, right) => right.amount - left.amount)[0];
+  const foodMatch = food && matchingAllocationsForExpense(data, { category: food.category, memberId: member.id, sourceId: source.id })[0];
+  if (food && foodMatch && isWeeklyPaced(foodMatch, data.settings.salaryPlan) && (!matched || matched.id === foodMatch.id)) {
+    matched = foodMatch;
+    category = food.category;
+  }
   const now = new Date().toISOString();
+  /**
+   * Bonul cu articole, pus într-un plic pe săptămâni: ce nu e mâncare (hârtie igienică, detergent,
+   * hrana pisicii) se împarte singur pe săptămânile rămase, ca la bifa „Cumpărătură pentru toată luna”.
+   */
+  const weekly = matched && isWeeklyPaced(matched, data.settings.salaryPlan) && receipt.lines?.length;
+  const longPart = weekly ? monthLongPart(lines) : { amount: 0, labels: [] as string[] };
+  const spreadAmount = longPart.amount > 0 ? Math.round(Math.min(receipt.amount, longPart.amount) * 100) / 100 : undefined;
+  const title = `Bon — ${receipt.vendor}`;
+  const tag = suggestTag(data, title);
   const transaction: Transaction = {
     id: `receipt-tx-${receipt.id}`,
     receiptId: receipt.id,
-    title: `Bon — ${receipt.vendor}`,
+    title,
     amount: receipt.amount,
     kind: "expense",
     category,
@@ -45,6 +67,8 @@ export function buildReceiptReviewDrafts(data: AppData, receipt: Receipt): Revie
     date: receipt.date,
     note: receipt.note,
     allocationId: matched?.id || "outside",
+    ...(spreadAmount ? { spreadAmount } : {}),
+    ...(tag ? { tag } : {}),
     createdAt: now,
   };
   return [{
@@ -54,7 +78,7 @@ export function buildReceiptReviewDrafts(data: AppData, receipt: Receipt): Revie
       vendor: receipt.vendor,
       amount: receipt.amount,
       count: lines.length,
-    }),
+    }) + (spreadAmount ? ` ${t("Din el, {amount} ({items}) se împarte pe săptămânile rămase, nu golește săptămâna asta.", { amount: spreadAmount, items: longPart.labels.slice(0, 4).join(", ") + (longPart.labels.length > 4 ? "…" : "") })}` : ""),
     createdAt: now,
     transaction,
   }];

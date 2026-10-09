@@ -4878,4 +4878,9 @@ export const en: Record<string, string> = {
   "{count} cheltuieli": "{count} expenses",
   "în aceleași zile de dinainte: {amount}": "same days before: {amount}",
   "o cheltuială": "one expense",
+  "Banii până la salariu": "Money until payday",
+  "Pe carduri și cash": "On cards and cash",
+  "Liberi, nepuși în plicuri": "Free, not in envelopes",
+  "De unde vine cifra?": "Where does this number come from?",
+  "Din el, {amount} ({items}) se împarte pe săptămânile rămase, nu golește săptămâna asta.": "Of it, {amount} ({items}) is spread over the remaining weeks instead of emptying this one.",
 };

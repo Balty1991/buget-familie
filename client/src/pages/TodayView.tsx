@@ -471,6 +471,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
                 ? <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-payday"))}>{t("A intrat salariul")}</button>
                 : salaryMissing && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-income"))}>{t("Notează salariul")}</button>}
               {isWeekCloseDue && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-week-close"))}>{t("Închide săptămâna")}</button>}
+              <button type="button" className="bf-hero-chip" onClick={() => setSafeSheetOpen(true)}>{t("De unde vine cifra?")}</button>
               <button type="button" className="bf-hero-chip" aria-expanded={whereOpen} onClick={() => setWhereOpen((open) => !open)}>{t("Unde sunt banii · Mută")}</button>
             </div>
             {where && (
