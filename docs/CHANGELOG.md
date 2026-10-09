@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.200
+
+- **Cumpărătura pentru toată luna.** Un bon cu detergent, hrană pentru animale sau provizii golea dintr-odată plicul săptămânii (Mega Image, 165,50 lei, din care 134,58 detergent și hrana pisicii). La cheltuială, bifa „Cumpărătură pentru toată luna” împarte suma, sau doar partea scrisă, egal pe săptămâna cumpărării și pe cele rămase până la salariu. Exemplu: 134,58 împărțit pe 6 săptămâni dă 22,43 pe săptămână, iar săptămâna asta scade doar 53,35, nu 165,50. Totalul plicului rămâne același. Bifa apare la plicurile împărțite pe săptămâni, atât la notare, cât și la corectarea mișcării din Mișcări. Graficul „se golește pe …” nu mai ia o astfel de cumpărătură drept ritm de cheltuială.
+
 ## 1.1.199
 
 - **Plicul din două surse, oricând.** La „Plic nou”, sub „Plătit din”, butonul „Plătit și din altă sursă” adaugă a doua sursă chiar și când prima ajunge (de exemplu 300 din card și 200 din cash). Înainte apărea doar când prima sursă nu avea destui bani. Se pot adăuga și mai multe surse („Încă o sursă”), iar caseta scrie exact împărțirea: „Împărțit: 95 RON din Card Raiffeisen + 5 RON din Cash”.

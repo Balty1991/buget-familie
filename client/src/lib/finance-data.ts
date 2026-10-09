@@ -65,6 +65,11 @@ export type Transaction = {
   splitId?: string;
   /** Totalul bonului plătit din două surse, pe fiecare parte: dacă o parte lipsește, se vede din diferență. */
   splitTotal?: number;
+  /**
+   * Partea cumpărată pentru toată luna (detergent, hrană pisică, provizii): în plicul cu ritm
+   * săptămânal se împarte pe săptămânile rămase, nu golește săptămâna în care s-a cumpărat.
+   */
+  spreadAmount?: number;
 };
 
 export type Debt = { id: string; name: string; remaining: number; monthly: number; due: string; tone: "forest" | "honey" | "coral"; dueDate?: string; memberId?: string; updatedAt?: string; /** Dobânda anuală, în procente (DAE sau dobânda din contract). */ annualRate?: number; /** Credit bancar, card de credit, IFN sau bani de la persoane. */ kind?: "credit" | "card" | "ifn" | "persoane"; /** Data ultimei rate din contract, dacă e știută. */ endDate?: string };
@@ -622,7 +627,7 @@ export const normalizeAppData = (input: unknown): AppData => {
     // Un rând fără marcaj de timp îl primește din ziua lui, nu din clipa normalizării:
     // altfel un rând vechi venit de pe celălalt telefon s-ar naște „acum”, ar învinge
     // urma ștergerii și ar reapărea în registru după ce a fost șters.
-    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: item.kind !== "income" && item.category === "Venit" ? guessCategoryFromText(String(item.title || "")) || "Altele" : splitLegacySgrCategory(String(item.category || "Altele"), `${item.title || ""} ${item.note || ""}`), amount: money2(Math.min(MAX_AMOUNT, Math.max(0, parseRomanianAmount(item.amount)))), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope, deviceId: typeof item.deviceId === "string" && /^[\w:-]{4,80}$/.test(item.deviceId) ? item.deviceId : undefined };
+    return { ...item, id: item.id || `${prefix}-${index}`, title: String(item.title || "Mișcare"), kind: item.kind === "income" ? "income" : "expense", category: item.kind !== "income" && item.category === "Venit" ? guessCategoryFromText(String(item.title || "")) || "Altele" : splitLegacySgrCategory(String(item.category || "Altele"), `${item.title || ""} ${item.note || ""}`), amount: money2(Math.min(MAX_AMOUNT, Math.max(0, parseRomanianAmount(item.amount)))), date: day, sourceId: source?.id, source: source?.name || item.source || "Necunoscut", memberId: member?.id, person: member?.name || item.person || memberName, createdAt: item.createdAt || `${day}T00:00:00.000Z`, originalCurrency: originalAmount ? originalCurrency : undefined, originalAmount, exchangeRate: originalAmount ? Math.max(0, parseRomanianAmount(item.exchangeRate ?? 0)) || undefined : undefined, shareScope, deviceId: typeof item.deviceId === "string" && /^[\w:-]{4,80}$/.test(item.deviceId) ? item.deviceId : undefined, spreadAmount: item.kind !== "income" && Number(item.spreadAmount) > 0 ? money2(Number(item.spreadAmount)) : undefined };
   };
   const transactions = realRows<Partial<Transaction>>(old.transactions).map((entry, index) => normalizeTransaction(entry, index, "legacy-tx"));
   const transactionIds = new Set(transactions.map((item) => item.id));
@@ -1323,6 +1328,9 @@ export const plannedEnvelopeReserved = (allocations: BudgetAllocation[], remaini
 
 const roundSigned = money2;
 
+/** Partea „pentru toată luna” a unei cheltuieli, cel mult cât cheltuiala. */
+export const spreadPart = (item: Pick<Transaction, "amount" | "spreadAmount">) => Math.max(0, Math.min(item.amount, item.spreadAmount || 0));
+
 /** Situația fiecărei tranșe calendaristice a unui plic, cu ajustările din transferurile între săptămâni. */
 const allocationWeeksStatusUncached = (data: AppData, allocation: BudgetAllocation) => {
   const plan = data.settings.salaryPlan;
@@ -1345,6 +1353,19 @@ const allocationWeeksStatusUncached = (data: AppData, allocation: BudgetAllocati
   const first = calendar.weeks[0]?.start || "";
   const last = cover > (calendar.weeks[lastIndex]?.end || "") ? cover : calendar.weeks[lastIndex]?.end || "";
   const mine = data.transactions.filter((item) => item.kind === "expense" && item.date >= first && item.date <= last && expenseBelongsTo(plan, item, allocation));
+  /**
+   * Cumpărătura pentru toată luna: partea ei se împarte egal pe săptămâna cumpărării și pe cele
+   * rămase. Detergentul de 102 lei nu mai golește o singură săptămână de alimente.
+   */
+  const weekOf = (date: string) => { const found = calendar.weeks.findIndex((week, index) => date >= week.start && date <= (index === lastIndex && cover > week.end ? cover : week.end)); return found < 0 ? lastIndex : found; };
+  const spreadExtra = new Array(calendar.weeks.length).fill(0) as number[];
+  for (const item of mine) {
+    const spread = spreadPart(item);
+    if (spread <= 0) continue;
+    const from = weekOf(item.date);
+    const share = spread / (lastIndex - from + 1);
+    for (let position = from; position <= lastIndex; position += 1) spreadExtra[position] += share;
+  }
   let carryNext = 0;
   return calendar.weeks.map((week, index) => {
     const adjustment = weekTransfers.reduce((sum, item) => sum + (item.toWeekIndex === week.index ? item.amount : 0) - (item.fromWeekIndex === week.index ? item.amount : 0), 0);
@@ -1353,7 +1374,8 @@ const allocationWeeksStatusUncached = (data: AppData, allocation: BudgetAllocati
     const weekBudget = roundSigned(week.amount + adjustment + carry);
     const weekEnd = index === lastIndex && cover > week.end ? cover : week.end;
     let spent = 0;
-    for (const item of mine) if (item.date >= week.start && item.date <= weekEnd) spent += item.amount;
+    for (const item of mine) if (item.date >= week.start && item.date <= weekEnd) spent += item.amount - spreadPart(item);
+    spent += spreadExtra[index];
     const remaining = roundSigned(weekBudget - spent);
     const days = weekEnd === week.end ? week.days : periodDays(week.start, weekEnd);
     carryNext = weekEnd < today ? remaining : 0;
@@ -2488,4 +2510,16 @@ export const healthScoreStory = (data: AppData, asOf = isoToday(), cycles = 3): 
 /** Tranșele unui plic și ciclul pe săptămâni: chemate din multe locuri în aceeași randare, socotite o dată. */
 export const allocationWeeksStatus = (data: AppData, allocation: BudgetAllocation): ReturnType<typeof allocationWeeksStatusUncached> =>
   tickMemo([data, allocation], `weeks:${isoToday()}`, () => allocationWeeksStatusUncached(data, allocation));
+
+/**
+ * Cât din cheltuială cade în ziua ei, într-un plic cu ritm săptămânal: tot, minus partea pentru
+ * toată luna, plus felia acelei părți care revine săptămânii cumpărării. Aceeași socoteală ca tranșele.
+ */
+export const envelopeDayAmount = (data: AppData, item: Transaction, allocation: BudgetAllocation) => {
+  const spread = spreadPart(item);
+  if (spread <= 0) return item.amount;
+  const weeks = allocationWeeksStatus(data, allocation);
+  const index = weeks.findIndex((week) => item.date >= week.start && item.date <= week.end);
+  return money2(item.amount - spread + spread / (index < 0 ? 1 : weeks.length - index));
+};
 export const planWeeklyCycle = (data: AppData): CalendarBudget | undefined => tickMemo([data], `planWeeklyCycle:${isoToday()}`, () => planWeeklyCycleUncached(data));
