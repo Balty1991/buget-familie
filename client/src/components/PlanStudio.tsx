@@ -297,6 +297,23 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     source.id !== allocationSourceId
     && !allocationFunding.some((entry) => entry.sourceId === source.id)
     && sourceAvailable(source.id).free > 0.5);
+  /** Plicul se face din bani care chiar sunt: înainte de salariu, spunem ce lipsește și ce e de făcut. */
+  const incomeMissing = !data.transactions.some((item) => item.kind === "income" && item.date >= (plan.periodStart || "") && item.category !== "Transfer");
+  const overdrawnMessage = fundingOverdrawn.length
+    ? t("Pe {source} sunt liberi acum doar {free}. Scade suma completării sau alege altă sursă.", { source: sourceName(data, fundingOverdrawn[0].sourceId), free: money(Math.max(0, sourceAvailable(fundingOverdrawn[0].sourceId).free)) })
+      + (incomeMissing ? ` ${t("Dacă salariul sau tichetele n-au intrat încă, notează-le întâi ca venit: plicul se face din banii care chiar sunt.")}` : "")
+    : "";
+  /** Toate celelalte surse pe care omul le poate adăuga de bunăvoie, nu doar când prima nu ajunge. */
+  const otherSources = data.settings.paymentSources.filter((source) => source.id !== allocationSourceId && !allocationFunding.some((entry) => entry.sourceId === source.id));
+  const addSecondSource = () => {
+    const best = fundingCandidates[0] || otherSources[0];
+    if (!best) return;
+    const free = sourceAvailable(best.id).free;
+    // O sumă de pornire: jumătate din plic, cât are liber sursa; omul o schimbă.
+    const start = Math.max(0, Math.min(Math.round(allocationTotal / 2), Math.floor(free)));
+    setAllocationFunding((current) => [...current, { sourceId: best.id, amount: start > 0 ? String(start) : "" }]);
+    setAllocationError("");
+  };
   /** Câți bani mai stau liberi în toată casa, dacă surplusul se caută în altă parte. */
   const freeElsewhere = Math.round(fundingCandidates.reduce((sum, source) => sum + sourceAvailable(source.id).free, 0) * 100) / 100;
   const sourceFreeHint = !selectedSourceAvailable
@@ -351,11 +368,12 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
     const member = data.settings.members.find((item) => item.id === allocationMemberId);
     if (amount <= 0) return setAllocationError(t("Introdu suma pentru această categorie."));
     if (fundingExcess) return setAllocationError(t("Completările depășesc suma plicului. Scade-le sau mărește suma."));
-    if (fundingOverdrawn.length) return setAllocationError(t("O completare cere mai mult decât are sursa liberă. Scade suma sau alege altă sursă."));
+    if (fundingOverdrawn.length) return setAllocationError(overdrawnMessage);
     if (shortfall > 0.5) {
       return setAllocationError(freeElsewhere > 0.5
         ? t("Mai lipsesc {amount}. Completează din altă sursă mai jos sau scade suma plicului.", { amount: money(shortfall) })
-        : t("Mai lipsesc {amount} și nu mai sunt bani liberi în nicio sursă. Scade suma plicului.", { amount: money(shortfall) }));
+        : t("Mai lipsesc {amount} și nu mai sunt bani liberi în nicio sursă. Scade suma plicului.", { amount: money(shortfall) })
+          + (incomeMissing ? ` ${t("Dacă salariul sau tichetele n-au intrat încă, notează-le întâi ca venit: plicul se face din banii care chiar sunt.")}` : ""));
     }
     if (!source) return setAllocationError(t("Alege sursa din care vei plăti această categorie."));
     if (!editingAllocationId && !canAddEnvelope(plan.allocations.length)) {
@@ -612,7 +630,9 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
                 ? t("Completările fac {funded}, mai mult decât plicul de {total}.", { funded: money(fundingTotal), total: money(allocationTotal) })
                 : shortfall > 0.5
                 ? t("{source} acoperă {covered} din {total}. Mai lipsesc {gap}.", { source: sourceName(data, allocationSourceId), covered: money(Math.max(0, covered)), total: money(allocationTotal), gap: money(shortfall) })
-                : t("Acoperit integral: {total}.", { total: money(allocationTotal) })}
+                : fundingEntries.length
+                  ? t("Împărțit: {parts}.", { parts: [{ sourceId: allocationSourceId, amount: Math.max(0, allocationTotal - fundingTotal) }, ...fundingEntries].filter((entry) => entry.amount > 0.005).map((entry) => t("{amount} din {source}", { amount: money(entry.amount), source: sourceName(data, entry.sourceId) })).join(" + ") })
+                  : t("Acoperit integral: {total}.", { total: money(allocationTotal) })}
             </p>
             {allocationFunding.map((entry, index) => {
               const free = entry.sourceId ? sourceAvailable(entry.sourceId).free : 0;
@@ -632,7 +652,12 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
               </button>
             )}
             {shortfall > 0.5 && fundingCandidates.length === 0 && <small className="bf-funding-none">{t("Nu mai sunt bani liberi în nicio sursă. Scade suma plicului.")}</small>}
+            {shortfall <= 0.5 && otherSources.length > 0 && <button type="button" className="bf-funding-add" onClick={addSecondSource}><Plus size={14} /> {t("Încă o sursă")}</button>}
           </div>
+        )}
+        {/* Plicul plătit din două surse și când prima ajunge: 300 din card și 200 din cash, alese de om. */}
+        {allocationTotal > 0 && shortfall <= 0.5 && allocationFunding.length === 0 && otherSources.length > 0 && (
+          <button type="button" className="bf-funding-add" onClick={addSecondSource}><Plus size={14} /> {t("Plătit și din altă sursă")}</button>
         )}
         </div>
         {/* Un singur loc în grilă: câmpul sumei plus comutatorul „total / pe săptămână”.
@@ -697,7 +722,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             </ul>
           </div>
         )}
-        {fundingOverdrawn.length > 0 && <p className="bf-form-error" role="alert">{t("O completare cere mai mult decât are sursa liberă. Scade suma sau alege altă sursă.")}</p>}
+        {fundingOverdrawn.length > 0 && <p className="bf-form-error" role="alert">{overdrawnMessage}</p>}
         <div className="bf-allocation-builder-actions"><button className="bf-primary" onClick={() => setAllocationPreviewOpen(true)}><Plus size={17} /> {editingAllocationId ? t("Salvează plicul") : t("Adaugă plicul")}</button>{editingAllocationId && <button onClick={resetAllocationBuilder}>{t("Renunță")}</button>}</div>
       </div>
       {/* Randat prin portal în <body>: `.bf-app` are `overflow: clip`, care limitează un element

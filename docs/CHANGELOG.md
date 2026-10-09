@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.199
+
+- **Plicul din două surse, oricând.** La „Plic nou”, sub „Plătit din”, butonul „Plătit și din altă sursă” adaugă a doua sursă chiar și când prima ajunge (de exemplu 300 din card și 200 din cash). Înainte apărea doar când prima sursă nu avea destui bani. Se pot adăuga și mai multe surse („Încă o sursă”), iar caseta scrie exact împărțirea: „Împărțit: 95 RON din Card Raiffeisen + 5 RON din Cash”.
+- **Mesaj clar când banii n-au intrat încă.** Plicul se face din banii care chiar sunt în surse. Înainte de salariu, în loc de „O completare cere mai mult decât are sursa liberă”, aplicația spune cât e liber pe sursa aleasă și ce e de făcut: notează întâi salariul și tichetele ca venit, apoi fă plicul.
+
 ## 1.1.198
 
 Ziua salariului și ratele lui Angi, după o dimineață cu salariul pe drum (raport real, 9 oct).
