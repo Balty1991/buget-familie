@@ -4,12 +4,13 @@
  */
 import { createPortal } from "react-dom";
 import { CalendarClock, X } from "lucide-react";
-import { formatDate, type AppData } from "@/lib/finance-data";
+import { formatDate, planAllocationMath, type AppData } from "@/lib/finance-data";
 import { paydayTrack, safeSpendBreakdown } from "@/lib/household-insights";
 import { PaydayStrip } from "@/components/LedgerArt";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { daysLabel, t } from "@/lib/i18n";
 import "../safe-spend-sheet.css";
+import "../payday.css";
 import { lei } from "@/lib/money-format";
 
 const money = lei;
@@ -18,6 +19,7 @@ export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onC
   const dialogRef = useFocusTrap<HTMLElement>(onClose);
   const sheet = safeSpendBreakdown(data);
   const track = paydayTrack(data);
+  const month = data.settings.salaryPlan.allocations.length ? planAllocationMath(data) : undefined;
 
   return createPortal(
     <div className="bf-modal-backdrop bf-safe-spend-backdrop" role="presentation" onClick={onClose}>
@@ -85,25 +87,37 @@ export function SafeSpendSheet({ data, onClose, onGoPlan }: { data: AppData; onC
           </figure>
         )}
 
-        <ol className="bf-safe-spend-steps">
-          {sheet.steps.map((step) => (
-            <li key={step.label}>
-              <span>{step.label}</span>
-              <strong className={step.amount < 0 ? "neg" : ""}>
-                {step.amount < 0 ? "−" : ""}
-                {money(Math.abs(step.amount))}
-              </strong>
-              {step.note ? <small>{step.note}</small> : null}
-            </li>
-          ))}
-        </ol>
+        {/* Socoteala lunii, ca pe un bon: aceleași cifre ca sus în Plicuri, ca un număr greșit să se vadă pe ce rând e. */}
+        {month ? (
+          <ol className="bf-payday-total" aria-label={t("Banii până la salariu")}>
+            <li><span>{t("Pe carduri și cash")}</span><strong>{money(month.availableSources)}</strong></li>
+            <li><span>{t("Rămas în plicuri")}</span><strong>−{money(Math.max(0, month.reservedInEnvelopes))}</strong></li>
+            <li><span>{t("Rate și facturi până la salariu")}</span><strong>−{money(Math.max(0, month.scheduled))}</strong></li>
+            <li className={month.unrepartized < -0.009 ? "is-warn" : undefined}><span>{month.unrepartized < -0.009 ? t("Lipsesc") : t("Liberi, nepuși în plicuri")}</span><strong>{money(Math.abs(month.unrepartized))}</strong></li>
+          </ol>
+        ) : (
+          <ol className="bf-safe-spend-steps">
+            {sheet.steps.map((step) => (
+              <li key={step.label}>
+                <span>{step.label}</span>
+                <strong className={step.amount < 0 ? "neg" : ""}>
+                  {step.amount < 0 ? "−" : ""}
+                  {money(Math.abs(step.amount))}
+                </strong>
+                {step.note ? <small>{step.note}</small> : null}
+              </li>
+            ))}
+          </ol>
+        )}
 
         <p className="bf-safe-spend-summary">{sheet.summary}</p>
-        <p className="bf-helper">
-          {t("În plicuri mai sunt {envelopes}. Plicul e limită de plan, nu sold bancar.", {
-            envelopes: money(sheet.envelopeLeft),
-          })}
-        </p>
+        {!month && (
+          <p className="bf-helper">
+            {t("În plicuri mai sunt {envelopes}. Plicul e limită de plan, nu sold bancar.", {
+              envelopes: money(sheet.envelopeLeft),
+            })}
+          </p>
+        )}
 
         <footer>
           <button type="button" className="bf-secondary" onClick={onClose}>

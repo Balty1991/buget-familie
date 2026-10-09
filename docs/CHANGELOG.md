@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.204
+
+- **„Închide săptămâna”.** Luni (sau duminică seara), pe Astăzi apare „Închide săptămâna”. Un ecran scurt arată cât ai cheltuit din plicurile săptămânii și ce a rămas:
+  - restul trece în săptămâna următoare (bifat din start, se poate debifa);
+  - o depășire se acoperă din săptămâna următoare, ca să nu rămână neagră pe Plan;
+  - la „Soldul, ca în bancă” scrii cât vezi în aplicația băncii sau în portofel, iar dacă diferă, aplicația potrivește soldul cu o corecție.
+  
+  Plicul rămâne același: se mută doar bani între săptămâni. Duminică dimineața nu se propune, ca Astăzi să nu ajungă la 0 în ultima zi a săptămânii. Cu „Ce rămâne trece în următoarea” pornit în Plan, nu mai întreabă.
+
+- **Etichete: „Pentru” Serviciu, Casă, Copil, Mașină sau una nouă.** La Notează și la corectarea unei mișcări, sub categorie apare rândul „Pentru (opțional)”. Categoria spune ce ai cumpărat, iar eticheta spune unde sau pentru cine: un sandviș la birou rămâne Alimente, dar cu eticheta Serviciu. Aceeași denumire primește singură eticheta de data trecută („Shaorma birou” → Serviciu). În Analiză, „Pe etichete” arată cât ai cheltuit pe fiecare de la salariu încoace, cu categoriile dinăuntru și comparat cu aceleași zile de dinainte.
+
+- **„De unde vine cifra?”** Sub cifra mare de pe Astăzi, butonul deschide calculul. Mai întâi cum se ajunge la cifra zilei, apoi socoteala lunii ca pe un bon: pe carduri și cash − rămas în plicuri − rate și facturi până la salariu = liberi. Sunt aceleași cifre ca sus în Plicuri, ca un număr greșit să se vadă pe ce rând e.
+- **Bonul scanat se împarte singur.** Pus în plicul de alimente pe săptămâni, bonul cu articole întinde singur pe lună ce nu e mâncare: hârtie igienică, detergent, hrana pisicii. Nu mai trebuie bifat. Bonul Mega Image cu detergentul ca articol cel mai scump nu mai iese „în afara plicurilor”: merge în Alimente, iar 134,58 lei se împart pe săptămâni. Bonul primește și eticheta de data trecută.
+
 ## 1.1.203
 
 - **„A intrat salariul”, într-un singur pas.** În ziua salariului, pe Astăzi apare „A intrat salariul”, iar în Plicuri „A intrat salariul: pornește luna”. Un singur ecran care propune:

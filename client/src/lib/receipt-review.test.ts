@@ -186,3 +186,45 @@ describe("bonul legat de o cheltuială notată", () => {
     expect(saved.deleted.some((item) => item.id === "tx-user")).toBe(false);
   });
 });
+
+describe("bonul cu lucruri pentru toată luna, în plicul de alimente pe săptămâni", () => {
+  const family = () => {
+    const data = createEmptyAppData();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, periodStart: "2026-10-09", nextPayday: "2026-11-09", earliestPayday: undefined, paydayFlexDays: 0,
+      allocations: [{ id: "food", label: "Alimente", amount: 2744, category: "Alimente", sourceId: "source-debit", weeklyAmount: 600, weeklyPace: true }] };
+    return data;
+  };
+  // Bonul Mega Image din 9 oct: detergentul e cel mai scump articol.
+  const mega = {
+    id: "mega", vendor: "Mega Image", amount: 165.5, category: "Alimente", date: "2026-10-09", sourceId: "source-debit", memberId: "member-me",
+    lines: [
+      { id: "l1", label: "PAINE ALBA FELII", category: "Alimente", amount: 2.69 },
+      { id: "l2", label: "M&M'S CIOCOLATA 82G", category: "Dulciuri", amount: 8.75 },
+      { id: "l3", label: "KINDER JOY 20G", category: "Dulciuri", amount: 6.79 },
+      { id: "l4", label: "ACTIMEL ACTIKIDS CAP", category: "Alimente", amount: 12.69 },
+      { id: "l5", label: "ARIEL PODS EXTRA CLE", category: "Altele", amount: 32.09 },
+      { id: "l6", label: "ONE JUN PISICA PUI", category: "Alimente", amount: 32.49 },
+      { id: "l7", label: "ARIEL PODS COLOR, 76", category: "Altele", amount: 70 },
+    ],
+  };
+
+  it("merge în plicul de alimente, iar detergentul și hrana pisicii se împart singure pe lună", () => {
+    const [draft] = buildReceiptReviewDrafts(family(), mega);
+    expect(draft.transaction).toMatchObject({ allocationId: "food", category: "Alimente", spreadAmount: 134.58 });
+    expect(draft.reason).toMatch(/134\.58|134,58/);
+  });
+
+  it("partea întinsă rămâne după confirmare și după salvare", () => {
+    const queued = queueReceiptForReview(family(), mega);
+    const confirmed = confirmReviewDraft(queued, queued.pendingReview[0].id)!;
+    const again = normalizeAppData(JSON.parse(JSON.stringify(confirmed)));
+    expect(again.transactions.find((item) => item.receiptId === "mega")?.spreadAmount).toBe(134.58);
+  });
+
+  it("fără plic pe săptămâni, bonul rămâne întreg (nimic de întins)", () => {
+    const data = family();
+    data.settings.salaryPlan.allocations[0] = { ...data.settings.salaryPlan.allocations[0], weeklyPace: false, weeklyAmount: undefined };
+    const [draft] = buildReceiptReviewDrafts(data, mega);
+    expect(draft.transaction.spreadAmount).toBeUndefined();
+  });
+});
