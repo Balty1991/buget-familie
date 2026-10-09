@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.204
+
+- **„Închide săptămâna”.** Luni (sau duminică seara), pe Astăzi apare „Închide săptămâna”. Un ecran scurt arată cât ai cheltuit din plicurile săptămânii și ce a rămas:
+  - restul trece în săptămâna următoare (bifat din start, se poate debifa);
+  - o depășire se acoperă din săptămâna următoare, ca să nu rămână neagră pe Plan;
+  - la „Soldul, ca în bancă” scrii cât vezi în aplicația băncii sau în portofel, iar dacă diferă, aplicația potrivește soldul cu o corecție.
+  
+  Plicul rămâne același: se mută doar bani între săptămâni. Duminică dimineața nu se propune, ca Astăzi să nu ajungă la 0 în ultima zi a săptămânii. Cu „Ce rămâne trece în următoarea” pornit în Plan, nu mai întreabă.
+
 ## 1.1.203
 
 - **„A intrat salariul”, într-un singur pas.** În ziua salariului, pe Astăzi apare „A intrat salariul”, iar în Plicuri „A intrat salariul: pornește luna”. Un singur ecran care propune:

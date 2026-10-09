@@ -88,6 +88,7 @@ const LongTermGoalsView = lazy(safeImport(() => import("@/pages/HabitsGoals").th
 const ObjectivesView = lazy(safeImport(() => import("@/pages/ObjectivesView").then((module) => ({ default: module.ObjectivesView }))));
 const InsightsView = lazy(safeImport(() => import("@/pages/InsightsView").then((module) => ({ default: module.InsightsView }))));
 const MoreViewScreen = lazy(safeImport(() => import("@/pages/home-secondary").then((module) => ({ default: module.MoreView }))));
+const WeekCloseSheet = lazy(safeImport(() => import("@/components/WeekCloseSheet").then((module) => ({ default: module.WeekCloseSheet }))));
 const PaydaySheet = lazy(safeImport(() => import("@/components/PaydaySheet").then((module) => ({ default: module.PaydaySheet }))));
 const FirstRunSetup = lazy(safeImport(() => import("@/components/FirstRunSetup").then((module) => ({ default: module.FirstRunSetup }))));
 const AICompanion = lazy(safeImport(() => import("@/components/AICompanion").then((module) => ({ default: module.AICompanion }))));
@@ -211,6 +212,13 @@ export default function Home() {
   const [quickMoving, setQuickMoving] = useState(false);
   const [quickVoice, setQuickVoice] = useState(false);
   const [paydayOpen, setPaydayOpen] = useState(false);
+  const [weekCloseOpen, setWeekCloseOpen] = useState(false);
+  useEffect(() => {
+    // „Închide săptămâna”: restul plicurilor și soldul, duminică seara sau luni.
+    const openWeekClose = () => setWeekCloseOpen(true);
+    window.addEventListener("buget-familie:open-week-close", openWeekClose);
+    return () => window.removeEventListener("buget-familie:open-week-close", openWeekClose);
+  }, []);
   useEffect(() => {
     // „A intrat salariul”: venitul, luna nouă, plicurile și ratele, într-un singur ecran.
     const openPayday = () => setPaydayOpen(true);
@@ -901,6 +909,7 @@ export default function Home() {
     })}</nav>}
     {!simpleMode && !memberModeActive && guideOn && <Suspense fallback={null}><AICompanion initiallyOpen data={data} view={view} onAdd={() => openTx()} onGo={go} onNaturalEntry={openNaturalDraft} onFinancialUpdate={applyFinancialUpdate} onRevert={revertGuided} /></Suspense>}
     {themePickerOpen && <Suspense fallback={null}><ThemePicker theme={activeTheme} schedule={themeSchedule} scheduleTimes={scheduleTimes} highContrast={highContrast} background={background} onChange={setTheme} onScheduleChange={setThemeSchedule} onScheduleTimesChange={setScheduleTimes} onContrastChange={setHighContrast} onBackgroundChange={setBackground} onClose={() => setThemePickerOpen(false)} /></Suspense>} {quickActionsOpen && <Suspense fallback={null}><QuickActionsPalette data={data} onClose={() => setQuickActionsOpen(false)} onAdd={() => openTx()} onGo={go} /></Suspense>} {onboardingOpen && <Suspense fallback={null}><CalmOnboarding onClose={() => { setOnboardingOpen(false); const hasStarted = data.transactions.length > 0 || data.settings.salaryPlan.allocations.length > 0 || data.debts.length > 0 || data.savings.length > 0 || data.settings.paymentSources.some((source) => source.openingBalance > 0); if (!window.localStorage.getItem("buget-familie:setup-complete") && !hasStarted) setSetupOpen(true); }} onAdd={() => openTx()} onGo={go} /></Suspense>} {setupOpen && <Suspense fallback={null}><FirstRunSetup data={data} onChange={applyData} onClose={() => { setSetupOpen(false); setDemo(isDemoMode()); }} onGoPlan={() => go("plan")} onAdd={() => openTx()} onOpenSync={() => { setMore("sync"); go("utilities"); }} /></Suspense>}
+    {weekCloseOpen && <Suspense fallback={null}><WeekCloseSheet data={data} today={todayIso} evening={new Date().getHours() >= 18} onClose={() => setWeekCloseOpen(false)} onApply={(change) => update(change)} /></Suspense>}
     {paydayOpen && <Suspense fallback={null}><PaydaySheet data={data} today={todayIso} onClose={() => setPaydayOpen(false)} onApply={(proposal) => { update((current) => applyPayday(current, proposal)); setPaydayOpen(false); }} /></Suspense>}
     {modal === "quick" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim înregistrarea rapidă…")}</div></div>}><QuickEntryPanel data={data} initialMoving={quickMoving} onAddSource={(source) => update((current) => ({ ...current, settings: { ...current.settings, paymentSources: [...current.settings.paymentSources, source] } }))} autoVoice={quickVoice} initialKind={quickKind} initialTemplateId={quickTemplateId} onSave={saveTx} onSaveTemplate={saveQuickTemplate} onDeleteTemplate={deleteQuickTemplate} onArchiveTemplate={archiveQuickTemplate} onRestoreTemplate={restoreQuickTemplate} onDeleteArchivedTemplate={deleteArchivedQuickTemplate} onClose={() => { setModal(null); setQuickTemplateId(undefined); setQuickKind(undefined); setQuickVoice(false); }} onMore={(draft, scan) => { setEditTx(draft); setScanPrefill(scan); setQuickTemplateId(undefined); setModal("transaction"); }} /></Suspense>}
     {modal === "transaction" && !memberModeActive && <Suspense fallback={<div className="bf-modal-backdrop"><div className="bf-lazy-panel">{t("Pregătim mișcarea…")}</div></div>}><TransactionForm data={data} initial={editTx} scan={scanPrefill} onSave={saveTx} onClose={() => { setModal(null); setEditTx(undefined); setScanPrefill(undefined); }} /></Suspense>}

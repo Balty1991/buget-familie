@@ -47,6 +47,7 @@ import { HABIT_DAYS, otherPhoneHasLogged, partnersQuietToday } from "@/lib/habit
 import { formatPlanPriceRon, openFamilieCatalog } from "@/lib/entitlements";
 import { getOrCreateDeviceId } from "@/lib/sync-devices";
 import { paydayDue } from "@/lib/payday";
+import { weekCloseDue } from "@/lib/week-close";
 import "../house-offer.css";
 
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
@@ -342,6 +343,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
 
   const todayIso = isoToday();
   const isPaydayDue = paydayDue(data, todayIso);
+  const isWeekCloseDue = !isPaydayDue && weekCloseDue(data, todayIso, new Date().getHours() >= 18);
   const held = distinctExpenseDays(data.transactions) >= HABIT_DAYS;
   const quietPartners = held ? partnersQuietToday(data, todayIso) : [];
   const otherPhoneLogged = held && otherPhoneHasLogged(data, getOrCreateDeviceId());
@@ -468,6 +470,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
               {isPaydayDue
                 ? <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-payday"))}>{t("A intrat salariul")}</button>
                 : salaryMissing && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-income"))}>{t("Notează salariul")}</button>}
+              {isWeekCloseDue && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-week-close"))}>{t("Închide săptămâna")}</button>}
               <button type="button" className="bf-hero-chip" aria-expanded={whereOpen} onClick={() => setWhereOpen((open) => !open)}>{t("Unde sunt banii · Mută")}</button>
             </div>
             {where && (
