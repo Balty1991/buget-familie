@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.202
+
+- **Astăzi nu mai arată 0,00 după cumpărăturile mari.** Cu plic săptămânal, cifra zilei se lua din „banii din cont împărțiți pe zilele până la salariu, minus tot ce s-a cheltuit azi”. Un bon de 165 de lei depășea partea unei singure zile, iar Astăzi arăta 0,00, deși plicul săptămânii mai avea bani pentru azi (raport real, 9 oct). Acum cifra zilei vine din plicul săptămânii (42,21 lei, din 213,71 pentru 3 zile), iar banii din cont rămân doar plafonul total.
+- **Felia „pentru toată luna” e pe măsura săptămânii.** O săptămână întreagă ia mai mult, iar ultima zi dinaintea salariului aproape nimic: S6 nu mai scade de la 86 la 63. Feliile se rotunjesc la bani, iar ultima ia restul, ca suma să dea fix partea bonului.
+
 ## 1.1.201
 
 - **Bifa „pentru toată luna” găsește singură ce nu e mâncare.** Pe un bon cu articole (scanat sau scris), bifa completează suma a tot ce nu e mâncare sau băutură și arată ce a pus: hârtie igienică, gel de duș, săpun lichid, odorizant, detergent, hăinuțe, jucării, hrana animalelor. Mâncarea, fructele, dulciurile, apa, băuturile (și alcoolul), SGR-ul și sacoșa rămân pe săptămâna cumpărăturilor. Recunoaște și prescurtările de pe bonuri („H.IG.CELULOZA … 10ROLE”, „REZ.SAP.LICHID”), plus hrana pisicii trecută din greșeală la Alimente. Pe bonurile din 9 octombrie: Mega Image, 134,58 din 165,50; Familia RO, 18,16 din 106,20. Suma se poate schimba înainte de salvare.
