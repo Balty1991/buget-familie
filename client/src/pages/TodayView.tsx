@@ -192,7 +192,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   const { simpleMode } = useSimpleMode();
   const math = usePlanCycle(data);
   const summary = useTodaySummary(data);
-  const { overPlan, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
+  const { overPlan, duesShort, heroLabel, heroValue, heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, planHelp } = summary;
   // Prima deschidere a zilei: salutul, intrarea pe rând a cardurilor și cifra care urcă de la 0.
   const [intro] = useState(() => { try { if (navigator.webdriver || window.localStorage.getItem(INTRO_KEY) === isoToday()) return false; safeSetItem(window.localStorage, INTRO_KEY, isoToday()); return true; } catch { return false; } });
   // Asistentul de final de lună (și fișierul lui) se încarcă doar în ultimele 5 zile dinainte de salariu.
@@ -400,7 +400,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
       )}
       <section className={`os-hero ${overPlan ? "is-risk" : ""}`}>
         <div className="os-hero-top">
-          {overPlan ? <span className="os-chip"><i /> {t("Plan de revizuit")}</span> : null}
+          {overPlan ? <span className="os-chip"><i /> {duesShort ? t("Rate de acoperit") : t("Plan de revizuit")}</span> : null}
           {/* D13: data pe un singur rând („dum., 27 sept.”), nu pe trei. */}
           <time className="os-date-line" dateTime={todayIso}>{new Date(`${todayIso}T12:00:00`).toLocaleDateString(getLocale(), { weekday: "short", day: "numeric", month: "short" })}</time>
         </div>
@@ -461,7 +461,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             </h1>
             {/* Eticheta spune mereu ce e cifra; lipsa partenerului e o notă dedesubt, nu în locul ei. */}
             <p className="os-hero-label">{heroLabel}</p>
-            <p className="os-hint" role={quietPartners.length ? "status" : undefined}>{quietPartners.length === 1 ? t("{name} n-a notat încă azi: cifra poate fi mai mică.", { name: quietPartners[0] }) : quietPartners.length > 1 ? t("{names} n-au notat încă azi: cifra poate fi mai mică.", { names: quietPartners.join(", ") }) : heroHint}</p>
+            <p className="os-hint" role={quietPartners.length && !overPlan ? "status" : undefined}>{overPlan ? heroHint : quietPartners.length === 1 ? t("{name} n-a notat încă azi: cifra poate fi mai mică.", { name: quietPartners[0] }) : quietPartners.length > 1 ? t("{names} n-au notat încă azi: cifra poate fi mai mică.", { names: quietPartners.join(", ") }) : heroHint}</p>
             <div className="bf-hero-chips">
               <button type="button" className="bf-hero-chip" aria-expanded={whereOpen} onClick={() => setWhereOpen((open) => !open)}>{t("Unde sunt banii · Mută")}</button>
             </div>

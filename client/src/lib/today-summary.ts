@@ -57,11 +57,23 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
    * „2.672 RON” ca bani disponibili.
    */
   const heroOver = overPlan && !(waitingForIncome && brief.hasPayday && !brief.expired);
+  /**
+   * Lipsa vine doar din rate și facturi, nu din plicuri: ratele până la venit cer mai mult decât e în surse.
+   * „Peste limita planului” suna a cheltuială făcută; omul vedea −1.806 fără niciun plic (backup, 9 oct).
+   */
+  const duesShort = heroOver && math.scheduled > 0.009 && math.availableSources - math.reservedInEnvelopes >= -0.009;
+  const planEndIso = planEndDate(math.plan);
+  const duesHint = duesShort
+    ? t("Până pe {date} sunt de plătit {dues} în rate și facturi, iar în surse ai {available}.", { date: planEndIso ? formatDate(planEndIso, { day: "numeric", month: "long" }) : t("următorul venit"), dues: exact(math.scheduled), available: exact(Math.max(0, math.availableSources - math.reservedInEnvelopes)) })
+      + (periodIncome < 0.01 ? ` ${t("Venitul acestui ciclu nu e notat încă: când intră salariul, notează-l ca venit și cifra se reface.")}` : "")
+    : "";
   const waitingNote = overPlan && !heroOver && upcomingIncome
     ? t("Plicurile mai așteaptă {amount}: se acoperă când vine {label} pe {date}.", { amount: exact(Math.abs(math.remaining)), label: upcomingIncome.first.title, date: formatDate(upcomingIncome.first.date, { day: "numeric", month: "long" }) })
     : "";
   const heroLabel = noMoneyYet
     ? t("Pune banii de azi")
+    : duesShort
+    ? t("Lipsesc pentru rate și facturi")
     : heroOver
     ? t("Peste limita planului")
     : brief.hasPayday
@@ -103,6 +115,8 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const planHelp = weekEmpty && freeInPlan > 0.009;
   const heroHint = noMoneyYet
     ? t("Scrie cât ai acum pe card și în numerar (Setări → Surse și sold inițial). Apoi îți spunem cât poți folosi pe zi.")
+    : duesShort
+    ? duesHint
     : heroOver
     ? t("de acoperit prin limită, plicuri sau cheltuieli flexibile")
     : weekEmpty
@@ -124,7 +138,9 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
               : trackHero.kind === "spent"
                 ? t("Nu e un sold. E suma ieșită azi, până pui un venit sau un plic.")
                 : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
-  const explainer = heroOver
+  const explainer = duesShort
+    ? t("Nu e o cheltuială făcută. E cât lipsește ca să plătești ratele și facturile care cad până la următorul venit, cu banii notați acum în surse.")
+    : heroOver
     ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
     : brief.hasPayday
       ? rhythm.hasWeekly
@@ -162,5 +178,5 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
    * „Poți folosi azi 4.457” exact când lipseau 4.457.
    */
   const canSpendToday = noMoneyYet || heroOver || !brief.hasPayday || brief.expired ? 0 : Math.max(0, brief.spendable);
-  return { overPlan: heroOver, canSpendToday, heroLabel, heroValue, heroHint: waitingNote ? `${heroHint} ${waitingNote}` : heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
+  return { overPlan: heroOver, duesShort, canSpendToday, heroLabel, heroValue, heroHint: waitingNote ? `${heroHint} ${waitingNote}` : heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
 }

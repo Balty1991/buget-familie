@@ -459,11 +459,16 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
           <ul>{[...envelopes].filter((entry) => entry.budget > 0).sort((a, b) => b.budget - a.budget).slice(0, 4).map((entry) => <li key={entry.item.id}><i style={{ background: categoryColor(entry.item.category || entry.item.label) }} aria-hidden="true" />{entry.item.label} <b>{Math.round((entry.budget / allocated) * 100)}%</b></li>)}</ul>
         </div>
       ) : <p>{t("Adaugă câte o categorie cu suma ei. Totalul e suma categoriilor — nu introduci nicio sumă generală separat.")}</p>}</div>
-      <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{t("NEREPARTIZAȚI")}</small><b>{money(unrepartized)}</b>
+      <div className="bf-plan-header-stat"><span><WalletCards size={20} /></span><small>{unrepartized < -0.009 ? t("LIPSESC") : t("NEREPARTIZAȚI")}</small><b>{money(unrepartized < -0.009 ? -unrepartized : unrepartized)}</b>
         {/* D12: cele trei cifre se leagă: disponibili = în plicuri (și scadențe) + liberi. */}
         {availableSources > 0 && <>
           <i className="bf-plan-header-bar" role="progressbar" aria-label={t("Procentul banilor repartizați în plicuri")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(allocatedRatio * 100)}><em style={{ width: `${Math.round(allocatedRatio * 100)}%` }} /></i>
-          <small className="bf-plan-header-eq">{t("{available} disponibili = {placed} în plicuri + {free} liberi · {percent}% așezat", { available: money(availableSources), placed: money(Math.max(0, availableSources - Math.max(0, unrepartized))), free: money(Math.max(0, unrepartized)), percent: Math.round(allocatedRatio * 100) })}</small>
+          <small className="bf-plan-header-eq">{unrepartized < -0.009
+            // Ratele și facturile până la venit nu sunt „în plicuri”: le spunem pe nume și spunem cât lipsește.
+            ? t("Ai {available} în surse. Până la venit sunt de plătit {dues} în rate și facturi{envelopes}. Lipsesc {missing}; când notezi salariul, se acoperă.", { available: money(availableSources), dues: money(Math.max(0, scheduled)), envelopes: reservedInEnvelopes > 0.009 ? t(" și {amount} rămân în plicuri", { amount: money(reservedInEnvelopes) }) : "", missing: money(-unrepartized) })
+            : scheduled > 0.009
+              ? t("{available} disponibili = {placed} în plicuri + {dues} rate și facturi + {free} liberi · {percent}% așezat", { available: money(availableSources), placed: money(Math.max(0, reservedInEnvelopes)), dues: money(scheduled), free: money(Math.max(0, unrepartized)), percent: Math.round(allocatedRatio * 100) })
+              : t("{available} disponibili = {placed} în plicuri + {free} liberi · {percent}% așezat", { available: money(availableSources), placed: money(Math.max(0, availableSources - Math.max(0, unrepartized))), free: money(Math.max(0, unrepartized)), percent: Math.round(allocatedRatio * 100) })}</small>
           <button type="button" className="bf-link-button" onClick={() => window.dispatchEvent(new Event("buget-familie:open-transfer"))}>{t("Mută bani sau dă cuiva")}</button>
         </>}
       </div>

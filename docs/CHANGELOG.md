@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.197
+
+O sumă negativă mare apărută pe Astăzi, după ce s-a pus data salariului (raport real, 9 oct).
+
+- **Lipsa pentru rate, spusă pe nume.** Cu data salariului pusă, aplicația păstrează deoparte ratele care cad până atunci. Când ele cer mai mult decât banii notați în surse, Astăzi arăta „−1.806,21 · Peste limita planului”, deși nu exista niciun plic și nu se cheltuise nimic peste plan. Acum scrie „Lipsesc pentru rate și facturi”, cu explicația: „Până pe 9 noiembrie sunt de plătit 1.971,94 în rate și facturi, iar în surse ai 165,73”. Dacă venitul ciclului nu e notat, spune și asta: notezi salariul și cifra se reface. Eticheta de sus devine „Rate de acoperit”.
+- **Plicuri: „Lipsesc”, nu „Nerepartizați” negativ.** Rândul „165,73 disponibili = 165,73 în plicuri” (cu zero plicuri) socotea ratele drept plicuri. Acum ratele și facturile apar separat, iar când banii nu ajung scrie cât lipsește și de ce.
+- Pe Astăzi, nota „Angi n-a notat încă azi: cifra poate fi mai mică” nu mai acoperă explicația unei lipse.
+
 ## 1.1.196
 
 Fluiditate și claritate, după un video cu ecranul care „clipea”.
