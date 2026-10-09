@@ -31,8 +31,9 @@ describe("ratele unui membru fără bani notați (Angi, 9 oct)", () => {
     expect(debtsOutsideTrackedMoney(data).map((item) => item.id).sort()).toEqual(["e", "f", "g"]);
     expect(planAllocationMath(data).scheduled).toBeCloseTo(1971.94 - 925.72, 2);
     const summary = buildTodaySummary(data, ASOF);
-    expect(summary.heroValue).toBeCloseTo(1971.94 - 925.72 - 165.73, 2);
-    expect(summary.heroHint).toMatch(/Nu sunt scăzute ratele pe numele Angi \(925,72\)/);
+    expect(summary.heroValue).toBeCloseTo(165.73, 2);
+    expect(summary.heroHint).toMatch(/lipsesc 880,49 până la venit/);
+    expect(summary.heroHint).toMatch(/Ratele pe numele Angi \(925,72\) nu se scad/);
   });
 
   it("o rată de-a ei confirmată din cardul altcuiva le aduce înapoi la socoteală", () => {
@@ -40,6 +41,16 @@ describe("ratele unui membru fără bani notați (Angi, 9 oct)", () => {
     const paid = recordDebtPayment(data, { debtId: "g", amount: 166.04, sourceId: "source-debit", memberId: "member-me", date: ASOF })!;
     expect(debtsOutsideTrackedMoney(paid)).toEqual([]);
     expect(planAllocationMath(paid).scheduled).toBeCloseTo(1971.94 - 166.04, 2);
+  });
+
+  it("rata ei confirmată din cardul ei (de Alin) rămâne a ei și nu-i scade banii lui Alin", () => {
+    const data = withAngi();
+    const paid = recordDebtPayment(data, { debtId: "g", amount: 166.04, sourceId: "src-angi", memberId: "angi", date: ASOF })!;
+    expect(debtsOutsideTrackedMoney(paid).map((item) => item.id).sort()).toEqual(["e", "f"]);
+    const math = planAllocationMath(paid);
+    expect(math.availableSources).toBeCloseTo(165.73, 2);
+    expect(math.scheduled).toBeCloseTo(1971.94 - 925.72, 2);
+    expect(buildTodaySummary(paid, ASOF).heroValue).toBeCloseTo(165.73, 2);
   });
 
   it("o mișcare pe sursa ei le aduce înapoi", () => {
@@ -54,9 +65,10 @@ describe("lipsa care vine doar din rate (9 oct)", () => {
     const summary = buildTodaySummary(family(), ASOF);
     expect(summary.overPlan).toBe(true);
     expect(summary.duesShort).toBe(true);
-    expect(summary.heroValue).toBeCloseTo(1806.21, 2);
-    expect(summary.heroLabel).toBe("Lipsesc pentru rate și facturi");
-    expect(summary.heroHint).toMatch(/sunt de plătit 1\.971,94.*în surse ai 165,73.*Venitul acestui ciclu nu e notat/);
+    // Cifra mare: banii de acum, nu minusul. Lipsa și prima rată, dedesubt.
+    expect(summary.heroValue).toBeCloseTo(165.73, 2);
+    expect(summary.heroLabel).toBe("Ai acum în surse");
+    expect(summary.heroHint).toMatch(/sunt de plătit 1\.971,94 în rate și facturi: lipsesc 1\.806,21 până la venit\. Prima: a, 90,25, pe 10 octombrie\. Când intră salariul/);
   });
 
   it("după ce salariul e notat, cifra se reface", () => {
@@ -65,5 +77,13 @@ describe("lipsa care vine doar din rate (9 oct)", () => {
     const summary = buildTodaySummary(data, ASOF);
     expect(summary.overPlan).toBe(false);
     expect(summary.duesShort).toBe(false);
+  });
+
+  it("fără dată de salariu, Astăzi arată din nou banii din surse, fără rate scăzute", () => {
+    const data = family();
+    data.settings.salaryPlan = { ...data.settings.salaryPlan, nextPayday: "", earliestPayday: undefined };
+    const summary = buildTodaySummary(data, ASOF);
+    expect(summary.overPlan).toBe(false);
+    expect(summary.heroValue).toBeCloseTo(165.73, 2);
   });
 });
