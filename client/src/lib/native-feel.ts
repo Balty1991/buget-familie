@@ -27,7 +27,12 @@ const reduced = () => { try { return window.matchMedia("(prefers-reduced-motion:
 export function haptic(kind: HapticKind = "tick") {
   void native().then((api) => {
     if (api) return api.haptic({ kind }).catch(() => undefined);
-    try { if (!reduced() && typeof navigator.vibrate === "function") navigator.vibrate(kind === "tick" ? 6 : kind === "confirm" ? 14 : [10, 40, 10]); } catch { /* fără vibrație */ }
+    /*
+     * În browser nu există „tic”-ul fin al sistemului: navigator.vibrate pornește motorul și bâzâia
+     * la fiecare schimbare de ecran (raport real, 9 oct). Aici vibrează doar salvarea și ștergerea.
+     */
+    if (kind === "tick") return undefined;
+    try { if (!reduced() && typeof navigator.vibrate === "function") navigator.vibrate(kind === "confirm" ? 14 : [10, 40, 10]); } catch { /* fără vibrație */ }
     return undefined;
   });
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.205
+
+- **În browser nu mai vibrează la fiecare schimbare de ecran.** Vibrația fină a sistemului există doar în aplicația instalată. În browser pornea motorul de vibrație la fiecare atingere care deschidea un ecran (raport real, 9 oct). Acum, în browser, vibrează doar salvarea unei notări și ștergerea. În aplicație nu se schimbă nimic.
+
 ## 1.1.204
 
 - **„Închide săptămâna”.** Luni (sau duminică seara), pe Astăzi apare „Închide săptămâna”. Un ecran scurt arată cât ai cheltuit din plicurile săptămânii și ce a rămas:
