@@ -4883,4 +4883,6 @@ export const en: Record<string, string> = {
   "Liberi, nepuși în plicuri": "Free, not in envelopes",
   "De unde vine cifra?": "Where does this number come from?",
   "Din el, {amount} ({items}) se împarte pe săptămânile rămase, nu golește săptămâna asta.": "Of it, {amount} ({items}) is spread over the remaining weeks instead of emptying this one.",
+  "Trimite rapoarte de erori": "Send error reports",
+  "Când aplicația dă o eroare, pleacă doar tipul ei, locul din cod și versiunea, ca s-o putem repara. Fără sume, nume, magazine sau bonuri.": "When the app hits an error, only its type, the place in the code and the version are sent, so we can fix it. No amounts, names, stores or receipts.",
 };

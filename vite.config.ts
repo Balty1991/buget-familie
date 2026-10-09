@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig, type Plugin } from "vite";
 
 function vitePluginPreloadCriticalFonts(): Plugin {
@@ -109,8 +110,8 @@ function vitePluginCsp(): Plugin {
           // Din afară vin doar imaginile reCAPTCHA.
           "img-src 'self' data: blob: https://www.gstatic.com https://www.google.com",
           "font-src 'self' data:",
-          // Doar serviciile folosite: Firestore, Auth, App Check, funcțiile din europe-central2, reCAPTCHA și Open Food Facts.
-          `connect-src 'self' data: blob: https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://europe-central2-buget-familie-a6a0d.cloudfunctions.net https://www.google.com https://search.openfoodfacts.org https://world.openfoodfacts.org https://world.openproductsfacts.org`,
+          // Doar serviciile folosite: Firestore, Auth, App Check, funcțiile din europe-central2, reCAPTCHA, Open Food Facts și rapoartele de erori (Sentry, UE).
+          `connect-src 'self' data: blob: https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseappcheck.googleapis.com https://content-firebaseappcheck.googleapis.com https://europe-central2-buget-familie-a6a0d.cloudfunctions.net https://www.google.com https://search.openfoodfacts.org https://world.openfoodfacts.org https://world.openproductsfacts.org https://*.ingest.de.sentry.io`,
           "frame-src https://www.google.com https://recaptcha.google.com https://*.firebaseapp.com",
           "worker-src 'self' blob:",
           "manifest-src 'self'",
@@ -126,6 +127,22 @@ function vitePluginCsp(): Plugin {
 
 export default defineConfig(({ command }) => {
   const plugins = [react(), tailwindcss(), vitePluginPreloadCriticalFonts(), vitePluginBuildId(), vitePluginCsp()];
+  /**
+   * Erorile din Sentry, citibile: hărțile de cod urcă la Sentry din CI (cu SENTRY_AUTH_TOKEN) și se
+   * șterg din pachet, ca să nu ajungă nici în APK, nici pe pagina publică. Fără token, nimic nu se schimbă.
+   */
+  const sentryUpload = command === "build" && Boolean(process.env.SENTRY_AUTH_TOKEN);
+  if (sentryUpload) {
+    plugins.push(...sentryVitePlugin({
+      org: "buget-familie",
+      project: "buget-familie",
+      url: "https://de.sentry.io/",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      release: { name: `buget-familie@${JSON.parse(readFileSync(path.resolve(import.meta.dirname, "package.json"), "utf8")).version}` },
+      sourcemaps: { filesToDeleteAfterUpload: ["**/*.map"] },
+      telemetry: false,
+    }));
+  }
 
   return {
     // GitHub Pages servește acest proiect sub /buget-familie/; buildurile locale și Android rămân la rădăcină.
@@ -148,6 +165,7 @@ export default defineConfig(({ command }) => {
       emptyOutDir: true,
       target: ["es2022", "chrome111", "safari16"],
       cssMinify: "lightningcss",
+      sourcemap: sentryUpload ? "hidden" : false,
       modulePreload: { polyfill: false },
       rollupOptions: {
         output: {

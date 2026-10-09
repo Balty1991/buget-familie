@@ -28,6 +28,7 @@ import "./obligations.css";
 import "./analysis.css";
 import "./design-system-37.css";
 import { startPerformanceMonitoring } from "./lib/performance-monitor";
+import { startErrorReports } from "./lib/error-reports";
 import { APP_VERSION } from "./lib/app-version";
 import { hideNativeSplash, onAppRevealed } from "./lib/native-splash";
 import {
@@ -56,6 +57,7 @@ const idle = (fn: () => void, timeout: number) => {
 };
 
 idle(() => startPerformanceMonitoring(), 2500);
+idle(() => startErrorReports(platform), 3000);
 startRamHygiene();
 
 /* Overlay-ul HTML așteaptă Home. Fallback dacă First Run / Astăzi întârzie. */
