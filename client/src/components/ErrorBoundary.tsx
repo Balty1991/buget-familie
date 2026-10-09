@@ -2,6 +2,7 @@ import { isQuotaExceededError, freeHeavyLocalCache } from "@/lib/safe-storage";
 import { AlertTriangle, RotateCcw, Trash2 } from "lucide-react";
 import { Component, ReactNode } from "react";
 import { t } from "@/lib/i18n";
+import { reportError } from "@/lib/error-reports";
 
 interface Props {
   children: ReactNode;
@@ -28,6 +29,10 @@ class ErrorBoundary extends Component<Props, State> {
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error) {
+    reportError(error);
   }
 
   private clearHeavyAndReload = () => {

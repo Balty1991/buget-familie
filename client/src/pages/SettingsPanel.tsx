@@ -16,6 +16,7 @@ import { BACKUP_SAVE_FALLBACK, BACKUP_SAVE_HELPER } from "@/lib/backup-ui-copy";
 import { disableLocalAlerts, enableLocalAlerts, getNotificationPermission, isNotificationsArmed, isNotificationsEnabled, scheduleFinancialReminders, sendTestAlert, type NotificationPref } from "@/lib/local-notifications";
 import { NOTIFY_KINDS, readNotifyPrefs, writeNotifyPrefs, type NotifyKind, type NotifyPrefs } from "@/lib/notify-prefs";
 import { isOfflineOnly, setOfflineOnly, setSimpleMode } from "@/lib/ui-prefs";
+import { errorReportsAvailable, readErrorReports, saveErrorReports } from "@/lib/error-reports";
 import { disableAppLock, hasAppLockPin, isAppLockEnabled, isValidPin, setAppLockPin } from "@/lib/app-lock";
 import { Field, dateText, money, sourceKindName } from "@/pages/home-kit";
 import { readSecureScreen, saveSecureScreen } from "@/lib/secure-screen";
@@ -227,6 +228,7 @@ function AppLockSettings() {
   const [pin, setPin] = useState("");
   const [notice, setNotice] = useState("");
   const [secureScreen, setSecureScreen] = useState(() => readSecureScreen());
+  const [errorReports, setErrorReports] = useState(() => readErrorReports());
 
   const startCreate = () => { setMode("create"); setPin(""); setFirstPin(""); setNotice(""); };
   const cancel = () => { setMode("idle"); setPin(""); setFirstPin(""); };
@@ -269,6 +271,7 @@ function AppLockSettings() {
       <h2>{t("Blocare cu PIN")}</h2>
       <p>{t("Un PIN de 4 cifre, doar pe acest telefon. Nu se salvează în clar, nu intră în backup și nu se sincronizează cu celelalte telefoane.")}</p>
       {isNativeApp() && <label className="bf-settings-switch"><input type="checkbox" checked={secureScreen} onChange={(event) => { setSecureScreen(event.target.checked); void saveSecureScreen(event.target.checked); }} /><span><b>{t("Ascunde ecranul în capturi")}</b><small>{t("Fără capturi de ecran și fără previzualizare în aplicațiile recente, ca sumele să nu rămână în galerie sau să fie văzute peste umăr.")}</small></span></label>}
+      {errorReportsAvailable() && <label className="bf-settings-switch"><input type="checkbox" checked={errorReports} onChange={(event) => { setErrorReports(event.target.checked); saveErrorReports(event.target.checked, isNativeApp() ? "android" : "web"); }} /><span><b>{t("Trimite rapoarte de erori")}</b><small>{t("Când aplicația dă o eroare, pleacă doar tipul ei, locul din cod și versiunea, ca s-o putem repara. Fără sume, nume, magazine sau bonuri.")}</small></span></label>}
       {mode === "idle" && (
         enabled ? (
           <div className="bf-notification-actions">

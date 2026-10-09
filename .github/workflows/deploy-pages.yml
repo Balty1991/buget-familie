@@ -44,6 +44,10 @@ jobs:
           TZ: Pacific/Auckland
       - name: Build GitHub Pages bundle
         run: pnpm run build:pages
+        env:
+          # Rapoartele de erori (Sentry): cheia intră în aplicație, tokenul doar urcă hărțile de cod. Fără ele, build-ul merge la fel.
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
         with:

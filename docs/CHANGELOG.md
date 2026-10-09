@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.206
+
+- **Rapoarte de erori (Sentry), fără date personale.** Când aplicația dă o eroare, aflăm singuri ce s-a întâmplat, fără capturi de ecran trimise de mână. Pleacă doar tipul erorii, locul din cod, versiunea și dacă e Android sau browser. Din mesaj se scot cifrele și textul dintre ghilimele; pașii dinaintea erorii, adresa IP, sumele, numele, magazinele și bonurile nu pleacă. Datele stau în UE (Frankfurt).
+  - Se opresc din Setări → Mementouri și siguranță → „Trimite rapoarte de erori”.
+  - Biblioteca se încarcă după pornire (30 KB), deci aplicația nu pornește mai greu.
+  - Politica de confidențialitate și răspunsurile Data safety descriu noul furnizor.
+
 ## 1.1.205
 
 - **În browser nu mai vibrează la fiecare schimbare de ecran.** Vibrația fină a sistemului există doar în aplicația instalată. În browser pornea motorul de vibrație la fiecare atingere care deschidea un ecran (raport real, 9 oct). Acum, în browser, vibrează doar salvarea unei notări și ștergerea. În aplicație nu se schimbă nimic.

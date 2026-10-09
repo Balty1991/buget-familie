@@ -102,6 +102,23 @@ Adresa IP și ID-ul anonim sunt folosite pe server pentru limite (ghid, feedback
 folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau alte ID-uri**, scop
 **Prevenirea fraudei, securitate și conformitate** (deja bifat la 3).
 
+### 4c. Rapoarte de erori (Sentry, de la 1.1.206)
+
+Categoria Play: **Informații și performanța aplicației → Jurnale de erori (Crash logs)** și
+**Diagnosticare (Diagnostics)**.
+
+| Întrebare | Răspuns |
+|---|---|
+| Colectat? | **Da** |
+| Partajat? | **Nu** (Sentry e furnizor de servicii, procesează în numele nostru) |
+| Prelucrat efemer? | **Nu** (erorile se păstrează în Sentry ca să fie reparate) |
+| Obligatoriu sau opțional? | **Opțional**: se oprește din Setări → „Trimite rapoarte de erori” |
+| Scop | **Analiza aplicației** (repararea erorilor) |
+| Legat de identitate? | **Nu**: fără ID de utilizator, fără IP (oprit în Sentry), fără date din registru |
+
+Ce pleacă: tipul erorii, locul din cod, versiunea, Android/web. Cifrele și textul dintre ghilimele
+se scot din mesaj; pașii dinaintea erorii nu se trimit. Date găzduite în UE (Frankfurt).
+
 ### 5. Date care NU se colectează (bifează „Nu”)
 
 - Locație precisă / aproximativă  
@@ -123,6 +140,7 @@ folosește reCAPTCHA Enterprise. În Play: **Identificatori de dispozitiv sau al
 | Firebase / Firestore | Infrastructură pentru **ciphertext** sync opțional — nu e „sale of data”; nu citește plaintext financiar |
 | Google Gemini / Groq | Furnizori de servicii pentru ghidul online opțional (Groq doar ca rezervă, SUA) — **dezvăluit** în privacy + aici |
 | Analytics / ads SDK | **Niciunul** în aplicație |
+| Sentry (rapoarte de erori, UE) | Furnizor de servicii pentru diagnosticare — **nu** e partajare în sensul Play; dezvăluit în privacy 5b |
 
 În formular: **Nu vindem datele utilizatorilor** · **Nu folosim date pentru publicitate**.
 

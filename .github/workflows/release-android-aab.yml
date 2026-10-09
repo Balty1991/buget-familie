@@ -29,6 +29,10 @@ jobs:
         run: pnpm test
       - name: Construiește bundle-ul Android
         run: pnpm run cap:sync
+        env:
+          # Rapoartele de erori (Sentry): cheia intră în aplicație, tokenul doar urcă hărțile de cod. Fără ele, build-ul merge la fel.
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin

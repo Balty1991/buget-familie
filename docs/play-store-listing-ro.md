@@ -129,7 +129,7 @@ Răspunsuri complete, mapate pe categorii Play: [`PLAY_CONSOLE_DATA_SAFETY.md`](
 - Sincronizare: da, opțională; AES-GCM; dezvoltatorul nu poate citi plaintext.
 - Cont utilizator: nu (core use).
 - Publicitate / sharing / vânzare: nu.
-- Analytics: niciun SDK de analytics sau reclame.
+- Analytics: niciun SDK de analytics sau reclame. Rapoartele de erori (Sentry, UE) sunt opționale și fără date personale.
 - Backup sistem Android: nu (`allowBackup=false`).
 - Ștergere: in-app Resetare + pagina publică de ștergere.
 - AI: opțional, întrebarea + ultimele mesaje + rezumatul bugetului către Google Gemini (Groq ca rezervă); niciodată jurnalul de mișcări.
