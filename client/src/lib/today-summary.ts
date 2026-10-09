@@ -1,4 +1,4 @@
-import { debtsOutsideTrackedMoney, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, planEndDate, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
+import { debtsOutsideTrackedMoney, reservedDebtsInPlan, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, planEndDate, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
 import { projectCashflow } from "@/lib/cashflow-projection";
 import { daysBetween } from "@/lib/planned-events";
 import { dayStripFigure, stripLei, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
@@ -63,9 +63,13 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
    */
   const duesShort = heroOver && math.scheduled > 0.009 && math.availableSources - math.reservedInEnvelopes >= -0.009;
   const planEndIso = planEndDate(math.plan);
+  /** Bani notați acum în surse, după ce e deja pus în plicuri: cifra mare când ratele nu încap. */
+  const moneyNow = Math.max(0, math.availableSources - math.reservedInEnvelopes);
+  const nextDebt = duesShort ? reservedDebtsInPlan(data).filter((debt) => debt.dueDate >= todayIso).sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0] : undefined;
   const duesHint = duesShort
-    ? t("Până pe {date} sunt de plătit {dues} în rate și facturi, iar în surse ai {available}.", { date: planEndIso ? formatDate(planEndIso, { day: "numeric", month: "long" }) : t("următorul venit"), dues: exact(math.scheduled), available: exact(Math.max(0, math.availableSources - math.reservedInEnvelopes)) })
-      + (periodIncome < 0.01 ? ` ${t("Venitul acestui ciclu nu e notat încă: când intră salariul, notează-l ca venit și cifra se reface.")}` : "")
+    ? t("Până pe {date} sunt de plătit {dues} în rate și facturi: lipsesc {missing} până la venit.", { date: planEndIso ? formatDate(planEndIso, { day: "numeric", month: "long" }) : t("următorul venit"), dues: exact(math.scheduled), missing: exact(Math.abs(math.remaining)) })
+      + (nextDebt ? ` ${t("Prima: {name}, {amount}, pe {date}.", { name: nextDebt.name, amount: exact(nextDebt.amount), date: formatDate(nextDebt.dueDate, { day: "numeric", month: "long" }) })}` : "")
+      + (periodIncome < 0.01 ? ` ${t("Când intră salariul, notează-l și lipsa dispare.")}` : "")
     : "";
   const waitingNote = overPlan && !heroOver && upcomingIncome
     ? t("Plicurile mai așteaptă {amount}: se acoperă când vine {label} pe {date}.", { amount: exact(Math.abs(math.remaining)), label: upcomingIncome.first.title, date: formatDate(upcomingIncome.first.date, { day: "numeric", month: "long" }) })
@@ -73,7 +77,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const heroLabel = noMoneyYet
     ? t("Pune banii de azi")
     : duesShort
-    ? t("Lipsesc pentru rate și facturi")
+    ? t("Ai acum în surse")
     : heroOver
     ? t("Peste limita planului")
     : brief.hasPayday
@@ -90,8 +94,11 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   const heroTracksWeek = !heroOver && brief.hasPayday && !brief.expired && rhythm.hasWeekly;
   /** Azi s-a consumat partea zilei, dar plicul mai are bani pentru zilele care urmează. */
   const todayUsedUp = rhythm.hasWeekly && rhythm.todayLeft <= 0.009 && rhythm.remaining > 0.009 && rhythm.remainingDays > 1 && rhythm.futureShare > 0;
+  // Ratele care nu încap nu înlocuiesc cifra: omul vrea dimineața să vadă câți bani are; lipsa e dedesubt.
   const heroValue = noMoneyYet
     ? 0
+    : duesShort
+    ? moneyNow
     : heroOver
     ? Math.abs(math.remaining)
     : heroTracksWeek
@@ -139,7 +146,7 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
                 ? t("Nu e un sold. E suma ieșită azi, până pui un venit sau un plic.")
                 : t("Adaugă plicuri pentru a urmări cât mai rămâne în fiecare perioadă");
   const explainer = duesShort
-    ? t("Nu e o cheltuială făcută. E cât lipsește ca să plătești ratele și facturile care cad până la următorul venit, cu banii notați acum în surse.")
+    ? t("Cifra mare e banii notați acum în surse. Dedesubt: cât lipsește ca să plătești ratele și facturile care cad până la următorul venit. Nu e o cheltuială făcută.")
     : heroOver
     ? t("Planul este depășit: suma arată cât trebuie acoperit, nu bani disponibili pentru cheltuieli.")
     : brief.hasPayday
@@ -181,8 +188,12 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
   // Ratele unui membru fără bani notați nu intră în cifră; o spunem, ca să nu fie uitate.
   const outside = noMoneyYet ? [] : debtsOutsideTrackedMoney(data);
   const outsideNote = outside.length
-    ? t("Nu sunt scăzute ratele pe numele {names} ({amount}): pe sursele lor nu e notat nimic. Când confirmi una dintre ele, intră la socoteală.", { names: Array.from(new Set(outside.map((debt) => data.settings.members.find((member) => member.id === debt.memberId)?.name || ""))).filter(Boolean).join(", "), amount: exact(outside.reduce((sum, debt) => sum + debt.amount, 0)) })
+    ? t("Ratele pe numele {names} ({amount}) nu se scad din banii tăi: pe sursele lor nu e notat niciun venit. Le vezi și le confirmi în Obligații; dacă una se plătește din banii tăi, alege sursa ta la confirmare.", { names: Array.from(new Set(outside.map((debt) => data.settings.members.find((member) => member.id === debt.memberId)?.name || ""))).filter(Boolean).join(", "), amount: exact(outside.reduce((sum, debt) => sum + debt.amount, 0)) })
     : "";
-  const hintWithNotes = [heroHint, waitingNote, outsideNote].filter(Boolean).join(" ");
-  return { overPlan: heroOver, duesShort, outsideNote, canSpendToday, heroLabel, heroValue, heroHint: hintWithNotes, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
+  // Pe Astăzi, scurt: explicația întreagă stă în Plicuri.
+  const outsideShort = outside.length
+    ? t("Ratele pe numele {names} ({amount}) nu se scad: pe sursele lor nu e notat niciun venit.", { names: Array.from(new Set(outside.map((debt) => data.settings.members.find((member) => member.id === debt.memberId)?.name || ""))).filter(Boolean).join(", "), amount: exact(outside.reduce((sum, debt) => sum + debt.amount, 0)) })
+    : "";
+  const hintWithNotes = [heroHint, waitingNote, outsideShort].filter(Boolean).join(" ");
+  return { overPlan: heroOver, duesShort, salaryMissing: duesShort && periodIncome < 0.01, outsideNote, canSpendToday, heroLabel, heroValue, heroHint: hintWithNotes, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
 }

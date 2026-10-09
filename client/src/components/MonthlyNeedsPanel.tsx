@@ -282,6 +282,9 @@ export function MonthlyNeedsSection({ data, onChange }: { data: AppData; onChang
  * Data aproximativă a următorului salariu și cât poate varia. Tranșele merg până la data
  * obișnuită, iar plicurile acoperă și zilele în care salariul poate întârzia.
  */
+/** Linkurile lungi se rup pe rânduri: pe 360 px, cu fontul mare, ieșeau din ecran. */
+const WRAP = { whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere", maxWidth: "100%", minWidth: 0 } as const;
+
 export function NextPayday({ plan, incomes, onSave }: { plan: SalaryPlan; incomes: ExpectedIncome[]; onSave: (patch: Partial<SalaryPlan>) => void }) {
   const today = isoToday();
   const active = Boolean(plan.nextPayday && plan.nextPayday >= today);
@@ -291,10 +294,20 @@ export function NextPayday({ plan, incomes, onSave }: { plan: SalaryPlan; income
   const range = paydayWindow({ ...plan, nextPayday: shown, periodStart: active ? plan.periodStart : today, earliestPayday: undefined, paydayFlexDays: flex });
   const day = (iso: string) => formatDate(iso, { day: "numeric", month: "long" });
   const setDate = (iso: string) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || iso <= today || iso === plan.nextPayday) return;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso) || iso < today || iso === plan.nextPayday) return;
+    if (iso === today) return salaryToday();
     const periodStart = active && plan.periodStart && plan.periodStart < iso ? plan.periodStart : today;
     const earliest = addIsoDays(iso, -flex);
     onSave({ periodStart, nextPayday: iso, paydayFlexDays: flex, earliestPayday: earliest > periodStart ? earliest : periodStart });
+  };
+  /**
+   * Salariul vine azi: ciclul nou începe azi, iar următorul salariu e cam peste o lună. Data de azi
+   * nu se putea alege (doar de mâine), iar ziua pusă la întâmplare lăsa ratele lunii fără salariu.
+   */
+  const salaryToday = () => {
+    const next = nextPaydayAfter(today, Number(today.slice(8)));
+    const earliest = addIsoDays(next, -flex);
+    onSave({ periodStart: today, nextPayday: next, paydayFlexDays: flex, earliestPayday: earliest > today ? earliest : today });
   };
   const setFlex = (value: number) => {
     if (!active) return onSave({ paydayFlexDays: value });
@@ -311,13 +324,19 @@ export function NextPayday({ plan, incomes, onSave }: { plan: SalaryPlan; income
           : t("Vine fix în ziua asta.")}</span>}
         {!active && shown && <span>{t("Se stabilește singur din ziua declarată când notezi salariul. Îl poți alege și acum.")}</span>}
       </p>
-      <label><span>{t("Data aproximativă")}</span><RoDateInput min={addIsoDays(today, 1)} value={shown} onChange={(event) => setDate(event.target.value)} /></label>
+      {/* O dată pusă din greșeală nu se mai putea scoate: Astăzi rămânea pe socoteala până la salariu. */}
+      <label><span>{t("Data aproximativă")}</span><RoDateInput min={today} value={shown} onChange={(event) => setDate(event.target.value)} /></label>
       <label><span>{t("Poate varia cu")}</span>
         <select value={flex} onChange={(event) => setFlex(Number(event.target.value))}>
           <option value={0}>{t("Nu variază")}</option>
           {[1, 2, 3, 4, 5].map((days) => <option key={days} value={days}>{days === 1 ? t("± 1 zi") : t("± {days} zile", { days })}</option>)}
         </select>
       </label>
+      {/* Pe tot rândul: în grila cu două coloane, butoanele împingeau data în afara ecranului. */}
+      <div style={{ gridColumn: "1 / -1", display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
+        {plan.periodStart !== today && <button type="button" className="bf-link-button" style={WRAP} onClick={salaryToday}>{t("Salariul vine azi")}</button>}
+        {active && <button type="button" className="bf-link-button" style={WRAP} onClick={() => onSave({ nextPayday: "", earliestPayday: undefined })}>{t("Fără dată de salariu: arată doar câți bani am")}</button>}
+      </div>
     </div>
   );
 }

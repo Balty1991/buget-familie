@@ -1205,7 +1205,8 @@ const allocationPlanSlice = (data: AppData, item: BudgetAllocation) => {
 export const planAllocationMath = (data: AppData) => {
   const plan = data.settings.salaryPlan;
   // Tichetele de masă nu se pun în plicuri: fără surse alese, ele nu intră în „nerepartizați”.
-  const sourceIds = plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.filter((source) => source.kind !== "meal").map((source) => source.id);
+  const untracked = untrackedSourceIds(data);
+  const sourceIds = (plan.sourceIds.length ? plan.sourceIds : data.settings.paymentSources.filter((source) => source.kind !== "meal").map((source) => source.id)).filter((id) => !untracked.has(id));
   const availableSources = data.settings.paymentSources
     .filter((source) => sourceIds.includes(source.id))
     .reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
@@ -1915,8 +1916,15 @@ export const untrackedDebtOwner = (data: AppData, memberId?: string) => {
   if (!own.length || own.some((source) => Math.abs(source.openingBalance || 0) >= 0.005)) return false;
   const ids = new Set(own.map((source) => source.id));
   const debtIds = new Set(data.debts.filter((debt) => debt.memberId === memberId).map((debt) => debt.id));
-  return !data.transactions.some((item) => (item.sourceId && ids.has(item.sourceId)) || (item.debtId && debtIds.has(item.debtId)));
+  return !data.transactions.some((item) => {
+    // Rata ei confirmată (de oricine) din sursa ei: plătită din banii ei, tot nenotați. Nu schimbă nimic.
+    if (item.debtId && item.sourceId && ids.has(item.sourceId)) return false;
+    // Altă mișcare pe sursele ei: își notează banii. O rată de-a ei plătită din altă sursă: se plătește din banii comuni.
+    return (item.sourceId && ids.has(item.sourceId)) || (item.debtId && debtIds.has(item.debtId));
+  });
 };
+/** Sursele unui membru fără bani notați: soldul lor (doar rate plătite, deci minus) nu scade banii celorlalți. */
+export const untrackedSourceIds = (data: AppData) => new Set(data.settings.paymentSources.filter((source) => source.memberId && untrackedDebtOwner(data, source.memberId)).map((source) => source.id));
 /** Ratele ținute deoparte din banii notați; cele ale unui membru fără bani în aplicație stau separat. */
 export const reservedDebtsInPlan = (data: AppData) => pendingDebtsInPlan(data).filter((debt) => !untrackedDebtOwner(data, debt.memberId));
 export const debtsOutsideTrackedMoney = (data: AppData) => pendingDebtsInPlan(data).filter((debt) => untrackedDebtOwner(data, debt.memberId));

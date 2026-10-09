@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.198
+
+Ziua salariului și ratele lui Angi, după o dimineață cu salariul pe drum (raport real, 9 oct).
+
+- **„Salariul vine azi”.** Data salariului se putea alege doar de mâine încolo, așa că salariul care intra azi nu se putea spune. Data aleasă la întâmplare (9 noiembrie) lăsa toate ratele lunii fără salariu. Acum data de azi se poate alege, plus un buton „Salariul vine azi”: ciclul nou începe azi, iar următorul salariu e cam peste o lună.
+- **Data salariului se poate scoate.** „Fără dată de salariu: arată doar câți bani am” întoarce Astăzi la banii din surse, ca înainte.
+- **Astăzi arată banii pe care îi ai, nu un minus.** Când ratele până la salariu cer mai mult decât e notat, cifra mare rămâne „Ai acum în surse: 165,73”. Dedesubt scrie cât lipsește până la venit și care e prima rată (fierul, 90,25, mâine), plus butonul „Notează salariul”.
+- **Ratele lui Angi, confirmate de Alin.** Confirmarea unei rate de-a ei din cardul ei (cum propune formularul) nu mai aduce toate ratele ei în socoteala lui Alin. Nici minusul de pe cardul ei, unde nu e notat niciun venit, nu-i mai scade lui banii. Ratele ei rămân în Obligații, cu reamintiri și „Confirmă plata”. Dacă una se plătește din cardul lui Alin, alege cardul lui la confirmare: atunci ratele ei se socotesc din banii familiei.
+
 ## 1.1.197
 
 O sumă negativă mare apărută pe Astăzi, după ce s-a pus data salariului (raport real, 9 oct).

@@ -41,6 +41,7 @@ import {
   expenseBelongsTo,
   isBalanceAdjustment,
   sourceBalance,
+  untrackedSourceIds,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
 import { floorCents, lei as leiExact, perDay } from "./money-format";
@@ -551,8 +552,11 @@ export const liquidSafeToSpend = (data: AppData, asOf = isoToday()) => {
   const balance = financialBalance(data);
   const pending = scheduledInPlan(data);
   const envelopeLeft = data.settings.salaryPlan.allocations.reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0);
-  const available = Math.max(0, balance.liquidFunds - pending);
-  return { liquidFunds: balance.liquidFunds, reservedRecurring: pending, envelopeLeft, available, asOf };
+  // Sursele unui membru fără bani notați au doar rate plătite (minus): nu scad banii celorlalți.
+  const untracked = untrackedSourceIds(data);
+  const liquidFunds = balance.liquidFunds - data.settings.paymentSources.filter((source) => untracked.has(source.id)).reduce((sum, source) => sum + sourceBalance(data, source.id), 0);
+  const available = Math.max(0, liquidFunds - pending);
+  return { liquidFunds, reservedRecurring: pending, envelopeLeft, available, asOf };
 };
 
 export const lastDaysPulse = (data: AppData, days = 7, asOf = isoToday()) => {
