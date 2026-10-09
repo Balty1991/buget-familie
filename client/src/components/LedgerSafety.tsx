@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, History, RotateCcw } from "lucide-react";
+import { AlertTriangle, History, RotateCcw, Scale } from "lucide-react";
 import { formatDate, newId, parseRomanianAmount, sourceBalance, type AppData, type Transaction } from "@/lib/finance-data";
 import { applyDeclaredBalance } from "@/lib/balance-check";
 import { outdatedSyncDevices } from "@/lib/sync-devices";
@@ -11,6 +11,7 @@ import { fmtExact, Modal } from "@/pages/home-kit";
 
 const money = (value: number) => fmtExact.format(value);
 /** Linkurile lungi se rup pe rânduri: pe 360 px, cu fontul mare, ieșeau din ecran. */
+const TOOLS = { order: 99, display: "grid", gap: 6, margin: "16px 0 8px", padding: "12px 14px", border: "1px solid var(--cf-line)", borderRadius: 16, background: "var(--cf-surface)" } as const;
 const WRAP = { whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere", maxWidth: "100%", minWidth: 0, justifySelf: "start" } as const;
 
 /**
@@ -18,7 +19,7 @@ const WRAP = { whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere"
  * - bonul plătit din două surse din care a rămas o singură parte apare cu roșu, cu „Repară”;
  * - „Șterse recent” arată tot ce a dispărut în ultimele 60 de zile, cu „Pune înapoi”.
  */
-export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChange: (next: AppData) => void; onEdit: (item: Transaction) => void }) {
+export function LedgerSafety({ data, onChange, onEdit, part = "alerts" }: { data: AppData; onChange: (next: AppData) => void; onEdit: (item: Transaction) => void; part?: "alerts" | "tools" }) {
   const [binVersion, setBinVersion] = useState(0);
   const [binOpen, setBinOpen] = useState(false);
   const [matchOpen, setMatchOpen] = useState(false);
@@ -48,7 +49,8 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
   // Un telefon vechi la care omul nu mai are acces (dat, resetat) se poate ascunde; revine dacă se sincronizează din nou.
   const outdated = outdatedSyncDevices(data).filter((item) => !hidden.includes(`${item.id}:${item.lastSeenAt}`));
   const hideDevice = (key: string) => { const next = [...hidden, key].slice(-20); setHidden(next); try { localStorage.setItem("buget-familie:outdated-hidden", JSON.stringify(next)); } catch { /* fără stocare */ } };
-  return <>
+  // Avertismentele stau sus, peste listă; uneltele de corectură, jos, după mișcări.
+  if (part === "alerts") return <>
     {outdated.length > 0 && <section className="bf-envelope-conflicts bf-movement-conflicts" aria-live="polite">
       <div className="bf-envelope-conflicts-heading">
         <AlertTriangle size={18} aria-hidden="true" />
@@ -82,7 +84,10 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
         </li>)}
       </ul>
     </section>}
-    <button type="button" className="bf-link-button" style={WRAP} onClick={() => setMatchOpen(true)}>{t("Potrivește soldul cu banii reali")}</button>
+  </>;
+  return <section className="bf-ledger-tools" aria-labelledby="bf-ledger-tools-title" style={TOOLS}>
+    <p className="bf-kicker" id="bf-ledger-tools-title">{t("CEVA NU SE POTRIVEȘTE?")}</p>
+    <button type="button" className="bf-link-button" style={{ ...WRAP, display: "inline-flex", alignItems: "center", gap: 6 }} onClick={() => setMatchOpen(true)}><Scale size={15} aria-hidden="true" /> {t("Potrivește soldul cu banii reali")}</button>
     {matchOpen && <Modal title={t("Potrivește soldul")} onClose={() => setMatchOpen(false)}>
       <p className="bf-helper">{t("Scrie câți bani ai de fapt. Diferența intră în Mișcări ca „Corecție de sold”, cu ziua de azi: soldul devine cel real, iar diferența nu apare ca cheltuială pe o categorie și nu strică analiza.")}</p>
       <label className="bf-field"><span>{t("Sursa")}</span><select value={matchSource} onChange={(event) => setMatchSource(event.target.value)}>{pockets.map((source) => <option key={source.id} value={source.id}>{source.name} · {t("în aplicație")} {money(sourceBalance(data, source.id))}</option>)}</select></label>
@@ -90,7 +95,7 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
       {matchAmount.trim() !== "" && <p className="bf-helper">{(() => { const diff = Math.round((parseRomanianAmount(matchAmount) - sourceBalance(data, matchSource)) * 100) / 100; return Math.abs(diff) < 0.005 ? t("Se potrivește deja.") : diff < 0 ? t("Lipsesc {amount} față de aplicație: intră ca ieșire.", { amount: money(-diff) }) : t("Ai cu {amount} mai mult decât arată aplicația: intră ca intrare.", { amount: money(diff) }); })()}</p>}
       <button type="button" className="bf-primary full" disabled={matchAmount.trim() === ""} onClick={() => { onChange(applyDeclaredBalance(data, matchSource, parseRomanianAmount(matchAmount))); setMatchOpen(false); setMatchAmount(""); }}>{t("Potrivește")}</button>
     </Modal>}
-    {bin.length > 0 && <button type="button" className="bf-link-button" style={WRAP} onClick={() => setBinOpen(true)}><History size={15} aria-hidden="true" /> {t("Șterse recent ({count})", { count: bin.length })}</button>}
+    {bin.length > 0 && <button type="button" className="bf-link-button" style={{ ...WRAP, display: "inline-flex", alignItems: "center", gap: 6 }} onClick={() => setBinOpen(true)}><History size={15} aria-hidden="true" /> {t("Șterse recent ({count})", { count: bin.length })}</button>}
     {binOpen && <Modal title={t("Șterse recent")} onClose={() => setBinOpen(false)}>
       <p className="bf-helper">{t("Tot ce a ieșit din registru în ultimele 60 de zile, pe telefonul acesta: șters de tine, la o corectură sau la sincronizare. Pune înapoi ce nu trebuia să plece.")}</p>
       <ul className="bf-envelope-conflicts-list">
@@ -110,5 +115,5 @@ export function LedgerSafety({ data, onChange, onEdit }: { data: AppData; onChan
       </ul>
       <button type="button" className="bf-link-button" style={WRAP} onClick={() => { forgetRemoved(bin.map((entry) => entry.key)); setBinOpen(false); }}>{t("Golește lista")}</button>
     </Modal>}
-  </>;
+  </section>;
 }

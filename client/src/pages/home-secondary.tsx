@@ -7,6 +7,7 @@ import { getOrCreateDeviceId } from "@/lib/sync-devices";
 import "../mobile-settings-pass.css";
 import "../atelier-review-final.css";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { warmLazy } from "@/lib/lazy-safe";
 import { recapReady, recapYearFor, yearRecap } from "@/lib/year-recap";
 import { ChartSpline, CalendarRange, FileBarChart, Landmark, TrendingDown, Activity, CalendarHeart, Sparkles, Sprout, MessageSquareWarning, BarChart3, Bell, BellRing, BrainCircuit, BookOpen, CalendarClock, Check, Inbox, ChevronLeft, ChevronRight, Cloud, Download, ListChecks, Search, Palette, PiggyBank, Plane, Plus, ReceiptText, Settings, ShieldCheck, ShoppingBasket, Store, PiggyBank as PiggyBankIcon, Trash2 } from "lucide-react";
 import { createEmptyAppData, isReceiptGapLabel, isoToday, type AppData, type Debt, type Receipt, type SavingsGoal } from "@/lib/finance-data";
@@ -52,6 +53,21 @@ const ProductCatalogPanel = lazy(() => import("@/components/ProductCatalogPanel"
 const SettingsPanel = lazy(() => import("./SettingsPanel").then((module) => ({ default: module.SettingsPanel })));
 const SyncPanel = lazy(() => import("./SyncPanel").then((module) => ({ default: module.SyncPanel })));
 const FamilyGuide = lazy(() => import("./FamilyGuide").then((module) => ({ default: module.FamilyGuide })));
+
+/** Panoul din spatele fiecărei file: încălzit înainte de deschidere, ca scheletul „Pregătim…” să nu clipească. */
+const TAB_PANELS: Partial<Record<MoreView, (object | (() => Promise<unknown>))[]>> = {
+  receipts: [ReceiptsStudio], catalog: [ProductCatalogPanel], review: [ReviewCenterPanel], "year-plan": [YearPlanPanel],
+  "net-worth": [NetWorthPanel], "debt-exit": [DebtExitPanel], charts: [ChartsPanel], trends: [TrendsPanel], invest: [InvestSimPanel],
+  "money-calendar": [MoneyCalendarPanel], advisor: [MonthAdvisorPanel], trip: [TripPanel], shopping: [ShoppingListPanel],
+  prices: [PriceWatchPanel], pocket: [PocketPanel], events: [PlannedEventsPanel], recurring: [RecurringPanel], reports: [ReportsPanel],
+  assistant: [AdvisorPanel], learned: [LearnedRulesPanel], settings: [SettingsPanel, () => import("./SettingsPanel").then((module) => module.preloadSettingsParts())], guide: [FamilyGuide], sync: [SyncPanel], overview: [YearRecapStory],
+};
+const warmTabs = new Set<MoreView>(["debts", "savings", "feedback"]);
+export const isMoreTabWarm = (tab: MoreView) => warmTabs.has(tab);
+/** Fără rețea, o bucată poate lipsi: fila se deschide oricum (arată „offline”), nu rămâne blocată. */
+export const preloadMoreTab = (tab: MoreView): Promise<void> => warmTabs.has(tab) ? Promise.resolve()
+  : Promise.all((TAB_PANELS[tab] || []).map((panel) => typeof panel === "function" ? panel() : warmLazy(panel))).then(() => { warmTabs.add(tab); }, () => undefined);
+export const MORE_TABS = Object.keys(TAB_PANELS) as MoreView[];
 
 export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, onSaveReceipt, onDeleteReceipt, onOpenDebt, onOpenSaving, onOpenCalendar: _onOpenCalendar, onEditDebt, onEditSaving, onPayDebt, onGo, receiptStorageNotice, sync }: { backTo?: { label: string; go: () => void }; tab: MoreView; setTab: (value: MoreView) => void; data: AppData; onChange: (value: AppData) => void; onAddReceipt: () => void; onSaveReceipt: (item: Receipt) => void; onDeleteReceipt: (id: string) => void; onOpenDebt: () => void; onOpenSaving: () => void; onOpenCalendar: () => void; onEditDebt?: (item: Debt) => void; onEditSaving?: (item: SavingsGoal) => void; onPayDebt?: (item: Debt) => void; onGo?: (view: MainView) => void; receiptStorageNotice?: string; sync: SyncPanelProps }) {
   const [simpleMode, setSimpleModeState] = useState(() => {
@@ -116,7 +132,7 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
       ) : (
         <>
       {onGo && <section className="bf-more-group bf-more-screens" aria-labelledby="more-screens-title">
-        <p className="bf-kicker bf-more-section-label" id="more-screens-title">{t("ECRANE")}</p>
+        <p className="bf-kicker bf-more-section-label" id="more-screens-title">{t("BANII FAMILIEI")}</p>
         <div className="bf-more-grid bf-settings-group">
           <button type="button" className="bf-settings-row" onClick={() => onGo("obligations")}><Bell size={20} /><span className="bf-settings-copy"><b>{t("Obligații")}</b><small>{t("scadențe, rate, datorii")}</small></span><ChevronRight className="bf-settings-chevron" size={18} /></button>
           <button type="button" className="bf-settings-row" onClick={() => onGo("insights")}><BarChart3 size={20} /><span className="bf-settings-copy"><b>{t("Analiză")}</b><small>{t("unde se duc banii, lună de lună")}</small></span><ChevronRight className="bf-settings-chevron" size={18} /></button>
@@ -124,6 +140,28 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
           <button type="button" className="bf-settings-row" onClick={() => setTab("advisor")}><FileBarChart size={20} /><span className="bf-settings-copy"><b>{t("Raportul lunii")}</b><small>{t("ce a mers, ce nu, ce să faceți")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
         </div>
       </section>}
+      {/* Ce așteaptă o decizie urcă sus, doar cât e ceva de confirmat. */}
+      {data.pendingReview.length > 0 && <section className="bf-more-group" aria-labelledby="more-daily-title">
+        <p className="bf-kicker bf-more-section-label" id="more-daily-title">{t("DE REZOLVAT")}</p>
+        <div className="bf-more-grid bf-settings-group">
+          <button type="button" className={data.pendingReview.length ? "bf-settings-row has-badge" : "bf-settings-row"} onClick={() => setTab("review")}><Inbox size={20} /><span className="bf-settings-copy"><b>{t("De verificat")}{data.pendingReview.length > 0 && <span className="bf-nav-count">{data.pendingReview.length}</span>}</b><small>{data.pendingReview.length ? t("{count} propuneri de confirmat", { count: data.pendingReview.length }) : t("import și confirmări")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+        </div>
+      </section>}
+      <section className="bf-more-group" aria-labelledby="more-shop-title">
+        <p className="bf-kicker bf-more-section-label" id="more-shop-title">{t("CUMPĂRĂTURI ȘI BONURI")}</p>
+        <div className="bf-more-grid bf-settings-group">
+          <button type="button" className="bf-settings-row" onClick={() => setTab("shopping")}><ListChecks size={20} /><span className="bf-settings-copy"><b>{t("Lista de cumpărături")}</b><small>{shoppingCount ? t("{count} de luat", { count: shoppingCount }) : t("comună pentru toată familia")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("receipts")}><ReceiptText size={20} /><span className="bf-settings-copy"><b>{t("Bonuri")}</b><small>{t("produse, catalog și alimente vs nealimentare")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          <button type="button" className="bf-settings-row" onClick={() => setTab("catalog")}><Search size={20} /><span className="bf-settings-copy"><b>{t("Catalog")}</b><small>{t("caută Napolact, Ariel, lapte — liste online")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+          {!data.pendingReview.length && <button type="button" className={data.pendingReview.length ? "bf-settings-row has-badge" : "bf-settings-row"} onClick={() => setTab("review")}><Inbox size={20} /><span className="bf-settings-copy"><b>{t("De verificat")}{data.pendingReview.length > 0 && <span className="bf-nav-count">{data.pendingReview.length}</span>}</b><small>{data.pendingReview.length ? t("{count} propuneri de confirmat", { count: data.pendingReview.length }) : t("import și confirmări")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>}
+        </div>
+      </section>
+      <section className="bf-more-group" aria-labelledby="more-plans-title">
+        <p className="bf-kicker bf-more-section-label" id="more-plans-title">{t("PLANURI")}</p>
+        <div className="bf-more-grid bf-settings-group">
+          <button type="button" className="bf-settings-row" onClick={() => setTab("trip")}><Plane size={20} /><span className="bf-settings-copy"><b>{t("Vacanță")}</b><small>{trip && !trip.closedAt && trip.end >= isoToday() ? t("{name} · până pe {date}", { name: trip.name, date: dateText(trip.end) }) : t("buget separat pentru o călătorie")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
+        </div>
+      </section>
       {/* Ecranele pentru cine vrea mai mult stau strânse: un om obișnuit vede doar ce folosește zilnic. */}
       <details className="bf-more-group bf-more-advanced">
         <summary className="bf-settings-row" id="more-plan-title" style={{ cursor: "pointer", listStyle: "none" }}><ChartSpline size={20} /><span className="bf-settings-copy"><b>{t("Instrumente avansate")}</b><small>{t("grafice, tendințe, plan pe un an, investiții, prețuri")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></summary>
@@ -141,21 +179,6 @@ export function MoreView({ backTo, tab, setTab, data, onChange, onAddReceipt, on
           <button type="button" className="bf-settings-row" onClick={() => setTab("learned")}><BrainCircuit size={20} /><span className="bf-settings-copy"><b>{t("Ce am învățat")}</b><small>{t("regulile după care îți propun")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
         </div>
       </details>
-      <section className="bf-more-group" aria-labelledby="more-daily-title">
-        <p className="bf-kicker bf-more-section-label" id="more-daily-title">{t("DE REZOLVAT")}</p>
-        <div className="bf-more-grid bf-settings-group">
-          <button type="button" className={data.pendingReview.length ? "bf-settings-row has-badge" : "bf-settings-row"} onClick={() => setTab("review")}><Inbox size={20} /><span className="bf-settings-copy"><b>{t("De verificat")}{data.pendingReview.length > 0 && <span className="bf-nav-count">{data.pendingReview.length}</span>}</b><small>{data.pendingReview.length ? t("{count} propuneri de confirmat", { count: data.pendingReview.length }) : t("import și confirmări")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
-          <button type="button" className="bf-settings-row" onClick={() => setTab("receipts")}><ReceiptText size={20} /><span className="bf-settings-copy"><b>{t("Bonuri")}</b><small>{t("produse, catalog și alimente vs nealimentare")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
-          <button type="button" className="bf-settings-row" onClick={() => setTab("trip")}><Plane size={20} /><span className="bf-settings-copy"><b>{t("Vacanță")}</b><small>{trip && !trip.closedAt && trip.end >= isoToday() ? t("{name} · până pe {date}", { name: trip.name, date: dateText(trip.end) }) : t("buget separat pentru o călătorie")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
-        </div>
-      </section>
-      <section className="bf-more-group" aria-labelledby="more-shop-title">
-        <p className="bf-kicker bf-more-section-label" id="more-shop-title">{t("CUMPĂRĂTURI")}</p>
-        <div className="bf-more-grid bf-settings-group">
-          <button type="button" className="bf-settings-row" onClick={() => setTab("shopping")}><ListChecks size={20} /><span className="bf-settings-copy"><b>{t("Lista de cumpărături")}</b><small>{shoppingCount ? t("{count} de luat", { count: shoppingCount }) : t("comună pentru toată familia")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
-          <button type="button" className="bf-settings-row" onClick={() => setTab("catalog")}><Search size={20} /><span className="bf-settings-copy"><b>{t("Catalog")}</b><small>{t("caută Napolact, Ariel, lapte — liste online")}</small></span><ChevronRight className="bf-settings-chevron" size={18} aria-hidden="true" /></button>
-        </div>
-      </section>
       <section className="bf-more-group" aria-labelledby="more-house-title">
         <p className="bf-kicker bf-more-section-label" id="more-house-title">{t("SETĂRI")}</p>
         <div className="bf-more-grid bf-settings-group">

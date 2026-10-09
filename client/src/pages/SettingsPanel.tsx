@@ -6,6 +6,7 @@ import { YearCloseSection } from "@/components/YearCloseSection";
 import "../monthly-needs.css";
 import "../pocket.css";
 import { lazy, Suspense, useEffect, useState, type ChangeEvent, type ReactNode } from "react";
+import { warmLazy } from "@/lib/lazy-safe";
 import { Check, ChevronRight, ClipboardPaste, Download, LockKeyhole, RotateCcw, Search, Share2, Trash2, Upload, X } from "lucide-react";
 import { deviceTimeZone, foldRomanian, BASE_CURRENCY, activeCurrencies, createFamilyCode, currenciesMissingRate, expenseCategories, newId, normalizeAppData, parseRomanianAmount, sourceBalance, sourceBalanceInCurrency, supportedCurrencies, type AppData, type PaymentKind } from "@/lib/finance-data";
 import { downloadBackup, isNativeApp, parseBackup, type BackupIntent } from "@/lib/app-storage";
@@ -30,6 +31,8 @@ import { chooseSelfMember, selfMemberIdOf } from "@/lib/member-identity";
 
 const TrustCenter = lazy(() => import("@/components/TrustCenter").then((module) => ({ default: module.TrustCenter })));
 const PremiumStudio = lazy(() => import("@/components/PremiumStudio").then((module) => ({ default: module.PremiumStudio })));
+/** Încălzite odată cu setările: altfel apăreau cu o clipă mai târziu și împingeau pagina. */
+export const preloadSettingsParts = () => Promise.all([warmLazy(TrustCenter), warmLazy(PremiumStudio)]);
 
 /**
  * Cursurile sunt introduse manual, cu data la care au fost puse. Aplicația nu întreabă
