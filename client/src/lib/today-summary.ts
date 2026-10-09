@@ -1,4 +1,4 @@
-import { envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, planEndDate, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
+import { debtsOutsideTrackedMoney, envelopeDecisionStatus, formatDate, inPlanPeriod, isBalanceAdjustment, isoToday, planEndDate, planForecast, sourceBalance, type AppData } from "@/lib/finance-data";
 import { projectCashflow } from "@/lib/cashflow-projection";
 import { daysBetween } from "@/lib/planned-events";
 import { dayStripFigure, stripLei, todayBrief, trackModeHero, weeklyEnvelopeDailyRhythm } from "@/lib/household-insights";
@@ -178,5 +178,11 @@ export function buildTodaySummary(data: AppData, asOf?: string) {
    * „Poți folosi azi 4.457” exact când lipseau 4.457.
    */
   const canSpendToday = noMoneyYet || heroOver || !brief.hasPayday || brief.expired ? 0 : Math.max(0, brief.spendable);
-  return { overPlan: heroOver, duesShort, canSpendToday, heroLabel, heroValue, heroHint: waitingNote ? `${heroHint} ${waitingNote}` : heroHint, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
+  // Ratele unui membru fără bani notați nu intră în cifră; o spunem, ca să nu fie uitate.
+  const outside = noMoneyYet ? [] : debtsOutsideTrackedMoney(data);
+  const outsideNote = outside.length
+    ? t("Nu sunt scăzute ratele pe numele {names} ({amount}): pe sursele lor nu e notat nimic. Când confirmi una dintre ele, intră la socoteală.", { names: Array.from(new Set(outside.map((debt) => data.settings.members.find((member) => member.id === debt.memberId)?.name || ""))).filter(Boolean).join(", "), amount: exact(outside.reduce((sum, debt) => sum + debt.amount, 0)) })
+    : "";
+  const hintWithNotes = [heroHint, waitingNote, outsideNote].filter(Boolean).join(" ");
+  return { overPlan: heroOver, duesShort, outsideNote, canSpendToday, heroLabel, heroValue, heroHint: hintWithNotes, explainer, heroTracksWeek, rhythm, rhythmNote, brief, todayStrip, planHelp };
 }

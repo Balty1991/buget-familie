@@ -1244,6 +1244,7 @@ export const en: Record<string, string> = {
   "PLIC DEPĂȘIT": "ENVELOPE OVER",
   "Peste limita planului": "Over the plan's limit",
   "Plan de revizuit": "Plan to review",
+  "Nu sunt scăzute ratele pe numele {names} ({amount}): pe sursele lor nu e notat nimic. Când confirmi una dintre ele, intră la socoteală.": "Instalments in the name of {names} ({amount}) are not deducted: nothing is recorded on their sources. Once you confirm one of them, they count again.",
   "Lipsesc pentru rate și facturi": "Short for instalments and bills",
   "Rate de acoperit": "Instalments to cover",
   "Până pe {date} sunt de plătit {dues} în rate și facturi, iar în surse ai {available}.": "Until {date} there are {dues} in instalments and bills to pay, and your sources hold {available}.",

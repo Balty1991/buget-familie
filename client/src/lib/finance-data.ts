@@ -1234,7 +1234,7 @@ export const planAllocationMath = (data: AppData) => {
   });
   const dues = [
     ...pendingRecurringInPlan(data).map((item) => ({ category: item.category, amount: item.amount })),
-    ...pendingDebtsInPlan(data).map((item) => ({ category: "Rate produse", amount: item.amount })),
+    ...reservedDebtsInPlan(data).map((item) => ({ category: "Rate produse", amount: item.amount })),
   ];
   const scheduledInEnvelopes = dues.reduce((sum, due) => {
     const left = envelopeLeft.get(due.category) || 0;
@@ -1903,10 +1903,28 @@ export const pendingDebtsInPlan = (data: AppData) => {
   });
 };
 
+/**
+ * Membrul ale cărui bani nu sunt în aplicație: are surse proprii, dar pe ele nu s-a notat niciodată
+ * nimic (sold inițial 0, nicio mișcare), iar nicio rată de-a lui n-a fost confirmată. Ratele lui nu se
+ * scad din banii celorlalți: Angi nu nota, iar cei 925 de lei ai ei apăreau ca lipsă în cifra lui Alin.
+ * Prima rată confirmată (din orice sursă) sau prima mișcare pe sursele lui le aduce înapoi la socoteală.
+ */
+export const untrackedDebtOwner = (data: AppData, memberId?: string) => {
+  if (!memberId || !data.settings.members.some((member) => member.id === memberId)) return false;
+  const own = data.settings.paymentSources.filter((source) => source.memberId === memberId);
+  if (!own.length || own.some((source) => Math.abs(source.openingBalance || 0) >= 0.005)) return false;
+  const ids = new Set(own.map((source) => source.id));
+  const debtIds = new Set(data.debts.filter((debt) => debt.memberId === memberId).map((debt) => debt.id));
+  return !data.transactions.some((item) => (item.sourceId && ids.has(item.sourceId)) || (item.debtId && debtIds.has(item.debtId)));
+};
+/** Ratele ținute deoparte din banii notați; cele ale unui membru fără bani în aplicație stau separat. */
+export const reservedDebtsInPlan = (data: AppData) => pendingDebtsInPlan(data).filter((debt) => !untrackedDebtOwner(data, debt.memberId));
+export const debtsOutsideTrackedMoney = (data: AppData) => pendingDebtsInPlan(data).filter((debt) => untrackedDebtOwner(data, debt.memberId));
+
 /** Tot ce trebuie ținut deoparte până la venit: scadențe recurente plus rate la datorii. */
 export const scheduledInPlan = (data: AppData) =>
   pendingRecurringInPlan(data).reduce((sum, item) => sum + item.amount, 0)
-  + pendingDebtsInPlan(data).reduce((sum, item) => sum + item.amount, 0);
+  + reservedDebtsInPlan(data).reduce((sum, item) => sum + item.amount, 0);
 
 /** Confirmă o scadență rezervată în perioada activă: adaugă mișcarea reală o singură dată, fără s-o poată dubla. */
 export const confirmRecurringPayment = (data: AppData, recurringId: string, paidAmount?: number): AppData | undefined => {

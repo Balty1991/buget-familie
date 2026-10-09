@@ -26,7 +26,7 @@ import { AllocationRecommendationsPanel } from "@/components/AllocationRecommend
 import { EnvelopeTransferPanel } from "@/components/EnvelopeTransferPanel";
 import { MonthlyAllocationWizard } from "@/components/MonthlyAllocationWizard";
 import { SalaryRitualPanel } from "@/components/SalaryRitualPanel";
-import { amountInput, sourceBalance, allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
+import { amountInput, debtsOutsideTrackedMoney, sourceBalance, allocationStatus, allocationWeekStatus, allocationWeeksStatus, addIsoDays, appendAllocationHistory, expenseCategories, formatDate, isoDate, isoToday, isWeeklyPaced, newId, parseRomanianAmount, paydayWindow, planAllocationMath, planEndDate, planWeeklyCycle, sourceFreeBalance, transferBetweenWeeks, type AppData, type BudgetAllocation } from "@/lib/finance-data";
 import { applyPlanRows, parsePlanTable } from "@/lib/plan-import";
 import { nextCycleIncomeArrived, envelopeBurnPace, envelopeMonthlyHistory, envelopeRunOut, envelopeUntilPayday, weekDayCap, envelopeBurndown} from "@/lib/household-insights";
 import { MonthlyNeedsSection, NextPayday } from "@/components/MonthlyNeedsPanel";
@@ -187,6 +187,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
   const allocated = envelopes.reduce((sum, envelope) => sum + envelope.budget, 0);
   const weekSpentByIndex = envelopes.reduce((all, envelope) => { envelope.weeks.forEach((week) => all.set(week.index, (all.get(week.index) || 0) + week.spent)); return all; }, new Map<number, number>());
   const { availableSources, scheduled, scheduledInEnvelopes, reservedInEnvelopes, unrepartized } = useMemo(() => planAllocationMath(data), [data]);
+  const outsideDebts = useMemo(() => debtsOutsideTrackedMoney(data), [data]);
   // Tichetele nu intră în plicuri, dar sunt tot bani de mâncare: se arată lângă plicul de alimente (utilizator #9).
   const mealLeft = data.settings.paymentSources.filter((source) => source.kind === "meal").reduce((sum, source) => sum + Math.max(0, sourceBalance(data, source.id)), 0);
   const isFoodCategory = (category?: string) => category === "Alimente" || category === "Mâncare";
@@ -469,6 +470,7 @@ export function PlanStudio({ data, onChange, simpleMode = false }: { data: AppDa
             : scheduled > 0.009
               ? t("{available} disponibili = {placed} în plicuri + {dues} rate și facturi + {free} liberi · {percent}% așezat", { available: money(availableSources), placed: money(Math.max(0, reservedInEnvelopes)), dues: money(scheduled), free: money(Math.max(0, unrepartized)), percent: Math.round(allocatedRatio * 100) })
               : t("{available} disponibili = {placed} în plicuri + {free} liberi · {percent}% așezat", { available: money(availableSources), placed: money(Math.max(0, availableSources - Math.max(0, unrepartized))), free: money(Math.max(0, unrepartized)), percent: Math.round(allocatedRatio * 100) })}</small>
+          {outsideDebts.length > 0 && <small className="bf-plan-header-eq">{t("Nu sunt scăzute ratele pe numele {names} ({amount}): pe sursele lor nu e notat nimic. Când confirmi una dintre ele, intră la socoteală.", { names: Array.from(new Set(outsideDebts.map((debt) => data.settings.members.find((member) => member.id === debt.memberId)?.name || ""))).filter(Boolean).join(", "), amount: money(outsideDebts.reduce((sum, debt) => sum + debt.amount, 0)) })}</small>}
           <button type="button" className="bf-link-button" onClick={() => window.dispatchEvent(new Event("buget-familie:open-transfer"))}>{t("Mută bani sau dă cuiva")}</button>
         </>}
       </div>
