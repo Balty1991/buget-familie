@@ -42,6 +42,8 @@ import {
   isBalanceAdjustment,
   sourceBalance,
   untrackedSourceIds,
+  envelopeDayAmount,
+  spreadPart,
 } from "./finance-data";
 import { statementMerchant } from "./statement-merchant";
 import { floorCents, lei as leiExact, perDay } from "./money-format";
@@ -621,7 +623,7 @@ export const weekDayCap = (data: AppData, allocation: BudgetAllocation, asOf = i
   // La bani, ca cifra de pe Astăzi (37,50), rotunjit în jos ca să nu promită mai mult.
   // Aceeași socoteală ca ritmul de pe Astăzi: partea zilei din banii de la începutul zilei,
   // minus ce s-a dus azi; zilele următoare împart restul.
-  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && expenseBelongsTo(data.settings.salaryPlan, item, allocation)).reduce((sum, item) => sum + item.amount, 0);
+  const spentToday = data.transactions.filter((item) => item.kind === "expense" && item.date === asOf && expenseBelongsTo(data.settings.salaryPlan, item, allocation)).reduce((sum, item) => sum + envelopeDayAmount(data, item, allocation), 0);
   const remaining = Math.max(0, week.remaining);
   const todayLeft = Math.max(0, (remaining + spentToday) / daysLeft - spentToday);
   const futureDays = daysLeft - 1;
@@ -1369,7 +1371,7 @@ const weeklyEnvelopeDailyRhythmUncached = (data: AppData, asOf: string): WeeklyE
   const cursorEnd = hasTranche ? windowEnd : windowEnd;
   for (let day = cursor; day && day <= cursorEnd && listed.length < 14; day = addIsoDays(day, 1)) listed.push(day);
   const spentByDay = listed.map((day) => {
-    const out = data.transactions.filter((item) => item.date === day && weekly.some((allocation) => expenseBelongsTo(data.settings.salaryPlan, item, allocation))).reduce((sum, item) => sum + item.amount, 0);
+    const out = data.transactions.filter((item) => item.date === day && weekly.some((allocation) => expenseBelongsTo(data.settings.salaryPlan, item, allocation))).reduce((sum, item) => { const allocation = weekly.find((entry) => expenseBelongsTo(data.settings.salaryPlan, item, entry)); return sum + (allocation ? envelopeDayAmount(data, item, allocation) : item.amount); }, 0);
     return { day, out };
   });
   const todayIndex = Math.max(0, spentByDay.findIndex((item) => item.day === asOf));
@@ -1753,7 +1755,11 @@ export const envelopeBurndown = (data: AppData, allocation: BudgetAllocation, as
   const spentByDay = new Array(days).fill(0) as number[];
   for (const item of data.transactions) {
     if (item.date < start || item.date > end || !expenseBelongsTo(plan, item, allocation)) continue;
-    spentByDay[daysBetween(start, item.date)] += item.amount;
+    // Partea pentru toată luna se întinde pe zilele rămase: nu e ritmul de cheltuială, ca să nu prezică „se golește pe 24”.
+    const spread = spreadPart(item);
+    const from = daysBetween(start, item.date);
+    spentByDay[from] += item.amount - spread;
+    if (spread > 0) for (let index = from; index < days; index += 1) spentByDay[index] += spread / (days - from);
   }
   const actual: number[] = [];
   let left = budget;
