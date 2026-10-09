@@ -1248,6 +1248,7 @@ export const en: Record<string, string> = {
   "{amount} din {source}": "{amount} from {source}",
   "Încă o sursă": "Another source",
   "Cumpărătură pentru toată luna": "Purchase for the whole month",
+  "De pe bon, ce nu e mâncare: {items} = {amount}.": "From the receipt, what is not food: {items} = {amount}.",
   "Detergent, hrană pentru animale, provizii: se împart pe săptămânile rămase, nu golesc săptămâna asta.": "Detergent, pet food, supplies: spread over the remaining weeks instead of emptying this week.",
   "Din care pentru toată luna (lei)": "Of which for the whole month (lei)",
   "Gol = toată suma. Ex.: din bonul de 165,50, doar detergentul și hrana pisicii.": "Empty = the whole amount. E.g. from a 165.50 receipt, only the detergent and cat food.",

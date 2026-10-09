@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.201
+
+- **Bifa „pentru toată luna” găsește singură ce nu e mâncare.** Pe un bon cu articole (scanat sau scris), bifa completează suma a tot ce nu e mâncare sau băutură și arată ce a pus: hârtie igienică, gel de duș, săpun lichid, odorizant, detergent, hăinuțe, jucării, hrana animalelor. Mâncarea, fructele, dulciurile, apa, băuturile (și alcoolul), SGR-ul și sacoșa rămân pe săptămâna cumpărăturilor. Recunoaște și prescurtările de pe bonuri („H.IG.CELULOZA … 10ROLE”, „REZ.SAP.LICHID”), plus hrana pisicii trecută din greșeală la Alimente. Pe bonurile din 9 octombrie: Mega Image, 134,58 din 165,50; Familia RO, 18,16 din 106,20. Suma se poate schimba înainte de salvare.
+
 ## 1.1.200
 
 - **Cumpărătura pentru toată luna.** Un bon cu detergent, hrană pentru animale sau provizii golea dintr-odată plicul săptămânii (Mega Image, 165,50 lei, din care 134,58 detergent și hrana pisicii). La cheltuială, bifa „Cumpărătură pentru toată luna” împarte suma, sau doar partea scrisă, egal pe săptămâna cumpărării și pe cele rămase până la salariu. Exemplu: 134,58 împărțit pe 6 săptămâni dă 22,43 pe săptămână, iar săptămâna asta scade doar 53,35, nu 165,50. Totalul plicului rămâne același. Bifa apare la plicurile împărțite pe săptămâni, atât la notare, cât și la corectarea mișcării din Mișcări. Graficul „se golește pe …” nu mai ia o astfel de cumpărătură drept ritm de cheltuială.
