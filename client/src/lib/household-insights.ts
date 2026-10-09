@@ -985,7 +985,13 @@ const todayBriefUncached = (data: AppData, asOf: string): TodayBrief => {
     ? plan.allocations.filter((item) => !isFixedEnvelope(plan, item)).reduce((sum, item) => sum + Math.max(0, allocationStatus(data, item).remaining), 0) + Math.max(0, planAllocationMath(data).unrepartized)
     : undefined;
   const fromEnvelopes = flexibleLeft == null ? undefined : dayShareLeft(flexibleLeft);
-  const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromEnvelopes ?? fromPace, fromLiquid, safe.available)) : 0;
+  /**
+   * Cu plic săptămânal, partea zilei vine din plic; banii din cont sunt doar plafonul total, nu
+   * „partea unei zile din cont”. Altfel cumpărăturile mari de azi (165 + 106 lei) depășeau a 31-a parte
+   * din cont și Astăzi arăta 0,00, deși plicul săptămânii mai avea 32,40 pentru azi.
+   */
+  const liquidCap = fromWeek != null ? Math.max(0, safe.available - fixedLeft) : fromLiquid;
+  const spendable = hasPayday && !expired ? Math.max(0, Math.min(fromWeek ?? fromEnvelopes ?? fromPace, liquidCap, safe.available)) : 0;
   const fixedNames = plan.allocations.filter((item) => fixedIds.has(item.id) && allocationStatus(data, item).remaining > 1).map((item) => item.label);
   const fixedAside = fixedLeft > 1 && fixedNames.length
     ? t("Am lăsat deoparte {amount} pentru {labels}.", { amount: stripLei(fixedLeft, getLocale()), labels: fixedNames.slice(0, 3).join(", ") })

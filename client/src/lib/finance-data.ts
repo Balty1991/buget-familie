@@ -1363,8 +1363,15 @@ const allocationWeeksStatusUncached = (data: AppData, allocation: BudgetAllocati
     const spread = spreadPart(item);
     if (spread <= 0) continue;
     const from = weekOf(item.date);
-    const share = spread / (lastIndex - from + 1);
-    for (let position = from; position <= lastIndex; position += 1) spreadExtra[position] += share;
+    // Pe măsura săptămânii: una întreagă ia mai mult, ultima zi dinaintea salariului aproape nimic.
+    const weight = calendar.weeks.slice(from).reduce((sum, week) => sum + Math.max(0, week.amount), 0);
+    // La bani: fiecare felie rotunjită la bani, iar ultima ia restul, ca suma să dea fix partea bonului.
+    let given = 0;
+    for (let position = from; position <= lastIndex; position += 1) {
+      const slice = position === lastIndex ? money2(spread - given) : money2(weight > 0 ? spread * Math.max(0, calendar.weeks[position].amount) / weight : spread / (lastIndex - from + 1));
+      spreadExtra[position] += slice;
+      given = money2(given + slice);
+    }
   }
   let carryNext = 0;
   return calendar.weeks.map((week, index) => {
@@ -2520,6 +2527,9 @@ export const envelopeDayAmount = (data: AppData, item: Transaction, allocation: 
   if (spread <= 0) return item.amount;
   const weeks = allocationWeeksStatus(data, allocation);
   const index = weeks.findIndex((week) => item.date >= week.start && item.date <= week.end);
-  return money2(item.amount - spread + spread / (index < 0 ? 1 : weeks.length - index));
+  if (index < 0) return item.amount;
+  // Aceeași felie ca în tranșe: pe măsura săptămânii cumpărării.
+  const weight = weeks.slice(index).reduce((sum, week) => sum + Math.max(0, week.amount), 0);
+  return money2(item.amount - spread + (weight > 0 ? spread * Math.max(0, weeks[index].amount) / weight : spread / (weeks.length - index)));
 };
 export const planWeeklyCycle = (data: AppData): CalendarBudget | undefined => tickMemo([data], `planWeeklyCycle:${isoToday()}`, () => planWeeklyCycleUncached(data));
