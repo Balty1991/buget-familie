@@ -9,6 +9,8 @@
   
   Plicul rămâne același: se mută doar bani între săptămâni. Duminică dimineața nu se propune, ca Astăzi să nu ajungă la 0 în ultima zi a săptămânii. Cu „Ce rămâne trece în următoarea” pornit în Plan, nu mai întreabă.
 
+- **Etichete: „Pentru” Serviciu, Casă, Copil, Mașină sau una nouă.** La Notează și la corectarea unei mișcări, sub categorie apare rândul „Pentru (opțional)”. Categoria spune ce ai cumpărat, iar eticheta spune unde sau pentru cine: un sandviș la birou rămâne Alimente, dar cu eticheta Serviciu. Aceeași denumire primește singură eticheta de data trecută („Shaorma birou” → Serviciu). În Analiză, „Pe etichete” arată cât ai cheltuit pe fiecare de la salariu încoace, cu categoriile dinăuntru și comparat cu aceleași zile de dinainte.
+
 ## 1.1.203
 
 - **„A intrat salariul”, într-un singur pas.** În ziua salariului, pe Astăzi apare „A intrat salariul”, iar în Plicuri „A intrat salariul: pornește luna”. Un singur ecran care propune:
