@@ -282,6 +282,9 @@ export function MonthlyNeedsSection({ data, onChange }: { data: AppData; onChang
  * Data aproximativă a următorului salariu și cât poate varia. Tranșele merg până la data
  * obișnuită, iar plicurile acoperă și zilele în care salariul poate întârzia.
  */
+/** Linkurile lungi se rup pe rânduri: pe 360 px, cu fontul mare, ieșeau din ecran. */
+const WRAP = { whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere", maxWidth: "100%", minWidth: 0 } as const;
+
 export function NextPayday({ plan, incomes, onSave }: { plan: SalaryPlan; incomes: ExpectedIncome[]; onSave: (patch: Partial<SalaryPlan>) => void }) {
   const today = isoToday();
   const active = Boolean(plan.nextPayday && plan.nextPayday >= today);
@@ -331,8 +334,8 @@ export function NextPayday({ plan, incomes, onSave }: { plan: SalaryPlan; income
       </label>
       {/* Pe tot rândul: în grila cu două coloane, butoanele împingeau data în afara ecranului. */}
       <div style={{ gridColumn: "1 / -1", display: "flex", flexWrap: "wrap", gap: "4px 16px" }}>
-        {plan.periodStart !== today && <button type="button" className="bf-link-button" onClick={salaryToday}>{t("Salariul vine azi")}</button>}
-        {active && <button type="button" className="bf-link-button" onClick={() => onSave({ nextPayday: "", earliestPayday: undefined })}>{t("Fără dată de salariu: arată doar câți bani am")}</button>}
+        {plan.periodStart !== today && <button type="button" className="bf-link-button" style={WRAP} onClick={salaryToday}>{t("Salariul vine azi")}</button>}
+        {active && <button type="button" className="bf-link-button" style={WRAP} onClick={() => onSave({ nextPayday: "", earliestPayday: undefined })}>{t("Fără dată de salariu: arată doar câți bani am")}</button>}
       </div>
     </div>
   );
