@@ -67,24 +67,6 @@ html {
   object-fit: cover;
 }
 
-.bf-receipt-count {
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
-  min-width: 16px;
-  height: 16px;
-  display: grid;
-  place-items: center;
-  padding: 0 4px;
-  border-radius: 999px;
-  color: #fffefa;
-  background: color-mix(in srgb, var(--cf-ink, #10251f) 78%, #000);
-  font-size:12px;
-  font-style: normal;
-  font-weight:600;
-  line-height: 1;
-  pointer-events: none;
-}
 
 .bf-receipt-list article {
   content-visibility: auto;
@@ -162,9 +144,6 @@ html {
     animation: none !important;
   }
 
-  .bf-screen-transition {
-    animation: none !important;
-  }
 
   .bf-ledger-desk,
 .bf-today-envelopes,
@@ -226,8 +205,7 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .bf-app button,
 .bf-app .bf-primary,
-.bf-app .bf-secondary,
-.bf-screen-transition {
+.bf-app .bf-secondary {
     transition: none !important;
     animation: none !important;
   }

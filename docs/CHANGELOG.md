@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.203
+
+- **„A intrat salariul”, într-un singur pas.** În ziua salariului, pe Astăzi apare „A intrat salariul”, iar în Plicuri „A intrat salariul: pornește luna”. Un singur ecran care propune:
+  - veniturile de luna trecută (salariul, tichetele, alocația), cu sumele de schimbat sau debifat; ce e deja notat azi nu se mai adaugă o dată;
+  - luna nouă, până la salariul următor;
+  - plicurile pe noua perioadă: Alimente rămâne la 600 pe săptămână, iar totalul se reface din zilele lunii;
+  - ratele până la salariu, cu ale lui Angi separat;
+  - socoteala de la final: pe carduri și cash − în plicuri − rate = nerepartizat, aceeași cifră ca în Plan după apăsare.
+  
+  „Pornește luna” face totul o dată. Mișcările vechi rămân neatinse, iar luna trecută intră în istoric.
+- **Verificări automate ale banilor.** O lună întreagă simulată zi cu zi, pe cinci variante, trebuie să respecte de fiecare dată regulile: Astăzi arată exact partea de azi a plicului cât banii sunt în surse, săptămânile dau plicul, soldurile se potrivesc cu mișcările, nicio rată nu se scade de două ori. Erorile ca „0,00 după cumpărăturile mari” se prind înainte de versiune.
+
 ## 1.1.202
 
 - **Astăzi nu mai arată 0,00 după cumpărăturile mari.** Cu plic săptămânal, cifra zilei se lua din „banii din cont împărțiți pe zilele până la salariu, minus tot ce s-a cheltuit azi”. Un bon de 165 de lei depășea partea unei singure zile, iar Astăzi arăta 0,00, deși plicul săptămânii mai avea bani pentru azi (raport real, 9 oct). Acum cifra zilei vine din plicul săptămânii (42,21 lei, din 213,71 pentru 3 zile), iar banii din cont rămân doar plafonul total.

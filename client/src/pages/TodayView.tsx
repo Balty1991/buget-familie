@@ -46,6 +46,7 @@ import { distinctExpenseDays } from "@/lib/quiet-start";
 import { HABIT_DAYS, otherPhoneHasLogged, partnersQuietToday } from "@/lib/habit-hold";
 import { formatPlanPriceRon, openFamilieCatalog } from "@/lib/entitlements";
 import { getOrCreateDeviceId } from "@/lib/sync-devices";
+import { paydayDue } from "@/lib/payday";
 import "../house-offer.css";
 
 const HealthScoreBadge = lazy(() => import("@/components/HealthScoreBadge").then((module) => ({ default: module.HealthScoreBadge })));
@@ -340,6 +341,7 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
   };
 
   const todayIso = isoToday();
+  const isPaydayDue = paydayDue(data, todayIso);
   const held = distinctExpenseDays(data.transactions) >= HABIT_DAYS;
   const quietPartners = held ? partnersQuietToday(data, todayIso) : [];
   const otherPhoneLogged = held && otherPhoneHasLogged(data, getOrCreateDeviceId());
@@ -463,7 +465,9 @@ export function TodayView({ data, onAdd, onEdit, onGo, onChange, onOpenReview, o
             <p className="os-hero-label">{heroLabel}</p>
             <p className="os-hint" role={quietPartners.length && !overPlan ? "status" : undefined}>{overPlan ? heroHint : quietPartners.length === 1 ? t("{name} n-a notat încă azi: cifra poate fi mai mică.", { name: quietPartners[0] }) : quietPartners.length > 1 ? t("{names} n-au notat încă azi: cifra poate fi mai mică.", { names: quietPartners.join(", ") }) : heroHint}</p>
             <div className="bf-hero-chips">
-              {salaryMissing && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-income"))}>{t("Notează salariul")}</button>}
+              {isPaydayDue
+                ? <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-payday"))}>{t("A intrat salariul")}</button>
+                : salaryMissing && <button type="button" className="bf-hero-chip" onClick={() => window.dispatchEvent(new Event("buget-familie:open-income"))}>{t("Notează salariul")}</button>}
               <button type="button" className="bf-hero-chip" aria-expanded={whereOpen} onClick={() => setWhereOpen((open) => !open)}>{t("Unde sunt banii · Mută")}</button>
             </div>
             {where && (
