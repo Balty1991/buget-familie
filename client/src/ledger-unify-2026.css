@@ -453,12 +453,7 @@ html.theme-navy .os-shell .os-dock button.is-on {
 
 
 /* Reguli globale mutate din mobile-capture-pass.css (acela se încarcă doar cu Notează). */
-.bf-needs-templates-label {
-  margin: 0 0 6px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--cf-muted);
-}
+.bf-needs-templates-label{margin:0 0 6px;font-size:12px;font-weight:700;color:var(--cf-muted)}
 
 .bf-needs-meal {
   display: flex;
@@ -468,13 +463,7 @@ html.theme-navy .os-shell .os-dock button.is-on {
   font-size: 13px;
 }
 
-.bf-allocation-list-total .bf-allocation-meal {
-  display: block;
-  max-width: 19ch;
-  margin: 2px 0 0 auto;
-  color: var(--cf-muted);
-  white-space: normal;
-}
+.bf-allocation-list-total .bf-allocation-meal{display:block;max-width:19ch;margin:2px 0 0 auto;color:var(--cf-muted);white-space:normal}
 
 .bf-needs-balance {
   margin: 12px 0 0;

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.208
+
+- **Analiză pe articole.** Un bon cu detergent, mâncare și bere intra în „Unde au mers banii” cu totul la o singură categorie (bonul Mega de 165,51 tot la „Casă & facturi”). Acum fiecare articol de pe bon merge la categoria lui: Băuturi, Apă, Dulciuri, Alimente. Un bon plătit din două surse nu se numără de două ori; unul deja împărțit pe categorii nu se mai desface (raport real, 10 oct).
+- **„Pe ce ai dat cel mai mult” și „Unde”.** Atingi o categorie în Analiză și vezi primele 5 articole (cu de câte ori le-ai luat) și magazinele.
+- **„Plătit din” / „Încasat în”, ușor de citit.** În locul listei de sistem: o foaie cu sursele grupate pe persoană, numele mare, felul sursei (card, numerar, tichete) și soldul aliniat în dreapta; sursele goale sunt estompate.
+
 ## 1.1.207
 
 - **Plicul din două surse arată cât mai e din fiecare.** Un plic de Alimente de 2.744 făcut din 2.144 pe card și 600 pe bonuri arăta „+ tichete: 708” (tot soldul cardului de bonuri), deși bonurile erau deja în plic. Acum, sub sumă, apare partea fiecărei surse: „Card bonuri Alin: 434 din 600”, „Card Raiffeisen Alin: 2.144 din 2.144” (raport real, 10 oct).
