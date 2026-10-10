@@ -4888,4 +4888,12 @@ export const en: Record<string, string> = {
   "+ tichete în afara plicului: {amount}": "+ meal vouchers outside the envelope: {amount}",
   "Din partea {source} a plicului rămân {left} din {share}.": "Of the envelope's {source} part, {left} of {share} remain.",
   "Partea {source} din plic e de {share} și nu mai ajunge: {over} peste. Restul plătește-l din altă sursă a plicului.": "The envelope's {source} part is {share} and won't cover this: {over} over. Pay the rest from another source of the envelope.",
+  "de {count} ori": "{count} times",
+  "PE CE AI DAT CEL MAI MULT": "WHAT YOU SPENT MOST ON",
+  "UNDE": "WHERE",
+  "numerar": "cash",
+  "tichete de masă": "meal vouchers",
+  "voucher": "voucher",
+  "card": "card",
+  "transfer": "transfer",
 };
