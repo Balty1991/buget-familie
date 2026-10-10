@@ -1291,6 +1291,19 @@ const allocationSpentFromSource = (data: AppData, allocation: BudgetAllocation, 
   return total;
 };
 
+/**
+ * Cât mai e din plic pe fiecare sursă: partea pusă din ea, minus ce s-a plătit chiar din ea.
+ * Un plic de 2.744 cu 600 din cardul de bonuri arată „bonuri: 452 din 600”, nu tot soldul cardului.
+ */
+export const allocationSourceParts = (data: AppData, allocation: BudgetAllocation) => {
+  const shares = new Map<string, number>();
+  for (const entry of allocationFundingShares(allocation)) shares.set(entry.sourceId, (shares.get(entry.sourceId) || 0) + entry.amount);
+  return Array.from(shares, ([sourceId, share]) => {
+    const spent = money2(allocationSpentFromSource(data, allocation, sourceId));
+    return { sourceId, share: money2(share), spent, left: money2(share - spent) };
+  });
+};
+
 export const sourceFreeBalance = (data: AppData, sourceId: string, ignoreAllocationId?: string) => {
   const balance = sourceBalance(data, sourceId);
   const reservedInEnvelopes = data.settings.salaryPlan.allocations

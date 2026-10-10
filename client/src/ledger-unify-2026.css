@@ -470,8 +470,10 @@ html.theme-navy .os-shell .os-dock button.is-on {
 
 .bf-allocation-list-total .bf-allocation-meal {
   display: block;
-  margin-top: 2px;
+  max-width: 19ch;
+  margin: 2px 0 0 auto;
   color: var(--cf-muted);
+  white-space: normal;
 }
 
 .bf-needs-balance {
