@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.207
+
+- **Plicul din două surse arată cât mai e din fiecare.** Un plic de Alimente de 2.744 făcut din 2.144 pe card și 600 pe bonuri arăta „+ tichete: 708” (tot soldul cardului de bonuri), deși bonurile erau deja în plic. Acum, sub sumă, apare partea fiecărei surse: „Card bonuri Alin: 434 din 600”, „Card Raiffeisen Alin: 2.144 din 2.144” (raport real, 10 oct).
+  - La notare, când alegi sursa, apare „Din partea Card bonuri a plicului rămân …”; dacă nu ajunge, spune cât e peste și că restul se plătește din cealaltă sursă a plicului.
+  - Chenarul „Se va lua din plic” arată sursa aleasă, nu pe cea principală a plicului.
+  - „+ tichete” rămâne doar pe plicurile de mâncare care nu au bonurile incluse, cu textul „în afara plicului”.
+
 ## 1.1.206
 
 - **Rapoarte de erori (Sentry), fără date personale.** Când aplicația dă o eroare, aflăm singuri ce s-a întâmplat, fără capturi de ecran trimise de mână. Pleacă doar tipul erorii, locul din cod, versiunea și dacă e Android sau browser. Din mesaj se scot cifrele și textul dintre ghilimele; pașii dinaintea erorii, adresa IP, sumele, numele, magazinele și bonurile nu pleacă. Datele stau în UE (Frankfurt).

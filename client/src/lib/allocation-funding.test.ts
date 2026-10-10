@@ -3,7 +3,7 @@
  * de 1.800 — diferența vine explicit din altă sursă, iar rezervarea se împarte între ele.
  */
 import { describe, expect, it } from "vitest";
-import { allocationFundingShares, allocationSourceIds, createEmptyAppData, matchingAllocationsForExpense, sourceFreeBalance, type AppData } from "./finance-data";
+import { allocationFundingShares, allocationSourceIds, allocationSourceParts, createEmptyAppData, matchingAllocationsForExpense, sourceFreeBalance, type AppData } from "./finance-data";
 
 const house = (): AppData => {
   const data = createEmptyAppData();
@@ -60,5 +60,18 @@ describe("alimentarea unui plic din mai multe surse", () => {
        Partea partenerei rămâne neatinsă, fiindcă nu din ea s-a plătit. */
     expect(sourceFreeBalance(data, "cash").free).toBe(0);
     expect(sourceFreeBalance(data, "cash-angi").free).toBe(200);
+  });
+
+  it("arată cât mai e din partea fiecărei surse, nu tot soldul ei", () => {
+    const data = house();
+    data.settings.salaryPlan.allocations = [{ id: "env", label: "Alimente", category: "Alimente", amount: 1900, sourceId: "cash", funding: [{ sourceId: "cash-angi", amount: 100 }] }];
+    data.transactions = [
+      { id: "a", title: "Lidl", amount: 190, kind: "expense", category: "Alimente", source: "Cash", sourceId: "cash", person: "Eu", date: "2026-09-17", allocationId: "env" },
+      { id: "b", title: "Piață", amount: 40, kind: "expense", category: "Alimente", source: "Cash · Angi", sourceId: "cash-angi", person: "Angi", date: "2026-09-18", allocationId: "env" },
+    ];
+    expect(allocationSourceParts(data, data.settings.salaryPlan.allocations[0])).toEqual([
+      { sourceId: "cash", share: 1800, spent: 190, left: 1610 },
+      { sourceId: "cash-angi", share: 100, spent: 40, left: 60 },
+    ]);
   });
 });

@@ -3518,7 +3518,6 @@ export const en: Record<string, string> = {
   "Bonuri de masă · {name}": "Meal vouchers · {name}",
   "partener": "partner",
   "Primește și tichete de masă": "Also gets meal vouchers",
-  "+ tichete: {amount}": "+ meal vouchers: {amount}",
   "Venituri {income} · cheltuieli ~{spend}": "Income {income} · spending ~{spend}",
   "lipsesc ~{amount}": "~{amount} short",
   "rămân ~{amount}": "~{amount} left",
@@ -4885,4 +4884,8 @@ export const en: Record<string, string> = {
   "Din el, {amount} ({items}) se împarte pe săptămânile rămase, nu golește săptămâna asta.": "Of it, {amount} ({items}) is spread over the remaining weeks instead of emptying this one.",
   "Trimite rapoarte de erori": "Send error reports",
   "Când aplicația dă o eroare, pleacă doar tipul ei, locul din cod și versiunea, ca s-o putem repara. Fără sume, nume, magazine sau bonuri.": "When the app hits an error, only its type, the place in the code and the version are sent, so we can fix it. No amounts, names, stores or receipts.",
+  "{source}: {left} din {share}": "{source}: {left} of {share}",
+  "+ tichete în afara plicului: {amount}": "+ meal vouchers outside the envelope: {amount}",
+  "Din partea {source} a plicului rămân {left} din {share}.": "Of the envelope's {source} part, {left} of {share} remain.",
+  "Partea {source} din plic e de {share} și nu mai ajunge: {over} peste. Restul plătește-l din altă sursă a plicului.": "The envelope's {source} part is {share} and won't cover this: {over} over. Pay the rest from another source of the envelope.",
 };
